@@ -1,0 +1,101 @@
+# Dependencies
+node_modules/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+.output/
+*.tsbuildinfo
+
+# NestJS
+dist/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# TypeScript
+*.tsbuildinfo
+
+# Test & coverage
+coverage/
+.nyc_output/
+*.lcov
+.jest/
+
+# Caches
+.cache/
+.parcel-cache/
+.turbo/
+.eslintcache
+.stylelintcache
+*.sass-cache
+.sass-cache/
+
+# Package manager
+.pnpm-store/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Editor & IDE
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# Optional: uncomment if you don't want to share editor settings
+# .vscode/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Debug
+.vscode-test/
+
+# Vercel (Next.js deployments)
+.vercel
+
+# Local databases (if used in lessons)
+*.sqlite
+*.sqlite3
+*.db
