@@ -123,7 +123,15 @@ def main() -> None:
         assert snippet in html, f"Missing code example: {snippet}"
 
     assert "@media print" in html, "Missing print stylesheet"
+    assert "@media (max-width: 760px)" in html, "Missing mobile stylesheet"
     assert "prefers-reduced-motion" in html, "Missing reduced-motion support"
+    assert 'aria-live="polite"' in html, "Demo result must be announced"
+    assert 'window.addEventListener("beforeprint"' in html, (
+        "Print preparation must reveal closed instructor answers"
+    )
+    assert 'window.addEventListener("afterprint"' in html, (
+        "Print cleanup must restore the instructor's answer state"
+    )
     assert not re.search(r'<(?:link|script)\b[^>]+(?:href|src)=["\']https?://', html), (
         "External dependencies are not allowed"
     )
