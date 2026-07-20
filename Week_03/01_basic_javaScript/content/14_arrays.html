@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้วิธีสร้างและใช้งาน Array เพื่อเก็บหลายค่าไว้ในตัวแปรเดียว" /><title>Array — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+</head><body><main><article>
+<h1>Array</h1><p>จนถึงตอนนี้ เราสร้างตัวแปรที่เก็บค่าเดียวมาตลอด แต่หากเราต้องการเก็บหลายค่าไว้ในตัวแปรเดียวล่ะ? นี่คือหน้าที่ของ <strong>Array</strong>!</p>
+<h2>Array คืออะไร?</h2><p>Array คือรายการของค่าที่เก็บไว้ในตัวแปรเดียว ลองนึกว่าเป็นภาชนะที่เก็บสิ่งของได้หลายชิ้น</p>
+<pre><code>// ค่าเดี่ยว
+const number = 5
+const name = "Kyle"
+
+// หลายค่าใน Array
+const numbers = [1, 2, 3, 4, 5]
+const names = ["Kyle", "Sarah", "John"]</code></pre>
+<h2>การสร้าง Array</h2><p>ใช้วงเล็บเหลี่ยม <code>[]</code> เพื่อสร้าง Array และใช้เครื่องหมายจุลภาคคั่นแต่ละค่า:</p>
+<pre><code>const letters = ["A", "B", "C", "D", "E"]
+const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]</code></pre><p>คุณสามารถจัดรูปแบบ Array เป็นหลายบรรทัดเพื่อให้อ่านง่าย:</p>
+<pre><code>const longList = [
+  "Kyle",
+  "Sarah",
+  "John",
+  "Alice",
+  "Bob",
+  "Charlie",
+  "Mike",
+  "Emma",
+]</code></pre>
+<h2>การเข้าถึงสมาชิกของ Array</h2><p>ใช้วงเล็บเหลี่ยมพร้อมตัวเลขที่ตรงกับตำแหน่งของสมาชิกใน Array เพื่อเข้าถึงสมาชิกนั้น:</p>
+<pre><code>const numbers = [1, 2, 3, 4, 5]
+
+console.log(numbers[0]) // 1 (สมาชิกลำดับแรก)
+console.log(numbers[1]) // 2 (สมาชิกลำดับที่สอง)
+console.log(numbers[4]) // 5 (สมาชิกลำดับที่ห้า)</code></pre>
+<h3>สำคัญ: Index ของ Array เริ่มที่ 0!</h3><p>นี่เป็นหนึ่งในสาเหตุของความสับสนที่พบบ่อยที่สุด:</p>
+<pre><code>const letters = ["A", "B", "C"]
+
+// หากต้องการตัวอักษรตัวแรก ให้ใช้ index 0
+console.log(letters[0]) // "A"
+
+// หากต้องการตัวอักษรตัวที่สอง ให้ใช้ index 1
+console.log(letters[1]) // "B"
+
+// หากต้องการตัวอักษรตัวที่สาม ให้ใช้ index 2
+console.log(letters[2]) // "C"</code></pre>
+<h2>การเพิ่มสมาชิกลงใน Array</h2><p>ใช้เมธอด <code>push()</code> เพื่อเพิ่มสมาชิกต่อท้าย Array:</p>
+<pre><code>const numbers = [1, 2, 3]
+console.log(numbers) // [1, 2, 3]
+
+numbers.push(4)
+console.log(numbers) // [1, 2, 3, 4]
+
+numbers.push(5)
+console.log(numbers) // [1, 2, 3, 4, 5]</code></pre>
+<h2>ชนิดข้อมูลแบบผสม</h2><p>Array ใน JavaScript สามารถมีข้อมูลต่างชนิดกันได้:</p>
+<pre><code>const mixedArray = [1, "hello", true, 3.14, null]
+
+console.log(mixedArray[0]) // 1 (number)
+console.log(mixedArray[1]) // "hello" (string)
+console.log(mixedArray[2]) // true (boolean)</code></pre><p>แม้จะทำได้ แต่โดยทั่วไปควรเก็บข้อมูลใน Array ให้เป็นชนิดเดียวกัน (เป็นตัวเลขทั้งหมด เป็น String ทั้งหมด เป็นต้น)</p>
+<h2>Array ซ้อนกัน</h2><p>คุณสามารถใส่ Array ไว้ภายใน Array อื่นได้:</p>
+<pre><code>const nestedArray = [
+  ["A", "B"],
+  ["C", "D"],
+]
+
+console.log(nestedArray[0]) // ["A", "B"]
+console.log(nestedArray[1]) // ["C", "D"]</code></pre>
+<h3>การเข้าถึงสมาชิกที่ซ้อนกัน</h3><p>ใช้วงเล็บเหลี่ยมหลายชุดเพื่อเข้าถึงสมาชิกที่ซ้อนกัน:</p>
+<pre><code>const grid = [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+]
+
+// รับแถวแรก
+console.log(grid[0]) // [1, 2, 3]
+
+// รับสมาชิกตรงกลาง (5)
+console.log(grid[1][1]) // 5
+
+// รับสมาชิกด้านขวาล่าง (9)
+console.log(grid[2][2]) // 9</code></pre>
+<h2>ความยาวของ Array</h2><p>Array ทุกตัวมีพร็อพเพอร์ตี <code>length</code> ที่บอกจำนวนสมาชิกภายใน:</p>
+<pre><code>const colors = ["red", "green", "blue"]
+console.log(colors.length) // 3
+
+const empty = []
+console.log(empty.length) // 0</code></pre>
+<h2>แบบฝึกหัด</h2><p>สร้าง Array ที่มีตัวอักษร 5 ตัวแรกของภาษาอังกฤษ แล้วแสดงสมาชิกตรงกลาง (ซึ่งควรเป็น “C”)</p>
+<details><summary>เฉลย</summary><pre><code>const letters = ["A", "B", "C", "D", "E"]
+
+// สมาชิกตรงกลางอยู่ที่ index 2 (อย่าลืมว่าเริ่มนับที่ 0)
+console.log(letters[2]) // "C"</code></pre></details>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="13_equality_type_comparisons.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="15_objects.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/advanced-variables/arrays">“Arrays” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

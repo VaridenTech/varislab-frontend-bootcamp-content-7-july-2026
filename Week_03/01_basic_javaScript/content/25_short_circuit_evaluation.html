@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้การประเมินผลแบบลัดวงจรด้วยตัวดำเนินการทางตรรกะ เพื่อเขียนเงื่อนไขที่กระชับและมีประสิทธิภาพ" /><title>การประเมินผลแบบลัดวงจร — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+</head><body><main><article>
+<h1>การประเมินผลแบบลัดวงจร</h1><p>การประเมินผลแบบลัดวงจรเป็นคุณสมบัติที่ทรงพลังของตัวดำเนินการทางตรรกะใน JavaScript (<code>&amp;&amp;</code> และ <code>||</code>) ซึ่งช่วยให้โค้ดมีประสิทธิภาพและกระชับขึ้น</p>
+<h2>การประเมินผลแบบลัดวงจรคืออะไร?</h2><p>หมายถึง JavaScript จะหยุดประเมินนิพจน์ทางตรรกะทันทีที่ทราบผลลัพธ์สุดท้าย โดยจะ “ลัดวงจร” หรือข้ามส่วนที่เหลือของนิพจน์</p>
+<h2>ตัวดำเนินการ <code>&amp;&amp;</code> (AND)</h2><p>สำหรับ AND operand <strong>ทั้งสอง</strong> ต้องเป็น <code>true</code> ผลลัพธ์จึงเป็น <code>true</code> หาก operand แรกเป็น <code>false</code> JavaScript จะรู้ว่าทั้งนิพจน์เป็น <code>false</code> จึงไม่ประเมิน operand ที่สอง</p><pre><code>const a = false
+const b = true
+
+// JavaScript ตรวจเฉพาะ 'a' พบว่าเป็น false แล้วหยุด
+const result = a &amp;&amp; b
+console.log(result) // false
+
+// หากมีการเรียกฟังก์ชันที่ใช้ทรัพยากรมาก:
+function expensiveFunction() {
+  console.log("This is an expensive operation!")
+  return true
+}
+
+// expensiveFunction() จะไม่ถูกเรียก เพราะ a เป็น false
+const result2 = a &amp;&amp; expensiveFunction()
+console.log(result2) // false (และไม่มี console.log จาก expensiveFunction)</code></pre><p>สิ่งนี้ทำให้ <code>&amp;&amp;</code> เหมาะสำหรับการเข้าถึงพร็อพเพอร์ตีแบบมีเงื่อนไข:</p><pre><code>// เข้าถึงพร็อพเพอร์ตีอย่างปลอดภัย
+const user = null
+user &amp;&amp; user.name &amp;&amp; console.log(user.name) // ไม่เกิดข้อผิดพลาด</code></pre>
+<h2>ตัวดำเนินการ <code>||</code> (OR)</h2><p>สำหรับ OR หาก operand แรกเป็น <code>true</code> JavaScript จะรู้ว่าทั้งนิพจน์เป็น <code>true</code> จึงไม่ประเมิน operand ที่สอง</p><pre><code>const a = true
+const b = false
+
+// JavaScript ตรวจเฉพาะ 'a' พบว่าเป็น true แล้วหยุด
+const result = a || b
+console.log(result) // true
+
+function expensiveFunction() {
+  console.log("This expensive function runs!")
+  return false
+}
+
+// expensiveFunction() จะไม่ถูกเรียก เพราะ a เป็น true
+const result2 = a || expensiveFunction()
+console.log(result2) // true (และไม่มี console.log จาก expensiveFunction)</code></pre><p>สิ่งนี้ทำให้ <code>||</code> เหมาะสำหรับกำหนดค่าสำรอง:</p><pre><code>const userInput = ""
+const defaultName = "Guest"
+
+// หาก userInput เป็น falsy ให้ใช้ defaultName
+const displayName = userInput || defaultName
+console.log(displayName) // "Guest"
+
+// ตัวอย่างเพิ่มเติม
+const config = {
+  theme: null,
+  timeout: 0,
+}
+
+const theme = config.theme || "light" // "light"
+const timeout = config.timeout || 5000 // 5000
+const debug = config.debug || false // false</code></pre>
+<h2>ค่าที่ส่งกลับในการประเมินผลแบบลัดวงจร</h2><p><strong>สำคัญ:</strong> ตัวดำเนินการแบบลัดวงจรไม่ได้ส่งกลับเพียง <code>true</code> หรือ <code>false</code> แต่ส่งค่าจริงที่กำหนดผลลัพธ์กลับมา!</p>
+<h3>AND <code>&amp;&amp;</code> ส่งกลับ:</h3><pre><code>// ส่งค่า falsy แรก หรือค่าสุดท้ายหากทุกค่าเป็น truthy
+console.log(false &amp;&amp; "hello") // false
+console.log(true &amp;&amp; "hello") // "hello"
+console.log("hi" &amp;&amp; "bye") // "bye"
+console.log("" &amp;&amp; "hello") // "" (String ว่างเป็น falsy)
+console.log(5 &amp;&amp; 10 &amp;&amp; 15) // 15 (ทุกค่าเป็น truthy จึงส่งค่าสุดท้าย)
+console.log(5 &amp;&amp; 0 &amp;&amp; 15) // 0 (ค่า falsy แรก)</code></pre>
+<h3>OR <code>||</code> ส่งกลับ:</h3><pre><code>// ส่งค่า truthy แรก หรือค่าสุดท้ายหากทุกค่าเป็น falsy
+console.log(false || "hello") // "hello"
+console.log(true || "hello") // true
+console.log("hi" || "bye") // "hi"
+console.log("" || "hello") // "hello"
+console.log(null || undefined || "default") // "default"
+console.log(0 || false || null) // null (ทุกค่าเป็น falsy จึงส่งค่าสุดท้าย)</code></pre>
+<h2>ทางเลือกสมัยใหม่</h2><p>JavaScript มีตัวดำเนินการใหม่สองตัวที่ใช้แทนรูปแบบลัดวงจรทั่วไปบางแบบได้:</p>
+<h3>Nullish Coalescing <code>??</code></h3><p>ตัวดำเนินการ nullish coalescing ถือว่าเฉพาะ <code>null</code> และ <code>undefined</code> เป็น falsy จึงเหมาะกับค่าเริ่มต้นเมื่อ <code>0</code> หรือ <code>false</code> เป็นค่าที่ใช้ได้:</p><pre><code>const config = {
+  timeout: 0, // เราต้องการเก็บค่า 0 นี้ไว้!
+  debug: null, // ค่านี้ควรได้รับค่าเริ่มต้น
+}
+
+// ใช้ || (ถือว่า 0 เป็น falsy)
+const timeout1 = config.timeout || 5000 // 5000 (❌)
+const debug = config.debug || true // true (✅)
+
+// ใช้ ?? (ถือว่าเฉพาะ null/undefined เป็น falsy)
+const timeout2 = config.timeout ?? 5000 // 0 (✅)
+const debug = config.debug ?? true // true (✅)</code></pre>
+<h3>Optional Chaining <code>?.</code></h3><p>Optional chaining จะเข้าถึงพร็อพเพอร์ตีเฉพาะเมื่อค่าก่อนหน้าไม่ใช่ <code>null</code> หรือ <code>undefined</code> เหมาะสำหรับเข้าถึงพร็อพเพอร์ตีที่ซ้อนลึกอย่างปลอดภัย:</p><pre><code>const user = {
+  profile: {
+    settings: {
+      theme: "dark",
+    },
+  },
+}
+
+// วิธีเดิมด้วย &amp;&amp;
+const theme1 =
+  user &amp;&amp; user.profile &amp;&amp; user.profile.settings &amp;&amp; user.profile.settings.theme
+
+// วิธีใหม่ด้วย optional chaining
+const theme2 = user?.profile?.settings?.theme
+
+// ใช้กับเมธอดได้เช่นกัน
+user?.notify?.()</code></pre>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="24_recursion.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="26_array_methods.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/short-circuit-evaluation">“Short-Circuit Evaluation” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

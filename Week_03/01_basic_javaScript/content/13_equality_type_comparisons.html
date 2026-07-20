@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้วิธีที่ JavaScript เปรียบเทียบความเท่ากัน และความสำคัญของการใช้ strict equality" /><title>ความเท่ากัน: == กับ === — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body><main><article>
+  <h1>ความเท่ากัน: <code>==</code> กับ <code>===</code></h1><p>JavaScript มีสองวิธีในการตรวจสอบความเท่ากัน และทั้งสองทำงานแตกต่างกันมาก</p>
+  <h2>เครื่องหมายเท่ากับสองตัว <code>==</code> - มีการแปลงชนิดข้อมูล</h2><p>ตัวดำเนินการ <code>==</code> จะแปลงชนิดข้อมูลก่อนเปรียบเทียบ:</p>
+  <pre><code>console.log(1 == "1") // true (แปลง String "1" เป็น Number 1)
+
+console.log(0 == false) // true (0 เป็นค่า "falsy")
+console.log("" == false) // true (String ว่างเป็นค่า "falsy")</code></pre>
+  <p><strong>ทำไม?</strong> JavaScript แปลงค่าเหล่านี้ให้เป็นชนิดเดียวกันก่อนเปรียบเทียบ เลขศูนย์และ String ว่างถือเป็นค่า “falsy” ที่เท่ากับ <code>false</code></p>
+  <h2>เครื่องหมายเท่ากับสามตัว <code>===</code> - ไม่มีการแปลงชนิดข้อมูล</h2><p>ตัวดำเนินการ <code>===</code> เปรียบเทียบทั้งค่า <strong>และ</strong> ชนิด โดยไม่แปลงชนิดข้อมูล:</p>
+  <pre><code>console.log(1 === 1) // true (ชนิดและค่าเหมือนกัน)
+console.log(1 === "1") // false (ชนิดต่างกัน)
+console.log(0 === false) // false (ชนิดต่างกัน)
+console.log("" === false) // false (ชนิดต่างกัน)</code></pre>
+  <h2>ไม่เท่ากัน: <code>!=</code> กับ <code>!==</code></h2><p>กฎเดียวกันนี้ใช้กับการเปรียบเทียบว่าไม่เท่ากัน:</p>
+  <pre><code>console.log(1 != "1") // false (แปลงชนิดแล้วจึงเปรียบเทียบ)
+console.log(1 !== "1") // true (ชนิดต่างกัน จึงไม่เท่ากัน)</code></pre>
+  <h2>ควรใช้แบบใด?</h2><p><strong>เลือกใช้ <code>===</code> และ <code>!==</code> เสมอ</strong> เพื่อหลีกเลี่ยงปัญหาจากการแปลงชนิดข้อมูลที่ไม่คาดคิด</p>
+  <h3>ข้อยกเว้น: <code>null</code> และ <code>undefined</code></h3><p>มีกรณีหนึ่งที่ <code>==</code> มีประโยชน์ คือการตรวจสอบ <code>null</code> หรือ <code>undefined</code>:</p>
+  <pre><code>console.log(null == null) // true
+console.log(null == undefined) // true (ถือว่า null และ undefined เท่ากัน)
+
+console.log(null === null) // true
+console.log(null === undefined) // false (ชนิดต่างกัน)</code></pre>
+  <p>เมื่อตรวจสอบว่าตัวแปรมีค่าหรือไม่ คุณมักต้องการตรวจพบทั้ง <code>null</code> และ <code>undefined</code> นี่คือเหตุผลที่ <code>==</code> มีประโยชน์ในกรณีนี้</p>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="12_nan_not_a_number.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="14_arrays.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/advanced-variables/equality-type-comparisons">“Equality: == vs ===” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

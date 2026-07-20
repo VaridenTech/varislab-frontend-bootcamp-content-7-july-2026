@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้วิธีสร้างค่าคงที่โดยใช้คีย์เวิร์ด const และทำความเข้าใจว่าเมื่อใดควรใช้ const แทน let สำหรับค่าที่ไม่เปลี่ยนแปลง" />
+  <title>const - การสร้างค่าคงที่ — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1><code>const</code> - การสร้างค่าคงที่</h1>
+      <p><code>const</code> ใช้สร้างตัวแปรที่เป็น <em>ค่าคงที่</em> ซึ่งค่าของมันจะไม่มีวันเปลี่ยนแปลง</p>
+
+      <h2><code>const</code> คืออะไร?</h2>
+      <p><code>const</code> สร้างตัวแปรที่ไม่สามารถกำหนดค่าใหม่ได้หลังจากสร้างแล้ว ลองนึกถึงปากกาเคมี เมื่อคุณกำหนดค่าแล้ว ค่านั้นจะไม่สามารถเปลี่ยนแปลงได้</p>
+      <pre><code>const name = "Alice"
+
+// การพยายามเปลี่ยนตัวแปร const จะทำให้เกิดข้อผิดพลาด
+name = "Bob" // ❌ TypeError: Assignment to constant variable</code></pre>
+
+      <h2>ความแตกต่างจาก <code>let</code></h2>
+      <ol>
+        <li>
+          <p>ต้องกำหนดค่าเมื่อสร้าง</p>
+          <p>ต่างจาก <code>let</code> ตรงที่คุณไม่สามารถสร้างตัวแปร <code>const</code> โดยไม่กำหนดค่าให้มันได้:</p>
+          <pre><code>// ✅ ถูกต้อง - const ที่มีค่าเริ่มต้น
+const name = "Alice"
+const age = 45
+
+const message // ❌ SyntaxError: Missing initializer in const declaration</code></pre>
+        </li>
+        <li>
+          <p>ไม่สามารถกำหนดค่าใหม่ได้</p>
+          <p>เมื่อสร้างแล้ว คุณไม่สามารถเปลี่ยนค่าของตัวแปร <code>const</code> ได้:</p>
+          <pre><code>const name = "Alice"
+
+name = "Bob" // ❌ TypeError: Assignment to constant variable</code></pre>
+        </li>
+      </ol>
+
+      <h2>แนวทางตัดสินใจเลือกระหว่าง <code>const</code> กับ <code>let</code></h2>
+      <p>ผมใช้ <code>const</code> เป็นค่าเริ่มต้น เว้นแต่จะรู้ว่าค่านั้นจะเปลี่ยนแปลง วิธีนี้ช่วยป้องกันการเปลี่ยนค่าที่สำคัญโดยไม่ตั้งใจ</p>
+
+      <h3>ใช้ <code>const</code> เมื่อ:</h3>
+      <ul>
+        <li>ค่าจะไม่มีวันเปลี่ยนแปลง</li>
+        <li>เป็นค่าคงที่ส่วนกลาง เช่น การกำหนดค่าหรือการตั้งค่า</li>
+      </ul>
+
+      <h3>ใช้ <code>let</code> เมื่อ:</h3>
+      <ul>
+        <li>ค่าจะเปลี่ยนแปลงในขณะที่โปรแกรมทำงาน</li>
+        <li>คุณกำลังนับหรือติดตามบางสิ่ง</li>
+      </ul>
+
+      <h2>ค่าคงที่ส่วนกลาง</h2>
+      <p>ในแอปพลิเคชันขนาดใหญ่ คุณอาจกำหนดค่าคงที่ส่วนกลางที่นำไปใช้ทั่วทั้งโค้ดเบส:</p>
+      <pre><code>const APP_NAME = "My Awesome App"
+const VERSION = "1.0.0"
+const SUPPORT_EMAIL = "support@example.com"</code></pre>
+      <p>ค่าคงที่ส่วนกลางเหล่านี้มักเขียนด้วยตัวพิมพ์ใหญ่และใช้ขีดล่างคั่นระหว่างคำ</p>
+    </article>
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="04_creating_your_first_variable.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="06_null_vs_undefined.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main>
+
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/variable-basics/constants-with-const">“const - Creating Constants” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

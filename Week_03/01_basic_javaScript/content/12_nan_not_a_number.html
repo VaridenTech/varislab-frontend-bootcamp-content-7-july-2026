@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้เกี่ยวกับ NaN และวิธีตรวจสอบค่า NaN ใน JavaScript อย่างถูกต้อง" /><title>NaN (ไม่ใช่ตัวเลข) — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body><main><article>
+  <h1><code>NaN</code> (ไม่ใช่ตัวเลข)</h1><p><code>NaN</code> เป็นค่าพิเศษใน JavaScript ย่อมาจาก “Not a Number”</p>
+  <h2>อะไรทำให้เกิด <code>NaN</code>?</h2><p><code>NaN</code> เกิดขึ้นเมื่อคุณพยายามแปลงตัวแปรที่ไม่ใช่ตัวเลข (เช่น String) ให้เป็น Number:</p>
+  <pre><code>const result = parseInt("hello")
+
+console.log(result) // NaN
+console.log(typeof result) // "number"</code></pre><p>แม้ <code>NaN</code> จะแปลว่า “ไม่ใช่ตัวเลข” แต่ชนิดข้อมูลของมันคือ <code>"number"</code></p>
+  <h2>การตรวจสอบ <code>NaN</code></h2><p>คุณอาจคิดว่าสามารถตรวจสอบ <code>NaN</code> แบบนี้ได้ แต่มันใช้ไม่ได้:</p>
+  <pre><code>const a = parseInt("hello")
+
+console.log(a == NaN) // false</code></pre><p><strong>ทำไมจึงใช้ไม่ได้?</strong> <code>NaN</code> จะไม่เท่ากับค่าใดเลย แม้แต่ตัวมันเอง!</p>
+  <pre><code>console.log(NaN == NaN) // false</code></pre>
+  <h3>วิธีที่ถูกต้อง: <code>isNaN()</code></h3><p>หากต้องการตรวจสอบว่าค่าเป็น <code>NaN</code> หรือไม่ ให้ใช้ฟังก์ชัน <code>isNaN()</code> ที่มีมาให้:</p>
+  <pre><code>const a = parseInt("hello") // NaN
+const b = 5 // number
+
+console.log(isNaN(a)) // true (a เป็น NaN)
+console.log(isNaN(b)) // false (b เป็นตัวเลขที่ถูกต้อง)</code></pre>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="11_type_coercion.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="13_equality_type_comparisons.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/advanced-variables/nan-not-a-number">“NaN (Not a Number)” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

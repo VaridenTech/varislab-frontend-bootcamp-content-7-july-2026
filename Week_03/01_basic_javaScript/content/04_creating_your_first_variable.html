@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้วิธีสร้างตัวแปรใน JavaScript โดยใช้คีย์เวิร์ด let และทำความเข้าใจว่าตัวแปรจัดเก็บค่าในหน่วยความจำอย่างไร" />
+  <title>การสร้างตัวแปรแรกของคุณ — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การสร้างตัวแปรแรกของคุณ</h1>
+      <p>ตัวแปรคือภาชนะที่มีป้ายกำกับ ซึ่งใช้เก็บข้อมูลที่คุณต้องการนำไปใช้ในภายหลังในโค้ดของคุณ</p>
+
+      <h2>ตัวแปรคืออะไร?</h2>
+      <ul>
+        <li><strong>ภาชนะสำหรับเก็บข้อมูล</strong> - ตัวแปรเก็บค่าต่าง ๆ เช่น ตัวเลข ข้อความ หรือข้อมูลอื่น ๆ</li>
+        <li><strong>การอ้างอิงที่นำกลับมาใช้ซ้ำได้</strong> - เมื่อสร้างตัวแปรแล้ว คุณสามารถใช้ชื่อตัวแปรเพื่อเข้าถึงค่าของมันได้จากทุกที่</li>
+        <li><strong>พื้นที่จัดเก็บแบบเปลี่ยนแปลงได้</strong> - ตัวแปรสามารถอัปเดตด้วยค่าใหม่ได้ในขณะที่โปรแกรมกำลังทำงาน</li>
+      </ul>
+
+      <h2>การกำหนดตัวแปร</h2>
+      <p>ใน JavaScript มี 3 วิธีในการกำหนดตัวแปร แต่ตอนนี้เราจะเน้นเพียงวิธีเดียว นั่นคือ <code>let</code></p>
+      <pre><code>let variableOne
+let name = "Sally"
+let age = 25</code></pre>
+
+      <h3>ประเด็นสำคัญ:</h3>
+      <ul>
+        <li><strong>ไม่จำเป็นต้องมีค่า</strong> - คุณสามารถสร้างตัวแปรโดยไม่กำหนดค่าเริ่มต้นได้</li>
+        <li><strong>เครื่องหมายเท่ากับหนึ่งตัว (<code>=</code>)</strong> ใช้กำหนดค่าให้กับตัวแปร</li>
+        <li><strong>ชื่อตัวแปร</strong> ควรอธิบายความหมายได้และสื่อความหมายอย่างชัดเจน</li>
+        <li><strong>ตัวพิมพ์เล็กและตัวพิมพ์ใหญ่มีความแตกต่างกัน</strong> - <code>age</code> และ <code>Age</code> เป็นตัวแปรคนละตัวกัน</li>
+      </ul>
+
+      <h2>การอัปเดตค่าของตัวแปร</h2>
+      <p>หนึ่งในคุณสมบัติที่ทรงพลังของตัวแปรคือ คุณสามารถเปลี่ยนค่าของมันได้:</p>
+      <pre><code>let score = 10
+console.log(score) // แสดงผล: 10
+
+score = 15
+console.log(score) // แสดงผล: 15
+
+score = "name"
+console.log(score) // แสดงผล: name</code></pre>
+
+      <h2>ประโยชน์ของการใช้ตัวแปร</h2>
+      <ul>
+        <li><strong>อ่านง่าย</strong>: ทำให้โค้ดของคุณเข้าใจได้ง่ายขึ้น</li>
+        <li><strong>บำรุงรักษาง่าย</strong>: คุณสามารถเปลี่ยนค่าได้ในที่เดียวโดยไม่ต้องแก้ไขหลายบรรทัด</li>
+        <li><strong>นำกลับมาใช้ซ้ำได้</strong>: ใช้ตัวแปรเดียวกันในส่วนต่าง ๆ ของโค้ดได้</li>
+      </ul>
+
+      <h2>แนวทางปฏิบัติที่ดี</h2>
+      <ul>
+        <li><strong>ใช้ชื่อที่สื่อความหมาย</strong>: ใช้ <code>age</code> แทน <code>a</code></li>
+        <li><strong>ใช้ camelCase</strong>: ใช้ <code>firstName</code> แทน <code>first_name</code></li>
+        <li><strong>ลดการเปลี่ยนค่าให้น้อยที่สุด</strong>: พยายามหลีกเลี่ยงการเปลี่ยนค่าของตัวแปรบ่อย ๆ เพราะอาจทำให้ติดตามการทำงานของโค้ดได้ยากขึ้น</li>
+      </ul>
+    </article>
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="03_primitive_types_and_operations.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="05_constants_with_const.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main>
+
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/variable-basics/creating-your-first-variable">“Creating Your First Variable” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

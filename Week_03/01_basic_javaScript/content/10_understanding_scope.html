@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้วิธีที่ JavaScript จัดระเบียบตัวแปรและฟังก์ชันไว้ใน scope ต่าง ๆ รวมถึงวิธีที่ scope ด้านในเข้าถึง scope ด้านนอกได้ แต่ไม่สามารถทำย้อนกลับได้" />
+  <title>ทำความเข้าใจ Scope — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>ทำความเข้าใจ Scope</h1>
+      <p>Scope เป็นแนวคิดพื้นฐานใน JavaScript ที่กำหนดว่าสามารถเข้าถึงตัวแปรและฟังก์ชันได้จากที่ใด</p>
+      <pre><code>function sayHi() {
+  const result = "Hi"
+  console.log(result) // แสดงผล "Hi"
+}
+
+const result = "Bye"
+sayHi() // บรรทัดนี้แสดงผลอะไร?
+console.log(result) // บรรทัดนี้แสดงผลอะไร?</code></pre>
+
+      <h2>Scope คืออะไร?</h2>
+      <p><strong>Scope</strong> คือบริเวณในโค้ดที่สามารถเข้าถึงตัวแปรหรือฟังก์ชันได้ JavaScript จะสร้าง scope ใหม่ภายในวงเล็บปีกกา <code>{}</code> ทุกชุด และยังมี <strong>global scope</strong> สำหรับทั้งไฟล์ด้วย</p>
+      <pre><code>function myFunction() {
+  // สร้าง scope ใหม่ตรงนี้
+  const x = 5
+}
+
+// Global scope
+const x = 10
+myFunction()</code></pre>
+
+      <h3>Scope ทำงานทางเดียว</h3>
+      <p>วิธีคิดเกี่ยวกับ scope ที่ดีที่สุดคือมองว่าเป็น <strong>กระจกมองทางเดียว</strong> ซึ่งมองออกไปด้านนอกเสมอ:</p>
+      <ul>
+        <li>
+          <p>✅ Scope ด้านในมองเห็น scope ด้านนอกได้</p>
+          <pre><code>const a = 1 // Global scope
+
+function func() {
+  const b = 2 // Function scope
+  console.log(a) // ✅ มองเห็น scope ด้านนอกได้
+  console.log(b) // ✅ มองเห็น scope ของตัวเองได้
+}</code></pre>
+        </li>
+        <li>
+          <p>❌ Scope ด้านนอกมองไม่เห็น scope ด้านใน</p>
+          <pre><code>function func() {
+  const b = 2 // Function scope
+}
+
+func()
+console.log(b) // ❌ ข้อผิดพลาด - มองไม่เห็น scope ด้านใน</code></pre>
+        </li>
+      </ul>
+
+      <h2>ประเภทของ Scope</h2>
+      <p>Scope ใน JavaScript มีหลายประเภท แต่สามประเภทที่สำคัญที่สุดคือ <strong>global scope</strong>, <strong>function scope</strong> และ <strong>block scope</strong></p>
+
+      <h3>Global Scope</h3>
+      <p><strong>Global scope</strong> คือ scope ชั้นนอกสุด ซึ่งก็คือทั้งไฟล์ของคุณ ตัวแปรที่ประกาศไว้ตรงนี้สามารถเข้าถึงได้จากทุกที่ในโค้ด:</p>
+      <pre><code>const name = "Kyle" // Global scope
+
+function sayHi() {
+  console.log(name) // ✅ เข้าถึงตัวแปรส่วนกลางได้
+}
+
+sayHi()</code></pre>
+
+      <h3>Block Scope</h3>
+      <p><strong>Block scope</strong> ใหม่จะถูกสร้างขึ้นสำหรับโค้ดใด ๆ ที่อยู่ระหว่างวงเล็บปีกกา <code>{}</code>:</p>
+      <pre><code>function myFunction() {
+  const x = 3 // Block scope ใหม่
+}
+
+if (true) {
+  const x = 1 // Block scope ใหม่
+}
+
+{
+  const x = 2 // Block scope ใหม่
+}</code></pre>
+
+      <h3>Function Scope</h3>
+      <p><strong>Function scope</strong> จะถูกสร้างขึ้นทุกครั้งที่คุณกำหนดฟังก์ชัน Function scope คล้ายกับ block scope มาก แต่คุณสมบัติบางอย่างของ JavaScript (ซึ่งจะกล่าวถึงในภายหลัง) ใช้ function scope แทน block scope:</p>
+      <pre><code>function myFunction() {
+  const x = 5
+}</code></pre>
+
+      <h2>Scope ที่ซ้อนกัน</h2>
+      <p>คุณสามารถมี scope ได้หลายระดับ:</p>
+      <pre><code>let c = 3 // Global scope
+
+{
+  // Block scope ด้านนอก
+  let a = 1
+
+  {
+    // Block scope ด้านใน
+    let b = 2
+
+    console.log(a) // 1 - มองเห็น scope ด้านนอกได้
+    console.log(b) // 2 - มองเห็น scope ของตัวเองได้
+    console.log(c) // 3 - มองเห็น global scope ได้
+  }
+
+  console.log(a) // 1 - มองเห็น scope ของตัวเองได้
+  console.log(c) // 3 - มองเห็น global scope ได้
+  // console.log(b)  // ❌ ข้อผิดพลาด - มองไม่เห็น scope ด้านใน
+}</code></pre>
+
+      <h3>ชื่อที่ขัดแย้งกัน</h3>
+      <p>คุณสามารถมีตัวแปรชื่อเดียวกันใน scope ที่ต่างกันได้โดยไม่เกิดความขัดแย้ง:</p>
+      <pre><code>const result = "Kyle" // Global scope
+
+function sayHi(name) {
+  const result = "Hi " + name // Block scope - เป็นตัวแปรคนละตัว!
+  console.log(result) // "Hi Kyle"
+}
+
+sayHi("Kyle")
+console.log(result) // "Kyle" - ยังคงเป็นตัวแปรส่วนกลาง</code></pre>
+      <p>ตัวแปรเหล่านี้แยกจากกันอย่างสิ้นเชิง เพียงแต่บังเอิญใช้ชื่อเดียวกัน</p>
+
+      <h3>การพิจารณาว่าจะใช้ตัวแปรใด</h3>
+      <p>เมื่อ JavaScript มองหาตัวแปร มันจะเริ่มจาก scope ปัจจุบันแล้วไล่ออกไปด้านนอก:</p>
+      <pre><code>const a = 1 // Global scope
+const name = "Kyle" // Global scope
+
+function myFunction() {
+  const a = 2 // Block scope
+
+  console.log(a) // แสดงผล 2
+  console.log(name) // แสดงผล "Kyle"
+}
+
+myFunction()</code></pre>
+
+      <h2>แนวทางปฏิบัติที่ดี</h2>
+      <ul>
+        <li>
+          <p>ลดการใช้ตัวแปรส่วนกลางให้น้อยที่สุด</p>
+          <pre><code>// ❌ หลีกเลี่ยงการทำแบบนี้
+const name = "Kyle"
+
+function myFunction() {
+  console.log(name)
+}</code></pre>
+          <pre><code>// ✅ วางตัวแปรไว้ภายในมากที่สุดเท่าที่ทำได้
+function myFunction() {
+  const name = "Kyle"
+  console.log(name)
+}</code></pre>
+        </li>
+        <li>
+          <p>อย่าใช้ชื่อเดียวกันสำหรับตัวแปรคนละตัวใน scope ที่ซ้อนกัน</p>
+          <pre><code>// ❌ ชวนให้สับสน - ยากที่จะบอกว่าใช้ 'a' ตัวใด
+const a = 1
+
+function myFunction() {
+  const a = 2
+  console.log(a) // นี่คือ 'a' ตัวใด?
+}</code></pre>
+          <pre><code>// ✅ ชัดเจน - ใช้ชื่อต่างกัน
+const outerA = 1
+
+function myFunction() {
+  const innerA = 2
+  console.log(innerA) // ใช้ตัวแปรใน scope ด้านในอย่างชัดเจน
+}</code></pre>
+        </li>
+      </ul>
+    </article>
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="09_arrow_functions.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="11_type_coercion.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main>
+
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/scope/understanding-scope">“Understanding Scope” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

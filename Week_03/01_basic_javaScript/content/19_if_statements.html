@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้วิธีสั่งให้โค้ดทำงานตามเงื่อนไขด้วยคำสั่ง if, else if และ else" /><title>คำสั่ง If — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+</head><body><main><article>
+<h1>คำสั่ง If</h1><p>คำสั่ง If เป็นหนึ่งในแนวคิดพื้นฐานที่สุดของการเขียนโปรแกรม ช่วยให้คุณรันโค้ดต่างกันตามว่าเงื่อนไขบางอย่างเป็นจริงหรือเท็จ</p>
+<h2>คำสั่ง If พื้นฐาน</h2><p>รูปแบบที่ง่ายที่สุดของคำสั่ง If จะตรวจสอบเงื่อนไขและรันโค้ดเฉพาะเมื่อเงื่อนไขเป็นจริง:</p><pre><code>const age = 18
+
+if (age &gt;= 18) {
+  console.log("You can vote!") // บรรทัดนี้จะทำงาน
+}
+
+console.log("Program continues...") // บรรทัดนี้ทำงานเสมอ</code></pre><p>ไวยากรณ์ประกอบด้วย:</p><ul><li>คีย์เวิร์ด <code>if</code></li><li>เงื่อนไขในวงเล็บ <code>()</code></li><li>บล็อกโค้ดในวงเล็บปีกกา <code>{}</code></li></ul>
+<h2>คำสั่ง If...Else</h2><p>ใช้ <code>else</code> เพื่อระบุว่าจะเกิดอะไรขึ้นเมื่อเงื่อนไขเป็นเท็จ:</p><pre><code>const age = 16
+
+if (age &gt;= 18) {
+  console.log("You can vote!")
+} else {
+  console.log("You cannot vote yet") // บรรทัดนี้จะทำงาน
+}</code></pre>
+<h2>หลายเงื่อนไขด้วย Else If</h2><p>ใช้ <code>else if</code> เพื่อตรวจสอบหลายเงื่อนไขตามลำดับ:</p><pre><code>const temperature = 75
+
+if (temperature &gt; 80) {
+  console.log("It's hot outside!")
+} else if (temperature &gt; 60) {
+  console.log("Perfect weather!") // บรรทัดนี้จะทำงาน
+} else if (temperature &gt; 40) {
+  console.log("It's a bit chilly")
+} else {
+  console.log("It's cold!")
+}</code></pre><p><strong>สำคัญ:</strong> มีเพียงเงื่อนไข <strong>แรก</strong> ที่ตรงเท่านั้นที่จะทำงาน แม้หลายเงื่อนไขจะเป็นจริงก็ตาม</p>
+<h2>ตัวดำเนินการทางตรรกะ</h2><p>รวมหลายเงื่อนไขเข้าด้วยกัน:</p>
+<h3>AND (<code>&amp;&amp;</code>) - ทั้งสองเงื่อนไขต้องเป็นจริง</h3><pre><code>const age = 25
+const hasLicense = true
+
+if (age &gt;= 18 &amp;&amp; hasLicense) {
+  console.log("You can drive!") // ทั้งสองเงื่อนไขเป็นจริง
+}</code></pre>
+<h3>OR (<code>||</code>) - อย่างน้อยหนึ่งเงื่อนไขต้องเป็นจริง</h3><pre><code>const isWeekend = false
+const isHoliday = true
+
+if (isWeekend || isHoliday) {
+  console.log("No work today!") // หนึ่งเงื่อนไขเป็นจริง
+}</code></pre>
+<h3>NOT (<code>!</code>) - กลับค่าเงื่อนไข</h3><pre><code>const isLoggedIn = false
+
+if (!isLoggedIn) {
+  console.log("Please log in") // ทำงานเพราะ !false คือ true
+}</code></pre>
+<h2>ค่า Truthy และ Falsy</h2><p>JavaScript ถือว่าค่าบางค่าเป็น “truthy” หรือ “falsy” ในคำสั่ง If:</p><p><strong>ค่า Falsy</strong> (ถือเป็น false):</p><ul><li><code>false</code></li><li><code>0</code></li><li><code>""</code> (String ว่าง)</li><li><code>null</code></li><li><code>undefined</code></li><li><code>NaN</code></li></ul><p><strong>ค่า Truthy</strong> (ถือเป็น true):</p><ul><li>ค่าอื่นทั้งหมด! รวมถึง <code>"0"</code>, <code>[]</code>, <code>{}</code></li></ul><pre><code>const name = "Kyle"
+
+if (name) {
+  console.log(`Hello ${name}!`) // ทำงานเพราะ String ที่ไม่ว่างเป็น truthy
+}
+
+const emptyString = ""
+if (emptyString) {
+  console.log("This won't run") // String ว่างเป็น falsy
+}</code></pre>
+<h2>คำสั่ง If ซ้อนกัน</h2><p>คุณสามารถใส่คำสั่ง If ไว้ในคำสั่ง If อื่นได้:</p><pre><code>const weather = "sunny"
+const temperature = 75
+
+if (weather === "sunny") {
+  if (temperature &gt; 70) {
+    console.log("Perfect day for the beach!") // บรรทัดนี้จะทำงาน
+  } else {
+    console.log("Sunny but a bit cold")
+  }
+} else {
+  console.log("Not a sunny day")
+}</code></pre><p>โดยทั่วไปไม่แนะนำให้ทำเช่นนี้หากไม่จำเป็น เพราะอาจทำให้โค้ดอ่านยากขึ้น</p>
+<h3>Guard Clause</h3><p>Guard clause เป็นวิธีจัดการเงื่อนไขตั้งแต่ต้นและออกจากฟังก์ชันหรือบล็อกหากเงื่อนไขไม่ผ่าน ช่วยให้ตรรกะหลักซ้อนกันน้อยลงและอ่านง่ายขึ้น:</p><pre><code>const weather = "sunny"
+const temperature = 75
+
+if (weather !== "sunny") {
+  console.log("Not a sunny day")
+  return // ออกจากการทำงานก่อน
+}
+
+if (temperature &gt; 70) {
+  console.log("Perfect day for the beach!") // บรรทัดนี้จะทำงาน
+} else {
+  console.log("Sunny but a bit cold")
+}</code></pre>
+<h2>คำสั่ง If บรรทัดเดียว</h2><p>หากมีคำสั่งเดียวในบล็อก If หรือ Else คุณสามารถละวงเล็บปีกกา <code>{}</code> ได้:</p><pre><code>const age = 18
+if (age &gt;= 18) console.log("You can vote!") // บรรทัดนี้จะทำงาน
+else console.log("You cannot vote yet") // บรรทัดนี้จะไม่ทำงาน</code></pre><p>โดยทั่วไปผมใช้รูปแบบนี้เฉพาะกับ guard clause เพราะการใช้บ่อยเกินไปทำให้โค้ดอ่านยากขึ้น</p>
+<h2>แบบฝึกหัด</h2><p>ลองเขียนคำสั่ง If ที่:</p><ol><li>ตรวจสอบว่าบุคคลสามารถขอใบขับขี่ได้หรือไม่</li><li>ข้อกำหนด: ต้องมีอายุอย่างน้อย 16 ปี และเรียนหลักสูตรขับรถจบแล้ว</li><li>หากขอใบขับขี่ได้ ให้แสดง “You can get your license!”</li><li>หากอายุน้อยเกินไป ให้แสดง “You must be at least 16”</li><li>หากยังเรียนหลักสูตรขับรถไม่จบ ให้แสดง “You need to complete driver's education”</li></ol>
+<details><summary>เฉลย</summary><pre><code>const age = 17
+const hasDriversEd = true
+
+if (age &lt; 16) {
+  console.log("You must be at least 16")
+} else if (!hasDriversEd) {
+  console.log("You need to complete driver's education")
+} else {
+  console.log("You can get your license!")
+}</code></pre><p>อีกวิธีหนึ่งโดยใช้ guard clause:</p><pre><code>const age = 17
+const hasDriversEd = true
+
+if (age &lt; 16) {
+  console.log("You must be at least 16")
+  return
+}
+
+if (!hasDriversEd) {
+  console.log("You need to complete driver's education")
+  return
+}
+
+console.log("You can get your license!")</code></pre></details>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="18_this_keyword.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="20_ternary_operator.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/if-statements">“If Statements” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

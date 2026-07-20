@@ -1,0 +1,82 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้การใช้ For Loop เพื่อทำโค้ดซ้ำตามจำนวนรอบที่กำหนดและวนผ่านโครงสร้างข้อมูล" /><title>For Loop — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+</head><body><main><article>
+<h1>For Loop</h1><p>For loop ใช้เมื่อต้องทำโค้ดซ้ำตามจำนวนครั้งที่กำหนด เหมาะสำหรับการนับ การวนผ่าน Array หรืองานที่ต้องทำซ้ำ</p>
+<h2>ไวยากรณ์ For Loop พื้นฐาน</h2><p>For loop มีสามส่วนหลักคั่นด้วยอัฒภาค และมีส่วนคำสั่งอยู่ในวงเล็บปีกกา:</p><pre><code>for (let i = 0; i &lt; 5; i++) {
+  console.log(`Count: ${i}`)
+}
+// ผลลัพธ์: Count: 0, 1, 2, 3, 4</code></pre><ol><li><code>let i = 0</code> - ทำงานครั้งเดียวตอนเริ่ม มักสร้างตัวแปรติดตามจำนวนรอบ</li><li><code>i &lt; 5</code> - เงื่อนไขที่ตรวจก่อนแต่ละรอบ หากจริงจะรันโค้ด หากเท็จจะหยุด</li><li><code>i++</code> - ทำงานหลังแต่ละรอบ โดยปกติใช้อัปเดตตัวแปร Loop</li><li><code>{ ... }</code> - โค้ดที่ทำงานในแต่ละรอบ</li></ol>
+<h3>ตัวอย่างการนับอย่างง่าย</h3><p>แสดง <code>"Hi"</code> ห้าครั้ง:</p><pre><code>// ไม่มี Loop (ซ้ำซ้อน)
+console.log("Hi")
+console.log("Hi")
+console.log("Hi")
+console.log("Hi")
+console.log("Hi")
+
+// ใช้ For loop (สะอาดกว่า)
+for (let i = 0; i &lt; 5; i++) {
+  console.log("Hi")
+}</code></pre><p>ทั้งสองให้ผลเหมือนกัน แต่ For loop ดูแลรักษาง่ายกว่ามาก</p>
+<h2>รูปแบบ Loop ที่พบบ่อย</h2><ul><li><p>นับขึ้น</p><pre><code>// นับจาก 1 ถึง 10
+for (let i = 1; i &lt;= 10; i++) console.log(i)</code></pre></li><li><p>นับลง</p><pre><code>// นับถอยหลังจาก 10 ถึง 1
+for (let i = 10; i &gt;= 1; i--) console.log(i)</code></pre></li><li><p>ข้ามตัวเลข</p><pre><code>// เฉพาะเลขคู่
+for (let i = 0; i &lt;= 10; i += 2) console.log(i) // 0, 2, 4, 6, 8, 10
+
+// ทุก ๆ สามตัวเลข
+for (let i = 0; i &lt;= 20; i += 3) console.log(i) // 0, 3, 6, 9, 12, 15, 18</code></pre></li></ul>
+<h2>การวนผ่าน Array</h2><p>For loop เหมาะสำหรับการวนผ่านสมาชิกทุกตัวใน Array:</p><pre><code>const fruits = ["apple", "banana", "orange", "grape"]
+
+for (let i = 0; i &lt; fruits.length; i++) {
+  console.log(`${i}: ${fruits[i]}`)
+}
+// ผลลัพธ์: 0: apple, 1: banana, 2: orange, 3: grape</code></pre>
+<h2>For Loop ซ้อนกัน</h2><p>คุณใส่ For loop ไว้ภายใน For loop อื่นได้:</p><pre><code>// ตารางสูตรคูณ
+for (let i = 1; i &lt;= 3; i++) {
+  for (let j = 1; j &lt;= 3; j++) {
+    console.log(`${i} × ${j} = ${i * j}`)
+  }
+}</code></pre>
+<h2>คำสั่งควบคุม Loop</h2><ul><li><p><code>break</code> - ออกจาก Loop ก่อนกำหนด</p><pre><code>const numbers = [1, 3, 7, 2, 9, 4]
+for (let i = 0; i &lt; numbers.length; i++) {
+  if (numbers[i] &gt; 5) {
+    console.log(`Found: ${numbers[i]} at index ${i}`)
+    break // ออกจาก Loop ทันที
+  }
+}</code></pre></li><li><p><code>continue</code> - ข้ามไปยังรอบถัดไป</p><pre><code>for (let i = 1; i &lt;= 5; i++) {
+  if (i === 3) continue // ข้าม 3
+  console.log(i)
+}
+// ผลลัพธ์: 1, 2, 4, 5</code></pre></li></ul>
+<h2>ทางเลือกแทน For Loop</h2><ul><li><p>For...of (สำหรับ Array)</p><pre><code>const fruits = ["apple", "banana", "orange"]
+
+for (let i = 0; i &lt; fruits.length; i++) console.log(fruits[i])
+
+for (const fruit of fruits) console.log(fruit)</code></pre></li><li><p>For...in (สำหรับพร็อพเพอร์ตีของ Object)</p><pre><code>const person = { name: "Kyle", age: 30, city: "New York" }
+for (const key in person) {
+  console.log(`${key}: ${person[key]}`)
+}</code></pre></li></ul>
+<h2>ข้อผิดพลาดที่พบบ่อย</h2><ol><li><p>Loop ไม่สิ้นสุด: ต้องแน่ใจว่าเงื่อนไขจะกลายเป็นเท็จในที่สุด</p><pre><code>// ❌ Loop ไม่สิ้นสุด
+for (let i = 0; i &lt; 10; i--) console.log(i)</code></pre><p>สัญญาณคือเบราว์เซอร์ไม่ตอบสนอง Console แสดงสิ่งเดิมไม่หยุด หรือต้องบังคับปิดโปรแกรม</p></li><li><p>ข้อผิดพลาดคลาดหนึ่งตำแหน่ง</p><pre><code>const arr = [10, 20, 30]
+for (let i = 0; i &lt; arr.length - 1; i++) console.log(arr[i]) // ❌ ขาดตัวสุดท้าย
+for (let i = 0; i &lt;= arr.length; i++) console.log(arr[i]) // ❌ เกินขอบเขต
+for (let i = 0; i &lt; arr.length; i++) console.log(arr[i]) // ✅ ถูกต้อง</code></pre></li><li><p>แก้ไขตัวแปร Loop ภายใน Loop</p><pre><code>// ❌ เปลี่ยนตัวแปร Loop
+for (let i = 0; i &lt; 5; i++) {
+  console.log(i)
+  if (i === 1) i += 2
+}
+
+// ✅ อย่าเปลี่ยนตัวแปร Loop
+for (let i = 0; i &lt; 5; i++) console.log(i)</code></pre></li></ol>
+<h2>แบบฝึกหัด</h2><p>เขียน For loop ที่สร้าง Array ของเลขคู่ 10 ตัวแรก จากนั้นคำนวณผลรวมใน Loop ที่สอง และแสดง Array กับผลรวม</p><details><summary>เฉลย</summary><pre><code>const evenNumbers = []
+for (let i = 1; i &lt;= 10; i++) evenNumbers.push(i * 2)
+
+let sum = 0
+for (let i = 0; i &lt; evenNumbers.length; i++) sum += evenNumbers[i]
+
+console.log("Even numbers:", evenNumbers)
+console.log("Sum:", sum) // 110</code></pre></details>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="21_switch_statements.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="23_while_loops.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/for-loops">“For Loops” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

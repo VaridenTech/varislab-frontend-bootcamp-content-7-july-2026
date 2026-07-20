@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>พื้นฐาน Browser DevTools</title>  <link rel="stylesheet" href="lesson.css" />
+</head><body><main><article>
+<h1>พื้นฐาน Browser DevTools</h1><p>DevTools เป็นเครื่องมือ Debug ที่ทรงพลังในเบราว์เซอร์ ใช้ตรวจสอบ แก้ปัญหา และปรับประสิทธิภาพเว็บ เนื้อหานี้เน้น Chrome แต่แนวคิดใช้กับเบราว์เซอร์อื่นได้</p>
+<h2>การเปิด DevTools</h2><ol><li><strong>คีย์ลัด</strong>: Windows/Linux ใช้ <code>F12</code> หรือ <code>Ctrl + Shift + I</code>; Mac ใช้ <code>Cmd + Option + I</code></li><li><strong>คลิกขวา</strong> Element แล้วเลือก “Inspect”</li><li><strong>เมนู Chrome</strong>: จุดสามจุด → More Tools → Developer Tools</li></ol>
+<h3>ภาพรวม</h3><ol><li><strong>Elements</strong> - ดูและแก้ HTML/CSS</li><li><strong>Console</strong> - รัน JavaScript และดู Log/Error</li><li><strong>Network</strong> - ตรวจคำขอเครือข่าย</li><li><strong>Application</strong> - ดู Storage, Cookie และข้อมูลอื่น</li><li><strong>Sources</strong> - ดูไฟล์และ Debug ทีละบรรทัด</li><li><strong>Performance</strong> - วิเคราะห์ประสิทธิภาพ</li></ol>
+<h2>แท็บ Elements</h2><h3>คุณสมบัติสำคัญ</h3><ol><li>สำรวจโครงสร้าง HTML แบบลำดับชั้น และชี้เพื่อ Highlight ในหน้า</li><li>แก้ HTML แบบ Live ดับเบิลคลิกข้อความหรือคลิกขวาเพื่อแก้ ลบ คัดลอก หรือซ่อน Element</li><li>แผง Styles แสดงและแก้ CSS, Computed style, Color picker และ Box model</li><li>ดู Event Listener ที่ติดกับ Element</li><li>จำลองสถานะ <code>:hover</code>, <code>:active</code>, <code>:focus</code></li></ol>
+<h3>ตัวอย่างตรวจ Layout</h3><p>Inspect Element แล้วตรวจ <code>display: none</code>, <code>visibility: hidden</code>, ขนาดศูนย์ และปัญหา Margin/Padding จากนั้นแก้ค่า CSS โดยตรงเพื่อทดสอบ</p><h3>ค้นหา CSS ที่ขัดแย้ง</h3><p>Style ที่ถูกขีดทับคือค่าที่ถูก Override และจะแสดงไฟล์ต้นทางกับเลขบรรทัด</p>
+<h2>แท็บ Console</h2><p>เป็นที่แสดง Log/Error และรัน JavaScript โดยตรง:</p><pre><code>document.title = "New Title"
+document.body.style.backgroundColor = "lightblue"
+const button = document.querySelector("button")
+button.style.fontSize = "20px"
+function add(a, b) { return a + b }
+add(5, 3) // 8</code></pre><p>หากมีคำเตือนเรื่องการวางข้อมูล ให้พิมพ์ <code>allow pasting</code> แล้วกด Enter</p>
+<h2>แท็บ Network</h2><p>แสดงคำขอทั้งหมด เช่น HTML, CSS, JavaScript, รูปภาพ และ API</p><ol><li><strong>ติดตาม Request</strong>: Status code, เวลา และขนาดไฟล์</li><li><strong>กรอง</strong>: ตามชนิด Status หรือชื่อไฟล์</li><li><strong>รายละเอียด</strong>: Headers, Preview, Response และ Timing</li></ol><p>ตัวเลือกสำคัญคือ <strong>Preserve log</strong>, <strong>Disable cache</strong> และ <strong>Throttle</strong></p>
+<h2>แท็บ Application</h2><p>ใช้ตรวจข้อมูลที่เบราว์เซอร์เก็บ ได้แก่ <strong>Local Storage</strong>, <strong>Session Storage</strong> และ <strong>Cookies</strong> เลือก Storage กับโดเมนเพื่อดู แก้ หรือลบข้อมูล</p>
+<h2>แท็บ Sources</h2><p>แสดงไฟล์ทั้งหมดที่หน้าโหลดและมีประโยชน์สำหรับ Debug JavaScript โดยจะกล่าวถึงอย่างละเอียดในบทถัดไป</p>
+<h2>แท็บ Performance</h2><p>บันทึกและวิเคราะห์ประสิทธิภาพขณะทำงาน รวมถึงจำลอง CPU และเครือข่ายที่ช้าลง</p>
+<h2>เคล็ดลับ DevTools</h2><ol><li><strong>Element Picker</strong>: คลิกไอคอนลูกศรแล้วเลือก Element ในหน้า</li><li><strong>Device Simulation</strong>: คลิกไอคอนคอมพิวเตอร์/โทรศัพท์เพื่อทดสอบ Responsive</li><li><strong>Docking</strong>: เลือกวาง DevTools ด้านซ้าย ขวา ล่าง หรือแยกหน้าต่าง</li></ol>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="30_common_errors.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/debugging/devtools-basics">“Browser DevTools Basics” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

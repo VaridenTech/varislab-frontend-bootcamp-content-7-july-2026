@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้วิธีสร้างและใช้งาน Object เพื่อจัดระเบียบข้อมูลและฟังก์ชันที่เกี่ยวข้องไว้ด้วยกัน" /><title>Object — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+</head><body><main><article>
+<h1>Object</h1><p>Object เป็นชนิดตัวแปรที่สำคัญที่สุดใน JavaScript เพราะช่วยให้คุณจัดระเบียบข้อมูลได้</p>
+<h2>Object คืออะไร?</h2><p>Object คือกลุ่มข้อมูลที่เกี่ยวข้องกัน ซึ่งเก็บรวมกันเป็นคู่ key-value ลองนึกว่าเป็นกล่องที่เก็บข้อมูลหลายส่วนเกี่ยวกับบางสิ่งไว้ด้วยกัน</p>
+<pre><code>// ตัวแปรแยกกัน (ไม่ได้จัดระเบียบ)
+const name = "Kyle"
+const age = 30
+const favoriteNumber = 3
+
+// Object (จัดระเบียบไว้ด้วยกัน)
+const person = {
+  name: "Kyle",
+  age: 30,
+  favoriteNumber: 3,
+}</code></pre>
+<h2>การสร้าง Object</h2><p>ใช้วงเล็บปีกกา <code>{}</code> เพื่อสร้าง Object โดยใช้เครื่องหมายจุลภาคคั่นคู่ key-value</p>
+<pre><code>const person = {
+  name: "Kyle",
+  age: 30,
+  favoriteNumber: 3,
+}</code></pre>
+<h3>คู่ Key-Value</h3><p>ข้อมูลแต่ละส่วนใน Object ประกอบด้วย:</p><ul><li><strong>Key</strong>: ชื่อของพร็อพเพอร์ตี</li><li><strong>Value</strong>: ข้อมูลที่เก็บไว้ในพร็อพเพอร์ตีนั้น</li></ul>
+<p>Key ใช้หลักการตั้งชื่อเดียวกับตัวแปร (camelCase และไม่มีช่องว่าง) ส่วน Value เป็นข้อมูลชนิดใดก็ได้ รวมถึง Object หรือฟังก์ชันอื่น โดยใช้เครื่องหมายทวิภาค <code>:</code> คั่น Key กับ Value</p>
+<pre><code>const person = {
+  name: "Kyle", // key: "name", value: "Kyle"
+  age: 30, // key: "age", value: 30
+  favoriteNumber: 3, // key: "favoriteNumber", value: 3
+}</code></pre>
+<h2>การเข้าถึงพร็อพเพอร์ตีของ Object</h2><p>ใช้ dot notation เพื่อเข้าถึงพร็อพเพอร์ตี:</p>
+<pre><code>const person = {
+  name: "Kyle",
+  age: 30,
+  favoriteNumber: 3,
+}
+
+console.log(person.name) // "Kyle"
+console.log(person.age) // 30
+console.log(person.favoriteNumber) // 3</code></pre>
+<h2>การเพิ่มฟังก์ชันลงใน Object</h2><p>Object สามารถมีฟังก์ชันได้ (มักเรียกว่า <strong>เมธอด</strong> เมื่ออยู่ภายใน Object):</p>
+<pre><code>const person = {
+  name: "Kyle",
+  age: 30,
+  favoriteNumber: 3,
+  sayHi: function () {
+    console.log("Hi")
+  },
+}
+
+person.sayHi() // "Hi"</code></pre>
+<h3>ไวยากรณ์ฟังก์ชันแบบย่อ</h3><p>คุณสามารถเขียนฟังก์ชันใน Object โดยไม่ใช้คีย์เวิร์ด <code>function</code>:</p>
+<pre><code>const person = {
+  name: "Kyle",
+  age: 30,
+  favoriteNumber: 3,
+  sayHi() {
+    console.log("Hi")
+  },
+  sayGoodbye() {
+    console.log("Goodbye")
+  },
+}
+
+person.sayHi() // "Hi"
+person.sayGoodbye() // "Goodbye"</code></pre>
+<h2>ตัวอย่างในโลกจริง: <code>console.log</code></h2><p>คุณใช้ Object มาตลอด! <code>console</code> คือ Object ที่มีฟังก์ชัน <code>log</code>:</p>
+<pre><code>console.log("Hello") // console คือ Object และ log คือเมธอด
+
+// คล้ายกับ:
+const console = {
+  log(message) {
+    // แสดงข้อความ
+  },
+}</code></pre>
+<h2>Bracket Notation (อีกวิธีในการเข้าถึง)</h2><p>คุณสามารถเข้าถึงพร็อพเพอร์ตีด้วยวงเล็บเหลี่ยมและ String ได้เช่นกัน:</p>
+<pre><code>const car = {
+  make: "Nissan",
+  model: "370Z",
+}
+
+console.log(car["make"]) // "Nissan"
+console.log(car.make) // "Nissan" (แนะนำให้ใช้)</code></pre><p>กรณีเดียวที่จำเป็นต้องใช้ bracket notation คือเมื่อชื่อพร็อพเพอร์ตีถูกเก็บไว้ในตัวแปร:</p>
+<pre><code>const property = "make"
+console.log(car[property]) // "Nissan"</code></pre>
+<h2>Object ซ้อนกัน</h2><p>Object สามารถมี Object หรือ Array อื่นอยู่ภายในได้:</p>
+<pre><code>const person = {
+  name: "Kyle",
+  address: {
+    street: "12345 Main Street",
+    city: "Somewhere",
+  },
+  hobbies: ["weightlifting", "programming"],
+}
+
+console.log(person.name) // "Kyle"
+console.log(person.address.street) // "12345 Main Street"
+console.log(person.address.city) // "Somewhere"
+console.log(person.hobbies[0]) // "weightlifting"</code></pre>
+<h2>แบบฝึกหัด</h2><p>สร้าง Object ชื่อ <code>book</code> ที่มีพร็อพเพอร์ตีต่อไปนี้:</p><ol><li><code>title</code> - ชื่อหนังสือ</li><li><code>author</code> - Object ที่มี <code>firstName</code> และ <code>lastName</code></li><li><code>yearPublished</code> - ปีที่ตีพิมพ์หนังสือ</li><li><code>publish</code> - ฟังก์ชันที่แสดงข้อความ <code>"Publishing your book"</code></li></ol>
+<details><summary>เฉลย</summary><pre><code>const book = {
+  title: "The Way of Kings",
+  author: {
+    firstName: "Brandon",
+    lastName: "Sanderson",
+  },
+  yearPublished: 2010,
+  publish() {
+    console.log("Publishing your book")
+  },
+}</code></pre></details>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="14_arrays.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="16_reference_vs_value.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/advanced-variables/objects">“Objects” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Event Listener — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+</head><body><main><article>
+<h1>Event Listener</h1><p>Event listener ทำให้หน้าเว็บโต้ตอบได้ โดยตอบสนองต่อการคลิก การพิมพ์ การส่งฟอร์ม และอื่น ๆ</p>
+<h2>Event คืออะไร?</h2><p>Event คือสิ่งที่เกิดขึ้นในเบราว์เซอร์ เช่น ผู้ใช้คลิกปุ่ม พิมพ์ในช่องข้อมูล ส่งฟอร์ม หรือปรับขนาดหน้าต่าง Event listener คือฟังก์ชันที่ “ฟัง” Event เหล่านี้และรันโค้ดเมื่อเกิดขึ้น</p>
+<h2>ไวยากรณ์พื้นฐาน</h2><pre><code>const button = document.querySelector("button")
+button.addEventListener("click", () =&gt; {
+  console.log("Button was clicked!")
+})</code></pre><p><code>addEventListener</code> รับสองอาร์กิวเมนต์หลัก:</p><ul><li><strong>eventType</strong>: String ระบุชนิด Event เช่น “click”, “input”, “submit”</li><li><strong>function</strong>: ฟังก์ชันที่จะรันเมื่อเกิด Event</li></ul>
+<h2>การเพิ่ม Event Listener ให้ Element</h2><pre><code>const input = document.querySelector("input")
+input.addEventListener("input", (e) =&gt; {
+  console.log("Input value:", e.target.value)
+})
+document.addEventListener("click", () =&gt; console.log("Document was clicked"))
+window.addEventListener("resize", () =&gt; {
+  console.log("Window resized to:", window.innerWidth, window.innerHeight)
+})</code></pre>
+<h3>Event Listener หลายตัว</h3><p>เพิ่ม Listener หลายตัวให้ Element เดียวกันได้ โดยไม่เขียนทับกันและทำงานตามลำดับที่เพิ่ม:</p><pre><code>button.addEventListener("click", () =&gt; console.log("First listener"))
+button.addEventListener("click", () =&gt; console.log("Second listener"))</code></pre>
+<h2>การลบ Event Listener</h2><p>ต้องมี Reference ของฟังก์ชันตัวเดิม:</p><pre><code>function handleClick() { console.log("Clicked!") }
+button.addEventListener("click", handleClick)
+button.removeEventListener("click", handleClick)</code></pre><pre><code>// ❌ ฟังก์ชันคนละ Object จึงลบไม่ได้
+button.addEventListener("click", () =&gt; console.log("Clicked!"))
+button.removeEventListener("click", () =&gt; console.log("Clicked!"))</code></pre>
+<h2>Event Object</h2><p>ฟังก์ชัน Listener ได้รับ <strong>Event object</strong> ที่มีข้อมูลเกี่ยวกับ Event โดยอัตโนมัติ:</p><pre><code>button.addEventListener("click", (event) =&gt; console.log(event))</code></pre><h3>พร็อพเพอร์ตีที่พบบ่อย</h3><pre><code>button.addEventListener("click", (e) =&gt; {
+  console.log(e.target)
+  console.log(e.currentTarget)
+  console.log(e.clientX, e.clientY)
+  console.log(e.ctrlKey, e.shiftKey, e.altKey)
+})</code></pre>
+<h3><code>target</code> กับ <code>currentTarget</code></h3><ul><li><code>target</code> - Element จริงที่ทำให้เกิด Event อาจเป็น Element ลูก</li><li><code>currentTarget</code> - Element ที่ติด Listener ไว้</li></ul><p>โดยทั่วไป <code>currentTarget</code> คือค่าที่ต้องการเมื่อทำงานใน Listener</p>
+<h2>ชนิด Event ที่พบบ่อย</h2><h3>Mouse</h3><ul><li><code>click</code>, <code>dblclick</code>, <code>mouseenter</code>, <code>mouseleave</code>, <code>mouseover</code></li></ul><h3>Focus</h3><ul><li><code>focus</code>, <code>blur</code></li></ul><h3>Input</h3><ul><li><code>input</code> - ทำงานทุกครั้งที่ค่าเปลี่ยน</li><li><code>change</code> - ทำงานเมื่อเสีย Focus และค่าเปลี่ยน</li></ul><h3>Window</h3><ul><li><code>resize</code> - เมื่อขนาดหน้าต่างเปลี่ยน</li></ul>
+<h2>ป้องกันพฤติกรรมเริ่มต้นด้วย <code>preventDefault</code></h2><p>Event หลายชนิดมีพฤติกรรมเริ่มต้น เช่น ลิงก์นำทางและฟอร์มเปลี่ยนหน้า:</p><pre><code>const form = document.querySelector("form")
+form.addEventListener("submit", (e) =&gt; {
+  e.preventDefault()
+  const formData = new FormData(e.currentTarget)
+  console.log("Username:", formData.get("username"))
+})</code></pre><pre><code>link.addEventListener("click", (e) =&gt; e.preventDefault())
+document.addEventListener("contextmenu", (e) =&gt; e.preventDefault())</code></pre>
+<h2>ข้อผิดพลาดที่พบบ่อย</h2><ol><li><p>เรียกฟังก์ชันโดยไม่ตั้งใจ</p><pre><code>// ❌ ผิด
+button.addEventListener("click", handleClick())
+// ✅ ถูกต้อง
+button.addEventListener("click", handleClick)</code></pre></li><li><p>ใช้ <code>target</code> แทน <code>currentTarget</code></p><pre><code>button.addEventListener("click", (e) =&gt; {
+  console.log(e.target) // อาจเป็น Element ลูก
+  console.log(e.currentTarget) // เป็นปุ่มเสมอ
+})</code></pre></li></ol>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="28_selecting_elements.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="30_common_errors.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/dom/event-listeners">“Event Listeners” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

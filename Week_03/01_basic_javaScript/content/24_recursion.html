@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้การทำงานของ Recursion เมื่อฟังก์ชันเรียกตัวเองเพื่อแก้ปัญหาย่อยที่คล้ายกัน" /><title>Recursion — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+</head><body><main><article>
+<h1>Recursion</h1><p>Recursion คือการที่ฟังก์ชันเรียกตัวเอง แม้ฟังดูแปลกในตอนแรก แต่เป็นเทคนิคที่ทรงพลังสำหรับแก้ปัญหาที่แบ่งเป็นปัญหาย่อยคล้ายกันได้</p><p>⚠️ <strong>คำเตือน:</strong> หัวข้อนี้เข้าใจยาก จึงควรใช้เวลาทำความเข้าใจให้ถ่องแท้!</p>
+<h2>ตัวอย่าง Recursion พื้นฐาน</h2><pre><code>function printNumbers(number) {
+  if (number &gt; 10) return // Base case: หยุด Recursion
+  console.log(number)
+  printNumbers(number + 1) // Recursive call: ฟังก์ชันเรียกตัวเอง
+}
+printNumbers(1) // แสดง 1 ถึง 10</code></pre><p>ใช้แทน For loop แบบนี้ได้:</p><pre><code>for (let i = 1; i &lt;= 10; i++) console.log(i)</code></pre>
+<h2>สองส่วนสำคัญของ Recursion</h2><h3>1. Base Case (เงื่อนไขหยุด)</h3><p>เงื่อนไขที่หยุดไม่ให้ Recursion ทำงานตลอดไป:</p><pre><code>if (number &gt; 10) return</code></pre><p>หากไม่มี Base case ที่เหมาะสม จะเกิด Recursion ไม่สิ้นสุดและ <strong>Stack overflow error</strong>:</p><pre><code>// ❌ ทำให้โปรแกรมล่ม!
+function printHi() {
+  console.log("Hi")
+  printHi() // RangeError: Maximum call stack size exceeded
+}
+printHi()</code></pre>
+<h3>2. Recursive Case (การเรียกตัวเอง)</h3><p>ฟังก์ชันเรียกตัวเองพร้อมพารามิเตอร์ที่เปลี่ยนไป:</p><pre><code>printNumbers(number + 1) // เรียกตัวเองด้วยเลขถัดไป</code></pre>
+<h2>ทำความเข้าใจ Call Stack</h2><p>เมื่อฟังก์ชันเรียกตัวเอง แต่ละครั้งจะถูกเพิ่มลงใน Call stack:</p><pre><code>function countdown(n) {
+  console.log(n)
+  if (n &lt;= 0) return
+  console.log("Before")
+  countdown(n - 1)
+  console.log("After")
+}
+countdown(3)</code></pre><p><strong>ภาพ Call stack:</strong></p><pre><code>countdown(3) เรียก countdown(2)
+  countdown(2) เรียก countdown(1)
+    countdown(1) เรียก countdown(0)
+      countdown(0) ส่งค่ากลับ
+    countdown(1) ส่งค่ากลับ
+  countdown(2) ส่งค่ากลับ
+countdown(3) ส่งค่ากลับ</code></pre>
+<h2>เมื่อใดควรใช้ Recursion</h2><p>โครงสร้างข้อมูลแบบต้นไม้:</p><pre><code>const fileSystem = {
+  name: "root", type: "folder",
+  children: [
+    { name: "documents", type: "folder", children: [
+      { name: "resume.pdf", type: "file" },
+      { name: "notes.txt", type: "file" },
+    ]},
+    { name: "photos", type: "folder", children: [
+      { name: "vacation.jpg", type: "file" },
+    ]},
+    { name: "readme.txt", type: "file" },
+  ],
+}
+
+function countFiles(item) {
+  if (item.type === "file") return 1 // Base case
+  let count = 0
+  for (const child of item.children) {
+    count += countFiles(child) // เรียกซ้ำสำหรับลูกแต่ละตัว
+  }
+  return count
+}
+console.log(countFiles(fileSystem)) // ไฟล์ทั้งหมด 4 ไฟล์</code></pre>
+<h2>ข้อผิดพลาดที่พบบ่อย</h2><ol><li><p>ลืม Base Case</p><pre><code>// ✅ มี Base case
+function countdown(n) {
+  if (n &lt;= 0) return
+  console.log(n)
+  countdown(n - 1)
+}
+
+// ❌ ไม่มี Base case
+function badCountdown(n) {
+  console.log(n)
+  badCountdown(n - 1)
+}</code></pre></li><li><p>ไม่เคลื่อนไปหา Base Case</p><pre><code>// ✅ n ลดลงทุกครั้ง
+function countdown(n) {
+  if (n &lt;= 0) return
+  console.log(n)
+  countdown(n - 1)
+}
+
+// ❌ n ไม่เปลี่ยน
+function badCountdown(n) {
+  if (n &lt;= 0) return
+  console.log(n)
+  countdown(n)
+}</code></pre></li></ol>
+<h2>เมื่อใดควรใช้ Recursion</h2><p><strong>✅ ใช้เมื่อ:</strong></p><ul><li>ทำงานกับโครงสร้างแบบต้นไม้หรือข้อมูลซ้อนกัน</li><li>แบ่งปัญหาเป็นปัญหาย่อยคล้ายกันได้</li><li>วิธี Recursive ชัดเจนกว่าวิธีวนซ้ำ</li><li>ประมวลผลข้อมูลลำดับชั้น</li></ul><p><strong>❌ หลีกเลี่ยงเมื่อ:</strong></p><ul><li>Loop ธรรมดาทำงานได้ดีเท่ากัน</li><li>ประสิทธิภาพสำคัญมาก</li><li>วิธี Recursive เข้าใจยาก</li></ul>
+<h2>แบบฝึกหัด</h2><p>เขียนฟังก์ชัน Recursive เพื่อหาค่าสูงสุดใน Array ซ้อนกัน:</p><pre><code>const data = [1, [2, 3], [4, [5, 6]], 7]
+// ควรส่งกลับ 7</code></pre><details><summary>เฉลย</summary><pre><code>function findMax(arr) {
+  let max = -Infinity
+  for (const item of arr) {
+    if (Array.isArray(item)) {
+      const subMax = findMax(item)
+      max = Math.max(max, subMax)
+    } else {
+      max = Math.max(max, item)
+    }
+  }
+  return max
+}
+const data = [1, [2, 3], [4, [5, 6]], 7]
+console.log(findMax(data)) // 7</code></pre></details>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="23_while_loops.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="25_short_circuit_evaluation.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/recursion">“Recursion” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

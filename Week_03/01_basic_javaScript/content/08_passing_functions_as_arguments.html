@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้วิธีส่งฟังก์ชันไปยังฟังก์ชันอื่นในรูปแบบอาร์กิวเมนต์ รวมถึง callback และฟังก์ชันนิรนาม" />
+  <title>การส่งฟังก์ชันเป็นอาร์กิวเมนต์ — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การส่งฟังก์ชันเป็นอาร์กิวเมนต์</h1>
+      <p>หนึ่งในคุณสมบัติที่ทรงพลังที่สุดของ JavaScript คือความสามารถในการส่งฟังก์ชันไปยังฟังก์ชันอื่นในรูปแบบอาร์กิวเมนต์</p>
+      <p>⚠️ <strong>คำเตือน:</strong> นี่เป็นหัวข้อที่เข้าใจยาก ดังนั้นค่อย ๆ ใช้เวลาทำความเข้าใจให้ถ่องแท้!</p>
+
+      <h2>ฟังก์ชันคือตัวแปร</h2>
+      <p>สิ่งสำคัญที่ต้องเข้าใจคือ <strong>ฟังก์ชันเป็นเพียงตัวแปร</strong> ที่เก็บตรรกะ:</p>
+      <pre><code>function printName(name) {
+  console.log(name)
+}
+
+// จะเกิดอะไรขึ้นหากเราแสดงชื่อฟังก์ชันโดยไม่มีวงเล็บ?
+console.log(printName) // แสดงผล: ƒ printName(name) { console.log(name) }</code></pre>
+      <p>เมื่อคุณสร้างฟังก์ชันด้วยคีย์เวิร์ด <code>function</code> JavaScript จะสร้างตัวแปรชื่อนั้นและเก็บนิยามฟังก์ชันไว้ในตัวแปร เช่นเดียวกับที่ <code>let</code> สร้างตัวแปรเพื่อเก็บค่า</p>
+
+      <h2>การส่งฟังก์ชันเบื้องต้น</h2>
+      <p>เนื่องจากฟังก์ชันเป็นตัวแปร คุณจึงส่งฟังก์ชันไปยังฟังก์ชันอื่นได้:</p>
+      <pre><code>function printName(name) {
+  console.log(name)
+}
+
+function callFunction(x) {
+  console.log("before")
+  x("Kyle") // เรียกใช้ฟังก์ชันที่ถูกส่งเข้ามา
+  console.log("after")
+}
+
+// ส่งฟังก์ชันเข้าไป (สังเกตว่าไม่มีวงเล็บ!)
+callFunction(printName)
+// ผลลัพธ์:
+// before
+// Kyle
+// after</code></pre>
+
+      <h3>ประเด็นสำคัญ: ฟังก์ชันกับการเรียกใช้ฟังก์ชัน</h3>
+      <ul>
+        <li><code>printVariable</code> - นี่คือตัวฟังก์ชันเอง (ตัวแปร)</li>
+        <li><code>printVariable()</code> - นี่คือการเรียกใช้ฟังก์ชันและรันโค้ดที่อยู่ข้างใน</li>
+      </ul>
+
+      <h2>ฟังก์ชัน Callback</h2>
+      <p>เมื่อคุณส่งฟังก์ชันไปยังฟังก์ชันอื่น ฟังก์ชันที่ถูกส่งเข้าไปนั้นเรียกว่า <strong>callback</strong>:</p>
+      <pre><code>function sumCallback(a, b, callback) {
+  let sum = a + b
+  callback(sum) // เรียกใช้ callback พร้อมส่งผลลัพธ์เข้าไป
+}
+
+function handleSum(sum) {
+  console.log(sum)
+}
+
+sumCallback(1, 2, handleSum) // แสดงผล: 3</code></pre>
+      <p>นี่คือสิ่งที่เกิดขึ้นทีละขั้นตอน:</p>
+      <ol>
+        <li><code>sumCallback</code> รับ <code>1</code>, <code>2</code> และฟังก์ชัน <code>handleSum</code></li>
+        <li>ฟังก์ชันคำนวณ <code>1 + 2 = 3</code></li>
+        <li>ฟังก์ชันเรียกใช้ callback (<code>handleSum</code>) พร้อมผลลัพธ์ <code>3</code></li>
+        <li><code>handleSum</code> แสดงค่า <code>sum</code></li>
+      </ol>
+
+      <h2>ข้อผิดพลาดที่พบบ่อย: เรียกใช้แทนที่จะส่งฟังก์ชัน</h2>
+      <p>ข้อผิดพลาดที่พบบ่อยมากคือการเรียกใช้ฟังก์ชันโดยไม่ตั้งใจ แทนที่จะส่งตัวฟังก์ชันเข้าไป:</p>
+      <pre><code>function printName(name) {
+  console.log(name)
+}
+
+function printGreeting(name, callback) {
+  callback("Hello " + name)
+}
+
+// ❌ ผิด - บรรทัดนี้เรียกใช้ printName ทันที
+printGreeting("Kyle", printName())
+// ผลลัพธ์: undefined ถูกส่งเข้าไป จากนั้นเกิดข้อผิดพลาด "callback is not a function"
+
+// ✅ ถูกต้อง - บรรทัดนี้ส่งตัวฟังก์ชันเข้าไป
+printGreeting("Kyle", printName)
+// ผลลัพธ์: "Hello Kyle"</code></pre>
+      <p>เมื่อคุณเติมวงเล็บ คุณกำลังเรียกใช้ฟังก์ชันและส่งค่าที่ฟังก์ชันนั้นส่งกลับมาเข้าไป (ซึ่งจะเป็น <code>undefined</code> หากฟังก์ชันไม่ได้ส่งค่าใดกลับมา)</p>
+
+      <h2>ตัวอย่างกรณีใช้งาน</h2>
+      <pre><code>function doMath(a, b, operation) {
+  return operation(a, b)
+}
+
+function add(x, y) {
+  return x + y
+}
+
+function subtract(x, y) {
+  return x - y
+}
+
+console.log(doMath(5, 3, add)) // แสดงผล: 8
+console.log(doMath(5, 3, subtract)) // แสดงผล: 2</code></pre>
+
+      <h2>แบบฝึกหัด</h2>
+      <p>ลองสร้างฟังก์ชันที่:</p>
+      <ol>
+        <li>รับพารามิเตอร์สามตัว ได้แก่ <code>firstName</code>, <code>lastName</code> และฟังก์ชัน <code>callback</code></li>
+        <li>สร้างตัวแปร <code>fullName</code> โดยนำชื่อและนามสกุลมาต่อกัน</li>
+        <li>ส่ง <code>fullName</code> ไปยังฟังก์ชัน callback (ซึ่งเติม <code>"Hello "</code> ไว้ข้างหน้า)</li>
+        <li>แสดงค่าที่ฟังก์ชัน callback ส่งกลับมา</li>
+      </ol>
+      <details>
+        <summary>เฉลย</summary>
+        <pre><code>function printGreeting(firstName, lastName, callback) {
+  const fullName = firstName + " " + lastName
+  console.log(callback(fullName))
+}
+
+function getGreeting(name) {
+  return "Hello " + name
+}
+
+printGreeting("Kyle", "Cook", getGreeting) // "Hello Kyle Cook"</code></pre>
+      </details>
+
+      <h2>ทำไมจึงใช้ Callback?</h2>
+      <ol>
+        <li><strong>ความยืดหยุ่น</strong> - ฟังก์ชันเดียวกันสามารถทำงานต่างกันได้ตาม callback</li>
+        <li><strong>การแยกหน้าที่รับผิดชอบ</strong> - ฟังก์ชันหลักจัดการเรื่องหนึ่ง ส่วน callback จัดการอีกเรื่องหนึ่ง</li>
+      </ol>
+    </article>
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="07_introduction_to_functions.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="09_arrow_functions.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main>
+
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/functions/passing-functions-as-arguments">“Passing Functions as Arguments” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

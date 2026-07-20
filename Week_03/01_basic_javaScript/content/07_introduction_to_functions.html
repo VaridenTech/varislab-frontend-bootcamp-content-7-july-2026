@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้วิธีสร้างและใช้ฟังก์ชันใน JavaScript เพื่อจัดระเบียบโค้ดและหลีกเลี่ยงการเขียนซ้ำ" />
+  <title>บทนำเกี่ยวกับฟังก์ชัน — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>บทนำเกี่ยวกับฟังก์ชัน</h1>
+      <p>ฟังก์ชันเก็บตรรกะไว้ใช้ในภายหลังในโค้ด คล้ายกับที่ตัวแปรเก็บค่าไว้ใช้ในภายหลัง</p>
+
+      <h2>ทำไมเราจึงต้องใช้ฟังก์ชัน?</h2>
+      <p>ฟังก์ชันช่วยให้เราไม่ต้องเขียนโค้ดเดิมหลายครั้ง มาดูตัวอย่างกัน:</p>
+      <pre><code>console.log("Hello")
+
+// ... มีโค้ดอื่นอีกมากมายอยู่ตรงนี้ ...
+
+console.log("Hello") // เรากำลังเขียนสิ่งเดิมซ้ำ!</code></pre>
+      <p>หากเราต้องการเปลี่ยน “Hello” เป็น “Hi” เราจะต้องจำให้ได้ว่าต้องแก้ไขทุกจุด นี่คือจุดที่ฟังก์ชันมีประโยชน์</p>
+
+      <h2>การสร้างฟังก์ชันแรกของคุณ</h2>
+      <p>นี่คือวิธีเขียนฟังก์ชันใน JavaScript:</p>
+      <pre><code>function sayHi() {
+  console.log("Hi")
+}</code></pre>
+      <p>เรามาแยกดูแต่ละส่วนกัน:</p>
+      <ol>
+        <li><strong><code>function</code></strong> - คีย์เวิร์ดที่บอก JavaScript ว่าเรากำลังสร้างฟังก์ชัน</li>
+        <li><strong><code>sayHi</code></strong> - ชื่อฟังก์ชันของเรา (ใช้กฎการตั้งชื่อเดียวกับตัวแปร)</li>
+        <li><strong><code>()</code></strong> - วงเล็บสำหรับพารามิเตอร์ (ตอนนี้ยังว่างอยู่)</li>
+        <li><strong><code>{}</code></strong> - วงเล็บปีกกาที่ครอบโค้ดของฟังก์ชัน</li>
+      </ol>
+
+      <h3>การตั้งชื่อฟังก์ชัน</h3>
+      <p>ชื่อฟังก์ชันใช้กฎเดียวกับตัวแปร:</p>
+      <ul>
+        <li>เริ่มต้นด้วยตัวอักษรพิมพ์เล็ก</li>
+        <li>ใช้ camelCase สำหรับชื่อที่มีหลายคำ</li>
+        <li>เลือกชื่อที่สื่อความหมาย</li>
+      </ul>
+      <pre><code>function sayHello() {} // ดี
+function calculateTotal() {} // ดี
+function getUserAge() {} // ดี</code></pre>
+
+      <h2>การเรียกใช้ (รัน) ฟังก์ชัน</h2>
+      <p>การสร้างฟังก์ชันไม่ได้ทำให้ฟังก์ชันทำงานโดยอัตโนมัติ หากต้องการให้ฟังก์ชันทำงาน คุณต้อง <strong>เรียกใช้</strong> มัน:</p>
+      <pre><code>function sayHi() {
+  console.log("Hi")
+}
+
+sayHi() // บรรทัดนี้เรียกใช้ฟังก์ชัน</code></pre>
+      <p>คุณสามารถเรียกใช้ฟังก์ชันเดิมได้หลายครั้ง:</p>
+      <pre><code>sayHi() // แสดงผล "Hi"
+sayHi() // แสดงผล "Hi" อีกครั้ง</code></pre>
+
+      <h2>ฟังก์ชันที่มีพารามิเตอร์</h2>
+      <p>ฟังก์ชันจะทรงพลังยิ่งขึ้นเมื่อสามารถรับข้อมูลได้ ข้อมูลนำเข้าเหล่านี้เรียกว่า <strong>พารามิเตอร์</strong>:</p>
+      <pre><code>function printName(name) {
+  console.log(name)
+}
+
+printName("Kyle") // แสดงผล "Kyle"
+printName("Sarah") // แสดงผล "Sarah"</code></pre>
+
+      <h3>พารามิเตอร์กับอาร์กิวเมนต์</h3>
+      <ul>
+        <li><strong>พารามิเตอร์</strong> คือชื่อที่ระบุไว้ในนิยามฟังก์ชัน - <code>name</code></li>
+        <li><strong>อาร์กิวเมนต์</strong> คือค่าจริงที่ส่งเข้าไปเมื่อเรียกใช้ฟังก์ชัน - <code>"Kyle"</code>, <code>"Sarah"</code></li>
+      </ul>
+      <p>ในทางเทคนิค คำทั้งสองมีความหมายต่างกัน แต่หลายคน (รวมถึงผมด้วย) ใช้คำเหล่านี้แทนกันในการสนทนาทั่วไป</p>
+
+      <h3>พารามิเตอร์หลายตัว</h3>
+      <p>คุณสามารถมีพารามิเตอร์หลายตัวโดยใช้เครื่องหมายจุลภาคคั่น:</p>
+      <pre><code>function sum(a, b) {
+  console.log(a + b)
+}
+
+sum(1, 2) // แสดงผล 3
+sum(5, 7) // แสดงผล 12</code></pre>
+
+      <h3>การใช้ตัวแปรเป็นอาร์กิวเมนต์</h3>
+      <p>คุณสามารถส่งตัวแปรเข้าไปในฟังก์ชันได้:</p>
+      <pre><code>function add(x, y) {
+  console.log(x + y)
+}
+
+let num1 = 10
+let num2 = 5
+
+add(num1, num2) // แสดงผล 15
+add(3, 7) // คุณสามารถส่งค่าเข้าไปโดยตรงได้เช่นกัน</code></pre>
+
+      <h2>การส่งค่ากลับด้วย <code>return</code></h2>
+      <p>จนถึงตอนนี้ ฟังก์ชันของเราแสดงผลลัพธ์เพียงอย่างเดียว แต่ฟังก์ชันยังสามารถ <strong>ส่งค่ากลับ</strong> ด้วยคีย์เวิร์ด <code>return</code> ได้อีกด้วย ซึ่งช่วยให้คุณนำผลลัพธ์ไปใช้ที่อื่นในโค้ดได้:</p>
+      <pre><code>function add(x, y) {
+  return x + y
+}
+
+let sum = add(2, 3)
+console.log(sum) // 5
+console.log(add(10, 7)) // 17</code></pre>
+      <p>เมื่อฟังก์ชันทำงานถึงคำสั่ง <code>return</code> ฟังก์ชันจะหยุดทำงานทันทีและส่งค่ากลับมา จากนั้นคุณสามารถเก็บค่านั้นไว้ในตัวแปรหรือนำไปใช้โดยตรงได้</p>
+      <p>หากคุณไม่ใช้ <code>return</code> ฟังก์ชันจะส่งค่า <code>undefined</code> กลับมาโดยค่าเริ่มต้น</p>
+
+      <h2>ข้อผิดพลาดทางไวยากรณ์ที่พบบ่อย</h2>
+      <ul>
+        <li>
+          <p>ไม่มีวงเล็บ</p>
+          <pre><code>// ❌ ผิด - ไม่มีวงเล็บ
+function sayHello {
+  console.log("Hello")
+}
+
+// ✅ ถูกต้อง
+function sayHello() {
+  console.log("Hello")
+}</code></pre>
+        </li>
+        <li>
+          <p>ไม่มีวงเล็บปีกกา</p>
+          <pre><code>// ❌ ผิด - ไม่มีวงเล็บปีกกาเปิด
+function sayHello()
+  console.log("Hello")
+}
+
+// ❌ ผิด - ไม่มีวงเล็บปีกกาปิด
+function sayHello() {
+  console.log("Hello")
+
+// ✅ ถูกต้อง
+function sayHello() {
+  console.log("Hello")
+}</code></pre>
+        </li>
+        <li>
+          <p>ลืมเรียกใช้ฟังก์ชัน</p>
+          <pre><code>// บรรทัดเหล่านี้สร้างฟังก์ชัน แต่ไม่ได้เรียกใช้
+function sayHello() {
+  console.log("Hello")
+}
+
+// คุณต้องเรียกใช้ฟังก์ชัน:
+sayHello() // ตอนนี้ฟังก์ชันทำงานแล้ว</code></pre>
+        </li>
+      </ul>
+
+      <h2>ประโยชน์ของฟังก์ชัน</h2>
+      <ol>
+        <li><strong>หลีกเลี่ยงการเขียนซ้ำ</strong> - เขียนตรรกะครั้งเดียว แล้วใช้ซ้ำได้หลายครั้ง</li>
+        <li><strong>แก้ไขได้ง่าย</strong> - เปลี่ยนตรรกะได้ในที่เดียว</li>
+        <li><strong>จัดระเบียบได้ดีขึ้น</strong> - แบ่งปัญหาที่ซับซ้อนออกเป็นส่วนย่อย ๆ</li>
+      </ol>
+    </article>
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="06_null_vs_undefined.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="08_passing_functions_as_arguments.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main>
+
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/functions/introduction-to-functions">“Introduction to Functions” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

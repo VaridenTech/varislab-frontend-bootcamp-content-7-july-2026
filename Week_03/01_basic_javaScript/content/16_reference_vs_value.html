@@ -1,0 +1,61 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้ความแตกต่างสำคัญระหว่างการจัดการค่าพื้นฐานและการอ้างอิง Object ใน JavaScript" /><title>Reference กับ Value — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+</head><body><main><article>
+<h1>Reference กับ Value</h1><p>หนึ่งในแนวคิดสำคัญที่สุดของ JavaScript คือวิธีที่ตัวแปรเก็บข้อมูลในหน่วยความจำของคอมพิวเตอร์ ชนิดข้อมูลแบ่งเป็นสองกลุ่มหลัก ได้แก่ <strong>ชนิดค่า</strong> (primitive) และ <strong>ชนิดอ้างอิง</strong> (Object, Array และฟังก์ชัน)</p><p>⚠️ <strong>คำเตือน:</strong> หัวข้อนี้เข้าใจยาก จึงควรใช้เวลาทำความเข้าใจให้ถ่องแท้!</p>
+<h2>ชนิดค่าทำงานอย่างไร</h2><p>เมื่อกำหนดค่าพื้นฐาน JavaScript จะคัดลอกค่าจริงเข้าไปในหน่วยความจำโดยตรง:</p><pre><code>const a = 10
+const b = "hi"</code></pre><table><thead><tr><th>ตัวแปร</th><th>ค่า</th></tr></thead><tbody><tr><td><code>a</code></td><td><code>10</code></td></tr><tr><td><code>b</code></td><td><code>"hi"</code></td></tr></tbody></table>
+<h3>การคัดลอกชนิดค่า</h3><p>เมื่อคัดลอกตัวแปรที่เก็บค่าพื้นฐาน JavaScript จะสร้างสำเนาใหม่ของค่านั้นในหน่วยความจำ:</p><pre><code>let a = 10
+let b = a // คัดลอกค่าของ a
+
+b = b + 1 // เปลี่ยนเฉพาะ b ไม่เปลี่ยน a</code></pre><table><thead><tr><th>ตัวแปร</th><th>ค่า</th></tr></thead><tbody><tr><td><code>a</code></td><td><code>10</code></td></tr><tr><td><code>b</code></td><td><code>11</code></td></tr></tbody></table>
+<h2>ชนิดอ้างอิงทำงานอย่างไร</h2><p>เมื่อสร้าง Array หรือ Object JavaScript จะเก็บ <strong>reference</strong> (ที่อยู่หน่วยความจำ) ของตำแหน่งข้อมูล:</p><pre><code>const c = [1, 2]</code></pre><table><thead><tr><th>ตัวแปร</th><th>ค่า (Reference)</th></tr></thead><tbody><tr><td><code>c</code></td><td><code>0x001</code></td></tr></tbody></table><table><thead><tr><th>ตำแหน่งหน่วยความจำ</th><th>ข้อมูลจริง</th></tr></thead><tbody><tr><td><code>0x001</code></td><td><code>[1, 2]</code></td></tr></tbody></table><p>ให้นึกถึง <code>0x001</code> ว่าเป็น “หมายเลขห้องพักโรงแรม” ตัวแปรเก็บหมายเลขห้อง ไม่ได้เก็บสิ่งของจริงภายในห้อง</p>
+<h3>การคัดลอกชนิดอ้างอิง</h3><p>เมื่อคัดลอกตัวแปรที่เก็บ Array หรือ Object JavaScript จะคัดลอก <strong>reference</strong> ไม่ใช่ข้อมูลจริง:</p><pre><code>const c = [1, 2]
+const d = c // คัดลอก REFERENCE ไม่ใช่ Array
+
+d.push(3) // แก้ไข Array ที่ทั้ง c และ d ชี้ไป</code></pre><table><thead><tr><th>ตัวแปร</th><th>ค่า (Reference)</th></tr></thead><tbody><tr><td><code>c</code></td><td><code>0x001</code></td></tr><tr><td><code>d</code></td><td><code>0x001</code></td></tr></tbody></table><table><thead><tr><th>ตำแหน่งหน่วยความจำ</th><th>ข้อมูลจริง</th></tr></thead><tbody><tr><td><code>0x001</code></td><td><code>[1, 2, 3]</code></td></tr></tbody></table><p>ทั้ง <code>c</code> และ <code>d</code> เก็บที่อยู่หน่วยความจำเดียวกัน (<code>0x001</code>) จึงชี้ไปยัง Array เดียวกัน</p>
+<h2>การสร้าง Reference ใหม่</h2><p>เมื่อสร้าง Array หรือ Object ใหม่ JavaScript จะจัดสรรตำแหน่งหน่วยความจำใหม่:</p><pre><code>let c = [1, 2] // ตำแหน่งหน่วยความจำ 0x001
+let d = [3, 4, 5] // ตำแหน่งหน่วยความจำ 0x002 (ต่างกัน!)
+
+d.push(6)</code></pre><table><thead><tr><th>ตัวแปร</th><th>ค่า (Reference)</th></tr></thead><tbody><tr><td><code>c</code></td><td><code>0x001</code></td></tr><tr><td><code>d</code></td><td><code>0x002</code></td></tr></tbody></table><table><thead><tr><th>ตำแหน่งหน่วยความจำ</th><th>ข้อมูลจริง</th></tr></thead><tbody><tr><td><code>0x001</code></td><td><code>[1, 2]</code></td></tr><tr><td><code>0x002</code></td><td><code>[3, 4, 5, 6]</code></td></tr></tbody></table>
+<h3>การเปรียบเทียบ Reference</h3><p>เนื่องจาก JavaScript เปรียบเทียบค่า Reference ไม่ใช่เนื้อหาจริง Array หรือ Object คนละตัวที่มีเนื้อหาเหมือนกันจึงถือว่าต่างกัน:</p><pre><code>const a = [1, 2]
+const b = [1, 2] // เนื้อหาเหมือนกัน แต่ตำแหน่งหน่วยความจำต่างกัน!
+
+console.log(a == b) // false
+console.log(a === b) // false</code></pre><table><thead><tr><th>ตัวแปร</th><th>ค่า (Reference)</th></tr></thead><tbody><tr><td><code>a</code></td><td><code>0x001</code></td></tr><tr><td><code>b</code></td><td><code>0x002</code></td></tr></tbody></table><table><thead><tr><th>ตำแหน่งหน่วยความจำ</th><th>ข้อมูลจริง</th></tr></thead><tbody><tr><td><code>0x001</code></td><td><code>[1, 2]</code></td></tr><tr><td><code>0x002</code></td><td><code>[1, 2]</code></td></tr></tbody></table><p>JavaScript กำลังถามว่า “<code>0x001</code> เหมือนกับ <code>0x002</code> หรือไม่?” คำตอบคือไม่ แม้เนื้อหาจะเหมือนกัน</p>
+<h4>เมื่อการเปรียบเทียบคืนค่า True</h4><pre><code>const a = [1, 2]
+const b = a // Reference เดียวกัน!
+
+console.log(a === b) // true ← ทั้งคู่ชี้ไปยังตำแหน่งหน่วยความจำเดียวกัน</code></pre>
+<h4>Object ทำงานแบบเดียวกัน</h4><pre><code>let person1 = { name: "Kyle" }
+let person2 = person1 // Reference เดียวกัน
+
+person2.name = "Joe"
+
+console.log(person1.name) // "Joe" ← เปลี่ยนแล้ว!
+console.log(person2.name) // "Joe" ← Object เดียวกัน
+console.log(person1 === person2) // true ← Reference เดียวกัน
+
+// แต่เมื่อสร้าง Object ใหม่:
+const person3 = { name: "Joe" }
+console.log(person1 === person3) // false ← Reference ต่างกัน</code></pre>
+<h3><code>const</code> กับ Reference</h3><p>คีย์เวิร์ด <code>const</code> ป้องกันการกำหนดตัวแปรใหม่ แต่ไม่ได้ป้องกันการแก้ไขเนื้อหาของ Array หรือ Object ที่ประกาศด้วย <code>const</code></p><p><code>const</code> สนใจเฉพาะค่า Reference เท่านั้น</p><pre><code>const arr = [1, 2]
+
+// ใช้ได้! เราไม่ได้เปลี่ยน Reference
+arr.push(3)
+console.log(arr) // [1, 2, 3]
+
+// ใช้ไม่ได้! เรากำลังพยายามเปลี่ยน Reference
+arr = [4, 5, 6] // ❌ TypeError: Assignment to constant variable</code></pre><table><thead><tr><th>ตัวแปร</th><th>ค่า (Reference)</th></tr></thead><tbody><tr><td><code>a</code></td><td><code>0x001</code></td></tr></tbody></table>
+<h2>ฟังก์ชันและ Reference</h2><p>เมื่อส่ง Array หรือ Object ไปยังฟังก์ชัน คุณกำลังส่ง Reference ซึ่งหมายความว่าฟังก์ชันสามารถแก้ไขข้อมูลต้นฉบับได้:</p><pre><code>function addElement(array, element) {
+  array.push(element) // แก้ไข Array ต้นฉบับ!
+}
+
+const numbers = [1, 2, 3]
+addElement(numbers, 4)
+
+console.log(numbers) // [1, 2, 3, 4] ← Array ต้นฉบับถูกแก้ไข</code></pre>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="15_objects.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="17_string_template_literals.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/advanced-variables/reference-vs-value">“Reference vs Value” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

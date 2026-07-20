@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="การตั้งค่าสภาพแวดล้อมสำหรับการพัฒนาและการเขียนโปรแกรม JavaScript โปรแกรมแรกของคุณ"
+    />
+    <title>แอป JavaScript แรกของคุณ</title>
+    <link rel="stylesheet" href="lesson.css" />
+</head>
+  <body>
+    <main>
+      <h1>แอป JavaScript แรกของคุณ</h1>
+
+      <p>
+        มาเขียนโปรแกรม JavaScript โปรแกรมแรกของคุณกัน! เราจะสร้างแอปพลิเคชัน
+        "Hello World" แบบคลาสสิก
+      </p>
+
+      <h2>การตั้งค่าพื้นที่ทำงานของคุณ</h2>
+
+      <ol>
+        <li>เปิด VSCode</li>
+        <li>
+          สร้างโฟลเดอร์โปรเจกต์
+          <ul>
+            <li>คลิก <strong>File</strong> → <strong>Open Folder</strong></li>
+            <li>เลือกหรือสร้างโฟลเดอร์ใหม่สำหรับโปรเจกต์ของคุณ</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h3>หน้าตาของ VSCode</h3>
+
+      <p>เมื่อเปิดโฟลเดอร์แล้ว คุณจะเห็น:</p>
+
+      <ul>
+        <li><strong>แถบด้านซ้าย</strong>: ตัวสำรวจไฟล์</li>
+        <li><strong>ตรงกลาง</strong>: ตัวแก้ไขโค้ด</li>
+        <li>
+          <strong>ด้านล่าง</strong>: เทอร์มินัล (เราจะใช้ส่วนนี้เพื่อรันโค้ด)
+        </li>
+      </ul>
+
+      <h3>แป้นพิมพ์ลัดที่สำคัญ</h3>
+
+      <ul>
+        <li><strong>แสดงหรือซ่อนแถบด้านข้าง</strong>: <code>Ctrl + B</code></li>
+        <li><strong>แสดงหรือซ่อนเทอร์มินัล</strong>: <code>Ctrl + ~</code></li>
+        <li><strong>บันทึกไฟล์</strong>: <code>Ctrl + S</code></li>
+      </ul>
+
+      <h2>การสร้างแอป JavaScript แรกของคุณ</h2>
+
+      <h3>1. สร้างไฟล์</h3>
+
+      <ul>
+        <li>คลิกปุ่ม <strong>New File</strong> ในแถบด้านข้าง</li>
+        <li>ตั้งชื่อว่า: <code>script.js</code></li>
+        <li>นามสกุล <code>.js</code> จะบอก VSCode ว่าไฟล์นี้เป็น JavaScript</li>
+      </ul>
+
+      <h3>2. เขียนโค้ดแรกของคุณ</h3>
+
+      <p>ในไฟล์ <code>script.js</code> ให้พิมพ์ตามนี้ทุกประการ:</p>
+
+      <pre><code class="language-javascript">console.log("Hello World")</code></pre>
+
+      <h3>3. บันทึกไฟล์</h3>
+
+      <ul>
+        <li>จุดสีขาวข้างชื่อไฟล์จะหายไปเมื่อบันทึกไฟล์แล้ว</li>
+      </ul>
+
+      <h2>การรันโค้ดของคุณ</h2>
+
+      <h3>Node.js</h3>
+
+      <ol>
+        <li>เปิดเทอร์มินัล</li>
+        <li>รันคำสั่ง <code>node script.js</code></li>
+      </ol>
+
+      <p><strong>ผลลัพธ์:</strong> คุณจะเห็น "Hello World" แสดงอยู่ในเทอร์มินัล!</p>
+
+      <h4>เคล็ดลับสั้น ๆ</h4>
+
+      <ul>
+        <li>กด <strong>ลูกศรขึ้น</strong> เพื่อรันคำสั่งล่าสุดอีกครั้ง</li>
+      </ul>
+
+      <h3>เบราว์เซอร์</h3>
+
+      <ol>
+        <li>
+          สร้างไฟล์ HTML ชื่อ <code>index.html</code>
+
+          <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8" /&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0" /&gt;
+    &lt;title&gt;My First App&lt;/title&gt;
+    &lt;script src="script.js"&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;My First JavaScript App&lt;/h1&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </li>
+        <li>เปิดด้วย Live Server</li>
+        <li>
+          ดูผลลัพธ์จาก JavaScript
+          <ul>
+            <li>คลิกขวาบนหน้าเว็บ</li>
+            <li>
+              เลือก <strong>"Inspect"</strong> (หรือกด
+              <code>Ctrl + Shift + I</code>)
+            </li>
+            <li>คลิกแท็บ <strong>"Console"</strong></li>
+            <li>คุณจะเห็น "Hello World" แสดงอยู่ตรงนั้น!</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h2>ข้อผิดพลาดที่พบบ่อย</h2>
+
+      <h3>ลืมใส่เครื่องหมายคำพูด</h3>
+
+      <pre><code class="language-javascript">// ❌ ผิด
+console.log(Hello World);
+
+// ✅ ถูกต้อง
+console.log('Hello World');</code></pre>
+
+      <h3>ลืมใส่วงเล็บ</h3>
+
+      <pre><code class="language-javascript">// ❌ ผิด
+console.log'Hello World';
+
+// ✅ ถูกต้อง
+console.log('Hello World');</code></pre>
+
+      <h3>พิมพ์ console.log ผิด</h3>
+
+      <pre><code class="language-javascript">// ❌ ผิด
+consol.log("Hello World")
+
+// ✅ ถูกต้อง
+console.log("Hello World")</code></pre>
+
+      <h2>คอมเมนต์ใน JavaScript</h2>
+
+      <p>
+        คุณสามารถเพิ่มคอมเมนต์ลงในโค้ดเพื่อให้เข้าใจได้ง่ายขึ้น เอนจิน JavaScript
+        จะไม่ประมวลผลคอมเมนต์เหล่านี้
+      </p>
+
+      <h3>คอมเมนต์บรรทัดเดียว</h3>
+
+      <p>ใช้ <code>//</code> เพื่อเพิ่มคอมเมนต์ในบรรทัดเดียว:</p>
+
+      <pre><code class="language-javascript">// นี่คือคอมเมนต์บรรทัดเดียว
+console.log("Hello World") // คำสั่งนี้จะแสดง "Hello World"</code></pre>
+
+      <h3>คอมเมนต์หลายบรรทัด</h3>
+
+      <p>
+        ใช้ <code>/* ... */</code> เพื่อเพิ่มคอมเมนต์ที่ครอบคลุมหลายบรรทัด:
+      </p>
+
+      <pre><code class="language-javascript">/*
+  นี่คือคอมเมนต์หลายบรรทัด
+  ซึ่งสามารถครอบคลุมได้หลายบรรทัด
+*/
+console.log("Hello World")</code></pre>
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="01_what_is_javascript.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="03_primitive_types_and_operations.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main>
+  </body>
+</html>

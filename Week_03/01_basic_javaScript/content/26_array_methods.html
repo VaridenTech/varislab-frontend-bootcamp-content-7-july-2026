@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้เมธอด Array สำคัญ เช่น forEach, map, filter, find, some, every และ reduce" /><title>เมธอด Array — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+</head><body><main><article>
+<h1>เมธอด Array</h1><p>Array มีความสามารถสูงมากใน JavaScript และจะมีประโยชน์ยิ่งขึ้นเมื่อรู้จักเมธอดที่มีมาให้สำหรับทำงานกับ Array อย่างมีประสิทธิภาพ</p>
+<h2>เมธอด Array คืออะไร?</h2><p>คือฟังก์ชันที่มีอยู่ใน Array ของ JavaScript เรียกใช้ด้วย dot notation เช่นเดียวกับการเข้าถึงพร็อพเพอร์ตีของ Object</p><pre><code>const numbers = [1, 2, 3, 4, 5]
+numbers.forEach((n) =&gt; {
+  // ทำบางอย่างกับตัวเลขแต่ละตัว
+})</code></pre>
+<h2>เมธอด <code>forEach</code></h2><p><code>forEach</code> น่าจะเป็นเมธอด Array ที่ใช้บ่อยที่สุด โดยวนผ่านสมาชิกแต่ละตัวและรันฟังก์ชันให้แต่ละตัว</p><pre><code>const numbers = [1, 2, 3, 4, 5]
+numbers.forEach((number) =&gt; console.log(number))
+// แสดง 1, 2, 3, 4, 5</code></pre>
+<h3><code>forEach</code> พร้อม Index</h3><p><code>forEach</code> สามารถให้ Index ของสมาชิกแต่ละตัวได้:</p><pre><code>const names = ["Kyle", "Sarah", "John"]
+names.forEach((name, index) =&gt; {
+  console.log(`${name} ${index}`)
+})
+// Kyle 0, Sarah 1, John 2</code></pre><p>Index ตรงกับ bracket notation ที่ใช้เข้าถึงสมาชิก:</p><pre><code>console.log(numbers[0]) // 1
+console.log(numbers[1]) // 2</code></pre>
+<h2>เมธอด <code>map</code></h2><p><code>map</code> คล้าย <code>forEach</code> แต่มีความแตกต่างสำคัญคือ <strong>ส่ง Array ใหม่กลับมา</strong> จากค่าที่ฟังก์ชันส่งกลับ:</p><pre><code>const numbers = [1, 2, 3, 4, 5]
+const doubled = numbers.map((number) =&gt; {
+  return number * 2
+})
+console.log(doubled) // [2, 4, 6, 8, 10]
+console.log(numbers) // ต้นฉบับไม่เปลี่ยน</code></pre><h3>ประเด็นสำคัญของ <code>map</code>:</h3><ul><li><strong>ส่ง Array ใหม่กลับ</strong> - ไม่แก้ไขต้นฉบับ</li><li><strong>ความยาวเท่าเดิม</strong> - Array ใหม่มีจำนวนสมาชิกเท่าเดิม</li><li><strong>แปลงสมาชิกแต่ละตัว</strong> - สมาชิกแต่ละตัวกลายเป็นสิ่งใหม่ได้</li></ul><h3>กรณีใช้งานทั่วไป</h3><pre><code>const people = [
+  { id: 1, name: "Alice" },
+  { id: 2, name: "Bob" },
+  { id: 3, name: "Charlie" },
+]
+const names = people.map((person) =&gt; person.name)
+console.log(names) // ["Alice", "Bob", "Charlie"]</code></pre>
+<h2>เมธอด <code>filter</code></h2><p><code>filter</code> สร้าง Array ใหม่ที่มีเฉพาะสมาชิกซึ่งผ่านการทดสอบ ส่ง <code>true</code> เพื่อเก็บ และ <code>false</code> เพื่อตัดออก</p><pre><code>const numbers = [1, 2, 3, 4, 5]
+const smallNumbers = numbers.filter((number) =&gt; number &lt;= 2)
+console.log(smallNumbers) // [1, 2]
+console.log(numbers) // ต้นฉบับไม่เปลี่ยน</code></pre>
+<h2>เมธอด <code>find</code></h2><p><code>find</code> คล้าย <code>filter</code> แต่ส่งกลับเฉพาะสมาชิก <strong>ตัวแรก</strong> ที่ตรงเงื่อนไข แล้วหยุดค้นหา</p><pre><code>const numbers = [1, 2, 3, 4, 5]
+const firstBigNumber = numbers.find((number) =&gt; number &gt; 2)
+console.log(firstBigNumber) // 3</code></pre>
+<h2>เมธอด <code>some</code></h2><p><code>some</code> ตรวจว่า <strong>อย่างน้อยหนึ่ง</strong> สมาชิกผ่านการทดสอบหรือไม่ และส่ง <code>true</code> หรือ <code>false</code> กลับ</p><pre><code>const numbers = [1, 2, 3, 4, 5]
+const hasLargeNumber = numbers.some((number) =&gt; number &gt; 3) // true
+const hasNegativeNumber = numbers.some((number) =&gt; number &lt; 0) // false</code></pre><h3><code>some</code> ทำงานอย่างไร:</h3><ul><li>ส่ง true หากมีสมาชิกตัวใดผ่าน</li><li>ส่ง false หากไม่มีสมาชิกผ่าน</li><li>หยุดทันทีเมื่อพบตัวที่ผ่าน</li></ul>
+<h2>เมธอด <code>every</code></h2><p><code>every</code> ตรงข้ามกับ <code>some</code> โดยตรวจว่าสมาชิก <strong>ทั้งหมด</strong> ผ่านการทดสอบหรือไม่</p><pre><code>const numbers = [1, 2, 3, 4, 5]
+const allPositive = numbers.every((number) =&gt; number &gt; 0) // true
+const allLarge = numbers.every((number) =&gt; number &gt; 3) // false</code></pre><h3><code>every</code> ทำงานอย่างไร:</h3><ul><li>ส่ง true หากทุกตัวผ่าน</li><li>ส่ง false หากมีตัวใดไม่ผ่าน</li><li>หยุดทันทีเมื่อพบตัวที่ไม่ผ่าน</li></ul>
+<h2>เมธอด <code>reduce</code></h2><p><code>reduce</code> เป็นเมธอดที่ทรงพลังที่สุด (และชวนสับสนที่สุด) โดย “ลด” Array ให้เหลือค่าเดียวด้วยฟังก์ชันที่รวบรวมผลลัพธ์</p><pre><code>const numbers = [1, 2, 3, 4, 5]
+const sum = numbers.reduce((accumulator, number) =&gt; {
+  return accumulator + number
+}, 0) // 0 คือค่าเริ่มต้น
+console.log(sum) // 15</code></pre><h3><code>reduce</code> ทำงานอย่างไร:</h3><ol><li><strong>ค่าเริ่มต้น</strong>: อาร์กิวเมนต์ตัวที่สอง</li><li><strong>Accumulator</strong>: เริ่มจากค่าเริ่มต้น แล้วกลายเป็นค่าที่ส่งกลับ</li><li><strong>สมาชิกปัจจุบัน</strong>: สมาชิกแต่ละตัวตามลำดับ</li><li><strong>ค่าที่ส่งกลับ</strong>: กลายเป็น Accumulator ใหม่ในรอบถัดไป</li></ol><p>ติดตามตัวอย่างผลรวม:</p><pre><code>const sum = numbers.reduce((accumulator, number) =&gt; {
+  console.log(`accumulator: ${accumulator}, number: ${number}`)
+  return accumulator + number
+}, 0)
+// 0+1 → 1, 1+2 → 3, 3+3 → 6, 6+4 → 10, 10+5 → 15
+console.log(sum) // 15</code></pre>
+</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="25_short_circuit_evaluation.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="27_window_and_document.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/array-methods">“Array Methods” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>

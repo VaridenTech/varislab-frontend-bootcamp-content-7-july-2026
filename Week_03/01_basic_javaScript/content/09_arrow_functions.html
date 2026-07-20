@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้ไวยากรณ์ arrow function ซึ่งเป็นอีกวิธีหนึ่งในการเขียนฟังก์ชัน JavaScript ที่สั้นกว่าและมีคุณสมบัติเฉพาะบางอย่าง" />
+  <title>Arrow Function — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Arrow Function</h1>
+      <p>Arrow function เป็นอีกวิธีหนึ่งในการเขียนฟังก์ชันใน JavaScript โดยมีไวยากรณ์ที่สั้นกว่าและมีคุณสมบัติเฉพาะบางอย่างที่ทำให้มีประโยชน์อย่างยิ่งในบางสถานการณ์</p>
+
+      <h2>การแปลงฟังก์ชันปกติเป็น Arrow Function</h2>
+      <p>มาเริ่มด้วยฟังก์ชันปกติแล้วแปลงเป็น arrow function:</p>
+      <pre><code>// ฟังก์ชันปกติ
+function sum(a, b) {
+  return a + b
+}
+
+// Arrow function
+const sumArrow = (a, b) =&gt; {
+  return a + b
+}
+
+console.log(sum(1, 2)) // 3
+console.log(sumArrow(1, 2)) // 3</code></pre>
+
+      <h3>ไวยากรณ์ของ Arrow Function</h3>
+      <pre><code>const functionName = (parameters) =&gt; {
+  // ส่วนคำสั่งของฟังก์ชัน
+}</code></pre>
+      <p><strong>ความแตกต่างสำคัญจากฟังก์ชันปกติ:</strong></p>
+      <ol>
+        <li>ใช้ <code>const</code> (หรือ <code>let</code>) แทนคีย์เวิร์ด <code>function</code></li>
+        <li>ชื่อฟังก์ชันอยู่ก่อน ตามด้วย <code>=</code></li>
+        <li>พารามิเตอร์อยู่ในวงเล็บ</li>
+        <li>มีลูกศร (<code>=&gt;</code>) คั่นระหว่างพารามิเตอร์กับส่วนคำสั่ง</li>
+        <li>ส่วนคำสั่งของฟังก์ชันอยู่ในวงเล็บปีกกา</li>
+      </ol>
+
+      <h2>คุณสมบัติเฉพาะ</h2>
+      <p>โดยส่วนใหญ่ คุณสามารถใช้ arrow function ได้เหมือนฟังก์ชันปกติ แต่มีคุณสมบัติเฉพาะบางอย่างที่คุณต้องทราบ</p>
+
+      <h3>รูปแบบย่อสำหรับพารามิเตอร์เดียว</h3>
+      <p>เมื่อมี <strong>พารามิเตอร์เพียงหนึ่งตัว</strong> คุณสามารถละวงเล็บได้:</p>
+      <pre><code>// มีวงเล็บ
+const printName = (name) =&gt; {
+  console.log(name)
+}
+
+// ไม่มีวงเล็บ
+const printNameShort = name =&gt; {
+  console.log(name)
+}</code></pre>
+      <p><strong>หมายเหตุ:</strong> หากไม่มีพารามิเตอร์หรือมีพารามิเตอร์หลายตัว จำเป็นต้องใช้วงเล็บ:</p>
+      <pre><code>// ไม่มีพารามิเตอร์ - ต้องมีวงเล็บ
+const sayHi = () =&gt; {
+  console.log("Hi")
+}
+
+// พารามิเตอร์หลายตัว - ต้องมีวงเล็บ
+const add = (x, y) =&gt; {
+  return x + y
+}</code></pre>
+
+      <h3>รูปแบบย่อสำหรับการส่งค่ากลับในบรรทัดเดียว</h3>
+      <p>เมื่อส่วนคำสั่งของฟังก์ชันมีเพียง <strong>หนึ่งบรรทัดที่ส่งค่ากลับ</strong> คุณสามารถใช้ไวยากรณ์ที่สั้นยิ่งขึ้นได้:</p>
+      <pre><code>// Arrow function แบบปกติ
+const sum = (a, b) =&gt; {
+  return a + b
+}
+
+// Arrow function แบบย่อ (ส่งค่ากลับโดยปริยาย)
+const sumShort = (a, b) =&gt; a + b
+
+console.log(sumShort(1, 2)) // 3</code></pre>
+      <p>JavaScript จะส่งค่าหลังลูกศรกลับโดยอัตโนมัติโดยไม่ต้องใช้ <code>return</code> หรือวงเล็บปีกกา หากมีเพียงบรรทัดเดียว</p>
+
+      <h2>ข้อผิดพลาดที่พบบ่อย</h2>
+      <ol>
+        <li>
+          <p>การส่งค่ากลับโดยปริยายไม่ถูกต้อง</p>
+          <pre><code>// ❌ ผิด - ใช้ 'return' โดยไม่มีวงเล็บปีกกาไม่ได้
+const add = (a, b) =&gt; return a + b
+
+// ❌ ผิด - ไม่ได้ส่งค่าใดกลับมา
+const add = (a, b) =&gt; {
+  a + b
+}
+
+// ✅ ถูกต้อง - ใช้วงเล็บปีกกาพร้อม return
+const add = (a, b) =&gt; {
+  return a + b
+}
+
+// ✅ หรือใช้การส่งค่ากลับโดยปริยายโดยไม่มีวงเล็บปีกกา
+const add = (a, b) =&gt; a + b</code></pre>
+        </li>
+        <li>
+          <p>ลืมวงเล็บเมื่อมีพารามิเตอร์หลายตัว</p>
+          <pre><code>// ❌ ผิด - พารามิเตอร์หลายตัวต้องมีวงเล็บ
+const multiply = a, b =&gt; a * b
+
+// ✅ ถูกต้อง
+const multiply = (a, b) =&gt; a * b</code></pre>
+        </li>
+      </ol>
+
+      <h2>เมื่อใดควรใช้ Arrow Function</h2>
+      <pre><code>function processData(x, callback) {
+  callback(x)
+}
+
+// ใช้ฟังก์ชันปกติ (ยืดยาว)
+processData(10, function (variable) {
+  console.log(variable)
+})
+
+// ใช้ arrow function (กระชับ)
+processData(10, (variable) =&gt; {
+  console.log(variable)
+})
+
+// หรือสั้นกว่านั้นด้วยการเขียนในบรรทัดเดียว
+processData(10, (variable) =&gt; console.log(variable))</code></pre>
+      <p><strong>ใช้ arrow function สำหรับ:</strong></p>
+      <ul>
+        <li>ฟังก์ชันสั้น ๆ ที่ไม่ซับซ้อน</li>
+        <li>ฟังก์ชัน callback</li>
+        <li>ฟังก์ชันนิรนาม</li>
+        <li>ฟังก์ชันที่เขียนได้ในบรรทัดเดียว</li>
+      </ul>
+      <p><strong>พิจารณาใช้ฟังก์ชันปกติสำหรับ:</strong></p>
+      <ul>
+        <li>ฟังก์ชันที่ต้องการชื่อซึ่งสื่อความหมาย</li>
+      </ul>
+    </article>
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="08_passing_functions_as_arguments.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="10_understanding_scope.html" rel="next">บทถัดไป →</a>
+    </nav>
+</main>
+
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/functions/arrow-functions">“Arrow Functions” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>
