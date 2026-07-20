@@ -1,43 +1,129 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>ข้อผิดพลาด JavaScript ที่พบบ่อย</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>ข้อผิดพลาด JavaScript ที่พบบ่อย</h1><p>นักพัฒนา JavaScript ทุกคนพบข้อผิดพลาด การเข้าใจประเภทหลักและวิธีระบุปัญหาจะช่วยให้ทำงานได้มีประสิทธิภาพขึ้น</p>
-<h2>ประเภทข้อผิดพลาด</h2><ol><li><strong>Syntax Error</strong>: ไวยากรณ์ผิดจนโค้ดรันไม่ได้</li><li><strong>Runtime Error</strong>: ปัญหาเกิดระหว่างทำงานและทำให้โค้ดหยุด</li><li><strong>Logical Error (Bug)</strong>: โค้ดรันได้แต่ผลไม่ถูกต้อง</li></ol>
-<h3>Syntax Error</h3><p>เกิดเมื่อโค้ดไม่เป็นไปตามกฎไวยากรณ์ เช่น ไม่มีจุลภาค หรือวงเล็บไม่ตรงกัน:</p><pre><code>// ❌ ไม่มีจุลภาค
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ข้อผิดพลาดที่พบบ่อยใน JavaScript (Common Errors) — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>ข้อผิดพลาดที่พบบ่อยใน JavaScript (Common Errors)</h1>
+      <p>ไม่ว่าคุณจะเป็นนักพัฒนามือใหม่หรือผู้เชี่ยวชาญ การพบเจอข้อผิดพลาด (Errors) ในการเขียนโค้ดเป็นเรื่องที่หลีกเลี่ยงไม่ได้ การทำความเข้าใจประเภทของข้อผิดพลาดและรู้วิธีการอ่านข้อความแจ้งเตือน (Error Messages) จะช่วยให้คุณสามารถค้นหาและแก้ไข Bug (Debug) ได้อย่างรวดเร็วและมีประสิทธิภาพมากขึ้น</p>
+
+      <h2>1. ประเภทของข้อผิดพลาดในโปรแกรม</h2>
+      <ol>
+        <li><strong>Syntax Error (ข้อผิดพลาดทางไวยากรณ์)</strong>: เกิดจากการเขียนโค้ดผิดกฎไวยากรณ์ของภาษา ทำให้โปรแกรมไม่สามารถคอมไพล์หรือรันได้ตั้งแต่แรก</li>
+        <li><strong>Runtime Error (ข้อผิดพลาดขณะทำงาน)</strong>: โค้ดผ่านไวยากรณ์รันได้ปกติ แต่เกิดปัญหาขึ้นในขณะที่โปรแกรมกำลังทำงาน ส่งผลให้โปรแกรมหยุดทำงานกะทันหัน</li>
+        <li><strong>Logical Error (ข้อผิดพลาดทางตรรกะ)</strong>: โปรแกรมรันได้ผ่านฉลุยไม่มี Error แจ้งเตือนใด ๆ แต่ผลลัพธ์ที่ได้กลับไม่ถูกต้องตามที่ต้องการ (มักเรียกว่า Bug)</li>
+      </ol>
+
+      <h3>ตัวอย่าง Syntax Error (ข้อผิดพลาดทางไวยากรณ์)</h3>
+      <p>มักเกิดจากการลืมพิมพ์เครื่องหมายสำคัญ เช่น เครื่องหมายจุลภาค (Comma <code>,</code>) หรือวงเล็บปิดไม่ครบ:</p>
+      <pre><code>// ❌ ผิด: ลืมใส่เครื่องหมายจุลภาคคั่นระหว่าง Property
 const person = { name: "John" age: 30 }
-// ✅ แก้ไขแล้ว
-const person = { name: "John", age: 30 }</code></pre><pre><code>// ❌ ไม่มีวงเล็บปิด
+
+// ✅ แก้ไขถูกต้อง
+const person = { name: "John", age: 30 }</code></pre>
+      <pre><code>// ❌ ผิด: ลืมใส่วงเล็บปิดเงื่อนไขของ if
 if (age &gt; 18 { console.log("Adult") }
-// ✅ แก้ไขแล้ว
+
+// ✅ แก้ไขถูกต้อง
 if (age &gt; 18) { console.log("Adult") }</code></pre>
-<h3>Runtime Error</h3><ol><li><p>พิมพ์ชื่อตัวแปรผิด</p><pre><code>const userName = "john123"
-console.log(username) // ❌ ReferenceError
-console.log(userName) // ✅</code></pre></li><li><p>เข้าถึงพร็อพเพอร์ตีของ Undefined หรือ Null</p><pre><code>const user = getUser()
-// console.log(user.name) // ❌
-if (user) console.log(user.name) // ✅</code></pre></li><li><p>กำหนดค่าใหม่ให้ Const</p><pre><code>const age = 30
-// age = 31 // ❌
+
+      <h3>ตัวอย่าง Runtime Error (ข้อผิดพลาดขณะทำงาน)</h3>
+      <ol>
+        <li>
+          <p><strong>1. การพิมพ์ชื่อตัวแปรสะกดผิด (ReferenceError)</strong></p>
+          <pre><code>const userName = "john123"
+console.log(username) // ❌ ReferenceError เพราะสะกดด้วยตัวพิมพ์เล็กทั้งหมด
+console.log(userName) // ✅ สะกดถูกต้องตามที่ประกาศไว้</code></pre>
+        </li>
+        <li>
+          <p><strong>2. การเข้าถึงคุณสมบัติของค่าที่เป็น null หรือ undefined (TypeError)</strong></p>
+          <pre><code>const user = getUser()
+// console.log(user.name) // ❌ หาก getUser() ส่งคืนค่า null โปรแกรมจะแครชทันที
+if (user) console.log(user.name) // ✅ ตรวจสอบความปลอดภัยก่อนใช้งาน</code></pre>
+        </li>
+        <li>
+          <p><strong>3. การพยายามกำหนดค่าใหม่ให้กับตัวแปรประเภทค่าคงที่ (TypeError)</strong></p>
+          <pre><code>const age = 30
+// age = 31 // ❌ TypeError: Assignment to constant variable.
+
 let newAge = 30
-newAge = 31 // ✅</code></pre></li></ol>
-<h3>Logical Error</h3><ol><li><p>คลาดหนึ่งตำแหน่ง</p><pre><code>const items = ["apple", "banana", "orange"]
-for (let i = 0; i &lt;= items.length; i++) console.log(items[i]) // ❌
-for (let i = 0; i &lt; items.length; i++) console.log(items[i]) // ✅</code></pre></li><li><p>การกำหนดค่ากับการเปรียบเทียบ</p><pre><code>// ❌ ใช้ = แทน ===
+newAge = 31 // ✅ สามารถแก้ไขค่าได้ปกติ</code></pre>
+        </li>
+      </ol>
+
+      <h3>ตัวอย่าง Logical Error (ข้อผิดพลาดทางตรรกะ)</h3>
+      <ol>
+        <li>
+          <p><strong>1. ข้อผิดพลาดคลาดเคลื่อนหนึ่งตำแหน่ง (Off-by-One Error)</strong></p>
+          <pre><code>const items = ["apple", "banana", "orange"]
+for (let i = 0; i &lt;= items.length; i++) console.log(items[i]) // ❌ รอบสุดท้ายจะดึงค่าตำแหน่งที่ 3 ซึ่งไม่มีอยู่จริง (undefined)
+for (let i = 0; i &lt; items.length; i++) console.log(items[i]) // ✅ ดึงข้อมูลได้ถูกต้องครบถ้วน</code></pre>
+        </li>
+        <li>
+          <p><strong>2. การสับสนระหว่างเครื่องหมายกำหนดค่าและเครื่องหมายเปรียบเทียบ</strong></p>
+          <pre><code>// ❌ ผิด: ใช้เครื่องหมายเท่ากับตัวเดียว = (เป็นการกำหนดค่า) แทนที่จะเป็น === (การเปรียบเทียบ)
 if (name = "Sally") console.log("Is Sally")
-// ✅
-if (name === "Sally") console.log("Is Sally")</code></pre></li></ol>
-<h2>ข้อผิดพลาดเกี่ยวกับ DOM</h2><ol><li><p>ไม่พบ Element: ตรวจว่ามี Element ก่อนใช้งาน</p><pre><code>const button = document.querySelector(".submit-btn")
-if (button) button.addEventListener("click", handleClick)
-else console.warn("Submit button not found")</code></pre></li><li><p>Script โหลดก่อน DOM: ใช้แอตทริบิวต์ <code>defer</code></p><pre><code>&lt;script src="script.js" defer&gt;&lt;/script&gt;</code></pre></li></ol>
-<h2>วิธีอ่านข้อความ Error</h2><pre><code>TypeError: Cannot read property 'name' of null
+
+// ✅ เปรียบเทียบความเท่ากันอย่างถูกต้อง
+if (name === "Sally") console.log("Is Sally")</code></pre>
+        </li>
+      </ol>
+
+      <h2>2. ข้อผิดพลาดที่พบบ่อยเกี่ยวกับการจัดการหน้าเว็บ (DOM Errors)</h2>
+      <ol>
+        <li>
+          <p><strong>1. การพยายามใช้งาน Element ที่ไม่มีอยู่จริง (Null Element)</strong></p>
+          <pre><code>const button = document.querySelector(".submit-btn")
+// button.addEventListener("click", handleClick) // ❌ หากไม่มีปุ่ม Class นี้บนหน้าเว็บ โปรแกรมจะแครชทันที
+if (button) button.addEventListener("click", handleClick) // ✅ ตรวจสอบก่อนว่ามีองค์ประกอบอยู่จริง
+else console.warn("Submit button not found")</code></pre>
+        </li>
+        <li>
+          <p><strong>2. ไฟล์ Script ถูกโหลดและรันก่อนที่หน้าเว็บ HTML จะสร้างเสร็จ</strong></p>
+          <pre><code>// ในไฟล์ HTML ควรใส่ Attribute defer เพื่อให้ Browser โหลด HTML ให้เสร็จก่อนรัน Script
+&lt;script src="script.js" defer&gt;&lt;/script&gt;</code></pre>
+        </li>
+      </ol>
+
+      <h2>3. วิธีการอ่านข้อความแจ้งเตือนข้อผิดพลาด (Error Messages)</h2>
+      <pre><code>TypeError: Cannot read property 'name' of null
     at getUserName (script.js:15:20)
-    at main (script.js:8:5)</code></pre><ul><li><strong>ประเภท</strong>: <code>TypeError</code></li><li><strong>ข้อความ</strong>: อธิบายสิ่งที่ผิด</li><li><strong>Stack trace</strong>: แสดงตำแหน่งและลำดับการเรียก</li></ul>
-<h3>ข้อความที่พบบ่อย</h3><pre><code>// ReferenceError: variable is not defined → ใช้ตัวแปรที่ยังไม่ประกาศ
-// TypeError: Cannot read property 'X' → เข้าถึงพร็อพเพอร์ตีบน undefined/null
-// TypeError: X is not a function → เรียกสิ่งที่ไม่ใช่ฟังก์ชัน
-// SyntaxError: Unexpected token → พิมพ์ผิดหรือเครื่องหมายหาย
-// RangeError: Maximum call stack size exceeded → Recursion ไม่สิ้นสุด</code></pre>
-<h2>เคล็ดลับ Debug อย่างรวดเร็ว</h2><ol><li>อ่านข้อความ Error ทั้งหมดและดูเลขบรรทัด</li><li>ตรวจคำสะกดและเครื่องหมาย</li><li>ใช้ <code>console.log</code> อย่างมีกลยุทธ์</li><li>Comment โค้ดบางส่วนเพื่อแยกปัญหา</li><li>เปิด Console ของเบราว์เซอร์ไว้เสมอ</li></ol>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+    at main (script.js:8:5)</code></pre>
+      <ul>
+        <li><strong>ประเภทของ Error (Type)</strong>: บอกประเภทของข้อผิดพลาด เช่น <code>TypeError</code></li>
+        <li><strong>ข้อความอธิบาย (Message)</strong>: รายละเอียดที่บอกว่าเกิดอะไรขึ้น (เช่น ไม่สามารถอ่านคุณสมบัติ 'name' ของค่าที่เป็น null ได้)</li>
+        <li><strong>ประวัติการเรียก Function (Stack Trace)</strong>: ลำดับขั้นตอนการทำงานของ Function ที่นำไปสู่การเกิด Error พร้อมระบุชื่อไฟล์และเลขบรรทัดอย่างละเอียด (เช่น บรรทัดที่ 15 ในไฟล์ script.js)</li>
+      </ul>
+
+      <h3>ข้อความแจ้งเตือนที่พบบ่อยและคำอธิบาย</h3>
+      <pre><code>// ReferenceError: variable is not defined → มีการเรียกใช้งานตัวแปรที่ยังไม่ได้ประกาศ
+// TypeError: Cannot read property 'X' of null/undefined → พยายามเข้าถึงคุณสมบัติ X บนตัวแปรที่เป็น null หรือ undefined
+// TypeError: X is not a function → พยายามเรียกใช้งานตัวแปร X ในฐานะ Function ทั้งที่มันไม่ใช่ Function
+// SyntaxError: Unexpected token → มีการพิมพ์สะกดผิดหรือเครื่องหมายบางอย่างขาดหายไป
+// RangeError: Maximum call stack size exceeded → เกิดการเรียกตัวเองซ้ำของ Function (Recursion) แบบไม่สิ้นสุดจนหน่วยความจำเต็ม</code></pre>
+
+      <h2>4. เคล็ดลับการค้นหาและแก้ไขข้อผิดพลาด (Debugging Tips)</h2>
+      <ol>
+        <li>ตั้งสติและอ่านข้อความ Error ให้ครบถ้วน โดยเฉพาะการดูเลขบรรทัดที่เกิดปัญหา</li>
+        <li>ตรวจสอบการสะกดคำ ตัวพิมพ์เล็ก-ใหญ่ และเครื่องหมายต่าง ๆ ให้ละเอียด</li>
+        <li>ใช้คำสั่ง <code>console.log()</code> เพื่อตรวจสอบค่าของตัวแปรในแต่ละขั้นตอนการทำงาน</li>
+        <li>ลองปิด Comment โค้ดบางส่วนชั่วคราวเพื่อแยกแยะและจำกัดวงของปัญหา</li>
+        <li>เปิดแท็บ Console ของ Browser (DevTools) ทิ้งไว้เสมอในขณะพัฒนาหน้าเว็บ</li>
+      </ol>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="29_event_listeners.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="31_devtools_basics.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/debugging/common-errors">“Common JavaScript Errors” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/debugging/common-errors">“Common JavaScript Errors” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

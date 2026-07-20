@@ -1,21 +1,47 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้วิธีสั่งให้โค้ดทำงานตามเงื่อนไขด้วยคำสั่ง if, else if และ else" /><title>คำสั่ง If — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>คำสั่ง If</h1><p>คำสั่ง If เป็นหนึ่งในแนวคิดพื้นฐานที่สุดของการเขียนโปรแกรม ช่วยให้คุณรันโค้ดต่างกันตามว่าเงื่อนไขบางอย่างเป็นจริงหรือเท็จ</p>
-<h2>คำสั่ง If พื้นฐาน</h2><p>รูปแบบที่ง่ายที่สุดของคำสั่ง If จะตรวจสอบเงื่อนไขและรันโค้ดเฉพาะเมื่อเงื่อนไขเป็นจริง:</p><pre><code>const age = 18
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้วิธีสั่งให้โค้ดทำงานตามเงื่อนไขด้วยคำสั่ง if, else if และ else" />
+  <title>การใช้งานเงื่อนไข If Else — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งานเงื่อนไข If Else</h1>
+      <p><strong>คำสั่งเงื่อนไข If Else</strong> เป็นหนึ่งในแนวคิดพื้นฐานและสำคัญที่สุดของการเขียนโปรแกรม ช่วยให้เราสามารถควบคุมทิศทางการทำงานของโค้ด (Control Flow) ให้ทำงานแตกต่างกันออกไปตามเงื่อนไขที่เรากำหนดว่าเป็นจริง (True) หรือเท็จ (False)</p>
+
+      <h2>1. คำสั่ง If พื้นฐาน (Basic If Statement)</h2>
+      <p>รูปแบบที่เรียบง่ายที่สุดคือการตรวจสอบเงื่อนไข หากเงื่อนไขในวงเล็บเป็นจริง (True) ชุดคำสั่งภายในวงเล็บปีกกาจะทำงานทันที แต่ถ้าเป็นเท็จ (False) ระบบจะข้ามไปทำงานในส่วนถัดไป:</p>
+      <pre><code>const age = 18
 
 if (age &gt;= 18) {
   console.log("You can vote!") // บรรทัดนี้จะทำงาน
 }
 
-console.log("Program continues...") // บรรทัดนี้ทำงานเสมอ</code></pre><p>ไวยากรณ์ประกอบด้วย:</p><ul><li>คีย์เวิร์ด <code>if</code></li><li>เงื่อนไขในวงเล็บ <code>()</code></li><li>บล็อกโค้ดในวงเล็บปีกกา <code>{}</code></li></ul>
-<h2>คำสั่ง If...Else</h2><p>ใช้ <code>else</code> เพื่อระบุว่าจะเกิดอะไรขึ้นเมื่อเงื่อนไขเป็นเท็จ:</p><pre><code>const age = 16
+console.log("Program continues...") // บรรทัดนี้ทำงานเสมอ</code></pre>
+      <p>โครงสร้างไวยากรณ์ประกอบด้วย:</p>
+      <ul>
+        <li>Keyword <code>if</code></li>
+        <li>เงื่อนไขที่ต้องการตรวจสอบภายในวงเล็บ <code>()</code></li>
+        <li>บล็อกคำสั่งที่ต้องการให้ทำงานภายในวงเล็บปีกกา <code>{}</code></li>
+      </ul>
+
+      <h2>2. คำสั่ง If...Else (กรณีมีทางเลือกอื่น)</h2>
+      <p>เราสามารถใช้ Keyword <code>else</code> เพื่อกำหนดชุดคำสั่งที่จะทำงานในกรณีที่เงื่อนไขแรกใน <code>if</code> เป็นเท็จ (False):</p>
+      <pre><code>const age = 16
 
 if (age &gt;= 18) {
   console.log("You can vote!")
 } else {
   console.log("You cannot vote yet") // บรรทัดนี้จะทำงาน
 }</code></pre>
-<h2>หลายเงื่อนไขด้วย Else If</h2><p>ใช้ <code>else if</code> เพื่อตรวจสอบหลายเงื่อนไขตามลำดับ:</p><pre><code>const temperature = 75
+
+      <h2>3. การตรวจสอบหลายเงื่อนไขด้วย Else If</h2>
+      <p>หากเรามีเงื่อนไขที่ต้องการตรวจสอบมากกว่าสองทางเลือก เราสามารถใช้ <code>else if</code> เพื่อตรวจสอบเงื่อนไขอื่น ๆ ไล่ตามลำดับลงมาได้:</p>
+      <pre><code>const temperature = 75
 
 if (temperature &gt; 80) {
   console.log("It's hot outside!")
@@ -25,26 +51,51 @@ if (temperature &gt; 80) {
   console.log("It's a bit chilly")
 } else {
   console.log("It's cold!")
-}</code></pre><p><strong>สำคัญ:</strong> มีเพียงเงื่อนไข <strong>แรก</strong> ที่ตรงเท่านั้นที่จะทำงาน แม้หลายเงื่อนไขจะเป็นจริงก็ตาม</p>
-<h2>ตัวดำเนินการทางตรรกะ</h2><p>รวมหลายเงื่อนไขเข้าด้วยกัน:</p>
-<h3>AND (<code>&amp;&amp;</code>) - ทั้งสองเงื่อนไขต้องเป็นจริง</h3><pre><code>const age = 25
+}</code></pre>
+      <p>⚠️ <strong>ข้อควรจำ:</strong> JavaScript จะทำงานเฉพาะในบล็อกเงื่อนไข <strong>แรกสุดที่เป็นจริงเท่านั้น</strong> เมื่อพบเงื่อนไขที่เป็นจริงแล้ว ระบบจะข้ามเงื่อนไขที่เหลือทั้งหมดด้านล่างทันที แม้ว่าเงื่อนไขอื่น ๆ ด้านล่างจะเป็นจริงด้วยก็ตาม</p>
+
+      <h2>4. ตัวดำเนินการทางตรรกศาสตร์ (Logical Operators)</h2>
+      <p>เราสามารถใช้ตัวดำเนินการทางตรรกศาสตร์เพื่อเชื่อมหรือรวมเงื่อนไขหลาย ๆ ข้อเข้าด้วยกันได้:</p>
+
+      <h3>AND (<code>&amp;&amp;</code>) - ทุกเงื่อนไขต้องเป็นจริงพร้อมกัน</h3>
+      <pre><code>const age = 25
 const hasLicense = true
 
 if (age &gt;= 18 &amp;&amp; hasLicense) {
   console.log("You can drive!") // ทั้งสองเงื่อนไขเป็นจริง
 }</code></pre>
-<h3>OR (<code>||</code>) - อย่างน้อยหนึ่งเงื่อนไขต้องเป็นจริง</h3><pre><code>const isWeekend = false
+
+      <h3>OR (<code>||</code>) - ขอเพียงเงื่อนไขใดเงื่อนไขหนึ่งเป็นจริงก็พอ</h3>
+      <pre><code>const isWeekend = false
 const isHoliday = true
 
 if (isWeekend || isHoliday) {
   console.log("No work today!") // หนึ่งเงื่อนไขเป็นจริง
 }</code></pre>
-<h3>NOT (<code>!</code>) - กลับค่าเงื่อนไข</h3><pre><code>const isLoggedIn = false
+
+      <h3>NOT (<code>!</code>) - กลับค่าความจริง (จากจริงเป็นเท็จ จากเท็จเป็นจริง)</h3>
+      <pre><code>const isLoggedIn = false
 
 if (!isLoggedIn) {
   console.log("Please log in") // ทำงานเพราะ !false คือ true
 }</code></pre>
-<h2>ค่า Truthy และ Falsy</h2><p>JavaScript ถือว่าค่าบางค่าเป็น “truthy” หรือ “falsy” ในคำสั่ง If:</p><p><strong>ค่า Falsy</strong> (ถือเป็น false):</p><ul><li><code>false</code></li><li><code>0</code></li><li><code>""</code> (String ว่าง)</li><li><code>null</code></li><li><code>undefined</code></li><li><code>NaN</code></li></ul><p><strong>ค่า Truthy</strong> (ถือเป็น true):</p><ul><li>ค่าอื่นทั้งหมด! รวมถึง <code>"0"</code>, <code>[]</code>, <code>{}</code></li></ul><pre><code>const name = "Kyle"
+
+      <h2>5. ค่า Truthy และ Falsy</h2>
+      <p>ในภาษา JavaScript ตัวแปรหรือค่าข้อมูลทั่วไปที่ไม่ใช่ Boolean (Boolean) ก็สามารถนำมาตรวจสอบในเงื่อนไข <code>if</code> ได้ โดยระบบจะมองค่าเหล่านั้นเป็น <strong>Truthy</strong> (เทียบเท่าจริง) หรือ <strong>Falsy</strong> (เทียบเท่าเท็จ) ตามกฎของภาษา:</p>
+      <p><strong>ค่า Falsy (ค่าที่ถูกมองว่าเป็น false):</strong></p>
+      <ul>
+        <li><code>false</code></li>
+        <li><code>0</code></li>
+        <li><code>""</code> (String ว่าง)</li>
+        <li><code>null</code></li>
+        <li><code>undefined</code></li>
+        <li><code>NaN</code></li>
+      </ul>
+      <p><strong>ค่า Truthy (ค่าที่ถูกมองว่าเป็น true):</strong></p>
+      <ul>
+        <li>ค่าข้อมูลอื่น ๆ ทั้งหมดนอกเหนือจาก Falsy (รวมถึงข้อความที่มีตัวเลข <code>"0"</code>, Array ว่าง <code>[]</code>, และ Object ว่าง <code>{}</code>)</li>
+      </ul>
+      <pre><code>const name = "Kyle"
 
 if (name) {
   console.log(`Hello ${name}!`) // ทำงานเพราะ String ที่ไม่ว่างเป็น truthy
@@ -54,7 +105,10 @@ const emptyString = ""
 if (emptyString) {
   console.log("This won't run") // String ว่างเป็น falsy
 }</code></pre>
-<h2>คำสั่ง If ซ้อนกัน</h2><p>คุณสามารถใส่คำสั่ง If ไว้ในคำสั่ง If อื่นได้:</p><pre><code>const weather = "sunny"
+
+      <h2>6. คำสั่ง If ซ้อนกัน (Nested If)</h2>
+      <p>เราสามารถเขียนคำสั่ง <code>if</code> ซ้อนอยู่ภายในบล็อก <code>if</code> อื่นได้ตามต้องการ:</p>
+      <pre><code>const weather = "sunny"
 const temperature = 75
 
 if (weather === "sunny") {
@@ -65,8 +119,12 @@ if (weather === "sunny") {
   }
 } else {
   console.log("Not a sunny day")
-}</code></pre><p>โดยทั่วไปไม่แนะนำให้ทำเช่นนี้หากไม่จำเป็น เพราะอาจทำให้โค้ดอ่านยากขึ้น</p>
-<h3>Guard Clause</h3><p>Guard clause เป็นวิธีจัดการเงื่อนไขตั้งแต่ต้นและออกจากฟังก์ชันหรือบล็อกหากเงื่อนไขไม่ผ่าน ช่วยให้ตรรกะหลักซ้อนกันน้อยลงและอ่านง่ายขึ้น:</p><pre><code>const weather = "sunny"
+}</code></pre>
+      <p>💡 <strong>คำแนะนำ:</strong> ในทางปฏิบัติไม่แนะนำให้เขียนโค้ดซ้อนกันหลาย ๆ ชั้น (Nested If) เพราะจะทำให้โค้ดอ่านยากและซับซ้อนต่อการดูแลรักษา</p>
+
+      <h3>ทางเลือกที่ดีกว่า: การใช้ Guard Clauses</h3>
+      <p><strong>Guard Clause</strong> คือเทคนิคการเขียนโค้ดเพื่อตรวจสอบและจัดการเงื่อนไขที่ไม่ถูกต้องหรือกรณีข้อยกเว้นไว้ที่ด้านบนสุดของ Function แล้วสั่งให้หยุดทำงานทันที (ด้วย <code>return</code>) ช่วยลดการเขียนโค้ดซ้อนกันหลายชั้น ทำให้โค้ดสะอาดและอ่านง่ายขึ้นมาก:</p>
+      <pre><code>const weather = "sunny"
 const temperature = 75
 
 if (weather !== "sunny") {
@@ -79,11 +137,25 @@ if (temperature &gt; 70) {
 } else {
   console.log("Sunny but a bit cold")
 }</code></pre>
-<h2>คำสั่ง If บรรทัดเดียว</h2><p>หากมีคำสั่งเดียวในบล็อก If หรือ Else คุณสามารถละวงเล็บปีกกา <code>{}</code> ได้:</p><pre><code>const age = 18
+
+      <h2>7. การเขียนคำสั่ง If แบบบรรทัดเดียว (Shorthand If)</h2>
+      <p>หากชุดคำสั่งภายในบล็อก <code>if</code> หรือ <code>else</code> มีเพียงบรรทัดเดียว เราสามารถละเว้น (ไม่ต้องเขียน) วงเล็บปีกกา <code>{}</code> ได้เพื่อความกระชับ:</p>
+      <pre><code>const age = 18
 if (age &gt;= 18) console.log("You can vote!") // บรรทัดนี้จะทำงาน
-else console.log("You cannot vote yet") // บรรทัดนี้จะไม่ทำงาน</code></pre><p>โดยทั่วไปผมใช้รูปแบบนี้เฉพาะกับ guard clause เพราะการใช้บ่อยเกินไปทำให้โค้ดอ่านยากขึ้น</p>
-<h2>แบบฝึกหัด</h2><p>ลองเขียนคำสั่ง If ที่:</p><ol><li>ตรวจสอบว่าบุคคลสามารถขอใบขับขี่ได้หรือไม่</li><li>ข้อกำหนด: ต้องมีอายุอย่างน้อย 16 ปี และเรียนหลักสูตรขับรถจบแล้ว</li><li>หากขอใบขับขี่ได้ ให้แสดง “You can get your license!”</li><li>หากอายุน้อยเกินไป ให้แสดง “You must be at least 16”</li><li>หากยังเรียนหลักสูตรขับรถไม่จบ ให้แสดง “You need to complete driver's education”</li></ol>
-<details><summary>เฉลย</summary><pre><code>const age = 17
+else console.log("You cannot vote yet") // บรรทัดนี้จะไม่ทำงาน</code></pre>
+      <p>💡 <strong>แนวทางปฏิบัติที่ดี:</strong> แนะนำให้ใช้รูปแบบนี้เฉพาะกับคำสั่งสั้น ๆ เช่น Guard Clause เท่านั้น หากมีคำสั่งหลายบรรทัดหรือซับซ้อน ควรใส่วงเล็บปีกกา <code>{}</code> เสมอเพื่อความปลอดภัยและป้องกันข้อผิดพลาด</p>
+
+      <h2>ลองทำแบบฝึกหัด</h2>
+      <p>ฝึกฝนความเข้าใจด้วยการเขียนเงื่อนไขตรวจสอบคุณสมบัติของผู้ขอใบขับขี่ ดังนี้:</p>
+      <ol>
+        <li>เงื่อนไข: จะต้องมีอายุอย่างน้อย 16 ปี และผ่านการอบรมหลักสูตรขับขี่เรียบร้อยแล้ว</li>
+        <li>หากผ่านเงื่อนไขทั้งหมด ให้แสดงข้อความ “You can get your license!”</li>
+        <li>หากอายุไม่ถึง 16 ปี ให้แสดงข้อความ “You must be at least 16”</li>
+        <li>หากอายุถึงแต่ยังไม่อบรมหลักสูตรขับขี่ ให้แสดงข้อความ “You need to complete driver's education”</li>
+      </ol>
+      <details>
+        <summary>ดูเฉลย</summary>
+        <pre><code>const age = 17
 const hasDriversEd = true
 
 if (age &lt; 16) {
@@ -92,7 +164,9 @@ if (age &lt; 16) {
   console.log("You need to complete driver's education")
 } else {
   console.log("You can get your license!")
-}</code></pre><p>อีกวิธีหนึ่งโดยใช้ guard clause:</p><pre><code>const age = 17
+}</code></pre>
+        <p>อีกวิธีหนึ่งที่สะอาดกว่าโดยใช้เทคนิค Guard Clause:</p>
+        <pre><code>const age = 17
 const hasDriversEd = true
 
 if (age &lt; 16) {
@@ -105,10 +179,17 @@ if (!hasDriversEd) {
   return
 }
 
-console.log("You can get your license!")</code></pre></details>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+console.log("You can get your license!")</code></pre>
+      </details>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="18_this_keyword.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="20_ternary_operator.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/if-statements">“If Statements” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/if-statements">“If Statements” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

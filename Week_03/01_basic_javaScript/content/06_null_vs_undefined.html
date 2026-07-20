@@ -4,59 +4,59 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="เรียนรู้เกี่ยวกับค่าพิเศษ null และ undefined ใน JavaScript ทำความเข้าใจความแตกต่าง และรู้ว่าเมื่อใดควรใช้ค่าแต่ละแบบ" />
-  <title>การแสดงถึง “การไม่มีค่า” — เริ่มต้นใช้งาน JavaScript</title>
+  <title>Null vs Undefined: การแสดงถึง “การไม่มีค่า” — เริ่มต้นใช้งาน JavaScript</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
 <body>
   <main>
     <article>
-      <h1>การแสดงถึง “การไม่มีค่า”</h1>
-      <p>การแสดงถึงการไม่มีค่าใน JavaScript นั้นชวนให้สับสน เพราะมีสองวิธีที่แตกต่างกันในการทำเช่นนี้ ได้แก่ <code>null</code> และ <code>undefined</code></p>
+      <h1>Null vs Undefined: การแสดงถึง “การไม่มีค่า”</h1>
+      <p>การแสดงถึงการไม่มีค่าใน JavaScript อาจทำให้ผู้เริ่มต้นสับสนได้ง่าย เนื่องจากมีสองคำที่มีความหมายคล้ายกันแต่ใช้งานต่างกัน นั่นคือ <code>null</code> และ <code>undefined</code></p>
 
       <h2><code>null</code> และ <code>undefined</code> คืออะไร?</h2>
-      <p>ทั้ง <code>null</code> และ <code>undefined</code> แสดงถึงการไม่มีค่า แต่ถูกใช้ในสถานการณ์ที่แตกต่างกัน:</p>
+      <p>แม้ว่าทั้ง <code>null</code> และ <code>undefined</code> จะหมายถึงการไม่มีข้อมูลเหมือนกัน แต่ถูกนำมาใช้ในวัตถุประสงค์ที่ต่างกันอย่างชัดเจน:</p>
       <ul>
-        <li><code>undefined</code> - หมายความว่ามีตัวแปรอยู่ แต่ยังไม่ได้รับการกำหนดค่า</li>
-        <li><code>null</code> - หมายความว่าคุณตั้งใจให้ตัวแปรไม่มีค่า</li>
+        <li><code>undefined</code> - หมายความว่า <strong>มีการประกาศตัวแปรไว้แล้ว แต่ยังไม่ได้ถูกกำหนดค่าใด ๆ ให้กับตัวแปรนั้น</strong> (เกิดขึ้นโดยอัตโนมัติจากระบบ)</li>
+        <li><code>null</code> - หมายความว่า <strong>ผู้เขียนโปรแกรมตั้งใจกำหนดให้ตัวแปรนั้นไม่มีค่าหรือว่างเปล่า</strong></li>
       </ul>
 
       <h2>ทำความเข้าใจ <code>undefined</code></h2>
-      <p>เมื่อคุณสร้างตัวแปรแต่ไม่ได้กำหนดค่าให้ JavaScript จะตั้งค่าให้เป็น <code>undefined</code> โดยอัตโนมัติ:</p>
+      <p>เมื่อคุณประกาศตัวแปรแต่ไม่ได้กำหนดค่าเริ่มต้นให้มัน JavaScript Engine จะกำหนดค่าเริ่มต้นให้เป็น <code>undefined</code> โดยอัตโนมัติ:</p>
       <pre><code>let a
 console.log(a) // undefined</code></pre>
-      <p>ยังมีกรณีอื่น ๆ ที่คุณอาจพบ <code>undefined</code> ซึ่งจะกล่าวถึงในภายหลัง แต่ค่านี้หมายความเสมอว่าไม่มีค่าอยู่</p>
+      <p>นอกจากนี้ยังมีกรณีอื่น ๆ ที่คุณจะได้พบกับ <code>undefined</code> (เช่น ค่าที่ส่งกลับจาก Function ที่ไม่มีการ return) ซึ่งจะอธิบายในบทถัด ๆ ไป แต่จำง่าย ๆ ว่าค่านี้หมายถึงระบบยังไม่รู้จักค่าของมัน</p>
 
       <h2>ทำความเข้าใจ <code>null</code></h2>
-      <p><code>null</code> เป็นค่าที่ใช้ระบุว่า “ตั้งใจให้ว่าง”:</p>
+      <p><code>null</code> คือค่าพิเศษที่เรากำหนดขึ้นมาเพื่อระบุว่าตัวแปรนี้ "ตั้งใจให้ว่างเปล่า" หรือ "ไม่มีข้อมูล":</p>
       <pre><code>let a = null
 console.log(a) // null</code></pre>
-      <p>การกำหนดค่าเป็น <code>null</code> คือการระบุอย่างชัดเจนว่าตัวแปรนี้ <strong>ไม่มีค่า</strong></p>
+      <p>การกำหนดค่าเป็น <code>null</code> คือการประกาศอย่างชัดเจนโดยผู้เขียนโปรแกรมว่าตัวแปรนี้ <strong>ไม่มีค่าอยู่ ณ ขณะนี้</strong></p>
 
-      <h2>แนวทางปฏิบัติที่ดี</h2>
+      <h2>แนวทางปฏิบัติที่ดีในการใช้งาน (Best Practices)</h2>
       <ol>
         <li>
-          <p>ใช้ <code>null</code> สำหรับสถานะ “ว่าง” โดยตั้งใจ</p>
+          <p>ใช้ <code>null</code> เมื่อต้องการระบุว่าตัวแปร "ว่างเปล่า" โดยตั้งใจ</p>
           <pre><code>let selectedFile = null
 let currentTheme = null
 let lastError = null</code></pre>
         </li>
         <li>
-          <p>ปล่อยให้ <code>undefined</code> เกิดขึ้นเองตามธรรมชาติ</p>
-          <pre><code>let userName // จะกำหนดค่าในภายหลัง
-let userPreferences // จะโหลดจากเซิร์ฟเวอร์</code></pre>
+          <p>ปล่อยให้ <code>undefined</code> เกิดขึ้นตามระบบของภาษา (ไม่ควรกำหนดเอง)</p>
+          <pre><code>let userName // จะถูกกำหนดค่าจริงในภายหลัง
+let userPreferences // จะถูกโหลดข้อมูลจากเซิร์ฟเวอร์ในภายหลัง</code></pre>
         </li>
         <li>
-          <p>ใช้ <code>null</code> เพื่อล้างค่า</p>
+          <p>ใช้ <code>null</code> เมื่อต้องการล้างค่าข้อมูลเดิม</p>
           <pre><code>let name = "Kyle"
-// โค้ดอื่นใช้ name...
-name = null // ตอนนี้ name ไม่มีค่า</code></pre>
+// โค้ดส่วนอื่น ๆ เรียกใช้งาน name...
+name = null // ล้างค่าออก เพื่อระบุว่าตอนนี้ name ไม่มีข้อมูลแล้ว</code></pre>
         </li>
       </ol>
 
-      <h2>ความแตกต่างที่สำคัญ</h2>
+      <h2>สรุปความแตกต่างที่สำคัญ</h2>
       <ul>
-        <li><code>undefined</code> - ฉันยังไม่ได้รับการกำหนดค่า</li>
-        <li><code>null</code> - ฉันไม่มีค่าโดยตั้งใจ</li>
+        <li><code>undefined</code> - ตัวแปรนี้ยังไม่ได้ถูกกำหนดค่าใด ๆ (ระบบกำหนดให้โดยอัตโนมัติ)</li>
+        <li><code>null</code> - ตัวแปรนี้ตั้งใจให้ไม่มีค่าหรือว่างเปล่า (ผู้เขียนโปรแกรมกำหนดเอง)</li>
       </ul>
     </article>
       <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">

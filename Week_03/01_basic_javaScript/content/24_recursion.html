@@ -1,34 +1,69 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้การทำงานของ Recursion เมื่อฟังก์ชันเรียกตัวเองเพื่อแก้ปัญหาย่อยที่คล้ายกัน" /><title>Recursion — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>Recursion</h1><p>Recursion คือการที่ฟังก์ชันเรียกตัวเอง แม้ฟังดูแปลกในตอนแรก แต่เป็นเทคนิคที่ทรงพลังสำหรับแก้ปัญหาที่แบ่งเป็นปัญหาย่อยคล้ายกันได้</p><p>⚠️ <strong>คำเตือน:</strong> หัวข้อนี้เข้าใจยาก จึงควรใช้เวลาทำความเข้าใจให้ถ่องแท้!</p>
-<h2>ตัวอย่าง Recursion พื้นฐาน</h2><pre><code>function printNumbers(number) {
-  if (number &gt; 10) return // Base case: หยุด Recursion
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้การทำงานของ Recursion เมื่อ Function เรียกตัวเองเพื่อแก้ปัญหาย่อยที่คล้ายกัน" />
+  <title>การใช้งาน Function เรียกตัวเอง (Recursion) — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งาน Function เรียกตัวเอง (Recursion)</h1>
+      <p><strong>Recursion (การเรียกตัวเองซ้ำ)</strong> คือเทคนิคการเขียนโปรแกรมที่ Function หนึ่ง ๆ จะทำการ <strong>เรียกใช้งานตัวเอง (Self-calling)</strong> เพื่อแก้ปัญหาที่มีลักษณะซับซ้อน โดยการย่อยปัญหาใหญ่นั้นออกเป็นปัญหาย่อย ๆ ที่มีรูปแบบโครงสร้างเหมือนเดิมแต่มีขนาดเล็กลงเรื่อย ๆ</p>
+      <p>💡 <strong>คำแนะนำ:</strong> หัวข้อนี้เป็นหนึ่งในแนวคิดที่เข้าใจยากที่สุดสำหรับผู้เริ่มต้นเขียนโปรแกรม แนะนำให้ค่อย ๆ ทำความเข้าใจกลไกการทำงานเบื้องหลังและลองวาดภาพตามไปพร้อม ๆ กันนะครับ</p>
+
+      <h2>1. ตัวอย่างการทำงานของ Recursion เบื้องต้น</h2>
+      <pre><code>function printNumbers(number) {
+  if (number &gt; 10) return // Base Case: เงื่อนไขสิ้นสุดเพื่อหยุดการเรียกตัวเองซ้ำ
   console.log(number)
-  printNumbers(number + 1) // Recursive call: ฟังก์ชันเรียกตัวเอง
+  printNumbers(number + 1) // Recursive Case: Function เรียกตัวเองพร้อมส่งค่าใหม่เข้าไป
 }
-printNumbers(1) // แสดง 1 ถึง 10</code></pre><p>ใช้แทน For loop แบบนี้ได้:</p><pre><code>for (let i = 1; i &lt;= 10; i++) console.log(i)</code></pre>
-<h2>สองส่วนสำคัญของ Recursion</h2><h3>1. Base Case (เงื่อนไขหยุด)</h3><p>เงื่อนไขที่หยุดไม่ให้ Recursion ทำงานตลอดไป:</p><pre><code>if (number &gt; 10) return</code></pre><p>หากไม่มี Base case ที่เหมาะสม จะเกิด Recursion ไม่สิ้นสุดและ <strong>Stack overflow error</strong>:</p><pre><code>// ❌ ทำให้โปรแกรมล่ม!
+printNumbers(1) // แสดงตัวเลข 1 ถึง 10</code></pre>
+      <p>ซึ่งโค้ด Recursion ด้านบนสามารถเขียนทดแทนด้วยคำสั่ง For Loop ทั่วไปได้ดังนี้:</p>
+      <pre><code>for (let i = 1; i &lt;= 10; i++) console.log(i)</code></pre>
+
+      <h2>2. สองส่วนประกอบสำคัญของ Function Recursion</h2>
+
+      <h3>1. เงื่อนไขสิ้นสุด (Base Case)</h3>
+      <p>คือเงื่อนไขสำคัญที่บอกให้ Function <strong>หยุดเรียกตัวเองและส่งค่ากลับออกไปทันที</strong> เพื่อป้องกันไม่ให้ Function ทำงานวนซ้ำไปเรื่อย ๆ อย่างไม่มีที่สิ้นสุด:</p>
+      <pre><code>if (number &gt; 10) return</code></pre>
+      <p>⚠️ <strong>ข้อควรระวัง:</strong> หากเราเขียน Function Recursion โดยไม่มี Base Case หรือกำหนดเงื่อนไขผิดพลาด จะทำให้เกิดการเรียกตัวเองซ้ำไม่สิ้นสุดจนหน่วยความจำเต็ม และระบบจะแจ้งข้อผิดพลาด <strong>Stack Overflow (Maximum call stack size exceeded)</strong> ส่งผลให้โปรแกรมค้างหรือล่มทันที:</p>
+      <pre><code>// ❌ ตัวอย่างโค้ดที่ไม่มี Base Case ทำให้โปรแกรมล่ม!
 function printHi() {
   console.log("Hi")
   printHi() // RangeError: Maximum call stack size exceeded
 }
 printHi()</code></pre>
-<h3>2. Recursive Case (การเรียกตัวเอง)</h3><p>ฟังก์ชันเรียกตัวเองพร้อมพารามิเตอร์ที่เปลี่ยนไป:</p><pre><code>printNumbers(number + 1) // เรียกตัวเองด้วยเลขถัดไป</code></pre>
-<h2>ทำความเข้าใจ Call Stack</h2><p>เมื่อฟังก์ชันเรียกตัวเอง แต่ละครั้งจะถูกเพิ่มลงใน Call stack:</p><pre><code>function countdown(n) {
+
+      <h3>2. การเรียกตัวเองซ้ำ (Recursive Case)</h3>
+      <p>คือส่วนของโค้ดที่ Function จะเรียกใช้งานตัวเองอีกครั้ง แต่ต้องมั่นใจว่า <strong>ค่า Argument ที่ส่งเข้าไปใหม่นั้นจะต้องขยับเข้าใกล้ Base Case มากขึ้นเรื่อย ๆ</strong> ในทุก ๆ รอบ:</p>
+      <pre><code>printNumbers(number + 1) // เรียกตัวเองซ้ำโดยส่งค่าตัวเลขที่เพิ่มขึ้นทีละ 1 เข้าไป</code></pre>
+
+      <h2>3. ทำความเข้าใจกลไก Call Stack กับ Recursion</h2>
+      <p>เมื่อ Function ทำการเรียกตัวเองซ้ำ JavaScript Engine จะนำ Function แต่ละรอบไปซ้อนทับกันในหน่วยความจำที่เรียกว่า <strong>Call Stack</strong> (เหมือนกับการวางจานซ้อนกันขึ้นไปเรื่อย ๆ) โดย Function ที่อยู่บนสุดจะต้องทำงานให้เสร็จและถูกหยิบออกไปก่อน Function ด้านล่างจึงจะทำงานต่อได้:</p>
+      <pre><code>function countdown(n) {
   console.log(n)
   if (n &lt;= 0) return
   console.log("Before")
   countdown(n - 1)
   console.log("After")
 }
-countdown(3)</code></pre><p><strong>ภาพ Call stack:</strong></p><pre><code>countdown(3) เรียก countdown(2)
-  countdown(2) เรียก countdown(1)
-    countdown(1) เรียก countdown(0)
-      countdown(0) ส่งค่ากลับ
-    countdown(1) ส่งค่ากลับ
-  countdown(2) ส่งค่ากลับ
-countdown(3) ส่งค่ากลับ</code></pre>
-<h2>เมื่อใดควรใช้ Recursion</h2><p>โครงสร้างข้อมูลแบบต้นไม้:</p><pre><code>const fileSystem = {
+countdown(3)</code></pre>
+      <p><strong>ลำดับการทำงานใน Call Stack (Execution Order):</strong></p>
+      <pre><code>countdown(3) ทำงาน -> แสดง 3 -> เรียก countdown(2)
+  countdown(2) ทำงาน -> แสดง 2 -> เรียก countdown(1)
+    countdown(1) ทำงาน -> แสดง 1 -> เรียก countdown(0)
+      countdown(0) ทำงาน -> เข้าเงื่อนไข Base Case -> สิ้นสุดและส่งค่ากลับ (Pop ออกจาก Stack)
+    countdown(1) ทำงานส่วนที่เหลือต่อ -> แสดง "After" -> ส่งค่ากลับ (Pop ออก)
+  countdown(2) ทำงานส่วนที่เหลือต่อ -> แสดง "After" -> ส่งค่ากลับ (Pop ออก)
+countdown(3) ทำงานส่วนที่เหลือต่อ -> แสดง "After" -> สิ้นสุดการทำงานทั้งหมด</code></pre>
+
+      <h2>4. ตัวอย่างการใช้งานจริง: การจัดการโครงสร้างข้อมูลแบบต้นไม้ (Tree Structures)</h2>
+      <p>ประโยชน์สูงสุดของ Recursion คือการนำมาจัดการกับโครงสร้างข้อมูลที่มีความซับซ้อนและซ้อนกันหลายชั้น เช่น โครงสร้างโฟลเดอร์และไฟล์ (File System) หรือโครงสร้างข้อมูลแบบต้นไม้ (Tree) ซึ่งยากต่อการจัดการด้วยการวนลูปทั่วไป:</p>
+      <pre><code>// ตัวอย่างโครงสร้างระบบโฟลเดอร์และไฟล์
+const fileSystem = {
   name: "root", type: "folder",
   children: [
     { name: "documents", type: "folder", children: [
@@ -46,38 +81,69 @@ function countFiles(item) {
   if (item.type === "file") return 1 // Base case
   let count = 0
   for (const child of item.children) {
-    count += countFiles(child) // เรียกซ้ำสำหรับลูกแต่ละตัว
+    count += countFiles(child) // เรียกใช้งาน Function countFiles ซ้ำสำหรับโฟลเดอร์ย่อย
   }
   return count
 }
-console.log(countFiles(fileSystem)) // ไฟล์ทั้งหมด 4 ไฟล์</code></pre>
-<h2>ข้อผิดพลาดที่พบบ่อย</h2><ol><li><p>ลืม Base Case</p><pre><code>// ✅ มี Base case
+console.log(countFiles(fileSystem)) // ผลลัพธ์: 4</code></pre>
+
+      <h2>5. ข้อผิดพลาดที่พบบ่อยใน Recursion (Common Pitfalls)</h2>
+      <ol>
+        <li>
+          <p><strong>การลืมเขียนหรือกำหนด Base Case ผิดพลาด</strong></p>
+          <pre><code>// ✅ ตัวอย่างที่ถูกต้อง: มี Base Case ป้องกันลูปไม่สิ้นสุด
 function countdown(n) {
   if (n &lt;= 0) return
   console.log(n)
   countdown(n - 1)
 }
 
-// ❌ ไม่มี Base case
+// ❌ ตัวอย่างที่ผิด: ไม่มี Base Case ทำให้เกิด Stack Overflow
 function badCountdown(n) {
   console.log(n)
   badCountdown(n - 1)
-}</code></pre></li><li><p>ไม่เคลื่อนไปหา Base Case</p><pre><code>// ✅ n ลดลงทุกครั้ง
+}</code></pre>
+        </li>
+        <li>
+          <p><strong>ค่า Argument ไม่ขยับเข้าใกล้ Base Case</strong></p>
+          <pre><code>// ✅ ตัวอย่างที่ถูกต้อง: ค่า n ลดลงเรื่อย ๆ จนถึงเงื่อนไขหยุด
 function countdown(n) {
   if (n &lt;= 0) return
   console.log(n)
   countdown(n - 1)
 }
 
-// ❌ n ไม่เปลี่ยน
+// ❌ ตัวอย่างที่ผิด: ค่า n ไม่เปลี่ยนแปลง ทำให้ Function เรียกตัวเองซ้ำไปเรื่อย ๆ
 function badCountdown(n) {
   if (n &lt;= 0) return
   console.log(n)
   countdown(n)
-}</code></pre></li></ol>
-<h2>เมื่อใดควรใช้ Recursion</h2><p><strong>✅ ใช้เมื่อ:</strong></p><ul><li>ทำงานกับโครงสร้างแบบต้นไม้หรือข้อมูลซ้อนกัน</li><li>แบ่งปัญหาเป็นปัญหาย่อยคล้ายกันได้</li><li>วิธี Recursive ชัดเจนกว่าวิธีวนซ้ำ</li><li>ประมวลผลข้อมูลลำดับชั้น</li></ul><p><strong>❌ หลีกเลี่ยงเมื่อ:</strong></p><ul><li>Loop ธรรมดาทำงานได้ดีเท่ากัน</li><li>ประสิทธิภาพสำคัญมาก</li><li>วิธี Recursive เข้าใจยาก</li></ul>
-<h2>แบบฝึกหัด</h2><p>เขียนฟังก์ชัน Recursive เพื่อหาค่าสูงสุดใน Array ซ้อนกัน:</p><pre><code>const data = [1, [2, 3], [4, [5, 6]], 7]
-// ควรส่งกลับ 7</code></pre><details><summary>เฉลย</summary><pre><code>function findMax(arr) {
+}</code></pre>
+        </li>
+      </ol>
+
+      <h2>6. สรุปแนวทางการเลือกใช้งาน Recursion</h2>
+      <p><strong>✅ ควรเลือกใช้ Recursion เมื่อ:</strong></p>
+      <ul>
+        <li>ต้องทำงานกับโครงสร้างข้อมูลแบบต้นไม้ (Tree), กราฟ (Graph) หรือข้อมูลที่มีการซ้อนกันลึกหลายชั้น</li>
+        <li>ปัญหานั้นสามารถแบ่งออกเป็นปัญหาย่อย ๆ ที่มีขั้นตอนการทำงานเหมือนเดิมได้ชัดเจน</li>
+        <li>การเขียนแบบ Recursion ช่วยให้โค้ดมีความสั้น กระชับ และอ่านเข้าใจง่ายกว่าการเขียนลูปซ้อนกันหลาย ๆ ชั้น</li>
+        <li>ต้องการประมวลผลข้อมูลที่มีความสัมพันธ์เป็นลำดับขั้น (Hierarchical Data)</li>
+      </ul>
+      <p><strong>❌ ควรหลีกเลี่ยงและใช้ Loop ทั่วไปเมื่อ:</strong></p>
+      <ul>
+        <li>การวนลูปแบบธรรมดา (For/While) สามารถแก้ปัญหาได้ดีและเข้าใจง่ายอยู่แล้ว</li>
+        <li>ต้องการประสิทธิภาพการทำงานที่รวดเร็วและใช้หน่วยความจำน้อยที่สุด (เนื่องจาก Recursion จะใช้พื้นที่บน Call Stack ค่อนข้างมาก)</li>
+        <li>ตรรกะการเรียกตัวเองซ้ำมีความซับซ้อนเกินไปจนทำให้ทีมพัฒนาเข้าใจยาก</li>
+      </ul>
+
+      <h2>ลองทำแบบฝึกหัด</h2>
+      <p>จงเขียน Function Recursive เพื่อค้นหาค่าตัวเลขที่สูงที่สุด (Maximum Value) จาก Array ที่มีการซ้อนกันหลายชั้น (Nested Array) ดังนี้:</p>
+      <pre><code>const data = [1, [2, 3], [4, [5, 6]], 7]
+// ผลลัพธ์ที่ควรได้คือ: 7</code></pre>
+      <details>
+        <summary>ดูเฉลย</summary>
+        <pre><code>function findMax(arr) {
   let max = -Infinity
   for (const item of arr) {
     if (Array.isArray(item)) {
@@ -90,10 +156,17 @@ function badCountdown(n) {
   return max
 }
 const data = [1, [2, 3], [4, [5, 6]], 7]
-console.log(findMax(data)) // 7</code></pre></details>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+console.log(findMax(data)) // 7</code></pre>
+      </details>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="23_while_loops.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="25_short_circuit_evaluation.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/recursion">“Recursion” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/recursion">“Recursion” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

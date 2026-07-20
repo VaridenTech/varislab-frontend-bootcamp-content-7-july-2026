@@ -3,24 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="เรียนรู้ไวยากรณ์ arrow function ซึ่งเป็นอีกวิธีหนึ่งในการเขียนฟังก์ชัน JavaScript ที่สั้นกว่าและมีคุณสมบัติเฉพาะบางอย่าง" />
-  <title>Arrow Function — เริ่มต้นใช้งาน JavaScript</title>
+  <meta name="description" content="เรียนรู้ไวยากรณ์ arrow function ซึ่งเป็นอีกวิธีหนึ่งในการเขียน Function JavaScript ที่สั้นกว่าและมีคุณสมบัติเฉพาะบางอย่าง" />
+  <title>การใช้งาน Arrow Functions — เริ่มต้นใช้งาน JavaScript</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
 <body>
   <main>
     <article>
-      <h1>Arrow Function</h1>
-      <p>Arrow function เป็นอีกวิธีหนึ่งในการเขียนฟังก์ชันใน JavaScript โดยมีไวยากรณ์ที่สั้นกว่าและมีคุณสมบัติเฉพาะบางอย่างที่ทำให้มีประโยชน์อย่างยิ่งในบางสถานการณ์</p>
+      <h1>การใช้งาน Arrow Functions</h1>
+      <p><strong>Arrow Functions</strong> เป็นรูปแบบการเขียน Function แบบย่อใน JavaScript (เริ่มมีใน ES6) ซึ่งช่วยให้โค้ดมีความกระชับ อ่านง่ายขึ้น และมีคุณสมบัติเฉพาะตัวบางประการที่ทำให้มีประโยชน์อย่างมากในการพัฒนาเว็บสมัยใหม่</p>
 
-      <h2>การแปลงฟังก์ชันปกติเป็น Arrow Function</h2>
-      <p>มาเริ่มด้วยฟังก์ชันปกติแล้วแปลงเป็น arrow function:</p>
-      <pre><code>// ฟังก์ชันปกติ
+      <h2>การแปลง Function ปกติ (Regular Function) เป็น Arrow Function</h2>
+      <p>ลองเปรียบเทียบการแปลง Function รูปแบบปกติไปเป็น Arrow Function ดังนี้:</p>
+      <pre><code>// รูปแบบ Function ปกติ (Regular Function)
 function sum(a, b) {
   return a + b
 }
 
-// Arrow function
+// รูปแบบ Arrow Function
 const sumArrow = (a, b) =&gt; {
   return a + b
 }
@@ -28,80 +28,80 @@ const sumArrow = (a, b) =&gt; {
 console.log(sum(1, 2)) // 3
 console.log(sumArrow(1, 2)) // 3</code></pre>
 
-      <h3>ไวยากรณ์ของ Arrow Function</h3>
+      <h3>โครงสร้างไวยากรณ์ (Syntax)</h3>
       <pre><code>const functionName = (parameters) =&gt; {
-  // ส่วนคำสั่งของฟังก์ชัน
+  // ส่วนคำสั่งของ Function
 }</code></pre>
-      <p><strong>ความแตกต่างสำคัญจากฟังก์ชันปกติ:</strong></p>
+      <p><strong>จุดแตกต่างสำคัญจาก Function ปกติ:</strong></p>
       <ol>
-        <li>ใช้ <code>const</code> (หรือ <code>let</code>) แทนคีย์เวิร์ด <code>function</code></li>
-        <li>ชื่อฟังก์ชันอยู่ก่อน ตามด้วย <code>=</code></li>
-        <li>พารามิเตอร์อยู่ในวงเล็บ</li>
-        <li>มีลูกศร (<code>=&gt;</code>) คั่นระหว่างพารามิเตอร์กับส่วนคำสั่ง</li>
-        <li>ส่วนคำสั่งของฟังก์ชันอยู่ในวงเล็บปีกกา</li>
+        <li>ใช้ Keyword <code>const</code> (หรือ <code>let</code>) ประกาศตัวแปรเพื่อเก็บ Function แทนการใช้ Keyword <code>function</code></li>
+        <li>ชื่อ Function จะอยู่ด้านหน้า ตามด้วยเครื่องหมายเท่ากับ (<code>=</code>)</li>
+        <li>Parameter จะเขียนอยู่ภายในวงเล็บ <code>()</code></li>
+        <li>ใช้สัญลักษณ์ลูกศร (<code>=&gt;</code>) คั่นระหว่าง Parameter กับบล็อกคำสั่ง (เป็นที่มาของชื่อ Arrow Function)</li>
+        <li>ชุดคำสั่งการทำงานจะเขียนอยู่ภายในวงเล็บปีกกา <code>{}</code></li>
       </ol>
 
-      <h2>คุณสมบัติเฉพาะ</h2>
-      <p>โดยส่วนใหญ่ คุณสามารถใช้ arrow function ได้เหมือนฟังก์ชันปกติ แต่มีคุณสมบัติเฉพาะบางอย่างที่คุณต้องทราบ</p>
+      <h2>คุณสมบัติพิเศษและรูปแบบย่อ (Shorthand Rules)</h2>
+      <p>ในแง่การทำงานทั่วไป Arrow Function สามารถใช้แทน Function ปกติได้เกือบทั้งหมด แต่มีกฎการเขียนแบบย่อและคุณสมบัติพิเศษที่คุณควรรู้ดังนี้:</p>
 
-      <h3>รูปแบบย่อสำหรับพารามิเตอร์เดียว</h3>
-      <p>เมื่อมี <strong>พารามิเตอร์เพียงหนึ่งตัว</strong> คุณสามารถละวงเล็บได้:</p>
-      <pre><code>// มีวงเล็บ
+      <h3>1. รูปแบบย่อเมื่อมี Parameter ตัวเดียว</h3>
+      <p>หาก Function นั้นรับ Parameter <strong>เพียงตัวเดียว</strong> เราสามารถละเว้น (ไม่ต้องเขียน) วงเล็บ <code>()</code> ได้:</p>
+      <pre><code>// แบบปกติ (ใส่วงเล็บ)
 const printName = (name) =&gt; {
   console.log(name)
 }
 
-// ไม่มีวงเล็บ
+// แบบย่อ (ไม่ต้องใส่วงเล็บ)
 const printNameShort = name =&gt; {
   console.log(name)
 }</code></pre>
-      <p><strong>หมายเหตุ:</strong> หากไม่มีพารามิเตอร์หรือมีพารามิเตอร์หลายตัว จำเป็นต้องใช้วงเล็บ:</p>
-      <pre><code>// ไม่มีพารามิเตอร์ - ต้องมีวงเล็บ
+      <p>⚠️ <strong>ข้อควรระวัง:</strong> หาก Function ไม่มี Parameter เลย หรือมี Parameter ตั้งแต่ 2 ตัวขึ้นไป <strong>ยังคงจำเป็นต้องใส่วงเล็บ <code>()</code> เสมอ</strong>:</p>
+      <pre><code>// กรณีไม่มี Parameter
 const sayHi = () =&gt; {
   console.log("Hi")
 }
 
-// พารามิเตอร์หลายตัว - ต้องมีวงเล็บ
+// กรณีมี Parameter หลายตัว
 const add = (x, y) =&gt; {
   return x + y
 }</code></pre>
 
-      <h3>รูปแบบย่อสำหรับการส่งค่ากลับในบรรทัดเดียว</h3>
-      <p>เมื่อส่วนคำสั่งของฟังก์ชันมีเพียง <strong>หนึ่งบรรทัดที่ส่งค่ากลับ</strong> คุณสามารถใช้ไวยากรณ์ที่สั้นยิ่งขึ้นได้:</p>
-      <pre><code>// Arrow function แบบปกติ
+      <h3>2. รูปแบบย่อสำหรับการส่งค่ากลับในบรรทัดเดียว (Implicit Return)</h3>
+      <p>หากภายใน Function มีคำสั่งเพียงบรรทัดเดียวและเป็นคำสั่งที่ส่งค่ากลับ (Return) เราสามารถตัดวงเล็บปีกกา <code>{}</code> และคำว่า <code>return</code> ออกได้เลย ซึ่งเรียกว่า <strong>Implicit Return</strong>:</p>
+      <pre><code>// แบบปกติ (มีวงเล็บปีกกาและ return)
 const sum = (a, b) =&gt; {
   return a + b
 }
 
-// Arrow function แบบย่อ (ส่งค่ากลับโดยปริยาย)
+// แบบย่อ (Implicit Return - ส่งค่ากลับอัตโนมัติ)
 const sumShort = (a, b) =&gt; a + b
 
 console.log(sumShort(1, 2)) // 3</code></pre>
-      <p>JavaScript จะส่งค่าหลังลูกศรกลับโดยอัตโนมัติโดยไม่ต้องใช้ <code>return</code> หรือวงเล็บปีกกา หากมีเพียงบรรทัดเดียว</p>
+      <p>JavaScript Engine จะนำผลลัพธ์ของคำสั่งที่อยู่หลังลูกศร <code>=&gt;</code> ส่งกลับออกไปให้โดยอัตโนมัติ</p>
 
-      <h2>ข้อผิดพลาดที่พบบ่อย</h2>
+      <h2>ข้อผิดพลาดที่พบบ่อย (Common Errors)</h2>
       <ol>
         <li>
-          <p>การส่งค่ากลับโดยปริยายไม่ถูกต้อง</p>
-          <pre><code>// ❌ ผิด - ใช้ 'return' โดยไม่มีวงเล็บปีกกาไม่ได้
+          <p>การใช้คำสั่ง Return ในรูปแบบย่ออย่างผิดวิธี</p>
+          <pre><code>// ❌ ผิด - ห้ามใช้ Keyword return หากไม่มีวงเล็บปีกกา
 const add = (a, b) =&gt; return a + b
 
-// ❌ ผิด - ไม่ได้ส่งค่าใดกลับมา
+// ❌ ผิด - หากใส่วงเล็บปีกกาแล้วลืมเขียน return จะทำให้ Function ส่งค่ากลับเป็น undefined
 const add = (a, b) =&gt; {
   a + b
 }
 
-// ✅ ถูกต้อง - ใช้วงเล็บปีกกาพร้อม return
+// ✅ ถูกต้อง - แบบเต็ม (มีปีกกาและมี return)
 const add = (a, b) =&gt; {
   return a + b
 }
 
-// ✅ หรือใช้การส่งค่ากลับโดยปริยายโดยไม่มีวงเล็บปีกกา
+// ✅ ถูกต้อง - แบบย่อ (ไม่มีปีกกาและไม่มี return)
 const add = (a, b) =&gt; a + b</code></pre>
         </li>
         <li>
-          <p>ลืมวงเล็บเมื่อมีพารามิเตอร์หลายตัว</p>
-          <pre><code>// ❌ ผิด - พารามิเตอร์หลายตัวต้องมีวงเล็บ
+          <p>ลืมใส่วงเล็บเมื่อประกาศ Parameter หลายตัว</p>
+          <pre><code>// ❌ ผิด - Parameter หลายตัวห้ามละวงเล็บ
 const multiply = a, b =&gt; a * b
 
 // ✅ ถูกต้อง
@@ -109,33 +109,33 @@ const multiply = (a, b) =&gt; a * b</code></pre>
         </li>
       </ol>
 
-      <h2>เมื่อใดควรใช้ Arrow Function</h2>
+      <h2>แนวทางการเลือกใช้งาน Arrow Functions</h2>
       <pre><code>function processData(x, callback) {
   callback(x)
 }
 
-// ใช้ฟังก์ชันปกติ (ยืดยาว)
+// การเขียนแบบ Function ปกติ (ค่อนข้างยาว)
 processData(10, function (variable) {
   console.log(variable)
 })
 
-// ใช้ arrow function (กระชับ)
+// การเขียนแบบ Arrow Function (กระชับขึ้นชัดเจน)
 processData(10, (variable) =&gt; {
   console.log(variable)
 })
 
-// หรือสั้นกว่านั้นด้วยการเขียนในบรรทัดเดียว
+// เขียนย่อให้เหลือบรรทัดเดียวได้อย่างสวยงาม
 processData(10, (variable) =&gt; console.log(variable))</code></pre>
-      <p><strong>ใช้ arrow function สำหรับ:</strong></p>
+      <p><strong>แนะนำให้ใช้ Arrow Functions สำหรับ:</strong></p>
       <ul>
-        <li>ฟังก์ชันสั้น ๆ ที่ไม่ซับซ้อน</li>
-        <li>ฟังก์ชัน callback</li>
-        <li>ฟังก์ชันนิรนาม</li>
-        <li>ฟังก์ชันที่เขียนได้ในบรรทัดเดียว</li>
+        <li>Function สั้น ๆ ที่ทำงานเพียงอย่างเดียว</li>
+        <li>Function คอลแบ็ก (Callback) เช่น ใน Method ของ Array</li>
+        <li>Function นิรนาม (Anonymous Functions) ที่เรียกใช้ครั้งเดียว</li>
+        <li>Function ที่สามารถเขียนจบได้ในบรรทัดเดียว</li>
       </ul>
-      <p><strong>พิจารณาใช้ฟังก์ชันปกติสำหรับ:</strong></p>
+      <p><strong>แนะนำให้ใช้ Function ปกติ (Regular Function) สำหรับ:</strong></p>
       <ul>
-        <li>ฟังก์ชันที่ต้องการชื่อซึ่งสื่อความหมาย</li>
+        <li>Function หลักของระบบที่มีความยาว มีความซับซ้อน หรือต้องการการดีบักที่ง่าย</li>
       </ul>
     </article>
       <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">

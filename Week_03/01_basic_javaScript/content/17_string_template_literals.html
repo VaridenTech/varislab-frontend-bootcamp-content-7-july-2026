@@ -1,19 +1,44 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้วิธีใช้ Template Literal เพื่อสร้าง String แบบไดนามิกที่ฝังตัวแปรและนิพจน์" /><title>String Template Literal — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>String Template Literal</h1><p>จนถึงตอนนี้เราสร้าง String ด้วยเครื่องหมายคำพูดเดี่ยว <code>''</code> หรือคู่ <code>""</code> แต่ JavaScript มีวิธีที่สามซึ่งทรงพลังกว่ามาก คือ <strong>template literal</strong> ที่ใช้ backtick <code>``</code></p>
-<h2>ไวยากรณ์พื้นฐานของ Template Literal</h2><p>Template literal ใช้ backtick แทนเครื่องหมายคำพูดปกติ (ปุ่มเหนือ <code>Tab</code> บนแป้นพิมพ์ส่วนใหญ่):</p><pre><code>const a = `Hi`
-console.log(a) // Hi</code></pre><p>ทำงานเหมือน String ปกติทุกประการ แต่ template literal มีความสามารถพิเศษ</p>
-<h3>การฝังตัวแปรด้วย <code>${}</code></h3><p>พลังที่แท้จริงของ template literal คือการฝังตัวแปรไว้ใน String โดยตรงด้วยไวยากรณ์ <code>${}</code>:</p><pre><code>const firstName = "Kyle"
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้วิธีใช้ Template Literal เพื่อสร้าง String แบบไดนามิกที่ฝังตัวแปรและนิพจน์" />
+  <title>การใช้งาน String Template Literals — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งาน String Template Literals</h1>
+      <p>ที่ผ่านมาเราได้สร้างข้อมูลข้อความ (String) โดยใช้เครื่องหมายคำพูดเดี่ยว <code>''</code> (Single Quotes) หรือเครื่องหมายคำพูดคู่ <code>""</code> (Double Quotes) แต่ในภาษา JavaScript ยังมีวิธีที่สามซึ่งมีความยืดหยุ่นและทรงพลังกว่ามาก นั่นคือการใช้ <strong>Template Literals</strong> ด้วยสัญลักษณ์ Backtick <code>``</code></p>
+
+      <h2>โครงสร้างไวยากรณ์พื้นฐาน (Syntax)</h2>
+      <p>Template Literals จะใช้สัญลักษณ์ Backtick <code>``</code> แทนเครื่องหมายคำพูดปกติ (ซึ่งบนคีย์บอร์ดภาษาไทยมักจะเป็นปุ่มเดียวกับปุ่มเปลี่ยนภาษา หรือปุ่ม Grave Accent ที่อยู่มุมซ้ายบนสุดเหนือปุ่ม <code>Tab</code>):</p>
+      <pre><code>const a = `Hi`
+console.log(a) // Hi</code></pre>
+      <p>ในแง่การใช้งานทั่วไปจะแสดงผลเหมือน String ปกติทุกประการ แต่ความพิเศษของ Template Literals คือฟีเจอร์ที่อยู่ด้านล่างนี้:</p>
+
+      <h3>1. การฝังตัวแปรลงในข้อความ (String Interpolation)</h3>
+      <p>จุดเด่นที่สำคัญที่สุดของ Template Literals คือเราสามารถนำตัวแปรมาแทรกหรือฝังไว้ภายในข้อความได้โดยตรงผ่านสัญลักษณ์ <code>${ตัวแปร}</code> โดยไม่จำเป็นต้องใช้เครื่องหมายบวก (<code>+</code>) เพื่อต่อข้อความให้ยุ่งยากอีกต่อไป:</p>
+      <pre><code>const firstName = "Kyle"
 const lastName = "Cook"
 
 console.log(firstName + " " + lastName) // Kyle Cook
-console.log(`${firstName} ${lastName}`) // Kyle Cook</code></pre><p>ไวยากรณ์ <code>${}</code> บอก JavaScript ว่า “รันโค้ดภายในวงเล็บนี้แล้วนำผลลัพธ์มาใส่ตรงนี้”</p>
-<h3>การฝังนิพจน์ JavaScript ใด ๆ</h3><p>คุณสามารถใส่นิพจน์ JavaScript <strong>ใด ๆ</strong> ภายใน <code>${}</code> ไม่ใช่แค่ตัวแปร:</p><pre><code>const firstName = "Kyle"
+console.log(`${firstName} ${lastName}`) // Kyle Cook</code></pre>
+      <p>สัญลักษณ์ <code>${}</code> จะทำหน้าที่บอกให้ JavaScript Engine ทราบว่า "ให้ประมวลผลโค้ดที่อยู่ภายในวงเล็บปีกกานี้ แล้วนำผลลัพธ์ที่ได้มาแปลงเป็นข้อความแทรกลงในตำแหน่งนี้ทันที"</p>
+
+      <h3>2. การฝังนิพจน์หรือการคำนวณ (Expressions)</h3>
+      <p>นอกจากตัวแปรแล้ว เรายังสามารถเขียนคำสั่งคำนวณทางคณิตศาสตร์ เรียกใช้ Function หรือใส่ตรรกะใด ๆ ของ JavaScript ลงไปในสัญลักษณ์ <code>${}</code> ได้ด้วย:</p>
+      <pre><code>const firstName = "Kyle"
 
 console.log(`${firstName} ${2 + 3}`) // Kyle 5
 console.log(`Hello ${firstName.toUpperCase()}`) // Hello KYLE
 console.log(`Random number: ${Math.random()}`) // Random number: 0.234...</code></pre>
-<h2>String หลายบรรทัด</h2><p>Template literal ยังช่วยให้สร้าง String หลายบรรทัดได้ง่าย:</p><pre><code>const poem = `Roses are red,
+
+      <h2>3. การเขียนข้อความแบบหลายบรรทัด (Multi-line Strings)</h2>
+      <p>หากเป็นเครื่องหมายคำพูดแบบปกติ การเขียนข้อความขึ้นบรรทัดใหม่จะทำได้ยากและต้องใช้สัญลักษณ์พิเศษอย่าง <code>\n</code> แต่สำหรับ Template Literals เราสามารถกดปุ่ม Enter เพื่อขึ้นบรรทัดใหม่ในโค้ดได้ตรง ๆ เลย:</p>
+      <pre><code>const poem = `Roses are red,
 Violets are blue,
 Template literals are awesome,
 And so are you!`
@@ -23,10 +48,26 @@ console.log(poem)
 // Violets are blue,
 // Template literals are awesome,
 // And so are you!</code></pre>
-<h2>เมื่อใดควรใช้ Template Literal</h2><p>ใช้ template literal เมื่อ:</p><ul><li>✅ ต้องฝังตัวแปรใน String</li><li>✅ ต้องการ String หลายบรรทัด</li></ul><p>ใช้เครื่องหมายคำพูดปกติเมื่อ:</p><ul><li>✅ มี String คงที่แบบง่าย ๆ ที่ไม่มีตัวแปร</li></ul>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+
+      <h2>สรุปแนวทางการใช้งาน</h2>
+      <p><strong>ควรเลือกใช้ Template Literals เมื่อ:</strong></p>
+      <ul>
+        <li>ต้องการแทรกตัวแปรหรือคำนวณค่าต่าง ๆ ลงในข้อความ</li>
+        <li>ต้องการเขียนข้อความที่มีการขึ้นบรรทัดใหม่ (เช่น โครงสร้าง HTML)</li>
+      </ul>
+      <p><strong>ควรเลือกใช้เครื่องหมายคำพูดปกติ (<code>''</code> หรือ <code>""</code>) เมื่อ:</strong></p>
+      <ul>
+        <li>เป็นข้อความสั้น ๆ ทั่วไปที่ไม่มีการแทรกตัวแปรหรือการคำนวณใด ๆ เพื่อให้อ่านโค้ดได้ง่ายและเป็นระเบียบ</li>
+      </ul>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="16_reference_vs_value.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="18_this_keyword.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/advanced-variables/string-template-literals">“String Template Literals” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/advanced-variables/string-template-literals">“String Template Literals” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

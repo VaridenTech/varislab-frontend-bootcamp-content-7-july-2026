@@ -1,7 +1,20 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้การใช้คำสั่ง Switch สำหรับเงื่อนไขหลายทางและการสร้าง Scope ให้แต่ละ Case" /><title>คำสั่ง Switch — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>คำสั่ง Switch</h1><p>คำสั่ง Switch เป็นวิธีที่สะอาดกว่าในการเขียนเงื่อนไข if-else หลายชุด เมื่อเปรียบเทียบตัวแปรหนึ่งตัวกับค่าหลายค่า</p>
-<h2>ไวยากรณ์ Switch พื้นฐาน</h2><pre><code>const favoriteAnimal = "cat"
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้การใช้คำสั่ง Switch สำหรับเงื่อนไขหลายทางและการสร้าง Scope ให้แต่ละ Case" />
+  <title>การใช้งานคำสั่ง Switch — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งานคำสั่ง Switch</h1>
+      <p><strong>คำสั่ง Switch (Switch Statement)</strong> เป็นรูปแบบการเขียนเงื่อนไขทางเลือกที่มีประสิทธิภาพและสะอาดตามากกว่าการเขียน <code>if-else if-else</code> หลาย ๆ ชุดซ้อนกัน เหมาะสำหรับกรณีที่เราต้องการเปรียบเทียบค่าของตัวแปรตัวหนึ่งกับตัวเลือกหลาย ๆ ตัวเลือก</p>
+
+      <h2>1. โครงสร้างไวยากรณ์ Switch พื้นฐาน</h2>
+      <pre><code>const favoriteAnimal = "cat"
 
 switch (favoriteAnimal) {
   case "cat":
@@ -16,8 +29,18 @@ switch (favoriteAnimal) {
   default:
     console.log("That is cool but I am unfamiliar with that animal")
 }</code></pre>
-<h3>ทำงานอย่างไร</h3><ol><li><strong>นิพจน์ Switch</strong>: ตัวแปรที่ต้องตรวจสอบ (<code>favoriteAnimal</code>)</li><li><strong>ป้าย Case</strong>: แต่ละ <code>case</code> ตรวจว่านิพจน์ Switch เท่ากับค่าหนึ่งหรือไม่</li><li><strong>คำสั่ง Break</strong>: จบบล็อก Switch เมื่อพบค่าที่ตรงกัน</li><li><strong>Default Case</strong>: ทำงานเมื่อไม่มี Case ใดตรงกัน คล้าย <code>else</code></li></ol>
-<h3>Switch กับ If-Else</h3><p>คำสั่ง Switch ข้างต้นเทียบเท่ากับ if-else ชุดนี้:</p><pre><code>const favoriteAnimal = "cat"
+
+      <h3>กลไกการทำงานของ Switch</h3>
+      <ol>
+        <li><strong>นิพจน์ Switch (Switch Expression)</strong>: ตัวแปรหรือค่าที่เราต้องการนำมาตรวจสอบ (ในตัวอย่างคือ <code>favoriteAnimal</code>)</li>
+        <li><strong>ป้าย Case (Case Label)</strong>: ตัวเลือกแต่ละตัว (<code>case</code>) ที่จะนำค่ามาตรวจสอบว่าตรงกับนิพจน์ Switch หรือไม่</li>
+        <li><strong>คำสั่ง Break (<code>break</code>)</strong>: คำสั่งที่ใช้สำหรับหยุดและกระโดดออกจากบล็อก Switch ทันทีเมื่อทำงานใน Case นั้นเสร็จสิ้น</li>
+        <li><strong>Default Case (<code>default</code>)</strong>: ชุดคำสั่งที่จะทำงานในกรณีที่ไม่มี Case ใดตรงกับค่าที่นำมาเปรียบเทียบเลย (ทำหน้าที่เหมือนกับ <code>else</code> ในคำสั่งเงื่อนไขปกติ)</li>
+      </ol>
+
+      <h3>การเปรียบเทียบระหว่าง Switch และ If-Else</h3>
+      <p>หากเราเขียนโค้ดการทำงานของ Switch ด้านบนให้อยู่ในรูปของ <code>if-else</code> จะได้หน้าตาแบบนี้:</p>
+      <pre><code>const favoriteAnimal = "cat"
 
 if (favoriteAnimal === "cat") {
   console.log("Cats are pretty cool")
@@ -27,9 +50,28 @@ if (favoriteAnimal === "cat") {
   console.log("That is an interesting choice")
 } else {
   console.log("That is cool but I am unfamiliar with that animal")
-}</code></pre><p>จะเห็นว่า Switch ช่วยตัดการตรวจ <code>favoriteAnimal ===</code> ที่ซ้ำกันออก</p>
-<h2>เมื่อใดควรใช้ Switch หรือ If-Else</h2><p><strong>ใช้ Switch เมื่อ:</strong></p><ul><li>เปรียบเทียบตัวแปรหนึ่งตัวกับค่าที่เจาะจงหลายค่า</li><li>มีหลายเงื่อนไขให้ตรวจ</li><li>เงื่อนไขใช้ strict equality (<code>===</code>)</li></ul><p><strong>ใช้ If-Else เมื่อ:</strong></p><ul><li>ต้องใช้เงื่อนไขซับซ้อน (<code>&gt;</code>, <code>&lt;</code>, <code>&amp;&amp;</code>, <code>||</code>)</li><li>เปรียบเทียบตัวแปรต่างตัวกัน</li><li>มีเงื่อนไขเพียงไม่กี่ข้อ</li></ul>
-<h2>คุณสมบัติขั้นสูง</h2><h3>หลาย Case สำหรับการทำงานเดียวกัน</h3><p>หากต้องการให้หลาย Case รันโค้ดเดียวกัน ให้วางต่อกันโดยไม่มี Break คั่น:</p><pre><code>const day = "saturday"
+}</code></pre>
+      <p>จะเห็นได้ว่าการใช้ <code>switch</code> ช่วยลดความซ้ำซ้อนในการเขียน <code>favoriteAnimal ===</code> ซ้ำ ๆ หลายรอบ ทำให้โค้ดดูสะอาดและเป็นระเบียบขึ้นมาก</p>
+
+      <h2>2. เมื่อใดควรใช้ Switch หรือ If-Else?</h2>
+      <p><strong>ควรเลือกใช้ Switch เมื่อ:</strong></p>
+      <ul>
+        <li>ต้องการเปรียบเทียบค่าของตัวแปรตัวเดียวกับค่าที่ระบุเจาะจงหลาย ๆ ค่า</li>
+        <li>มีทางเลือกหรือเงื่อนไขจำนวนมาก</li>
+        <li>การเปรียบเทียบเงื่อนไขทั้งหมดใช้เครื่องหมายเท่ากับแบบเข้มงวด (Strict Equality - <code>===</code>)</li>
+      </ul>
+      <p><strong>ควรเลือกใช้ If-Else เมื่อ:</strong></p>
+      <ul>
+        <li>ต้องใช้การเปรียบเทียบเงื่อนไขที่ซับซ้อน (เช่น การใช้เครื่องหมาย <code>&gt;</code>, <code>&lt;</code>, <code>&amp;&amp;</code>, <code>||</code>)</li>
+        <li>ต้องการเปรียบเทียบตัวแปรคนละตัวกันในแต่ละเงื่อนไข</li>
+        <li>มีทางเลือกหรือเงื่อนไขเพียงไม่กี่ข้อ</li>
+      </ul>
+
+      <h2>3. ฟีเจอร์และเทคนิคขั้นสูงของ Switch</h2>
+
+      <h3>การรวมหลาย Case เพื่อทำงานร่วมกัน (Multi-case grouping)</h3>
+      <p>หากเราต้องการให้มีตัวเลือกหลายตัวรันชุดคำสั่งเดียวกัน เราสามารถเขียน <code>case</code> วางเรียงต่อกันโดยไม่ต้องใส่คำสั่ง <code>break</code> คั่นกลางได้เลย:</p>
+      <pre><code>const day = "saturday"
 
 switch (day) {
   case "monday":
@@ -45,19 +87,23 @@ switch (day) {
     break
   default:
     console.log("Invalid day")
-}</code></pre><p>ทำงานได้เพราะ Switch จะรันโค้ดต่อไปจนกว่าจะพบคำสั่ง Break</p>
-<h3>การสร้าง Scope ด้วยวงเล็บปีกกา</h3><p><strong>สำคัญ:</strong> แต่ละ Case ไม่ได้สร้าง Scope ของตัวเองโดยค่าเริ่มต้น หากต้องประกาศตัวแปรใน Case ให้ครอบด้วยวงเล็บปีกกา:</p><pre><code>const action = "login"
+}</code></pre>
+      <p>กลไกนี้ทำงานได้เนื่องจากเมื่อ JavaScript พบ Case ที่ตรงกันแล้ว มันจะทำงานและไหลผ่าน (Fall-through) ไปยัง Case ถัดไปเรื่อย ๆ จนกว่าจะพบคำสั่ง <code>break</code></p>
+
+      <h3>การสร้างขอบเขตตัวแปร (Scope) ด้วยวงเล็บปีกกา <code>{}</code></h3>
+      <p>⚠️ <strong>กฎสำคัญมาก:</strong> โดยปกติแล้ว แต่ละ <code>case</code> ภายใน Switch จะไม่ได้สร้างขอบเขตตัวแปร (Scope) ของตัวเองขึ้นมาใหม่ หมายความว่าหากเราประกาศตัวแปรใน Case หนึ่ง ตัวแปรนั้นจะรั่วไหลออกไปและอาจชนกับ Case อื่นได้ หากต้องการประกาศตัวแปรเฉพาะเจาะจงในแต่ละ Case เราจำเป็นต้องครอบชุดคำสั่งใน Case นั้นด้วยวงเล็บปีกกา <code>{}</code>:</p>
+      <pre><code>const action = "login"
 
 switch (action) {
   case "login": {
-    // วงเล็บปีกกาสร้าง Scope ใหม่
+    // วงเล็บปีกกาช่วยสร้าง Scope ใหม่สำหรับ Case นี้
     const message = "Welcome back!"
     const timestamp = new Date()
     console.log(`${message} Login time: ${timestamp}`)
     break
   }
   case "logout": {
-    // Scope นี้แยกจาก Case login
+    // Scope นี้จะถูกแยกเป็นอิสระจาก Case login
     const message = "Goodbye!"
     const timestamp = new Date()
     console.log(`${message} Logout time: ${timestamp}`)
@@ -71,62 +117,97 @@ switch (action) {
   default:
     console.log("Unknown action")
 }</code></pre>
-<h4>ทำไม Scope จึงสำคัญ</h4><p>หากไม่มีวงเล็บปีกกา คุณไม่สามารถประกาศตัวแปรซ้ำได้:</p><pre><code>const status = "success"
+
+      <h4>ทำไมการสร้าง Scope จึงมีความสำคัญ?</h4>
+      <p>หากเราไม่ใส่วงเล็บปีกกา <code>{}</code> ครอบแต่ละ Case ระบบจะมองว่าตัวแปรเหล่านั้นอยู่ในขอบเขต (Scope) เดียวกันทั้งหมด ส่งผลให้เราไม่สามารถประกาศตัวแปรชื่อซ้ำกันได้ และจะเกิดข้อผิดพลาดขึ้น:</p>
+      <pre><code>const status = "success"
 
 switch (status) {
   case "success":
-    const message = "Operation successful!" // ประกาศ message
+    const message = "Operation successful!" // ประกาศตัวแปร message
     console.log(message)
     break
   case "error":
-    const message = "Operation failed!" // ❌ Error! ประกาศ 'message' ซ้ำไม่ได้
+    const message = "Operation failed!" // ❌ Error! ไม่สามารถประกาศตัวแปร message ซ้ำใน Scope เดียวกันได้
     console.log(message)
     break
-}</code></pre><p>เมื่อมีวงเล็บปีกกา แต่ละ Case จะมี Scope ของตัวเอง:</p><pre><code>const status = "success"
+}</code></pre>
+      <p>แต่เมื่อเราใช้วงเล็บปีกกา <code>{}</code> ครอบแต่ละ Case จะทำให้แต่ละ Case มี Scope แยกจากกันเป็นอิสระ ทำให้เราสามารถใช้ชื่อตัวแปรซ้ำกันได้โดยไม่เกิดข้อผิดพลาด:</p>
+      <pre><code>const status = "success"
 
 switch (status) {
   case "success": {
-    const message = "Operation successful!" // ✅ ใช้ได้
+    const message = "Operation successful!" // ✅ ทำงานได้ปกติ
     console.log(message)
     break
   }
   case "error": {
-    const message = "Operation failed!" // ✅ ใช้ได้ - คนละ Scope
+    const message = "Operation failed!" // ✅ ทำงานได้ปกติเพราะอยู่คนละ Scope
     console.log(message)
     break
   }
 }</code></pre>
-<h2>ข้อผิดพลาดที่พบบ่อย</h2><ol><li><p>ลืมคำสั่ง Break</p><p>หากลืม <code>break</code> โค้ดจะ “ไหลผ่าน” ไปยัง Case ถัดไป:</p><pre><code>const fruit = "apple"
+
+      <h2>4. ข้อผิดพลาดที่พบบ่อย (Common Pitfalls)</h2>
+      <ol>
+        <li>
+          <p><strong>การลืมใส่คำสั่ง Break</strong></p>
+          <p>หากเราลืมเขียนคำสั่ง <code>break</code> ปิดท้าย Case โค้ดจะทำงานไหลผ่าน (Fall-through) ไปรันคำสั่งของ Case ถัดไปเรื่อย ๆ แม้ว่าเงื่อนไขของ Case ถัดไปจะไม่ตรงก็ตาม:</p>
+          <pre><code>const fruit = "apple"
 
 switch (fruit) {
   case "apple":
     console.log("Apple selected")
-  // ไม่มี Break จึงไหลผ่าน
+    // ⚠️ ไม่มี break ปิดท้าย ทำให้โค้ดไหลผ่าน
   case "banana":
-    console.log("Banana selected") // บรรทัดนี้ทำงานด้วย!
+    console.log("Banana selected") // ⚠️ บรรทัดนี้จะทำงานด้วยแม้ว่าผลไม้จะไม่ใช่ banana!
     break
   default:
     console.log("Unknown fruit")
-}</code></pre></li><li><p>พึ่งพา Loose Equality</p><p>Switch ใช้ strict equality (<code>===</code>) จึงต้องระวังชนิดข้อมูล:</p><pre><code>const value = "5"
+}</code></pre>
+        </li>
+        <li>
+          <p><strong>ความเข้าใจผิดเรื่องการเปรียบเทียบค่า (Loose Equality)</strong></p>
+          <p>คำสั่ง Switch จะใช้การเปรียบเทียบแบบเข้มงวด (Strict Equality - <code>===</code>) เสมอ ดังนั้นชนิดข้อมูล (Data Type) จะต้องตรงกันทุกประการ มิฉะนั้นจะไม่พบ Case ที่ตรงกันเลย:</p>
+          <pre><code>const value = "5"
 
 switch (value) {
-  case 5: // ❌ ไม่ตรงกัน เพราะ 5 เป็น Number ไม่ใช่ String
+  case 5: // ❌ ไม่ตรงกัน เพราะ 5 เป็น Number แต่ตัวแปร value เป็น String "5"
     console.log("Matched number 5")
     break
   default:
     console.log("No match") // บรรทัดนี้ทำงาน
-}</code></pre></li><li><p>ลืมสร้าง Scope ให้ตัวแปร</p><p>หากประกาศตัวแปรใน Case โดยไม่มีวงเล็บปีกกา ตัวแปรจะรั่วไปยัง Scope ของ Switch:</p><pre><code>const action = "login"
+}</code></pre>
+        </li>
+        <li>
+          <p><strong>การประกาศตัวแปรโดยไม่มี Scope ครอบ</strong></p>
+          <p>หากเราประกาศตัวแปรภายใน Case โดยไม่มีวงเล็บปีกกา <code>{}</code> ครอบ ตัวแปรนั้นจะรั่วไหลและอาจทำให้เกิดข้อผิดพลาดเมื่อเรียกใช้ใน Case อื่น:</p>
+          <pre><code>const action = "login"
 
 switch (action) {
   case "login":
-    const message = "Welcome!" // รั่วไปยัง Scope ของ Switch
+    const message = "Welcome!" // ตัวแปร message จะรั่วไหลไปยัง Scope หลักของ Switch
     console.log(message)
     break
   case "logout":
-    console.log(message) // ❌ Error - message ไม่ได้กำหนดไว้ตรงนี้
+    console.log(message) // ❌ Error - เนื่องจาก message ไม่ได้ถูกกำหนดค่าไว้สำหรับกรณี logout
     break
-}</code></pre><p>ควรใช้วงเล็บปีกกาเพื่อสร้าง Scope ใหม่เสมอเมื่อประกาศตัวแปรใน Case</p></li></ol>
-<h2>แบบฝึกหัด</h2><p>สร้างคำสั่ง Switch ที่รับหมายเลขเดือน (1–12) และส่งฤดูกลับมา:</p><ul><li>ธันวาคม (12), มกราคม (1), กุมภาพันธ์ (2): “Winter”</li><li>มีนาคม (3), เมษายน (4), พฤษภาคม (5): “Spring”</li><li>มิถุนายน (6), กรกฎาคม (7), สิงหาคม (8): “Summer”</li><li>กันยายน (9), ตุลาคม (10), พฤศจิกายน (11): “Fall”</li></ul><details><summary>เฉลย</summary><pre><code>function getSeason(month) {
+}</code></pre>
+          <p>ดังนั้น ควรสร้าง Scope แยกสำหรับแต่ละ Case ด้วยวงเล็บปีกกา <code>{}</code> ทุกครั้งที่มีการประกาศตัวแปรภายใน Case</p>
+        </li>
+      </ol>
+
+      <h2>ลองทำแบบฝึกหัด</h2>
+      <p>จงเขียนคำสั่ง Switch ที่รับหมายเลขเดือน (1-12) แล้วคืนค่าเป็นชื่อฤดูกาล (Season) ตามเงื่อนไขดังนี้:</p>
+      <ul>
+        <li>ธันวาคม (12), มกราคม (1), กุมภาพันธ์ (2): “Winter”</li>
+        <li>มีนาคม (3), เมษายน (4), พฤษภาคม (5): “Spring”</li>
+        <li>มิถุนายน (6), กรกฎาคม (7), สิงหาคม (8): “Summer”</li>
+        <li>กันยายน (9), ตุลาคม (10), พฤศจิกายน (11): “Fall”</li>
+      </ul>
+      <details>
+        <summary>ดูเฉลย</summary>
+        <pre><code>function getSeason(month) {
   switch (month) {
     case 12:
     case 1:
@@ -150,10 +231,17 @@ switch (action) {
 }
 
 console.log(getSeason(7)) // "Summer"
-console.log(getSeason(13)) // "Invalid month"</code></pre></details>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+console.log(getSeason(13)) // "Invalid month"</code></pre>
+      </details>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="20_ternary_operator.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="22_for_loops.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/switch-statements">“Switch Statements” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/switch-statements">“Switch Statements” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

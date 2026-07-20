@@ -1,34 +1,56 @@
 <!DOCTYPE html>
-<html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้วิธีสร้างและใช้งาน Object เพื่อจัดระเบียบข้อมูลและฟังก์ชันที่เกี่ยวข้องไว้ด้วยกัน" /><title>Object — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>Object</h1><p>Object เป็นชนิดตัวแปรที่สำคัญที่สุดใน JavaScript เพราะช่วยให้คุณจัดระเบียบข้อมูลได้</p>
-<h2>Object คืออะไร?</h2><p>Object คือกลุ่มข้อมูลที่เกี่ยวข้องกัน ซึ่งเก็บรวมกันเป็นคู่ key-value ลองนึกว่าเป็นกล่องที่เก็บข้อมูลหลายส่วนเกี่ยวกับบางสิ่งไว้ด้วยกัน</p>
-<pre><code>// ตัวแปรแยกกัน (ไม่ได้จัดระเบียบ)
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้วิธีสร้างและใช้งาน Object เพื่อจัดระเบียบข้อมูลและ Function ที่เกี่ยวข้องไว้ด้วยกัน" />
+  <title>การใช้งาน Object — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งาน Object</h1>
+      <p><strong>Object</strong> เป็นประเภทข้อมูลที่สำคัญและถูกใช้งานบ่อยที่สุดในภาษา JavaScript เนื่องจากช่วยให้เราสามารถจัดระเบียบและรวมกลุ่มข้อมูลที่เกี่ยวข้องกันเอาไว้ด้วยกันได้อย่างเป็นระบบ</p>
+
+      <h2>Object คืออะไร?</h2>
+      <p><strong>Object</strong> คือโครงสร้างข้อมูลที่เก็บข้อมูลในรูปแบบของคู่ <strong>คีย์-ค่า (Key-Value Pairs)</strong> เปรียบเสมือนกล่องเก็บของขนาดใหญ่ที่มีป้ายกำกับ (Key) ติดไว้ที่แต่ละช่อง เพื่อระบุว่าช่องนั้นเก็บข้อมูลอะไร (Value) เอาไว้</p>
+      <pre><code>// การประกาศตัวแปรแยกกัน (กระจัดกระจายและยากต่อการจัดการ)
 const name = "Kyle"
 const age = 30
 const favoriteNumber = 3
 
-// Object (จัดระเบียบไว้ด้วยกัน)
+// การใช้ Object เพื่อจัดรวมกลุ่มข้อมูลให้อยู่ในที่เดียวกัน
 const person = {
   name: "Kyle",
   age: 30,
   favoriteNumber: 3,
 }</code></pre>
-<h2>การสร้าง Object</h2><p>ใช้วงเล็บปีกกา <code>{}</code> เพื่อสร้าง Object โดยใช้เครื่องหมายจุลภาคคั่นคู่ key-value</p>
-<pre><code>const person = {
+
+      <h2>วิธีการสร้าง Object</h2>
+      <p>เราจะใช้สัญลักษณ์วงเล็บปีกกา <code>{}</code> (Curly Braces) ในการประกาศสร้าง Object และใช้เครื่องหมายจุลภาค (<code>,</code>) คั่นระหว่างคู่ Key-Value แต่ละตัว:</p>
+      <pre><code>const person = {
   name: "Kyle",
   age: 30,
   favoriteNumber: 3,
 }</code></pre>
-<h3>คู่ Key-Value</h3><p>ข้อมูลแต่ละส่วนใน Object ประกอบด้วย:</p><ul><li><strong>Key</strong>: ชื่อของพร็อพเพอร์ตี</li><li><strong>Value</strong>: ข้อมูลที่เก็บไว้ในพร็อพเพอร์ตีนั้น</li></ul>
-<p>Key ใช้หลักการตั้งชื่อเดียวกับตัวแปร (camelCase และไม่มีช่องว่าง) ส่วน Value เป็นข้อมูลชนิดใดก็ได้ รวมถึง Object หรือฟังก์ชันอื่น โดยใช้เครื่องหมายทวิภาค <code>:</code> คั่น Key กับ Value</p>
-<pre><code>const person = {
-  name: "Kyle", // key: "name", value: "Kyle"
-  age: 30, // key: "age", value: 30
-  favoriteNumber: 3, // key: "favoriteNumber", value: 3
+
+      <h3>โครงสร้างคู่ Key-Value</h3>
+      <p>ข้อมูลทุกตัวภายใน Object จะต้องประกอบด้วย 2 ส่วนเสมอ คือ:</p>
+      <ul>
+        <li><strong>Key (คีย์)</strong>: เปรียบเสมือนชื่อป้ายกำกับหรือชื่อคุณสมบัติ (Property Name)</li>
+        <li><strong>Value (ค่า)</strong>: ข้อมูลจริง ๆ ที่เราต้องการจัดเก็บ ซึ่งสามารถเป็นข้อมูลประเภทใดก็ได้</li>
+      </ul>
+      <p>ตามหลักปฏิบัติที่ดี ตัว Key ควรตั้งชื่อโดยใช้รูปแบบ camelCase และไม่มีช่องว่าง ส่วน Value สามารถเก็บข้อมูลประเภทใดก็ได้ ไม่ว่าจะเป็นตัวเลข ข้อความ Boolean หรือแม้กระทั่ง Array และ Object อื่น ๆ โดยเราจะใช้เครื่องหมายโคลอน (<code>:</code>) คั่นระหว่าง Key และ Value เสมอ</p>
+      <pre><code>const person = {
+  name: "Kyle", // key คือ name, value คือ "Kyle"
+  age: 30, // key คือ age, value คือ 30
+  favoriteNumber: 3, // key คือ favoriteNumber, value คือ 3
 }</code></pre>
-<h2>การเข้าถึงพร็อพเพอร์ตีของ Object</h2><p>ใช้ dot notation เพื่อเข้าถึงพร็อพเพอร์ตี:</p>
-<pre><code>const person = {
+
+      <h2>การเข้าถึงข้อมูลใน Object (Accessing Properties)</h2>
+      <p>วิธีการเข้าถึงข้อมูลใน Object ที่นิยมและง่ายที่สุดคือการใช้ <strong>Dot Notation</strong> (ใช้เครื่องหมายจุด <code>.</code> ตามด้วยชื่อ Key):</p>
+      <pre><code>const person = {
   name: "Kyle",
   age: 30,
   favoriteNumber: 3,
@@ -37,8 +59,10 @@ const person = {
 console.log(person.name) // "Kyle"
 console.log(person.age) // 30
 console.log(person.favoriteNumber) // 3</code></pre>
-<h2>การเพิ่มฟังก์ชันลงใน Object</h2><p>Object สามารถมีฟังก์ชันได้ (มักเรียกว่า <strong>เมธอด</strong> เมื่ออยู่ภายใน Object):</p>
-<pre><code>const person = {
+
+      <h2>การเขียน Function ภายใน Object (Methods)</h2>
+      <p>Object ไม่เพียงแต่เก็บข้อมูลทั่วไปได้เท่านั้น แต่ยังสามารถเก็บ Function การทำงานไว้ข้างในได้ด้วย ซึ่งเราจะเรียก Function ที่อยู่ภายใน Object ว่า <strong>Method (Methods)</strong>:</p>
+      <pre><code>const person = {
   name: "Kyle",
   age: 30,
   favoriteNumber: 3,
@@ -48,8 +72,10 @@ console.log(person.favoriteNumber) // 3</code></pre>
 }
 
 person.sayHi() // "Hi"</code></pre>
-<h3>ไวยากรณ์ฟังก์ชันแบบย่อ</h3><p>คุณสามารถเขียนฟังก์ชันใน Object โดยไม่ใช้คีย์เวิร์ด <code>function</code>:</p>
-<pre><code>const person = {
+
+      <h3>การเขียน Method แบบย่อ (Shorthand Method Syntax)</h3>
+      <p>ใน JavaScript เวอร์ชันปัจจุบัน (ES6+) เราสามารถเขียน Method ภายใน Object ได้สั้นลงโดยไม่จำเป็นต้องใส่ Keyword <code>function</code> และเครื่องหมายโคลอน <code>:</code>:</p>
+      <pre><code>const person = {
   name: "Kyle",
   age: 30,
   favoriteNumber: 3,
@@ -63,27 +89,34 @@ person.sayHi() // "Hi"</code></pre>
 
 person.sayHi() // "Hi"
 person.sayGoodbye() // "Goodbye"</code></pre>
-<h2>ตัวอย่างในโลกจริง: <code>console.log</code></h2><p>คุณใช้ Object มาตลอด! <code>console</code> คือ Object ที่มีฟังก์ชัน <code>log</code>:</p>
-<pre><code>console.log("Hello") // console คือ Object และ log คือเมธอด
+
+      <h2>ตัวอย่างการใช้งานจริง: คำสั่ง <code>console.log</code></h2>
+      <p>จริง ๆ แล้วคุณได้ใช้งาน Object มาตั้งแต่วันแรกที่เขียน JavaScript! เพราะคำสั่งยอดนิยมอย่าง <code>console.log()</code> นั้น ตัว <code>console</code> ก็คือ Object ตัวหนึ่ง และ <code>log</code> ก็คือ Method (Function) ที่อยู่ข้างในนั่นเอง:</p>
+      <pre><code>console.log("Hello") // console คือ Object และ log คือ Method (Method) ที่อยู่ข้างใน
 
 // คล้ายกับ:
 const console = {
   log(message) {
-    // แสดงข้อความ
+    // คำสั่งสำหรับแสดงข้อความออกทางหน้าจอ
   },
 }</code></pre>
-<h2>Bracket Notation (อีกวิธีในการเข้าถึง)</h2><p>คุณสามารถเข้าถึงพร็อพเพอร์ตีด้วยวงเล็บเหลี่ยมและ String ได้เช่นกัน:</p>
-<pre><code>const car = {
+
+      <h2>การเข้าถึงข้อมูลด้วย Bracket Notation</h2>
+      <p>นอกจากเครื่องหมายจุด <code>.</code> แล้ว เรายังสามารถเข้าถึงข้อมูลใน Object ได้โดยใช้สัญลักษณ์วงเล็บเหลี่ยม <code>[]</code> และระบุชื่อ Key เป็นข้อความ (String) ได้เช่นกัน:</p>
+      <pre><code>const car = {
   make: "Nissan",
   model: "370Z",
 }
 
 console.log(car["make"]) // "Nissan"
-console.log(car.make) // "Nissan" (แนะนำให้ใช้)</code></pre><p>กรณีเดียวที่จำเป็นต้องใช้ bracket notation คือเมื่อชื่อพร็อพเพอร์ตีถูกเก็บไว้ในตัวแปร:</p>
-<pre><code>const property = "make"
+console.log(car.make) // "Nissan" (แนะนำให้ใช้แบบนี้เป็นหลัก)</code></pre>
+      <p>กรณีหลักที่เราจำเป็นต้องใช้ Bracket Notation คือเมื่อชื่อ Key ที่เราต้องการเข้าถึงนั้นถูกจัดเก็บอยู่ภายในตัวแปรอีกทีหนึ่ง (ทำให้ชื่อ Key มีความยืดหยุ่นตามตัวแปร):</p>
+      <pre><code>const property = "make"
 console.log(car[property]) // "Nissan"</code></pre>
-<h2>Object ซ้อนกัน</h2><p>Object สามารถมี Object หรือ Array อื่นอยู่ภายในได้:</p>
-<pre><code>const person = {
+
+      <h2>Object ซ้อน Object (Nested Objects)</h2>
+      <p>Object สามารถเก็บข้อมูลที่มีความซับซ้อนสูงได้ โดยการนำ Object อื่นหรือ Array มาซ้อนไว้ข้างในเป็น Value:</p>
+      <pre><code>const person = {
   name: "Kyle",
   address: {
     street: "12345 Main Street",
@@ -96,8 +129,18 @@ console.log(person.name) // "Kyle"
 console.log(person.address.street) // "12345 Main Street"
 console.log(person.address.city) // "Somewhere"
 console.log(person.hobbies[0]) // "weightlifting"</code></pre>
-<h2>แบบฝึกหัด</h2><p>สร้าง Object ชื่อ <code>book</code> ที่มีพร็อพเพอร์ตีต่อไปนี้:</p><ol><li><code>title</code> - ชื่อหนังสือ</li><li><code>author</code> - Object ที่มี <code>firstName</code> และ <code>lastName</code></li><li><code>yearPublished</code> - ปีที่ตีพิมพ์หนังสือ</li><li><code>publish</code> - ฟังก์ชันที่แสดงข้อความ <code>"Publishing your book"</code></li></ol>
-<details><summary>เฉลย</summary><pre><code>const book = {
+
+      <h2>ลองทำแบบฝึกหัด</h2>
+      <p>จงสร้าง Object ชื่อ <code>book</code> โดยให้มีคุณสมบัติ (Properties) และ Method ดังต่อไปนี้:</p>
+      <ol>
+        <li><code>title</code>: เก็บชื่อหนังสือ (String)</li>
+        <li><code>author</code>: เก็บข้อมูลผู้แต่งในรูปแบบ Object ที่มี Key ย่อยเป็น <code>firstName</code> และ <code>lastName</code></li>
+        <li><code>yearPublished</code>: เก็บปีที่ตีพิมพ์หนังสือ (Number)</li>
+        <li><code>publish</code>: Method (Function) ที่เมื่อเรียกใช้จะแสดงข้อความ <code>"Publishing your book"</code></li>
+      </ol>
+      <details>
+        <summary>ดูเฉลย</summary>
+        <pre><code>const book = {
   title: "The Way of Kings",
   author: {
     firstName: "Brandon",
@@ -107,10 +150,17 @@ console.log(person.hobbies[0]) // "weightlifting"</code></pre>
   publish() {
     console.log("Publishing your book")
   },
-}</code></pre></details>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+}</code></pre>
+      </details>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="14_arrays.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="16_reference_vs_value.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/advanced-variables/objects">“Objects” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/advanced-variables/objects">“Objects” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

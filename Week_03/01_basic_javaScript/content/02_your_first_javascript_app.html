@@ -5,97 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="การตั้งค่าสภาพแวดล้อมสำหรับการพัฒนาและการเขียนโปรแกรม JavaScript โปรแกรมแรกของคุณ"
+      content="ขั้นตอนการเตรียมสภาพแวดล้อมการพัฒนาและการเขียนโปรแกรม JavaScript แรกของคุณ"
     />
-    <title>แอป JavaScript แรกของคุณ</title>
+    <title>เขียนโปรแกรม JavaScript แรกของคุณ — เริ่มต้นใช้งาน JavaScript</title>
     <link rel="stylesheet" href="lesson.css" />
 </head>
   <body>
     <main>
-      <h1>แอป JavaScript แรกของคุณ</h1>
+      <h1>เขียนโปรแกรม JavaScript แรกของคุณ</h1>
 
       <p>
-        มาเขียนโปรแกรม JavaScript โปรแกรมแรกของคุณกัน! เราจะสร้างแอปพลิเคชัน
-        "Hello World" แบบคลาสสิก
+        มาเริ่มต้นเขียนโปรแกรม JavaScript แรกกันเลย! เราจะสร้างโปรแกรม
+        "Hello World" ซึ่งเป็นโปรแกรมเริ่มต้นยอดนิยมของนักเขียนโค้ดทั่วโลก
       </p>
 
-      <h2>การตั้งค่าพื้นที่ทำงานของคุณ</h2>
+      <h2>การเตรียมพื้นที่ทำงาน (Workspace Setup)</h2>
 
       <ol>
-        <li>เปิด VSCode</li>
+        <li>เปิดโปรแกรม VS Code</li>
         <li>
-          สร้างโฟลเดอร์โปรเจกต์
+          สร้างโฟลเดอร์สำหรับเก็บโปรเจกต์
           <ul>
-            <li>คลิก <strong>File</strong> → <strong>Open Folder</strong></li>
+            <li>คลิกเมนู <strong>File</strong> → <strong>Open Folder</strong></li>
             <li>เลือกหรือสร้างโฟลเดอร์ใหม่สำหรับโปรเจกต์ของคุณ</li>
           </ul>
         </li>
       </ol>
 
-      <h3>หน้าตาของ VSCode</h3>
+      <h3>โครงสร้างหน้าต่างโปรแกรม VS Code</h3>
 
-      <p>เมื่อเปิดโฟลเดอร์แล้ว คุณจะเห็น:</p>
+      <p>เมื่อเปิดโฟลเดอร์ขึ้นมาแล้ว คุณจะพบกับส่วนประกอบหลักดังนี้:</p>
 
       <ul>
-        <li><strong>แถบด้านซ้าย</strong>: ตัวสำรวจไฟล์</li>
-        <li><strong>ตรงกลาง</strong>: ตัวแก้ไขโค้ด</li>
+        <li><strong>แถบด้านซ้าย</strong>: แถบสำรวจไฟล์ (File Explorer)</li>
+        <li><strong>พื้นที่ตรงกลาง</strong>: พื้นที่เขียนโค้ด (Editor)</li>
         <li>
-          <strong>ด้านล่าง</strong>: เทอร์มินัล (เราจะใช้ส่วนนี้เพื่อรันโค้ด)
+          <strong>แถบด้านล่าง</strong>: Terminal (Terminal - สำหรับใช้รันและทดสอบโค้ด)
         </li>
       </ul>
 
-      <h3>แป้นพิมพ์ลัดที่สำคัญ</h3>
+      <h3>คีย์ลัด (Shortcuts) ที่จำเป็น</h3>
 
       <ul>
-        <li><strong>แสดงหรือซ่อนแถบด้านข้าง</strong>: <code>Ctrl + B</code></li>
-        <li><strong>แสดงหรือซ่อนเทอร์มินัล</strong>: <code>Ctrl + ~</code></li>
-        <li><strong>บันทึกไฟล์</strong>: <code>Ctrl + S</code></li>
+        <li><strong>เปิด/ปิดแถบด้านข้าง</strong>: <code>Ctrl + B</code></li>
+        <li><strong>เปิด/ปิด Terminal</strong>: <code>Ctrl + ~</code></li>
+        <li><strong>บันทึกไฟล์ (Save)</strong>: <code>Ctrl + S</code></li>
       </ul>
 
-      <h2>การสร้างแอป JavaScript แรกของคุณ</h2>
+      <h2>ขั้นตอนการเขียนโค้ด JavaScript แรก</h2>
 
-      <h3>1. สร้างไฟล์</h3>
+      <h3>1. สร้างไฟล์ใหม่</h3>
 
       <ul>
         <li>คลิกปุ่ม <strong>New File</strong> ในแถบด้านข้าง</li>
-        <li>ตั้งชื่อว่า: <code>script.js</code></li>
-        <li>นามสกุล <code>.js</code> จะบอก VSCode ว่าไฟล์นี้เป็น JavaScript</li>
+        <li>ตั้งชื่อไฟล์ว่า: <code>script.js</code></li>
+        <li>นามสกุล <code>.js</code> จะช่วยให้ VS Code ทราบว่าไฟล์นี้เป็นไฟล์ JavaScript</li>
       </ul>
 
       <h3>2. เขียนโค้ดแรกของคุณ</h3>
 
-      <p>ในไฟล์ <code>script.js</code> ให้พิมพ์ตามนี้ทุกประการ:</p>
+      <p>พิมพ์โค้ดต่อไปนี้ลงในไฟล์ <code>script.js</code>:</p>
 
       <pre><code class="language-javascript">console.log("Hello World")</code></pre>
 
       <h3>3. บันทึกไฟล์</h3>
 
       <ul>
-        <li>จุดสีขาวข้างชื่อไฟล์จะหายไปเมื่อบันทึกไฟล์แล้ว</li>
+        <li>จุดสีขาวข้างชื่อไฟล์จะหายไปเมื่อคุณบันทึกไฟล์เรียบร้อยแล้ว</li>
       </ul>
 
-      <h2>การรันโค้ดของคุณ</h2>
+      <h2>วิธีการรันโค้ด</h2>
 
       <h3>Node.js</h3>
 
       <ol>
-        <li>เปิดเทอร์มินัล</li>
-        <li>รันคำสั่ง <code>node script.js</code></li>
+        <li>เปิด Terminal (Terminal)</li>
+        <li>พิมพ์คำสั่ง <code>node script.js</code> แล้วกด Enter</li>
       </ol>
 
-      <p><strong>ผลลัพธ์:</strong> คุณจะเห็น "Hello World" แสดงอยู่ในเทอร์มินัล!</p>
+      <p><strong>ผลลัพธ์:</strong> คุณจะพบข้อความ "Hello World" แสดงขึ้นมาบน Terminal!</p>
 
-      <h4>เคล็ดลับสั้น ๆ</h4>
+      <h4>เกร็ดความรู้เพิ่มเติม</h4>
 
       <ul>
-        <li>กด <strong>ลูกศรขึ้น</strong> เพื่อรันคำสั่งล่าสุดอีกครั้ง</li>
+        <li>คุณสามารถกดปุ่ม <strong>ลูกศรขึ้น (Up Arrow)</strong> เพื่อเรียกใช้คำสั่งล่าสุดอีกครั้งได้อย่างรวดเร็ว</li>
       </ul>
 
-      <h3>เบราว์เซอร์</h3>
+      <h3>เว็บ Browser (Web Browser)</h3>
 
       <ol>
         <li>
-          สร้างไฟล์ HTML ชื่อ <code>index.html</code>
+          สร้างไฟล์ HTML ใหม่ชื่อ <code>index.html</code>
 
           <pre><code class="language-html">&lt;!DOCTYPE html&gt;
 &lt;html lang="en"&gt;
@@ -110,24 +110,24 @@
   &lt;/body&gt;
 &lt;/html&gt;</code></pre>
         </li>
-        <li>เปิดด้วย Live Server</li>
+        <li>เปิดไฟล์ด้วย <strong>Live Server</strong></li>
         <li>
-          ดูผลลัพธ์จาก JavaScript
+          ตรวจสอบผลลัพธ์การทำงานของ JavaScript
           <ul>
-            <li>คลิกขวาบนหน้าเว็บ</li>
+            <li>คลิกขวาบนพื้นที่ว่างของหน้าเว็บ</li>
             <li>
-              เลือก <strong>"Inspect"</strong> (หรือกด
+              เลือกเมนู <strong>"Inspect"</strong> (หรือกดปุ่มลัด
               <code>Ctrl + Shift + I</code>)
             </li>
-            <li>คลิกแท็บ <strong>"Console"</strong></li>
-            <li>คุณจะเห็น "Hello World" แสดงอยู่ตรงนั้น!</li>
+            <li>คลิกไปที่แท็บ <strong>"Console"</strong></li>
+            <li>คุณจะพบข้อความ "Hello World" แสดงอยู่ตรงนั้น!</li>
           </ul>
         </li>
       </ol>
 
-      <h2>ข้อผิดพลาดที่พบบ่อย</h2>
+      <h2>ข้อผิดพลาดที่พบบ่อย (Common Errors)</h2>
 
-      <h3>ลืมใส่เครื่องหมายคำพูด</h3>
+      <h3>ลืมใส่เครื่องหมายคำพูด (Quotes)</h3>
 
       <pre><code class="language-javascript">// ❌ ผิด
 console.log(Hello World);
@@ -135,7 +135,7 @@ console.log(Hello World);
 // ✅ ถูกต้อง
 console.log('Hello World');</code></pre>
 
-      <h3>ลืมใส่วงเล็บ</h3>
+      <h3>ลืมใส่วงเล็บ (Parentheses)</h3>
 
       <pre><code class="language-javascript">// ❌ ผิด
 console.log'Hello World';
@@ -143,7 +143,7 @@ console.log'Hello World';
 // ✅ ถูกต้อง
 console.log('Hello World');</code></pre>
 
-      <h3>พิมพ์ console.log ผิด</h3>
+      <h3>สะกดคำสั่ง console.log ผิด</h3>
 
       <pre><code class="language-javascript">// ❌ ผิด
 consol.log("Hello World")
@@ -151,28 +151,27 @@ consol.log("Hello World")
 // ✅ ถูกต้อง
 console.log("Hello World")</code></pre>
 
-      <h2>คอมเมนต์ใน JavaScript</h2>
+      <h2>การเขียน Comment (Comments) ใน JavaScript</h2>
 
       <p>
-        คุณสามารถเพิ่มคอมเมนต์ลงในโค้ดเพื่อให้เข้าใจได้ง่ายขึ้น เอนจิน JavaScript
-        จะไม่ประมวลผลคอมเมนต์เหล่านี้
+        Comment คือข้อความอธิบายโค้ดที่เขียนขึ้นเพื่อให้มนุษย์อ่านเข้าใจง่ายขึ้น โดย JavaScript Engine จะข้ามการทำงานและไม่นำ Comment เหล่านี้ไปประมวลผล
       </p>
 
-      <h3>คอมเมนต์บรรทัดเดียว</h3>
+      <h3>การเขียน Comment บรรทัดเดียว (Single-line Comment)</h3>
 
-      <p>ใช้ <code>//</code> เพื่อเพิ่มคอมเมนต์ในบรรทัดเดียว:</p>
+      <p>ใช้เครื่องหมาย <code>//</code> สำหรับ Comment ข้อความสั้น ๆ ในบรรทัดเดียว:</p>
 
-      <pre><code class="language-javascript">// นี่คือคอมเมนต์บรรทัดเดียว
+      <pre><code class="language-javascript">// นี่คือ Comment บรรทัดเดียว
 console.log("Hello World") // คำสั่งนี้จะแสดง "Hello World"</code></pre>
 
-      <h3>คอมเมนต์หลายบรรทัด</h3>
+      <h3>การเขียน Comment หลายบรรทัด (Multi-line Comment)</h3>
 
       <p>
-        ใช้ <code>/* ... */</code> เพื่อเพิ่มคอมเมนต์ที่ครอบคลุมหลายบรรทัด:
+        ใช้เครื่องหมาย <code>/* ... */</code> สำหรับ Comment ข้อความที่มีความยาวหลายบรรทัด:
       </p>
 
       <pre><code class="language-javascript">/*
-  นี่คือคอมเมนต์หลายบรรทัด
+  นี่คือ Comment หลายบรรทัด
   ซึ่งสามารถครอบคลุมได้หลายบรรทัด
 */
 console.log("Hello World")</code></pre>

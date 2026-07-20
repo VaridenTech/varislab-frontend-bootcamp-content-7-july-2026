@@ -1,25 +1,72 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Window และ Document Object — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>Window และ Document Object</h1><p>เมื่อ JavaScript ทำงานในเบราว์เซอร์ จะเข้าถึง Global object พื้นฐานสองตัวคือ <code>window</code> และ <code>document</code> ซึ่งเป็นตัวเชื่อมระหว่างโค้ด JavaScript กับหน้าเว็บ</p>
-<h2>Window Object</h2><p><code>window</code> แทนหน้าต่างเบราว์เซอร์และเป็น <strong>Global object</strong> ของ JavaScript ทั้งหมดที่ทำงานในหน้าต่างนั้น ทุกสิ่งที่เข้าถึงแบบ Global แท้จริงคือพร็อพเพอร์ตีของ Window</p><h3>ลักษณะ Global ของ Window</h3><pre><code>// ทำงานเทียบเท่ากัน
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>การใช้งาน Window และ Document Object — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งาน Window และ Document Object</h1>
+      <p>เมื่อเรานำ JavaScript ไปรันบนเว็บ Browser ตัว Browser จะเตรียม Object ระดับโกลบอล (Global Objects) พื้นฐานมาให้เราใช้งาน 2 ตัวหลัก ๆ คือ <code>window</code> และ <code>document</code> ซึ่งทำหน้าที่เป็นสะพานเชื่อมต่อระหว่างโค้ด JavaScript กับหน้าต่าง Browser และหน้าเว็บ HTML ของเรา</p>
+
+      <h2>1. ทำความเข้าใจเกี่ยวกับ Window Object</h2>
+      <p>Object <code>window</code> คือตัวแทนของ <strong>หน้าต่างเว็บ Browser (Browser Window)</strong> และเป็น Object ระดับสูงสุด (Global Object) ของระบบ ทุก ๆ ตัวแปร Function หรือเครื่องมือสำเร็จรูปที่เราเรียกใช้งานแบบลอย ๆ (Global Scope) แท้จริงแล้วล้วนเป็นคุณสมบัติ (Properties) หรือ Method (Methods) ที่อยู่ภายใต้ <code>window</code> ทั้งสิ้น:</p>
+
+      <h3>คุณสมบัติความเป็น Global ของ Window</h3>
+      <pre><code>// ทั้งสองคู่ด้านล่างนี้ทำงานเหมือนกันทุกประการ
 console.log("Hello")
 window.console.log("Hello")
+
 alert("Hi there!")
-window.alert("Hi there!")</code></pre><p>เมื่อใช้ฟังก์ชันหรือตัวแปร Global JavaScript จะถือว่าคุณหมายถึง <code>window.something</code></p>
-<h3>สำรวจ Window Object</h3><pre><code>console.log(window)</code></pre><p>ใน Console จะเห็นว่ามีพร็อพเพอร์ตีและเมธอดจำนวนมาก แต่ไม่จำเป็นต้องจำทั้งหมด</p>
-<h3>เมื่อใดต้องใช้ <code>window</code></h3><ol><li><p>ชื่อขัดแย้งกัน: ใช้ <code>window</code> เพื่อเข้าถึงเวอร์ชัน Global</p><pre><code>const alert = "This is my custom alert message"
-// alert("Hello") // ❌ Error
-window.alert(alert) // ✅ ใช้ฟังก์ชัน alert ของ Window</code></pre></li><li><p>สร้างตัวแปร Global:</p><pre><code>window.myGlobalVar = "Hello, World!"
-console.log(myGlobalVar) // ✅ "Hello, World!"</code></pre><p>โดยทั่วไปไม่แนะนำ เพราะทำให้โค้ดดูแลรักษายากขึ้น</p></li></ol>
-<h2>Document Object</h2><p><code>document</code> แทนเอกสาร HTML ที่โหลดในหน้าต่าง HTML ของหน้ามักเรียกว่า <strong>DOM</strong> (Document Object Model)</p><h3>Document Object คืออะไร?</h3><pre><code>console.log(document)</code></pre><p>จะเห็นโครงสร้าง HTML ทั้งหมด ตั้งแต่ <code>&lt;!DOCTYPE html&gt;</code> จนถึงแท็กปิด <code>&lt;/html&gt;</code> และ Document เป็นพร็อพเพอร์ตีของ Window:</p><pre><code>console.log(document)
+window.alert("Hi there!")</code></pre>
+      <p>ดังนั้น เมื่อใดก็ตามที่เราเรียกใช้ Function ระดับ Global ทาง JavaScript Engine จะเข้าใจโดยอัตโนมัติว่าเรากำลังอ้างอิงถึง <code>window.ชื่อ Function</code> เสมอ</p>
+
+      <h3>การทดลองสำรวจ Window Object</h3>
+      <pre><code>console.log(window)</code></pre>
+      <p>หากคุณลองพิมพ์คำสั่งด้านบนใน Console ของเครื่องมือผู้พัฒนา (DevTools) คุณจะพบกับรายการคุณสมบัติและ Method จำนวนมหาศาลที่ Browser เตรียมมาให้ (เช่น ข้อมูลขนาดหน้าจอ ประวัติการเข้าเว็บ หรือการตั้งเวลา) ซึ่งไม่จำเป็นต้องท่องจำทั้งหมด เลือกศึกษาเฉพาะตัวที่ต้องใช้งานก็พอครับ</p>
+
+      <h3>กรณีที่เราจำเป็นต้องระบุ Keyword <code>window</code> เจาะจง</h3>
+      <ol>
+        <li>
+          <p><strong>1. เพื่อหลีกเลี่ยงปัญหาชื่อตัวแปรชนกัน (Name Collision)</strong></p>
+          <pre><code>const alert = "This is my custom alert message"
+// alert("Hello") // ❌ Error เพราะระบบจะมองเป็นตัวแปร string ด้านบนแทน Function
+window.alert(alert) // ✅ ระบุ window นำหน้าเพื่อเรียกใช้ Function ดั้งเดิมของ Browser</code></pre>
+        </li>
+        <li>
+          <p><strong>2. เมื่อต้องการประกาศตัวแปร Global เจาะจง</strong></p>
+          <pre><code>window.myGlobalVar = "Hello, World!"
+console.log(myGlobalVar) // ✅ "Hello, World!"</code></pre>
+          <p>💡 <strong>แนวทางปฏิบัติที่ดี:</strong> ไม่แนะนำให้สร้างตัวแปร Global ขึ้นมาเองผ่าน <code>window</code> หากไม่จำเป็นจริง ๆ เพราะอาจทำให้ตัวแปรไปทับซ้อนกับไลบรารีอื่น ๆ และทำให้ตรวจสอบหา Bug ได้ยากขึ้น</p>
+        </li>
+      </ol>
+
+      <h2>2. ทำความเข้าใจเกี่ยวกับ Document Object (DOM)</h2>
+      <p>Object <code>document</code> คือตัวแทนของ <strong>หน้าเอกสาร HTML (HTML Document)</strong> ที่กำลังแสดงผลอยู่ในหน้าต่าง Browser ขณะนั้น โครงสร้าง Object นี้เรามักจะคุ้นเคยกันในชื่อ <strong>DOM (Document Object Model)</strong> ซึ่งช่วยให้ JavaScript สามารถเข้าไปอ่าน แก้ไข เพิ่มลบ หรือตกแต่งหน้าเว็บ HTML ได้ตามต้องการ</p>
+
+      <h3>ความสัมพันธ์ระหว่าง Window และ Document</h3>
+      <pre><code>console.log(document)</code></pre>
+      <p>หากคุณลองรันคำสั่งด้านล่าง จะพบว่า <code>document</code> ก็คือคุณสมบัติ (Property) หนึ่งที่อยู่ภายใต้ Object <code>window</code> นั่นเอง (เขียนย่อเหลือเพียง <code>document</code> ได้เพราะ window เป็น Global):</p>
+      <pre><code>console.log(document)
 console.log(window.document)</code></pre>
-<h3>พร็อพเพอร์ตีสำคัญของ Document</h3><pre><code>console.log(document.documentElement) // Element &lt;html&gt;
+
+      <h3>คุณสมบัติ (Properties) ที่น่าสนใจของ Document</h3>
+      <pre><code>console.log(document.documentElement) // Element &lt;html&gt;
 console.log(document.body) // Element &lt;body&gt;
 console.log(document.head) // Element &lt;head&gt;
-console.log(document.URL) // URL ปัจจุบัน</code></pre>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+console.log(document.URL) // แสดง URL ของหน้าเว็บปัจจุบัน</code></pre>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="26_array_methods.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="28_selecting_elements.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/dom/window-and-document">“Window and Document Objects” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/dom/window-and-document">“Window and Document Objects” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

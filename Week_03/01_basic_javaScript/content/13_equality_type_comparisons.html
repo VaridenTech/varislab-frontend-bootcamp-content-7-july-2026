@@ -1,33 +1,58 @@
 <!DOCTYPE html>
-<html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้วิธีที่ JavaScript เปรียบเทียบความเท่ากัน และความสำคัญของการใช้ strict equality" /><title>ความเท่ากัน: == กับ === — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้วิธีที่ JavaScript เปรียบเทียบความเท่ากัน และความสำคัญของการใช้ strict equality" />
+  <title>การเปรียบเทียบความเท่ากัน: == และ === — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
 </head>
-<body><main><article>
-  <h1>ความเท่ากัน: <code>==</code> กับ <code>===</code></h1><p>JavaScript มีสองวิธีในการตรวจสอบความเท่ากัน และทั้งสองทำงานแตกต่างกันมาก</p>
-  <h2>เครื่องหมายเท่ากับสองตัว <code>==</code> - มีการแปลงชนิดข้อมูล</h2><p>ตัวดำเนินการ <code>==</code> จะแปลงชนิดข้อมูลก่อนเปรียบเทียบ:</p>
-  <pre><code>console.log(1 == "1") // true (แปลง String "1" เป็น Number 1)
+<body>
+  <main>
+    <article>
+      <h1>การเปรียบเทียบความเท่ากัน: <code>==</code> และ <code>===</code></h1>
+      <p>ในภาษา JavaScript มีวิธีการเปรียบเทียบความเท่ากันอยู่ 2 รูปแบบหลัก ๆ ซึ่งเบื้องหลังการทำงานมีความแตกต่างกันอย่างมากและอาจส่งผลต่อผลลัพธ์ของโปรแกรมได้</p>
 
-console.log(0 == false) // true (0 เป็นค่า "falsy")
-console.log("" == false) // true (String ว่างเป็นค่า "falsy")</code></pre>
-  <p><strong>ทำไม?</strong> JavaScript แปลงค่าเหล่านี้ให้เป็นชนิดเดียวกันก่อนเปรียบเทียบ เลขศูนย์และ String ว่างถือเป็นค่า “falsy” ที่เท่ากับ <code>false</code></p>
-  <h2>เครื่องหมายเท่ากับสามตัว <code>===</code> - ไม่มีการแปลงชนิดข้อมูล</h2><p>ตัวดำเนินการ <code>===</code> เปรียบเทียบทั้งค่า <strong>และ</strong> ชนิด โดยไม่แปลงชนิดข้อมูล:</p>
-  <pre><code>console.log(1 === 1) // true (ชนิดและค่าเหมือนกัน)
-console.log(1 === "1") // false (ชนิดต่างกัน)
-console.log(0 === false) // false (ชนิดต่างกัน)
-console.log("" === false) // false (ชนิดต่างกัน)</code></pre>
-  <h2>ไม่เท่ากัน: <code>!=</code> กับ <code>!==</code></h2><p>กฎเดียวกันนี้ใช้กับการเปรียบเทียบว่าไม่เท่ากัน:</p>
-  <pre><code>console.log(1 != "1") // false (แปลงชนิดแล้วจึงเปรียบเทียบ)
-console.log(1 !== "1") // true (ชนิดต่างกัน จึงไม่เท่ากัน)</code></pre>
-  <h2>ควรใช้แบบใด?</h2><p><strong>เลือกใช้ <code>===</code> และ <code>!==</code> เสมอ</strong> เพื่อหลีกเลี่ยงปัญหาจากการแปลงชนิดข้อมูลที่ไม่คาดคิด</p>
-  <h3>ข้อยกเว้น: <code>null</code> และ <code>undefined</code></h3><p>มีกรณีหนึ่งที่ <code>==</code> มีประโยชน์ คือการตรวจสอบ <code>null</code> หรือ <code>undefined</code>:</p>
-  <pre><code>console.log(null == null) // true
-console.log(null == undefined) // true (ถือว่า null และ undefined เท่ากัน)
+      <h2>1. เครื่องหมายเท่ากับสองตัว (<code>==</code>) - Loose Equality (มีการแปลงชนิดข้อมูล)</h2>
+      <p>ตัวดำเนินการ <code>==</code> จะทำการแปลงชนิดข้อมูลของค่าทั้งสองฝั่งให้เป็นประเภทเดียวกันก่อน (Type Coercion) แล้วจึงทำการเปรียบเทียบค่า:</p>
+      <pre><code>console.log(1 == "1") // true (จริง - แปลงข้อความ "1" เป็นตัวเลข 1 ก่อนเปรียบเทียบ)
+
+console.log(0 == false) // true (จริง - 0 มีสถานะเป็น Falsy Value)
+console.log("" == false) // true (จริง - ข้อความว่างมีสถานะเป็น Falsy Value)</code></pre>
+      <p><strong>ทำไมจึงเป็นเช่นนั้น?</strong> นั่นเป็นเพราะ JavaScript Engine จะแปลงค่าเหล่านี้ให้กลายเป็นข้อมูลชนิดเดียวกันก่อนเปรียบเทียบ โดยตัวเลข <code>0</code> และข้อความว่าง <code>""</code> มีสถานะเป็นค่า "Falsy" (ค่าที่เทียบเท่ากับความเท็จ) ซึ่งระบบจะมองว่ามีค่าเท่ากับ <code>false</code> นั่นเอง</p>
+
+      <h2>2. เครื่องหมายเท่ากับสามตัว (<code>===</code>) - Strict Equality (ไม่มีการแปลงชนิดข้อมูล)</h2>
+      <p>ตัวดำเนินการ <code>===</code> จะเปรียบเทียบทั้ง <strong>ค่าข้อมูล (Value)</strong> และ <strong>ชนิดข้อมูล (Type)</strong> ไปพร้อม ๆ กัน โดยไม่มีการแปลงชนิดข้อมูลใด ๆ เบื้องหลัง:</p>
+      <pre><code>console.log(1 === 1) // true (จริง - ชนิดข้อมูลและค่าเหมือนกันทุกประการ)
+console.log(1 === "1") // false (เท็จ - ชนิดข้อมูลต่างกัน แม้ค่าจะดูเหมือนกัน)
+console.log(0 === false) // false (เท็จ - ชนิดข้อมูลต่างกัน)
+console.log("" === false) // false (เท็จ - ชนิดข้อมูลต่างกัน)</code></pre>
+
+      <h2>3. การเปรียบเทียบความไม่เท่ากัน: <code>!=</code> และ <code>!==</code></h2>
+      <p>กฎการแปลงชนิดข้อมูลแบบเดียวกันนี้จะถูกนำมาใช้กับการเปรียบเทียบความไม่เท่ากันเช่นกัน:</p>
+      <pre><code>console.log(1 != "1") // false (เท็จ - แปลงชนิดข้อมูลแล้วพบว่ามีค่าเท่ากัน)
+console.log(1 !== "1") // true (จริง - ชนิดข้อมูลต่างกัน จึงถือว่าไม่เท่ากันอย่างชัดเจน)</code></pre>
+
+      <h2>สรุปแนวทางปฏิบัติที่ดี (Best Practices)</h2>
+      <p>ในชีวิตการทำงานจริง <strong>แนะนำให้เลือกใช้ <code>===</code> และ <code>!==</code> เป็นหลักเสมอ</strong> เพื่อป้องกันปัญหาและ Bug ที่คาดไม่ถึงจากการแปลงชนิดข้อมูลอัตโนมัติของ JavaScript</p>
+
+      <h3>ข้อยกเว้นที่ยอมรับได้: การตรวจสอบ <code>null</code> และ <code>undefined</code></h3>
+      <p>มีเพียงกรณีเดียวที่เหล่านักพัฒนานิยมใช้ <code>==</code> คือเมื่อต้องการตรวจสอบว่าตัวแปรนั้นมีค่าเป็น <code>null</code> หรือ <code>undefined</code> หรือไม่พร้อม ๆ กันในคำสั่งเดียว:</p>
+      <pre><code>console.log(null == null) // true
+console.log(null == undefined) // true (จริง - ในการเปรียบเทียบแบบหลวม null และ undefined จะถูกมองว่าเท่ากัน)
 
 console.log(null === null) // true
 console.log(null === undefined) // false (ชนิดต่างกัน)</code></pre>
-  <p>เมื่อตรวจสอบว่าตัวแปรมีค่าหรือไม่ คุณมักต้องการตรวจพบทั้ง <code>null</code> และ <code>undefined</code> นี่คือเหตุผลที่ <code>==</code> มีประโยชน์ในกรณีนี้</p>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <p>เมื่อเราต้องการตรวจสอบว่าตัวแปรหนึ่ง ๆ มีข้อมูลอยู่จริงหรือไม่ การใช้ <code>variable == null</code> จะช่วยตรวจจับได้ทั้งกรณีที่ตัวแปรเป็น <code>null</code> และ <code>undefined</code> ได้พร้อมกันอย่างกระชับและสะดวกมาก</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="12_nan_not_a_number.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="14_arrays.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/advanced-variables/equality-type-comparisons">“Equality: == vs ===” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/advanced-variables/equality-type-comparisons">“Equality: == vs ===” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

@@ -1,23 +1,93 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>พื้นฐาน Browser DevTools</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>พื้นฐาน Browser DevTools</h1><p>DevTools เป็นเครื่องมือ Debug ที่ทรงพลังในเบราว์เซอร์ ใช้ตรวจสอบ แก้ปัญหา และปรับประสิทธิภาพเว็บ เนื้อหานี้เน้น Chrome แต่แนวคิดใช้กับเบราว์เซอร์อื่นได้</p>
-<h2>การเปิด DevTools</h2><ol><li><strong>คีย์ลัด</strong>: Windows/Linux ใช้ <code>F12</code> หรือ <code>Ctrl + Shift + I</code>; Mac ใช้ <code>Cmd + Option + I</code></li><li><strong>คลิกขวา</strong> Element แล้วเลือก “Inspect”</li><li><strong>เมนู Chrome</strong>: จุดสามจุด → More Tools → Developer Tools</li></ol>
-<h3>ภาพรวม</h3><ol><li><strong>Elements</strong> - ดูและแก้ HTML/CSS</li><li><strong>Console</strong> - รัน JavaScript และดู Log/Error</li><li><strong>Network</strong> - ตรวจคำขอเครือข่าย</li><li><strong>Application</strong> - ดู Storage, Cookie และข้อมูลอื่น</li><li><strong>Sources</strong> - ดูไฟล์และ Debug ทีละบรรทัด</li><li><strong>Performance</strong> - วิเคราะห์ประสิทธิภาพ</li></ol>
-<h2>แท็บ Elements</h2><h3>คุณสมบัติสำคัญ</h3><ol><li>สำรวจโครงสร้าง HTML แบบลำดับชั้น และชี้เพื่อ Highlight ในหน้า</li><li>แก้ HTML แบบ Live ดับเบิลคลิกข้อความหรือคลิกขวาเพื่อแก้ ลบ คัดลอก หรือซ่อน Element</li><li>แผง Styles แสดงและแก้ CSS, Computed style, Color picker และ Box model</li><li>ดู Event Listener ที่ติดกับ Element</li><li>จำลองสถานะ <code>:hover</code>, <code>:active</code>, <code>:focus</code></li></ol>
-<h3>ตัวอย่างตรวจ Layout</h3><p>Inspect Element แล้วตรวจ <code>display: none</code>, <code>visibility: hidden</code>, ขนาดศูนย์ และปัญหา Margin/Padding จากนั้นแก้ค่า CSS โดยตรงเพื่อทดสอบ</p><h3>ค้นหา CSS ที่ขัดแย้ง</h3><p>Style ที่ถูกขีดทับคือค่าที่ถูก Override และจะแสดงไฟล์ต้นทางกับเลขบรรทัด</p>
-<h2>แท็บ Console</h2><p>เป็นที่แสดง Log/Error และรัน JavaScript โดยตรง:</p><pre><code>document.title = "New Title"
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ความรู้เบื้องต้นเกี่ยวกับ Browser DevTools — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>ความรู้เบื้องต้นเกี่ยวกับ Browser DevTools</h1>
+      <p><strong>Browser Developer Tools (DevTools)</strong> คือชุดเครื่องมือสำหรับนักพัฒนาที่ถูกติดตั้งมาพร้อมกับเว็บ Browser เป็นเครื่องมือที่ทรงพลังอย่างมากในการตรวจสอบโครงสร้างหน้าเว็บ (Inspect), แก้ไขข้อผิดพลาด (Debug JavaScript), ตรวจสอบเครือข่าย (Network) และวิเคราะห์ประสิทธิภาพการทำงานของเว็บไซต์ แม้ว่าบทเรียนนี้จะอ้างอิงจาก Google Chrome เป็นหลัก แต่แนวคิดและวิธีการใช้งานสามารถนำไปปรับใช้กับ Browser อื่น ๆ (เช่น Safari, Firefox, Edge) ได้เช่นกัน</p>
+
+      <h2>1. วิธีการเปิดใช้งาน DevTools</h2>
+      <ol>
+        <li><strong>ใช้คีย์ลัด (Keyboard Shortcuts)</strong>: บน Windows/Linux กดปุ่ม <code>F12</code> หรือ <code>Ctrl + Shift + I</code> และบน Mac กดปุ่ม <code>Cmd + Option + I</code></li>
+        <li><strong>คลิกขวา</strong> ที่องค์ประกอบ HTML ใด ๆ บนหน้าจอ แล้วเลือกเมนู <strong>"Inspect" (ตรวจสอบ)</strong></li>
+        <li><strong>เปิดผ่านเมนู Browser</strong>: คลิกที่ปุ่มจุดสามจุดมุมขวาบนของ Chrome -> เลือก More Tools (เครื่องมือเพิ่มเติม) -> Developer Tools (เครื่องมือสำหรับนักพัฒนาซอฟต์แวร์)</li>
+      </ol>
+
+      <h3>ภาพรวมแท็บเครื่องมือหลัก ๆ</h3>
+      <ol>
+        <li><strong>Elements</strong>: ใช้สำหรับตรวจสอบและแก้ไขโครงสร้าง HTML และสไตล์ CSS แบบเรียลไทม์</li>
+        <li><strong>Console</strong>: ใช้สำหรับรันโค้ด JavaScript ทดสอบคำสั่ง และดูข้อความ Log หรือข้อผิดพลาด (Errors)</li>
+        <li><strong>Network</strong>: ใช้สำหรับตรวจสอบการรับส่งข้อมูลผ่านเครือข่าย (เช่น การดึงข้อมูลจาก API)</li>
+        <li><strong>Application</strong>: ใช้สำหรับตรวจสอบข้อมูลที่ Browser บันทึกไว้ (เช่น Local Storage, Session Storage, Cookies)</li>
+        <li><strong>Sources</strong>: ใช้สำหรับดูไฟล์ Source Code ทั้งหมด และทำระบบ Debug โค้ดทีละบรรทัด (Breakpoints)</li>
+        <li><strong>Performance</strong>: ใช้สำหรับวิเคราะห์ความเร็วและประสิทธิภาพการแสดงผลของหน้าเว็บ</li>
+      </ol>
+
+      <h2>2. แท็บ Elements (การจัดการโครงสร้างและสไตล์หน้าเว็บ)</h2>
+
+      <h3>ฟีเจอร์เด่นที่ใช้งานบ่อย:</h3>
+      <ol>
+        <li><strong>สำรวจโครงสร้างหน้าเว็บ</strong>: สามารถไล่ดู Tag HTML ต่าง ๆ และเมื่อนำเมาส์ไปชี้ ระบบจะไฮไลต์พื้นที่ขององค์ประกอบนั้นบนหน้าจอจริงให้เห็น</li>
+        <li><strong>แก้ไข HTML แบบเรียลไทม์ (Live Edit)</strong>: สามารถดับเบิลคลิกเพื่อแก้ข้อความ หรือคลิกขวาเพื่อลบ คัดลอก หรือซ่อน Element เพื่อทดสอบหน้าเว็บได้ทันที</li>
+        <li><strong>ปรับแต่ง CSS (Styles Panel)</strong>: แสดงสไตล์ CSS ทั้งหมดที่ส่งผลต่อ Element นั้น สามารถเปิด/ปิดสไตล์ แก้ไขค่าสีผ่าน Color Picker และตรวจสอบขนาดผ่าน Box Model ได้</li>
+        <li><strong>ตรวจสอบ Event Listener</strong>: ดูรายการเหตุการณ์ (Events) ทั้งหมดที่ถูกผูกไว้กับ Element นั้น</li>
+        <li><strong>จำลองสถานะ (Force State)</strong>: สามารถจำลองสถานะพิเศษ เช่น <code>:hover</code>, <code>:active</code>, หรือ <code>:focus</code> เพื่อดูผลลัพธ์ของ CSS ได้สะดวก</li>
+      </ol>
+
+      <h3>ตัวอย่างการตรวจสอบและแก้ไขสไตล์หน้าเว็บ</h3>
+      <p>หากมีองค์ประกอบบางอย่างไม่แสดงผลบนหน้าจอตามที่ควรจะเป็น เราสามารถใช้เครื่องมือ Inspect เพื่อตรวจสอบว่ามีสไตล์อย่าง <code>display: none</code> หรือ <code>visibility: hidden</code> บังอยู่หรือไม่ หรือตรวจสอบระยะห่าง Margin/Padding ที่อาจจะคลาดเคลื่อน จากนั้นลองแก้ไขค่า CSS ในแผง Styles ได้ทันทีเพื่อดูผลลัพธ์</p>
+
+      <h3>การค้นหาสไตล์ CSS ที่ขัดแย้งกัน</h3>
+      <p>ในแผง Styles สไตล์ CSS ใดที่มีเส้นขีดทับ (Strikethrough) หมายความว่าสไตล์นั้นถูกสไตล์ตัวอื่นที่มีความสำคัญสูงกว่าเขียนทับ (Override) ไปแล้ว โดย DevTools จะแสดงสไตล์ตัวที่ชนะอยู่ด้านบน พร้อมระบุชื่อไฟล์และเลขบรรทัดที่เขียนสไตล์นั้นไว้อย่างชัดเจน</p>
+
+      <h2>3. แท็บ Console (การทดสอบโค้ดและดูข้อผิดพลาด)</h2>
+      <p>แท็บ Console เป็นพื้นที่ยอดนิยมสำหรับนักพัฒนาซอฟต์แวร์ ใช้สำหรับตรวจสอบข้อผิดพลาด (Errors) ที่เกิดขึ้น และยังทำหน้าที่เป็นสนามทดลองเขียนโค้ด JavaScript เพื่อสั่งงานหน้าเว็บได้โดยตรง:</p>
+      <pre><code>document.title = "New Title"
 document.body.style.backgroundColor = "lightblue"
 const button = document.querySelector("button")
 button.style.fontSize = "20px"
 function add(a, b) { return a + b }
-add(5, 3) // 8</code></pre><p>หากมีคำเตือนเรื่องการวางข้อมูล ให้พิมพ์ <code>allow pasting</code> แล้วกด Enter</p>
-<h2>แท็บ Network</h2><p>แสดงคำขอทั้งหมด เช่น HTML, CSS, JavaScript, รูปภาพ และ API</p><ol><li><strong>ติดตาม Request</strong>: Status code, เวลา และขนาดไฟล์</li><li><strong>กรอง</strong>: ตามชนิด Status หรือชื่อไฟล์</li><li><strong>รายละเอียด</strong>: Headers, Preview, Response และ Timing</li></ol><p>ตัวเลือกสำคัญคือ <strong>Preserve log</strong>, <strong>Disable cache</strong> และ <strong>Throttle</strong></p>
-<h2>แท็บ Application</h2><p>ใช้ตรวจข้อมูลที่เบราว์เซอร์เก็บ ได้แก่ <strong>Local Storage</strong>, <strong>Session Storage</strong> และ <strong>Cookies</strong> เลือก Storage กับโดเมนเพื่อดู แก้ หรือลบข้อมูล</p>
-<h2>แท็บ Sources</h2><p>แสดงไฟล์ทั้งหมดที่หน้าโหลดและมีประโยชน์สำหรับ Debug JavaScript โดยจะกล่าวถึงอย่างละเอียดในบทถัดไป</p>
-<h2>แท็บ Performance</h2><p>บันทึกและวิเคราะห์ประสิทธิภาพขณะทำงาน รวมถึงจำลอง CPU และเครือข่ายที่ช้าลง</p>
-<h2>เคล็ดลับ DevTools</h2><ol><li><strong>Element Picker</strong>: คลิกไอคอนลูกศรแล้วเลือก Element ในหน้า</li><li><strong>Device Simulation</strong>: คลิกไอคอนคอมพิวเตอร์/โทรศัพท์เพื่อทดสอบ Responsive</li><li><strong>Docking</strong>: เลือกวาง DevTools ด้านซ้าย ขวา ล่าง หรือแยกหน้าต่าง</li></ol>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+add(5, 3) // 8</code></pre>
+      <p>💡 <strong>เกร็ดความรู้:</strong> หาก Browser ขึ้นคำเตือนเพื่อความปลอดภัยเมื่อคุณพยายามวางโค้ดลงใน Console ให้พิมพ์คำว่า <code>allow pasting</code> ลงไปแล้วกด Enter ก่อนเพื่ออนุญาตให้วางโค้ดได้</p>
+
+      <h2>4. แท็บ Network (การตรวจสอบการรับส่งข้อมูลเครือข่าย)</h2>
+      <p>แท็บ Network ใช้สำหรับตรวจสอบการโหลดทรัพยากรต่าง ๆ ของหน้าเว็บ เช่น ไฟล์ HTML, CSS, JavaScript, รูปภาพ รวมถึงการเรียกใช้งาน API (Fetch/XHR):</p>
+      <ol>
+        <li><strong>ติดตามสถานะการโหลด</strong>: ตรวจสอบสถานะการโหลด (Status Code เช่น 200 OK, 404 Not Found), เวลาที่ใช้ในการโหลด และขนาดของไฟล์</li>
+        <li><strong>การกรองข้อมูล (Filtering)</strong>: สามารถเลือกกรองดูเฉพาะไฟล์รูปภาพ ไฟล์ Script หรือพิมพ์ค้นหาตามชื่อไฟล์ที่ต้องการได้</li>
+        <li><strong>ดูรายละเอียดเชิงลึก</strong>: เมื่อคลิกที่แต่ละรายการ จะสามารถดูข้อมูล Headers, ผลลัพธ์ที่ส่งกลับมาจากเซิร์ฟเวอร์ (Response) และลำดับเวลาในการโหลดได้</li>
+      </ol>
+      <p>💡 <strong>ตัวเลือกสำคัญที่ควรรู้:</strong><br>- <strong>Disable Cache</strong>: สั่งไม่ให้ Browser ดึงข้อมูลจากแคช เพื่อทดสอบการโหลดหน้าเว็บใหม่จริง ๆ ทุกครั้ง<br>- <strong>Preserve Log</strong>: สั่งให้เก็บประวัติการโหลดไว้ ไม่ให้ล้างข้อมูลทิ้งเมื่อมีการรีโหลดหน้าเว็บ<br>- <strong>Throttling</strong>: จำลองความเร็วอินเทอร์เน็ต (เช่น 3G ช้า ๆ) เพื่อดูว่าผู้ใช้ที่เน็ตช้าจะใช้งานเว็บของเราได้ดีหรือไม่</p>
+
+      <h2>5. แท็บ Application (การจัดการข้อมูลที่บันทึกบน Browser)</h2>
+      <p>แท็บ Application ใช้สำหรับตรวจสอบและจัดการข้อมูลที่ถูกบันทึกไว้ใน Browser ของผู้ใช้งาน เช่น ข้อมูลใน <strong>Local Storage</strong>, <strong>Session Storage</strong> และ <strong>Cookies</strong> เราสามารถคลิกเลือกโดเมนเพื่อเข้าไปดู แก้ไขค่า หรือลบข้อมูลเหล่านั้นเพื่อทดสอบระบบล็อกอินหรือการตั้งค่าต่าง ๆ ได้</p>
+
+      <h2>6. แท็บ Sources (การตรวจสอบไฟล์และการ Debug)</h2>
+      <p>แท็บ Sources แสดงโครงสร้างไฟล์ทั้งหมดที่ถูกโหลดเข้ามาในหน้าเว็บนี้ มีประโยชน์อย่างมากในการเข้าไปดู Source Code และตั้งจุดหยุดทำงานของโปรแกรม (Breakpoints) เพื่อไล่ตรวจหา Bug ใน JavaScript ทีละบรรทัด (ซึ่งจะได้เรียนรู้ในบทเรียนขั้นสูงถัดไป)</p>
+
+      <h2>7. แท็บ Performance (การวิเคราะห์ความเร็วหน้าเว็บ)</h2>
+      <p>แท็บ Performance ใช้สำหรับบันทึกและวิเคราะห์ความเร็วในการแสดงผลและการตอบสนองของหน้าเว็บ ช่วยระบุจุดที่ทำให้เว็บทำงานช้าหรือกระตุก รวมถึงสามารถจำลองการทำงานบนอุปกรณ์ที่ CPU ช้าลงได้</p>
+
+      <h2>8. เคล็ดลับการใช้งาน DevTools เพิ่มเติม</h2>
+      <ol>
+        <li><strong>เครื่องมือเลือกองค์ประกอบ (Element Picker)</strong>: คลิกที่ไอคอนลูกศรมุมซ้ายบนสุดของ DevTools จากนั้นนำเมาส์ไปคลิกเลือกองค์ประกอบที่ต้องการบนหน้าจอเพื่อ Inspect ได้ทันที</li>
+        <li><strong>โหมดจำลองอุปกรณ์มือถือ (Device Mode)</strong>: คลิกที่ไอคอนรูปแท็บเล็ต/โทรศัพท์เพื่อจำลองขนาดหน้าจอของอุปกรณ์ต่าง ๆ สำหรับทดสอบความยืดหยุ่นของหน้าเว็บ (Responsive Design)</li>
+        <li><strong>การจัดวางหน้าต่าง (Dock Side)</strong>: คลิกที่ปุ่มจุดสามจุดของ DevTools เพื่อปรับตำแหน่งการวางหน้าต่างเครื่องมือ เช่น วางไว้ด้านขวา ด้านล่าง ด้านซ้าย หรือแยกหน้าต่างออกมาเป็นอิสระ</li>
+      </ol>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="30_common_errors.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/debugging/devtools-basics">“Browser DevTools Basics” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/debugging/devtools-basics">“Browser DevTools Basics” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

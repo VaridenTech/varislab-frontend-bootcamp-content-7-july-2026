@@ -1,41 +1,92 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>การเลือก Element — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>การเลือก Element</h1><p>ทักษะพื้นฐานของการพัฒนาเว็บคือการเลือก Element HTML เพื่อโต้ตอบด้วย JavaScript โดยมีหลายเมธอดที่เหมาะกับกรณีต่างกัน</p>
-<h2>วิธีที่ 1: <code>getElementById</code></h2><p>เลือก Element เดียวจากแอตทริบิวต์ ID</p><pre><code>&lt;div id="header"&gt;This is a header&lt;/div&gt;</code></pre><pre><code>const header = document.getElementById("header")
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>การเลือกองค์ประกอบหน้าเว็บ (Selecting Elements) — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การเลือกองค์ประกอบหน้าเว็บ (Selecting Elements)</h1>
+      <p>ทักษะพื้นฐานที่สำคัญที่สุดของการพัฒนาเว็บคือ <strong>การเลือกองค์ประกอบ HTML (HTML Elements)</strong> เพื่อนำมาควบคุม สั่งงาน หรือเปลี่ยนแปลงข้อมูลด้วย JavaScript โดย Browser มี Method สำเร็จรูปให้เราเลือกใช้งานตามความเหมาะสมดังนี้:</p>
+
+      <h2>วิธีที่ 1: การเลือกด้วย ID (<code>document.getElementById()</code>)</h2>
+      <p>ใช้สำหรับเลือกองค์ประกอบ HTML เพียง <strong>ตัวเดียว</strong> โดยอ้างอิงจาก Attribute <code>id</code> ที่ระบุไว้:</p>
+      <pre><code>&lt;div id="header"&gt;This is a header&lt;/div&gt;</code></pre>
+      <pre><code>const header = document.getElementById("header")
 console.log(header)
-header.style.color = "blue"</code></pre><h3>ประเด็นสำคัญ:</h3><ul><li>ส่ง Element เดียวกลับมา หรือ <code>null</code> หากไม่พบ</li><li>ID ควรไม่ซ้ำในหน้า</li><li>ส่งเพียงชื่อ ID ไม่ใช่ <code>#header</code></li><li>รวดเร็วและมีประสิทธิภาพ</li></ul><pre><code>// ❌ ผิด
+header.style.color = "blue"</code></pre>
+
+      <h3>คุณสมบัติสำคัญ:</h3>
+      <ul>
+        <li>จะส่งคืน Object HTML Element กลับมาเพียงตัวเดียว หรือส่งคืน <code>null</code> หากไม่พบ ID นั้นในหน้าเว็บ</li>
+        <li>ค่า ID ควรจะมีความเฉพาะเจาะจงและไม่ซ้ำกันเลยในหน้าเว็บนั้น ๆ</li>
+        <li>ในการส่ง Argument ให้ระบุเฉพาะชื่อ ID ตรง ๆ (ไม่ต้องใส่เครื่องหมาย <code>#</code> นำหน้า)</li>
+        <li>เป็น Method ที่ทำงานได้รวดเร็วและมีประสิทธิภาพสูงที่สุดในระบบ</li>
+      </ul>
+      <pre><code>// ❌ วิธีที่ผิด (ห้ามใส่เครื่องหมาย #)
 document.getElementById("#header")
-// ✅ ถูกต้อง
+
+// ✅ วิธีที่ถูกต้อง
 document.getElementById("header")</code></pre>
-<h2>วิธีที่ 2: <code>getElementsByClassName</code></h2><p>เลือกหลาย Element จากชื่อ Class</p><pre><code>&lt;div class="content"&gt;First&lt;/div&gt;
+
+      <h2>วิธีที่ 2: การเลือกด้วยชื่อ Class (<code>document.getElementsByClassName()</code>)</h2>
+      <p>ใช้สำหรับเลือกองค์ประกอบ HTML <strong>ทั้งหมด</strong> ที่มีชื่อ Class ตรงกับที่เรากำหนด:</p>
+      <pre><code>&lt;div class="content"&gt;First&lt;/div&gt;
 &lt;div class="content"&gt;Second&lt;/div&gt;
-&lt;div class="content"&gt;Third&lt;/div&gt;</code></pre><pre><code>const contentDivs = document.getElementsByClassName("content")
+&lt;div class="content"&gt;Third&lt;/div&gt;</code></pre>
+      <pre><code>const contentDivs = document.getElementsByClassName("content")
 console.log(contentDivs.length) // 3
-console.log(contentDivs[0])</code></pre><h3>การทำงานกับ HTMLCollection</h3><p>HTMLCollection ดูคล้าย Array แต่ไม่มีเมธอด Array ทั้งหมด:</p><pre><code>// แปลงเป็น Array ก่อน
+console.log(contentDivs[0])</code></pre>
+
+      <h3>การจัดการข้อมูลประเภท HTMLCollection</h3>
+      <p>Method นี้จะส่งคืนข้อมูลกลับมาในรูปแบบ <strong>HTMLCollection</strong> ซึ่งมีลักษณะคล้าย Array (มี <code>.length</code> และเข้าถึงด้วย index ได้) แต่ <strong>ไม่ใช่ Array จริง ๆ</strong> ทำให้ไม่สามารถใช้ Method จัดการ Array ทั่วไป (เช่น <code>forEach</code>, <code>map</code>) ได้โดยตรง:</p>
+      <pre><code>// วิธีที่ 1: แปลง HTMLCollection ให้เป็น Array จริงก่อนนำไปใช้งาน
 Array.from(contentDivs).forEach((div) =&gt; div.style.color = "green")
 
-// หรือใช้ For loop
+// วิธีที่ 2: ใช้ For Loop แบบดั้งเดิมในการวนลูปเข้าถึงข้อมูล
 for (let i = 0; i &lt; contentDivs.length; i++) {
   contentDivs[i].style.backgroundColor = "lightgray"
 }
 contentDivs[0].style.fontWeight = "bold"</code></pre>
-<h2>วิธีที่ 3: <code>querySelector</code> (แนะนำ)</h2><p>ใช้ CSS selector และส่ง Element <strong>ตัวแรก</strong> ที่ตรงกันกลับมา:</p><pre><code>const header = document.querySelector("#header")
+
+      <h2>วิธีที่ 3: การเลือกด้วย CSS Selector ตัวแรก (<code>document.querySelector()</code>) — แนะนำ</h2>
+      <p>เป็น Method ที่ยืดหยุ่นและแนะนำให้ใช้งานเป็นหลัก โดยเราสามารถระบุเงื่อนไขการเลือกในรูปแบบของ <strong>CSS Selector</strong> ได้เลย และระบบจะส่งคืนองค์ประกอบ <strong>ตัวแรกสุด</strong> ที่ตรงตามเงื่อนไขกลับมาเพียงตัวเดียว:</p>
+      <pre><code>const header = document.querySelector("#header")
 const firstContent = document.querySelector(".content")
 const firstDiv = document.querySelector("div")
 const submitButton = document.querySelector('[data-action="submit"]')</code></pre>
-<h2>วิธีที่ 4: <code>querySelectorAll</code> (แนะนำ)</h2><p>ส่ง Element <strong>ทั้งหมด</strong> ที่ตรงกันกลับมาเป็น NodeList:</p><pre><code>const allContent = document.querySelectorAll(".content")
+
+      <h2>วิธีที่ 4: การเลือกด้วย CSS Selector ทั้งหมด (<code>document.querySelectorAll()</code>) — แนะนำ</h2>
+      <p>ใช้สำหรับเลือกองค์ประกอบ HTML <strong>ทั้งหมด</strong> ที่ตรงตาม CSS Selector ที่เรากำหนด โดยจะส่งคืนข้อมูลกลับมาในรูปแบบของ <strong>NodeList</strong>:</p>
+      <pre><code>const allContent = document.querySelectorAll(".content")
 const allDivs = document.querySelectorAll("div")
-const allInputs = document.querySelectorAll("input")</code></pre><h3>การทำงานกับ NodeList</h3><p>NodeList คล้าย Array และมี <code>forEach</code>:</p><pre><code>document.querySelectorAll(".content").forEach((div) =&gt; {
+const allInputs = document.querySelectorAll("input")</code></pre>
+
+      <h3>การจัดการข้อมูลประเภท NodeList</h3>
+      <p>แม้ว่า NodeList จะไม่ใช่ Array แท้ ๆ เช่นกัน แต่ Browser สมัยใหม่ได้ออกแบบให้ NodeList <strong>มี Method <code>forEach()</code> ติดมาให้ในตัว</strong> ทำให้เราสามารถวนลูปจัดการข้อมูลได้ทันทีโดยไม่ต้องแปลงชนิดข้อมูลก่อน:</p>
+      <pre><code>document.querySelectorAll(".content").forEach((div) =&gt; {
   div.style.padding = "10px"
 })</code></pre>
-<h2>Collection แบบ Live กับ Static</h2><p><code>getElementsByClassName</code> ส่ง HTMLCollection แบบ <strong>Live</strong> ซึ่งอัปเดตเมื่อ DOM เปลี่ยน ส่วน <code>querySelectorAll</code> ส่ง NodeList แบบ <strong>Static</strong> ซึ่งไม่เปลี่ยนจนกว่าจะเรียกใหม่</p><pre><code>const liveCollection = document.getElementsByClassName("content")
+
+      <h2>5. ความแตกต่างระหว่าง Live Collection และ Static Collection</h2>
+      <p>ความแตกต่างสำคัญที่ซ่อนอยู่คือ:<br>1. <code>getElementsByClassName</code> จะส่งคืนข้อมูลแบบ <strong>Live Collection</strong> หมายความว่าหากมีการเพิ่มหรือลบ Element บนหน้าเว็บในภายหลัง ข้อมูลในตัวแปรนี้จะอัปเดตตามโดยอัตโนมัติ<br>2. <code>querySelectorAll</code> จะส่งคืนข้อมูลแบบ <strong>Static Collection</strong> หมายความว่าข้อมูลจะเป็นภาพถ่าย ณ ขณะที่เรียกใช้งานเท่านั้น หากมีการเปลี่ยนแปลงโครงสร้างหน้าเว็บในภายหลัง ข้อมูลในตัวแปรจะไม่เปลี่ยนตามจนกว่าจะสั่งเรียก Method ใหม่อีกครั้ง</p>
+      <pre><code>const liveCollection = document.getElementsByClassName("content")
 const newDiv = document.createElement("div")
 newDiv.className = "content"
 document.body.appendChild(newDiv)
-console.log(liveCollection.length) // อัปเดตอัตโนมัติ</code></pre><pre><code>const staticNodeList = document.querySelectorAll(".content")
-// หลังเพิ่ม Element ค่า length ยังคงเดิม</code></pre><p>ส่วนใหญ่ไม่ต้องการ Collection แบบ Live เพราะทำให้โค้ดเข้าใจยากและคาดเดาได้น้อยลง</p>
-<h2>ควรใช้เมธอดใด?</h2><p>โดยค่าเริ่มต้นควรเลือก <code>querySelector</code> และ <code>querySelectorAll</code> เพราะยืดหยุ่น ใช้ CSS selector ที่คุ้นเคย และได้ NodeList แบบ Static ใช้ <code>getElementById</code> เมื่อต้องเลือก Element เดียวด้วย ID และต้องการประสิทธิภาพสูงสุด</p>
-<h2>การใช้ CSS Selector ขั้นสูง</h2><pre><code>document.querySelector('input[name="username"]')
+console.log(liveCollection.length) // จำนวนสมาชิกจะอัปเดตเพิ่มขึ้นโดยอัตโนมัติ</code></pre>
+      <pre><code>const staticNodeList = document.querySelectorAll(".content")
+// หลังเพิ่ม Element ค่า length ยังคงเดิม ไม่เปลี่ยนแปลงตาม</code></pre>
+      <p>💡 <strong>คำแนะนำ:</strong> ในการพัฒนาเว็บทั่วไป เรามักจะต้องการข้อมูลแบบ Static (จาก <code>querySelectorAll</code>) มากกว่า เพราะช่วยลดพฤติกรรมแปลก ๆ ของโค้ดและทำให้ควบคุมทิศทางของโปรแกรมได้ง่ายกว่า</p>
+
+      <h2>6. สรุปแนวทางการเลือกใช้งาน</h2>
+      <p><strong>คำแนะนำหลัก:</strong><br>1. ในกรณีทั่วไป แนะนำให้ใช้ <code>querySelector</code> และ <code>querySelectorAll</code> เป็นหลัก เนื่องจากมีความยืดหยุ่นสูงมากและใช้รูปแบบ CSS Selector ที่เราคุ้นเคยอยู่แล้ว<br>2. หากต้องการเลือกองค์ประกอบเดียวที่มี ID เจาะจงและต้องการความรวดเร็วในการประมวลผลสูงสุด ให้เลือกใช้ <code>getElementById</code></p>
+
+      <h2>7. ตัวอย่างการเขียน CSS Selector ขั้นสูงร่วมกับ querySelector</h2>
+      <pre><code>document.querySelector('input[name="username"]')
 document.querySelectorAll('a[href^="https://"]')
 document.querySelector("li:first-child")
 document.querySelector("div:not(.hidden)")
@@ -43,15 +94,27 @@ document.querySelector("nav &gt; ul &gt; li")
 document.querySelector("h2 + p")
 document.querySelector("article p")
 document.querySelector("button, input[type='submit']")</code></pre>
-<h2>แบบฝึกหัด</h2><p>เปลี่ยนข้อความ Header เป็น “Welcome!”, ทำ Paragraph ทั้งหมดเป็นสีน้ำเงิน, ซ่อน Paragraph สุดท้าย และเพิ่มเส้นขอบให้ Input ที่มี Class “required”</p><details><summary>เฉลย</summary><pre><code>document.querySelector("#main-header").textContent = "Welcome!"
+
+      <h2>ลองทำแบบฝึกหัด</h2>
+      <p>จงเขียนโค้ด JavaScript เพื่อจัดการหน้าเว็บดังต่อไปนี้:<br>1. เปลี่ยนข้อความใน Header (ID: <code>main-header</code>) ให้เป็นคำว่า "Welcome!"<br>2. ปรับเปลี่ยนสีตัวอักษรของ Paragraph (<code>&lt;p&gt;</code>) ทั้งหมดในหน้าเว็บให้เป็นสีน้ำเงิน<br>3. ซ่อน Paragraph ตัวสุดท้ายของหน้าเว็บ (ไม่ให้แสดงผล)<br>4. เพิ่มเส้นขอบสีแดงขนาด 2px ให้กับช่องกรอกข้อมูล (<code>&lt;input&gt;</code>) ทั้งหมดที่มี Class <code>required</code></p>
+      <details>
+        <summary>ดูเฉลย</summary>
+        <pre><code>document.querySelector("#main-header").textContent = "Welcome!"
 document.querySelectorAll("p").forEach((p) =&gt; p.style.color = "blue")
 document.querySelector("p:last-child").style.display = "none"
 document.querySelectorAll("input.required").forEach((input) =&gt; {
   input.style.border = "2px solid red"
-})</code></pre></details>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+})</code></pre>
+      </details>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="27_window_and_document.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="29_event_listeners.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/dom/selecting-elements">“Selecting Elements” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/dom/selecting-elements">“Selecting Elements” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

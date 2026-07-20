@@ -3,40 +3,40 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="เรียนรู้วิธีที่ JavaScript จัดระเบียบตัวแปรและฟังก์ชันไว้ใน scope ต่าง ๆ รวมถึงวิธีที่ scope ด้านในเข้าถึง scope ด้านนอกได้ แต่ไม่สามารถทำย้อนกลับได้" />
-  <title>ทำความเข้าใจ Scope — เริ่มต้นใช้งาน JavaScript</title>
+  <meta name="description" content="เรียนรู้วิธีที่ JavaScript จัดระเบียบตัวแปรและ Function ไว้ใน scope ต่าง ๆ รวมถึงวิธีที่ scope ด้านในเข้าถึง scope ด้านนอกได้ แต่ไม่สามารถทำย้อนกลับได้" />
+  <title>ทำความเข้าใจขอบเขตของตัวแปร (Scope) — เริ่มต้นใช้งาน JavaScript</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
 <body>
   <main>
     <article>
-      <h1>ทำความเข้าใจ Scope</h1>
-      <p>Scope เป็นแนวคิดพื้นฐานใน JavaScript ที่กำหนดว่าสามารถเข้าถึงตัวแปรและฟังก์ชันได้จากที่ใด</p>
+      <h1>ทำความเข้าใจขอบเขตของตัวแปร (Scope)</h1>
+      <p><strong>ขอบเขตของตัวแปร (Scope)</strong> เป็นแนวคิดพื้นฐานที่สำคัญมากใน JavaScript ซึ่งทำหน้าที่กำหนดว่า ตัวแปรหรือ Function ที่เราประกาศขึ้นมานั้น จะสามารถเรียกใช้งานหรือเข้าถึงได้จากบริเวณใดของโค้ดบ้าง</p>
       <pre><code>function sayHi() {
   const result = "Hi"
   console.log(result) // แสดงผล "Hi"
 }
 
 const result = "Bye"
-sayHi() // บรรทัดนี้แสดงผลอะไร?
-console.log(result) // บรรทัดนี้แสดงผลอะไร?</code></pre>
+sayHi() // ผลลัพธ์บรรทัดนี้คืออะไร?
+console.log(result) // ผลลัพธ์บรรทัดนี้คืออะไร?</code></pre>
 
       <h2>Scope คืออะไร?</h2>
-      <p><strong>Scope</strong> คือบริเวณในโค้ดที่สามารถเข้าถึงตัวแปรหรือฟังก์ชันได้ JavaScript จะสร้าง scope ใหม่ภายในวงเล็บปีกกา <code>{}</code> ทุกชุด และยังมี <strong>global scope</strong> สำหรับทั้งไฟล์ด้วย</p>
+      <p><strong>Scope</strong> คือขอบเขตพื้นที่ในโค้ดที่ตัวแปรหรือ Function นั้นมีตัวตนอยู่และสามารถเรียกใช้ได้ โดยทั่วไป JavaScript จะสร้างขอบเขต (Scope) ใหม่ขึ้นมาทุกครั้งที่มีการใช้วงเล็บปีกกา <code>{}</code> และจะมีขอบเขตใหญ่สุดที่เรียกว่า <strong>Global Scope</strong> ครอบคลุมโค้ดทั้งไฟล์</p>
       <pre><code>function myFunction() {
-  // สร้าง scope ใหม่ตรงนี้
+  // 👈 เริ่มต้น Scope ใหม่ภายใน Function
   const x = 5
 }
 
-// Global scope
+// 👈 อยู่ใน Global Scope (นอก Function)
 const x = 10
 myFunction()</code></pre>
 
-      <h3>Scope ทำงานทางเดียว</h3>
-      <p>วิธีคิดเกี่ยวกับ scope ที่ดีที่สุดคือมองว่าเป็น <strong>กระจกมองทางเดียว</strong> ซึ่งมองออกไปด้านนอกเสมอ:</p>
+      <h3>กฎการทำงานของ Scope: การเข้าถึงข้อมูลแบบทางเดียว (One-Way Street)</h3>
+      <p>วิธีทำความเข้าใจการทำงานของ Scope ที่ง่ายที่สุดคือ ให้จินตนาการถึง <strong>"กระจกเงาด้านเดียว" (One-Way Mirror)</strong> ที่คนข้างในสามารถมองเห็นคนข้างนอกได้ แต่คนข้างนอกไม่สามารถมองเห็นคนข้างในได้:</p>
       <ul>
         <li>
-          <p>✅ Scope ด้านในมองเห็น scope ด้านนอกได้</p>
+          <p>✅ Scope ด้านใน สามารถเข้าถึงตัวแปรใน Scope ด้านนอกได้</p>
           <pre><code>const a = 1 // Global scope
 
 function func() {
@@ -46,31 +46,31 @@ function func() {
 }</code></pre>
         </li>
         <li>
-          <p>❌ Scope ด้านนอกมองไม่เห็น scope ด้านใน</p>
+          <p>❌ Scope ด้านนอก ไม่สามารถเข้าถึงตัวแปรใน Scope ด้านในได้</p>
           <pre><code>function func() {
   const b = 2 // Function scope
 }
 
 func()
-console.log(b) // ❌ ข้อผิดพลาด - มองไม่เห็น scope ด้านใน</code></pre>
+console.log(b) // ❌ Error! ไม่สามารถเข้าถึงตัวแปร b ที่อยู่ข้างใน Function ได้</code></pre>
         </li>
       </ul>
 
-      <h2>ประเภทของ Scope</h2>
-      <p>Scope ใน JavaScript มีหลายประเภท แต่สามประเภทที่สำคัญที่สุดคือ <strong>global scope</strong>, <strong>function scope</strong> และ <strong>block scope</strong></p>
+      <h2>ประเภทของ Scope ใน JavaScript</h2>
+      <p>ขอบเขตหรือ Scope ใน JavaScript สามารถแบ่งออกเป็น 3 ประเภทหลัก ๆ ที่คุณจำเป็นต้องรู้ ได้แก่ <strong>Global Scope</strong>, <strong>Function Scope</strong> และ <strong>Block Scope</strong></p>
 
-      <h3>Global Scope</h3>
-      <p><strong>Global scope</strong> คือ scope ชั้นนอกสุด ซึ่งก็คือทั้งไฟล์ของคุณ ตัวแปรที่ประกาศไว้ตรงนี้สามารถเข้าถึงได้จากทุกที่ในโค้ด:</p>
+      <h3>1. Global Scope (ขอบเขตส่วนกลาง)</h3>
+      <p><strong>Global Scope</strong> คือขอบเขตที่อยู่นอกสุดของไฟล์โค้ด ตัวแปรหรือ Function ใด ๆ ที่ประกาศไว้ในพื้นที่นี้จะถือเป็น "ตัวแปรส่วนกลาง" และสามารถถูกเรียกใช้งานจากส่วนใดของโค้ดก็ได้ (รวมถึงภายใน Function ด้วย):</p>
       <pre><code>const name = "Kyle" // Global scope
 
 function sayHi() {
-  console.log(name) // ✅ เข้าถึงตัวแปรส่วนกลางได้
+  console.log(name) // ✅ สามารถเข้าถึงตัวแปร name จาก Global Scope ได้
 }
 
 sayHi()</code></pre>
 
-      <h3>Block Scope</h3>
-      <p><strong>Block scope</strong> ใหม่จะถูกสร้างขึ้นสำหรับโค้ดใด ๆ ที่อยู่ระหว่างวงเล็บปีกกา <code>{}</code>:</p>
+      <h3>2. Block Scope (ขอบเขตแบบบล็อก)</h3>
+      <p><strong>Block Scope</strong> คือขอบเขตที่จะถูกสร้างขึ้นใหม่ทุกครั้งเมื่อมีวงเล็บปีกกา <code>{}</code> เช่น ในคำสั่งเงื่อนไข <code>if</code>, การวนลูป <code>for</code> / <code>while</code> หรือแม้กระทั่งการเขียนปีกกาเปล่า ๆ ครอบโค้ดไว้:</p>
       <pre><code>function myFunction() {
   const x = 3 // Block scope ใหม่
 }
@@ -83,14 +83,14 @@ if (true) {
   const x = 2 // Block scope ใหม่
 }</code></pre>
 
-      <h3>Function Scope</h3>
-      <p><strong>Function scope</strong> จะถูกสร้างขึ้นทุกครั้งที่คุณกำหนดฟังก์ชัน Function scope คล้ายกับ block scope มาก แต่คุณสมบัติบางอย่างของ JavaScript (ซึ่งจะกล่าวถึงในภายหลัง) ใช้ function scope แทน block scope:</p>
+      <h3>3. Function Scope (ขอบเขตแบบ Function)</h3>
+      <p><strong>Function Scope</strong> คือขอบเขตที่จะถูกสร้างขึ้นใหม่ทุกครั้งที่มีการประกาศ Function ซึ่งในทางปฏิบัติจะคล้ายกับ Block Scope มาก แต่มีความสำคัญเป็นพิเศษเมื่อทำงานร่วมกับ Keyword รุ่นเก่าอย่าง <code>var</code> (ซึ่งจะอธิบายเพิ่มเติมในภายหลัง):</p>
       <pre><code>function myFunction() {
   const x = 5
 }</code></pre>
 
-      <h2>Scope ที่ซ้อนกัน</h2>
-      <p>คุณสามารถมี scope ได้หลายระดับ:</p>
+      <h2>ขอบเขตที่ซ้อนกัน (Nested Scopes)</h2>
+      <p>เราสามารถเขียนบล็อกหรือ Function ซ้อนกันหลาย ๆ ชั้นได้ ซึ่งจะทำให้เกิด Scope ซ้อนกันเป็นลำดับขั้น:</p>
       <pre><code>let c = 3 // Global scope
 
 {
@@ -111,8 +111,8 @@ if (true) {
   // console.log(b)  // ❌ ข้อผิดพลาด - มองไม่เห็น scope ด้านใน
 }</code></pre>
 
-      <h3>ชื่อที่ขัดแย้งกัน</h3>
-      <p>คุณสามารถมีตัวแปรชื่อเดียวกันใน scope ที่ต่างกันได้โดยไม่เกิดความขัดแย้ง:</p>
+      <h3>การประกาศตัวแปรชื่อซ้ำกัน (Variable Shadowing)</h3>
+      <p>เราสามารถตั้งชื่อตัวแปรซ้ำกันในคนละ Scope ได้โดยไม่ทำให้โปรแกรมพังหรือเกิดข้อผิดพลาด:</p>
       <pre><code>const result = "Kyle" // Global scope
 
 function sayHi(name) {
@@ -122,10 +122,10 @@ function sayHi(name) {
 
 sayHi("Kyle")
 console.log(result) // "Kyle" - ยังคงเป็นตัวแปรส่วนกลาง</code></pre>
-      <p>ตัวแปรเหล่านี้แยกจากกันอย่างสิ้นเชิง เพียงแต่บังเอิญใช้ชื่อเดียวกัน</p>
+      <p>ตัวแปรทั้งสองจะถูกมองเป็นคนละกล่องข้อมูลแยกจากกันอย่างสิ้นเชิง เพียงแค่ใช้ชื่อเดียวกันเท่านั้น</p>
 
-      <h3>การพิจารณาว่าจะใช้ตัวแปรใด</h3>
-      <p>เมื่อ JavaScript มองหาตัวแปร มันจะเริ่มจาก scope ปัจจุบันแล้วไล่ออกไปด้านนอก:</p>
+      <h3>ลำดับการค้นหาตัวแปรของ JavaScript</h3>
+      <p>เมื่อมีการเรียกใช้ตัวแปร JavaScript Engine จะเริ่มค้นหาตัวแปรนั้นจาก <strong>Scope ปัจจุบันก่อนเสมอ</strong> หากไม่พบ จึงจะค่อย ๆ ค้นหาไล่ออกไปยัง Scope ชั้นนอกทีละระดับจนถึง Global Scope:</p>
       <pre><code>const a = 1 // Global scope
 const name = "Kyle" // Global scope
 
@@ -138,37 +138,37 @@ function myFunction() {
 
 myFunction()</code></pre>
 
-      <h2>แนวทางปฏิบัติที่ดี</h2>
+      <h2>แนวทางปฏิบัติที่ดี (Best Practices)</h2>
       <ul>
         <li>
-          <p>ลดการใช้ตัวแปรส่วนกลางให้น้อยที่สุด</p>
-          <pre><code>// ❌ หลีกเลี่ยงการทำแบบนี้
+          <p>1. หลีกเลี่ยงการใช้ตัวแปร Global โดยไม่จำเป็น</p>
+          <pre><code>// ❌ ไม่แนะนำ: ประกาศตัวแปรไว้ใน Global Scope ทั้งที่ใช้แค่ใน Function เดียว
 const name = "Kyle"
 
 function myFunction() {
   console.log(name)
 }</code></pre>
-          <pre><code>// ✅ วางตัวแปรไว้ภายในมากที่สุดเท่าที่ทำได้
+          <pre><code>// ✅ แนะนำ: ประกาศตัวแปรไว้ภายในขอบเขตที่ต้องการใช้งานจริง ๆ
 function myFunction() {
   const name = "Kyle"
   console.log(name)
 }</code></pre>
         </li>
         <li>
-          <p>อย่าใช้ชื่อเดียวกันสำหรับตัวแปรคนละตัวใน scope ที่ซ้อนกัน</p>
-          <pre><code>// ❌ ชวนให้สับสน - ยากที่จะบอกว่าใช้ 'a' ตัวใด
+          <p>2. หลีกเลี่ยงการตั้งชื่อตัวแปรซ้ำกันใน Scope ที่ซ้อนกัน</p>
+          <pre><code>// ❌ ไม่แนะนำ: ตั้งชื่อซ้ำกันในบล็อกที่ซ้อนกัน ทำให้โค้ดอ่านยากและสับสน
 const a = 1
 
 function myFunction() {
   const a = 2
   console.log(a) // นี่คือ 'a' ตัวใด?
 }</code></pre>
-          <pre><code>// ✅ ชัดเจน - ใช้ชื่อต่างกัน
+          <pre><code>// ✅ แนะนำ: ใช้ชื่อที่แตกต่างและสื่อความหมายชัดเจน
 const outerA = 1
 
 function myFunction() {
   const innerA = 2
-  console.log(innerA) // ใช้ตัวแปรใน scope ด้านในอย่างชัดเจน
+  console.log(innerA) // เรียกใช้ตัวแปรได้อย่างมั่นใจและเข้าใจง่าย
 }</code></pre>
         </li>
       </ul>

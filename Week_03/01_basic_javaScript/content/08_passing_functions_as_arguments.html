@@ -3,57 +3,57 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="เรียนรู้วิธีส่งฟังก์ชันไปยังฟังก์ชันอื่นในรูปแบบอาร์กิวเมนต์ รวมถึง callback และฟังก์ชันนิรนาม" />
-  <title>การส่งฟังก์ชันเป็นอาร์กิวเมนต์ — เริ่มต้นใช้งาน JavaScript</title>
+  <meta name="description" content="เรียนรู้วิธีส่ง Function ไปยัง Function อื่นในรูปแบบ Argument รวมถึง callback และ Function นิรนาม" />
+  <title>การส่ง Function เป็น Argument (Passing Functions as Arguments) — เริ่มต้นใช้งาน JavaScript</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
 <body>
   <main>
     <article>
-      <h1>การส่งฟังก์ชันเป็นอาร์กิวเมนต์</h1>
-      <p>หนึ่งในคุณสมบัติที่ทรงพลังที่สุดของ JavaScript คือความสามารถในการส่งฟังก์ชันไปยังฟังก์ชันอื่นในรูปแบบอาร์กิวเมนต์</p>
-      <p>⚠️ <strong>คำเตือน:</strong> นี่เป็นหัวข้อที่เข้าใจยาก ดังนั้นค่อย ๆ ใช้เวลาทำความเข้าใจให้ถ่องแท้!</p>
+      <h1>การส่ง Function เป็น Argument (Passing Functions as Arguments)</h1>
+      <p>หนึ่งในฟีเจอร์ที่ทรงพลังและยืดหยุ่นที่สุดของภาษา JavaScript คือความสามารถในการส่ง Function หนึ่ง เข้าไปเป็น Argument (Argument) ของอีก Function หนึ่งได้</p>
+      <p>💡 <strong>คำแนะนำ:</strong> หัวข้อนี้อาจจะทำความเข้าใจได้ยากสำหรับผู้เริ่มต้น แนะนำให้ค่อย ๆ อ่านและลองเขียนโค้ดตามไปทีละขั้นตอนนะครับ</p>
 
-      <h2>ฟังก์ชันคือตัวแปร</h2>
-      <p>สิ่งสำคัญที่ต้องเข้าใจคือ <strong>ฟังก์ชันเป็นเพียงตัวแปร</strong> ที่เก็บตรรกะ:</p>
+      <h2>Function ก็คือตัวแปรประเภทหนึ่ง (First-Class Functions)</h2>
+      <p>แนวคิดสำคัญที่คุณต้องเข้าใจก่อนคือ <strong>ใน JavaScript Function ก็เปรียบเสมือนตัวแปรทั่วไป</strong> ที่เก็บชุดคำสั่งหรือตรรกะการทำงานเอาไว้:</p>
       <pre><code>function printName(name) {
   console.log(name)
 }
 
-// จะเกิดอะไรขึ้นหากเราแสดงชื่อฟังก์ชันโดยไม่มีวงเล็บ?
+// จะเกิดอะไรขึ้นหากเราแสดงชื่อ Function โดยไม่มีวงเล็บ?
 console.log(printName) // แสดงผล: ƒ printName(name) { console.log(name) }</code></pre>
-      <p>เมื่อคุณสร้างฟังก์ชันด้วยคีย์เวิร์ด <code>function</code> JavaScript จะสร้างตัวแปรชื่อนั้นและเก็บนิยามฟังก์ชันไว้ในตัวแปร เช่นเดียวกับที่ <code>let</code> สร้างตัวแปรเพื่อเก็บค่า</p>
+      <p>เมื่อเราสร้าง Function ขึ้นมา JavaScript Engine จะทำการสร้างตัวแปรชื่อเดียวกับ Function นั้น และเก็บนิยามหรือโค้ดของ Function เอาไว้ข้างใน ซึ่งมีลักษณะการทำงานคล้ายกับการใช้ Keyword <code>let</code> ประกาศตัวแปรเพื่อเก็บข้อมูลทั่วไป</p>
 
-      <h2>การส่งฟังก์ชันเบื้องต้น</h2>
-      <p>เนื่องจากฟังก์ชันเป็นตัวแปร คุณจึงส่งฟังก์ชันไปยังฟังก์ชันอื่นได้:</p>
+      <h2>การส่ง Function เข้าไปทำงานในอีก Function หนึ่ง</h2>
+      <p>เนื่องจาก Function มีสถานะเป็นตัวแปรประเภทหนึ่ง เราจึงสามารถส่งมันเข้าไปเป็น Argument ของ Function อื่นได้เหมือนกับข้อมูลทั่วไป:</p>
       <pre><code>function printName(name) {
   console.log(name)
 }
 
 function callFunction(x) {
   console.log("before")
-  x("Kyle") // เรียกใช้ฟังก์ชันที่ถูกส่งเข้ามา
+  x("Kyle") // เรียกใช้ Function ที่ถูกส่งเข้ามา
   console.log("after")
 }
 
-// ส่งฟังก์ชันเข้าไป (สังเกตว่าไม่มีวงเล็บ!)
+// ส่งตัวแปร Function เข้าไปเป็น Argument (สังเกตว่าไม่มีวงเล็บ () ต่อท้าย!)
 callFunction(printName)
 // ผลลัพธ์:
 // before
 // Kyle
 // after</code></pre>
 
-      <h3>ประเด็นสำคัญ: ฟังก์ชันกับการเรียกใช้ฟังก์ชัน</h3>
+      <h3>ความแตกต่างสำคัญ: Function vs การเรียกใช้งาน Function</h3>
       <ul>
-        <li><code>printVariable</code> - นี่คือตัวฟังก์ชันเอง (ตัวแปร)</li>
-        <li><code>printVariable()</code> - นี่คือการเรียกใช้ฟังก์ชันและรันโค้ดที่อยู่ข้างใน</li>
+        <li><code>printName</code> - หมายถึง <strong>ตัวแปรที่เก็บ Function นั้นไว้</strong> (ส่งไปเพื่อเรียกใช้ทีหลัง)</li>
+        <li><code>printName()</code> - หมายถึง <strong>การสั่งให้ Function นั้นทำงานทันที ณ บรรทัดนั้น</strong></li>
       </ul>
 
-      <h2>ฟังก์ชัน Callback</h2>
-      <p>เมื่อคุณส่งฟังก์ชันไปยังฟังก์ชันอื่น ฟังก์ชันที่ถูกส่งเข้าไปนั้นเรียกว่า <strong>callback</strong>:</p>
+      <h2>Function คอลแบ็ก (Callback Functions)</h2>
+      <p>Function ที่เราส่งเข้าไปเป็น Argument เพื่อให้ Function หลักเรียกใช้งานในภายหลังนั้น เราจะเรียกว่า <strong>Function คอลแบ็ก (Callback Function)</strong>:</p>
       <pre><code>function sumCallback(a, b, callback) {
   let sum = a + b
-  callback(sum) // เรียกใช้ callback พร้อมส่งผลลัพธ์เข้าไป
+  callback(sum) // เรียกใช้งาน Function callback พร้อมส่งผลลัพธ์กลับไปประมวลผล
 }
 
 function handleSum(sum) {
@@ -61,16 +61,16 @@ function handleSum(sum) {
 }
 
 sumCallback(1, 2, handleSum) // แสดงผล: 3</code></pre>
-      <p>นี่คือสิ่งที่เกิดขึ้นทีละขั้นตอน:</p>
+      <p>กระบวนการทำงานทีละขั้นตอน:</p>
       <ol>
-        <li><code>sumCallback</code> รับ <code>1</code>, <code>2</code> และฟังก์ชัน <code>handleSum</code></li>
-        <li>ฟังก์ชันคำนวณ <code>1 + 2 = 3</code></li>
-        <li>ฟังก์ชันเรียกใช้ callback (<code>handleSum</code>) พร้อมผลลัพธ์ <code>3</code></li>
-        <li><code>handleSum</code> แสดงค่า <code>sum</code></li>
+        <li><code>sumCallback</code> รับค่า <code>1</code>, <code>2</code> และตัวแปร Function <code>handleSum</code> เข้ามา</li>
+        <li>คำนวณผลรวมได้ <code>1 + 2 = 3</code></li>
+        <li>เรียกใช้งาน Function callback (ซึ่งก็คือ <code>handleSum</code>) พร้อมส่งผลลัพธ์ <code>3</code> เข้าไป</li>
+        <li>Function <code>handleSum</code> ทำงานและแสดงผลลัพธ์ <code>3</code> ออกมา</li>
       </ol>
 
-      <h2>ข้อผิดพลาดที่พบบ่อย: เรียกใช้แทนที่จะส่งฟังก์ชัน</h2>
-      <p>ข้อผิดพลาดที่พบบ่อยมากคือการเรียกใช้ฟังก์ชันโดยไม่ตั้งใจ แทนที่จะส่งตัวฟังก์ชันเข้าไป:</p>
+      <h2>ข้อผิดพลาดที่พบบ่อย: การเผลอเรียกใช้ Function ทันที</h2>
+      <p>ข้อผิดพลาดที่พบบ่อยที่สุดสำหรับผู้เริ่มต้นคือ การเผลอใส่เครื่องหมายวงเล็บ <code>()</code> ซึ่งเป็นการสั่งให้ Function ทำงานทันที แทนที่จะส่งเฉพาะตัวแปร Function เข้าไป:</p>
       <pre><code>function printName(name) {
   console.log(name)
 }
@@ -79,16 +79,16 @@ function printGreeting(name, callback) {
   callback("Hello " + name)
 }
 
-// ❌ ผิด - บรรทัดนี้เรียกใช้ printName ทันที
+// ❌ ผิด - บรรทัดนี้จะสั่งให้ printName ทำงานทันที
 printGreeting("Kyle", printName())
-// ผลลัพธ์: undefined ถูกส่งเข้าไป จากนั้นเกิดข้อผิดพลาด "callback is not a function"
+// ผลลัพธ์: ค่าที่ส่งกลับ (ซึ่งคือ undefined) จะถูกส่งเข้าไปแทนตัว Function และทำให้เกิดข้อผิดพลาด "callback is not a function"
 
-// ✅ ถูกต้อง - บรรทัดนี้ส่งตัวฟังก์ชันเข้าไป
+// ✅ ถูกต้อง - ส่งเฉพาะชื่อตัวแปร Function เข้าไป เพื่อให้เรียกใช้ทีหลัง
 printGreeting("Kyle", printName)
 // ผลลัพธ์: "Hello Kyle"</code></pre>
-      <p>เมื่อคุณเติมวงเล็บ คุณกำลังเรียกใช้ฟังก์ชันและส่งค่าที่ฟังก์ชันนั้นส่งกลับมาเข้าไป (ซึ่งจะเป็น <code>undefined</code> หากฟังก์ชันไม่ได้ส่งค่าใดกลับมา)</p>
+      <p>จำไว้ว่า: เมื่อใดก็ตามที่คุณใส่เครื่องหมายวงเล็บ <code>()</code> ต่อท้ายชื่อ Function จะหมายถึงคุณกำลังสั่งให้มันทำงานทันที และค่าที่จะถูกส่งต่อเข้าไปคือผลลัพธ์จากการ <code>return</code> ของ Function นั้น (ซึ่งจะเป็น <code>undefined</code> หากไม่มีการ return ค่าใด ๆ)</p>
 
-      <h2>ตัวอย่างกรณีใช้งาน</h2>
+      <h2>ตัวอย่างการใช้งานจริง</h2>
       <pre><code>function doMath(a, b, operation) {
   return operation(a, b)
 }
@@ -104,16 +104,16 @@ function subtract(x, y) {
 console.log(doMath(5, 3, add)) // แสดงผล: 8
 console.log(doMath(5, 3, subtract)) // แสดงผล: 2</code></pre>
 
-      <h2>แบบฝึกหัด</h2>
-      <p>ลองสร้างฟังก์ชันที่:</p>
+      <h2>ลองทำแบบฝึกหัด</h2>
+      <p>ฝึกฝนความเข้าใจด้วยการสร้าง Function ตามเงื่อนไขต่อไปนี้:</p>
       <ol>
-        <li>รับพารามิเตอร์สามตัว ได้แก่ <code>firstName</code>, <code>lastName</code> และฟังก์ชัน <code>callback</code></li>
+        <li>รับ Parameter สามตัว ได้แก่ <code>firstName</code>, <code>lastName</code> และ Function <code>callback</code></li>
         <li>สร้างตัวแปร <code>fullName</code> โดยนำชื่อและนามสกุลมาต่อกัน</li>
-        <li>ส่ง <code>fullName</code> ไปยังฟังก์ชัน callback (ซึ่งเติม <code>"Hello "</code> ไว้ข้างหน้า)</li>
-        <li>แสดงค่าที่ฟังก์ชัน callback ส่งกลับมา</li>
+        <li>ส่งค่า <code>fullName</code> ไปยัง Function callback (ซึ่งจะทำหน้าที่เติมคำว่า <code>"Hello "</code> ไว้ข้างหน้า)</li>
+        <li>แสดงผลลัพธ์ที่ได้รับกลับมาจาก Function callback</li>
       </ol>
       <details>
-        <summary>เฉลย</summary>
+        <summary>ดูเฉลย</summary>
         <pre><code>function printGreeting(firstName, lastName, callback) {
   const fullName = firstName + " " + lastName
   console.log(callback(fullName))
@@ -126,10 +126,10 @@ function getGreeting(name) {
 printGreeting("Kyle", "Cook", getGreeting) // "Hello Kyle Cook"</code></pre>
       </details>
 
-      <h2>ทำไมจึงใช้ Callback?</h2>
+      <h2>ทำไมเราจึงต้องใช้ Callback?</h2>
       <ol>
-        <li><strong>ความยืดหยุ่น</strong> - ฟังก์ชันเดียวกันสามารถทำงานต่างกันได้ตาม callback</li>
-        <li><strong>การแยกหน้าที่รับผิดชอบ</strong> - ฟังก์ชันหลักจัดการเรื่องหนึ่ง ส่วน callback จัดการอีกเรื่องหนึ่ง</li>
+        <li><strong>เพิ่มความยืดหยุ่น (Flexibility)</strong> - Function หลักตัวเดียวสามารถทำงานได้หลากหลายรูปแบบ ขึ้นอยู่กับพฤติกรรมของ Function callback ที่เราส่งเข้าไป</li>
+        <li><strong>การแยกหน้าที่รับผิดชอบ (Separation of Concerns)</strong> - ช่วยแบ่งหน้าที่การทำงานอย่างชัดเจน เช่น Function หลักทำหน้าที่คำนวณหาผลลัพธ์ ส่วน callback ทำหน้าที่นำผลลัพธ์นั้นไปแสดงผลในรูปแบบที่ต้องการ</li>
       </ol>
     </article>
       <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">

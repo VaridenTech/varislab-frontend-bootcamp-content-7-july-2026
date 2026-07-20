@@ -1,51 +1,134 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Event Listener — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>Event Listener</h1><p>Event listener ทำให้หน้าเว็บโต้ตอบได้ โดยตอบสนองต่อการคลิก การพิมพ์ การส่งฟอร์ม และอื่น ๆ</p>
-<h2>Event คืออะไร?</h2><p>Event คือสิ่งที่เกิดขึ้นในเบราว์เซอร์ เช่น ผู้ใช้คลิกปุ่ม พิมพ์ในช่องข้อมูล ส่งฟอร์ม หรือปรับขนาดหน้าต่าง Event listener คือฟังก์ชันที่ “ฟัง” Event เหล่านี้และรันโค้ดเมื่อเกิดขึ้น</p>
-<h2>ไวยากรณ์พื้นฐาน</h2><pre><code>const button = document.querySelector("button")
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>การใช้งาน Event Listener — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งาน Event Listener</h1>
+      <p><strong>Event Listener</strong> คือเครื่องมือสำคัญที่ช่วยทำให้หน้าเว็บของเราสามารถโต้ตอบกับผู้ใช้งานได้ (Interactive) โดยทำหน้าที่คอยตรวจจับและตอบสนองต่อพฤติกรรมต่าง ๆ เช่น การคลิกปุ่ม การพิมพ์ข้อความ การส่ง Form หรือการขยับเมาส์</p>
+
+      <h2>1. Event คืออะไร?</h2>
+      <p><strong>Event (เหตุการณ์)</strong> คือสิ่งต่าง ๆ ที่เกิดขึ้นบนเว็บ Browser จากการกระทำของผู้ใช้หรือระบบ เช่น การคลิกปุ่ม (Click), การพิมพ์ในช่องข้อมูล (Input), การส่งข้อมูล Form (Submit) หรือการปรับขนาดหน้าจอ (Resize)</p>
+      <p><strong>Event Listener (ตัวดักฟังเหตุการณ์)</strong> คือ Function พิเศษที่เราสั่งให้ไปเกาะติดอยู่กับองค์ประกอบหน้าเว็บ เพื่อคอยตรวจจับว่าเกิดเหตุการณ์นั้น ๆ ขึ้นหรือยัง และเมื่อเกิดเหตุการณ์ขึ้นแล้ว ระบบจะสั่งให้โค้ด JavaScript ที่เรากำหนดไว้ทำงานทันที</p>
+
+      <h2>2. โครงสร้างไวยากรณ์พื้นฐาน</h2>
+      <pre><code>const button = document.querySelector("button")
 button.addEventListener("click", () =&gt; {
   console.log("Button was clicked!")
-})</code></pre><p><code>addEventListener</code> รับสองอาร์กิวเมนต์หลัก:</p><ul><li><strong>eventType</strong>: String ระบุชนิด Event เช่น “click”, “input”, “submit”</li><li><strong>function</strong>: ฟังก์ชันที่จะรันเมื่อเกิด Event</li></ul>
-<h2>การเพิ่ม Event Listener ให้ Element</h2><pre><code>const input = document.querySelector("input")
+})</code></pre>
+      <p>Method <code>addEventListener()</code> จะรับ Argument หลัก 2 ตัวดังนี้:</p>
+      <ul>
+        <li><strong>eventType</strong>: ข้อความ (String) ระบุชนิดของเหตุการณ์ที่ต้องการตรวจจับ เช่น <code>"click"</code>, <code>"input"</code>, <code>"submit"</code></li>
+        <li><strong>function</strong>: Function คอลแบ็ก (Callback Function) ที่ต้องการให้ทำงานทันทีเมื่อเกิดเหตุการณ์นั้นขึ้น</li>
+      </ul>
+
+      <h2>3. ตัวอย่างการเพิ่ม Event Listener รูปแบบต่าง ๆ</h2>
+      <pre><code>const input = document.querySelector("input")
 input.addEventListener("input", (e) =&gt; {
   console.log("Input value:", e.target.value)
 })
+
 document.addEventListener("click", () =&gt; console.log("Document was clicked"))
+
 window.addEventListener("resize", () =&gt; {
   console.log("Window resized to:", window.innerWidth, window.innerHeight)
 })</code></pre>
-<h3>Event Listener หลายตัว</h3><p>เพิ่ม Listener หลายตัวให้ Element เดียวกันได้ โดยไม่เขียนทับกันและทำงานตามลำดับที่เพิ่ม:</p><pre><code>button.addEventListener("click", () =&gt; console.log("First listener"))
+
+      <h3>การผูก Event Listener หลายตัวเข้ากับองค์ประกอบเดียว</h3>
+      <p>เราสามารถผูก Event Listener หลาย ๆ ตัวเข้ากับองค์ประกอบ HTML เดียวกันได้ โดยระบบจะไม่เขียนทับกัน แต่จะทำงานเรียงลำดับตามที่เราประกาศไว้:</p>
+      <pre><code>button.addEventListener("click", () =&gt; console.log("First listener"))
 button.addEventListener("click", () =&gt; console.log("Second listener"))</code></pre>
-<h2>การลบ Event Listener</h2><p>ต้องมี Reference ของฟังก์ชันตัวเดิม:</p><pre><code>function handleClick() { console.log("Clicked!") }
+
+      <h2>4. การยกเลิกและลบ Event Listener (removeEventListener)</h2>
+      <p>หากเราต้องการลบ Event Listener ออกในภายหลัง เราจำเป็นต้อง <strong>ส่งอ้างอิงของ Function ตัวเดิม (Named Function Reference)</strong> เข้าไปใน Method <code>removeEventListener()</code>:</p>
+      <pre><code>function handleClick() { console.log("Clicked!") }
 button.addEventListener("click", handleClick)
-button.removeEventListener("click", handleClick)</code></pre><pre><code>// ❌ ฟังก์ชันคนละ Object จึงลบไม่ได้
+button.removeEventListener("click", handleClick)</code></pre>
+      <pre><code>// ❌ วิธีที่ผิด: การใช้ Arrow Function แบบนิรนาม (Anonymous) จะทำให้ลบไม่ได้ เนื่องจากระบบมองเป็น Function คนละตัวกันในหน่วยความจำ
 button.addEventListener("click", () =&gt; console.log("Clicked!"))
 button.removeEventListener("click", () =&gt; console.log("Clicked!"))</code></pre>
-<h2>Event Object</h2><p>ฟังก์ชัน Listener ได้รับ <strong>Event object</strong> ที่มีข้อมูลเกี่ยวกับ Event โดยอัตโนมัติ:</p><pre><code>button.addEventListener("click", (event) =&gt; console.log(event))</code></pre><h3>พร็อพเพอร์ตีที่พบบ่อย</h3><pre><code>button.addEventListener("click", (e) =&gt; {
+
+      <h2>5. ทำความเข้าใจเกี่ยวกับ Event Object (e)</h2>
+      <p>เมื่อเกิดเหตุการณ์ขึ้น Function คอลแบ็กจะได้รับ Argument ตัวหนึ่งโดยอัตโนมัติ เรียกว่า <strong>Event Object</strong> (นิยมตั้งชื่อตัวแปรย่อว่า <code>e</code> หรือ <code>event</code>) ซึ่งเก็บข้อมูลรายละเอียดทั้งหมดเกี่ยวกับเหตุการณ์ที่เกิดขึ้น ณ ขณะนั้น:</p>
+      <pre><code>button.addEventListener("click", (event) =&gt; console.log(event))</code></pre>
+
+      <h3>คุณสมบัติ (Properties) ที่นิยมใช้งานของ Event Object</h3>
+      <pre><code>button.addEventListener("click", (e) =&gt; {
   console.log(e.target)
   console.log(e.currentTarget)
   console.log(e.clientX, e.clientY)
   console.log(e.ctrlKey, e.shiftKey, e.altKey)
 })</code></pre>
-<h3><code>target</code> กับ <code>currentTarget</code></h3><ul><li><code>target</code> - Element จริงที่ทำให้เกิด Event อาจเป็น Element ลูก</li><li><code>currentTarget</code> - Element ที่ติด Listener ไว้</li></ul><p>โดยทั่วไป <code>currentTarget</code> คือค่าที่ต้องการเมื่อทำงานใน Listener</p>
-<h2>ชนิด Event ที่พบบ่อย</h2><h3>Mouse</h3><ul><li><code>click</code>, <code>dblclick</code>, <code>mouseenter</code>, <code>mouseleave</code>, <code>mouseover</code></li></ul><h3>Focus</h3><ul><li><code>focus</code>, <code>blur</code></li></ul><h3>Input</h3><ul><li><code>input</code> - ทำงานทุกครั้งที่ค่าเปลี่ยน</li><li><code>change</code> - ทำงานเมื่อเสีย Focus และค่าเปลี่ยน</li></ul><h3>Window</h3><ul><li><code>resize</code> - เมื่อขนาดหน้าต่างเปลี่ยน</li></ul>
-<h2>ป้องกันพฤติกรรมเริ่มต้นด้วย <code>preventDefault</code></h2><p>Event หลายชนิดมีพฤติกรรมเริ่มต้น เช่น ลิงก์นำทางและฟอร์มเปลี่ยนหน้า:</p><pre><code>const form = document.querySelector("form")
+
+      <h3>ความแตกต่างระหว่าง <code>target</code> และ <code>currentTarget</code></h3>
+      <ul>
+        <li><code>e.target</code>: คือองค์ประกอบ HTML <strong>ตัวจริงเสียงจริงที่ผู้ใช้กระทำโดยตรง</strong> (ซึ่งอาจจะเป็น Tag ลูกที่อยู่ข้างในปุ่มอีกที เช่น รูปภาพหรือไอคอน)</li>
+        <li><code>e.currentTarget</code>: คือองค์ประกอบ HTML <strong>ที่เราเอา Event Listener ไปผูกติดไว้จริง ๆ</strong> (เช่น ตัวปุ่มหลัก)</li>
+      </ul>
+      <p>💡 <strong>คำแนะนำ:</strong> ในการทำงานส่วนใหญ่ ค่าที่เราต้องการนำมาใช้งานมักจะเป็น <code>e.currentTarget</code> เพราะมีความแน่นอนและไม่เปลี่ยนแปลงตามตำแหน่งที่ผู้ใช้คลิกโดน</p>
+
+      <h2>6. ชนิดของ Event ที่นิยมใช้งานบ่อย ๆ</h2>
+      <h3>กลุ่มเหตุการณ์เมาส์ (Mouse Events):</h3>
+      <ul>
+        <li><code>click</code>, <code>dblclick</code>, <code>mouseenter</code>, <code>mouseleave</code>, <code>mouseover</code></li>
+      </ul>
+      <h3>กลุ่มเหตุการณ์โฟกัส (Focus Events):</h3>
+      <ul>
+        <li><code>focus</code>, <code>blur</code></li>
+      </ul>
+      <h3>กลุ่มเหตุการณ์ Input (Input Events):</h3>
+      <ul>
+        <li><code>input</code> - ทำงานทันทีในทุก ๆ ครั้งที่มีการพิมพ์หรือค่าเปลี่ยน</li>
+        <li><code>change</code> - ทำงานเมื่อผู้ใช้พิมพ์เสร็จและกดคลิกออกนอกช่องกรอกข้อมูล (เสีย Focus)</li>
+      </ul>
+      <h3>กลุ่มเหตุการณ์หน้าจอ (Window Events):</h3>
+      <ul>
+        <li><code>resize</code> - เมื่อขนาดหน้าต่างเปลี่ยน</li>
+      </ul>
+
+      <h2>7. การยกเลิกพฤติกรรมเริ่มต้นของ Browser ด้วย <code>preventDefault()</code></h2>
+      <p>องค์ประกอบ HTML บางตัวจะมีพฤติกรรมเริ่มต้นที่ Browser กำหนดมาให้โดยอัตโนมัติ เช่น เมื่อกดปุ่มส่ง Form หน้าเว็บจะรีโหลดใหม่ หรือเมื่อคลิก Link หน้าเว็บจะเปลี่ยนเส้นทางไปหน้าอื่น เราสามารถใช้ Method <code>e.preventDefault()</code> เพื่อสั่งระงับพฤติกรรมเริ่มต้นเหล่านี้ชั่วคราว เพื่อให้เราสามารถประมวลผลข้อมูลด้วย JavaScript เองก่อนได้:</p>
+      <pre><code>const form = document.querySelector("form")
 form.addEventListener("submit", (e) =&gt; {
   e.preventDefault()
   const formData = new FormData(e.currentTarget)
   console.log("Username:", formData.get("username"))
-})</code></pre><pre><code>link.addEventListener("click", (e) =&gt; e.preventDefault())
+})</code></pre>
+      <pre><code>link.addEventListener("click", (e) =&gt; e.preventDefault())
 document.addEventListener("contextmenu", (e) =&gt; e.preventDefault())</code></pre>
-<h2>ข้อผิดพลาดที่พบบ่อย</h2><ol><li><p>เรียกฟังก์ชันโดยไม่ตั้งใจ</p><pre><code>// ❌ ผิด
+
+      <h2>8. ข้อผิดพลาดที่พบบ่อย (Common Mistakes)</h2>
+      <ol>
+        <li>
+          <p><strong>การใส่เครื่องหมายวงเล็บเรียกใช้งาน Function ทันที</strong></p>
+          <pre><code>// ❌ วิธีที่ผิด: การใส่ () จะทำให้ Function ทำงานทันทีตั้งแต่หน้าเว็บโหลดเสร็จ ไม่ใช่ทำงานเมื่อเกิดการคลิก
 button.addEventListener("click", handleClick())
-// ✅ ถูกต้อง
-button.addEventListener("click", handleClick)</code></pre></li><li><p>ใช้ <code>target</code> แทน <code>currentTarget</code></p><pre><code>button.addEventListener("click", (e) =&gt; {
-  console.log(e.target) // อาจเป็น Element ลูก
-  console.log(e.currentTarget) // เป็นปุ่มเสมอ
-})</code></pre></li></ol>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+
+// ✅ วิธีที่ถูกต้อง: ส่งเฉพาะชื่อ Function เพื่อบอกระบบว่าให้เรียกใช้เมื่อมีการคลิกเท่านั้น
+button.addEventListener("click", handleClick)</code></pre>
+        </li>
+        <li>
+          <p><strong>การสับสนระหว่าง target และ currentTarget</strong></p>
+          <pre><code>button.addEventListener("click", (e) =&gt; {
+  console.log(e.target) // ⚠️ อาจเป็น Tag ลูกข้างในปุ่ม
+  console.log(e.currentTarget) // ✅ ปลอดภัยและเป็นตัวปุ่มหลักเสมอ
+})</code></pre>
+        </li>
+      </ol>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="28_selecting_elements.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="30_common_errors.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/dom/event-listeners">“Event Listeners” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/dom/event-listeners">“Event Listeners” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

@@ -1,59 +1,114 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้การใช้ While Loop เพื่อทำโค้ดซ้ำเมื่อไม่ทราบจำนวนรอบแน่นอน" /><title>While Loop — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>While Loop</h1><p>While loop ใช้เมื่อต้องทำโค้ดซ้ำ แต่ไม่ทราบแน่ชัดว่าต้องวนกี่รอบ โดยจะทำงานต่อไปตราบใดที่เงื่อนไขยังเป็นจริง</p>
-<h2>ไวยากรณ์พื้นฐานของ While Loop</h2><p>While loop เริ่มด้วยคีย์เวิร์ด <code>while</code> ตามด้วยเงื่อนไขในวงเล็บ <code>()</code> และบล็อกโค้ดในวงเล็บปีกกา <code>{}</code>:</p><pre><code>let i = 0
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้การใช้ While Loop เพื่อทำโค้ดซ้ำเมื่อไม่ทราบจำนวนรอบแน่นอน" />
+  <title>การใช้งาน While Loop — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งาน While Loop</h1>
+      <p><strong>While Loop</strong> คือคำสั่งควบคุมการทำงานซ้ำ (Loop) ที่เหมาะสำหรับกรณีที่เรา <strong>ไม่ทราบจำนวนรอบการทำงานที่แน่นอนล่วงหน้า</strong> โดยโปรแกรมจะทำงานซ้ำไปเรื่อย ๆ ตราบใดที่เงื่อนไขที่กำหนดไว้ยังคงเป็นจริง (True)</p>
+
+      <h2>1. โครงสร้างไวยากรณ์พื้นฐานของ While Loop</h2>
+      <p>คำสั่ง While Loop จะเริ่มต้นด้วย Keyword <code>while</code> ตามด้วยเงื่อนไขที่ต้องการตรวจสอบภายในวงเล็บ <code>()</code> และบล็อกคำสั่งที่ต้องการให้ทำงานซ้ำภายในวงเล็บปีกกา <code>{}</code>:</p>
+      <pre><code>let i = 0
 while (i &lt; 5) {
-  // โค้ดที่ต้องทำซ้ำ
+  // ชุดคำสั่งที่ต้องการให้ทำงานซ้ำ
   console.log(`Count: ${i}`)
-  i++ // สำคัญ: อย่าลืมเปลี่ยนค่า i!
-}</code></pre><p>Loop จะทำงานต่อไปตราบใดที่เงื่อนไขในวงเล็บเป็น <code>true</code> และหยุดเมื่อกลายเป็น <code>false</code></p>
-<h2>การแปลง For Loop เป็น While Loop</h2><p>นี่คือวิธีแปลง for loop เป็น while loop:</p><pre><code>// For loop
+  i++ // ⚠️ สำคัญมาก: ต้องอัปเดตค่าตัวแปรควบคุมเพื่อป้องกันการเกิด Infinite Loop!
+}</code></pre>
+      <p>ลูปจะทำงานซ้ำไปเรื่อย ๆ ตราบใดที่ผลลัพธ์ของเงื่อนไขในวงเล็บยังคงเป็น <code>true</code> และจะหยุดทำงานทันทีเมื่อเงื่อนไขกลายเป็น <code>false</code></p>
+
+      <h2>2. การเปรียบเทียบการแปลง For Loop เป็น While Loop</h2>
+      <p>เราสามารถเขียนคำสั่ง For Loop และ While Loop ให้ทำงานทดแทนกันได้ โดยมีโครงสร้างเปรียบเทียบดังนี้:</p>
+      <pre><code>// For loop
 for (let i = 0; i &lt; 5; i++) {
   console.log(i)
 }
 
-// While loop ที่ทำงานเทียบเท่ากัน
-let i = 0 // การกำหนดค่าเริ่มต้น (อยู่นอก Loop)
-while (i &lt; 5) { // เงื่อนไข (เหมือนกับ For loop)
-  console.log(i) // โค้ดที่ต้องทำงาน
-  i++ // การเพิ่มค่า (อยู่ภายใน Loop)
-}</code></pre><p>ทั้งสองแบบแสดงผล: <code>0, 1, 2, 3, 4</code></p>
-<h2>เมื่อใดควรใช้ While Loop</h2><ol><li><p>ไม่ทราบจำนวนรอบ</p><pre><code>// ถามข้อมูลต่อไปจนกว่าผู้ใช้จะป้อน "quit"
+// การเขียนแบบ While Loop ที่ให้ผลลัพธ์เหมือนกัน
+let i = 0 // 1. กำหนดค่าเริ่มต้นของตัวแปรควบคุม (เขียนไว้นอก Loop)
+while (i &lt; 5) { // 2. ตรวจสอบเงื่อนไข (เหมือนกับใน For Loop)
+  console.log(i) // 3. ชุดคำสั่งที่ต้องการทำงาน
+  i++ // 4. อัปเดตค่าตัวแปรควบคุม (เขียนไว้ท้ายสุดในบล็อก Loop)
+}</code></pre>
+      <p>ทั้งสองแบบแสดงผล: <code>0, 1, 2, 3, 4</code></p>
+
+      <h2>3. เมื่อใดที่ควรเลือกใช้ While Loop?</h2>
+      <ol>
+        <li>
+          <p><strong>เมื่อไม่ทราบจำนวนรอบการทำงานที่แน่นอน</strong></p>
+          <pre><code>// ตัวอย่าง: ถามข้อมูลจากผู้ใช้ไปเรื่อย ๆ จนกว่าจะพิมพ์คำว่า "quit" เพื่อออก
 let userInput = ""
 while (userInput !== "quit") {
   userInput = prompt("Enter a command (or 'quit' to exit):")
   if (userInput !== "quit") {
     console.log(`You entered: ${userInput}`)
   }
-}</code></pre></li><li><p>ประมวลผลโครงสร้างข้อมูลที่ซ้อนกัน</p><pre><code>const person = {
+}</code></pre>
+        </li>
+        <li>
+          <p><strong>เมื่อต้องประมวลผลโครงสร้างข้อมูลแบบเชื่อมโยงที่ซ้อนกัน (Linked Data Structures)</strong></p>
+          <pre><code>const person = {
   name: "Kyle",
   friend: {
     name: "Joe",
     friend: {
       name: "Sally",
-      friend: null, // Sally ไม่มีเพื่อน
+      friend: null, // Sally ไม่มีเพื่อนต่อท้ายแล้ว
     },
   },
 }
 
-// หาเพื่อนคนสุดท้ายในสาย
+// ค้นหาเพื่อนคนสุดท้ายในสายความสัมพันธ์ (Linked List)
 let currentPerson = person
 while (currentPerson.friend !== null) {
   currentPerson = currentPerson.friend
   console.log(`Current friend: ${currentPerson.name}`)
 }
 
-console.log(`Final friend: ${currentPerson.name}`) // "Final friend: Sally"</code></pre><p>คุณทำแบบนี้ด้วย for loop ได้ไม่ง่าย เพราะไม่รู้ว่าสายเพื่อนซ้อนลึกเพียงใด!</p></li></ol>
-<h3>While Loop กับ For Loop</h3><p><strong>ใช้ for loop เมื่อ:</strong></p><ul><li>รู้จำนวนรอบที่แน่นอน</li><li>กำลังนับหรือวนผ่าน Array</li><li>มีจุดเริ่ม จุดสิ้นสุด และการเพิ่มค่าที่ชัดเจน</li></ul><p><strong>ใช้ while loop เมื่อ:</strong></p><ul><li>ไม่ทราบว่าต้องวนกี่รอบ</li><li>ต้องเข้าถึงข้อมูลที่ซ้อนหรือเชื่อมโยงกัน</li></ul>
-<h2>การควบคุม Loop: <code>break</code> และ <code>continue</code></h2><p>คุณใช้ <code>break</code> และ <code>continue</code> ใน while loop ได้เช่นเดียวกับ for loop</p>
-<h2>Do-While Loop</h2><p>เป็นรูปแบบที่รันบล็อกโค้ดอย่างน้อยหนึ่งครั้งก่อนตรวจสอบเงื่อนไข:</p><pre><code>let userInput
+console.log(`Final friend: ${currentPerson.name}`) // "Final friend: Sally"</code></pre>
+          <p>กรณีนี้การใช้ For Loop จะทำได้ยากมาก เนื่องจากเราไม่มีทางรู้ล่วงหน้าเลยว่าสายความสัมพันธ์นี้จะมีความลึกกี่ชั้น แต่ While Loop สามารถจัดการได้ง่าย ๆ เพียงแค่สั่งให้ทำงานไปเรื่อย ๆ จนกว่าจะเจอค่าที่เป็น <code>null</code></p>
+        </li>
+      </ol>
+
+      <h3>สรุปแนวทางการเลือกระหว่าง For Loop และ While Loop</h3>
+      <p><strong>ควรเลือกใช้ For Loop เมื่อ:</strong></p>
+      <ul>
+        <li>ทราบจำนวนรอบการทำงานที่แน่นอนล่วงหน้า</li>
+        <li>ต้องการวนลูปดึงข้อมูลจาก Array (Array)</li>
+        <li>มีจุดเริ่มต้น จุดสิ้นสุด และขั้นตอนการอัปเดตค่าที่ชัดเจน</li>
+      </ul>
+      <p><strong>ควรเลือกใช้ While Loop เมื่อ:</strong></p>
+      <ul>
+        <li>ไม่ทราบจำนวนรอบการทำงานที่แน่นอนล่วงหน้า</li>
+        <li>ต้องทำงานกับโครงสร้างข้อมูลที่ซ้อนกันหรือเชื่อมโยงกันไปเรื่อย ๆ</li>
+      </ul>
+
+      <h2>4. การควบคุมการทำงานด้วย break และ continue</h2>
+      <p>เราสามารถใช้คำสั่ง <code>break</code> (เพื่อหยุดลูปทันที) และ <code>continue</code> (เพื่อข้ามไปรอบถัดไป) ภายใน While Loop ได้เช่นเดียวกับใน For Loop</p>
+
+      <h2>5. การใช้งาน Do-While Loop</h2>
+      <p><strong>Do-While Loop</strong> เป็นลูปที่มีลักษณะพิเศษคือ <strong>จะทำงานในบล็อกคำสั่งก่อนอย่างน้อย 1 รอบเสมอ</strong> จากนั้นจึงค่อยมาตรวจสอบเงื่อนไขทีหลัง:</p>
+      <pre><code>let userInput
 do {
   userInput = prompt("Enter 'yes' to continue:")
   console.log(`You entered: ${userInput}`)
-} while (userInput !== "yes")</code></pre><p>ความแตกต่างสำคัญคือ <code>do-while</code> ตรวจสอบเงื่อนไข <strong>หลังจาก</strong> รันบล็อกโค้ด</p>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+} while (userInput !== "yes")</code></pre>
+      <p>💡 <strong>ความแตกต่างสำคัญ:</strong> ในขณะที่ While Loop ปกติจะตรวจสอบเงื่อนไขก่อนรันโค้ดเสมอ (ถ้าเงื่อนไขเป็นเท็จตั้งแต่แรก โค้ดจะไม่รันเลย) แต่ Do-While Loop จะทำงานก่อน 1 รอบเสมอแล้วค่อยตรวจสอบเงื่อนไขในภายหลัง</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="22_for_loops.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="24_recursion.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/while-loops">“While Loops” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/while-loops">“While Loops” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

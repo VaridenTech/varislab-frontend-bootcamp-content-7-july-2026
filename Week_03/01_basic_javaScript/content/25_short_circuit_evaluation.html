@@ -1,29 +1,50 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้การประเมินผลแบบลัดวงจรด้วยตัวดำเนินการทางตรรกะ เพื่อเขียนเงื่อนไขที่กระชับและมีประสิทธิภาพ" /><title>การประเมินผลแบบลัดวงจร — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>การประเมินผลแบบลัดวงจร</h1><p>การประเมินผลแบบลัดวงจรเป็นคุณสมบัติที่ทรงพลังของตัวดำเนินการทางตรรกะใน JavaScript (<code>&amp;&amp;</code> และ <code>||</code>) ซึ่งช่วยให้โค้ดมีประสิทธิภาพและกระชับขึ้น</p>
-<h2>การประเมินผลแบบลัดวงจรคืออะไร?</h2><p>หมายถึง JavaScript จะหยุดประเมินนิพจน์ทางตรรกะทันทีที่ทราบผลลัพธ์สุดท้าย โดยจะ “ลัดวงจร” หรือข้ามส่วนที่เหลือของนิพจน์</p>
-<h2>ตัวดำเนินการ <code>&amp;&amp;</code> (AND)</h2><p>สำหรับ AND operand <strong>ทั้งสอง</strong> ต้องเป็น <code>true</code> ผลลัพธ์จึงเป็น <code>true</code> หาก operand แรกเป็น <code>false</code> JavaScript จะรู้ว่าทั้งนิพจน์เป็น <code>false</code> จึงไม่ประเมิน operand ที่สอง</p><pre><code>const a = false
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้การประเมินผลแบบลัดวงจรด้วยตัวดำเนินการทางตรรกะ เพื่อเขียนเงื่อนไขที่กระชับและมีประสิทธิภาพ" />
+  <title>การประเมินผลแบบลัดวงจร (Short-Circuit Evaluation) — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การประเมินผลแบบลัดวงจร (Short-Circuit Evaluation)</h1>
+      <p><strong>การประเมินผลแบบลัดวงจร (Short-Circuit Evaluation)</strong> คือพฤติกรรมการทำงานที่ชาญฉลาดของตัวดำเนินการทางตรรกศาสตร์ใน JavaScript (ได้แก่ <code>&amp;&amp;</code> และ <code>||</code>) โดยระบบจะหยุดประมวลผลเงื่อนไขที่เหลือทันทีที่ทราบผลลัพธ์สุดท้ายที่แน่ชัดแล้ว ช่วยให้โค้ดทำงานได้เร็วขึ้นและเขียนเงื่อนไขได้กระชับขึ้นอย่างมาก</p>
+
+      <h2>1. การประเมินผลแบบลัดวงจรคืออะไร?</h2>
+      <p>หมายถึง กระบวนการที่ JavaScript Engine จะประเมินค่าความจริงจากซ้ายไปขวา และจะ <strong>"หยุดประมวลผลทันที" (Short-circuit)</strong> เมื่อพบค่าที่สามารถสรุปผลลัพธ์สุดท้ายของทั้งนิพจน์นั้นได้แล้ว โดยไม่จำเป็นต้องเสียเวลาไปคำนวณโค้ดส่วนที่เหลืออยู่ทางด้านขวา</p>
+
+      <h2>2. การลัดวงจรด้วยตัวดำเนินการ <code>&amp;&amp;</code> (AND)</h2>
+      <p>ตามหลักตรรกศาสตร์ของ <code>&amp;&amp;</code> (AND) เงื่อนไข <strong>ทุกตัวจะต้องเป็นจริงทั้งหมด</strong> ผลลัพธ์จึงจะเป็นจริง ดังนั้น หาก JavaScript ตรวจสอบเงื่อนไขแรกทางซ้ายมือแล้วพบว่าเป็นเท็จ (<code>false</code>) ระบบจะรู้ทันทีว่าผลลัพธ์สุดท้ายอย่างไรก็ต้องเป็นเท็จแน่นอน จึงหยุดทำงานและลัดวงจรโดยข้ามการตรวจสอบเงื่อนไขที่สองทางขวาไปเลย:</p>
+      <pre><code>const a = false
 const b = true
 
-// JavaScript ตรวจเฉพาะ 'a' พบว่าเป็น false แล้วหยุด
+// JavaScript จะตรวจสอบเฉพาะค่า a เมื่อพบว่าเป็น false ก็จะหยุดทำงานทันทีโดยไม่ดูค่า b
 const result = a &amp;&amp; b
 console.log(result) // false
 
-// หากมีการเรียกฟังก์ชันที่ใช้ทรัพยากรมาก:
+// ตัวอย่าง: หากเงื่อนไขด้านหลังเป็น Function ที่ทำงานหนัก (Expensive Function)
 function expensiveFunction() {
   console.log("This is an expensive operation!")
   return true
 }
 
-// expensiveFunction() จะไม่ถูกเรียก เพราะ a เป็น false
+// Function expensiveFunction() จะไม่ถูกเรียกใช้งานเลย เนื่องจากตัวแปร a เป็น false ไปแล้ว
 const result2 = a &amp;&amp; expensiveFunction()
-console.log(result2) // false (และไม่มี console.log จาก expensiveFunction)</code></pre><p>สิ่งนี้ทำให้ <code>&amp;&amp;</code> เหมาะสำหรับการเข้าถึงพร็อพเพอร์ตีแบบมีเงื่อนไข:</p><pre><code>// เข้าถึงพร็อพเพอร์ตีอย่างปลอดภัย
+console.log(result2) // false (และไม่มี console.log จาก expensiveFunction)</code></pre>
+      <p>💡 <strong>การนำไปใช้งานจริง:</strong> เรามักใช้ <code>&amp;&amp;</code> เพื่อตรวจสอบความปลอดภัยก่อนเข้าถึงข้อมูลภายใน Object (เพื่อป้องกันไม่ให้โปรแกรมแครชเมื่อตัวแปรเป็น null หรือ undefined):</p>
+      <pre><code>// ตรวจสอบว่ามี user และ user.name อยู่จริงก่อนจะสั่งพิมพ์ชื่อ
 const user = null
 user &amp;&amp; user.name &amp;&amp; console.log(user.name) // ไม่เกิดข้อผิดพลาด</code></pre>
-<h2>ตัวดำเนินการ <code>||</code> (OR)</h2><p>สำหรับ OR หาก operand แรกเป็น <code>true</code> JavaScript จะรู้ว่าทั้งนิพจน์เป็น <code>true</code> จึงไม่ประเมิน operand ที่สอง</p><pre><code>const a = true
+
+      <h2>3. การลัดวงจรด้วยตัวดำเนินการ <code>||</code> (OR)</h2>
+      <p>ตามหลักตรรกศาสตร์ของ <code>||</code> (OR) ขอเพียงแค่ <strong>เงื่อนไขใดเงื่อนไขหนึ่งเป็นจริงก็พอ</strong> ผลลัพธ์สุดท้ายก็จะเป็นจริงทันที ดังนั้น หาก JavaScript ตรวจสอบเงื่อนไขแรกทางซ้ายมือแล้วพบว่าเป็นจริง (<code>true</code>) ระบบจะรู้ทันทีว่าผลลัพธ์สุดท้ายอย่างไรก็ต้องเป็นจริงแน่นอน จึงหยุดทำงานและลัดวงจรข้ามการตรวจสอบเงื่อนไขที่สองทางขวาไปทันที:</p>
+      <pre><code>const a = true
 const b = false
 
-// JavaScript ตรวจเฉพาะ 'a' พบว่าเป็น true แล้วหยุด
+// JavaScript จะตรวจสอบเฉพาะค่า a เมื่อพบว่าเป็น true ก็จะหยุดทำงานทันทีโดยไม่ดูค่า b
 const result = a || b
 console.log(result) // true
 
@@ -32,53 +53,69 @@ function expensiveFunction() {
   return false
 }
 
-// expensiveFunction() จะไม่ถูกเรียก เพราะ a เป็น true
+// expensiveFunction() จะไม่ถูกเรียกใช้งานเลย เนื่องจากตัวแปร a เป็น true ไปแล้ว
 const result2 = a || expensiveFunction()
-console.log(result2) // true (และไม่มี console.log จาก expensiveFunction)</code></pre><p>สิ่งนี้ทำให้ <code>||</code> เหมาะสำหรับกำหนดค่าสำรอง:</p><pre><code>const userInput = ""
+console.log(result2) // true (และไม่มี console.log จาก expensiveFunction)</code></pre>
+      <p>💡 <strong>การนำไปใช้งานจริง:</strong> เรามักใช้ <code>||</code> ในการกำหนดค่าเริ่มต้นหรือค่าสำรอง (Default Value) ให้กับตัวแปร ในกรณีที่ค่าหลักไม่มีอยู่จริงหรือเป็นค่าว่าง (Falsy):</p>
+      <pre><code>const userInput = ""
 const defaultName = "Guest"
 
-// หาก userInput เป็น falsy ให้ใช้ defaultName
+// หาก userInput เป็นค่าว่าง (Falsy) ตัวแปร displayName จะได้รับค่า defaultName แทน
 const displayName = userInput || defaultName
 console.log(displayName) // "Guest"
 
-// ตัวอย่างเพิ่มเติม
+// ตัวอย่างเพิ่มเติมในการกำหนดค่าเริ่มต้น
 const config = {
   theme: null,
-  timeout: 0,
+  timeout: 0, // ถือว่า 0 เป็น falsy
 }
 
 const theme = config.theme || "light" // "light"
 const timeout = config.timeout || 5000 // 5000
 const debug = config.debug || false // false</code></pre>
-<h2>ค่าที่ส่งกลับในการประเมินผลแบบลัดวงจร</h2><p><strong>สำคัญ:</strong> ตัวดำเนินการแบบลัดวงจรไม่ได้ส่งกลับเพียง <code>true</code> หรือ <code>false</code> แต่ส่งค่าจริงที่กำหนดผลลัพธ์กลับมา!</p>
-<h3>AND <code>&amp;&amp;</code> ส่งกลับ:</h3><pre><code>// ส่งค่า falsy แรก หรือค่าสุดท้ายหากทุกค่าเป็น truthy
+
+      <h2>4. ค่าที่ส่งกลับจากการประเมินผลแบบลัดวงจร (Return Values)</h2>
+      <p>⚠️ <strong>กฎเหล็กสำคัญ:</strong> ตัวดำเนินการ <code>&amp;&amp;</code> และ <code>||</code> ใน JavaScript ไม่ได้ส่งกลับมาแค่ค่า Boolean <code>true</code> หรือ <code>false</code> เสมอไป แต่พวกมันจะ <strong>ส่งคืนค่าข้อมูลจริง ๆ (Actual Value) ของตัวแปรตัวสุดท้ายที่ทำให้การประเมินผลนั้นสิ้นสุดลง</strong>:</p>
+
+      <h3>การส่งค่ากลับของ AND (<code>&amp;&amp;</code>)</h3>
+      <pre><code>// จะส่งคืนค่า Falsy ตัวแรกที่เจอ หรือส่งคืนค่าสุดท้ายหากทุกค่าเป็น Truthy ทั้งหมด:
 console.log(false &amp;&amp; "hello") // false
 console.log(true &amp;&amp; "hello") // "hello"
 console.log("hi" &amp;&amp; "bye") // "bye"
-console.log("" &amp;&amp; "hello") // "" (String ว่างเป็น falsy)
-console.log(5 &amp;&amp; 10 &amp;&amp; 15) // 15 (ทุกค่าเป็น truthy จึงส่งค่าสุดท้าย)
-console.log(5 &amp;&amp; 0 &amp;&amp; 15) // 0 (ค่า falsy แรก)</code></pre>
-<h3>OR <code>||</code> ส่งกลับ:</h3><pre><code>// ส่งค่า truthy แรก หรือค่าสุดท้ายหากทุกค่าเป็น falsy
+console.log("" &amp;&amp; "hello") // "" (เนื่องจาก String ว่างเป็น Falsy)
+console.log(5 &amp;&amp; 10 &amp;&amp; 15) // 15 (เนื่องจากทุกค่าเป็น Truthy ระบบจึงส่งคืนค่าสุดท้าย)
+console.log(5 &amp;&amp; 0 &amp;&amp; 15) // 0 (ส่งคืนค่า Falsy ตัวแรกที่พบ)</code></pre>
+
+      <h3>การส่งค่ากลับของ OR (<code>||</code>)</h3>
+      <pre><code>// จะส่งคืนค่า Truthy ตัวแรกที่เจอ หรือส่งคืนค่าสุดท้ายหากทุกค่าเป็น Falsy ทั้งหมด:
 console.log(false || "hello") // "hello"
 console.log(true || "hello") // true
 console.log("hi" || "bye") // "hi"
 console.log("" || "hello") // "hello"
 console.log(null || undefined || "default") // "default"
-console.log(0 || false || null) // null (ทุกค่าเป็น falsy จึงส่งค่าสุดท้าย)</code></pre>
-<h2>ทางเลือกสมัยใหม่</h2><p>JavaScript มีตัวดำเนินการใหม่สองตัวที่ใช้แทนรูปแบบลัดวงจรทั่วไปบางแบบได้:</p>
-<h3>Nullish Coalescing <code>??</code></h3><p>ตัวดำเนินการ nullish coalescing ถือว่าเฉพาะ <code>null</code> และ <code>undefined</code> เป็น falsy จึงเหมาะกับค่าเริ่มต้นเมื่อ <code>0</code> หรือ <code>false</code> เป็นค่าที่ใช้ได้:</p><pre><code>const config = {
-  timeout: 0, // เราต้องการเก็บค่า 0 นี้ไว้!
-  debug: null, // ค่านี้ควรได้รับค่าเริ่มต้น
+console.log(0 || false || null) // null (เนื่องจากทุกค่าเป็น Falsy ระบบจึงส่งคืนค่าสุดท้าย)</code></pre>
+
+      <h2>5. ทางเลือกสมัยใหม่ใน JavaScript (Modern Alternatives)</h2>
+      <p>ใน JavaScript เวอร์ชันใหม่ ๆ ได้มีการเพิ่มตัวดำเนินการใหม่เข้ามาเพื่อช่วยแก้ปัญหาขอบเขตการทำงานบางอย่างของ <code>&amp;&amp;</code> และ <code>||</code> ให้มีความปลอดภัยและแม่นยำยิ่งขึ้น:</p>
+
+      <h3>1. ตัวดำเนินการ Nullish Coalescing (<code>??</code>)</h3>
+      <p>ตัวดำเนินการ <code>??</code> จะทำงานคล้ายกับ <code>||</code> แต่จะมีความเข้มงวดกว่ามาก โดยจะมองว่า <strong>เฉพาะค่า <code>null</code> และ <code>undefined</code> เท่านั้นที่เป็นค่าว่าง (Nullish)</strong> ส่วนค่าอื่น ๆ เช่น ตัวเลข <code>0</code> หรือข้อความว่าง <code>""</code> หรือ <code>false</code> จะถูกมองว่าเป็นค่าที่ใช้งานได้จริง (ไม่ถูกแทนที่ด้วยค่าเริ่มต้น):</p>
+      <pre><code>const config = {
+  timeout: 0, // เราต้องการใช้งานค่า 0 นี้จริง ๆ (ไม่ใช่ค่าว่าง)
+  debug: null, // ค่านี้เป็น null ควรได้รับค่าเริ่มต้นแทนที่
 }
 
-// ใช้ || (ถือว่า 0 เป็น falsy)
+// ❌ หากใช้ || ระบบจะมองว่า 0 เป็น Falsy ทำให้ได้ค่า 5000 ซึ่งผิดพลาด
 const timeout1 = config.timeout || 5000 // 5000 (❌)
 const debug = config.debug || true // true (✅)
 
-// ใช้ ?? (ถือว่าเฉพาะ null/undefined เป็น falsy)
+// ✅ หากใช้ ?? ระบบจะมองว่า 0 เป็นค่าที่ถูกต้อง จึงได้ค่า 0 ตามต้องการ
 const timeout2 = config.timeout ?? 5000 // 0 (✅)
-const debug = config.debug ?? true // true (✅)</code></pre>
-<h3>Optional Chaining <code>?.</code></h3><p>Optional chaining จะเข้าถึงพร็อพเพอร์ตีเฉพาะเมื่อค่าก่อนหน้าไม่ใช่ <code>null</code> หรือ <code>undefined</code> เหมาะสำหรับเข้าถึงพร็อพเพอร์ตีที่ซ้อนลึกอย่างปลอดภัย:</p><pre><code>const user = {
+const debug2 = config.debug ?? true // true (✅)</code></pre>
+
+      <h3>2. ตัวดำเนินการ Optional Chaining (<code>?.</code>)</h3>
+      <p>ตัวดำเนินการ <code>?.</code> ช่วยให้เราสามารถเข้าถึงคุณสมบัติที่ซ้อนกันอยู่ลึก ๆ ภายใน Object ได้อย่างปลอดภัย โดยระบบจะทำการตรวจสอบให้อัตโนมัติในทุก ๆ ลำดับขั้น หากพบว่าค่าก่อนหน้าเครื่องหมาย <code>?.</code> เป็น <code>null</code> หรือ <code>undefined</code> ระบบจะหยุดทำงานและส่งคืนค่า <code>undefined</code> กลับมาทันทีแทนที่จะเกิดข้อผิดพลาดรุนแรงจนโปรแกรมแครช:</p>
+      <pre><code>const user = {
   profile: {
     settings: {
       theme: "dark",
@@ -86,18 +123,24 @@ const debug = config.debug ?? true // true (✅)</code></pre>
   },
 }
 
-// วิธีเดิมด้วย &amp;&amp;
+// วิธีการเขียนแบบเดิมด้วยการใช้ && เชื่อมตรวจสอบความปลอดภัย
 const theme1 =
   user &amp;&amp; user.profile &amp;&amp; user.profile.settings &amp;&amp; user.profile.settings.theme
 
-// วิธีใหม่ด้วย optional chaining
+// วิธีการเขียนแบบใหม่ที่กระชับและสะอาดกว่าด้วย Optional Chaining
 const theme2 = user?.profile?.settings?.theme
 
-// ใช้กับเมธอดได้เช่นกัน
+// สามารถใช้ตรวจสอบก่อนเรียกใช้งาน Function (Method) ได้เช่นกัน
 user?.notify?.()</code></pre>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="24_recursion.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="26_array_methods.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/short-circuit-evaluation">“Short-Circuit Evaluation” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/short-circuit-evaluation">“Short-Circuit Evaluation” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>

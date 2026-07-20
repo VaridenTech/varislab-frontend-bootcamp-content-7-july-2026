@@ -1,21 +1,42 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="description" content="เรียนรู้การเขียนเงื่อนไขแบบกระชับด้วย Ternary Operator สำหรับกรณี if-else แบบง่าย" /><title>Ternary Operator — เริ่มต้นใช้งาน JavaScript</title>  <link rel="stylesheet" href="lesson.css" />
-</head><body><main><article>
-<h1>Ternary Operator</h1><p>Ternary operator เป็นวิธีเขียนคำสั่ง if-else แบบง่ายในรูปแบบย่อ เรียกว่า “ternary” เพราะประกอบด้วย operand สามส่วน</p>
-<h2>ไวยากรณ์พื้นฐาน</h2><pre><code>const age = 18
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้การเขียนเงื่อนไขแบบกระชับด้วย Ternary Operator สำหรับกรณี if-else แบบง่าย" />
+  <title>การใช้งาน Ternary Operator — เริ่มต้นใช้งาน JavaScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งาน Ternary Operator</h1>
+      <p><strong>Ternary Operator</strong> คือรูปแบบการเขียนเงื่อนไข <code>if-else</code> แบบย่อให้เหลือเพียงบรรทัดเดียว ซึ่งช่วยให้โค้ดมีความกระชับและสะอาดมากขึ้น ที่ได้ชื่อว่า "Ternary" (สามส่วน) เพราะตัวดำเนินการนี้ประกอบด้วยส่วนประกอบหลัก 3 ส่วนด้วยกัน</p>
 
-age &gt;= 18 ? "trueValue" : "falseValue"</code></pre><p>ให้คิดว่า <code>?</code> คือ “if” และ <code>:</code> คือ “else” หากเงื่อนไขก่อน <code>?</code> เป็นจริง จะส่งค่าหลัง <code>?</code> กลับมา มิฉะนั้นจะส่งค่าหลัง <code>:</code> กลับมา</p>
-<h3>Ternary ส่งค่ากลับ</h3><p>คุณสมบัติที่มีประโยชน์อีกอย่างคือ ternary operator <strong>ส่งค่ากลับเสมอ</strong> จึงเหมาะกับการกำหนดค่า:</p><pre><code>// if-else แบบเดิม
+      <h2>โครงสร้างไวยากรณ์พื้นฐาน (Syntax)</h2>
+      <pre><code>const age = 18
+
+age &gt;= 18 ? "trueValue" : "falseValue"</code></pre>
+      <p>วิธีจำง่าย ๆ คือ ให้มองว่าเครื่องหมายคำถาม <code>?</code> ทำหน้าที่แทน <code>if</code> และเครื่องหมายโคลอน <code>:</code> ทำหน้าที่แทน <code>else</code> หากเงื่อนไขที่อยู่หน้า <code>?</code> เป็นจริง (True) ระบบจะเลือกใช้ค่าที่อยู่หลัง <code>?</code> แต่ถ้าเป็นเท็จ (False) จะเลือกใช้ค่าที่อยู่หลัง <code>:</code> แทน</p>
+
+      <h3>จุดเด่น: Ternary Operator จะส่งค่ากลับมาเสมอ</h3>
+      <p>คุณสมบัติที่ยอดเยี่ยมของ Ternary Operator คือ <strong>มันจะส่งคืนค่าผลลัพธ์ (Return Value) ออกมาเสมอ</strong> ทำให้เราสามารถนำมันไปใช้กำหนดค่าเริ่มต้นให้กับตัวแปรได้โดยตรงในบรรทัดเดียว:</p>
+      <pre><code>// การเขียนแบบ if-else ปกติ
 let message
 if (age &gt;= 18) {
   message = "You can vote"
 } else {
   message = "You cannot vote"
-}</code></pre><pre><code>// Ternary operator
+}</code></pre>
+      <pre><code>// การเขียนย่อด้วย Ternary Operator
 const message = age &gt;= 18 ? "You can vote" : "You cannot vote"</code></pre>
-<h2>การต่อ Ternary Operator</h2><p>คุณสามารถต่อ ternary หลายชุดเข้าด้วยกันได้ แต่ต้องระวังเพราะอาจอ่านยาก:</p><pre><code>// ใช้ได้ แต่อาจอ่านยาก
+
+      <h2>การเขียน Ternary Operator ซ้อนกัน (Chaining)</h2>
+      <p>เราสามารถเขียน Ternary Operator ซ้อนกันหลาย ๆ ชั้นเพื่อเปรียบเทียบหลายเงื่อนไขได้ แต่ต้องระมัดระวังเป็นพิเศษเพราะอาจทำให้โค้ดอ่านยากมาก:</p>
+      <pre><code>// ⚠️ แม้จะทำงานได้ แต่โครงสร้างนี้อ่านยากและสับสนได้ง่าย
 const grade = score &gt;= 90 ? "A" : score &gt;= 80 ? "B" : score &gt;= 70 ? "C" : "F"
 
-// if-else ชัดเจนกว่า
+// ✅ การเขียนแบบ if-else ปกติจะอ่านง่ายและชัดเจนกว่ามากสำหรับกรณีนี้
 let grade
 if (score &gt;= 90) {
   grade = "A"
@@ -26,16 +47,42 @@ if (score &gt;= 90) {
 } else {
   grade = "F"
 }</code></pre>
-<h2>เมื่อใดควรใช้ Ternary Operator</h2><p>✅ <strong>เหมาะสำหรับ:</strong></p><ul><li>เงื่อนไขง่าย ๆ ที่มีผลลัพธ์สองแบบ</li><li>การกำหนดค่าตามเงื่อนไข</li><li>นิพจน์สั้น ๆ ที่อ่านง่าย</li></ul><p>❌ <strong>หลีกเลี่ยงสำหรับ:</strong></p><ul><li>เงื่อนไขซับซ้อน</li><li>หลายคำสั่งในแต่ละทางเลือก</li><li>Ternary operator ที่ซ้อนกัน</li></ul>
-<h2>แบบฝึกหัด</h2><p>แปลงคำสั่ง if-else นี้เป็น ternary operator:</p><pre><code>let weather
+
+      <h2>เมื่อใดที่ควรใช้ Ternary Operator?</h2>
+      <p><strong>✅ เหมาะสำหรับกรณี:</strong></p>
+      <ul>
+        <li>เงื่อนไขที่เรียบง่ายและมีทางเลือกเพียง 2 ทางชัดเจน</li>
+        <li>การกำหนดค่าให้กับตัวแปรตามเงื่อนไข</li>
+        <li>ชุดคำสั่งสั้น ๆ ที่จบได้ในบรรทัดเดียวและอ่านเข้าใจง่าย</li>
+      </ul>
+      <p><strong>❌ ควรหลีกเลี่ยงในกรณี:</strong></p>
+      <ul>
+        <li>เงื่อนไขที่มีความซับซ้อนสูงหรือมีหลายทางเลือก</li>
+        <li>เมื่อมีชุดคำสั่งที่ต้องทำงานหลายบรรทัดในแต่ละเงื่อนไข</li>
+        <li>การเขียน Ternary Operator ซ้อนกันหลาย ๆ ชั้น (Nested Ternary)</li>
+      </ul>
+
+      <h2>ลองทำแบบฝึกหัด</h2>
+      <p>จงแปลงคำสั่งเงื่อนไข <code>if-else</code> ต่อไปนี้ให้เป็นรูปแบบย่อโดยใช้ Ternary Operator:</p>
+      <pre><code>let weather
 if (temperature &gt; 75) {
   weather = "hot"
 } else {
   weather = "not hot"
-}</code></pre><details><summary>เฉลย</summary><pre><code>const weather = temperature &gt; 75 ? "hot" : "not hot"</code></pre></details>
-</article>    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+}</code></pre>
+      <details>
+        <summary>ดูเฉลย</summary>
+        <pre><code>const weather = temperature &gt; 75 ? "hot" : "not hot"</code></pre>
+      </details>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="19_if_statements.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="21_switch_statements.html" rel="next">บทถัดไป →</a>
     </nav>
-</main><footer><p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/ternary-operator">“Ternary Operator” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
+  </main>
+  <footer>
+    <p>คำแปลภาษาไทยจาก <a href="https://webdevsimplified.github.io/fem-getting-started-with-javascript/lessons/control-flow/ternary-operator">“Ternary Operator” โดย Web Dev Simplified</a> เนื้อหาเผยแพร่ภายใต้ <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และตัวอย่างโค้ดเผยแพร่ภายใต้ <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+  </footer>
+</body>
+</html>
