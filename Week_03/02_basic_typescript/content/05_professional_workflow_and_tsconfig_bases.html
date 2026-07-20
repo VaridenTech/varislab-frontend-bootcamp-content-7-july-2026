@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ขั้นตอนจริงในการย้ายโปรเจกต์ JavaScript ที่มีอยู่แล้วมาเป็น TypeScript ทีละไฟล์ พร้อมตั้งค่า tsconfig ด้วย Base สำเร็จรูป และผูก tsc เข้ากับ Workflow การพัฒนา" />
+  <title>Workflow มืออาชีพ: ย้ายโปรเจกต์เดิมมาเป็น TypeScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Workflow มืออาชีพ: ย้ายโปรเจกต์เดิมมาเป็น TypeScript</h1>
+
+      <p>
+        โปรเจกต์จริงในที่ทำงานแทบไม่มีใครเริ่มเขียนใหม่ทั้งหมดด้วย TypeScript ตั้งแต่วันแรก ส่วนใหญ่คือการ<strong>ค่อย ๆ ย้าย</strong>
+        โปรเจกต์ JavaScript ที่มีอยู่แล้วมาเป็น TypeScript ทีละไฟล์ บทนี้จะพาดูขั้นตอนที่ทีมพัฒนาใช้กันจริงในการทำแบบนั้น
+      </p>
+
+      <h2>ขั้นตอนที่ 1: ติดตั้ง TypeScript เป็น Dev Dependency</h2>
+      <p>
+        ต่างจากบทก่อนที่เราติดตั้งแบบ Global เพื่อทดลองใช้ โปรเจกต์จริงควรติดตั้ง TypeScript ไว้ใน <code>package.json</code>
+        ของโปรเจกต์เอง เพื่อให้ทุกคนในทีมใช้ TypeScript เวอร์ชันเดียวกัน
+      </p>
+      <pre><code>npm i -D typescript</code></pre>
+
+      <h2>ขั้นตอนที่ 2: ตั้งค่า tsconfig.json ด้วย Base สำเร็จรูป</h2>
+      <p>
+        แทนที่จะเขียนค่าตั้งค่าใน <code>tsconfig.json</code> เองทั้งหมด ชุมชน TypeScript มีค่าตั้งค่าสำเร็จรูป (เรียกว่า "Base")
+        สำหรับ Use Case ต่าง ๆ ให้เลือกใช้ได้เลย เช่น โปรเจกต์ที่ใช้ Node.js, โปรเจกต์ที่ใช้ Vite, โปรเจกต์ React
+      </p>
+      <p>ติดตั้ง Base ที่เหมาะกับโปรเจกต์ (ตัวอย่างนี้ใช้ Base แนะนำทั่วไป):</p>
+      <pre><code>npm i -D @tsconfig/recommended</code></pre>
+      <p>แล้วให้ <code>tsconfig.json</code> ของเรา "สืบทอด" ค่าจาก Base นั้นด้วย Key <code>extends</code>:</p>
+      <pre><code>{
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  }
+}</code></pre>
+      <p>ถ้าต้องใช้หลาย Base ร่วมกัน (เช่น Base ทั่วไป + Base เฉพาะของ Framework) ก็ระบุเป็น Array ได้:</p>
+      <pre><code>{
+  "extends": [
+    "@tsconfig/recommended/tsconfig.json",
+    "@tsconfig/vite-react/tsconfig.json"
+  ]
+}</code></pre>
+      <p>อยากรู้ว่าค่าตั้งค่าสุดท้ายที่ TypeScript จะใช้จริง (หลังรวมทุก Base เข้าด้วยกันแล้ว) หน้าตาเป็นอย่างไร ใช้คำสั่ง:</p>
+      <pre><code>tsc --showConfig</code></pre>
+
+      <h2>ขั้นตอนที่ 3: เปลี่ยนไฟล์ทีละไฟล์ ไม่ใช่ทีเดียวทั้งโปรเจกต์</h2>
+      <p>
+        สมมติเรามีโปรเจกต์ร้านค้าออนไลน์ขนาดเล็กที่เขียนด้วย JavaScript ล้วน:
+      </p>
+      <pre><code>src/
+  CartSummary.js
+  ProductList.js
+  formatCurrency.js</code></pre>
+      <p>เริ่มจากไฟล์ที่มีความเสี่ยงต่ำและมีคนอื่นพึ่งพาน้อยที่สุดก่อน เช่น Utility Function ง่าย ๆ:</p>
+      <pre><code>mv src/formatCurrency.js src/formatCurrency.ts</code></pre>
+      <p>
+        แค่เปลี่ยนนามสกุลไฟล์ (File Extension) ก็ถือว่าไฟล์นั้นเป็น TypeScript แล้ว (เพราะ TypeScript เป็น Superset ของ JavaScript)
+        จากนั้นค่อยรัน <code>tsc</code> เพื่อดูว่ามี Error อะไรโผล่มาบ้าง แล้วค่อย ๆ เติม Type Annotation ทีละจุด
+      </p>
+      <pre><code>tsc</code></pre>
+      <p>ทำซ้ำแบบเดียวกันกับไฟล์ที่เหลือ ไล่จากไฟล์ที่ถูกพึ่งพาน้อยไปหามาก จนกว่าทั้งโปรเจกต์จะเป็น <code>.ts</code> ครบ</p>
+
+      <h2>ผูก tsc เข้ากับ Workflow การพัฒนาประจำวัน</h2>
+      <h3>ตรวจ Type อัตโนมัติทุกครั้งที่บันทึกไฟล์</h3>
+      <pre><code>tsc --watch</code></pre>
+      <p>คำสั่งนี้จะรัน TypeScript ค้างไว้เป็น Process เดียว แล้วตรวจ Type ใหม่ทุกครั้งที่มีไฟล์ถูกแก้ไข (ข้อควรระวัง: โปรเจกต์ใหญ่มากอาจทำให้ตรวจสอบช้าลง)</p>
+
+      <h3>ให้การตรวจ Type เป็นด่านแรกก่อนรัน Test</h3>
+      <p>ผูกคำสั่ง <code>tsc --noEmit</code> ไว้เป็นขั้นตอนแรกใน Script ทดสอบ เพื่อให้ Error ด้าน Type ถูกจับตั้งแต่ก่อน Test จะรันเลย:</p>
+      <pre><code>{
+  "scripts": {
+    "test": "tsc --noEmit && vitest",
+    "compile": "tsc"
+  }
+}</code></pre>
+      <p>
+        ด้วยรูปแบบนี้ ถ้า <code>tsc --noEmit</code> เจอ Error ด้าน Type คำสั่ง <code>&&</code> จะทำให้ <code>vitest</code>
+        ไม่ถูกรันต่อเลย — ทีมจะไม่มีทางเห็น Test ผ่านทั้งที่โค้ดมี Type ผิดอยู่
+      </p>
+
+      <h2>สรุป Checklist การย้ายโปรเจกต์มาเป็น TypeScript</h2>
+      <ol>
+        <li>ติดตั้ง <code>typescript</code> เป็น Dev Dependency ของโปรเจกต์</li>
+        <li>เลือก <code>tsconfig</code> Base ที่ตรงกับลักษณะโปรเจกต์ แล้ว <code>extends</code> จากมัน</li>
+        <li>เปลี่ยนไฟล์เป็น <code>.ts</code> ทีละไฟล์ เริ่มจากไฟล์ที่ถูกพึ่งพาน้อยที่สุด</li>
+        <li>รัน <code>tsc</code> หลังเปลี่ยนแต่ละไฟล์ แล้วแก้ Error ที่โผล่มาก่อนไปไฟล์ถัดไป</li>
+        <li>ผูก <code>tsc --noEmit</code> เข้ากับ Script ทดสอบ เพื่อกันไม่ให้ Type Error หลุดเข้า Production</li>
+      </ol>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="04_compiling_typescript_and_tsconfig.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="06_typescript_ecosystem.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </article>
+  </main>
+
+  <footer>
+    <p>เนื้อหาเรียบเรียงขึ้นใหม่โดยได้แรงบันดาลใจจากหัวข้อในคอร์ส <a href="https://github.com/vakila/typescript-first-steps">“TypeScript First Steps” โดย Anjana Vakil (Frontend Masters)</a> คำอธิบายและตัวอย่างโค้ดทั้งหมดเป็นการเขียนขึ้นใหม่สำหรับผู้เรียนของคอร์สนี้โดยเฉพาะ</p>
+  </footer>
+</body>
+</html>

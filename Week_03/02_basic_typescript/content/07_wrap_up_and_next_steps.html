@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="สรุปสิ่งที่ได้เรียนรู้ตลอดสัปดาห์ TypeScript และแหล่งเรียนรู้ต่อเพื่อพัฒนาฝีมือให้ลึกขึ้น" />
+  <title>สรุปบทเรียน TypeScript และก้าวต่อไป</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>สรุปบทเรียน TypeScript และก้าวต่อไป</h1>
+
+      <p>
+        ยินดีด้วย! เราเดินทางจากการทำความรู้จัก TypeScript ครั้งแรก มาจนถึงการนำไปใช้งานร่วมกับ Ecosystem จริงแล้ว
+        มาทบทวนภาพรวมทั้งหมดที่ผ่านมากันอีกครั้ง
+      </p>
+
+      <h2>JavaScript เทียบกับ TypeScript</h2>
+      <ul>
+        <li>Type แบบ Dynamic และ Weak ใน JavaScript คือที่มาของ Bug ที่มักโผล่มาให้เห็นตอนรันจริงเท่านั้น</li>
+        <li>TypeScript คือ Superset ของ JavaScript ที่เพิ่มการตรวจสอบ Type <strong>ตั้งแต่ก่อนรันโค้ด</strong></li>
+        <li>ติดตั้งและใช้งานผ่านคำสั่ง <code>tsc</code> — ตรวจสอบได้แม้แต่ไฟล์ <code>.js</code> เดิมด้วย <code>--checkJs</code></li>
+      </ul>
+
+      <h2>ไวยากรณ์หลักของ TypeScript</h2>
+      <ul>
+        <li>Type Annotation สำหรับตัวแปร Function Parameter และค่าที่ Return</li>
+        <li>Primitive Types, Literal Types, Array Types, Object Types</li>
+        <li>Union Types และการ Narrow ขอบเขต Type ด้วย <code>if</code> หรือ <code>typeof</code></li>
+        <li>การสร้าง Type ของตัวเองด้วย <code>type</code> Alias และ <code>interface</code></li>
+        <li>Generics และ Utility Types สำเร็จรูป เช่น <code>Readonly</code>, <code>Partial</code>, <code>Pick</code>, <code>Omit</code></li>
+      </ul>
+
+      <h2>Workflow และ Ecosystem</h2>
+      <ul>
+        <li>ตั้งค่า Compiler ด้วย <code>tsconfig.json</code> และ Base สำเร็จรูปจากชุมชน</li>
+        <li>ย้ายโปรเจกต์ JavaScript เดิมมาเป็น TypeScript ได้ทีละไฟล์ ไม่ต้องเขียนใหม่ทั้งหมด</li>
+        <li>ใช้ <code>@types/</code> เพื่อได้ Type ของ Library ที่ไม่ได้เขียนด้วย TypeScript</li>
+        <li>แชร์ Type ระหว่างไฟล์และระหว่าง Frontend/Backend เพื่อ End-to-End Type Safety</li>
+        <li>Library อย่าง Zod และ TypeORM ขยายประโยชน์ของ Type ไปถึงข้อมูลตอนรันจริงและฐานข้อมูล</li>
+      </ul>
+
+      <h2>คำถามชวนคิด</h2>
+      <p>ลองตอบคำถามเหล่านี้ด้วยตัวเองก่อนไปเรียนหัวข้อถัดไป เพื่อเช็กว่าภาพรวมของ TypeScript ในหัวเราแน่นแค่ไหน:</p>
+      <ol>
+        <li>มุมมองต่อ TypeScript ของเราเปลี่ยนไปอย่างไรบ้างเทียบกับตอนก่อนเริ่มสัปดาห์นี้?</li>
+        <li>Feature ไหนของ TypeScript ที่เรารู้สึกว่ามีประโยชน์กับงานที่เคยเขียนมากที่สุด?</li>
+        <li>มี Feature ไหนที่ยังรู้สึกสับสน หรืออยากทำความเข้าใจให้ลึกขึ้นอีก?</li>
+      </ol>
+
+      <h2>แหล่งเรียนรู้เพิ่มเติม</h2>
+      <ul>
+        <li>
+          <a href="https://www.typescriptlang.org/docs/handbook/intro.html">TypeScript Handbook</a> —
+          เอกสารทางการ อ่านฟรี ครอบคลุมตั้งแต่พื้นฐานถึงขั้นสูง
+        </li>
+        <li>
+          <a href="https://www.typescriptlang.org/docs/">TypeScript Docs</a> — คู่มืออ้างอิงฉบับสมบูรณ์ของทีม TypeScript เอง
+        </li>
+        <li>
+          <a href="https://www.typescriptlang.org/play/">TypeScript Playground</a> —
+          เว็บสำหรับทดลองเขียน TypeScript และดูผลลัพธ์ที่ Compile ออกมาเป็น JavaScript ได้ทันทีโดยไม่ต้องติดตั้งอะไร
+        </li>
+        <li>
+          <a href="https://github.com/vakila/typescript-first-steps">typescript-first-steps</a> โดย Anjana Vakil —
+          ต้นทางแรงบันดาลใจของบทเรียนชุดนี้ มีแบบฝึกหัดเชิงลึกให้ลองทำเพิ่มเติม
+        </li>
+        <li>
+          <a href="https://github.com/dzharii/awesome-typescript">awesome-typescript</a> —
+          รวมรายชื่อ Library และแหล่งข้อมูล TypeScript ยอดนิยมจากชุมชน
+        </li>
+      </ul>
+
+      <p>
+        สิ่งสำคัญที่สุดในการเรียนรู้ TypeScript ต่อจากนี้คือการ<strong>ลงมือใช้จริง</strong> — ลองเปิดโปรเจกต์เก่าของตัวเอง
+        แล้วค่อย ๆ ย้ายมาเป็น TypeScript ทีละไฟล์ตามขั้นตอนที่เราเรียนไปในบทที่แล้ว จะเป็นวิธีที่ช่วยให้ความเข้าใจแน่นขึ้นเร็วที่สุด
+      </p>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="06_typescript_ecosystem.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      </nav>
+    </article>
+  </main>
+
+  <footer>
+    <p>เนื้อหาเรียบเรียงขึ้นใหม่โดยได้แรงบันดาลใจจากหัวข้อในคอร์ส <a href="https://github.com/vakila/typescript-first-steps">“TypeScript First Steps” โดย Anjana Vakil (Frontend Masters)</a> คำอธิบายและตัวอย่างโค้ดทั้งหมดเป็นการเขียนขึ้นใหม่สำหรับผู้เรียนของคอร์สนี้โดยเฉพาะ</p>
+  </footer>
+</body>
+</html>

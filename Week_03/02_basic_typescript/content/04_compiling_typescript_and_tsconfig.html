@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ทำความเข้าใจว่า TypeScript ถูกแปลงเป็น JavaScript อย่างไร ตั้งค่า Compiler ด้วย tsconfig.json และประกอบ Type ที่ซับซ้อนขึ้นด้วย Interface, Generics และ Utility Types" />
+  <title>การ Compile TypeScript และไฟล์ tsconfig.json</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การ Compile TypeScript และไฟล์ tsconfig.json</h1>
+
+      <p>
+        Browser และ Node.js ไม่รู้จักไวยากรณ์ของ TypeScript เลย — สิ่งที่รันได้จริงมีแค่ JavaScript เท่านั้น
+        ดังนั้นก่อนโค้ด <code>.ts</code> ของเราจะถูกใช้งานจริง มันต้องผ่านขั้นตอน <strong>Compile</strong> เพื่อแปลงเป็น <code>.js</code> ก่อนเสมอ
+      </p>
+
+      <h2>tsc แปลง .ts เป็น .js อย่างไร</h2>
+      <p>ลองดูตัวอย่างไฟล์ TypeScript นี้:</p>
+      <pre><code>// greet.ts
+function greet(name: string): string {
+  return `สวัสดี ${name}`;
+}</code></pre>
+      <p>เมื่อสั่ง Compile:</p>
+      <pre><code>tsc greet.ts</code></pre>
+      <p>TypeScript จะสร้างไฟล์ <code>greet.js</code> ขึ้นมาใหม่ โดยมีเนื้อหาประมาณนี้:</p>
+      <pre><code>// greet.js
+function greet(name) {
+  return `สวัสดี ${name}`;
+}</code></pre>
+      <p>
+        สังเกตว่า Type Annotation ทั้งหมด (<code>: string</code>) <strong>หายไป</strong> จากไฟล์ผลลัพธ์
+        นี่คือหลักการสำคัญของ TypeScript: Type มีไว้ช่วยตรวจสอบตอนเขียนโค้ดเท่านั้น เมื่อ Compile เสร็จแล้ว
+        Type ทั้งหมดจะถูกลบทิ้ง เหลือแค่ JavaScript ธรรมดาที่พร้อมรันจริง
+      </p>
+
+      <h2>ทบทวน Flag ที่ใช้บ่อย</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Flag</th>
+            <th>ทำหน้าที่อะไร</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>--checkJs</code></td>
+            <td>ให้ตรวจสอบไฟล์ <code>.js</code> ด้วย (ปกติดูแค่ <code>.ts</code>)</td>
+          </tr>
+          <tr>
+            <td><code>--noEmit</code></td>
+            <td>ตรวจสอบ Type อย่างเดียว ไม่สร้างไฟล์ <code>.js</code> ออกมา</td>
+          </tr>
+          <tr>
+            <td><code>--strict</code></td>
+            <td>เปิดโหมดตรวจสอบแบบเข้มงวดที่สุด</td>
+          </tr>
+          <tr>
+            <td><code>--target &lt;version&gt;</code></td>
+            <td>กำหนดว่า JavaScript ที่ Compile ออกมาต้องรันได้บน Environment รุ่นไหน</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Compiler Target</h3>
+      <p>
+        Flag <code>--target</code> บอก TypeScript ว่า JavaScript ที่จะสร้างออกมาต้องรองรับ Environment เก่าแค่ไหน
+      </p>
+      <pre><code>tsc --target es2020 greet.ts</code></pre>
+      <table>
+        <thead>
+          <tr>
+            <th>Target</th>
+            <th>เหมาะกับ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>es5</code></td>
+            <td>Browser รุ่นเก่ามาก (ค่าเริ่มต้นของ TypeScript)</td>
+          </tr>
+          <tr>
+            <td><code>es2015</code> / <code>es6</code></td>
+            <td>Browser ส่วนใหญ่ในปัจจุบัน</td>
+          </tr>
+          <tr>
+            <td><code>esnext</code></td>
+            <td>Environment ล่าสุดที่รองรับ JavaScript feature ใหม่ที่สุด</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>ไฟล์ tsconfig.json: ตั้งค่าครั้งเดียว ใช้ได้ทั้งโปรเจกต์</h2>
+      <p>
+        การพิมพ์ Flag ยาว ๆ ทุกครั้งที่ Compile นั้นไม่สะดวก โปรเจกต์จริงจึงเก็บค่าตั้งค่าเหล่านี้ไว้ในไฟล์ <code>tsconfig.json</code> แทน
+      </p>
+      <p>สร้างไฟล์ตั้งต้นได้ด้วยคำสั่ง:</p>
+      <pre><code>tsc --init</code></pre>
+      <p>ตัวอย่างไฟล์ <code>tsconfig.json</code> แบบเรียบง่าย:</p>
+      <pre><code>{
+  "compilerOptions": {
+    "target": "es2020",
+    "strict": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  }
+}</code></pre>
+      <p>เมื่อมีไฟล์นี้อยู่ในโปรเจกต์แล้ว การรัน <code>tsc</code> เฉย ๆ (ไม่ต้องระบุชื่อไฟล์หรือ Flag ใด ๆ) ก็จะใช้ค่าตั้งค่าจากไฟล์นี้โดยอัตโนมัติ</p>
+
+      <h3>ตัวเลือกที่พบบ่อยเพิ่มเติม</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>ตัวเลือก</th>
+            <th>สร้างไฟล์อะไร</th>
+            <th>ใช้ทำอะไร</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>declaration</code></td>
+            <td><code>.d.ts</code></td>
+            <td>ให้ Editor แนะนำ Type ของโค้ดเราตอนถูก Import ไปใช้ที่อื่น</td>
+          </tr>
+          <tr>
+            <td><code>sourceMap</code></td>
+            <td><code>.js.map</code></td>
+            <td>ให้ DevTools แสดงตำแหน่งอ้างอิงกลับไปยังไฟล์ <code>.ts</code> ต้นฉบับตอน Debug</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Interface: อีกวิธีในการกำหนดรูปร่างของ Object</h2>
+      <p>
+        นอกจาก <code>type</code> ที่เรียนไปแล้ว TypeScript ยังมี Keyword <code>interface</code> สำหรับกำหนดรูปร่างของ Object โดยเฉพาะ:
+      </p>
+      <pre><code>interface User {
+  username: string;
+  id: number;
+}
+
+const currentUser: User = { username: "somchai", id: 1 };</code></pre>
+      <p>จุดเด่นของ <code>interface</code> คือขยาย (Extend) จาก Interface อื่นได้ตรง ๆ ด้วย Keyword <code>extends</code>:</p>
+      <pre><code>interface Customer extends User {
+  loyaltyPoints: number;
+}
+
+interface Admin extends User {
+  permissionLevel: "staff" | "owner";
+}
+
+const jane: Customer = { username: "jane", id: 2, loyaltyPoints: 120 };   // OK
+const noPoints: Customer = { username: "kim", id: 3 };                     // Error! ขาด loyaltyPoints
+
+const root: Admin = { username: "root", id: 4, permissionLevel: "owner" }; // OK</code></pre>
+      <p>
+        ในทางปฏิบัติ <code>type</code> และ <code>interface</code> ทำงานคล้ายกันมากสำหรับกำหนดรูปร่าง Object ทีมส่วนใหญ่เลือกใช้อย่างใดอย่างหนึ่งให้สม่ำเสมอทั้งโปรเจกต์ —
+        <code>interface</code> มักถูกเลือกเมื่อคาดว่า Type นั้นจะถูกขยายต่อในอนาคต
+      </p>
+
+      <h2>Type ของโค้ด Async</h2>
+      <p>
+        Function ที่เป็น <code>async</code> จะคืนค่าเป็น <code>Promise</code> เสมอ ไม่ใช่ค่าตรง ๆ — TypeScript จึงกำหนด Type ของค่าที่ Return
+        โดยห่อด้วย <code>Promise&lt;...&gt;</code>
+      </p>
+      <pre><code>function getGreeting(): string {
+  return "สวัสดี";
+}
+
+async function getGreetingAsync(): Promise&lt;string&gt; {
+  return "สวัสดี";
+}
+
+const message = getGreeting();          // string
+const pendingMessage = getGreetingAsync(); // Promise&lt;string&gt;
+
+message.toUpperCase();       // OK
+pendingMessage.toUpperCase(); // Error! Promise ไม่มี Method toUpperCase</code></pre>
+      <p><code>Promise&lt;string&gt;</code> คือตัวอย่างของ <strong>Type Parameter</strong> — การระบุว่า "Promise นี้ เมื่อเสร็จแล้วจะให้ค่าชนิดอะไร"</p>
+
+      <h2>Generics: เขียน Type ที่ใช้ซ้ำได้กับหลาย Type</h2>
+      <p>
+        แนวคิดเดียวกับ Type Parameter ของ <code>Promise</code> เราสามารถนำมาใช้กับ Type ของตัวเองได้ เรียกว่า <strong>Generics</strong>
+        โดยใส่ตัวแปร Type (มักตั้งชื่อว่า <code>T</code>) ไว้ในเครื่องหมาย <code>&lt;&gt;</code>
+      </p>
+      <pre><code>type Nullable&lt;T&gt; = T | null;
+
+let maybeId: Nullable&lt;number&gt; = 4;
+maybeId = null;   // OK
+maybeId = "four"; // Error!
+
+let maybeName: Nullable&lt;string&gt; = null;
+maybeName = "พลอย"; // OK
+maybeName = 5;        // Error!</code></pre>
+      <p><code>Nullable&lt;T&gt;</code> เขียนครั้งเดียว แต่ใช้ซ้ำได้กับ Type ใดก็ได้ที่ส่งเข้ามาแทน <code>T</code></p>
+      <p>Function ก็เป็น Generic ได้เช่นกัน:</p>
+      <pre><code>function firstItem&lt;T&gt;(items: T[]): T {
+  return items[0];
+}
+
+firstItem([1, 2, 3]);          // Type ที่ได้กลับมาคือ number
+firstItem(["a", "b", "c"]);    // Type ที่ได้กลับมาคือ string</code></pre>
+      <p>TypeScript จะ "อนุมาน (Infer)" ว่า <code>T</code> คือ Type อะไรจากค่าที่ส่งเข้าไปจริงในแต่ละครั้งที่เรียกใช้ Function โดยอัตโนมัติ</p>
+
+      <h2>Utility Types: Generic สำเร็จรูปที่มากับ TypeScript</h2>
+      <p>
+        TypeScript มี Generic Type สำเร็จรูปให้ใช้ได้เลยสำหรับดัดแปลง Type ที่มีอยู่แล้ว โดยไม่ต้องเขียนใหม่ทั้งหมด ตัวอย่างที่ใช้บ่อยที่สุด ได้แก่
+      </p>
+      <pre><code>interface Product {
+  id: number;
+  name: string;
+  price: number;
+}</code></pre>
+
+      <h3><code>Readonly&lt;T&gt;</code> — ห้ามแก้ไข Property หลังกำหนดค่าแล้ว</h3>
+      <pre><code>const draft: Product = { id: 1, name: "เสื้อยืด", price: 259 };
+draft.price = 299; // OK
+
+const published: Readonly&lt;Product&gt; = { id: 2, name: "กางเกง", price: 590 };
+published.price = 490; // Error! Cannot assign to 'price' because it is a read-only property</code></pre>
+
+      <h3><code>Partial&lt;T&gt;</code> — ทำให้ทุก Property ไม่บังคับต้องมี</h3>
+      <pre><code>const productUpdate: Partial&lt;Product&gt; = { price: 199 }; // OK - ไม่ต้องใส่ id หรือ name ก็ได้
+
+function updateProduct(id: number, changes: Partial&lt;Product&gt;) {
+  // นำ changes ไปอัปเดตเฉพาะ Property ที่ส่งมา
+}</code></pre>
+
+      <h3><code>Pick&lt;T, Keys&gt;</code> — เลือกมาแค่บาง Property</h3>
+      <pre><code>type ProductSummary = Pick&lt;Product, "id" | "name"&gt;;
+
+const summary: ProductSummary = { id: 1, name: "เสื้อยืด" }; // OK, ไม่ต้องมี price</code></pre>
+
+      <h3><code>Omit&lt;T, Keys&gt;</code> — ตัดบาง Property ออก</h3>
+      <pre><code>type NewProduct = Omit&lt;Product, "id"&gt;; // Product แบบไม่มี id เพราะยังไม่ถูกสร้างในระบบ
+
+const draftProduct: NewProduct = { name: "หมวก", price: 350 }; // OK</code></pre>
+      <p>
+        ยังมี Utility Type อื่นอีกมาก เช่น <code>Record</code>, <code>Required</code>, <code>Exclude</code> — ดูรายการทั้งหมดได้ที่
+        <a href="https://www.typescriptlang.org/docs/handbook/utility-types.html">TypeScript Handbook: Utility Types</a>
+      </p>
+
+      <h2>ทางลัดเมื่อจนตรอกจริง ๆ: any และ @ts-ignore</h2>
+      <p>บางครั้งเราอาจเจอสถานการณ์ที่ยังหา Type ที่ถูกต้องไม่ได้ TypeScript มีทางลัดไว้ให้ แต่ควรใช้ให้น้อยที่สุด</p>
+      <pre><code>let anything: any = "อะไรก็ได้";
+anything = 5;
+anything = { a: 1 };
+anything.toUpperCase(); // ไม่มี Error เลย แม้ตอนรันจริงอาจพังก็ตาม</code></pre>
+      <p>
+        <code>any</code> คือการ<strong>ปิดการตรวจสอบ Type ของตัวแปรนั้นไปเลย</strong> — เหมือนกลับไปเขียน JavaScript ธรรมดา
+        ใช้ได้ในกรณีจำเป็นจริง ๆ แต่ไม่ควรใช้พร่ำเพรื่อ เพราะเสียจุดประสงค์หลักของการใช้ TypeScript
+      </p>
+      <p>อีกทางลัดหนึ่งคือ Comment พิเศษ <code>@ts-ignore</code> ซึ่งสั่งให้ปิดการตรวจสอบเฉพาะบรรทัดถัดไปเท่านั้น:</p>
+      <pre><code>// @ts-ignore
+const legacyResult = someUntypedLibraryFunction();</code></pre>
+      <p>เก็บทางลัดทั้งสองนี้ไว้ใช้เฉพาะจุดที่จำเป็นจริง ๆ พร้อม Comment อธิบายเหตุผลกำกับไว้เสมอ เพื่อไม่ให้เพื่อนร่วมทีมงงว่าทำไมตรงนี้ TypeScript ถึงเงียบ</p>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="03_type_annotations_and_syntax.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="05_professional_workflow_and_tsconfig_bases.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </article>
+  </main>
+
+  <footer>
+    <p>เนื้อหาเรียบเรียงขึ้นใหม่โดยได้แรงบันดาลใจจากหัวข้อในคอร์ส <a href="https://github.com/vakila/typescript-first-steps">“TypeScript First Steps” โดย Anjana Vakil (Frontend Masters)</a> คำอธิบายและตัวอย่างโค้ดทั้งหมดเป็นการเขียนขึ้นใหม่สำหรับผู้เรียนของคอร์สนี้โดยเฉพาะ</p>
+  </footer>
+</body>
+</html>

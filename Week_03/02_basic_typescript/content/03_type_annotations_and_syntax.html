@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="เรียนรู้ไวยากรณ์หลักของ TypeScript: การกำหนด Type ให้ตัวแปร Function Array และ Object รวมถึง Union Types, Type Narrowing และการสร้าง Type ของตัวเองด้วย type Alias" />
+  <title>Type Annotations และไวยากรณ์พื้นฐานของ TypeScript</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Type Annotations และไวยากรณ์พื้นฐานของ TypeScript</h1>
+
+      <p>
+        หัวใจของ TypeScript คือ <strong>Type Annotation</strong> — ไวยากรณ์สำหรับ "ประกาศ" ว่าตัวแปร Parameter หรือค่าที่คืนกลับจาก Function
+        ควรมี Type อะไร โดยเขียนเครื่องหมาย Colon (<code>:</code>) ตามด้วยชื่อ Type ต่อท้ายสิ่งที่ต้องการระบุ
+      </p>
+
+      <h2>การกำหนด Type ให้ตัวแปร</h2>
+      <pre><code>let price: number = 129.99;
+price = 99.5;      // OK
+price = "on sale"; // Error! Type 'string' is not assignable to type 'number'</code></pre>
+      <p>
+        เมื่อไหร่ก็ตามที่เรากำหนด Type ให้ตัวแปรแล้ว TypeScript จะจดจำไว้และคอยเตือนทันทีที่มีการกำหนดค่าอื่นที่ไม่ตรงกับ Type นั้น
+        ไม่ว่าจะตอนประกาศตัวแปรครั้งแรก หรือตอน Reassign ค่าใหม่ในภายหลัง
+      </p>
+
+      <h3>กำหนด Type ไว้ก่อน ค่อยใส่ค่าทีหลังก็ได้</h3>
+      <pre><code>let quantity: number;
+quantity = 3;        // OK
+quantity = "three";  // Error!
+quantity = null;      // Error! (ดูเหตุผลในหัวข้อถัดไป)</code></pre>
+
+      <h2>Primitive Types พื้นฐาน</h2>
+      <p>TypeScript มี Type สำหรับข้อมูลพื้นฐานของ JavaScript ให้ใช้ตรงตัว:</p>
+      <pre><code>let age: number = 25;
+let name: string = "พลอย";
+let isMember: boolean = true;
+
+let missing: undefined = undefined;
+let empty: null = null;</code></pre>
+      <p>
+        ข้อสังเกต: <code>null</code> และ <code>undefined</code> ใน TypeScript แบบ Strict Mode จะ<strong>ไม่</strong>ถูกยอมรับให้เป็นค่าของ Type อื่นโดยอัตโนมัติ
+        (ต่างจาก JavaScript ที่ยอมให้ทุกตัวแปรเป็น <code>null</code> ได้เสมอ) เราจะพูดถึงวิธีอนุญาตให้ตัวแปรเป็นได้ทั้งค่าปกติและ <code>null</code> ในหัวข้อ Union Types ด้านล่าง
+      </p>
+
+      <h3>Literal Types: จำกัดให้เป็นได้แค่ค่าที่ระบุไว้เท่านั้น</h3>
+      <p>นอกจากระบุ "ชนิด" กว้าง ๆ อย่าง <code>string</code> เรายังระบุ "ค่าที่อนุญาต" แบบเจาะจงได้เลย เรียกว่า Literal Type:</p>
+      <pre><code>let status: "pending" | "shipped" | "delivered";
+status = "pending";   // OK
+status = "shipped";   // OK
+status = "cancelled"; // Error! ไม่ใช่หนึ่งในค่าที่กำหนดไว้</code></pre>
+      <p>
+        เครื่องหมาย <code>|</code> อ่านว่า "หรือ" — ตัวแปร <code>status</code> เป็นได้แค่หนึ่งในสามค่านี้เท่านั้น
+        รูปแบบนี้มีประโยชน์มากเวลาต้องการแทนที่ "Magic String" ด้วยชุดค่าที่ตรวจสอบได้จริง
+      </p>
+
+      <h2>การกำหนด Type ให้ Function</h2>
+      <p>Function ใน TypeScript ระบุ Type ได้ทั้งที่ Parameter และค่าที่ Return กลับ:</p>
+      <pre><code>function calculateTotal(price: number, quantity: number): number {
+  return price * quantity;
+}
+
+calculateTotal(100, 2);      // 200
+calculateTotal("100", 2);    // Error! Argument of type 'string' is not assignable</code></pre>
+      <p>Arrow Function เขียนแบบเดียวกัน โดยใส่ Type ของค่าที่ Return หลังวงเล็บ Parameter:</p>
+      <pre><code>const greet = (name: string): string => {
+  return `สวัสดีครับ ${name}`;
+}
+
+greet("คุณสมชาย"); // "สวัสดีครับ คุณสมชาย"
+greet(42);          // Error!</code></pre>
+
+      <h2>การกำหนด Type ให้ Array</h2>
+      <pre><code>const scores: number[] = [88, 92, 76];
+scores.push(95);    // OK
+scores.push("A+");  // Error! ใส่ String เข้า Array ที่เป็น number[] ไม่ได้
+
+const tags: string[] = ["sale", "new"];
+tags.push("popular"); // OK
+tags.push(10);         // Error!</code></pre>
+
+      <h2>การกำหนด Type ให้ Object</h2>
+      <pre><code>let product: { name: string, price: number };
+product = { name: "เสื้อยืด", price: 259 };
+
+product.price = 299;    // OK
+product.price = "299";  // Error!
+product.color = "blue"; // Error! ไม่มี Property ชื่อ color ใน Type ที่กำหนดไว้</code></pre>
+      <p>
+        สังเกตว่า TypeScript ไม่ได้ตรวจแค่ Type ของแต่ละ Property เท่านั้น แต่ยังตรวจด้วยว่า Object มี Property
+        <strong>ครบตามที่ระบุไว้และไม่มีตัวเกิน</strong>
+      </p>
+
+      <h3>Property ที่ไม่บังคับต้องมี (Optional Properties)</h3>
+      <p>ใส่เครื่องหมาย <code>?</code> ต่อท้ายชื่อ Property เพื่อบอกว่า Property นั้นมีหรือไม่มีก็ได้:</p>
+      <pre><code>let product: {
+  id: number,
+  name: string,
+  discountCode?: string,
+};
+
+product = { id: 1, name: "เสื้อยืด" };                          // OK - ไม่ใส่ discountCode ก็ได้
+product = { id: 2, name: "กางเกง", discountCode: "SALE10" };   // OK
+product = { name: "หมวก" };                                     // Error! ขาด id ซึ่งจำเป็นต้องมี</code></pre>
+
+      <h2>Union Types: ให้ตัวแปรเป็นได้มากกว่าหนึ่ง Type</h2>
+      <p>บางครั้งตัวแปรก็มีความจำเป็นต้องเก็บค่าได้มากกว่าหนึ่ง Type จริง ๆ เช่น รหัสสินค้าที่อาจเป็นได้ทั้งตัวเลขหรือรหัสข้อความ:</p>
+      <pre><code>let productId: number | string;
+productId = 1024;     // OK
+productId = "SKU-42"; // OK
+productId = true;      // Error!</code></pre>
+      <p>Union Types ยังเป็นวิธีมาตรฐานในการบอกว่าตัวแปรนั้น "เป็นได้ทั้งค่าปกติ หรือไม่มีค่าเลย":</p>
+      <pre><code>let selectedProduct: string | null;
+selectedProduct = "เสื้อยืด"; // OK
+selectedProduct = null;        // OK
+selectedProduct = undefined;   // Error! null กับ undefined ไม่ใช่ Type เดียวกัน</code></pre>
+
+      <h2>Type Narrowing: จำกัดขอบเขต Type ก่อนใช้งาน</h2>
+      <p>
+        เมื่อตัวแปรเป็น Union Type เราจะเรียกใช้ Method หรือ Property ที่มีเฉพาะในบาง Type ทันทีไม่ได้
+        เพราะ TypeScript ไม่รู้ล่วงหน้าว่าตอนรันจริงตัวแปรนั้นจะเป็น Type ไหน
+      </p>
+      <pre><code>let heading: HTMLElement | null;
+heading = document.getElementById("page-title");
+
+heading.textContent = "ยินดีต้อนรับ"; // Error! heading อาจเป็น null ก็ได้</code></pre>
+      <p>
+        วิธีแก้คือใช้เงื่อนไข <code>if</code> เพื่อ "แคบขอบเขต (Narrow)" ของ Type ลง — หลังผ่านเงื่อนไขแล้ว TypeScript จะรู้เองว่าเหลือ Type อะไรอยู่ในแต่ละ Branch:
+      </p>
+      <pre><code>if (heading === null) {
+  console.log("ไม่พบ Element");
+} else {
+  heading.textContent = "ยินดีต้อนรับ"; // OK - ในนี้ TypeScript รู้ว่า heading ไม่ใช่ null แน่นอน
+}</code></pre>
+      <p>เทคนิคนี้เรียกว่า <strong>Type Guard</strong> ใช้ตรวจสอบ Type ด้วย <code>typeof</code> ได้เช่นกัน:</p>
+      <pre><code>function formatId(id: number | string): string {
+  if (typeof id === "number") {
+    return `#${id.toString().padStart(4, "0")}`; // ในนี้ id เป็น number แน่นอน
+  }
+  return id.toUpperCase(); // ในนี้ id เป็น string แน่นอน
+}</code></pre>
+
+      <h2>สร้าง Type ของตัวเองด้วย <code>type</code> Alias</h2>
+      <p>
+        เมื่อ Type ที่เขียนซ้ำ ๆ เริ่มยาวขึ้น เราสามารถตั้งชื่อให้มันแล้วนำไปใช้ซ้ำได้ด้วย Keyword <code>type</code>
+      </p>
+      <pre><code>type ProductId = number | string;
+type OrderStatus = "pending" | "shipped" | "delivered";
+
+type Product = {
+  id: ProductId,
+  name: string,
+  status: OrderStatus,
+  discountCode?: string,
+};
+
+const item: Product = {
+  id: "SKU-42",
+  name: "เสื้อยืด",
+  status: "pending",
+};</code></pre>
+      <p>
+        <code>type</code> Alias ไม่ได้สร้าง Type ใหม่ในทางเทคนิค แต่เป็นเพียง "ชื่อเรียก" ของ Type ที่เขียนไว้ ทำให้โค้ดสั้นลง อ่านง่ายขึ้น
+        และแก้ไข Type ได้จากจุดเดียว
+      </p>
+
+      <h2>สรุปไวยากรณ์ที่ได้เรียนในบทนี้</h2>
+      <ul>
+        <li><code>let x: Type</code> — กำหนด Type ให้ตัวแปร</li>
+        <li><code>function f(x: Type): ReturnType</code> — กำหนด Type ให้ Parameter และค่าที่ Return</li>
+        <li><code>Type[]</code> — Array ที่สมาชิกทุกตัวเป็น Type เดียวกัน</li>
+        <li><code>{ key: Type }</code> — Object ที่มี Shape ตามที่ระบุ, ใช้ <code>?</code> สำหรับ Property ที่ไม่บังคับ</li>
+        <li><code>TypeA | TypeB</code> — Union Type ให้ค่าเป็นได้มากกว่าหนึ่ง Type</li>
+        <li><code>type Name = ...</code> — ตั้งชื่อ Type เพื่อนำไปใช้ซ้ำ</li>
+      </ul>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="02_javascript_pitfalls_and_the_case_for_types.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="04_compiling_typescript_and_tsconfig.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </article>
+  </main>
+
+  <footer>
+    <p>เนื้อหาเรียบเรียงขึ้นใหม่โดยได้แรงบันดาลใจจากหัวข้อในคอร์ส <a href="https://github.com/vakila/typescript-first-steps">“TypeScript First Steps” โดย Anjana Vakil (Frontend Masters)</a> คำอธิบายและตัวอย่างโค้ดทั้งหมดเป็นการเขียนขึ้นใหม่สำหรับผู้เรียนของคอร์สนี้โดยเฉพาะ</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ทบทวนข้อผิดพลาดยอดฮิตจาก Type แบบ Dynamic และ Weak ใน JavaScript แล้วติดตั้ง TypeScript เพื่อดักจับปัญหาเหล่านั้นตั้งแต่ก่อนรันโค้ด" />
+  <title>จุดอ่อนของ JavaScript ที่ TypeScript เข้ามาแก้</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>จุดอ่อนของ JavaScript ที่ TypeScript เข้ามาแก้</h1>
+
+      <p>
+        ก่อนจะเริ่มเขียน TypeScript เรามาย้อนดูกันก่อนว่าปัญหาที่ TypeScript ถูกสร้างมาแก้จริง ๆ แล้วหน้าตาเป็นอย่างไร
+        แล้วค่อยติดตั้ง TypeScript เพื่อลองดักจับปัญหาเหล่านั้นด้วยตัวเอง
+      </p>
+
+      <h2>1. Dynamic Typing: Type เปลี่ยนได้ตลอดเวลา</h2>
+      <p>
+        ใน JavaScript ตัวแปรหนึ่งตัวสามารถเก็บค่าคนละ Type กันได้ในเวลาต่างกัน
+        ปัญหาจะเกิดขึ้นเมื่อโค้ดส่วนหนึ่งคาดหวังว่าตัวแปรจะเป็น Type หนึ่ง แต่ดันได้อีก Type มาแทน
+      </p>
+      <pre><code>let price = 129.99;
+price.toFixed(2); // "129.99" ใช้ได้ปกติ
+
+price = "sold out";
+price.toFixed(2); // TypeError: price.toFixed is not a function</code></pre>
+      <p>
+        โค้ดสองบรรทัดแรกไม่มีปัญหาอะไรเลย แต่พอ <code>price</code> ถูกเปลี่ยนเป็น String ในภายหลัง
+        โค้ดที่เคยทำงานถูกต้องก็พังทันที และ JavaScript จะไม่เตือนอะไรเลยจนกว่าโค้ดบรรทัดนั้นจะถูกรันจริง
+      </p>
+
+      <h2>2. Weak Typing: การแปลง Type แบบเดาใจ (Coercion)</h2>
+      <p>
+        JavaScript ยังพยายาม "ช่วยเหลือ" เราด้วยการแปลง Type ให้อัตโนมัติเมื่อเจอ Operator ที่ไม่ตรงกับ Type ผลลัพธ์ที่ได้บางครั้งก็ไม่ตรงกับที่คาดไว้เลย
+      </p>
+      <pre><code>const total = "20" + 5;      // "205"  (บวกเลขเข้ากับ String กลายเป็นต่อ String)
+const discount = "20" - 5;   // 15    (ลบ String จะถูกแปลงเป็นตัวเลขก่อน)
+const combined = [] + {};    // "[object Object]"</code></pre>
+      <p>
+        ผลลัพธ์เหล่านี้ไม่ใช่ Bug ของ JavaScript แต่เป็นพฤติกรรมที่ถูกออกแบบไว้ตั้งแต่แรก เพียงแต่มักไม่ตรงกับสิ่งที่นักพัฒนาตั้งใจเขียน
+      </p>
+
+      <h2>ทำไมปัญหานี้ถึงอันตราย</h2>
+      <p>
+        จุดร่วมของทั้งสองปัญหาคือ <strong>ข้อผิดพลาดจะถูกพบก็ต่อเมื่อโค้ดบรรทัดนั้นถูกรันจริงเท่านั้น</strong>
+        ถ้าโค้ดส่วนนั้นไม่ค่อยถูกเรียกใช้ (เช่น กรณีขอบ หรือ Path ที่ผู้ใช้ไม่ค่อยเดิน) Bug อาจซ่อนอยู่ในโปรเจกต์เป็นเดือนโดยไม่มีใครรู้ จนกระทั่งผู้ใช้งานจริงไปเจอเข้า
+      </p>
+      <p>
+        คำถามคือ — เราจะรู้ได้อย่างไรว่าโค้ดของเรามีจุดที่เสี่ยงแบบนี้อยู่ <strong>ก่อน</strong> ที่จะรันโค้ดจริง? นี่คือสิ่งที่ TypeScript เข้ามาช่วย
+      </p>
+
+      <h2>ติดตั้ง TypeScript</h2>
+      <p>ติดตั้ง TypeScript แบบ Global ผ่าน npm เพื่อใช้คำสั่ง <code>tsc</code> (TypeScript Compiler) จาก Terminal ได้ทุกที่:</p>
+      <pre><code>npm i -g typescript</code></pre>
+      <p>ตรวจสอบว่าติดตั้งสำเร็จ:</p>
+      <pre><code>tsc --version</code></pre>
+
+      <h2>ให้ TypeScript ตรวจไฟล์ .js ของเราเอง</h2>
+      <p>
+        สิ่งที่หลายคนไม่รู้คือ <code>tsc</code> ไม่จำเป็นต้องใช้กับไฟล์ <code>.ts</code> เท่านั้น เราสามารถสั่งให้มันตรวจสอบไฟล์
+        <code>.js</code> ธรรมดาได้ด้วย Flag <code>--checkJs</code> โดยที่ยังไม่ต้องแปลงไฟล์เป็น TypeScript เลย
+      </p>
+      <p>สมมติเรามีไฟล์ <code>price.js</code> ที่มีโค้ดจากตัวอย่างด้านบน:</p>
+      <pre><code>tsc --checkJs --noEmit price.js</code></pre>
+      <table>
+        <thead>
+          <tr>
+            <th>Flag</th>
+            <th>ความหมาย</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>--checkJs</code></td>
+            <td>สั่งให้ตรวจสอบ Type ในไฟล์ <code>.js</code> ด้วย (ปกติ <code>tsc</code> จะดูแค่ไฟล์ <code>.ts</code>)</td>
+          </tr>
+          <tr>
+            <td><code>--noEmit</code></td>
+            <td>แค่ตรวจสอบ Type เท่านั้น ไม่ต้องสร้างไฟล์ผลลัพธ์ออกมา</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        ลองเพิ่ม Flag <code>--strict</code> เข้าไปอีกตัว เพื่อให้ TypeScript ตรวจสอบแบบเข้มงวดขึ้น (จะพบปัญหาเพิ่มอีกหลายจุดที่ก่อนหน้านี้ไม่ถูกจับได้เลย):
+      </p>
+      <pre><code>tsc --checkJs --noEmit --strict price.js</code></pre>
+
+      <h2>สรุป</h2>
+      <p>
+        แม้จะยังไม่ได้เขียน Type ใด ๆ เองเลยสักตัว แค่ปล่อยให้ <code>tsc</code> อ่านไฟล์ JavaScript เดิมของเราด้วย <code>--checkJs</code>
+        ก็ช่วยเผยปัญหาที่ซ่อนอยู่ได้แล้ว บทถัดไปเราจะเริ่มเขียน Type Annotation ด้วยตัวเอง เพื่อบอก TypeScript อย่างชัดเจนว่าตัวแปรแต่ละตัวควรเป็น Type อะไร
+      </p>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="01_what_is_typescript.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="03_type_annotations_and_syntax.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </article>
+  </main>
+
+  <footer>
+    <p>เนื้อหาเรียบเรียงขึ้นใหม่โดยได้แรงบันดาลใจจากหัวข้อในคอร์ส <a href="https://github.com/vakila/typescript-first-steps">“TypeScript First Steps” โดย Anjana Vakil (Frontend Masters)</a> คำอธิบายและตัวอย่างโค้ดทั้งหมดเป็นการเขียนขึ้นใหม่สำหรับผู้เรียนของคอร์สนี้โดยเฉพาะ</p>
+  </footer>
+</body>
+</html>

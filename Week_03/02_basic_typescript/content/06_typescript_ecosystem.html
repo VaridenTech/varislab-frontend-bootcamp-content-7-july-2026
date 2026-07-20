@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="สำรวจ Ecosystem รอบตัว TypeScript: การใช้ Type จาก Library ที่ไม่ได้เขียนด้วย TypeScript, การแชร์ Type ระหว่างไฟล์และระหว่าง Frontend กับ Backend, และ Library ยอดนิยมอย่าง Zod และ TypeORM" />
+  <title>TypeScript ในโลกจริง: Ecosystem และ End-to-End Type Safety</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>TypeScript ในโลกจริง: Ecosystem และ End-to-End Type Safety</h1>
+
+      <p>
+        เมื่อเข้าใจไวยากรณ์หลักของ TypeScript แล้ว บทนี้จะพาดูว่าโปรเจกต์จริงใช้ TypeScript ร่วมกับ Library ภายนอก
+        และแชร์ Type ระหว่างส่วนต่าง ๆ ของระบบอย่างไร
+      </p>
+
+      <h2>เมื่อ Library ที่ใช้ไม่ได้เขียนด้วย TypeScript</h2>
+      <p>
+        Package บน npm จำนวนมากเขียนด้วย JavaScript ธรรมดา ไม่มี Type มาให้ในตัว เมื่อเรา Import Package เหล่านั้นมาใช้ใน TypeScript
+        TypeScript จะไม่รู้เลยว่า Function หรือค่าที่ Import มามีรูปร่างหน้าตาอย่างไร
+      </p>
+      <p>
+        ชุมชน TypeScript แก้ปัญหานี้ด้วยโปรเจกต์ชื่อ
+        <a href="https://github.com/DefinitelyTyped/DefinitelyTyped">DefinitelyTyped</a> — คลัง Type Declaration ที่ดูแลโดยชุมชน
+        สำหรับ Package JavaScript ยอดนิยมที่ไม่ได้แนบ Type มาด้วย
+      </p>
+      <p>ติดตั้ง Type ของ Package แยกต่างหากด้วย Prefix <code>@types/</code>:</p>
+      <pre><code>npm i -D @types/node
+npm i -D @types/express</code></pre>
+      <p>
+        หลังติดตั้งแล้ว Editor และ <code>tsc</code> จะรู้จัก Type ของ Package นั้นทันที โดยไม่ต้องแก้โค้ดที่ Import ใช้งานเลยแม้แต่บรรทัดเดียว
+        ถ้า Package ไหนไม่มี <code>@types/</code> ให้ใช้ ก็ยังสามารถประกาศ Type คร่าว ๆ ขึ้นมาเองได้เช่นกัน
+      </p>
+
+      <h2>Type Assertion: "เชื่อฉันเถอะ ฉันรู้ว่ามันคือ Type อะไร"</h2>
+      <p>
+        บางสถานการณ์ TypeScript อนุมาน Type ได้กว้างเกินไปเพราะไม่มีข้อมูลพอ เช่น <code>document.getElementById</code>
+        จะคืน Type <code>HTMLElement | null</code> เสมอ แม้เราจะรู้อยู่แล้วว่า Element ที่เลือกมาคือ Input จริง ๆ
+      </p>
+      <pre><code>const el = document.getElementById("email-input");
+el.value; // Error! HTMLElement ไม่มี Property ชื่อ value
+
+const emailInput = document.getElementById("email-input") as HTMLInputElement;
+emailInput.value; // OK - เราบอก TypeScript อย่างชัดเจนว่านี่คือ HTMLInputElement</code></pre>
+      <p>
+        Keyword <code>as</code> เรียกว่า <strong>Type Assertion</strong> ใช้เพื่อบอก TypeScript ว่า "เชื่อฉันเถอะ ค่านี้เป็น Type ที่ฉันระบุแน่นอน"
+        ข้อควรระวังคือ TypeScript จะ<strong>ไม่ตรวจสอบซ้ำ</strong>ว่าค่านั้นเป็น Type ที่ระบุจริงหรือไม่ตอนรันจริง — ถ้าเราระบุผิด โปรแกรมจะ Error ตอนรันเหมือน JavaScript ปกติ
+        ควรใช้เมื่อมั่นใจจริง ๆ เท่านั้น
+      </p>
+
+      <h2>แชร์ Type ระหว่างไฟล์</h2>
+      <p>Type ที่สร้างไว้ในไฟล์หนึ่งสามารถ Export ออกไปให้ไฟล์อื่น Import ไปใช้ได้ เหมือนกับ Value ทั่วไป:</p>
+      <pre><code>// product.ts
+export type Product = {
+  id: number;
+  name: string;
+  price: number;
+};
+
+export const TAX_RATE = 0.07;</code></pre>
+      <p>เมื่อ Import กลับมาใช้ ควรระบุให้ชัดว่ากำลัง Import "แค่ Type" ด้วย Keyword <code>type</code> เพื่อความชัดเจนว่าสิ่งนี้จะไม่มีอยู่ในไฟล์ JavaScript หลัง Compile:</p>
+      <pre><code>// checkout.ts
+import { type Product, TAX_RATE } from "./product";
+
+function priceWithTax(product: Product): number {
+  return product.price * (1 + TAX_RATE);
+}</code></pre>
+      <p>หรือถ้า Import มาแต่ Type ล้วน ๆ ไม่มี Value เลย ก็เขียนแบบ <code>import type</code> ทั้งบรรทัดได้:</p>
+      <pre><code>import type { Product } from "./product";</code></pre>
+
+      <h2>"End-to-End Type Safety": แชร์ Type ข้าม Frontend และ Backend</h2>
+      <p>
+        เมื่อ Frontend และ Backend ทั้งคู่เขียนด้วย TypeScript ทีมพัฒนาสามารถแชร์ไฟล์ Type ของข้อมูลที่ส่งผ่าน API ร่วมกันได้
+        (เช่น <code>Product</code>, <code>Order</code>) ทำให้เมื่อ Backend เปลี่ยนรูปร่างข้อมูลที่ส่งกลับ Frontend ที่ใช้ Type เดียวกันจะขึ้น Error ทันทีถ้ายังไม่ได้ปรับโค้ดตาม
+        แนวคิดนี้เรียกว่า <strong>End-to-End Type Safety</strong> — Type เดียวกันคุ้มครองตลอดเส้นทางของข้อมูล ตั้งแต่ฐานข้อมูลไปจนถึงหน้าจอผู้ใช้
+      </p>
+
+      <h2>Library ยอดนิยมในระบบนิเวศ TypeScript</h2>
+
+      <h3>Zod: ตรวจสอบข้อมูลตอนรันจริง พร้อมอนุมาน Type ให้อัตโนมัติ</h3>
+      <p>
+        Type ของ TypeScript มีข้อจำกัดสำคัญข้อหนึ่ง: มันถูกลบทิ้งตอน Compile จึงตรวจสอบข้อมูลที่มาจากภายนอก
+        (เช่น Response จาก API หรือข้อมูลจาก Form) ไม่ได้เลยตอนรันจริง Library อย่าง
+        <a href="https://zod.dev">Zod</a> จึงถูกสร้างมาเพื่ออุดช่องว่างนี้ — กำหนด "Schema" ครั้งเดียว ใช้ได้ทั้งตรวจสอบข้อมูลตอนรันจริง
+        และให้ TypeScript อนุมาน Type ที่ตรงกันโดยอัตโนมัติ
+      </p>
+      <pre><code>import { z } from "zod";
+
+const ProductSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  price: z.number(),
+});
+
+// ตรวจสอบข้อมูลจริงตอนรัน (เช่น ข้อมูลที่เพิ่งได้จาก API)
+// จะ throw Error ทันทีถ้าข้อมูลไม่ตรงกับ Schema
+const product = ProductSchema.parse(responseData);
+
+// อนุมาน Type ของ TypeScript จาก Schema เดียวกัน ไม่ต้องเขียนซ้ำ
+type Product = z.infer&lt;typeof ProductSchema&gt;;</code></pre>
+
+      <h3>TypeORM: ใช้ Type คุมความถูกต้องของข้อมูลในฐานข้อมูล</h3>
+      <p>
+        <a href="https://typeorm.io">TypeORM</a> เป็น ORM (Object-Relational Mapper) สำหรับ TypeScript ที่ให้เรานิยามตาราง (Entity) ในฐานข้อมูลด้วย Class
+        แล้วให้ Type ของ Class นั้นคุ้มครองทุก Query ที่เขียน — ถ้าพิมพ์ชื่อ Column ผิด หรือใส่ค่าผิดชนิด TypeScript จะแจ้งเตือนตั้งแต่ตอนเขียนโค้ด
+        ก่อนที่ Query จะถูกส่งไปยังฐานข้อมูลจริงเสียอีก
+      </p>
+
+      <h3>ทดสอบ Type ด้วย Vitest</h3>
+      <p>
+        นอกจากทดสอบ "พฤติกรรม" ของโค้ดแล้ว เรายังเขียน Test เพื่อยืนยัน "Type" ของโค้ดได้ด้วย เพื่อป้องกันไม่ให้ใครเผลอเปลี่ยน Type สาธารณะของ Function โดยไม่ตั้งใจ:
+      </p>
+      <pre><code>import { expectTypeOf, test } from "vitest";
+import { priceWithTax } from "./checkout";
+
+test("priceWithTax มี Type ตามที่คาดไว้", () =&gt; {
+  expectTypeOf(priceWithTax).toBeFunction();
+  expectTypeOf(priceWithTax).returns.toBeNumber();
+});</code></pre>
+
+      <h2>สรุป</h2>
+      <p>
+        Ecosystem ของ TypeScript กว้างขวางกว่าแค่ตัว Compiler เอง — ตั้งแต่การหา Type ให้ Library ภายนอกด้วย <code>@types/</code>,
+        การแชร์ Type ระหว่างไฟล์และระหว่างระบบด้วย <code>export type</code> / <code>import type</code>, ไปจนถึง Library
+        อย่าง Zod และ TypeORM ที่ขยายประโยชน์ของ Type ให้ครอบคลุมถึงข้อมูลตอนรันจริงและฐานข้อมูลด้วย
+        รายชื่อ Library อื่น ๆ ที่น่าสนใจดูเพิ่มเติมได้ที่
+        <a href="https://github.com/dzharii/awesome-typescript">awesome-typescript</a> บน GitHub
+      </p>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="05_professional_workflow_and_tsconfig_bases.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="07_wrap_up_and_next_steps.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </article>
+  </main>
+
+  <footer>
+    <p>เนื้อหาเรียบเรียงขึ้นใหม่โดยได้แรงบันดาลใจจากหัวข้อในคอร์ส <a href="https://github.com/vakila/typescript-first-steps">“TypeScript First Steps” โดย Anjana Vakil (Frontend Masters)</a> คำอธิบายและตัวอย่างโค้ดทั้งหมดเป็นการเขียนขึ้นใหม่สำหรับผู้เรียนของคอร์สนี้โดยเฉพาะ</p>
+  </footer>
+</body>
+</html>

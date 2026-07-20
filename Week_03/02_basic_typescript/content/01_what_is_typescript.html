@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ทำความเข้าใจว่า TypeScript คืออะไร เกี่ยวข้องกับ JavaScript อย่างไร และทำไมทีมพัฒนาซอฟต์แวร์ยุคใหม่จึงเลือกใช้" />
+  <title>TypeScript คืออะไร และทำไมต้องใช้?</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>TypeScript คืออะไร และทำไมต้องใช้?</h1>
+
+      <p>
+        ตลอดสัปดาห์ที่ผ่านมาเราเขียน JavaScript กันมาพอสมควรแล้ว
+        สัปดาห์นี้เราจะมาทำความรู้จักกับ <strong>TypeScript (TS)</strong>
+        ภาษาที่ทีมพัฒนาจำนวนมากใช้ต่อยอดจาก JavaScript เพื่อเขียนโค้ดที่ผิดพลาดยากขึ้นและอ่านเข้าใจง่ายขึ้น
+      </p>
+
+      <h2>TypeScript สัมพันธ์กับ JavaScript อย่างไร</h2>
+      <p>
+        สิ่งสำคัญที่สุดที่ต้องเข้าใจก่อนคือ TypeScript <strong>ไม่ใช่ภาษาคนละตัวที่แยกขาดจาก JavaScript</strong>
+        แต่เป็น <strong>Superset ของ JavaScript</strong> หมายความว่าโค้ด JavaScript ที่ถูกต้องทุกบรรทัดก็ถือเป็นโค้ด TypeScript ที่ถูกต้องเช่นกัน
+        TypeScript เพียงแค่ <em>เพิ่ม</em> ไวยากรณ์สำหรับระบุ "Type" เข้าไป แล้วใช้เครื่องมือตรวจสอบ Type นั้นก่อนโค้ดจะถูกนำไปรันจริง
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>หัวข้อ</th>
+            <th>JavaScript</th>
+            <th>TypeScript</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>File Extension</td>
+            <td><code>.js</code></td>
+            <td><code>.ts</code></td>
+          </tr>
+          <tr>
+            <td>การทำงาน (Execution)</td>
+            <td>Interpreted (รันได้ทันทีใน Browser หรือ Node.js)</td>
+            <td>ต้อง Compile เป็น JavaScript ก่อน แล้วโค้ด JavaScript ที่ได้จึงถูกรัน</td>
+          </tr>
+          <tr>
+            <td>ไวยากรณ์ (Syntax)</td>
+            <td>เป็นส่วนหนึ่งของ TypeScript (Subset)</td>
+            <td>ขยายมาจาก JavaScript (Superset)</td>
+          </tr>
+          <tr>
+            <td>ระบบ Type (Type System)</td>
+            <td>Dynamic และ Weak (ยืดหยุ่น แต่ตรวจสอบตอนรันจริงเท่านั้น)</td>
+            <td>Static และ Strong (ระบุชัดเจน ตรวจสอบได้ตั้งแต่ก่อนรัน)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>ปัญหาที่ TypeScript พยายามแก้</h2>
+      <p>
+        JavaScript เป็นภาษาที่มี Type แบบ <strong>Dynamic</strong> (Type ถูกกำหนดตอนโค้ดกำลังรัน ไม่ใช่ก่อนรัน)
+        และแบบ <strong>Weak</strong> (ยอมแปลง Type ให้อัตโนมัติเมื่อเจอค่าที่ไม่ตรงกับที่คาดไว้)
+        คุณสมบัติทั้งสองข้อนี้ทำให้ JavaScript เขียนง่ายและยืดหยุ่นสูง แต่ก็แลกมาด้วยข้อผิดพลาดที่มักโผล่มาตอนโปรแกรมกำลังรันอยู่แล้ว เช่น
+      </p>
+      <pre><code>"Cannot read properties of undefined (reading 'name')"
+"user.getFullName is not a function"
+"Cannot set properties of null"</code></pre>
+      <p>
+        ข้อผิดพลาดเหล่านี้มักไม่ปรากฏตอนเขียนโค้ด แต่จะโผล่มาให้เห็นตอนผู้ใช้งานจริงกดปุ่มบางอย่าง หรือแอปพลิเคชันทำงานถึงจุดนั้นพอดี
+        เป้าหมายของ TypeScript คือ<strong>ดักจับข้อผิดพลาดประเภทนี้ตั้งแต่ตอนเขียนโค้ด</strong> ก่อนจะถูกส่งไปให้ผู้ใช้งานเจอ
+      </p>
+
+      <h2>TypeScript ทำอะไรได้บ้าง</h2>
+      <p>ตลอดสัปดาห์นี้เราจะได้เห็น TypeScript ในสามบทบาทหลัก:</p>
+      <ul>
+        <li>
+          <strong>เครื่องมือตรวจสอบ Type (Type Checker)</strong> —
+          อ่านโค้ดของเราแล้วเตือนทันทีถ้าเราใช้ค่าผิดชนิด เช่น พยายามบวกเลขกับ Object
+        </li>
+        <li>
+          <strong>เครื่องมือแปลงโค้ด (Compiler / Build Tool)</strong> —
+          แปลงไฟล์ <code>.ts</code> เป็น <code>.js</code> ธรรมดา เพื่อให้ Browser หรือ Node.js รันได้ (Type ทั้งหมดจะถูกลบออกตอนแปลง)
+        </li>
+        <li>
+          <strong>ผู้ช่วยใน Editor (Dev Tool)</strong> —
+          เชื่อมกับ Editor อย่าง VS Code เพื่อให้ Autocomplete, คำแนะนำ, และคำเตือน ขึ้นให้เห็นแบบเรียลไทม์ขณะพิมพ์โค้ด
+        </li>
+      </ul>
+
+      <h2>สิ่งที่จะได้เรียนในสัปดาห์นี้</h2>
+      <p>เราจะค่อย ๆ สร้างความเข้าใจ TypeScript ไปทีละขั้น:</p>
+      <ul>
+        <li>การเพิ่ม Type ให้ตัวแปร Function และ Object</li>
+        <li>Union Types และการจำกัดขอบเขต Type (Type Narrowing)</li>
+        <li>การสร้างและขยาย Type ของตัวเองด้วย <code>type</code> และ <code>interface</code></li>
+        <li>การตั้งค่า Compiler ด้วยไฟล์ <code>tsconfig.json</code></li>
+        <li>Generic Types สำหรับเขียน Type ที่ใช้ซ้ำได้</li>
+        <li>การใช้งาน TypeScript ร่วมกับ Library และ Ecosystem จริง</li>
+      </ul>
+      <p>
+        ข่าวดีคือ เราไม่จำเป็นต้องแปลงทั้งโปรเจกต์เป็น TypeScript ในคราวเดียว
+        เพราะ TypeScript ถูกออกแบบมาให้<strong>ค่อย ๆ ย้ายจาก JavaScript มาได้ทีละไฟล์</strong>
+      </p>
+
+      <h2>สิ่งที่ต้องเตรียม</h2>
+      <p>
+        เนื่องจาก TypeScript ทำงานอยู่บน Node.js เราจึงใช้เครื่องมือชุดเดิมกับที่ติดตั้งไว้แล้วจากสัปดาห์ก่อนหน้า ได้แก่
+        <code>Node.js</code> (พร้อม <code>npm</code>) และ VS Code ยังไม่ต้องติดตั้งอะไรเพิ่มตอนนี้ — บทถัดไปจะพาติดตั้งตัว TypeScript เอง
+      </p>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="02_javascript_pitfalls_and_the_case_for_types.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </article>
+  </main>
+
+  <footer>
+    <p>เนื้อหาเรียบเรียงขึ้นใหม่โดยได้แรงบันดาลใจจากหัวข้อในคอร์ส <a href="https://github.com/vakila/typescript-first-steps">“TypeScript First Steps” โดย Anjana Vakil (Frontend Masters)</a> คำอธิบายและตัวอย่างโค้ดทั้งหมดเป็นการเขียนขึ้นใหม่สำหรับผู้เรียนของคอร์สนี้โดยเฉพาะ</p>
+  </footer>
+</body>
+</html>
