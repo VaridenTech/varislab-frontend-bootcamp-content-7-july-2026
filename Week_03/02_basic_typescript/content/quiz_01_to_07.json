@@ -1,0 +1,174 @@
+{
+  "questions": [
+    {
+      "prompt": "ข้อใดอธิบายความสัมพันธ์ระหว่าง TypeScript และ JavaScript ได้ถูกต้อง?",
+      "choices": [
+        "TypeScript ใช้แทน JavaScript ใน Browser ได้โดยตรงโดยไม่ต้อง Compile",
+        "TypeScript เป็น Superset ของ JavaScript ที่เพิ่มระบบ Type และต้อง Compile เป็น JavaScript ก่อนนำไปรัน",
+        "TypeScript เป็น Library สำหรับตรวจสอบข้อมูลจาก API ตอน Runtime เท่านั้น",
+        "TypeScript และ JavaScript มีไวยากรณ์ที่แยกจากกันทั้งหมด"
+      ],
+      "correctChoice": 2,
+      "explanation": "TypeScript ขยายไวยากรณ์ของ JavaScript ด้วยระบบ Type โค้ด JavaScript ที่ถูกต้องจึงใช้เป็น TypeScript ได้ แต่ Browser และ Node.js รันไฟล์ TypeScript โดยตรงไม่ได้ จึงต้อง Compile เป็น JavaScript ก่อน"
+    },
+    {
+      "prompt": "โค้ด JavaScript ต่อไปนี้แสดงปัญหาใดได้ชัดเจนที่สุด?",
+      "body": "<pre><code>let price = 129.99\nprice = &quot;sold out&quot;\nprice.toFixed(2)</code></pre>",
+      "choices": [
+        "JavaScript ไม่อนุญาตให้กำหนดค่าใหม่ให้ตัวแปรที่ประกาศด้วย let",
+        "Method toFixed() ใช้กับตัวเลขไม่ได้",
+        "Dynamic Typing ทำให้ตัวแปรเปลี่ยน Type ได้ และข้อผิดพลาดอาจปรากฏเมื่อตอนรัน",
+        "JavaScript ตรวจพบ Type Error ทั้งหมดก่อนรันโค้ดเสมอ"
+      ],
+      "correctChoice": 3,
+      "explanation": "ตัวแปร price เริ่มจาก Number แต่ถูกเปลี่ยนเป็น String ได้ เมื่อเรียก toFixed() ซึ่งไม่มีใน String จึงเกิด Error ตอนที่บรรทัดนั้นถูกรัน"
+    },
+    {
+      "prompt": "คำสั่งต่อไปนี้มีผลอย่างไร?",
+      "body": "<pre><code>tsc --checkJs --noEmit price.js</code></pre>",
+      "choices": [
+        "ตรวจสอบ Type ในไฟล์ JavaScript โดยไม่สร้างไฟล์ผลลัพธ์",
+        "เปลี่ยนนามสกุลไฟล์ price.js เป็น .ts โดยอัตโนมัติ",
+        "Compile ไฟล์ JavaScript แล้วสร้างไฟล์ price.ts",
+        "รันไฟล์ price.js โดยไม่ตรวจสอบ Type"
+      ],
+      "correctChoice": 1,
+      "explanation": "--checkJs สั่งให้ TypeScript ตรวจไฟล์ .js ส่วน --noEmit สั่งให้ตรวจสอบอย่างเดียวโดยไม่สร้างไฟล์ผลลัพธ์"
+    },
+    {
+      "prompt": "เมื่อ TypeScript ตรวจโค้ดต่อไปนี้ จะเกิดอะไรขึ้น?",
+      "body": "<pre><code>let quantity: number\nquantity = 3\nquantity = &quot;three&quot;</code></pre>",
+      "choices": [
+        "ผ่านการตรวจสอบ เพราะตัวแปรที่ประกาศด้วย let เปลี่ยน Type ได้เสมอ",
+        "ผ่านการตรวจสอบ แต่ quantity จะถูกเปลี่ยนเป็น 0",
+        "Error ที่ quantity = 3 เพราะยังไม่ได้กำหนดค่าเริ่มต้น",
+        "Error ที่ quantity = \"three\" เพราะ String ไม่ตรงกับ Type number"
+      ],
+      "correctChoice": 4,
+      "explanation": "Type Annotation : number กำหนดให้ quantity รับได้เฉพาะ Number การกำหนดค่า String ให้ตัวแปรนี้จึงไม่ผ่านการตรวจสอบ Type"
+    },
+    {
+      "prompt": "กำหนดให้มีตัวแปรดังนี้ ข้อใดไม่ทำให้เกิด Type Error?",
+      "body": "<pre><code>let status: &quot;pending&quot; | &quot;shipped&quot; | &quot;delivered&quot;</code></pre>",
+      "choices": [
+        "status = \"cancelled\"",
+        "status = \"delivered\"",
+        "status = true",
+        "status = 1"
+      ],
+      "correctChoice": 2,
+      "explanation": "Literal Type นี้อนุญาตเฉพาะ String สามค่าที่ระบุไว้ คือ pending, shipped และ delivered เท่านั้น"
+    },
+    {
+      "prompt": "ข้อใดกำหนด Type ให้ Parameter และค่าที่ Return ของ Function ได้ถูกต้อง?",
+      "choices": [
+        "function calculateTotal(price: number, quantity: number): number { return price * quantity }",
+        "function calculateTotal(price = number, quantity = number) => number { return price * quantity }",
+        "function calculateTotal(price number, quantity number): return number { return price * quantity }",
+        "function calculateTotal: number(price, quantity) { return price * quantity }"
+      ],
+      "correctChoice": 1,
+      "explanation": "Type ของ Parameter เขียนหลังชื่อ Parameter ด้วย : Type ส่วน Return Type เขียนหลังวงเล็บ Parameter ก่อนเปิดบล็อก Function"
+    },
+    {
+      "prompt": "ข้อใดกำหนดให้ description เป็น Property ที่มีหรือไม่มีก็ได้อย่างถูกต้อง?",
+      "choices": [
+        "{ name: string, optional description: string }",
+        "{ name: string, description: string | required }",
+        "{ name: string, description?: string }",
+        "{ name: string, ?description: string }"
+      ],
+      "correctChoice": 3,
+      "explanation": "เครื่องหมาย ? หลังชื่อ Property หมายความว่า Property นั้นเป็น Optional จึงไม่บังคับให้ Object ทุกตัวต้องมี description"
+    },
+    {
+      "prompt": "Function ใดใช้ Type Narrowing เพื่อรองรับ number | string ได้อย่างปลอดภัย?",
+      "choices": [
+        "function formatId(id: number | string) { return id.toUpperCase() }",
+        "function formatId(id: number | string) { return id.toFixed(2) }",
+        "function formatId(id: number | string) { return id as boolean }",
+        "function formatId(id: number | string) { return typeof id === \"string\" ? id.toUpperCase() : id.toString() }"
+      ],
+      "correctChoice": 4,
+      "explanation": "การตรวจด้วย typeof ทำให้ TypeScript รู้ว่า Branch แรกเป็น String จึงเรียก toUpperCase() ได้ ส่วนอีก Branch เหลือเป็น Number และเรียก toString() ได้อย่างปลอดภัย"
+    },
+    {
+      "prompt": "เมื่อ Compile โค้ด TypeScript ต่อไปนี้เป็น JavaScript ส่วนใดจะถูกลบออก?",
+      "body": "<pre><code>function greet(name: string): string {\n  return `สวัสดี ${name}`\n}</code></pre>",
+      "choices": [
+        "Type Annotation : string ของ Parameter และ Return Type",
+        "ชื่อ Function greet",
+        "คำสั่ง return",
+        "Template Literal ทั้งหมด"
+      ],
+      "correctChoice": 1,
+      "explanation": "Type มีไว้สำหรับตรวจสอบก่อนรันและจะถูกลบออกตอน Compile ส่วน Logic ของ Function จะยังอยู่ในไฟล์ JavaScript ผลลัพธ์"
+    },
+    {
+      "prompt": "เมื่อโปรเจกต์มีไฟล์ tsconfig.json แล้ว การรันคำสั่ง tsc โดยไม่ระบุชื่อไฟล์จะทำอะไร?",
+      "choices": [
+        "ลบ tsconfig.json แล้วสร้างใหม่ด้วยค่าเริ่มต้น",
+        "ตรวจเฉพาะไฟล์ JavaScript โดยไม่สนใจค่าตั้งค่า",
+        "ใช้ค่าจาก tsconfig.json เพื่อ Compile หรือตรวจสอบไฟล์ในโปรเจกต์",
+        "รัน Test ทั้งหมดของโปรเจกต์โดยอัตโนมัติ"
+      ],
+      "correctChoice": 3,
+      "explanation": "tsconfig.json เก็บ Compiler Options ของโปรเจกต์ เมื่อรัน tsc เฉย ๆ TypeScript จะค้นหาและใช้ค่าจากไฟล์นี้โดยอัตโนมัติ"
+    },
+    {
+      "prompt": "หากต้องการให้ Customer มี Property ทั้งหมดจาก User และเพิ่ม loyaltyPoints ข้อใดถูกต้อง?",
+      "choices": [
+        "interface Customer imports User { loyaltyPoints: number }",
+        "interface Customer extends User { loyaltyPoints: number }",
+        "interface Customer = User + { loyaltyPoints: number }",
+        "interface Customer includes User { loyaltyPoints: number }"
+      ],
+      "correctChoice": 2,
+      "explanation": "Keyword extends ใช้ขยาย Interface เดิม ทำให้ Customer ได้ Property ของ User พร้อมกับ Property ใหม่ที่ประกาศเพิ่ม"
+    },
+    {
+      "prompt": "กำหนดให้มี Type Product ที่บังคับ id, name และ price หากต้องการรับข้อมูลสำหรับอัปเดตเฉพาะบาง Property ควรใช้ Utility Type ใด?",
+      "choices": [
+        "Readonly<Product>",
+        "Pick<Product, never>",
+        "Promise<Product>",
+        "Partial<Product>"
+      ],
+      "correctChoice": 4,
+      "explanation": "Partial<T> เปลี่ยนทุก Property ของ T ให้เป็น Optional จึงเหมาะกับข้อมูลอัปเดตที่ส่งมาเพียงบาง Property เช่น { price: 199 }"
+    },
+    {
+      "prompt": "ข้อใดเป็น Workflow ที่เหมาะสมสำหรับย้ายโปรเจกต์ JavaScript เดิมมาเป็น TypeScript?",
+      "choices": [
+        "เปลี่ยนทุกไฟล์เป็น .ts พร้อมกัน แล้วปิด strict และใช้ any ทุกจุด",
+        "เขียนโปรเจกต์ใหม่ทั้งหมดและเลิกใช้ Test เดิม",
+        "ติดตั้ง TypeScript เป็น Dev Dependency เปลี่ยนไฟล์ทีละไฟล์ รัน tsc หลังแต่ละไฟล์ และใช้ tsc --noEmit ก่อน Test",
+        "Compile เฉพาะตอนขึ้น Production โดยไม่ตรวจ Type ระหว่างพัฒนา"
+      ],
+      "correctChoice": 3,
+      "explanation": "การย้ายทีละไฟล์ช่วยจำกัดจำนวน Error ที่ต้องแก้ในแต่ละครั้ง ส่วน tsc --noEmit ก่อน Test ทำให้ Type Error ถูกจับก่อนเข้าสู่ขั้นตอนทดสอบ"
+    },
+    {
+      "prompt": "โปรเจกต์ TypeScript ใช้ Package JavaScript ที่ไม่ได้แนบ Type มาให้ ข้อใดเป็นแนวทางที่ถูกต้อง?",
+      "choices": [
+        "ติดตั้ง Type Declaration ที่มีใน @types/ และใช้ import type เมื่อต้อง Import เฉพาะ Type",
+        "เปลี่ยน Type ของค่าจาก Package ทั้งหมดเป็น any เสมอ",
+        "เปลี่ยน Package JavaScript ให้เป็นไฟล์ .ts ภายใน node_modules",
+        "ใช้ @ts-ignore ก่อนทุกบรรทัดที่ Import Package"
+      ],
+      "correctChoice": 1,
+      "explanation": "DefinitelyTyped แจก Type Declaration ของ Package JavaScript ผ่านชื่อ Package ที่ขึ้นต้นด้วย @types/ ส่วน import type สื่อชัดว่าสิ่งที่ Import จะใช้เฉพาะตอนตรวจ Type และไม่มีอยู่ใน JavaScript หลัง Compile"
+    },
+    {
+      "prompt": "เหตุใดจึงนิยมใช้ Zod ตรวจสอบข้อมูลจาก API แม้โปรเจกต์จะเขียนด้วย TypeScript อยู่แล้ว?",
+      "choices": [
+        "เพราะ Zod ทำให้ Browser รันไฟล์ .ts ได้โดยไม่ต้อง Compile",
+        "เพราะ Type ของ TypeScript ถูกลบตอน Compile แต่ Zod ตรวจสอบข้อมูลจริงตาม Schema ได้ตอน Runtime",
+        "เพราะ Zod ใช้แทน tsconfig.json สำหรับตั้งค่า Compiler",
+        "เพราะ TypeScript ไม่สามารถกำหนด Type ให้ Object ได้"
+      ],
+      "correctChoice": 2,
+      "explanation": "TypeScript ตรวจความถูกต้องแบบ Static ก่อนรัน แต่ Type จะไม่เหลืออยู่ตอน Runtime จึงยืนยันข้อมูลภายนอกไม่ได้ Zod ช่วยตรวจข้อมูลจริงตาม Schema และยังอนุมาน TypeScript Type จาก Schema เดียวกันได้"
+    }
+  ]
+}
