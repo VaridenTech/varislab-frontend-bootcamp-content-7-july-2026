@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างแอป React ตัวแรกด้วย React.createElement โดยไม่ต้องมีขั้นตอน build" />
+    <title>React โดยไม่ต้องมีขั้นตอน Build | เรียน React เริ่มต้น</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 02 · React แบบเรียบง่าย (No Frills React)</p>
+          <h1>React โดยไม่ต้องมีขั้นตอน Build</h1>
+          <p class="lesson-original-title" lang="en">React without a Build Step</p>
+        </header>
+
+        <p>บทเรียน React ส่วนใหญ่มักเริ่มด้วยการให้คุณรันคำสั่งสร้างโปรเจกต์สำเร็จรูป แล้วคุณก็ได้โฟลเดอร์ที่เต็มไปด้วยไฟล์ซึ่งไม่รู้ว่าแต่ละไฟล์มีไว้ทำอะไร เราจะไม่ทำแบบนั้น</p>
+
+        <p>บทนี้เราจะเขียน React ล้วน ๆ — ไม่มีขั้นตอน compile ไม่มี JSX ไม่มี Babel ไม่มี Webpack หรือ Vite มีเพียงไฟล์ HTML หนึ่งไฟล์กับไฟล์ JavaScript หนึ่งไฟล์ที่เบราว์เซอร์อ่านได้ตรง ๆ เป้าหมายคือให้คุณเห็นชัดว่าแก่นแท้ของ React มีอยู่แค่ไหน และเครื่องมือทั้งหลายที่เราจะเพิ่มเข้ามาในบทถัด ๆ ไปนั้นเข้ามาแก้ปัญหาอะไรให้เรา</p>
+
+        <h2>สิ่งที่ต้องเตรียม</h2>
+
+        <ul>
+          <li><strong>เบราว์เซอร์</strong> — ตัวไหนก็ได้ที่คุณใช้อยู่ทุกวัน (Chrome, Edge, Firefox หรือ Safari)</li>
+          <li><strong>โปรแกรมแก้ไขโค้ด</strong> — แนะนำ Visual Studio Code แต่ตัวใดที่คุณถนัดก็ใช้ได้</li>
+          <li><strong>Node.js เวอร์ชัน 20 ขึ้นไป</strong> — บทนี้ยังไม่จำเป็นต้องมีก็ได้ แต่จะใช้เปิดเซิร์ฟเวอร์ทดสอบ และจะจำเป็นแน่นอนตั้งแต่บทเรื่อง npm เป็นต้นไป ตรวจสอบว่าติดตั้งแล้วหรือยังด้วยคำสั่ง <code>node -v</code> ใน terminal ถ้าขึ้นเป็นตัวเลขเวอร์ชันก็พร้อมแล้ว</li>
+        </ul>
+
+        <h2>ขั้นที่ 1: สร้างโปรเจกต์และไฟล์ HTML</h2>
+
+        <p>สร้างโฟลเดอร์เปล่าสำหรับโปรเจกต์นี้ เราจะเรียกมันว่า <code>padre-ginos</code> เพราะจะค่อย ๆ สร้างระบบสั่งพิซซ่าขึ้นมาด้วยกันตลอดทั้งหลักสูตร เปิดโฟลเดอร์นั้นด้วย editor ของคุณ แล้วสร้างไฟล์ <code>index.html</code> ตามนี้</p>
+
+        <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8" /&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0" /&gt;
+    &lt;title&gt;Padre Gino's&lt;/title&gt;
+  &lt;/head&gt;
+
+  &lt;body&gt;
+    &lt;div id="root"&gt;not rendered&lt;/div&gt;
+    &lt;script src="https://unpkg.com/react@18.3.1/umd/react.development.js"&gt;&lt;/script&gt;
+    &lt;script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"&gt;&lt;/script&gt;
+    &lt;script src="./src/App.js"&gt;&lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+        <p>มาไล่ดูทีละส่วนว่าแต่ละบรรทัดมีไว้ทำไม</p>
+
+        <ul>
+          <li>โครงข้างบนเป็นเอกสาร HTML5 มาตรฐานทั่วไป ไม่มีอะไรพิเศษเกี่ยวกับ React เลย ถ้าส่วนนี้ยังไม่คุ้นตา แนะนำให้ทบทวนพื้นฐาน HTML สักเล็กน้อยก่อน</li>
+          <li><code>&lt;div id="root"&gt;</code> คือจุดที่เราจะให้ React เข้ามาแสดงผลแอปทั้งหมด ข้อความ <code>not rendered</code> ข้างในเป็นตัวช่วยตรวจสอบ ถ้าเปิดหน้าเว็บแล้วยังเห็นข้อความนี้อยู่ แปลว่า React ยังทำงานไม่สำเร็จ ส่วนชื่อ <code>root</code> ไม่ได้บังคับ แต่เป็นธรรมเนียมที่ใช้กันทั่วไป</li>
+          <li>script สองตัวแรกคือตัว React เอง
+            <ul>
+              <li>ตัวแรกคือ <strong>React</strong> ซึ่งให้เราสร้างและอธิบาย component ทั้งหมด แต่มันแสดงผลด้วยตัวเองไม่ได้ มันเป็นเพียง API</li>
+              <li>ตัวที่สองคือ <strong>React DOM</strong> ซึ่งเป็นชั้นที่ทำหน้าที่แสดงผลจริง เนื่องจากเราแสดงผลลงในเบราว์เซอร์จึงใช้ React DOM ถ้าไปทำแอปมือถือก็เปลี่ยนเป็น React Native โดยที่ความรู้เรื่อง component ยังใช้ได้เหมือนเดิม — นี่คือความหมายของ “learn once, write anywhere” ที่พูดถึงในบทที่แล้ว คุณต้องมีทั้งสองตัว และลำดับของสองบรรทัดนี้ไม่สำคัญ</li>
+            </ul>
+          </li>
+          <li>script ตัวสุดท้ายคือโค้ดของเราเอง มันต้องอยู่ <em>หลัง</em> สองตัวข้างบน ไม่อย่างนั้นโค้ดเราจะทำงานตอนที่ตัวแปร <code>React</code> ยังไม่มีอยู่ แล้วจะได้ error ว่า <code>React is not defined</code></li>
+        </ul>
+
+        <p class="translator-note">💡 การโหลด React จาก CDN แบบนี้เหมาะกับการเรียนรู้และการทดลองเท่านั้น ไฟล์ที่ลงท้ายด้วย <code>.development.js</code> มีข้อความเตือนและเครื่องมือ debug ครบถ้วน จึงมีขนาดใหญ่และช้ากว่าปกติมาก เว็บที่ใช้งานจริงจะติดตั้ง React ผ่าน npm และผ่านขั้นตอน build ซึ่งเราจะทำกันในบทถัด ๆ ไป</p>
+
+        <h2>ขั้นที่ 2: เขียน React ตัวแรก</h2>
+
+        <p>สร้างโฟลเดอร์ชื่อ <code>src</code> และสร้างไฟล์ <code>App.js</code> ไว้ข้างในนั้น แล้วใส่โค้ดนี้ลงไป</p>
+
+        <pre><code class="language-javascript">const App = () =&gt; {
+  return React.createElement(
+    "div",
+    {},
+    React.createElement("h1", {}, "Pixel Perfect Pizzas")
+  );
+};
+
+const container = document.getElementById("root");
+const root = ReactDOM.createRoot(container);
+root.render(React.createElement(App));
+</code></pre>
+
+        <p>เท่านี้คือแอป React ที่เรียบง่ายที่สุดเท่าที่จะเป็นไปได้แล้ว</p>
+
+        <h2>ขั้นที่ 3: เปิดดูผลลัพธ์</h2>
+
+        <p>คุณจะเปิดไฟล์ <code>index.html</code> ด้วยเบราว์เซอร์ตรง ๆ ก็ได้ แต่แนะนำให้เปิดผ่านเซิร์ฟเวอร์เล็ก ๆ มากกว่า เพราะการเปิดไฟล์ตรง ๆ (โปรโตคอล <code>file://</code>) จะติดข้อจำกัดหลายอย่างเมื่อโปรเจกต์โตขึ้น ถ้าคุณมี Node.js อยู่แล้ว ให้รันคำสั่งนี้ในโฟลเดอร์โปรเจกต์</p>
+
+        <pre><code class="language-bash">npx serve</code></pre>
+
+        <p>แล้วเปิดที่อยู่ที่ terminal แสดงขึ้นมา (โดยปกติคือ <code>http://localhost:3000</code>) คุณควรเห็นข้อความ <strong>Pixel Perfect Pizzas</strong> เป็นหัวข้อใหญ่บนหน้าเว็บ ถ้ายังเห็นคำว่า <code>not rendered</code> อยู่ ให้เปิด Console ในเครื่องมือนักพัฒนาของเบราว์เซอร์ (กด F12) เพื่อดูข้อความ error</p>
+
+        <p class="translator-note">🔍 <strong>ปัญหาที่พบบ่อย</strong> — <code>React is not defined</code>: ลำดับของ script tag สลับกัน หรือ CDN โหลดไม่สำเร็จ · <code>Cannot read properties of null</code> ที่บรรทัด <code>createRoot</code>: ค่า <code>id</code> ของ div ไม่ตรงกับที่เขียนใน <code>getElementById</code> · หน้าเว็บว่างเปล่าไปเลย: ตรวจสอบว่า path <code>./src/App.js</code> ถูกต้องและชื่อไฟล์สะกดตรงกันทั้งตัวพิมพ์เล็กพิมพ์ใหญ่</p>
+
+        <h2>โค้ดที่เพิ่งเขียนทำงานอย่างไร</h2>
+
+        <ul>
+          <li>สิ่งแรกที่เราทำคือสร้าง component ของเราเองชื่อ <code>App</code> แก่นของ React คือการสร้าง component เล็ก ๆ แล้วนำมาประกอบกันเป็น component ที่ใหญ่ขึ้นเรื่อย ๆ</li>
+          <li>component มีสองแบบ คือ function component กับ class component สิ่งที่เราเขียนคือ function component ซึ่งเป็นแบบมาตรฐานที่ใช้กันในปัจจุบัน (เราจะได้เห็น class component ในบทเรื่อง Error Boundaries)</li>
+          <li>function component <em>ต้อง</em> คืนค่าเป็นสิ่งที่อธิบายหน้าตาของ UI ออกมา ซึ่งก็คือสิ่งที่ <code>React.createElement</code> สร้างขึ้น</li>
+          <li>ฟังก์ชันของ component <em>ต้อง</em> ทำงานเร็ว เพราะมันจะถูกเรียกซ้ำบ่อยมากทุกครั้งที่ข้อมูลเปลี่ยน ถือเป็น hot code path</li>
+          <li>ภายในฟังก์ชันนี้ห้ามไปแก้ไข state ใด ๆ ที่อยู่ข้างนอก พูดในเชิงฟังก์ชันคือมันต้องเป็น <strong>pure function</strong> เพราะคุณไม่มีทางรู้ว่า React จะเรียกมันเมื่อไหร่หรือกี่ครั้ง</li>
+          <li><code>React.createElement</code> สร้าง <em>instance</em> ของ component ขึ้นมาหนึ่งตัว ถ้าคุณส่ง <em>string</em> เข้าไป มันจะสร้าง DOM tag ตาม string นั้น เราจึงใช้ <code>"div"</code> และ <code>"h1"</code> ได้ตรง ๆ และถ้าใส่ <code>"x-custom-date-picker"</code> มันก็จะสร้างออกมาให้เช่นกัน (แปลว่าใช้ web component ร่วมได้)</li>
+          <li>object ว่าง <code>{}</code> ซึ่งเป็น argument ตัวที่สอง (จะใส่ <code>null</code> แทนก็ได้) คือ attribute ที่เราส่งให้ tag หรือ component นั้น อะไรที่ใส่ตรงนี้จะถูกส่งต่อไปยัง element เช่น <code>id</code> หรือ <code>style</code></li>
+          <li>argument ตัวที่สามเป็นต้นไปคือ “ลูก” ของ element นั้น จะเป็นข้อความ หรือเป็น element ที่สร้างจาก <code>React.createElement</code> อีกทีก็ได้ นี่คือวิธีที่เราซ้อน element เข้าไปเป็นชั้น ๆ</li>
+          <li>ฝั่งการแสดงผล เราใช้ <code>document.getElementById</code> ดึง div ที่มีอยู่แล้วในไฟล์ HTML ออกมา แล้วส่ง element นั้น (ที่เราตั้งชื่อว่า <code>container</code>) เข้า <code>ReactDOM.createRoot</code> เพื่อบอก React ว่าให้แสดงผลแอปตรงจุดนี้</li>
+          <li>สังเกตว่าเราส่ง <code>React.createElement(App)</code> เข้า <code>root.render</code> ไม่ใช่ส่ง <code>App</code> ตรง ๆ เพราะเราต้องการ <em>instance</em> ของ <code>App</code> มาแสดงผล เปรียบเทียบง่าย ๆ ว่า <code>App</code> คือ “รุ่นรถ” เช่น Honda Civic ซึ่งเป็นสายรถทั้งสายที่มีตัวเลือกมากมาย ส่วน instance คือ “รถหนึ่งคัน” ที่ถูกผลิตออกมาจริง ๆ จากรุ่นนั้น</li>
+        </ul>
+
+        <p class="translator-note"><code>ReactDOM.createRoot</code> เป็น API ที่เข้ามาแทนของเดิมตั้งแต่ React 18 ส่วน <code>ReactDOM.render</code> แบบเก่ายังพอใช้ได้แต่ถูกเลิกใช้แล้ว และจะทำให้แอปทำงานในโหมด “legacy” ซึ่งไม่ได้ใช้ความสามารถใหม่ ๆ ที่มาพร้อม React 18 และ 19 หากคุณเจอโค้ดที่ใช้ <code>ReactDOM.render</code> ให้รู้ไว้ว่านั่นคือโค้ดยุคก่อนหน้า</p>
+
+        <h2>ลองทำเอง</h2>
+
+        <p>ก่อนไปบทถัดไป ลองแก้โค้ดของคุณตามโจทย์เหล่านี้ดู การพิมพ์เองและเจอ error เองคือส่วนที่ทำให้จำได้จริง</p>
+
+        <ol>
+          <li>เพิ่ม <code>h2</code> ที่มีคำโปรยของร้านเข้าไปใต้ <code>h1</code> ภายใน div เดียวกัน (คำใบ้: เพิ่ม argument ตัวที่สี่ให้ <code>createElement</code> ของ div)</li>
+          <li>ใส่สีให้หัวข้อโดยส่ง attribute ผ่าน argument ตัวที่สอง เช่น <code>{ style: { color: "crimson" } }</code></li>
+          <li>สร้าง component ใหม่ชื่อ <code>Pizza</code> ที่คืนค่าเป็น div ซึ่งมีชื่อพิซซ่าและคำอธิบายอยู่ข้างใน แล้วเรียกใช้มันภายใน <code>App</code> ด้วย <code>React.createElement(Pizza)</code></li>
+          <li>ลองย้าย <code>&lt;script src="./src/App.js"&gt;</code> ไปไว้ <em>ก่อน</em> script ของ React ดูว่าเกิด error อะไรขึ้น แล้วย้ายกลับที่เดิม การได้เห็น error ด้วยตาตัวเองจะช่วยให้คุณแก้ปัญหาเดียวกันได้เร็วขึ้นในอนาคต</li>
+        </ol>
+
+        <h2>สรุป</h2>
+
+        <ul>
+          <li>React ใช้งานได้โดยไม่ต้องมีเครื่องมือ build ใด ๆ เลย มีแค่ script สองตัวกับ JavaScript ธรรมดา</li>
+          <li>ทุกอย่างใน React สุดท้ายแล้วคือการเรียก <code>React.createElement</code> เพื่ออธิบายว่าหน้าจอควรมีหน้าตาแบบไหน</li>
+          <li><code>ReactDOM.createRoot(container).render(...)</code> คือสะพานเชื่อมระหว่างโลกของ React กับ DOM จริงในเบราว์เซอร์</li>
+          <li>เขียนแบบนี้จริง ๆ แล้วเยิ่นเย้อมาก ลองนึกภาพหน้าเว็บที่มี element ซ้อนกันสิบชั้น — ความน่ารำคาญนี้แหละคือเหตุผลที่ JSX ถือกำเนิดขึ้น และเป็นสิ่งที่เราจะไปเรียนกันหลังจากติดตั้งเครื่องมือครบแล้ว</li>
+        </ul>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="01_intro.html" rel="prev">ก่อนหน้า: บทนำ</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="03_components.html" rel="next">ถัดไป: คอมโพเนนต์</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

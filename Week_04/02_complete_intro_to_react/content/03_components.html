@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้าง React component ที่นำกลับมาใช้ได้และรับ props" />
+    <title>คอมโพเนนต์ | เรียน React ฉบับสมบูรณ์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 03 · React แบบเรียบง่าย (No Frills React)</p>
+          <h1>คอมโพเนนต์</h1>
+          <p class="lesson-original-title" lang="en">Components</p>
+        </header>
+
+        <p>เมื่อทำสิ่งนั้นแล้ว มาย้ายโค้ดออกจาก script tag บน DOM ไปยังไฟล์ script ของตัวเองกัน (เป็นแนวทางปฏิบัติที่ดี)</p>
+
+        <p>แก้ไขโค้ดใน <code>App.js</code> ให้เป็นดังนี้:</p>
+
+        <pre><code class="language-javascript">const Pizza = () =&gt; {
+  return React.createElement("div", {}, [
+    React.createElement("h1", {}, "The Pepperoni Pizza"),
+    React.createElement("p", {}, "Mozzarella Cheese, Pepperoni"),
+  ]);
+};
+
+const App = () =&gt; {
+  return React.createElement("div", {}, [
+    React.createElement("h1", {}, "Pixel Perfect Pizzas"),
+    React.createElement(Pizza),
+    React.createElement(Pizza),
+    React.createElement(Pizza),
+  ]);
+};
+
+const container = document.getElementById("root");
+const root = ReactDOM.createRoot(container);
+root.render(React.createElement(App));
+</code></pre>
+
+        <p class="translator-note">🚨 คุณจะเห็นคำเตือนใน console ของเบราว์เซอร์ว่า <code>Warning: Each child in a list should have a unique "key" prop.</code> คำเตือนสำหรับนักพัฒนาของ React พยายามช่วยให้โค้ดของคุณทำงานเร็วขึ้น โดยพื้นฐาน React จะพยายามติดตาม component ที่สลับลำดับกัน ในรายการ มันทำเช่นนั้นโดยให้คุณกำหนด key เฉพาะที่ติดตามได้ หากเห็นว่าสองสิ่งสลับตำแหน่งกัน มันจะย้าย component แทนที่จะ render ใหม่</p>
+
+        <ul>
+          <li>หากต้องการให้ element มี child หลายตัว เพียงส่ง array ของ element เข้าไป</li>
+          <li>เราสร้าง component ใหม่ตัวที่สอง คือ component <code>Pizza</code> component นี้แทนพิซซ่าหนึ่งถาด เมื่อคุณมีแนวคิดที่แยกจากกันและแสดงด้วย markup ก็ควรแยกมันเป็น component เช่นที่เราทำที่นี่</li>
+          <li>เพราะเรามี component <code>Pizza</code> ใหม่ เราจึงใช้มันได้หลายครั้ง! เพียงเรียก <code>React.createElement</code> หลายครั้ง</li>
+          <li>ใน <code>createElement</code> parameter สองตัวสุดท้ายเป็น optional เนื่องจาก Pizza ไม่มี props หรือ children (มันอาจมีได้ แต่เรายังไม่ได้ทำให้มันใช้) เราจึงละไว้ได้</li>
+        </ul>
+
+        <p>โอเค ตอนนี้เรามีพิซซ่าหลายถาดได้ แต่ยังไม่ใช่ component ที่มีประโยชน์นัก เพราะพิซซ่าทุกถาดไม่ใช่พิซซ่าเปปเปอโรนี มาทำให้ซับซ้อนขึ้นอีกนิด</p>
+
+        <pre><code class="language-javascript">const Pizza = (props) =&gt; {
+  return React.createElement("div", {}, [
+    React.createElement("h1", {}, props.name),
+    React.createElement("p", {}, props.description),
+  ]);
+};
+
+const App = () =&gt; {
+  return React.createElement("div", {}, [
+    React.createElement("h1", {}, "Pixel Perfect Pizzas"),
+    React.createElement(Pizza, {
+      name: "The Pepperoni Pizza",
+      description: "Mozzarella Cheese, Pepperoni",
+    }),
+    React.createElement(Pizza, {
+      name: "The Hawaiian Pizza",
+      description: "Sliced Ham, Pineapple, Mozzarella Cheese",
+    }),
+    React.createElement(Pizza, {
+      name: "The Big Meat Pizza",
+      description: "Bacon, Pepperoni, Italian Sausage, Chorizo Sausage",
+    }),
+  ]);
+};
+
+const container = document.getElementById("root");
+const root = ReactDOM.createRoot(container);
+root.render(React.createElement(App));
+</code></pre>
+
+        <p>ตอนนี้เรามี component ที่ยืดหยุ่นกว่าเดิมและรับ props จาก parent ได้ Props คือ variable ที่ parent (App) ส่งให้ children (instance ของ Pizza) ตอนนี้แต่ละอันจึงแตกต่างกันได้! และมีประโยชน์กว่าเดิมมาก เพราะ component Pizza นี้แทนได้ไม่ใช่แค่พิซซ่าเปปเปอโรนี แต่แทนพิซซ่าใดก็ได้ นี่คือพลังของ React! เราสร้าง component หลายตัวที่นำกลับมาใช้ได้ แล้วใช้ component เหล่านี้สร้าง component ที่ใหญ่ขึ้น ซึ่งจะรวมกันเป็น component ที่ใหญ่กว่าอีก นี่คือวิธีสร้างแอป React!</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="02_react_without_a_build_step.html" rel="prev">ก่อนหน้า: React โดยไม่ต้องมีขั้นตอน Build</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="04_npm.html" rel="next">ถัดไป: npm</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

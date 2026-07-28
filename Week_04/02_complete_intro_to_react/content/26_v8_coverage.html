@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="วัด test coverage ด้วยเครื่องมือ v8 ของ Vitest" /><title>v8 | เรียน React ฉบับสมบูรณ์</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 26 · การทดสอบ (Testing)</p><h1>ความครอบคลุมด้วย v8</h1><p class="lesson-original-title" lang="en">v8</p></header>
+  <p>มีทริกสุดเจ๋งอีกอย่างที่ Vitest มีมาให้: <a href="https://vitest.dev/guide/coverage.html">v8</a> v8 ใช้เครื่องมือ test coverage ที่ built-in ของ Chrome ซึ่งบอกว่าคุณครอบคลุม code ของคุณด้วย tests ไป <em>มากแค่ไหน</em> ผ่าน interactive viewer คุณดูได้ว่า lines ใดถูกหรือไม่ถูกครอบคลุม การตั้งค่านี้เคยน่ารำคาญ แต่ Vitest ทำให้คุณได้เลย</p>
+  <p>รันต่อไปนี้</p>
+  <pre><code class="language-bash">npm i -D @vitest/coverage-v8@2.1.3
+</code></pre>
+  <blockquote><p>คุณใช้ <a href="https://istanbul.js.org/">Istanbul</a> ได้ด้วยหากต้องการ <code>npm i -D @vitest/coverage-istanbul</code> จะได้ package นั้น แต่ฉันว่า v8 เป็นเครื่องมือที่เหนือกว่า</p></blockquote>
+  <p>ตอนนี้เพิ่มสิ่งนี้ใน <code>vite.config.js</code> ของคุณ</p>
+  <pre><code class="language-javascript">// inside the test object
+coverage: {
+  reporter: ["text", "json", "html"],
+},
+</code></pre>
+  <p>เพิ่ม command นี้ใน npm scripts ของคุณ: <code>"coverage": "vitest --coverage"</code> แล้วไปรัน <code>npm run coverage</code> และเปิด file นี้ใน browser: <code>open coverage/index.html</code></p>
+  <p>ที่นี่คุณเห็น files ที่เราเขียน tests ให้แล้ว File หนึ่ง <code>postContact</code> ไม่มี coverage สอง lines (คลิกชื่อ file เพื่อดู): มันคือ line ที่อ่านกลับจาก cache เป็น file ที่เราไม่ได้เขียน test ให้ แต่มันถูก cover ผ่าน test สำหรับ contact page มันขาด test สำหรับ cover error cases ซึ่งอาจสำคัญ ถ้า contact API ของเราล่มล่ะ? เครื่องมือนี้ช่วยให้คุณดู code และเห็นว่า tests ของคุณไม่ cover อะไร บางอย่างอาจไม่เป็นไรและไม่คุ้มแรงที่จะเขียน test บางอย่างคุณจะดูแล้วพูดว่า “โอ้พระเจ้า เราต้อง cover สิ่งนั้นด้วย tests ตั้งแต่เมื่อวาน”</p>
+  <p>สุดท้าย เพิ่ม <code>coverage/</code> ใน <code>.gitignore</code> เพราะไม่ควร check in สิ่งนี้</p>
+  <h2>Istanbul</h2>
+  <p>v8 ใช้ความสามารถ built-in ของ Chrome ในการครอบคลุม code เพื่อ run tests ของคุณ ซึ่งทำให้เร็วขึ้นอย่างมาก และ output ในรูปแบบที่เครื่องมือ <a href="https://istanbul.js.org/">Istanbul</a> ทั้งหมดใช้ได้ คุณบอก Vitest ให้ใช้ Istanbul ได้ แต่เว้นแต่คุณมีเหตุผลเฉพาะมาก ให้ใช้ v8 ดู <a href="https://github.com/bcoe/c8">c8</a> เพิ่มเติมได้หากต้องการบริบทเกี่ยวกับเครื่องมือ coverage ที่เกี่ยวข้อง</p>
+  <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="25_snapshot_testing.html" rel="prev">ก่อนหน้า: Snapshot Testing</a><a href="index.html">สารบัญบทเรียน</a><a href="27_vitest_ui.html" rel="next">ถัดไป: Vitest UI</a></nav>
+</article></main></body></html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ทดสอบ React custom hooks ด้วย renderHook" /><title>Testing Custom Hooks | เรียน React ฉบับสมบูรณ์</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 24 · การทดสอบ (Testing)</p><h1>การทดสอบ Custom Hooks</h1><p class="lesson-original-title" lang="en">Testing Custom Hooks</p></header>
+  <p>สมมติว่าเราต้องการ tests สำหรับ custom hook ของเรา usePizzaOfTheDay การทดสอบ custom hooks มีเคล็ดเล็กน้อย เพราะมันผูกกับการทำงานภายในของ React โดยเนื้อแท้: เรียกมันนอก component ไม่ได้ แล้วเราจะเลี่ยงเรื่องนี้อย่างไร? เราปลอม component! สร้าง file ชื่อ <code>usePizzaOfTheDay.test.jsx</code> ใน <code>__tests__</code> directory ของเรา</p>
+  <pre><code class="language-javascript">import { expect, test, vi } from "vitest";
+import { render } from "@testing-library/react";
+import createFetchMock from "vitest-fetch-mock";
+import { usePizzaOfTheDay } from "../usePizzaOfTheDay";
+
+const fetchMocker = createFetchMock(vi);
+fetchMocker.enableMocks();
+
+const testPizza = {
+  id: "calabrese",
+  name: "The Calabrese Pizza",
+  category: "Supreme",
+  description:
+    "Salami, Pancetta, Tomatoes, Red Onions, Friggitello Peppers, Garlic",
+  image: "/public/pizzas/calabrese.webp",
+  sizes: { S: 12.25, M: 16.25, L: 20.25 },
+};
+
+function getPizzaOfTheDay() {
+  let pizza;
+
+  function TestComponent() {
+    pizza = usePizzaOfTheDay();
+    return null;
+  }
+
+  render(&lt;TestComponent /&gt;);
+
+  return pizza;
+}
+
+test("gives null when first called", async () =&gt; {
+  fetch.mockResponseOnce(JSON.stringify(testPizza));
+  const pizza = getPizzaOfTheDay();
+  expect(pizza).toBeNull();
+});
+</code></pre>
+  <p>การทำ fake component เพื่อ test อะไรบางอย่างดูแปลกนิดหน่อย (เราใกล้เส้นการ test implementation details แบบอันตราย) แต่สิ่งนี้คือ library code โดยแก่น และเราอยากยืนยันว่า code นี้ทำงานหากเราใช้มันบ่อยใน code base ของเรา</p>
+  <p>เราทำให้ดีกว่านี้ได้ ลองเขียน test ใหม่ให้เป็นแบบนี้:</p>
+  <pre><code class="language-javascript">import { renderHook } from "@testing-library/react"; // change import
+
+test("to be null on initial load", async () =&gt; {
+  fetch.mockResponseOnce(JSON.stringify(testPizza));
+  const { result } = renderHook(() =&gt; usePizzaOfTheDay(""));
+  expect(result.current).toBeNull();
+});
+</code></pre>
+  <p>ที่นี่ helper <code>renderHook</code> นามธรรมความแปลกที่เราต้องทำเพื่อทดสอบ hook นั้นออกไป แต่มั่นใจได้ว่ามันทำสิ่งเดียวกันเป็นหลัก: สร้าง component ภายในที่กำลังรัน hook lifecycle methods อย่างเหมาะสมให้คุณ</p>
+  <p>มาเพิ่ม test ให้แน่ใจว่ามันทำสิ่งถูกต้องกับ API response และเรียก API ที่ถูกต้อง</p>
+  <pre><code class="language-javascript">import { renderHook, waitFor } from "@testing-library/react"; // add waitFor
+
+test("to call the API and give back the pizza of the day", async () =&gt; {
+  fetch.mockResponseOnce(JSON.stringify(testPizza));
+  const { result } = renderHook(() =&gt; usePizzaOfTheDay(""));
+  await waitFor(() =&gt; {
+    expect(result.current).toEqual(testPizza);
+  });
+  expect(fetchMocker).toBeCalledWith("/api/pizza-of-the-day");
+});
+</code></pre>
+  <ul><li>waitFor เป็นทริกสะดวกเมื่อคุณต้องรอให้ React settle คุณให้ body ที่ throw errors จนกว่าจะเป็น true <code>expect</code> เมื่อใช้ไม่ได้จะ throw error จึงทำงานแบบนี้</li><li>เมื่อมัน resolve เป็น true ก็ผ่าน test และไปต่อ หากมัน fail ราว 20 ครั้ง (ตั้งค่าได้) ก็จะ fail test</li><li>บางคนคิดว่านี่เข้าไปใน implementation details มากเกินไป และฉันเห็นด้วยครึ่งหนึ่ง อย่างไรก็ตามมันมีประโยชน์จากมุมที่ hook นี้ต้องทำงานบางแบบ และคาดหวัง API ที่จะเรียก ซึ่งส่งผลต่อ user behavior จึงอาจมีประโยชน์ หากนี่เป็น codebase ของเราเองจริง ๆ ฉันคง test PizzaOfTheDay component แล้วจบ แต่หากเราใช้ hook นี้หลายที่ ฉันคงเขียน test สำหรับมัน</li></ul>
+  <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="23_testing_user_interaction.html" rel="prev">ก่อนหน้า: Testing User Interaction</a><a href="index.html">สารบัญบทเรียน</a><a href="25_snapshot_testing.html" rel="next">ถัดไป: Snapshot Testing</a></nav>
+</article></main></body></html>

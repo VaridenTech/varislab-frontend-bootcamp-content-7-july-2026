@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ใช้ useEffect เพื่อโหลดข้อมูล pizza จาก API" />
+    <title>Effects | เรียน React ฉบับสมบูรณ์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 11 · แนวคิดหลักของ React (Core React Concepts)</p>
+          <h1>เอฟเฟกต์</h1>
+          <p class="lesson-original-title" lang="en">Effects</p>
+        </header>
+
+        <h2>Effects</h2>
+
+        <p>ตอนนี้เรามีแอปมากพอที่จะเริ่มทำ API requests ได้แล้ว เราต้องการให้แอปขอ pizzaTypes ชุดแรกเมื่อหน้าโหลดครั้งแรก ดังนั้นมาทำสิ่งนั้นด้วย hook พิเศษชื่อ <code>useEffect</code> <code>useEffect</code> ให้คุณบอกว่า render component นี้ก่อนเพื่อให้ผู้ใช้เห็น<em>บางอย่าง</em> แล้วทันทีที่ render เสร็จ <em>จึง</em>ทำบางอย่าง (สิ่งนั้นในที่นี้คือ effect) กรณีของเรา เราต้องการให้ผู้ใช้เห็น UI ก่อน แล้วจึง request ไปยัง API เพื่อเริ่มต้นรายการ pizzas</p>
+
+        <blockquote>ต้องแน่ใจว่าคุณให้ทั้ง Vite dev server <em>และ</em> API server ทำงานอยู่ ทั้งคู่</blockquote>
+
+        <p>มา refactor Order.jsx</p>
+
+        <pre><code class="language-javascript">// change import at top
+import { useEffect, useState } from "react";
+import Pizza from "./Pizza";
+
+// outside of the render function
+// feel free to change en-US / USD to your locale
+const intl = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
+// add to the other useStates inside component at top
+const [pizzaTypes, setPizzaTypes] = useState([]);
+const [loading, setLoading] = useState(true);
+
+let price, selectedPizza;
+if (!loading) {
+  selectedPizza = pizzaTypes.find((pizza) =&gt; pizzaType === pizza.id);
+  price = intl.format(
+    selectedPizza.sizes ? selectedPizza.sizes[pizzaSize] : ""
+  );
+}
+
+useEffect(() =&gt; {
+  fetchPizzaTypes();
+}, []);
+
+async function fetchPizzaTypes() {
+  await new Promise((resolve) =&gt; setTimeout(resolve, 3000)); // remove this later, just to show you the loading state
+
+  const pizzasRes = await fetch("/api/pizzas");
+  const pizzasJson = await pizzasRes.json();
+  setPizzaTypes(pizzasJson);
+  setLoading(false);
+}
+
+// replace the options
+{
+  pizzaTypes.map((pizza) =&gt; (
+    &lt;option key={pizza.id} value={pizza.id}&gt;
+      {pizza.name}
+    &lt;/option&gt;
+  ));
+}
+
+// replace &lt;Pizza /&gt; and button at the end
+</code></pre>
+
+        <ul>
+          <li>เราใส่ logic ทั้งหมดสำหรับการดึง pizza types ไว้ใน async function เพื่อให้อ่านง่ายขึ้น คุณทำให้ function ที่ส่งให้ useEffect เป็น async ไม่ได้</li>
+          <li><code>[]</code> ท้าย useEffect คือที่ประกาศ data dependencies React ต้องการรู้ว่า<em>เมื่อไร</em>ต้องรัน effect นั้นอีก หากไม่ให้ data dependencies มันจะสมมติว่าทุกครั้งที่ hook ใด ๆ เปลี่ยนควรรัน effect อีก นี่ไม่ดี เพราะหมายความว่าทุกครั้งที่เรียก setPizzaTypes มันจะรัน render และ hooks ทั้งหมดอีก เห็นปัญหาไหม? มันจะรันไม่สิ้นสุด เพราะ fetchPizzaTypes เรียก setPizzaTypes</li>
+          <li>แทนที่คุณจะบอกว่าต้องเฝ้าดู hooks ใดเพื่อหาการเปลี่ยนแปลงได้ กรณีของเรา เราต้องการให้มันรันเพียงครั้งเดียว ตอนสร้าง component แล้วไม่ต้องรัน effect นั้นอีก (เราจะทำ searching ภายหลังผ่านการคลิก submit button) คุณทำให้รันเพียงครั้งเดียวเมื่อสร้างได้ด้วยการให้ empty array</li>
+          <li>เราใช้ loading flag เพื่อแสดง data เมื่อพร้อมเท่านั้น อีกสักครู่เราจะใช้ TanStack Query เพื่อให้โค้ดนี้ดูสะอาดขึ้น แต่นี่คือวิธีแสดง/ซ่อน components แบบมีเงื่อนไขใน React</li>
+          <li>ส่วน <code>key</code> น่าสนใจ เมื่อ React render arrays ของสิ่งต่าง ๆ มันไม่รู้ว่าสิ่งใดเป็นของใหม่และสิ่งใดเพียงถูกจัดลำดับใหม่ใน array (ลองนึกถึงการเปลี่ยน sorting ของ results list เช่น ราคาเรียงสูงไปต่ำแล้วต่ำไปสูง) ด้วยเหตุนี้ หากคุณไม่บอก React ว่าจะจัดการสถานการณ์เหล่านั้นอย่างไร มันจะรื้อทั้งหมดและ re-render ทุกอย่างใหม่ ทำให้ devices ช้าลงโดยไม่จำเป็น นี่คือสิ่งที่ key มีไว้ให้ Key บอก React ว่า “นี่คือ identifier ง่าย ๆ ว่า component นี้คืออะไร” หาก React เห็นว่าคุณเพียงย้าย key ไปอยู่ลำดับอื่น มันจะเก็บ component tree ไว้ ดังนั้น key ที่นี่คือการผูก key เข้ากับสิ่งที่เป็นเอกลักษณ์ของ component นั้น 99/100 นี่คือ database ID บางชนิด <em>อย่า</em>ใช้ index ของ array เพราะไม่ถูกต้อง เว้นแต่ array จะไม่เปลี่ยนลำดับเลยจริง ๆ</li>
+        </ul>
+
+        <h3>อัปเดต Pizza และ Price ที่เลือก</h3>
+
+        <p>เมื่อเลือก pizza เราต้องอัปเดต pizza และ price ที่เลือก ก่อนอื่น มา format price หลัง state <code>selectedPizza</code> ถูกอัปเดต:</p>
+
+        <pre><code class="language-javascript">  if(!loading){
+    selectedPizza = pizzaTypes.find((pizza) =&gt; pizzaType === pizza.id)
+    price = intl.format(selectedPizza.sizes[pizzaSize])
+  }
+</code></pre>
+
+        <p>เมื่อ application โหลด เรายังไม่มี data ดังนั้นเราต้องการ render pizza และ price ที่เลือกเมื่อโหลดเสร็จแล้วเท่านั้น เพิ่ม condition ใน JSX เพื่อแสดง “Loading...” ตอนแรก จากนั้นแสดง pizza ที่เลือกเมื่อโหลดเสร็จ เพิ่ม condition <strong>ก่อน</strong> closing tag <code>&lt;/form&gt;</code>:</p>
+
+        <pre><code class="language-jsx">...
+  {
+    loading ? (
+      &lt;h3&gt;Loading...&lt;/h3&gt;
+    ) : (
+      &lt;div className="order-pizza"&gt;
+        &lt;Pizza
+          name={selectedPizza.name}
+          description={selectedPizza.description}
+          image={selectedPizza.image}
+        /&gt;
+        &lt;p&gt;{price}&lt;/p&gt;
+      &lt;/div&gt;
+    )
+  }
+&lt;/form&gt;
+</code></pre>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="10_hooks.html" rel="prev">ก่อนหน้า: Hooks</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="12_dev_tools.html" rel="next">ถัดไป: Dev Tools</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

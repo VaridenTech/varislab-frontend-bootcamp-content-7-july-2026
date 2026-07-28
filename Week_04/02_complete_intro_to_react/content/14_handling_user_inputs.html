@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="จัดการ input ของผู้ใช้ ตะกร้า และการสั่งซื้อ" />
+    <title>Handling User Inputs | เรียน React ฉบับสมบูรณ์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 14 · แนวคิดหลักของ React (Core React Concepts)</p>
+          <h1>การจัดการข้อมูลที่ผู้ใช้ป้อน</h1>
+          <p class="lesson-original-title" lang="en">Handling User Inputs</p>
+        </header>
+
+        <h2>Handling User Input</h2>
+
+        <p>ตอนนี้เราต้องการจัดการ cart ของผู้ใช้และการส่ง order มาเพิ่มสิ่งที่เราต้องใช้ใน Order.jsx กัน</p>
+
+        <pre><code class="language-javascript">// add import
+import Cart from "./Cart";
+
+// add another hook
+const [cart, setCart] = useState([]);
+
+// replace &lt;form&gt;
+&lt;form
+  onSubmit={(e) =&gt; {
+    e.preventDefault();
+    setCart([...cart, { pizza: selectedPizza, size: pizzaSize, price }]);
+  }}
+&gt;
+  […]
+&lt;/form&gt;;
+
+// just inside the last closing div
+{
+  loading ? &lt;h2&gt;LOADING …&lt;/h2&gt; : &lt;Cart cart={cart} /&gt;
+}
+</code></pre>
+
+        <p>ตอนนี้เราใช้ onSubmit เพื่อจัดการการเพิ่มลง cart ยอดเยี่ยม! จากนั้นเราส่งมันเข้า Cart เพื่อให้แสดงผลอย่างสวยงาม</p>
+
+        <p>มาสร้าง cart กัน สร้างไฟล์ชื่อ Cart.jsx แล้วเพิ่ม</p>
+
+        <pre><code class="language-javascript">const intl = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD", // feel free to change to your local currency
+});
+
+export default function Cart({ cart, checkout }) {
+  let total = 0;
+  for (let i = 0; i &lt; cart.length; i++) {
+    const current = cart[i];
+    total += current.pizza.sizes[current.size];
+  }
+  return (
+    &lt;div className="cart"&gt;
+      &lt;h2&gt;Cart&lt;/h2&gt;
+      &lt;ul&gt;
+        {cart.map((item, index) =&gt; (
+          &lt;li key={index}&gt;
+            &lt;span className="size"&gt;{item.size}&lt;/span&gt; –
+            &lt;span className="type"&gt;{item.pizza.name}&lt;/span&gt; –
+            &lt;span className="price"&gt;{item.price}&lt;/span&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+      &lt;p&gt;Total: {intl.format(total)}&lt;/p&gt;
+      &lt;button onClick={checkout}&gt;Checkout&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <blockquote>โดยปกติการทำ key แบบนี้เป็นความคิดที่ไม่ดี แต่เราคงไม่จัดลำดับ list นี้ใหม่ และก็ไม่สนว่ามัน rerender อยู่แล้ว จึงผ่านได้</blockquote>
+
+        <p>ตอนนี้เรามีประสบการณ์ shopping cart ที่ดี แล้วจะ checkout บน server จริงอย่างไร? มาทำกัน! เราน่าจะทำที่ระดับ Order มันมี Cart อยู่แล้ว และเราปล่อย Cart ไว้เป็น dumb display component ได้ เราเพียงส่ง function เข้า Cart component แล้วเรียกมัน และรัน function ที่ระดับ Order</p>
+
+        <pre><code class="language-javascript">// inside the render body
+async function checkout() {
+  setLoading(true);
+
+  await fetch("/api/order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      cart,
+    }),
+  });
+
+  setCart([]);
+  setLoading(false);
+}
+
+// replace Cart
+&lt;Cart checkout={checkout} cart={cart} /&gt;;
+</code></pre>
+
+        <p>ตอนนี้เราส่ง checkout function เข้าไปได้ และเมื่อใครคลิกใน form มันจะรัน checkout function จาก Order components เรากำลังทำ loading animation ง่าย ๆ ทำ fetch แล้วล้าง status เมื่อทุกอย่างเสร็จ ไม่เลวเลย!</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="13_custom_hooks.html" rel="prev">ก่อนหน้า: Custom Hooks</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="15_context.html" rel="next">ถัดไป: Context</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="จัดการ tests จากเบราว์เซอร์ด้วย Vitest UI" /><title>Vitest UI | เรียน React ฉบับสมบูรณ์</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 27 · การทดสอบ (Testing)</p><h1>การใช้ Vitest UI</h1><p class="lesson-original-title" lang="en">Vitest UI</p></header>
+  <p>อีกเครื่องมือสนุกที่ให้คุณใช้คือ <a href="https://vitest.dev/guide/ui.html">Vitest UI</a> มันให้คุณเห็นและจัดการ tests ทั้งหมดจาก web browser มาเพิ่มมันกัน</p>
+  <pre><code class="language-bash">npm i -D @vitest/ui@2.1.3
+</code></pre>
+  <p>และใน package.json ของคุณ</p>
+  <pre><code class="language-json">// in scripts
+"test:ui": "vitest --ui"
+</code></pre>
+  <p>ตอนนี้จาก command line รัน <code>npm run test:ui</code> แล้วมันควรเปิด browser ของคุณพร้อม Vitest UI สะดวกมาก โดยเฉพาะที่ที่คุณต้อง run individual tests ซ้ำ ๆ และไม่มี VS Code extension module graph ก็เป็น visualization ที่เจ๋งด้วย</p>
+  <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="26_v8_coverage.html" rel="prev">ก่อนหน้า: v8</a><a href="index.html">สารบัญบทเรียน</a><a href="28_browser_tests.html" rel="next">ถัดไป: Browser Tests</a></nav>
+</article></main></body></html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="พื้นฐาน npm ตั้งแต่ package.json, การติดตั้งแพ็กเกจ, semver, lockfile ไปจนถึง npm scripts และ npx" />
+    <title>npm | เรียน React เริ่มต้น</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 04 · เครื่องมือ (Tools)</p>
+          <h1>npm: การจัดการแพ็กเกจ</h1>
+          <p class="lesson-original-title" lang="en">npm</p>
+        </header>
+
+        <p>สองบทที่ผ่านมาเราโหลด React ด้วย <code>&lt;script&gt;</code> จาก CDN ซึ่งใช้ได้ดีตอนเรียน แต่พอโปรเจกต์จริงเริ่มโต วิธีนี้จะพังทันที ลองนึกภาพว่าคุณต้องใช้ไลบรารีสิบตัว แต่ละตัวมีเวอร์ชันของตัวเอง บางตัวต้องพึ่งไลบรารีอื่นอีกที และเพื่อนร่วมทีมของคุณต้องได้เวอร์ชันเดียวกันเป๊ะ ๆ กับคุณ ไม่อย่างนั้นโค้ดจะทำงานคนละแบบ</p>
+
+        <p>นี่คือปัญหาที่ <strong>npm</strong> เกิดมาแก้ และบทนี้จะเป็นบทแรกของกลุ่ม “เครื่องมือ” ที่เราจะค่อย ๆ ประกอบขึ้นมาเองทีละชิ้น</p>
+
+        <h2>npm คืออะไร</h2>
+
+        <p>คนมักพูดถึง npm รวม ๆ เป็นคำเดียว แต่จริง ๆ แล้วมันหมายถึงสามสิ่งที่ทำงานร่วมกัน</p>
+
+        <ul>
+          <li><strong>Registry</strong> — คลังกลางบนอินเทอร์เน็ตที่เก็บแพ็กเกจ open source หลายล้านตัวที่นักพัฒนาทั่วโลกเผยแพร่ไว้ให้ใช้ฟรี</li>
+          <li><strong>คำสั่ง <code>npm</code></strong> — เครื่องมือ command line ที่ติดมากับ Node.js อยู่แล้ว ใช้ดาวน์โหลดแพ็กเกจจาก registry มาลงในโปรเจกต์ของเรา</li>
+          <li><strong><code>package.json</code></strong> — ไฟล์บันทึกว่าโปรเจกต์นี้ต้องใช้แพ็กเกจอะไรบ้าง เวอร์ชันไหน เปรียบเหมือน “ใบสั่งยา” ของโปรเจกต์ ใครได้ไฟล์นี้ไปก็สร้างสภาพแวดล้อมเดียวกับคุณได้</li>
+        </ul>
+
+        <p class="translator-note">💡 เกร็ดเล็กน้อย: npm <em>ไม่ได้</em> ย่อมาจาก “Node Package Manager” — ทีมผู้สร้างไม่เคยประกาศว่ามันย่อมาจากอะไร ถึงมันจะทำหน้าที่นั้นจริง ๆ ก็ตาม</p>
+
+        <h2>ตรวจสอบก่อนเริ่ม</h2>
+
+        <p>npm ติดตั้งมาพร้อม Node.js อยู่แล้ว ไม่ต้องติดตั้งแยก เปิด terminal แล้วลองรัน</p>
+
+        <pre><code class="language-bash">node -v
+npm -v</code></pre>
+
+        <p>ถ้าทั้งสองคำสั่งขึ้นเป็นเลขเวอร์ชัน (เช่น <code>v20.16.0</code> และ <code>10.8.1</code>) แปลว่าคุณพร้อมแล้ว หลักสูตรนี้ต้องการ Node.js เวอร์ชัน 20 ขึ้นไป ถ้าคำสั่งขึ้นว่า <code>command not found</code> ให้ไปดาวน์โหลดตัวติดตั้งจากเว็บไซต์ทางการของ Node.js (ค้นหาคำว่า “Node.js download” แล้วเลือกเวอร์ชัน LTS) จากนั้นปิดแล้วเปิด terminal ใหม่</p>
+
+        <h2>ขั้นที่ 1: เปลี่ยนโฟลเดอร์ให้เป็นโปรเจกต์ npm</h2>
+
+        <p>เข้าไปที่โฟลเดอร์ <code>padre-ginos</code> ของเรา แล้วรัน</p>
+
+        <pre><code class="language-bash">npm init -y</code></pre>
+
+        <p>คุณจะได้ไฟล์ <code>package.json</code> โผล่ขึ้นมา หน้าตาประมาณนี้</p>
+
+        <pre><code class="language-json">{
+  "name": "padre-ginos",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" &amp;&amp; exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}</code></pre>
+
+        <p>ธง <code>-y</code> แปลว่า “ตอบ yes ให้หมด” ใช้ค่าเริ่มต้นทั้งชุดโดยไม่ต้องตอบคำถามทีละข้อ ถ้ารัน <code>npm init</code> เฉย ๆ มันจะถามคุณทีละข้อ ซึ่งกด Enter รัว ๆ ก็ได้ผลเหมือนกัน ทุกค่าในไฟล์นี้แก้ทีหลังได้เสมอ เพราะมันเป็นแค่ไฟล์ข้อความธรรมดา</p>
+
+        <p>ความหมายของแต่ละช่อง</p>
+
+        <ul>
+          <li><code>name</code> และ <code>version</code> — ชื่อและเวอร์ชันของโปรเจกต์คุณเอง สำคัญมากถ้าคุณจะเผยแพร่แพ็กเกจขึ้น registry แต่ถ้าทำแอปใช้เองก็แค่ตั้งให้พอสื่อความหมาย</li>
+          <li><code>description</code>, <code>keywords</code>, <code>author</code>, <code>license</code> — ข้อมูลประกอบ ไม่มีผลต่อการทำงานของโค้ด</li>
+          <li><code>main</code> — ไฟล์เริ่มต้นเมื่อมีคน <code>import</code> แพ็กเกจนี้ เราไม่ได้ใช้ในหลักสูตรนี้</li>
+          <li><code>scripts</code> — คำสั่งลัดของโปรเจกต์ เดี๋ยวเราจะพูดถึงมันด้านล่าง และคุณจะได้ใช้มันแทบทุกวัน</li>
+        </ul>
+
+        <h2>ขั้นที่ 2: ลองติดตั้งแพ็กเกจดูสักตัว</h2>
+
+        <p>เพื่อไม่ให้กระทบโปรเจกต์หลัก ให้สร้างโฟลเดอร์ทดลองแยกต่างหาก (จะวางไว้ไหนก็ได้ที่ไม่ใช่ข้างใน <code>padre-ginos</code>) แล้วทำตามนี้</p>
+
+        <pre><code class="language-bash">mkdir npm-practice
+cd npm-practice
+npm init -y
+npm install dayjs</code></pre>
+
+        <p>สังเกตว่ามีสามอย่างเปลี่ยนไปในโฟลเดอร์นี้</p>
+
+        <ul>
+          <li><strong><code>node_modules/</code></strong> — โฟลเดอร์ที่เก็บโค้ดจริงของแพ็กเกจที่ดาวน์โหลดมา ลองเปิดดูได้ คุณอาจเห็นโฟลเดอร์ย่อยมากกว่าที่ติดตั้งไว้ เพราะแพ็กเกจหนึ่งตัวมักพึ่งพาแพ็กเกจอื่นต่อไปอีกเป็นทอด ๆ (เรียกว่า transitive dependencies) โฟลเดอร์นี้ <strong>ห้าม</strong> เอาขึ้น Git เด็ดขาด</li>
+          <li><strong><code>package.json</code></strong> — มีส่วน <code>dependencies</code> เพิ่มเข้ามา บันทึกว่าเราขอใช้ <code>dayjs</code> เวอร์ชันไหน</li>
+          <li><strong><code>package-lock.json</code></strong> — ไฟล์ที่บันทึกเวอร์ชัน <em>เป๊ะ ๆ</em> ของทุกแพ็กเกจที่ถูกติดตั้งจริง รวมถึงของที่ติดมาเป็นทอด ไฟล์นี้ <strong>ต้อง</strong> เอาขึ้น Git</li>
+        </ul>
+
+        <p>ลองสร้างไฟล์ <code>test.js</code> ในโฟลเดอร์ทดลอง แล้วเรียกใช้แพ็กเกจที่เพิ่งติดตั้งดู</p>
+
+        <pre><code class="language-javascript">const dayjs = require("dayjs");
+
+console.log(dayjs().format("YYYY-MM-DD HH:mm"));</code></pre>
+
+        <p>รันด้วย <code>node test.js</code> ถ้าเห็นวันเวลาปัจจุบันพิมพ์ออกมา แปลว่าคุณเพิ่งใช้โค้ดของคนอื่นในโปรเจกต์ของคุณสำเร็จแล้ว — และนี่คือทั้งหมดที่ npm ทำให้เรา</p>
+
+        <h2>dependencies กับ devDependencies ต่างกันอย่างไร</h2>
+
+        <p>แพ็กเกจแบ่งได้เป็นสองกลุ่มตามว่า “ผู้ใช้ปลายทางต้องการมันด้วยหรือไม่”</p>
+
+        <pre><code class="language-bash">npm install react           # → dependencies
+npm install -D vite         # → devDependencies (ใช้ --save-dev ก็ได้)</code></pre>
+
+        <ul>
+          <li><strong><code>dependencies</code></strong> — โค้ดที่ต้องมีตอนแอปทำงานจริง เช่น React เพราะถ้าไม่มีมันแอปก็รันไม่ได้</li>
+          <li><strong><code>devDependencies</code></strong> — เครื่องมือที่ใช้เฉพาะตอนพัฒนา เช่น Vite, Prettier, ESLint, Vitest ผู้ใช้ที่เปิดเว็บของคุณไม่ต้องโหลดสิ่งเหล่านี้เลย เพราะมันทำงานจบไปตั้งแต่ตอน build บนเครื่องเราแล้ว</li>
+        </ul>
+
+        <p class="translator-note">💡 แยกให้ถูกตั้งแต่แรกจะดีกว่ามาแก้ทีหลัง เพราะถ้าใส่เครื่องมือพัฒนาไว้ใน <code>dependencies</code> เซิร์ฟเวอร์ที่ deploy จะเสียเวลาติดตั้งของที่ไม่จำเป็นทุกครั้ง ในบทถัด ๆ ไปเราจะติดตั้ง Prettier, ESLint และ Vite ด้วย <code>-D</code> เสมอ ส่วน React จะไม่ใส่ <code>-D</code></p>
+
+        <h2>เข้าใจเลขเวอร์ชัน (semver)</h2>
+
+        <p>เปิด <code>package.json</code> ในโฟลเดอร์ทดลอง คุณจะเห็นเลขเวอร์ชันหน้าตาแบบ <code>"dayjs": "^1.11.13"</code> ตัวเลขสามชุดนี้เรียกว่า <strong>semantic versioning</strong> หรือ semver อ่านว่า</p>
+
+        <pre><code class="language-text">1  .  11  .  13
+│      │      └── PATCH — แก้บั๊ก ไม่กระทบการใช้งานเดิม
+│      └───────── MINOR — เพิ่มความสามารถใหม่ ของเดิมยังใช้ได้
+└──────────────── MAJOR — มีการเปลี่ยนแปลงที่ทำให้โค้ดเดิมพัง</code></pre>
+
+        <p>ส่วนสัญลักษณ์ข้างหน้าบอกว่าเรายอมให้อัปเดตไปได้ไกลแค่ไหน</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>ที่เขียนไว้</th>
+              <th>ความหมาย</th>
+              <th>เวอร์ชันที่ยอมรับ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>^1.11.13</code></td>
+              <td>อัปเดต minor และ patch ได้ (ค่าเริ่มต้นของ npm)</td>
+              <td>1.11.13 ถึงต่ำกว่า 2.0.0</td>
+            </tr>
+            <tr>
+              <td><code>~1.11.13</code></td>
+              <td>อัปเดตเฉพาะ patch</td>
+              <td>1.11.13 ถึงต่ำกว่า 1.12.0</td>
+            </tr>
+            <tr>
+              <td><code>1.11.13</code></td>
+              <td>ล็อกเวอร์ชันนี้เท่านั้น</td>
+              <td>1.11.13 เท่านั้น</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>ถ้าอยากติดตั้งเวอร์ชันเจาะจง ให้ใส่ <code>@</code> ตามด้วยเวอร์ชัน เช่น <code>npm install react@18.3.1</code> ซึ่งเป็นวิธีที่เราจะใช้ในบทเรื่อง Vite เพื่อให้ทุกคนได้ผลลัพธ์ตรงกัน</p>
+
+        <h2>package-lock.json สำคัญอย่างไร</h2>
+
+        <p>สังเกตว่า <code>^1.11.13</code> ไม่ได้ระบุเวอร์ชันตายตัว ถ้าเพื่อนร่วมทีมของคุณติดตั้งโปรเจกต์เดียวกันในอีกสองเดือน เขาอาจได้ <code>1.12.0</code> ซึ่งไม่ใช่ตัวเดียวกับที่คุณทดสอบไว้ นี่คือต้นตอของประโยคอมตะที่ว่า “แต่บนเครื่องผมมันรันได้นะ”</p>
+
+        <p><code>package-lock.json</code> แก้ปัญหานี้ด้วยการจดเวอร์ชันที่ถูกติดตั้ง <em>จริง</em> เอาไว้ทุกตัว เมื่อไฟล์นี้อยู่ใน Git ทุกคนที่ <code>npm install</code> จะได้ต้นไม้แพ็กเกจชุดเดียวกันเป๊ะ</p>
+
+        <pre><code class="language-bash">npm install   # อ่าน package.json ติดตั้ง และอัปเดต lockfile ได้
+npm ci        # อ่าน package-lock.json อย่างเดียว ติดตั้งแบบเป๊ะ ๆ</code></pre>
+
+        <p><code>npm ci</code> (ย่อจาก clean install) จะลบ <code>node_modules</code> แล้วติดตั้งใหม่ตาม lockfile เป๊ะ ๆ โดยไม่แก้ไขอะไรเลย จึงเป็นคำสั่งที่ระบบ CI/CD และเซิร์ฟเวอร์ deploy ใช้กัน ส่วนบนเครื่องเราตอนพัฒนาให้ใช้ <code>npm install</code> ตามปกติ</p>
+
+        <p class="translator-note">🚨 อย่าแก้ <code>package-lock.json</code> ด้วยมือ และอย่าลบทิ้งเพื่อแก้ปัญหา ให้ปล่อยให้ npm จัดการ ถ้าติดตั้งแล้วมีปัญหาแปลก ๆ วิธีล้างที่ปลอดภัยคือลบ <code>node_modules</code> ทิ้งแล้วรัน <code>npm install</code> ใหม่</p>
+
+        <h2>อย่าเอา node_modules ขึ้น Git</h2>
+
+        <p>โฟลเดอร์ <code>node_modules</code> มีขนาดใหญ่มาก (หลักร้อย MB ได้ง่าย ๆ) มีไฟล์เป็นหมื่น และสร้างใหม่ได้เสมอจาก <code>package.json</code> กับ <code>package-lock.json</code> จึงไม่มีเหตุผลที่จะเก็บมันไว้ในระบบควบคุมเวอร์ชัน</p>
+
+        <p>สร้างไฟล์ชื่อ <code>.gitignore</code> ที่ root ของ <code>padre-ginos</code> แล้วใส่</p>
+
+        <pre><code class="language-text">node_modules/</code></pre>
+
+        <p>เราจะพูดถึง <code>.gitignore</code> อย่างละเอียดอีกครั้งในบทเรื่อง Git แต่ใส่บรรทัดนี้ไว้ก่อนได้เลย เพราะเราจะเริ่มติดตั้งแพ็กเกจกันในบทถัดไป</p>
+
+        <h2>npm scripts: คำสั่งลัดของโปรเจกต์</h2>
+
+        <p>ช่อง <code>scripts</code> ใน <code>package.json</code> ให้เราตั้งชื่อย่อให้คำสั่งยาว ๆ ได้ ลองแก้ <code>package.json</code> ของโฟลเดอร์ทดลองเป็นแบบนี้</p>
+
+        <pre><code class="language-json">"scripts": {
+  "start": "node test.js",
+  "greet": "echo สวัสดีจาก npm script"
+}</code></pre>
+
+        <p>แล้วเรียกใช้ด้วย</p>
+
+        <pre><code class="language-bash">npm run greet
+npm run start   # หรือเขียนสั้น ๆ ว่า npm start ก็ได้</code></pre>
+
+        <p>ข้อดีที่ทำให้ทุกโปรเจกต์ใช้ scripts กัน</p>
+
+        <ul>
+          <li>คนที่เพิ่งเข้าโปรเจกต์ไม่ต้องมานั่งจำคำสั่งยาว ๆ พร้อม option เต็มไปหมด แค่เปิดดู <code>scripts</code> ก็รู้ว่าโปรเจกต์นี้ทำอะไรได้บ้าง</li>
+          <li>ภายใน script คุณเรียกคำสั่งของแพ็กเกจใน <code>node_modules</code> ได้ตรง ๆ โดยไม่ต้องติดตั้งแบบ global</li>
+          <li>ชื่อ <code>start</code>, <code>test</code>, <code>build</code>, <code>dev</code> เป็นชื่อที่ใช้กันเป็นมาตรฐาน ควรใช้ตามธรรมเนียม</li>
+        </ul>
+
+        <p>ในบทถัด ๆ ไปเราจะเพิ่ม scripts สำหรับ format โค้ด ตรวจ lint รัน dev server และรันเทสต์ จนสุดท้ายโปรเจกต์ทั้งหมดสั่งงานได้จาก <code>npm run</code> เพียงคำสั่งเดียว</p>
+
+        <h2>npx คืออะไร</h2>
+
+        <p>คุณเห็นคำสั่ง <code>npx serve</code> ไปแล้วในบทที่ 2 <strong><code>npx</code></strong> คือเครื่องมือที่ติดมากับ npm ไว้สำหรับ <em>รัน</em> แพ็กเกจโดยไม่ต้องติดตั้งถาวร มันจะหาแพ็กเกจใน <code>node_modules</code> ของโปรเจกต์ก่อน ถ้าไม่เจอก็จะดาวน์โหลดมาใช้ชั่วคราวแล้วลบทิ้ง</p>
+
+        <pre><code class="language-bash">npx prettier --write src/App.js   # รันครั้งเดียว ไม่ต้องติดตั้งค้างไว้
+npm install -g prettier           # ติดตั้งถาวรทั้งเครื่อง</code></pre>
+
+        <p>โดยทั่วไป <strong>ควรหลีกเลี่ยงการติดตั้งแบบ global</strong> (<code>-g</code>) เพราะแต่ละโปรเจกต์อาจต้องใช้เครื่องมือคนละเวอร์ชันกัน การติดตั้งเป็น devDependency ของโปรเจกต์แล้วเรียกผ่าน npm script หรือ <code>npx</code> จะทำให้ทุกคนในทีมได้เวอร์ชันเดียวกันเสมอ</p>
+
+        <h2>คำสั่งที่ใช้บ่อย</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>คำสั่ง</th>
+              <th>ทำอะไร</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>npm init -y</code></td>
+              <td>สร้าง <code>package.json</code> ด้วยค่าเริ่มต้น</td>
+            </tr>
+            <tr>
+              <td><code>npm install</code></td>
+              <td>ติดตั้งทุกอย่างที่ระบุไว้ใน <code>package.json</code></td>
+            </tr>
+            <tr>
+              <td><code>npm install &lt;ชื่อ&gt;</code></td>
+              <td>เพิ่มแพ็กเกจเข้า <code>dependencies</code></td>
+            </tr>
+            <tr>
+              <td><code>npm install -D &lt;ชื่อ&gt;</code></td>
+              <td>เพิ่มแพ็กเกจเข้า <code>devDependencies</code></td>
+            </tr>
+            <tr>
+              <td><code>npm uninstall &lt;ชื่อ&gt;</code></td>
+              <td>ถอนแพ็กเกจออกจากโปรเจกต์</td>
+            </tr>
+            <tr>
+              <td><code>npm outdated</code></td>
+              <td>ดูว่าแพ็กเกจไหนมีเวอร์ชันใหม่กว่าที่ใช้อยู่</td>
+            </tr>
+            <tr>
+              <td><code>npm update</code></td>
+              <td>อัปเดตแพ็กเกจภายในขอบเขตที่ semver อนุญาต</td>
+            </tr>
+            <tr>
+              <td><code>npm ls</code></td>
+              <td>แสดงต้นไม้ของแพ็กเกจที่ติดตั้งอยู่</td>
+            </tr>
+            <tr>
+              <td><code>npm run &lt;ชื่อ script&gt;</code></td>
+              <td>รัน script ที่ตั้งไว้ใน <code>package.json</code></td>
+            </tr>
+            <tr>
+              <td><code>npx &lt;ชื่อ&gt;</code></td>
+              <td>รันแพ็กเกจโดยไม่ติดตั้งถาวร</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>ทางเลือกอื่นนอกจาก npm</h2>
+
+        <p>ยังมี package manager ตัวอื่นที่ใช้ registry เดียวกันและอ่าน <code>package.json</code> รูปแบบเดียวกัน ที่พบบ่อยคือ <strong>pnpm</strong> ซึ่งประหยัดพื้นที่ดิสก์และติดตั้งเร็วกว่าด้วยการใช้ symlink ชี้ไปยังคลังกลางแทนการคัดลอกไฟล์ซ้ำทุกโปรเจกต์ และ <strong>Yarn</strong> ซึ่งเคยเป็นตัวเลือกหลักในยุคที่ npm ยังช้า</p>
+
+        <p>ทั้งหมดใช้งานได้ดี และแนวคิดที่คุณเรียนในบทนี้ใช้ได้กับทุกตัว หลักสูตรนี้จะใช้ <code>npm</code> ตลอด เพราะมันติดมากับ Node.js อยู่แล้วไม่ต้องติดตั้งเพิ่ม</p>
+
+        <p class="translator-note">🚨 ข้อควรระวัง: เลือกใช้ตัวเดียวต่อหนึ่งโปรเจกต์ อย่าสลับไปมา เพราะแต่ละตัวสร้าง lockfile คนละไฟล์ (<code>package-lock.json</code>, <code>pnpm-lock.yaml</code>, <code>yarn.lock</code>) การมีหลาย lockfile ในโปรเจกต์เดียวเป็นบ่อเกิดของปัญหาที่หาสาเหตุยากมาก</p>
+
+        <h2>ลองทำเอง</h2>
+
+        <ol>
+          <li>ในโฟลเดอร์ทดลอง ลองรัน <code>npm ls</code> แล้วเทียบกับจำนวนโฟลเดอร์ใน <code>node_modules</code> ว่าทำไมถึงไม่เท่ากัน</li>
+          <li>ติดตั้งเวอร์ชันเจาะจงด้วย <code>npm install dayjs@1.11.0</code> แล้วเปิดดูว่า <code>package.json</code> กับ <code>package-lock.json</code> เปลี่ยนไปอย่างไร</li>
+          <li>ลบ <code>node_modules</code> ทิ้งทั้งโฟลเดอร์ แล้วรัน <code>npm install</code> ใหม่ สังเกตว่าทุกอย่างกลับมาเหมือนเดิมได้จาก <code>package.json</code> — นี่คือเหตุผลที่เราไม่ต้องเก็บโฟลเดอร์นี้ไว้ใน Git</li>
+          <li>เพิ่ม script ชื่อ <code>hello</code> ที่รัน <code>node test.js</code> แล้วเรียกด้วย <code>npm run hello</code></li>
+          <li>ถอนแพ็กเกจออกด้วย <code>npm uninstall dayjs</code> แล้วดูว่าส่วน <code>dependencies</code> หายไปหรือไม่ จากนั้นลองรัน <code>node test.js</code> อีกครั้งเพื่อดูว่า error หน้าตาเป็นอย่างไร</li>
+        </ol>
+
+        <p>เสร็จแล้วลบโฟลเดอร์ <code>npm-practice</code> ทิ้งได้เลย ส่วน <code>padre-ginos</code> ของเราตอนนี้ควรมี <code>package.json</code> และ <code>.gitignore</code> เตรียมไว้สำหรับบทถัดไป</p>
+
+        <h2>สรุป</h2>
+
+        <ul>
+          <li>npm คือ registry, คำสั่ง command line และรูปแบบไฟล์ <code>package.json</code> ที่ทำงานร่วมกัน</li>
+          <li><code>package.json</code> บอกว่าเราต้องการอะไร ส่วน <code>package-lock.json</code> บอกว่าเราได้อะไรมาจริง ๆ — ทั้งสองไฟล์ต้องอยู่ใน Git ส่วน <code>node_modules</code> ต้องไม่อยู่</li>
+          <li>แยก <code>dependencies</code> (สิ่งที่แอปต้องใช้ตอนรันจริง) ออกจาก <code>devDependencies</code> (เครื่องมือตอนพัฒนา) ให้ชัดเจน</li>
+          <li>เข้าใจ semver แล้วคุณจะรู้ว่า <code>^</code> กับ <code>~</code> เปิดช่องให้อะไรเปลี่ยนได้บ้าง</li>
+          <li>ใช้ npm scripts เป็นหน้าต่างสั่งงานของโปรเจกต์ และใช้ <code>npx</code> แทนการติดตั้งเครื่องมือแบบ global</li>
+        </ul>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="03_components.html" rel="prev">ก่อนหน้า: คอมโพเนนต์</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="05_code_formatting.html" rel="next">ถัดไป: การจัดรูปแบบโค้ด</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
