@@ -43,14 +43,14 @@ npm -v</code></pre>
 
         <h2>ขั้นที่ 1: เปลี่ยนโฟลเดอร์ให้เป็นโปรเจกต์ npm</h2>
 
-        <p>เข้าไปที่โฟลเดอร์ <code>padre-ginos</code> ของเรา แล้วรัน</p>
+        <p>เข้าไปที่โฟลเดอร์ <code>pizza-app</code> ของเรา แล้วรัน</p>
 
         <pre><code class="language-bash">npm init -y</code></pre>
 
         <p>คุณจะได้ไฟล์ <code>package.json</code> โผล่ขึ้นมา หน้าตาประมาณนี้</p>
 
         <pre><code class="language-json">{
-  "name": "padre-ginos",
+  "name": "pizza-app",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -75,7 +75,7 @@ npm -v</code></pre>
 
         <h2>ขั้นที่ 2: ลองติดตั้งแพ็กเกจดูสักตัว</h2>
 
-        <p>เพื่อไม่ให้กระทบโปรเจกต์หลัก ให้สร้างโฟลเดอร์ทดลองแยกต่างหาก (จะวางไว้ไหนก็ได้ที่ไม่ใช่ข้างใน <code>padre-ginos</code>) แล้วทำตามนี้</p>
+        <p>เพื่อไม่ให้กระทบโปรเจกต์หลัก ให้สร้างโฟลเดอร์ทดลองแยกต่างหาก (จะวางไว้ไหนก็ได้ที่ไม่ใช่ข้างใน <code>pizza-app</code>) แล้วทำตามนี้</p>
 
         <pre><code class="language-bash">mkdir npm-practice
 cd npm-practice
@@ -169,7 +169,7 @@ npm ci        # อ่าน package-lock.json อย่างเดียว �
 
         <p>โฟลเดอร์ <code>node_modules</code> มีขนาดใหญ่มาก (หลักร้อย MB ได้ง่าย ๆ) มีไฟล์เป็นหมื่น และสร้างใหม่ได้เสมอจาก <code>package.json</code> กับ <code>package-lock.json</code> จึงไม่มีเหตุผลที่จะเก็บมันไว้ในระบบควบคุมเวอร์ชัน</p>
 
-        <p>สร้างไฟล์ชื่อ <code>.gitignore</code> ที่ root ของ <code>padre-ginos</code> แล้วใส่</p>
+        <p>สร้างไฟล์ชื่อ <code>.gitignore</code> ที่ root ของ <code>pizza-app</code> แล้วใส่</p>
 
         <pre><code class="language-text">node_modules/</code></pre>
 
@@ -279,7 +279,7 @@ npm install -g prettier           # ติดตั้งถาวรทั้�
           <li>ถอนแพ็กเกจออกด้วย <code>npm uninstall dayjs</code> แล้วดูว่าส่วน <code>dependencies</code> หายไปหรือไม่ จากนั้นลองรัน <code>node test.js</code> อีกครั้งเพื่อดูว่า error หน้าตาเป็นอย่างไร</li>
         </ol>
 
-        <p>เสร็จแล้วลบโฟลเดอร์ <code>npm-practice</code> ทิ้งได้เลย ส่วน <code>padre-ginos</code> ของเราตอนนี้ควรมี <code>package.json</code> และ <code>.gitignore</code> เตรียมไว้สำหรับบทถัดไป</p>
+        <p>เสร็จแล้วลบโฟลเดอร์ <code>npm-practice</code> ทิ้งได้เลย ส่วน <code>pizza-app</code> ของเราตอนนี้ควรมี <code>package.json</code> และ <code>.gitignore</code> เตรียมไว้สำหรับบทถัดไป</p>
 
         <h2>สรุป</h2>
 

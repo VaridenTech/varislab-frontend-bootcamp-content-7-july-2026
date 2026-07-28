@@ -79,7 +79,43 @@ rules: {
 },
 </code></pre>
 
-        <p>คุณยังคัดลอก configuration ฉบับเต็มจาก <a href="https://github.com/btholt/citr-v9-project/blob/main/03-jsx/eslint.config.mjs">repository</a> ได้ด้วย</p>
+        <p>ถ้าไม่แน่ใจว่าประกอบร่างถูกหรือไม่ นี่คือหน้าตาของ <code>eslint.config.mjs</code> ฉบับเต็มหลังแก้เสร็จ</p>
+
+        <pre><code class="language-javascript">import js from "@eslint/js";
+import globals from "globals";
+import prettier from "eslint-config-prettier";
+import reactPlugin from "eslint-plugin-react";
+
+/** @type {import('eslint').Linter.Config[]} */
+export default [
+  js.configs.recommended,
+  {
+    ...reactPlugin.configs.flat.recommended,
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
+  },
+  reactPlugin.configs.flat["jsx-runtime"],
+  {
+    files: ["**/*.js", "**/*.jsx"],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+    rules: {
+      "react/no-unescaped-entities": "off",
+      "react/prop-types": "off",
+    },
+  },
+  prettier,
+];
+</code></pre>
 
         <p>เราต้องเพิ่มสอง configs: อันหนึ่งให้ ESLint เข้าใจ React และเพิ่มกฎ React พื้นฐาน และอีกอันทำให้ทันสมัยขึ้น เพราะ React 17 เปลี่ยนวิธีที่ ESLint โต้ตอบกับ React ไปเล็กน้อย</p>
 
@@ -99,7 +135,7 @@ import Pizza from "./Pizza";
 const App = () =&gt; {
   return (
     &lt;div&gt;
-      &lt;h1&gt;Padre Gino's Pizza – Order Now&lt;/h1&gt;
+      &lt;h1&gt;Pizza app – Order Now&lt;/h1&gt;
       &lt;Pizza name="Pepperoni" description="Mozzarella Cheese, Pepperoni" /&gt;
       &lt;Pizza
         name="The Hawaiian Pizza"
@@ -127,13 +163,25 @@ root.render(&lt;App /&gt;);
 
         <p>ตอนนี้เราส่ง props ลงไปเหมือนเราเพิ่ม attributes ให้ HTML tag เจ๋งดี</p>
 
-        <p>คุณทดสอบแอปได้ด้วยการรัน <code>npm run dev</code> และเปิด URL ที่แสดงใน terminal โดยทั่วไปคือ <a href="http://localhost:5173/">http://localhost:5173/</a></p>
+        <p>คุณทดสอบแอปได้ด้วยการรัน <code>npm run dev</code> และเปิด URL ที่แสดงใน terminal โดยทั่วไปคือ <code>http://localhost:5173/</code></p>
 
         <h2>API / Image Server</h2>
 
-        <p>สำหรับหลักสูตรนี้เราจะใช้ Fastify server เล็ก ๆ ที่ฉันสร้างไว้ให้ อยู่ใน directory <a href="https://github.com/btholt/citr-v9-project/tree/main/api">api</a> เราจะใช้ Vite.js ทำ proxy ไปยัง API server นี้ นี่เป็นเทคนิคมีประโยชน์สำหรับ local development หากคุณมี frontend แยกจาก backend โดยปกติคุณอาจมี NGINX คอย route traffic ไปยัง frontend และ backend servers ที่แยกกัน ตอนนี้เราจะใช้ Vite ไปก่อน</p>
+        <p>ต่อจากนี้แอปของเราจะเริ่มดึงข้อมูลพิซซ่าและรูปภาพจาก backend แทนที่จะเขียนข้อมูลตายตัวไว้ในโค้ด หลักสูตรนี้จึงเตรียม API server ขนาดเล็กที่เขียนด้วย Fastify มาให้พร้อมแล้ว</p>
 
-        <blockquote>หมายเหตุ: นี่หมายความว่าคุณต้องมี terminal windows <strong>สอง</strong> หน้าต่างทำงานอยู่ หนึ่ง terminal สำหรับ API server (เมื่อมันทำงานแล้วคุณไม่ต้องแตะมัน) อีก terminal หนึ่งคือ Vite server สำหรับ web app ของเรา</blockquote>
+        <p><strong>คุณไม่ต้องไป clone repository จากที่ไหนทั้งสิ้น</strong> เซิร์ฟเวอร์อยู่ในไฟล์หลักสูตรที่คุณมีอยู่แล้ว ที่โฟลเดอร์ <code>api</code> ซึ่งวางอยู่ระดับเดียวกับโฟลเดอร์ <code>content</code> ที่เก็บบทเรียนเหล่านี้</p>
+
+        <pre><code class="language-text">02_complete_intro_to_react/
+├── api/          ← API server อยู่ตรงนี้
+│   ├── server.js
+│   ├── package.json
+│   ├── pizza.sqlite      (ฐานข้อมูลพิซซ่าและออร์เดอร์)
+│   └── public/           (รูปพิซซ่าและ style.css)
+└── content/      ← บทเรียนที่คุณกำลังอ่านอยู่</code></pre>
+
+        <p>เราจะใช้ Vite ทำ proxy ไปยัง API server นี้ เป็นเทคนิคที่มีประโยชน์มากสำหรับการพัฒนาบนเครื่องตัวเองเมื่อ frontend กับ backend แยกกันอยู่คนละที่ บนระบบจริงคุณอาจมี NGINX คอย route traffic ไปยัง frontend และ backend server ที่แยกกัน แต่ตอนนี้ให้ Vite ทำหน้าที่นั้นแทนไปก่อน</p>
+
+        <blockquote>หมายเหตุ: นี่แปลว่าคุณต้องเปิด terminal ไว้ <strong>สอง</strong> หน้าต่างพร้อมกัน หน้าต่างหนึ่งสำหรับ API server (เปิดทิ้งไว้ ไม่ต้องแตะอีก) อีกหน้าต่างสำหรับ Vite dev server ของแอปเรา</blockquote>
 
         <p>เพิ่มสิ่งนี้ใน vite.config.js ของคุณ</p>
 
@@ -157,20 +205,20 @@ export default defineConfig({
 
         <h2>รัน API Server</h2>
 
-        <p>หากคุณยังไม่ได้ทำก่อนหน้านี้ในหลักสูตร ให้ดาวน์โหลดหรือ clone <a href="https://github.com/btholt/citr-v9-project">citr-v9-project repo</a> คุณต้องใช้เฉพาะ directory <code>api</code> สำหรับ API server</p>
+        <p>เปิด terminal <em>ใหม่อีกหน้าต่างหนึ่ง</em> (อย่าปิดหน้าต่างที่รัน Vite อยู่) แล้วเข้าไปที่โฟลเดอร์ <code>api</code> ของหลักสูตร สังเกตว่าเซิร์ฟเวอร์นี้อยู่ <em>นอก</em> โฟลเดอร์โปรเจกต์ <code>pizza-app</code> ของคุณ มันเป็นคนละโปรเจกต์กัน มี <code>package.json</code> เป็นของตัวเอง</p>
 
-        <p>เปิด terminal ใหม่และไปที่ directory <code>api</code> สังเกตว่า server นี้อยู่<em>นอก</em> project directory ของคุณ</p>
+        <p>ใช้ <strong>Node.js เวอร์ชัน 20 ขึ้นไป</strong> ติดตั้ง dependencies แล้วสั่งรัน (ทำครั้งแรกครั้งเดียว ครั้งต่อ ๆ ไปข้าม <code>npm install</code> ได้เลย)</p>
 
-        <p>โดยใช้ <strong>Node 20 หรือสูงกว่า</strong> เข้าไปใน directory <code>api</code> ติดตั้ง dependencies แล้วรัน server:</p>
-
-        <pre><code class="language-bash">cd citr-v9-project/api
+        <pre><code class="language-bash">cd path/to/02_complete_intro_to_react/api
 npm install
 npm run dev
 </code></pre>
 
-        <p>server ควรเริ่มที่ port 3000 เพื่อยืนยันว่าทำงานอยู่ ให้ไปที่ <a href="http://localhost:3000/api/pizzas">http://localhost:3000/api/pizzas</a> แล้วคุณจะเห็น pizza JSON data</p>
+        <p>เซิร์ฟเวอร์จะเริ่มทำงานที่ port 3000 เพื่อยืนยันว่ามันทำงานจริง ให้เปิด <code>http://localhost:3000/api/pizzas</code> ในเบราว์เซอร์ คุณจะเห็นข้อมูลพิซซ่าเป็น JSON ออกมาเป็นชุดยาว ๆ</p>
 
-        <p>คุณต้องให้ทั้งสอง servers ทำงานพร้อมกัน ด้วย Vite proxy configuration ข้างต้น Vite server จะ intercept การเรียก <code>api</code> และ <code>public</code> ใน React application แล้วเปลี่ยนเส้นทางไปยัง API server ของคุณ!</p>
+        <p class="translator-note">🔍 <strong>ถ้าติดปัญหา</strong> — <code>EADDRINUSE</code> แปลว่ามีอย่างอื่นใช้ port 3000 อยู่แล้ว ให้ปิดโปรแกรมนั้นก่อน หรือสั่ง <code>PORT=3001 npm run dev</code> แล้วอย่าลืมแก้ค่า <code>target</code> ใน <code>vite.config.js</code> ให้ตรงกัน · ถ้า <code>npm install</code> ล้มเหลวที่แพ็กเกจ <code>sqlite3</code> ให้ตรวจสอบว่าใช้ Node.js เวอร์ชัน 20 ขึ้นไปด้วย <code>node -v</code> · รายละเอียดเพิ่มเติมเกี่ยวกับเซิร์ฟเวอร์นี้และรายการ endpoint ทั้งหมด อ่านได้ใน <code>api/README.md</code></p>
+
+        <p>คุณต้องให้เซิร์ฟเวอร์ทั้งสองตัวทำงานพร้อมกัน ด้วย proxy configuration ข้างต้น Vite จะดักคำขอที่ขึ้นต้นด้วย <code>/api</code> และ <code>/public</code> จากแอป React แล้วส่งต่อไปยัง API server ให้เอง แอปของเราจึงเรียก <code>fetch("/api/pizzas")</code> ได้ตรง ๆ เหมือนกับว่าทุกอย่างอยู่ที่เดียวกัน</p>
 
         <p>ตอนนี้มาเพิ่ม images ให้ Pizza ของเรา</p>
 
@@ -191,8 +239,6 @@ image={"/public/pizzas/big_meat.webp"}
 </code></pre>
 
         <p>และตอนนี้คุณก็ควรมี images แล้ว!</p>
-
-        <!-- Source reference definitions retained for parity: https://github.com/airbnb/javascript/tree/master/packages/eslint-config-airbnb https://standardjs.com/ -->
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="08_vite.html" rel="prev">ก่อนหน้า: Vite</a>
