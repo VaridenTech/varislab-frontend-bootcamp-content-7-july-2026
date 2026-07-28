@@ -66,6 +66,10 @@ const menuGridElement = document.getElementById("menuGrid");
 const cartItemsElement = document.getElementById("cartItems");
 const emptyCartMessageElement = document.getElementById("emptyCartMessage");
 
+const subtotalElement = document.getElementById("subtotal");
+const taxElement = document.getElementById("tax");
+const totalElement = document.getElementById("total");
+
 function formatPrice(price: number): string {
   return `฿${price.toFixed(2)}`;
 }
@@ -228,9 +232,44 @@ function renderCartItems(): void {
   });
 }
 
+function calculateSubtotal(): number {
+  let subtotal = 0;
+
+  menuItems.forEach((item) => {
+    const quantity = getQuantity(item.id);
+
+    subtotal = subtotal + (item.price * quantity) 
+  });
+
+  return subtotal;
+}
+
+function calculateTax(subtotal: number): number {
+  return subtotal * TAX_RATE;
+}
+
+function calculateTotal(subtotal: number, tax: number): number {
+  return subtotal + tax;
+}
+
+function renderSummary(): void {
+  if (!subtotalElement || !taxElement || !totalElement) {
+    return;
+  }
+
+  const subtotal = calculateSubtotal();
+  const tax = calculateTax(subtotal);
+  const total = calculateTotal(subtotal, tax);
+
+  subtotalElement.textContent = formatPrice(subtotal);
+  taxElement.textContent = formatPrice(tax);
+  totalElement.textContent = formatPrice(total);
+}
+
 function renderApp(): void {
   renderMenuItems();
   renderCartItems();
+  renderSummary();
 }
 
 setupMenuClickEvents();
