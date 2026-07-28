@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ทำความรู้จักฟีเจอร์ React 19 ที่กำลังมาถึง" /><title>React 19 | เรียน React ฉบับสมบูรณ์</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 30 · What's Next</p><h1>React 19: สิ่งที่กำลังมาถึง</h1><p class="lesson-original-title">React 19</p></header>
+  <blockquote><p>🚨 ส่วนที่เหลือของหลักสูตรครอบคลุมฟีเจอร์ experimental ของ React 19 หากอยากลองฟีเจอร์เหล่านี้โดยไม่กระทบโปรเจกต์ปัจจุบัน เราแนะนำให้ใช้โปรเจกต์ <code>14-testing</code></p></blockquote>
+  <p>หลักสูตรนี้มุ่งที่เวอร์ชัน 18.3 ข้อดีของ React คือ แม้จะมี breaking changes แต่โดยทั่วไปทีมจะตั้งใจทำและทำอย่างประหยัด กล่าวคือ สิ่งที่คุณเรียนวันนี้ยังมีประโยชน์อีกห้าปีนับจากนี้ คุณสามารถเรียนหลักสูตรเวอร์ชันที่ฉันสอนเมื่อห้าปีก่อน แล้วก็ยังตามวิธีเขียน React ได้เกือบทั้งหมด กล่าวคือ แม้ React 19 จะใกล้ออกแล้ว (หรืออาจออกแล้วตอนคุณอ่านอยู่) ก็ไม่ต้องตื่นตระหนก ของใหม่ทั้งหมดจะเพียงเสริมสิ่งที่คุณเรียนมา ไม่ได้เปลี่ยนมัน</p>
+  <p>คอยดู Intermediate React เวอร์ชัน 6 ของฉันไว้ด้วย เราจะครอบคลุมฟีเจอร์ React 19 จำนวนมากในหลักสูตรนั้น</p>
+  <p>ดังนั้น ในเมื่อ React 19 ใกล้ออกแล้ว และเรารู้แล้ว 95% ว่าจะมีอะไรบ้าง เราจะดูฟีเจอร์บางอย่างเพื่อให้คุณพร้อมสำหรับมัน จำไว้ว่าจะใช้ React 19 release candidate ซึ่งหมายความว่า แม้แนวคิดใหญ่ ๆ ไม่น่าจะเปลี่ยน แต่ API ที่แน่นอนอาจถูกปรับได้ จึงอาจเปลี่ยนเล็กน้อย</p>
+  <p>อย่างแรก มาคุยถึงฟีเจอร์เจ๋ง ๆ บางตัวที่ไม่คุ้มกับการใช้เวลาเขียนโค้ดมากนักก่อน แล้วค่อยดูตัวที่เราจะเพิ่มโค้ดลงในแอปจริง</p>
+  <h2><code>'use client'</code> และ <code>'use server'</code></h2>
+  <p>เริ่มด้วยหนึ่งในการเปลี่ยนแปลงใหญ่ของ React เราจะครอบคลุมเรื่องนี้ <em>อย่างละเอียด</em> ใน Intermediate React ดังนั้นหากสนใจก็ไปดูหลักสูตรนั้นเมื่อออกมา โดยพื้นฐานเราสามารถบอก React ได้ว่า “เฮ้ รัน component นี้บน server เท่านั้น” หรือกลับกัน “เฮ้ render เฉพาะฝั่ง client” ทำไปทำไม?</p>
+  <p>สำหรับ server components เราทำสิ่งต่าง ๆ เช่นอ้างอิง secrets ฝั่ง server, query database, เรียก private APIs หรือสิ่งอื่นที่แอปฝั่ง client ต้องการข้อมูล แต่ไม่สามารถ query จาก client ได้โดยไม่เสี่ยงทำ secrets รั่วหรือโดน DDOS logic ทั้งหมดจะทำงานบน server แล้วส่ง component ที่เสร็จแล้วมายัง client เจ๋งใช่ไหม?</p>
+  <p>พวกเขาไปไกลกว่านั้นด้วย <code>taintUniqueValue</code> และ <code>taintObjectReference</code> ซึ่งให้ developer บอกว่า “นี่เป็นข้อมูลที่ละเอียดอ่อนมาก ให้แน่ใจว่าไม่ส่งไปยัง client เด็ดขาด” คุณจะใช้กับ API key, database connection string หรือ secret อื่นที่ไม่อยากรั่วโดยไม่ตั้งใจ ฉันชอบแนวคิดนี้ เพราะถ้า developer เปลี่ยน directive <code>'use server'</code> เป็น <code>'use client'</code> ล่ะ? เขาอาจไม่สังเกตแล้วส่งขึ้น production จนเกิด data breach ได้ แนวคิด taint ทำให้แน่ใจได้ว่าจะไม่เกิดเช่นนั้น</p>
+  <p><code>'use client'</code> คือด้านตรงข้าม — สิ่งที่ไม่มีเหตุผลจะ render บน server ลองนึกถึง component ที่ interactive มาก เช่น text editor หรือ maps widget — มันควรเป็นประสบการณ์ฝั่ง client ดังนั้นส่งทุกอย่างไปยัง client ทันทีแล้วปล่อยให้เขา render จะดีกว่า จำไว้ว่าไม่จำเป็นต้องใช้ directive นี้ เว้นแต่ว่าคุณทำ server-side rendering โดยค่าเริ่มต้น React ยังคงทำ client-side rendering อยู่</p>
+  <h2>วางสิ่งต่าง ๆ ใน head</h2>
+  <p>ลองจินตนาการว่าคุณอยากให้ React component เพิ่ม <code>&lt;link&gt;</code>, <code>&lt;meta&gt;</code>, <code>&lt;title&gt;</code> หรือ HTML อื่นใน document ปัจจุบันคุณต้องใช้ portal หรือบางอย่างอย่าง <a href="https://github.com/nfl/react-helmet">react-helmet</a> เพื่อทำสิ่งนี้ แต่ใน React 19 คุณแค่ render tag แล้วมันจะเข้าไปอยู่ใน header โดยอัตโนมัติ</p>
+  <pre><code class="language-javascript">const MyPizza = () =&gt; (
+  &lt;div&gt;
+    &lt;h1&gt;I love pizza&lt;/h1&gt;
+    &lt;title&gt;🍕 Brian Loves Pizza 🍕&lt;/title&gt;
+  &lt;/div&gt;
+);
+</code></pre>
+  <p>ตอนที่ <code>MyPizza</code> ถูก render มันจะเปลี่ยน title ของ document (ซึ่งแสดงบน browser tab)</p>
+  <h2><code>preload</code> และ <code>preconnect</code></h2>
+  <p>เป็นสอง functions ที่มีประโยชน์มากสำหรับ hint ให้ browser รู้ว่าอาจต้องเริ่มโหลดอะไรบางอย่างเบื้องหลัง หากไม่คุ้นกับแนวคิดนี้ <a href="https://www.debugbear.com/blog/resource-hints-rel-preload-prefetch-preconnect">อ่านที่นี่</a> เพื่อดูเพิ่ม แต่สรุปคือใช้กับ images, fonts, scripts, stylesheets และอื่น ๆ คุณบอก browser ได้ว่า “เฮ้ เราน่าจะต้องโหลดสิ่งนี้เร็ว ๆ นี้ ช่วย preconnect URL นี้เพื่อเตรียม download หรือ preload ไปเลยได้ไหม?” ผู้ใช้จึงได้ประสบการณ์ที่แทบจะทันที เพราะไม่ต้องรอโหลดเมื่อต้องใช้ จำไว้ว่านี่เป็นเพียง hints browser สามารถไม่สนใจได้ ตัวอย่างที่ดีคือโทรศัพท์อยู่ใน low-power mode อาจไม่สนใจ hint เพราะอยากประหยัดแบตเตอรี่</p>
+  <pre><code class="language-javascript">const EnterConfirmation = () =&gt; {
+  preload("https://example.com/text-editor.js", { as: "script" });
+  return (
+    &lt;div&gt;
+      &lt;a href="/text-editor"&gt;Click here to open the text editor&lt;/a&gt;
+    &lt;/div&gt;
+  );
+};
+</code></pre>
+  <h2>Custom components (หรือ web components)</h2>
+  <p>ตามทฤษฎีแล้ว เราใช้ web components กับ React ได้เสมอ แต่เคยยุ่งยากมาก ต้องใช้ refs และวางแผนอย่างระมัดระวังเพื่อไม่ให้เผลอ un-render แล้ว re-render มัน สรุปคือทำได้ แต่ไม่สะดวกใช้งาน</p>
+  <p>React 19 จะจัดการการดูแล custom elements ทั้งหมดให้คุณ เพียงปฏิบัติกับมันเหมือน tag ปกติ แล้ว React จะคอยดูแลให้ เป็นก้าวใหญ่ในการทำให้ custom elements ใช้ได้ข้าม Angular, React, Svelte ฯลฯ แต่ก็ไม่รู้สิ เราพูดถึง custom elements มาตลอดอาชีพฉัน (จริงจัง ฉันจำได้ว่าเห็น talk เรื่อง Polymer ใน Fluent conf แรกที่ไป) และมันก็ยังไม่มาถึงสักที</p>
+  <h2>ยังมีอีก!</h2>
+  <p><a href="https://react.dev/blog/2024/04/25/react-19">คลิกที่นี่</a> เพื่ออ่าน React 19 blog post อย่างเป็นทางการหากอยากอ่านต่อ มีของเจ๋ง ๆ กำลังมาอีกมาก!!</p>
+  <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="29_browser_tests.html" rel="prev">ก่อนหน้า: การทดสอบในเบราว์เซอร์</a><a href="index.html">สารบัญบทเรียน</a><a href="31_form_actions.html" rel="next">ถัดไป: Form Actions</a></nav>
+</article></main><footer class="course-attribution"><p>เนื้อหาต้นฉบับคือ <a href="https://react-v9.holt.courses/lessons/whats-next/react-19">Complete Intro to React v9</a> โดย Brian Holt; คำแปลภาษาไทยจัดทำเพื่อการเรียนรู้ในหลักสูตรนี้</p><p>เนื้อหา Prose ต้นฉบับใช้สัญญาอนุญาต <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และ Code Samples กับ Exercises ใช้สัญญาอนุญาต <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
