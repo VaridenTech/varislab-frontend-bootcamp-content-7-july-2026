@@ -56,13 +56,15 @@ const menuItems: MenuItem[] = [
 const quantities: Record<number, number> = {
   1: 0,
   2: 0,
-  3: 0,
+  3: 3,
   4: 0,
   5: 0,
   6: 0,
 };
 
 const menuGridElement = document.getElementById("menuGrid");
+const cartItemsElement = document.getElementById("cartItems");
+const emptyCartMessageElement = document.getElementById("emptyCartMessage");
 
 function formatPrice(price: number): string {
   return `฿${price.toFixed(2)}`;
@@ -173,9 +175,63 @@ function setupMenuClickEvents(): void {
         increaseQuantity(itemId);
     }
 
-    renderMenuItems();
+    renderApp();
   });
 }
 
+function renderCartItems(): void {
+  if (!cartItemsElement || !emptyCartMessageElement) {
+    return;
+  }
+
+  cartItemsElement.innerHTML = "";
+  
+  const selectedItems = menuItems.filter((item) => {
+    // return true , keep item
+    // return false , remove item
+    // 1st getQuantity(item.id) = 0;
+    // return false
+    //
+    // 2nd getQuantity(item.id) = 3;
+    // return true
+
+    // 3rd getQuantity(item.id) = 4;
+    // return true
+    return getQuantity(item.id) > 0;
+  });
+
+  if (selectedItems.length === 0) {
+     // css display: block;
+    emptyCartMessageElement.style.display = "block";
+  } else {
+    // css display: none;
+    emptyCartMessageElement.style.display = "none";
+  }
+
+  selectedItems.forEach((item) => {
+    const quantity = getQuantity(item.id);
+    const lineTotal = item.price * quantity;
+
+    const cartItem = document.createElement("article");
+    cartItem.classList.add("cart-item");
+
+    cartItem.innerHTML = `
+      <div>
+        <h3>${item.name}</h3>
+        <p>${quantity} x ${formatPrice(item.price)}</p>
+      </div>
+
+      <strong>${formatPrice(lineTotal)}</strong>
+    `;
+
+    cartItemsElement.appendChild(cartItem);
+  });
+}
+
+function renderApp(): void {
+  renderMenuItems();
+  renderCartItems();
+}
+
 setupMenuClickEvents();
-renderMenuItems();
+renderApp();
