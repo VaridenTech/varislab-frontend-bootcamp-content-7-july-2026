@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="บทนำสู่หลักสูตร Complete Intro to React v9" />
+    <title>บทนำ | เรียน React ฉบับสมบูรณ์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 01 · Welcome</p>
+          <h1>บทนำ</h1>
+          <p class="lesson-original-title">Intro</p>
+        </header>
+
+        <p class="translator-note">🚨 คุณไม่จำเป็นต้องดูหรืออ่านหลักสูตรเวอร์ชันก่อนหน้า นี่เป็นเพียงการปรับปรุงหลักสูตรครั้งที่เก้าเท่านั้น</p>
+
+        <p>สวัสดี และยินดีต้อนรับสู่ Complete Intro to React เวอร์ชัน 9 ในหลักสูตรนี้ คุณจะเริ่มจากไม่รู้อะไรเลยเกี่ยวกับ React ไปจนพร้อมทำงานได้ หลักสูตรนี้สอนแนวคิดแกนกลางทั้งหมดของ React โดยมุ่งให้เป็นประโยชน์ที่สุด คุณจะเรียน React ด้วยแนวทางจากหลักการพื้นฐาน เราจะเริ่มโดยไม่มีเครื่องมือ build หรือสิ่งทำนองนั้นเลย มีเพียง JavaScript ล้วนและ React จากนั้นเราจะค่อย ๆ เพิ่มเครื่องมืออย่าง Vite, JSX, ESLint, Prettier และอื่น ๆ เพื่อให้คุณเรียนรู้วิธีสร้าง stack ของตนเองตั้งแต่ต้น ฉันจะสอนเครื่องมือบางอย่างใน ecosystem การทดสอบ และสิ่งที่จะมาถึงใน React ด้วย</p>
+
+        <h2>หลักสูตรนี้เหมาะกับใคร?</h2>
+
+        <p>คุณนั่นเอง! หลักสูตรนี้เหมาะสำหรับทุกคนที่อยากเริ่มต้นใช้ React หรืออยากต่อยอดความเชี่ยวชาญ ไม่จำเป็นต้องมีประสบการณ์มาก่อน อย่างไรก็ตาม ฉันรับประกันว่าทุกคนที่สนใจ React จะได้เรียนรู้บางสิ่งจากที่นี่ หลักสูตรนี้อาจไม่ควรเป็นหลักสูตรเขียนโปรแกรมหรือ JavaScript แรกของคุณ แต่หากไม่ใช่ ก็เหมาะสำหรับทุกคน เราใช้ Node.js บ้างเพื่อรัน API เล็ก ๆ และสำหรับเครื่องมือ build แต่ไม่จำเป็นต้องมีประสบการณ์ Node.js จริงจัง ฉันจะให้คำสั่งที่จำเป็นในการรันไว้</p>
+
+        <h2>ฉันคือใคร?</h2>
+
+        <img src="/images/social-share-cover.jpg" alt="Brian กำลังสอน" />
+
+        <p>ฉันชื่อ Brian Holt และเขียน React มานานมาก ฉันส่งโค้ด React ชุดแรกของ Reddit ขึ้นใช้งานจริงในปี 2014</p>
+
+        <blockquote class="twitter-tweet" data-dnt="true" data-theme="light"><p lang="en" dir="ltr">We shipped reddit&#39;s first production <a href="https://twitter.com/reactjs?ref_src=twsrc%5Etfw">@reactjs</a> code last week, our checkout process.<a href="https://t.co/KUInwsCmAF">https://t.co/KUInwsCmAF</a></p>&mdash; Brian Holt (@holtbt) <a href="https://twitter.com/holtbt/status/493852312604254208?ref_src=twsrc%5Etfw">July 28, 2014</a></blockquote>
+        <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+        <p>ต่อมาฉันได้เขียน React ที่บริษัทใหญ่หลากหลายแห่ง และมันเป็นเครื่องมือหลักของฉันมานานกว่าทศวรรษแล้ว เรียกได้ว่ามันเป็นสิ่งที่กำหนดเส้นทางอาชีพของฉันเลย</p>
+
+        <p>ปัจจุบันฉันทำงานเป็น staff product manager ที่ <a href="https://neon.tech/">Neon</a> ทำงานเกี่ยวกับเครื่องมือสำหรับนักพัฒนาและประสบการณ์ของนักพัฒนา ฉันชอบทำเครื่องมือและประสบการณ์สำหรับนักพัฒนามาก จนสุดท้ายได้ทำงานด้านเครื่องมือและกลยุทธ์ ก่อนหน้า Neon ฉันเคยทำงานที่ Snowflake, Microsoft, LinkedIn, Netflix, Reddit และสตาร์ตอัปอื่น ๆ อีกบางแห่ง ฉันเคยทำมาทุกอย่างตั้งแต่ VP of product, dev rel ไปจนถึง staff engineering tech lead</p>
+
+        <p>ตอนที่ไม่ได้ทำงานหรือสอน คุณจะพบฉันใช้เวลาอยู่กับภรรยา ลูกชาย และลูกสาวที่กำลังจะลืมตาดูโลก! ฉันอาศัยอยู่ใน Seattle ตลอดหกปีที่ผ่านมา แต่ตอนนี้กำลังย้ายไป Sacramento เพื่อรับแสงแดดมากขึ้นและอยู่ใกล้หิมะที่ยอดเยี่ยมสำหรับเล่นสโนว์บอร์ดที่ Tahoe! 🏂 ฉันยังชอบ hazy IPA, Islay Scotch, ปั่นจักรยานทางไกล และเล่น Dota 2 แบบไม่เก่งนักด้วย</p>
+
+        <p>มาติดตามฉันบนโซเชียลมีเดียได้เลย! โปรดทราบว่าฉันตอบ DM แย่มาก!!</p>
+
+        <ul>
+          <li><a href="https://twitter.com/holtbt">Twitter</a></li>
+          <li><a href="https://bsky.app/profile/brianholt.me">Bluesky</a></li>
+          <li><a href="https://www.linkedin.com/in/btholt/">LinkedIn</a></li>
+          <li><a href="https://github.com/btholt">GitHub</a></li>
+        </ul>
+
+        <h2>จะแจ้งปัญหาได้ที่ไหน</h2>
+
+        <p>ฉันเขียนหลักสูตรเหล่านี้และพยายามไม่ให้มีข้อผิดพลาด แต่เมื่อสอนเนื้อหานานกว่าสิบชั่วโมง ข้อผิดพลาดย่อมหลีกเลี่ยงไม่ได้ ทั้งในไวยากรณ์ตรงนี้และในหลักสูตร อย่างไรก็ตาม ฉันและทีมที่ยอดเยี่ยมของ Frontend Masters กำลังแก้ไขข้อผิดพลาดอย่างต่อเนื่อง เพื่อให้ผู้ที่มาเรียนภายหลังได้รับเนื้อหาที่ดีที่สุด หากคุณพบข้อผิดพลาด เราอยากแก้ไขมัน วิธีที่ดีที่สุดคือ <a href="https://github.com/btholt/complete-intro-to-react-v9/issues">เปิด pull request หรือแจ้ง issue ใน GitHub repository</a> แม้ว่าฉันยินดีเสมอที่จะพูดคุยและให้คำแนะนำผ่านโซเชียลมีเดีย แต่ฉันไม่สามารถเป็นฝ่ายสนับสนุนด้านเทคนิคให้ทุกคนได้ และหากคุณแจ้งบน GitHub ผู้ที่มาเรียนภายหลังก็ค้นหาคำตอบเดียวกับที่คุณได้รับใน Google ได้</p>
+
+        <h2>repository ทำงานอย่างไร</h2>
+
+        <p>คลาสนี้มี repository สองแห่ง: <a href="https://github.com/btholt/complete-intro-to-react-v9">เว็บไซต์ที่คุณกำลังอยู่</a> และ <a href="https://github.com/btholt/citr-v9-project">โปรเจกต์ตัวอย่าง</a> หากต้องการเตรียมพร้อม ให้ clone หรือ <a href="https://github.com/btholt/citr-v9-project/archive/refs/heads/main.zip">ดาวน์โหลด</a> repository ของโปรเจกต์:</p>
+
+        <pre><code class="language-bash">git clone https://github.com/btholt/citr-v9-project.git</code></pre>
+
+        <p>ทุกขั้นตอนของโปรเจกต์นี้จะมีโฟลเดอร์ที่เป็นภาพรวมสถานะของโปรเจกต์ ณ ขั้นตอนนั้น หากคุณติดขัด อยากคัดลอกและวางโค้ดยาว ๆ ที่ไม่อยากพิมพ์ หรือแค่อยากดูโค้ด ณ จุดนั้น ก็ทำได้เลย! เป้าหมายหลักคือให้คุณเรียนรู้ ดังนั้นตราบใดที่คุณกำลังเรียนรู้ ก็ไม่มีการโกง!</p>
+
+        <p>รูปแบบการตั้งชื่อจะเป็น <code>XX-&lt;name of the lesson&gt;</code> เพื่อให้คุณพอเห็นลำดับและรู้ว่าขั้นตอนนั้นมาจากบทเรียนใด ในแต่ละ snapshot คุณต้องรัน <code>npm install</code> อีกครั้ง เพราะแต่ละอันเป็นสำเนาโปรเจกต์ทั้งชุดอีกชุดหนึ่ง</p>
+
+        <p>เราจะเริ่มจากศูนย์ แต่คุณต้องดาวน์โหลด repository ไว้ เพราะมีไดเรกทอรี <code>api</code> ที่จะใช้ในภายหลังของหลักสูตร</p>
+
+        <p class="translator-note">และขออีกเรื่องสุดท้าย! <a href="https://github.com/btholt/complete-intro-to-react-v9">โปรดกดดาวให้ repository นี้</a> ช่วยให้คนค้นพบหลักสูตรได้ง่ายขึ้น และช่วยเยียวยาอีโก้อันเปราะบางของฉันด้วย</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <span></span>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="02_my_setup.html" rel="next">ถัดไป: การตั้งค่าสภาพแวดล้อมของฉัน</a>
+        </nav>
+      </article>
+    </main>
+
+    <footer class="course-attribution">
+      <p>เนื้อหาต้นฉบับคือ <a href="https://react-v9.holt.courses/">Complete Intro to React v9</a> โดย Brian Holt; คำแปลภาษาไทยจัดทำเพื่อการเรียนรู้ในหลักสูตรนี้</p>
+      <p>เนื้อหา Prose ต้นฉบับใช้สัญญาอนุญาต <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และ Code Samples กับ Exercises ใช้สัญญาอนุญาต <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+    </footer>
+  </body>
+</html>

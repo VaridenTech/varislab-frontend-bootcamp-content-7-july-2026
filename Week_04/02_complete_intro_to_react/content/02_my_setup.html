@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เครื่องมือและการตั้งค่าที่ Brian Holt ใช้ในหลักสูตร React" />
+    <title>การตั้งค่าสภาพแวดล้อมของฉัน | เรียน React ฉบับสมบูรณ์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 02 · Welcome</p>
+          <h1>การตั้งค่าสภาพแวดล้อมของฉัน</h1>
+          <p class="lesson-original-title">My Setup</p>
+        </header>
+
+        <h2>Node.js</h2>
+
+        <p>คุณต้องติดตั้ง Node.js สักเวอร์ชัน และควรเป็นเวอร์ชันหลัง v20.16 ฉันเขียนหลักสูตรนี้ด้วยเวอร์ชัน 20.16 แต่ก็น่าจะรองรับอนาคตได้ดีพอสมควร</p>
+
+        <p>ฉันใช้ <a href="https://github.com/Schniz/fnm">fnm</a> จัดการเวอร์ชัน Node.js ของฉัน (คล้ายกับ nvm)</p>
+
+        <p>ฉัน <em>คิดว่า</em> หลักสูตรนี้น่าจะทำงานได้กับเวอร์ชันล่าสุดของ <a href="https://bun.sh/">bun</a> หรือ <a href="https://deno.com/">deno</a> แต่ยังไม่ได้ทดสอบ โปรดระวังหากตัดสินใจเลือกเส้นทางนี้</p>
+
+        <h2>คำถามพบบ่อยเกี่ยวกับเครื่องมือ</h2>
+
+        <h3>คุณใช้เครื่องมืออะไรบ้าง?</h3>
+
+        <ul>
+          <li>Visual Studio Code – ฉันเคยทำงานที่ Microsoft ในทีม VS Code จึงไม่น่าแปลกใจที่ฉันจะใช้มันในหลักสูตรนี้ เราจะใช้ extension สองสามตัวด้วย ซึ่งฉันจะบอกเมื่อถึงตอนนั้น</li>
+          <li>Firefox – ฉันอยากให้มีสิ่งอื่นนอกเหนือจาก Chromium อยู่ด้วย จึงสนับสนุน Firefox เท่าที่ทำได้ จะใช้เบราว์เซอร์ใดก็ได้ เพราะในหลักสูตรนี้ไม่สำคัญ</li>
+          <li>Terminal.app – ฉันเคยใช้ iTerm2 และ Hyper แต่สุดท้ายก็ชอบความเร็วของ Terminal เริ่มต้น</li>
+        </ul>
+
+        <h3>คุณใช้ &lt;font/theme/extension&gt; อะไร?</h3>
+
+        <ul>
+          <li>Visual Studio Code
+            <ul>
+              <li>Dark+ Theme – ติดตั้งมาเป็นค่าเริ่มต้น แต่ตอนนี้ไม่ใช่ธีมเริ่มต้นแล้ว ฉันชินกับมันมากจนเปลี่ยนไม่ได้</li>
+              <li><a href="https://www.monolisa.dev/">MonoLisa</a> font – ฉันชอบฟอนต์และมองมันทั้งวัน จึงยอมจ่ายเงินได้ ฉันเปิดใช้ <a href="https://worldofzero.com/posts/enable-font-ligatures-vscode/">ligatures</a> อยู่ นั่นจึงเป็นเหตุผลที่คุณอาจเห็น glyph แปลก ๆ หากต้องการ ligatures แต่ไม่อยากจ่าย บทความ ligature ที่ลิงก์ไว้มีตัวเลือกบางตัว ฉันชอบ Cascadia Code ของ Microsoft</li>
+              <li><a href="https://marketplace.visualstudio.com/items?itemName=vscode-icons-team.vscode-icons">vscode-icons</a> – ไอคอนสวย ๆ มากมายสำหรับ VS Code และใช้ฟรี</li>
+            </ul>
+          </li>
+          <li>Terminal
+            <ul>
+              <li>zsh – ปัจจุบันมาพร้อม macOS แล้ว และฉันขี้เกียจ<em>มาก</em>เกินกว่าจะเปลี่ยนกลับไป bash</li>
+              <li><a href="https://draculatheme.com/terminal">Dracula theme</a> – ฉันชอบสีพาสเทล ถ้า Dark+ ไม่ฝังลึกอยู่ในสายเลือด ฉันก็คงใช้มันใน VS Code ด้วย</li>
+              <li><a href="https://starship.rs/">Starship Prompt</a> – prompt ที่เจ๋งและสวยงาม อีกทั้งยังบอกด้วยว่าคุณอยู่ในโปรเจกต์ประเภทใด ซึ่งบางครั้งก็มีประโยชน์</li>
+              <li><a href="https://www.nerdfonts.com/font-downloads">CaskaydiaCove Nerd Font</a> – ทำงานร่วมกับ Starship prompt เพื่อให้คุณมีโลโก้ JS และ glyph พิเศษทั้งหมด ฟอนต์นี้พัฒนามาจาก Cascadia Code</li>
+            </ul>
+          </li>
+        </ul>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="01_intro.html" rel="prev">ก่อนหน้า: บทนำ</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="03_react_without_a_build_step.html" rel="next">ถัดไป: React โดยไม่ต้องมีขั้นตอน Build</a>
+        </nav>
+      </article>
+    </main>
+
+    <footer class="course-attribution">
+      <p>เนื้อหาต้นฉบับคือ <a href="https://react-v9.holt.courses/">Complete Intro to React v9</a> โดย Brian Holt; คำแปลภาษาไทยจัดทำเพื่อการเรียนรู้ในหลักสูตรนี้</p>
+      <p>เนื้อหา Prose ต้นฉบับใช้สัญญาอนุญาต <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และ Code Samples กับ Exercises ใช้สัญญาอนุญาต <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+    </footer>
+  </body>
+</html>
