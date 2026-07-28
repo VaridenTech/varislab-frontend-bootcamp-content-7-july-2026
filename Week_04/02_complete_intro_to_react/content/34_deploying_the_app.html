@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="deploy React client ไป Netlify และ Node.js API ไป Render" /><title>Deploying the App | เรียน React ฉบับสมบูรณ์</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
-  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 34 · What's Next</p><h1>การ Deploy แอป</h1><p class="lesson-original-title">Deploying the App</p></header>
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 34 · ก้าวต่อไป (What's Next)</p><h1>การ Deploy แอป</h1><p class="lesson-original-title" lang="en">Deploying the App</p></header>
   <blockquote><p>📝 มีการพูดถึงการ Deploy ในหลักสูตร แต่ไม่ได้สาธิต คุณสามารถทำตามขั้นตอนด้านล่างหากต้องการ deploy client และ server applications</p></blockquote>
   <p>ด้วย React หรือ client-side framework ใด ๆ deployment ง่ายมาก รัน <code>npm run build</code> เพื่อสร้าง HTML, CSS และ JS files ด้วย Vite แล้วโยนขึ้น static web host ใดก็ได้ โปรเจกต์นี้ต่างออกไปเล็กน้อย เพราะมันเรียก API จาก local Node.js server ดังนั้นเราต้อง deploy ส่วนนั้นด้วย จะมีประโยชน์อะไรกับเว็บไซต์สั่งพิซซ่าที่ไม่มีพิซซ่าล่ะ จริงไหม?</p>
   <p>เพื่อ deploy ทั้ง client และ server applications เราต้อง refactor เล็กน้อย และจะใช้ best practices ระหว่างทาง React client app จะ deploy ไปยัง <a href="https://www.netlify.com/">Netlify</a> และ Node.js server app จะ deploy ไปยัง <a href="https://render.com/">Render</a> ทั้งสองแพลตฟอร์มมี free tiers และเราจะใช้ workflow ของ <a href="https://github.com/">GitHub</a> เพื่อให้ deployment ง่ายมาก</p>
@@ -8,7 +8,7 @@
   <h2>Refactor Static Assets</h2>
   <p>CSS, fonts และ images ของเราตอนนี้ host อยู่ใน API server application ทั้งหมดนี้ทำเพียงเพื่อความสะดวก เพื่อไม่ต้องคัดลอกข้ามทุก code checkpoint ในหลักสูตร ในโลกจริง สิ่งเหล่านี้ควรอยู่กับ React application</p>
   <p>ย้าย folder <code>public</code> จาก API project ไปยัง React project:</p>
-  <figure><img src="/images/deploy-public.png" alt="public folder in the VS Code file explorer" /><figcaption>โฟลเดอร์ public ใน VS Code file explorer</figcaption></figure>
+  <figure><img src="https://react-v9.holt.courses/images/deploy-public.png" alt="public folder in the VS Code file explorer" /><figcaption>โฟลเดอร์ public ใน VS Code file explorer</figcaption></figure>
   <p>Vite ยังสมมติด้วยว่าทุกอย่างใน directory <code>public</code> อยู่ที่ root ของ published files ดังนั้นเปิด <code>style.css</code> แล้วลบ references <code>public</code> ทั้งหมด ตัวอย่างเช่น font ควรโหลดจาก:</p>
   <pre><code class="language-css">src: url("/Pacifico-Regular.ttf");
 </code></pre>
@@ -54,10 +54,10 @@ await server.listen({ host: HOST, port: PORT });
 </code></pre>
   <h2>Deploy ไป Render</h2>
   <p>โอเค เราพร้อม deploy แล้ว Push code ของคุณไป GitHub repo</p>
-  <figure><img src="/images/deploy-repo.png" alt="Node.js server application files in a GitHub repo" /><figcaption>ไฟล์ Node.js server application ใน GitHub repo</figcaption></figure>
+  <figure><img src="https://react-v9.holt.courses/images/deploy-repo.png" alt="Node.js server application files in a GitHub repo" /><figcaption>ไฟล์ Node.js server application ใน GitHub repo</figcaption></figure>
   <p>ไปที่ <a href="https://dashboard.render.com/">Render Dashboard</a> แล้วเลือก <strong>Deploy a New Web Service</strong> เชื่อม GitHub account แล้วเลือก repo <code>pizza-server-app</code> (หรือชื่อที่คุณตั้ง) เป็น source code ของ project ค่าเริ่มต้นทั้งหมดควรใช้ได้ อย่างไรก็ตามตรวจสอบให้เลือก Free/Hobby tier สำหรับ server instance type</p>
   <p>เมื่อ server deploy เสร็จ คุณเข้าถึงได้จาก URL ที่แสดงใน dashboard คุณทดสอบได้ด้วยการเปิด endpoint <code>[yourserver]/api/pizzas</code>:</p>
-  <figure><img src="/images/deploy-render.png" alt="Node.js server application files in a GitHub repo" /><figcaption>Node.js server application ที่ deploy บน Render</figcaption></figure>
+  <figure><img src="https://react-v9.holt.courses/images/deploy-render.png" alt="Node.js server application files in a GitHub repo" /><figcaption>Node.js server application ที่ deploy บน Render</figcaption></figure>
   <p>server API ของคุณ deploy แล้ว! และข้อดีคือทุกครั้งที่ push ไป repo มันจะ redeploy ไป Render โดยอัตโนมัติ</p>
   <h2>Deploy Client Application</h2>
   <p>ก่อน deploy client application เราต้องปรับบางอย่าง เรามี local development API server และ remote production API server — สอง URLs ที่ต่างกัน เราไม่อยาก hard-code ไว้ใน application และไม่อยากสลับ URL ตอน build app เราจะใช้ Vite environment variables ช่วย สร้างสอง files ที่ root: <code>.env.development</code> และ <code>.env.production</code> แล้วเพิ่ม <code>VITE_API_URL</code> ในแต่ละ file:</p>
@@ -88,11 +88,11 @@ const pizzasRes = await fetch(`${apiUrl}/api/pizzas`);
 </code></pre>
   <h2>Deploy ไป Netlify</h2>
   <p>เฮ้อ! ฉันคิดว่าครบแล้ว Push code ของคุณขึ้น GitHub repo แยกต่างหาก เราพร้อม deploy แล้ว!</p>
-  <figure><img src="/images/deploy-client-repo.png" alt="React client app files in a GitHub repo" /><figcaption>ไฟล์ React client app ใน GitHub repo</figcaption></figure>
+  <figure><img src="https://react-v9.holt.courses/images/deploy-client-repo.png" alt="React client app files in a GitHub repo" /><figcaption>ไฟล์ React client app ใน GitHub repo</figcaption></figure>
   <p>ไปที่ <a href="https://www.netlify.com/">Netlify</a> สร้าง account หากยังไม่มี แล้วคลิกสร้าง site ใหม่ คุณจะเลือก import project จาก GitHub:</p>
-  <figure><img src="/images/deploy-netlify.png" alt="Choosing a repo in Netlify" /><figcaption>เลือก repo ใน Netlify</figcaption></figure>
+  <figure><img src="https://react-v9.holt.courses/images/deploy-netlify.png" alt="Choosing a repo in Netlify" /><figcaption>เลือก repo ใน Netlify</figcaption></figure>
   <p>เมื่อตั้งค่า project ค่าเริ่มต้นควรใช้ได้:</p>
-  <figure><img src="/images/deploy-netlify-config.png" alt="Netlify configuration settings" /><figcaption>การตั้งค่า Netlify</figcaption></figure>
+  <figure><img src="https://react-v9.holt.courses/images/deploy-netlify-config.png" alt="Netlify configuration settings" /><figcaption>การตั้งค่า Netlify</figcaption></figure>
   <p>เมื่อ site deploy แล้ว คุณเข้าถึงได้ด้วยชื่อที่เลือกตอนตั้งค่า ตัวอย่างเช่น <code>https://[Your-App-Name].netlify.app</code></p>
   <h2>ยินดีด้วย!</h2>
   <p>ตอนนี้คุณมี React client application ที่ deploy บน Netlify และ Node.js server API ที่ deploy บน Render แล้ว!</p>

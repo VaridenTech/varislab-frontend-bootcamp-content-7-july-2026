@@ -11,9 +11,9 @@
     <main>
       <article class="lesson">
         <header class="lesson-header">
-          <p class="lesson-eyebrow">บทเรียน 11 · Core React Concepts</p>
+          <p class="lesson-eyebrow">บทเรียน 11 · แนวคิดหลักของ React (Core React Concepts)</p>
           <h1>การจัดการ State ด้วย Hooks</h1>
-          <p class="lesson-original-title">Hooks</p>
+          <p class="lesson-original-title" lang="en">Hooks</p>
         </header>
 
         <h2>Hooks</h2>
@@ -104,7 +104,7 @@ import Order from "./Order";
 
         <blockquote>ในหลักสูตรวิดีโอ layout เป็นแนวตั้งเพราะ <code>order-pizza</code> DIV อยู่ผิดตำแหน่ง ให้ใช้ markup ข้างบน Layout ควรมีลักษณะดังนี้:</blockquote>
 
-        <p><img src="/images/order-page-layout.webp" alt="Order Page Layout" /></p>
+        <p><img src="https://react-v9.holt.courses/images/order-page-layout.webp" alt="Order Page Layout" /></p>
 
         <p>สังเกตว่าเราใช้ <code>className</code> แทน <code>class</code> บน HTML element สำหรับ CSS classes นี่เป็นเพราะ <code>class</code> เป็น reserved word ใน JS และ JSX ก็ยังเป็น JS อยู่ ดังนั้นจึงเลือกใช้ <code>className</code> ซึ่งเป็น <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/className">ชื่อของ JS API</a> สำหรับโต้ตอบกับ class names</p>
 
@@ -131,6 +131,8 @@ const [pizzaSize, setPizzaSize] = useState("medium");
 // add to all the radio buttons
 onChange={(e) =&gt; setPizzaSize(e.target.value)}
 </code></pre>
+
+        <p class="translator-note">หมายเหตุผู้แปล: ตัวอย่างต้นฉบับใช้ <code>useState(&quot;medium&quot;)</code> แต่ค่าของ radio และ key ใน <code>sizes[pizzaSize]</code> คือ <code>S</code>, <code>M</code> หรือ <code>L</code>; ให้ใช้ <code>useState(&quot;M&quot;)</code> เพื่อให้เลือกขนาดกลางและคำนวณราคาเริ่มต้นได้ถูกต้อง</p>
 
         <ul>
           <li>สิ่งนี้เรียกว่า hook frameworks อื่น เช่น Vue ก็นำมันไปใช้เช่นกัน</li>

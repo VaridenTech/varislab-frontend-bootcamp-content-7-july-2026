@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ตั้งค่า browser-based tests ด้วย Vitest และ Playwright" /><title>Browser Tests | เรียน React ฉบับสมบูรณ์</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
-  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 29 · Testing</p><h1>การทดสอบในเบราว์เซอร์</h1><p class="lesson-original-title">Browser Tests</p></header>
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 29 · การทดสอบ (Testing)</p><h1>การทดสอบในเบราว์เซอร์</h1><p class="lesson-original-title" lang="en">Browser Tests</p></header>
   <blockquote><p>🚨 สิ่งนี้เป็น experimental และมีแนวโน้มสูงที่จะเปลี่ยนในอนาคต ให้ถือว่านี่เป็น sneak peak ของสิ่งที่จะมา ไม่ใช่สิ่งที่ควรทำในวันนี้</p></blockquote>
   <p>Vitest กำลังเริ่มรองรับ browser-based testing ที่ลึกขึ้น สำหรับพวกเราที่อยู่มานานพอจะจำ Selenium ได้ สิ่งนี้อาจทำให้หวาดกลัวถึงใจ แต่ไม่ต้องกลัว! Browser-based testing tools พัฒนาไปไกลมากตั้งแต่นั้น จนทั้งเร็วและเชื่อถือได้ โดยเฉพาะเพราะ Microsoft project <a href="https://playwright.dev/">Playwright</a></p>
   <p>อย่างไรก็ตามนี่ก็ยังเป็นช่วงแรก ๆ ฉันจะสาธิตวิธีตั้งค่าให้ดู แต่ระวังว่ามันอาจเปลี่ยนได้ เพราะพวกเขายังทำงานกับมันอย่างแข็งขัน!</p>
@@ -120,6 +120,7 @@ test("correctly renders a header with a three cart count", async () =&gt; {
   <pre><code class="language-bash">npm uninstall @vitest/coverage-v8@2.1.3
 npm install -D @vitest/istanbul
 </code></pre>
+  <p class="translator-note">หมายเหตุผู้แปล: สำหรับ Vitest 2 ชื่อ package ที่ใช้งานได้คือ <code>@vitest/coverage-istanbul</code>; ให้รัน <code>npm install -D @vitest/coverage-istanbul</code> แทนคำสั่ง install ในตัวอย่างต้นฉบับ</p>
   <p>จากนั้นย้าย coverage configuration ไปยัง <code>vitest.workspace.js</code> file:</p>
   <pre><code class="language-javascript">
 export default defineWorkspace([

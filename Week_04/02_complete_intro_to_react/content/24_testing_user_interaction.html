@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ทดสอบการส่งฟอร์ม Contact และการโต้ตอบของผู้ใช้" /><title>Testing User Interaction | เรียน React ฉบับสมบูรณ์</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
-  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 24 · Testing</p><h1>การทดสอบปฏิสัมพันธ์ของผู้ใช้</h1><p class="lesson-original-title">Testing User Interaction</p></header>
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 24 · การทดสอบ (Testing)</p><h1>การทดสอบปฏิสัมพันธ์ของผู้ใช้</h1><p class="lesson-original-title" lang="en">Testing User Interaction</p></header>
   <p>มาทดสอบหน้า Contact กัน มันมี user interaction ที่ดีและเรียบง่าย ผู้ใช้ใส่ข้อมูล เรา submit ไป API แล้วแสดง submitted header ให้พวกเขา มาทดสอบทั้งหมดนั้นกัน</p>
   <p>ก่อนอื่นเราต้องมี helper function, vitest-fetch-mock เราไม่ได้ <em>ต้อง</em> ใช้มัน เพราะ Vitest ทำได้ แต่ฉันคิดว่ามันทำให้ง่ายขึ้น</p>
   <pre><code class="language-bash">npm i -D vitest-fetch-mock@0.3.0

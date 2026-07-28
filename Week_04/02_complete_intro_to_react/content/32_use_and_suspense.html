@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ใช้ Suspense และ use hook ใน React 19" /><title>use and Suspense | เรียน React ฉบับสมบูรณ์</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
-  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 32 · What's Next</p><h1><code>use</code> และ Suspense</h1><p class="lesson-original-title">use and Suspense</p></header>
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 32 · ก้าวต่อไป (What's Next)</p><h1><code>use</code> และ Suspense</h1><p class="lesson-original-title" lang="en">use and Suspense</p></header>
   <p>เราพูดถึง React Suspense มานานมาก และในทางเทคนิคเราก็ยังไม่ควรใช้มันโดยตรง แต่ React 19 จะให้วิธีที่ได้รับการรับรองเพื่อเริ่มใช้มัน (libraries บางตัวใช้แล้ว)</p>
   <p>แนวคิดเบื้องหลัง Suspense คือ React component สามารถเริ่ม render แล้ว suspend ตัวเองได้ หาก data ทั้งหมดยังโหลดไม่เสร็จ ซึ่งเจ๋งเพราะโค้ดของคุณอ่านง่ายมาก: มันเหมือนคุณสมมติว่า data มีอยู่แล้ว และ React จัดการการได้มาของมันอยู่เบื้องหลัง</p>
   <p>นี่คือแนวคิดของ hook ใหม่ <code>use</code> จาก React คุณเขียน <code>use(myPromise)</code> แล้ว React component จะ render เมื่อ <code>myPromise</code> resolve แล้วเท่านั้น</p>
