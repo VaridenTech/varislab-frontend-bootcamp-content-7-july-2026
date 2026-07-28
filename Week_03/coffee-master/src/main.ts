@@ -70,6 +70,10 @@ const subtotalElement = document.getElementById("subtotal");
 const taxElement = document.getElementById("tax");
 const totalElement = document.getElementById("total");
 
+const placeOrderButtonElement = document.getElementById("placeOrderButton");
+const customerNameInputElement = document.getElementById("customerName");
+const orderMessageElement = document.getElementById("orderMessage");
+
 function formatPrice(price: number): string {
   return `฿${price.toFixed(2)}`;
 }
@@ -136,23 +140,23 @@ function renderMenuItems() {
 }
 
 function decreaseQuantity(itemId: number): void {
-    const currentQuantity = getQuantity(itemId);
+  const currentQuantity = getQuantity(itemId);
 
-    if (currentQuantity <= 0) {
-        return;
-    }
+  if (currentQuantity <= 0) {
+    return;
+  }
 
-    quantities[itemId] = currentQuantity - 1;
+  quantities[itemId] = currentQuantity - 1;
 }
 
 function increaseQuantity(itemId: number): void {
-    const currentQuantity = getQuantity(itemId);
+  const currentQuantity = getQuantity(itemId);
 
-    if (currentQuantity >= 10) {
-        return;
-    }
+  if (currentQuantity >= 10) {
+    return;
+  }
 
-    quantities[itemId] = currentQuantity + 1;
+  quantities[itemId] = currentQuantity + 1;
 }
 
 function setupMenuClickEvents(): void {
@@ -165,18 +169,18 @@ function setupMenuClickEvents(): void {
     const button = target.closest("button");
 
     if (!(button instanceof HTMLButtonElement)) {
-        return;
+      return;
     }
 
     const action = button.dataset.action;
     const itemId = Number(button.dataset.id);
 
     if (action === "decrease") {
-        decreaseQuantity(itemId);
+      decreaseQuantity(itemId);
     }
-    
+
     if (action === "increase") {
-        increaseQuantity(itemId);
+      increaseQuantity(itemId);
     }
 
     renderApp();
@@ -189,7 +193,7 @@ function renderCartItems(): void {
   }
 
   cartItemsElement.innerHTML = "";
-  
+
   const selectedItems = menuItems.filter((item) => {
     // return true , keep item
     // return false , remove item
@@ -205,7 +209,7 @@ function renderCartItems(): void {
   });
 
   if (selectedItems.length === 0) {
-     // css display: block;
+    // css display: block;
     emptyCartMessageElement.style.display = "block";
   } else {
     // css display: none;
@@ -238,7 +242,7 @@ function calculateSubtotal(): number {
   menuItems.forEach((item) => {
     const quantity = getQuantity(item.id);
 
-    subtotal = subtotal + (item.price * quantity) 
+    subtotal = subtotal + item.price * quantity;
   });
 
   return subtotal;
@@ -266,6 +270,48 @@ function renderSummary(): void {
   totalElement.textContent = formatPrice(total);
 }
 
+function caculateTotalItems(): number {
+  let totalItems = 0;
+
+  menuItems.forEach((item) => {
+    totalItems = totalItems + getQuantity(item.id);
+  });
+
+  return totalItems;
+}
+
+function setupPlaceOrderButton(): void {
+  if (
+    !placeOrderButtonElement ||
+    !customerNameInputElement ||
+    !orderMessageElement
+  ) {
+    return;
+  }
+
+  placeOrderButtonElement.addEventListener("click", () => {
+    const input = customerNameInputElement as HTMLInputElement;
+    const customerName = input.value.trim();
+    const totalItems = caculateTotalItems();
+    const subtotal = calculateSubtotal();
+
+    if (customerName === "") {
+      orderMessageElement.textContent = "Please enter your name";
+      orderMessageElement.className = "order-message error";
+      return;
+    }
+
+    if (totalItems === 0) {
+      orderMessageElement.textContent = "Please add items to your cart";
+      orderMessageElement.className = "order-message error";
+      return;
+    }
+
+    orderMessageElement.textContent = `ขอบคุณคุณ ${customerName} ระบบได้รับ order จำนวน ${totalItems} รายการ ยอดรวมก่อน tax คือ ${formatPrice(subtotal)}`;
+    orderMessageElement.className = "order-message success";
+  });
+}
+
 function renderApp(): void {
   renderMenuItems();
   renderCartItems();
@@ -273,4 +319,5 @@ function renderApp(): void {
 }
 
 setupMenuClickEvents();
+setupPlaceOrderButton();
 renderApp();
