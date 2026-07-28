@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ตั้งค่าการทดสอบแอป React ด้วย Vitest" />
+    <title>Vitest | เรียน React ฉบับสมบูรณ์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main><article class="lesson">
+      <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 22 · Testing</p><h1>การทดสอบด้วย Vitest</h1><p class="lesson-original-title">Vitest</p></header>
+      <p>เนื้อหานี้ตั้งใจให้เป็นบทความสั้นมากว่าด้วยวิธีทำ testing กับ React applications นี่จะเป็นบทนำสั้น ๆ ว่าจะตั้งค่า Vitest tests สำหรับแอปพลิเคชันที่เราเพิ่งสร้างอย่างไร สำหรับข้อมูลเพิ่มเติมเกี่ยวกับ Vite, Vitest และการทดสอบโดยทั่วไป ดู <a href="https://frontendmasters.com/learn/build-tools/">Build Tools &amp; Testing Learning Path</a></p>
+      <h2>Testing with Vitest</h2>
+      <p><a href="https://vitest.dev/">Vitest</a> คือ test runner ที่สร้างโดยทีมชั้นยอดผู้สร้าง Vite (รวมถึง Vue) แนวคิดเบื้องหลัง Vitest คือคุณมี build pipeline ที่สมบูรณ์สำหรับสร้างแอปอยู่แล้ว แล้วทำไม pipeline นั้นจึงควรต่างออกไปสำหรับ test? มันไม่ควรต่างกัน; คุณอยากให้ testing environment เหมือน app environment ของคุณมากที่สุดเท่าที่ทำได้</p>
+      <p>พวกเขาออกแบบมันให้เป็นตัวแทนแบบเสียบแทนได้เลยของ <a href="https://jestjs.io">Jest</a> ซึ่งเป็นสิ่งที่ฉันสอนในคอร์สนี้มาตั้งแต่ต้น Jest เยี่ยมมากและยังเป็นเครื่องมือที่ใช้งานได้ดีมากสำหรับ testing แม้ใช้กับ Vite เราจะใช้ Vitest เพราะ 1. เราไม่ต้องตั้งค่าเพิ่มอีก และ 2. 100% ของสิ่งที่คุณจะเรียนที่นี่มีประโยชน์หากคุณใช้ Jest เช่นกัน ชนะทั้งคู่ ถ้าอยากเรียน Jest โดยเฉพาะ <a href="https://frontendmasters.com/courses/intermediate-react-v4/setup-jest-testing-library/">ลองดูส่วน testing ของ Intermediate React v4</a></p>
+      <blockquote><p>เกร็ดสนุก: <a href="https://twitter.com/cpojer/status/1524419433938046977">Jest เป็นโครงการของ OpenJS แล้ว และไม่ได้อยู่ภายใต้ Facebook โดยตรงอีกต่อไป</a></p></blockquote>
+      <p>แม้ Vitest จะไม่ได้ใช้ Jasmine โดยตรง แต่ APIs ของมันเลียนแบบ Jasmine APIs (เช่นเดียวกับ Jest)</p>
+      <p>เริ่มกันเลย รัน <code>npm install -D vitest@2.1.3 @testing-library/react@16.0.1 happy-dom@15.7.4</code></p>
+      <p><code>@testing-library/react</code> ที่เคยชื่อ <code>react-testing-library</code> คือเครื่องมือที่มี convenience features มากมายซึ่งทำให้ testing React ง่ายขึ้นอย่างมาก และปัจจุบันเป็นวิธีที่แนะนำสำหรับ testing React โดยเข้ามาแทนที่ <a href="http://airbnb.io/enzyme/">Enzyme</a> เวอร์ชันก่อนหน้าของคอร์สนี้สอน Enzyme ถ้าคุณอยากดู (แม้ฉันจะไม่แนะนำ เว้นแต่จำเป็น)</p>
+      <p>เราต้องบอก Vitest ว่าต้องการ environment คล้าย browser ซึ่งมันจะทำให้ผ่าน package <a href="https://github.com/capricorn86/happy-dom">happy-dom</a> happy-dom คล้าย jsdom มาก แต่เล็กกว่า ไม่ได้ทำ 100% ของสิ่งที่ browser ทำ และเร็วกว่า <em>มาก</em></p>
+      <p>ต่อไปเข้าไปใน src directory แล้วสร้าง folder ชื่อ <code>__tests__</code> สังเกตว่ามี underscores สองตัวทั้งสองด้าน ทำไมสองตัว? พวกเขายืมมาจาก Python ที่ double underscores (ที่ฉันเคยได้ยินเรียกว่า “dunders”) หมายความว่าจะมี magic เกิดขึ้น (โดยแก่นคือชื่อมีความสำคัญในตัวเอง และมีบางสิ่งกำลังมองหา path name นั้นตรงตัว) ในกรณีนี้ Vitest สมมติว่า JS files ทั้งหมดในนี้เป็น tests</p>
+      <p>ไปเพิ่ม npm script กัน ใน package.json ของคุณ</p>
+      <pre><code class="language-json">"test": "vitest"
+</code></pre>
+      <blockquote><p>ทริกสนุก: ถ้าคุณเรียกมันว่า test, npm ให้คุณรัน command นั้นเป็นเพียง <code>npm t</code></p></blockquote>
+      <p>command นี้ให้คุณรัน Vitest ใน interactive mode ซึ่งจะ re-run tests แบบเลือกเฉพาะเมื่อคุณ save นั่นทำให้คุณได้ instant feedback ว่า test ทำงานหรือไม่ นี่น่าจะเป็น feature ที่ฉันชอบที่สุดของ Vitest</p>
+      <p>โอเค มี configuration เล็กน้อยอย่างหนึ่งที่ต้องเพิ่มใน <code>vite.config.js</code> ของคุณ</p>
+      <pre><code class="language-javascript">// add this to the config object
+test: {
+  environment: "happy-dom",
+},
+</code></pre>
+      <p>ตอนนี้เราตั้งค่านี้แล้ว ไปเขียน test กัน</p>
+      <h2>ลิงก์อ้างอิงเพิ่มเติม</h2>
+      <ul>
+        <li><a href="https://jasmine.github.io/">Jasmine</a></li>
+        <li><a href="https://istanbul.js.org">Istanbul</a></li>
+        <li><a href="https://raw.githubusercontent.com/btholt/complete-intro-to-react-v5/testing/__mocks__/@frontendmasters/res.json">ตัวอย่าง resource JSON</a></li>
+        <li><a href="https://github.com/btholt/citr-v8-project/tree/master/14-context">สถานะ project ของคอร์สเวอร์ชันก่อนหน้า</a></li>
+      </ul>
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="21_uncontrolled_forms.html" rel="prev">ก่อนหน้า: Uncontrolled Forms</a><a href="index.html">สารบัญบทเรียน</a><a href="23_basic_react_tests.html" rel="next">ถัดไป: Basic React Tests</a></nav>
+    </article></main>
+    <footer class="course-attribution"><p>เนื้อหาต้นฉบับคือ <a href="https://react-v9.holt.courses/lessons/testing/vitest">Complete Intro to React v9</a> โดย Brian Holt; คำแปลภาษาไทยจัดทำเพื่อการเรียนรู้ในหลักสูตรนี้</p><p>เนื้อหา Prose ต้นฉบับใช้สัญญาอนุญาต <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และ Code Samples กับ Exercises ใช้สัญญาอนุญาต <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer>
+  </body>
+</html>

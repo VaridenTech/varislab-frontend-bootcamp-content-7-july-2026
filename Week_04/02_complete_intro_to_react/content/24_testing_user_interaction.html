@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ทดสอบการส่งฟอร์ม Contact และการโต้ตอบของผู้ใช้" /><title>Testing User Interaction | เรียน React ฉบับสมบูรณ์</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 24 · Testing</p><h1>การทดสอบปฏิสัมพันธ์ของผู้ใช้</h1><p class="lesson-original-title">Testing User Interaction</p></header>
+  <p>มาทดสอบหน้า Contact กัน มันมี user interaction ที่ดีและเรียบง่าย ผู้ใช้ใส่ข้อมูล เรา submit ไป API แล้วแสดง submitted header ให้พวกเขา มาทดสอบทั้งหมดนั้นกัน</p>
+  <p>ก่อนอื่นเราต้องมี helper function, vitest-fetch-mock เราไม่ได้ <em>ต้อง</em> ใช้มัน เพราะ Vitest ทำได้ แต่ฉันคิดว่ามันทำให้ง่ายขึ้น</p>
+  <pre><code class="language-bash">npm i -D vitest-fetch-mock@0.3.0
+</code></pre>
+  <p>และตอนนี้มาเขียน code กัน</p>
+  <pre><code class="language-javascript">import { render } from "@testing-library/react";
+import { expect, test, vi } from "vitest";
+import createFetchMock from "vitest-fetch-mock";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { Route } from "../routes/contact.lazy";
+
+const queryClient = new QueryClient();
+
+const fetchMocker = createFetchMock(vi);
+fetchMocker.enableMocks();
+
+test("can submit contact form", async () =&gt; {
+  fetchMocker.mockResponse(JSON.stringify({ status: "ok" }));
+  const screen = render(
+    &lt;QueryClientProvider client={queryClient}&gt;
+      &lt;Route.options.component /&gt;
+    &lt;/QueryClientProvider&gt;
+  );
+
+  const nameInput = screen.getByPlaceholderText("Name");
+  const emailInput = screen.getByPlaceholderText("Email");
+  const msgTextArea = screen.getByPlaceholderText("Message");
+
+  const testData = {
+    name: "Brian",
+    email: "test@example.com",
+    message: "This is a test message",
+  };
+
+  nameInput.value = testData.name;
+  emailInput.value = testData.email;
+  msgTextArea.value = testData.message;
+
+  const btn = screen.getByRole("button");
+
+  btn.click();
+
+  const h3 = await screen.findByRole("heading", { level: 3 });
+
+  expect(h3.innerText).toContain("Submitted");
+
+  const requests = fetchMocker.requests();
+  expect(requests.length).toBe(1);
+  expect(requests[0].url).toBe("/api/contact");
+  expect(fetchMocker).toHaveBeenCalledWith("/api/contact", {
+    body: JSON.stringify(testData),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+});
+</code></pre>
+  <ul><li>เราต้อง wrap React Query ด้วย query provider เสมอ ไม่เช่นนั้นมันไม่ทำงาน กรณีนี้เราให้มันเป็นส่วนหนึ่งของ initial render ได้เลย</li><li>คุณสามารถ pre-populate React Query ด้วย cache ที่ใช้ได้ แล้วทดสอบว่า app ใช้มันถูกต้องหรือไม่ เป็นวิธี test ที่ใช้ได้อย่างสมบูรณ์ ในกรณีนี้เราอยากให้แน่ใจว่า endpoint ของเราถูก post อย่างถูกต้อง (เพื่อให้แน่ใจว่าเราบันทึก contact) ดังนั้นจึงไม่ทำเช่นนั้น</li><li><code>vi</code> คือ spy library ของ Vitest คล้าย sinon</li><li>vitest-fetch-mock เป็นเพียง layer ที่สะดวกบน vi เราใช้ vi โดยตรงก็ได้</li><li>สังเกตว่าเราแค่เรียก <code>click</code> ได้เลย และมันทำทุกอย่างอย่างที่คาด Cool ใช่ไหม?</li><li>จากนั้นเราทำ assertions ว่า h3 ของเราแสดงถูกต้อง API ถูกเรียกครั้งเดียว และถูก submit ไปยัง API ของเราในแบบที่เราคาด นี่อาจดูเน้น implementation เล็กน้อย ซึ่งก็ใช่ แต่โดยทั่วไปใน app ใหญ่กว่านี้เราน่าจะมี library สำหรับเรียก API และทดสอบแยกต่างหาก แต่ที่นี่เราไม่มี เราจึงรวมมันทั้งหมดไว้ด้วยกัน</li></ul>
+  <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="23_basic_react_tests.html" rel="prev">ก่อนหน้า: Basic React Tests</a><a href="index.html">สารบัญบทเรียน</a><a href="25_testing_custom_hooks.html" rel="next">ถัดไป: Testing Custom Hooks</a></nav>
+</article></main><footer class="course-attribution"><p>เนื้อหาต้นฉบับคือ <a href="https://react-v9.holt.courses/lessons/testing/testing-user-interaction">Complete Intro to React v9</a> โดย Brian Holt; คำแปลภาษาไทยจัดทำเพื่อการเรียนรู้ในหลักสูตรนี้</p><p>เนื้อหา Prose ต้นฉบับใช้สัญญาอนุญาต <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และ Code Samples กับ Exercises ใช้สัญญาอนุญาต <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p></footer></body></html>
