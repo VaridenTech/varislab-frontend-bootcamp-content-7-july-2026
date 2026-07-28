@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="จัดการ state และ controlled form ด้วย React Hooks" />
+    <title>Hooks | เรียน React ฉบับสมบูรณ์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 11 · Core React Concepts</p>
+          <h1>Hooks</h1>
+          <p class="lesson-original-title">Hooks</p>
+        </header>
+
+        <h2>Hooks</h2>
+
+        <p>โอเค ตอนนี้เราต้องการให้ผู้คนเพิ่ม pizzas ลงใน order ของตนได้ เราต้องมี form เล็ก ๆ ที่ให้เลือก pizza และขนาด สร้างไฟล์ใหม่ชื่อ Order.jsx แล้วเพิ่มสิ่งต่อไปนี้:</p>
+
+        <pre><code class="language-javascript">import Pizza from "./Pizza";
+
+export default function Order() {
+  const pizzaType = "pepperoni";
+  const pizzaSize = "M";
+  return (
+    &lt;div className="order"&gt;
+      &lt;h2&gt;Create Order&lt;/h2&gt;
+      &lt;form&gt;
+        &lt;div&gt;
+          &lt;div&gt;
+            &lt;label htmlFor="pizza-type"&gt;Pizza Type&lt;/label&gt;
+            &lt;select name="pizza-type" value={pizzaType}&gt;
+              &lt;option value="pepperoni"&gt;The Pepperoni Pizza&lt;/option&gt;
+              &lt;option value="hawaiian"&gt;The Hawaiian Pizza&lt;/option&gt;
+              &lt;option value="big_meat"&gt;The Big Meat Pizza&lt;/option&gt;
+            &lt;/select&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label htmlFor="pizza-size"&gt;Pizza Size&lt;/label&gt;
+            &lt;div&gt;
+              &lt;span&gt;
+                &lt;input
+                  checked={pizzaSize === "S"}
+                  type="radio"
+                  name="pizza-size"
+                  value="S"
+                  id="pizza-s"
+                /&gt;
+                &lt;label htmlFor="pizza-s"&gt;Small&lt;/label&gt;
+              &lt;/span&gt;
+              &lt;span&gt;
+                &lt;input
+                  checked={pizzaSize === "M"}
+                  type="radio"
+                  name="pizza-size"
+                  value="M"
+                  id="pizza-m"
+                /&gt;
+                &lt;label htmlFor="pizza-m"&gt;Medium&lt;/label&gt;
+              &lt;/span&gt;
+              &lt;span&gt;
+                &lt;input
+                  checked={pizzaSize === "L"}
+                  type="radio"
+                  name="pizza-size"
+                  value="L"
+                  id="pizza-l"
+                /&gt;
+                &lt;label htmlFor="pizza-l"&gt;Large&lt;/label&gt;
+              &lt;/span&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+          &lt;button type="submit"&gt;Add to Cart&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div className="order-pizza"&gt;
+          &lt;Pizza
+            name="Pepperoni"
+            description="Mozzarella Cheese, Pepperoni"
+            image="/public/pizzas/pepperoni.webp"
+          /&gt;
+          &lt;p&gt;$13.37&lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/form&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <p>ตอนนี้เพิ่มมันใน App.jsx ของคุณ:</p>
+
+        <pre><code class="language-javascript">// delete Pizza import, and add Order
+import Order from "./Order";
+
+// in App.jsx, replace all the Pizzas
+&lt;Order /&gt;
+</code></pre>
+
+        <blockquote>🚨 คุณจะมี errors ใน console บ้าง ซึ่งไม่เป็นไร</blockquote>
+
+        <p>ตอนนี้ไปที่ <a href="http://localhost:5173/">http://localhost:5173/</a> แล้วดูว่าคุณมี inputs สองแบบ หนึ่งสำหรับชนิด pizza และ radio buttons ชุดหนึ่งสำหรับขนาด ลองเลือกบางอย่างด้วย inputs คุณจะเห็นว่าคุณเปลี่ยนมันไม่ได้ ทำไม? ลองคิดว่า React ทำงานอย่างไร: เมื่อคุณโต้ตอบกับ inputs React ตรวจพบว่า DOM event เกิดขึ้น เมื่อเกิดขึ้น React คิดว่า<em>บางสิ่ง</em>อาจเปลี่ยน จึงรัน re-render หาก render functions ของคุณเร็ว นี่เป็นการทำงานที่เร็วมาก จากนั้นมัน diff สิ่งที่มีอยู่ตอนนี้กับสิ่งที่ render pass สร้างขึ้น แล้วอัปเดต DOM ให้น้อยที่สุดเท่าที่จำเป็น</p>
+
+        <blockquote>ในหลักสูตรวิดีโอ layout เป็นแนวตั้งเพราะ <code>order-pizza</code> DIV อยู่ผิดตำแหน่ง ให้ใช้ markup ข้างบน Layout ควรมีลักษณะดังนี้:</blockquote>
+
+        <p><img src="/images/order-page-layout.webp" alt="Order Page Layout" /></p>
+
+        <p>สังเกตว่าเราใช้ <code>className</code> แทน <code>class</code> บน HTML element สำหรับ CSS classes นี่เป็นเพราะ <code>class</code> เป็น reserved word ใน JS และ JSX ก็ยังเป็น JS อยู่ ดังนั้นจึงเลือกใช้ <code>className</code> ซึ่งเป็น <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/className">ชื่อของ JS API</a> สำหรับโต้ตอบกับ class names</p>
+
+        <p>เช่นเดียวกับ <code>className</code> เราใช้ <code>htmlFor</code> เพราะ <code>for</code> เป็น reserved word ใน JS</p>
+
+        <p>ดังนั้นหากเราพิมพ์ลงใน input และมัน re-render อะไรจะออกมาใน tags <code>select</code> หรือ radio button? value ของมันผูกอยู่กับ <code>pizzaType</code> และ <code>pizzaSize</code> และไม่มีอะไรเปลี่ยนสองค่านั้น ดังนั้นมันจึงเหมือนเดิม กล่าวอีกนัยหนึ่ง two way data binding ไม่ได้ได้มาฟรีใน React ฉันว่ามันเป็น feature เพราะมันทำให้คุณชัดเจนว่าจะจัดการ data อย่างไร มาแก้ให้มันทำงานกัน</p>
+
+        <pre><code class="language-javascript">// in Order.jsx
+import { useState } from "react";
+
+// pizzaType and pizzaSize location
+const [pizzaType, setPizzaType] = useState("pepperoni");
+const [pizzaSize, setPizzaSize] = useState("medium");
+
+// replace input
+&lt;select
+  onChange={(e) =&gt; setPizzaType(e.target.value)}
+  name="pizza-type"
+  value={pizzaType}
+&gt;
+  […]
+&lt;/select&gt;
+
+// add to all the radio buttons
+onChange={(e) =&gt; setPizzaSize(e.target.value)}
+</code></pre>
+
+        <ul>
+          <li>สิ่งนี้เรียกว่า hook frameworks อื่น เช่น Vue ก็นำมันไปใช้เช่นกัน</li>
+          <li>ในความคิดของฉัน hook ถูกเรียกเช่นนั้นเพราะเป็น hook ที่ถูกจับทุกครั้งที่ render function ถูกเรียก เนื่องจาก hooks ถูกเรียกตามลำดับเดิมทุกครั้ง มันจึงชี้ไปที่ state ชิ้นเดิมเสมอ ด้วยเหตุนี้มันจึงมี state ได้: คุณเก็บ mutable state ด้วย hooks แล้วแก้ไขภายหลังผ่าน updater functions ที่มันให้มาได้</li>
+          <li>แนวคิดที่<em>สำคัญอย่างยิ่ง</em>ที่คุณต้องเข้าใจคือ hooks พึ่งพาลำดับที่เคร่งครัดนี้ ดังนั้น <strong>อย่าวาง hooks ไว้ใน if statements หรือ loops</strong> หากทำ คุณจะเจอ bugs ประหลาดที่ <code>useState</code> คืน<em>state ที่ผิด</em> หากคุณเห็น <code>useState</code> คืน state ผิดชิ้น นี่น่าจะเป็นสิ่งที่คุณทำ ทุก hook ต้องทำงานทุกครั้งในลำดับเดียวกัน</li>
+          <li>argument ที่ให้ <code>useState</code> คือ default value ในกรณีของเรา เราอาจให้ <code>&quot;&quot;</code> เป็น default value เพื่อบังคับให้ผู้ใช้เลือกบางอย่างก่อน แต่กรณีนี้เราต้องการตั้งค่าเริ่มต้นเป็น pepperoni pizza และขนาดกลาง</li>
+          <li><code>useState</code> คืน array ที่มีสองสิ่ง: current value ของ state นั้น และ function สำหรับอัปเดต state เราใช้ JavaScript feature ที่เรียกว่า destructuring เพื่อเอาทั้งสองสิ่งออกจาก array</li>
+          <li>เราใช้ function <code>setPizzaType</code> / <code>setPizzaSize</code> ใน attribute <code>onChange</code> ของ input ทุกครั้งที่พิมพ์ใน input มันจะเรียก functions ที่เรียก <code>setPizzaType</code> และ <code>setPizzaSize</code> ด้วยสิ่งที่พิมพ์ เลือก หรือคลิกใน input เมื่อเรียก <code>setPizzaType</code> และ <code>setPizzaSize</code> React รู้ว่า state ถูกแก้ไขและเริ่ม re-render</li>
+          <li>คุณสร้าง custom hooks ของตัวเองได้; <code>useState</code> เป็นเพียงหนึ่งจากหลายตัว</li>
+          <li>ในอดีต React เขียนด้วย classes โดย state อยู่บน instance ของ component รูปแบบนี้ยังได้รับการสนับสนุนใน React เราจะดูวิธีทำภายหลัง</li>
+          <li>เราอาจวาง onChange handler บน radio buttons แต่ละอันได้ อย่างไรก็ตาม event bubbling ใน React ทำงานเหมือนใน DOM ปกติ และเราวางมันตรงบน div ที่ครอบ radio buttons ทั้งหมดได้ จึงทำเพียงครั้งเดียว</li>
+          <li>คุณใช้ <code>useState</code> ได้มากเท่าที่ต้องการสำหรับ state หลายส่วน! นี่เป็นอีกเหตุผลว่าทำไมลำดับจึงสำคัญ เพราะ React พึ่งพาให้เรียก <code>useState</code> ด้วยลำดับเดิมอย่างเคร่งครัดทุกครั้ง เพื่อส่ง state ชิ้นเดิมให้คุณ</li>
+          <li>คล้ายกับข้างต้น เราใช้ <code>onChange</code> เพราะทำให้เข้าถึงได้ง่ายกว่า</li>
+        </ul>
+
+        <blockquote>ฉันกำลังแสดงวิธีทำ “controlled form” ที่เราใช้ hooks ควบคุมแต่ละส่วนของ form ในความจริงควรปล่อยให้มัน <em>uncontrolled</em> (หรือไม่ตั้ง value) แล้วห่อทั้งหมดด้วย form จากนั้นฟัง submit events และใช้ event นั้นเก็บข้อมูลจาก form วิธีนี้เขียนโค้ดน้อยกว่าและไม่หนักมือ หากคุณต้องเขียน form มาตรฐาน ให้ทำเป็น uncontrolled form หากต้องทำ dynamic validation, ตอบสนองขณะที่ผู้ใช้พิมพ์แบบ typeahead (ความสามารถที่ให้คำแนะนำแบบ real-time) หรือคล้ายกัน controlled input จะเหมาะมาก นอกนั้นใช้ uncontrolled<br />สิ่งใหม่ใน React เรียกว่า “form action” ซึ่งถือว่ายังไม่เสถียร อนาคตคุณจะเพียงเพิ่ม <code>&lt;form action=&quot;blah&quot;&gt;[…]&lt;/form&gt;</code> และ form action จะจัดการ form ทั้งหมดให้คุณ</blockquote>
+
+        <p>ข้อสังเกตอีกอย่าง: event bubbling ใน React ทำงานเหมือนที่คุณคาด ในทางทฤษฎีคุณมี mega event handler ใน React ได้ แต่ lint rules และ React's dev tools จะส่งเสียงเตือนมากหากทำเช่นนั้น ดังนั้นฉันมักทำตามคำแนะนำของมัน</p>
+
+        <pre><code class="language-javascript">// you could replace the div surrounding the radio buttons and remove all the onChange handlers
+&lt;div onChange={(e) =&gt; setPizzaSize(e.target.value)}&gt;[…]&lt;/div&gt;
+</code></pre>
+
+        <p class="translator-note">🏁 <a href="https://github.com/btholt/citr-v9-project/tree/main/04-hooks">คลิกที่นี่เพื่อดูสถานะของโปรเจกต์จนถึงตอนนี้: 04-hooks</a></p>
+
+        <!-- Source reference definition retained for parity: https://babeljs.io/ -->
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="10_jsx.html" rel="prev">ก่อนหน้า: JSX</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="12_effects.html" rel="next">ถัดไป: Effects</a>
+        </nav>
+      </article>
+    </main>
+
+    <footer class="course-attribution">
+      <p>เนื้อหาต้นฉบับคือ <a href="https://react-v9.holt.courses/">Complete Intro to React v9</a> โดย Brian Holt; คำแปลภาษาไทยจัดทำเพื่อการเรียนรู้ในหลักสูตรนี้</p>
+      <p>เนื้อหา Prose ต้นฉบับใช้สัญญาอนุญาต <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และ Code Samples กับ Exercises ใช้สัญญาอนุญาต <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+    </footer>
+  </body>
+</html>

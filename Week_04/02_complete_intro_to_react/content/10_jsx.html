@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เรียนรู้ JSX และการตั้งค่า API proxy ใน React" />
+    <title>JSX | เรียน React ฉบับสมบูรณ์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 10 · Core React Concepts</p>
+          <h1>JSX</h1>
+          <p class="lesson-original-title">JSX</p>
+        </header>
+
+        <h2>JSX</h2>
+
+        <p>จนถึงตอนนี้เราเขียน React โดยไม่ใช้ JSX ซึ่งฉันไม่รู้จักใครที่ทำแบบนั้นจริง ๆ กับแอปของตน <em>ทุกคน</em> ใช้ JSX ฉันแสดงวิธี <code>createElement</code> ให้คุณดูเพื่อให้คุณเข้าใจว่า JSX กำลังทำอะไรจริง ๆ มันแทบไม่ได้ทำอะไรเลย เพียงทำให้โค้ดของคุณอ่านง่ายขึ้นเล็กน้อย</p>
+
+        <p>ถ้าฉันเขียน <code>React.createElement(&quot;h1&quot;, { id: &quot;main-title&quot; }, &quot;My Website&quot;);</code> สิ่งที่ฉันพยายามให้ render ออกมาจริง ๆ คืออะไร <code>&lt;h1 id=&quot;main-title&quot;&gt;My Website&lt;/h1&gt;</code> ใช่ไหม JSX พยายามตัดชั้นการแปลในสมองของคุณนี้ออกไป เพื่อให้คุณเขียนสิ่งที่คุณหมายถึงได้เลย</p>
+
+        <p>สร้างไฟล์ใหม่ชื่อ Pizza.jsx</p>
+
+        <blockquote>ต้องแน่ใจว่าเรียกไฟล์ว่า <code>.jsx</code> ไม่ใช่ <code>.js</code> Vite จะไม่ทำ JSX transpilation หากไฟล์ไม่ได้มีนามสกุล JSX</blockquote>
+
+        <pre><code class="language-javascript">const Pizza = (props) =&gt; {
+  return (
+    &lt;div className="pizza"&gt;
+      &lt;h1&gt;{props.name}&lt;/h1&gt;
+      &lt;p&gt;{props.description}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default Pizza;
+</code></pre>
+
+        <p>ฉันไม่รู้ว่าคุณเป็นอย่างไร แต่ฉันว่าแบบนี้อ่านง่ายกว่ามาก และถ้าการนำ HTML มาไว้ใน JavaScript ทำให้คุณรู้สึกไม่คุ้นเคย ฉันอยากชวนให้คุณลองใช้จนจบเวิร์กช็อป เมื่อถึงตอนนั้นมันน่าจะรู้สึกคุ้นขึ้น และคุณก็กลับไปใช้วิธีเดิมได้เสมอ</p>
+
+        <p>อย่างไรก็ดี ตอนนี้คุณรู้แล้วว่า JSX ช่วยคุณทำ<em>อะไร</em> มันเพียงแปล HTML tags เหล่านั้นเป็นการเรียก <code>React.createElement</code> <em>แค่นั้นเอง</em> จริง ๆ ไม่มีเวทมนตร์อื่นอีก JSX ไม่ได้ทำอย่างอื่นเลย หลายคนที่เรียน React ไม่ได้เรียนเรื่องนี้</p>
+
+        <p>สังเกต syntax แปลก ๆ <code>{props.name}</code>: นี่คือวิธีแสดง JavaScript expressions ใน JSX expression คืออะไรก็ตามที่เป็นด้านขวาของ assignment operator ใน JavaScript ได้ เช่น <code>const x = &lt;anything that can go here&gt;</code> หากเอา <code>{}</code> ออก มันจะแสดง <code>props.name</code> ลงใน DOM ตามตัวอักษร</p>
+
+        <blockquote>สังเกตว่าเราไม่จำเป็นต้องเขียน <code>import React from 'react'</code> ที่นี่เหมือนเมื่อก่อน JSX เวอร์ชันล่าสุดจัดการให้คุณแล้ว ดังนั้นคุณต้อง import React package อย่างชัดเจนก็ต่อเมื่อต้องใช้บางสิ่งจากมัน นอกนั้นใช้ JSX ได้โดยไม่ต้อง import React!</blockquote>
+
+        <h2>ESLint</h2>
+
+        <p>มาแก้ ESLint ของเรากัน เพราะ JSX เพิ่มรายละเอียดใหม่ ๆ ที่เราต้องการความช่วยเหลือ โปรดติดตั้ง</p>
+
+        <pre><code class="language-bash">npm i -D eslint-plugin-react@7.37.1
+</code></pre>
+
+        <p>จากนั้นใน eslint.config.mjs ของคุณ</p>
+
+        <pre><code class="language-javascript">// at top, import the ESLint reactPlugin
+import reactPlugin from "eslint-plugin-react";
+
+// under js.configs.recommended line
+{
+  ...reactPlugin.configs.flat.recommended,
+  settings: {
+    react: {
+      version: "detect",
+    },
+  },
+},
+reactPlugin.configs.flat["jsx-runtime"],
+
+// add to files
+files: ["**/*.js", "**/*.jsx"], // add JSX
+
+//after the languageOptions object:
+rules: {
+  "react/no-unescaped-entities": "off",
+  "react/prop-types": "off",
+},
+</code></pre>
+
+        <p>คุณยังคัดลอก configuration ฉบับเต็มจาก <a href="https://github.com/btholt/citr-v9-project/blob/main/03-jsx/eslint.config.mjs">repository</a> ได้ด้วย</p>
+
+        <p>เราต้องเพิ่มสอง configs: อันหนึ่งให้ ESLint เข้าใจ React และเพิ่มกฎ React พื้นฐาน และอีกอันทำให้ทันสมัยขึ้น เพราะ React 17 เปลี่ยนวิธีที่ ESLint โต้ตอบกับ React ไปเล็กน้อย</p>
+
+        <p>เรายังปิดสอง rules ที่ฉันคิดว่าไม่ค่อยมีประโยชน์ ได้แก่ unescaped entities (ซึ่งทำให้คุณต้องเปลี่ยนสิ่งอย่าง <code>'</code> เป็น <code>&amp;apos</code>) และ prop types ซึ่ง ณ จุดนี้ไม่มีใครใช้มาสิบปีแล้ว นอกนั้นเราก็น่าจะพร้อมใช้งาน</p>
+
+        <h2>กลับไปที่ JSX</h2>
+
+        <p>ตอนนี้ JSX ถูกไขความลับไปบ้างแล้ว มาแปลง App.js กัน</p>
+
+        <pre><code class="language-javascript">// rename the file App.jsx
+// delete the React import
+import { createRoot } from "react-dom/client";
+import Pizza from "./Pizza";
+
+// delete the Pizza component
+
+const App = () =&gt; {
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;Padre Gino's Pizza – Order Now&lt;/h1&gt;
+      &lt;Pizza name="Pepperoni" description="Mozzarella Cheese, Pepperoni" /&gt;
+      &lt;Pizza
+        name="The Hawaiian Pizza"
+        description="Sliced Ham, Pineapple, Mozzarella Cheese"
+      /&gt;
+      &lt;Pizza
+        name="The Big Meat Pizza"
+        description="Bacon, Pepperoni, Italian Sausage, Chorizo Sausage"
+      /&gt;
+    &lt;/div&gt;
+  );
+};
+
+const container = document.getElementById("root");
+const root = createRoot(container);
+root.render(&lt;App /&gt;);
+</code></pre>
+
+        <p>ไปที่ index.html แล้วเปลี่ยน script tag ด้วย</p>
+
+        <pre><code class="language-html">&lt;script type="module" src="./src/App.jsx"&gt;&lt;/script&gt;
+</code></pre>
+
+        <p>สังเกตว่า Pizza เป็น component สังเกตว่าตัว <code>P</code> ใน <code>Pizza</code> เป็นตัวพิมพ์ใหญ่ มัน<em>ต้อง</em>เป็นเช่นนั้น หากทำให้เป็นตัวพิมพ์เล็ก มันจะพยายามใช้ <code>pizza</code> เป็น web component ไม่ใช่ React component</p>
+
+        <p>ตอนนี้เราส่ง props ลงไปเหมือนเราเพิ่ม attributes ให้ HTML tag เจ๋งดี</p>
+
+        <p>คุณทดสอบแอปได้ด้วยการรัน <code>npm run dev</code> และเปิด URL ที่แสดงใน terminal โดยทั่วไปคือ <a href="http://localhost:5173/">http://localhost:5173/</a></p>
+
+        <h2>API / Image Server</h2>
+
+        <p>สำหรับหลักสูตรนี้เราจะใช้ Fastify server เล็ก ๆ ที่ฉันสร้างไว้ให้ อยู่ใน directory <a href="https://github.com/btholt/citr-v9-project/tree/main/api">api</a> เราจะใช้ Vite.js ทำ proxy ไปยัง API server นี้ นี่เป็นเทคนิคมีประโยชน์สำหรับ local development หากคุณมี frontend แยกจาก backend โดยปกติคุณอาจมี NGINX คอย route traffic ไปยัง frontend และ backend servers ที่แยกกัน ตอนนี้เราจะใช้ Vite ไปก่อน</p>
+
+        <blockquote>หมายเหตุ: นี่หมายความว่าคุณต้องมี terminal windows <strong>สอง</strong> หน้าต่างทำงานอยู่ หนึ่ง terminal สำหรับ API server (เมื่อมันทำงานแล้วคุณไม่ต้องแตะมัน) อีก terminal หนึ่งคือ Vite server สำหรับ web app ของเรา</blockquote>
+
+        <p>เพิ่มสิ่งนี้ใน vite.config.js ของคุณ</p>
+
+        <pre><code class="language-javascript">// replace export
+export default defineConfig({
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+      "/public": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+    },
+  },
+  plugins: [react()],
+});
+</code></pre>
+
+        <h2>รัน API Server</h2>
+
+        <p>หากคุณยังไม่ได้ทำก่อนหน้านี้ในหลักสูตร ให้ดาวน์โหลดหรือ clone <a href="https://github.com/btholt/citr-v9-project">citr-v9-project repo</a> คุณต้องใช้เฉพาะ directory <code>api</code> สำหรับ API server</p>
+
+        <p>เปิด terminal ใหม่และไปที่ directory <code>api</code> สังเกตว่า server นี้อยู่<em>นอก</em> project directory ของคุณ</p>
+
+        <p>โดยใช้ <strong>Node 20 หรือสูงกว่า</strong> เข้าไปใน directory <code>api</code> ติดตั้ง dependencies แล้วรัน server:</p>
+
+        <pre><code class="language-bash">cd citr-v9-project/api
+npm install
+npm run dev
+</code></pre>
+
+        <p>server ควรเริ่มที่ port 3000 เพื่อยืนยันว่าทำงานอยู่ ให้ไปที่ <a href="http://localhost:3000/api/pizzas">http://localhost:3000/api/pizzas</a> แล้วคุณจะเห็น pizza JSON data</p>
+
+        <p>คุณต้องให้ทั้งสอง servers ทำงานพร้อมกัน ด้วย Vite proxy configuration ข้างต้น Vite server จะ intercept การเรียก <code>api</code> และ <code>public</code> ใน React application แล้วเปลี่ยนเส้นทางไปยัง API server ของคุณ!</p>
+
+        <p>ตอนนี้มาเพิ่ม images ให้ Pizza ของเรา</p>
+
+        <pre><code class="language-javascript">// return inside Pizza, inside div, under &lt;p&gt;
+&lt;img src={props.image} alt={props.name} /&gt;
+</code></pre>
+
+        <p>ตอนนี้ใน App.jsx</p>
+
+        <pre><code class="language-javascript">// add to first Pizza
+image={"/public/pizzas/pepperoni.webp"}
+
+// add to second Pizza
+image={"/public/pizzas/hawaiian.webp"}
+
+// add to third Pizza
+image={"/public/pizzas/big_meat.webp"}
+</code></pre>
+
+        <p>และตอนนี้คุณก็ควรมี images แล้ว!</p>
+
+        <p class="translator-note">🏁 <a href="https://github.com/btholt/citr-v9-project/tree/master/03-jsx">คลิกที่นี่เพื่อดูสถานะของโปรเจกต์จนถึงตอนนี้: 03-jsx</a></p>
+
+        <!-- Source reference definitions retained for parity: https://github.com/airbnb/javascript/tree/master/packages/eslint-config-airbnb https://standardjs.com/ -->
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="09_vite.html" rel="prev">ก่อนหน้า: Vite</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="11_hooks.html" rel="next">ถัดไป: Hooks</a>
+        </nav>
+      </article>
+    </main>
+
+    <footer class="course-attribution">
+      <p>เนื้อหาต้นฉบับคือ <a href="https://react-v9.holt.courses/">Complete Intro to React v9</a> โดย Brian Holt; คำแปลภาษาไทยจัดทำเพื่อการเรียนรู้ในหลักสูตรนี้</p>
+      <p>เนื้อหา Prose ต้นฉบับใช้สัญญาอนุญาต <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และ Code Samples กับ Exercises ใช้สัญญาอนุญาต <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+    </footer>
+  </body>
+</html>

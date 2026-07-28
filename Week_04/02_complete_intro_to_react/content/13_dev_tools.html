@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ใช้ environment และเครื่องมือพัฒนา React" />
+    <title>Dev Tools | เรียน React ฉบับสมบูรณ์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 13 · Core React Concepts</p>
+          <h1>Dev Tools</h1>
+          <p class="lesson-original-title">Dev Tools</p>
+        </header>
+
+        <p>React มีเครื่องมือดีมากสำหรับยกระดับ developer experience ของคุณ เราจะดูบางส่วนที่นี่</p>
+
+        <h2><code>NODE_ENV=development</code></h2>
+
+        <p>React มี developer conveniences มากมายติดมาให้ตั้งแต่แรก สิ่งที่ดีกว่าคือมันตัดสิ่งเหล่านั้นออกโดยอัตโนมัติเมื่อคุณ compile โค้ดสำหรับ production</p>
+
+        <p>แล้วคุณจะได้ debugging conveniences อย่างไร? หากใช้ Vite.js มันจะ compile development server ด้วย environment variable <code>NODE_ENV=development</code> และเมื่อรัน <code>vite build</code> มันจะเปลี่ยนเป็น <code>NODE_ENV=production</code> โดยอัตโนมัติ ซึ่งเป็นวิธีตัด extra weight ทั้งหมดออก</p>
+
+        <p>ทำไมการตัด debug stuff ออกจึงสำคัญ? React dev bundle ใหญ่กว่าและช้ากว่า production build มากพอสมควร ต้องแน่ใจว่าคุณ compile ด้วย environmental variables ที่ถูกต้อง ไม่เช่นนั้นผู้ใช้ของคุณจะเดือดร้อน</p>
+
+        <h2>Strict Mode</h2>
+
+        <p>React มี strict mode ใหม่ หากคุณห่อแอปด้วย <code>&lt;StrictMode&gt;&lt;/StrictMode&gt;</code> มันจะให้ warnings เพิ่มเติมเกี่ยวกับสิ่งที่คุณไม่ควรทำ ฉันไม่ได้สอนสิ่งใดที่ทำให้ warnings จาก <code>StrictMode</code> หายไป แต่การคุมทีมไม่ให้ใช้ legacy features หรือสิ่งที่จะถูกเลิกใช้ในไม่ช้าก็เป็นเรื่องดี</p>
+
+        <p>พึงระวังว่า <code>StrictMode</code> จะ double-render components ของคุณอย่างต่อเนื่อง และจะรัน effects สองครั้ง มันทำเช่นนี้เพื่อจับ subtle bugs ที่แอปของคุณเปลี่ยนระหว่าง renders ทั้งที่ไม่ควรเปลี่ยน มันอาจมีประโยชน์ แต่พูดตามตรง เมื่อคุณเรียนรู้ที่จะเขียน React อย่างถูกต้อง คุณแทบจะไม่เจอ bug แบบนั้น</p>
+
+        <h2>Dev Tools</h2>
+
+        <p>React มี dev tools ยอดเยี่ยมที่ core team ดูแล มีให้ใช้ทั้ง browsers ที่ใช้ Chromium และ Firefox มันให้คุณทำหลายอย่าง เช่น สำรวจ React app เหมือน DOM tree, แก้ state และ props ได้ทันทีเพื่อทดลอง, แกะ performance problems และจัดการ components แบบ programmatically ควรดาวน์โหลดตอนนี้เลย <a href="https://react.dev/learn/react-developer-tools">ดูที่นี่</a>สำหรับ links</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="12_effects.html" rel="prev">ก่อนหน้า: Effects</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="14_custom_hooks.html" rel="next">ถัดไป: Custom Hooks</a>
+        </nav>
+      </article>
+    </main>
+    <footer class="course-attribution">
+      <p>เนื้อหาต้นฉบับคือ <a href="https://react-v9.holt.courses/">Complete Intro to React v9</a> โดย Brian Holt; คำแปลภาษาไทยจัดทำเพื่อการเรียนรู้ในหลักสูตรนี้</p>
+      <p>เนื้อหา Prose ต้นฉบับใช้สัญญาอนุญาต <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a> และ Code Samples กับ Exercises ใช้สัญญาอนุญาต <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></p>
+    </footer>
+  </body>
+</html>
