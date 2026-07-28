@@ -270,7 +270,7 @@ function renderSummary(): void {
   totalElement.textContent = formatPrice(total);
 }
 
-function caculateTotalItems(): number {
+function calculateTotalItems(): number {
   let totalItems = 0;
 
   menuItems.forEach((item) => {
@@ -292,7 +292,7 @@ function setupPlaceOrderButton(): void {
   placeOrderButtonElement.addEventListener("click", () => {
     const input = customerNameInputElement as HTMLInputElement;
     const customerName = input.value.trim();
-    const totalItems = caculateTotalItems();
+    const totalItems = calculateTotalItems();
     const subtotal = calculateSubtotal();
 
     if (customerName === "") {
