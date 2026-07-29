@@ -3,36 +3,142 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="ตั้งค่าการทดสอบแอป React ด้วย Vitest" />
-    <title>Vitest | เรียน React ฉบับสมบูรณ์</title>
+    <meta name="description" content="ทำไมต้องเขียนเทสต์ และการตั้งค่า Vitest ให้แอป React ตั้งแต่ศูนย์" />
+    <title>Vitest | เรียน React เริ่มต้น</title>
     <link rel="stylesheet" href="lesson.css" />
   </head>
   <body>
     <main><article class="lesson">
       <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 21 · การทดสอบ (Testing)</p><h1>การทดสอบด้วย Vitest</h1><p class="lesson-original-title" lang="en">Vitest</p></header>
-      <p>เนื้อหานี้ตั้งใจให้เป็นบทความสั้นมากว่าด้วยวิธีทำ testing กับ React applications นี่จะเป็นบทนำสั้น ๆ ว่าจะตั้งค่า Vitest tests สำหรับแอปพลิเคชันที่เราเพิ่งสร้างอย่างไร สำหรับข้อมูลเพิ่มเติมเกี่ยวกับ Vite, Vitest และการทดสอบโดยทั่วไป ดู <a href="https://frontendmasters.com/learn/build-tools/">Build Tools &amp; Testing Learning Path</a></p>
-      <h2>Testing with Vitest</h2>
-      <p><a href="https://vitest.dev/">Vitest</a> คือ test runner ที่สร้างโดยทีมชั้นยอดผู้สร้าง Vite (รวมถึง Vue) แนวคิดเบื้องหลัง Vitest คือคุณมี build pipeline ที่สมบูรณ์สำหรับสร้างแอปอยู่แล้ว แล้วทำไม pipeline นั้นจึงควรต่างออกไปสำหรับ test? มันไม่ควรต่างกัน; คุณอยากให้ testing environment เหมือน app environment ของคุณมากที่สุดเท่าที่ทำได้</p>
-      <p>พวกเขาออกแบบมันให้เป็นตัวแทนแบบเสียบแทนได้เลยของ <a href="https://jestjs.io">Jest</a> ซึ่งเป็นสิ่งที่ฉันสอนในคอร์สนี้มาตั้งแต่ต้น Jest เยี่ยมมากและยังเป็นเครื่องมือที่ใช้งานได้ดีมากสำหรับ testing แม้ใช้กับ Vite เราจะใช้ Vitest เพราะ 1. เราไม่ต้องตั้งค่าเพิ่มอีก และ 2. 100% ของสิ่งที่คุณจะเรียนที่นี่มีประโยชน์หากคุณใช้ Jest เช่นกัน ชนะทั้งคู่ ถ้าอยากเรียน Jest โดยเฉพาะ <a href="https://frontendmasters.com/courses/intermediate-react-v4/setup-jest-testing-library/">ลองดูส่วน testing ของ Intermediate React v4</a></p>
-      <blockquote><p>เกร็ดสนุก: <a href="https://twitter.com/cpojer/status/1524419433938046977">Jest เป็นโครงการของ OpenJS แล้ว และไม่ได้อยู่ภายใต้ Facebook โดยตรงอีกต่อไป</a></p></blockquote>
-      <p>แม้ Vitest จะไม่ได้ใช้ Jasmine โดยตรง แต่ APIs ของมันเลียนแบบ Jasmine APIs (เช่นเดียวกับ Jest)</p>
-      <p>เริ่มกันเลย รัน <code>npm install -D vitest@2.1.3 @testing-library/react@16.0.1 happy-dom@15.7.4</code></p>
-      <p><code>@testing-library/react</code> ที่เคยชื่อ <code>react-testing-library</code> คือเครื่องมือที่มี convenience features มากมายซึ่งทำให้ testing React ง่ายขึ้นอย่างมาก และปัจจุบันเป็นวิธีที่แนะนำสำหรับ testing React โดยเข้ามาแทนที่ <a href="http://airbnb.io/enzyme/">Enzyme</a> เวอร์ชันก่อนหน้าของคอร์สนี้สอน Enzyme ถ้าคุณอยากดู (แม้ฉันจะไม่แนะนำ เว้นแต่จำเป็น)</p>
-      <p>เราต้องบอก Vitest ว่าต้องการ environment คล้าย browser ซึ่งมันจะทำให้ผ่าน package <a href="https://github.com/capricorn86/happy-dom">happy-dom</a> happy-dom คล้าย jsdom มาก แต่เล็กกว่า ไม่ได้ทำ 100% ของสิ่งที่ browser ทำ และเร็วกว่า <em>มาก</em></p>
-      <p>ต่อไปเข้าไปใน src directory แล้วสร้าง folder ชื่อ <code>__tests__</code> สังเกตว่ามี underscores สองตัวทั้งสองด้าน ทำไมสองตัว? พวกเขายืมมาจาก Python ที่ double underscores (ที่ฉันเคยได้ยินเรียกว่า “dunders”) หมายความว่าจะมี magic เกิดขึ้น (โดยแก่นคือชื่อมีความสำคัญในตัวเอง และมีบางสิ่งกำลังมองหา path name นั้นตรงตัว) ในกรณีนี้ Vitest สมมติว่า JS files ทั้งหมดในนี้เป็น tests</p>
-      <p>ไปเพิ่ม npm script กัน ใน package.json ของคุณ</p>
-      <pre><code class="language-json">"test": "vitest"
+
+      <p>ถึงตรงนี้แอปของเราทำงานได้ครบแล้ว — เลือกพิซซ่า ใส่ตะกร้า สั่งซื้อ ดูออร์เดอร์ย้อนหลัง ส่งฟอร์มติดต่อ ทุกครั้งที่แก้โค้ดสักจุด เราก็เปิดเบราว์เซอร์แล้วคลิกไล่ดูว่ายังใช้ได้อยู่ไหม บทนี้เราจะเปลี่ยนการคลิกซ้ำ ๆ นั้นให้เป็นโค้ดที่รันแทนเราได้</p>
+
+      <h2>ทำไมต้องเขียนเทสต์</h2>
+
+      <p>คำถามที่คนเรียนถามบ่อยที่สุดคือ “ในเมื่อกดดูเองก็ได้ ทำไมต้องเสียเวลาเขียนเทสต์” คำตอบไม่ใช่เรื่องความถูกต้องวันนี้ แต่เป็นเรื่องของวันข้างหน้า</p>
+
+      <ul>
+        <li><strong>มันไม่ scale</strong> — แอปเรามี 5 หน้าจอ กดตรวจครบยังพอไหว พอมี 50 หน้าจอ คุณจะกดตรวจไม่ครบ และคุณจะเลิกกดตรวจ</li>
+        <li><strong>มันจับของที่คุณ “ไม่ได้แตะ”</strong> — บั๊กที่เจ็บที่สุดคือแก้ตะกร้าแล้วหน้าออร์เดอร์ย้อนหลังพัง เพราะคุณไม่ได้เปิดหน้านั้นดูเลย</li>
+        <li><strong>มันทำให้กล้า refactor</strong> — เมื่อมีเทสต์คุ้มหลังอยู่ การรื้อโค้ดให้ดีขึ้นจะกลายเป็นเรื่องปกติ ไม่ใช่เรื่องน่ากลัว</li>
+        <li><strong>มันคือเอกสารที่ไม่มีวันล้าสมัย</strong> — คนที่เข้ามาอ่านโค้ดทีหลังดูเทสต์แล้วรู้ทันทีว่า component นี้ควรทำอะไร และคำอธิบายนั้นโกหกไม่ได้ เพราะถ้ามันไม่จริง เทสต์จะไม่ผ่าน</li>
+      </ul>
+
+      <p class="translator-note">💡 อย่าเพิ่งตั้งเป้าว่าต้องเทสต์ครบ 100% เป้าหมายที่ดีกว่ามากสำหรับผู้เริ่มต้นคือ “เทสต์สิ่งที่พังแล้วเจ็บที่สุด” เช่น การคำนวณราคารวมในตะกร้า ซึ่งถ้าผิดคือเก็บเงินลูกค้าผิด ส่วนเรื่องอย่างสีของปุ่มนั้นปล่อยไปได้</p>
+
+      <h2>Vitest คืออะไร</h2>
+
+      <p>Vitest คือ test runner ที่สร้างโดยทีมเดียวกับที่ทำ Vite แนวคิดของมันตรงไปตรงมามาก: ในเมื่อเรามี build pipeline ที่ใช้สร้างแอปอยู่แล้ว ทำไมตอนรันเทสต์ถึงต้องไปตั้งค่า pipeline อีกชุดหนึ่งแยกต่างหาก? สภาพแวดล้อมตอนเทสต์ควรเหมือนสภาพแวดล้อมจริงของแอปให้มากที่สุด</p>
+
+      <p>ผลคือเราแทบไม่ต้องตั้งค่าอะไรเลย เพราะ Vitest ใช้ <code>vite.config.js</code> ตัวเดิมที่เรามีอยู่แล้ว รู้จัก JSX อยู่แล้ว และเข้าใจ import แบบเดียวกับที่แอปเราใช้</p>
+
+      <p>Vitest ออกแบบมาให้ API เหมือน <strong>Jest</strong> ซึ่งเป็น test runner ที่ครองวงการ JavaScript มานาน แทบจะสลับกันใช้ได้เลย ข้อดีคือทุกอย่างที่คุณเรียนในบทนี้เอาไปใช้กับ Jest ได้หมด และทั้งคู่ก็ยืมรูปแบบคำสั่งอย่าง <code>describe</code>, <code>it</code>, <code>expect</code> มาจาก Jasmine อีกที ดังนั้นเรียนครั้งเดียวใช้ได้กับเครื่องมือแทบทุกตัวในวงการ</p>
+
+      <h2>ติดตั้ง</h2>
+
+      <pre><code class="language-bash">npm install -D vitest@2.1.3 @testing-library/react@16.0.1 happy-dom@15.7.4
 </code></pre>
-      <blockquote><p>ทริกสนุก: ถ้าคุณเรียกมันว่า test, npm ให้คุณรัน command นั้นเป็นเพียง <code>npm t</code></p></blockquote>
-      <p>command นี้ให้คุณรัน Vitest ใน interactive mode ซึ่งจะ re-run tests แบบเลือกเฉพาะเมื่อคุณ save นั่นทำให้คุณได้ instant feedback ว่า test ทำงานหรือไม่ นี่น่าจะเป็น feature ที่ฉันชอบที่สุดของ Vitest</p>
-      <p>โอเค มี configuration เล็กน้อยอย่างหนึ่งที่ต้องเพิ่มใน <code>vite.config.js</code> ของคุณ</p>
-      <pre><code class="language-javascript">// add this to the config object
+
+      <p>เราติดตั้งสามตัวด้วยกัน แต่ละตัวทำคนละหน้าที่</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>แพ็กเกจ</th>
+            <th>หน้าที่</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>vitest</code></td>
+            <td>ตัวรันเทสต์ คอยหาไฟล์เทสต์ รันมัน แล้วรายงานผลว่าผ่านหรือไม่ผ่าน</td>
+          </tr>
+          <tr>
+            <td><code>@testing-library/react</code></td>
+            <td>ชุดเครื่องมือสำหรับ render component ออกมาแล้วค้นหา/โต้ตอบกับสิ่งที่แสดงผล</td>
+          </tr>
+          <tr>
+            <td><code>happy-dom</code></td>
+            <td>DOM จำลองที่ทำงานใน Node.js เพราะเทสต์ของเราไม่ได้รันในเบราว์เซอร์จริง</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>ขยายความอีกนิดสำหรับสองตัวหลัง</p>
+
+      <ul>
+        <li><code>@testing-library/react</code> เป็นวิธีที่แนะนำสำหรับเทสต์ React ในปัจจุบัน จุดขายของมันคือปรัชญา “เทสต์เหมือนที่ผู้ใช้ใช้งานจริง” คือให้ค้นหา element จากสิ่งที่ผู้ใช้เห็น เช่น ข้อความบนปุ่มหรือ label ของช่องกรอก แทนที่จะไปยึดกับชื่อ class หรือโครงสร้างภายในของ component ผลคือเทสต์จะไม่พังเวลาคุณแก้ดีไซน์ แต่จะพังเมื่อพฤติกรรมของแอปเปลี่ยนจริง ๆ ซึ่งเป็นสิ่งที่เราต้องการ</li>
+        <li><code>happy-dom</code> จำเป็นเพราะโค้ด React ของเราเรียกใช้สิ่งที่มีเฉพาะในเบราว์เซอร์ เช่น <code>document</code> และ <code>window</code> แต่ Node.js ไม่มีสิ่งเหล่านี้ happy-dom จึงสร้าง DOM จำลองขึ้นมาให้ในหน่วยความจำ มันคล้าย <code>jsdom</code> ที่ใช้กันมานาน แต่เล็กกว่าและเร็วกว่ามาก แลกกับการที่มันไม่ได้ทำครบทุกอย่างเหมือนเบราว์เซอร์จริง (เดี๋ยวในบทท้าย ๆ เราจะได้รันเทสต์ในเบราว์เซอร์จริงกันด้วย)</li>
+      </ul>
+
+      <h2>ตั้งค่า</h2>
+
+      <p>เพิ่ม config เล็ก ๆ นี้ใน object ของ <code>vite.config.js</code> เพื่อบอก Vitest ว่าให้ใช้ DOM จำลอง</p>
+
+      <pre><code class="language-javascript">// เพิ่มเข้าไปใน object ที่ส่งให้ defineConfig
 test: {
   environment: "happy-dom",
 },
 </code></pre>
-      <p>ตอนนี้เราตั้งค่านี้แล้ว ไปเขียน test กัน</p>
-      <!-- Unused Markdown reference definitions retained for source-URL parity: https://jasmine.github.io/ https://istanbul.js.org https://raw.githubusercontent.com/btholt/complete-intro-to-react-v5/testing/__mocks__/@frontendmasters/res.json https://github.com/btholt/citr-v8-project/tree/master/14-context -->
+
+      <p>จากนั้นเพิ่ม npm script ใน <code>package.json</code></p>
+
+      <pre><code class="language-json">"test": "vitest"
+</code></pre>
+
+      <p class="translator-note">💡 ชื่อ <code>test</code> เป็นชื่อพิเศษที่ npm รู้จัก คุณจึงสั่งได้สั้น ๆ ว่า <code>npm test</code> หรือสั้นกว่านั้นคือ <code>npm t</code> โดยไม่ต้องมีคำว่า <code>run</code></p>
+
+      <p>สุดท้าย เข้าไปใน <code>src</code> แล้วสร้างโฟลเดอร์ชื่อ <code>__tests__</code> — สังเกตว่ามี underscore สองตัวขนาบทั้งสองข้าง Vitest จะถือว่าไฟล์ JS ทุกไฟล์ในโฟลเดอร์นี้คือเทสต์ ธรรมเนียม underscore คู่นี้ยืมมาจาก Python ที่ใช้สื่อว่า “ชื่อนี้มีความหมายพิเศษ มีบางอย่างกำลังมองหาชื่อนี้อยู่” ซึ่งในที่นี้คือตัว Vitest เอง</p>
+
+      <p>ตอนนี้โครงสร้างโปรเจกต์ควรเป็นแบบนี้</p>
+
+      <pre><code class="language-text">pizza-app/
+├── src/
+│   ├── __tests__/        ← เทสต์อยู่ตรงนี้
+│   ├── routes/
+│   ├── App.jsx
+│   └── Pizza.jsx
+├── vite.config.js
+└── package.json</code></pre>
+
+      <h2>ลองรันดู</h2>
+
+      <p>สั่ง <code>npm t</code> ได้เลย ตอนนี้ยังไม่มีไฟล์เทสต์สักไฟล์ Vitest จึงจะบ่นว่าหาเทสต์ไม่เจอ ซึ่งถูกต้องแล้ว ขอให้สังเกตว่ามันไม่ได้จบการทำงาน แต่ค้างรอไว้</p>
+
+      <p>นั่นเพราะโดยค่าเริ่มต้น Vitest ทำงานในโหมด <strong>watch</strong> คือมันจะเฝ้าดูไฟล์ของคุณ แล้วรันเฉพาะเทสต์ที่เกี่ยวข้องกับไฟล์ที่คุณเพิ่งบันทึกใหม่โดยอัตโนมัติ คุณจึงเขียนโค้ดไปแล้วเห็นผลทันทีในอีกหน้าต่างหนึ่งโดยไม่ต้องสลับไปกดอะไรเลย นี่เป็นฟีเจอร์ที่ทำให้การเขียนเทสต์รู้สึกลื่นขึ้นมาก กด <code>q</code> เพื่อออกจากโหมดนี้</p>
+
+      <p class="translator-note">🔍 ถ้าจะรันบนระบบ CI/CD ที่ต้องการให้จบแล้วคืนค่าสถานะ ให้ใช้ <code>npx vitest run</code> ซึ่งจะรันครั้งเดียวแล้วจบ ไม่ค้างรอ</p>
+
+      <h2>ลองทำเอง</h2>
+
+      <p>ก่อนไปบทถัดไปที่เราจะเขียนเทสต์จริงจัง ลองสร้างไฟล์ <code>src/__tests__/sanity.test.js</code> เพื่อยืนยันว่าเครื่องมือตั้งค่าถูกแล้ว</p>
+
+      <pre><code class="language-javascript">import { expect, test } from "vitest";
+
+test("ตั้งค่า Vitest เรียบร้อยแล้ว", () =&gt; {
+  expect(1 + 1).toBe(2);
+});
+</code></pre>
+
+      <ol>
+        <li>รัน <code>npm t</code> แล้วดูว่าเทสต์ผ่านเป็นสีเขียว</li>
+        <li>แก้ <code>toBe(2)</code> เป็น <code>toBe(3)</code> แล้วบันทึกไฟล์ โดยไม่ต้องไปสั่งอะไรใหม่ สังเกตว่า Vitest รันใหม่ให้เองทันที และอ่านข้อความ error ดูว่ามันบอกอะไรเราบ้าง</li>
+        <li>แก้กลับให้ผ่าน แล้วลองเปลี่ยนชื่อไฟล์เป็น <code>sanity.js</code> เฉย ๆ (เอา <code>.test</code> ออก) สังเกตว่า Vitest มองไม่เห็นมันแล้ว เพราะมันมองหาเฉพาะไฟล์ที่มี <code>.test.</code> หรือ <code>.spec.</code> ในชื่อ</li>
+        <li>เปลี่ยนชื่อกลับ แล้วลองเขียนเทสต์เพิ่มอีกหนึ่งข้อในไฟล์เดียวกัน ดูว่าผลลัพธ์แสดงทั้งสองข้ออย่างไร</li>
+      </ol>
+
+      <p>เมื่อทุกอย่างพร้อมแล้ว ลบไฟล์นี้ทิ้งได้ บทถัดไปเราจะเริ่มเทสต์ component จริงของแอปเรา</p>
+
+      <h2>สรุป</h2>
+
+      <ul>
+        <li>เทสต์ไม่ได้มีไว้พิสูจน์ว่าโค้ดวันนี้ถูก แต่มีไว้กันไม่ให้โค้ดวันหน้าพังโดยที่เราไม่รู้ตัว</li>
+        <li>Vitest ใช้ config เดียวกับ Vite เราจึงแทบไม่ต้องตั้งค่าอะไรเพิ่ม และสิ่งที่เรียนใช้กับ Jest ได้เกือบทั้งหมด</li>
+        <li>ต้องมีสามชิ้นประกอบกัน: ตัวรันเทสต์ (Vitest), เครื่องมือ render component (Testing Library) และ DOM จำลอง (happy-dom)</li>
+        <li>ไฟล์เทสต์อยู่ใน <code>src/__tests__</code> และต้องมี <code>.test.</code> อยู่ในชื่อไฟล์</li>
+        <li>โหมด watch คือค่าเริ่มต้น ส่วน <code>vitest run</code> ไว้ใช้บน CI</li>
+      </ul>
+
       <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="20_uncontrolled_forms.html" rel="prev">ก่อนหน้า: Uncontrolled Forms</a><a href="index.html">สารบัญบทเรียน</a><a href="22_basic_react_tests.html" rel="next">ถัดไป: Basic React Tests</a></nav>
     </article></main>
   </body>
