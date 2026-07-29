@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workshop Hub</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="navbar" aria-label="Main navigation">
+        <a class="logo" href="#top">Workshop Hub</a>
+        <a href="#booking">My Booking</a>
+      </nav>
+    </header>
+    <main id="top">
+      <section class="hero-section" aria-labelledby="heroTitle">
+        <p class="eyebrow">Create something memorable</p>
+        <h1 id="heroTitle">เลือกคลาสใหม่ให้วันหยุดของคุณ</h1>
+        <p>ค้นหาเวิร์กช็อปที่สนใจ เลือกจำนวนที่นั่ง และตรวจสอบยอดก่อนยืนยันการจอง</p>
+      </section>
+      <section class="workshop-section" aria-labelledby="workshopTitle">
+        <div class="section-header">
+          <p class="eyebrow">Upcoming workshops</p>
+          <h2 id="workshopTitle">คลาสที่เปิดจอง</h2>
+          <p>เลือกได้ไม่เกินจำนวนที่นั่งสูงสุดของแต่ละคลาส</p>
+        </div>
+        <div id="workshopGrid" class="workshop-grid"></div>
+      </section>
+      <section id="booking" class="booking-section" aria-label="Booking details">
+        <div class="booking-card">
+          <p class="panel-label">Selected classes</p>
+          <h2>รายการจอง</h2>
+          <div id="bookingItems" class="booking-items"></div>
+          <p id="emptyBookingMessage" class="empty-booking">ยังไม่ได้เลือกเวิร์กช็อป</p>
+        </div>
+        <div class="summary-card">
+          <p class="panel-label">Payment summary</p>
+          <h2>สรุปยอด</h2>
+          <label for="customerName">ชื่อผู้จอง</label>
+          <input id="customerName" type="text" autocomplete="name" placeholder="เช่น มานะ ใจดี" />
+          <div class="summary-row"><span>Subtotal</span><span id="subtotal">฿0.00</span></div>
+          <div class="summary-row"><span>Service Fee 3%</span><span id="serviceFee">฿0.00</span></div>
+          <div class="summary-row final-total"><span>Total</span><span id="total">฿0.00</span></div>
+          <button id="confirmBookingButton" type="button">Confirm Booking</button>
+          <p id="bookingMessage" class="booking-message" aria-live="polite"></p>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer"><p>Workshop Hub · Built with HTML, CSS and TypeScript</p></footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
