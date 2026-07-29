@@ -110,7 +110,7 @@ import Order from "./Order";
 
         <p>เช่นเดียวกับ <code>className</code> เราใช้ <code>htmlFor</code> เพราะ <code>for</code> เป็น reserved word ใน JS</p>
 
-        <p>ดังนั้นหากเราพิมพ์ลงใน input และมัน re-render อะไรจะออกมาใน tags <code>select</code> หรือ radio button? value ของมันผูกอยู่กับ <code>pizzaType</code> และ <code>pizzaSize</code> และไม่มีอะไรเปลี่ยนสองค่านั้น ดังนั้นมันจึงเหมือนเดิม กล่าวอีกนัยหนึ่ง two way data binding ไม่ได้ได้มาฟรีใน React ฉันว่ามันเป็น feature เพราะมันทำให้คุณชัดเจนว่าจะจัดการ data อย่างไร มาแก้ให้มันทำงานกัน</p>
+        <p>ดังนั้นหากเราพิมพ์ลงใน input และมัน re-render อะไรจะออกมาใน tags <code>select</code> หรือ radio button? value ของมันผูกอยู่กับ <code>pizzaType</code> และ <code>pizzaSize</code> และไม่มีอะไรเปลี่ยนสองค่านั้น ดังนั้นมันจึงเหมือนเดิม กล่าวอีกนัยหนึ่ง two way data binding ไม่ได้ได้มาฟรีใน React ถือเป็น feature มากกว่า bug เพราะมันบังคับให้คุณชัดเจนว่าจะจัดการ data อย่างไร มาแก้ให้มันทำงานกัน</p>
 
         <pre><code class="language-javascript">// in Order.jsx
 import { useState } from "react";
@@ -136,7 +136,7 @@ onChange={(e) =&gt; setPizzaSize(e.target.value)}
 
         <ul>
           <li>สิ่งนี้เรียกว่า hook frameworks อื่น เช่น Vue ก็นำมันไปใช้เช่นกัน</li>
-          <li>ในความคิดของฉัน hook ถูกเรียกเช่นนั้นเพราะเป็น hook ที่ถูกจับทุกครั้งที่ render function ถูกเรียก เนื่องจาก hooks ถูกเรียกตามลำดับเดิมทุกครั้ง มันจึงชี้ไปที่ state ชิ้นเดิมเสมอ ด้วยเหตุนี้มันจึงมี state ได้: คุณเก็บ mutable state ด้วย hooks แล้วแก้ไขภายหลังผ่าน updater functions ที่มันให้มาได้</li>
+          <li>ที่เรียกว่า hook น่าจะเพราะมันเป็น hook ที่ถูกจับทุกครั้งที่ render function ถูกเรียก เนื่องจาก hooks ถูกเรียกตามลำดับเดิมทุกครั้ง มันจึงชี้ไปที่ state ชิ้นเดิมเสมอ ด้วยเหตุนี้มันจึงมี state ได้: คุณเก็บ mutable state ด้วย hooks แล้วแก้ไขภายหลังผ่าน updater functions ที่มันให้มาได้</li>
           <li>แนวคิดที่<em>สำคัญอย่างยิ่ง</em>ที่คุณต้องเข้าใจคือ hooks พึ่งพาลำดับที่เคร่งครัดนี้ ดังนั้น <strong>อย่าวาง hooks ไว้ใน if statements หรือ loops</strong> หากทำ คุณจะเจอ bugs ประหลาดที่ <code>useState</code> คืน<em>state ที่ผิด</em> หากคุณเห็น <code>useState</code> คืน state ผิดชิ้น นี่น่าจะเป็นสิ่งที่คุณทำ ทุก hook ต้องทำงานทุกครั้งในลำดับเดียวกัน</li>
           <li>argument ที่ให้ <code>useState</code> คือ default value ในกรณีของเรา เราอาจให้ <code>&quot;&quot;</code> เป็น default value เพื่อบังคับให้ผู้ใช้เลือกบางอย่างก่อน แต่กรณีนี้เราต้องการตั้งค่าเริ่มต้นเป็น pepperoni pizza และขนาดกลาง</li>
           <li><code>useState</code> คืน array ที่มีสองสิ่ง: current value ของ state นั้น และ function สำหรับอัปเดต state เราใช้ JavaScript feature ที่เรียกว่า destructuring เพื่อเอาทั้งสองสิ่งออกจาก array</li>
@@ -148,9 +148,9 @@ onChange={(e) =&gt; setPizzaSize(e.target.value)}
           <li>คล้ายกับข้างต้น เราใช้ <code>onChange</code> เพราะทำให้เข้าถึงได้ง่ายกว่า</li>
         </ul>
 
-        <blockquote>ฉันกำลังแสดงวิธีทำ “controlled form” ที่เราใช้ hooks ควบคุมแต่ละส่วนของ form ในความจริงควรปล่อยให้มัน <em>uncontrolled</em> (หรือไม่ตั้ง value) แล้วห่อทั้งหมดด้วย form จากนั้นฟัง submit events และใช้ event นั้นเก็บข้อมูลจาก form วิธีนี้เขียนโค้ดน้อยกว่าและไม่หนักมือ หากคุณต้องเขียน form มาตรฐาน ให้ทำเป็น uncontrolled form หากต้องทำ dynamic validation, ตอบสนองขณะที่ผู้ใช้พิมพ์แบบ typeahead (ความสามารถที่ให้คำแนะนำแบบ real-time) หรือคล้ายกัน controlled input จะเหมาะมาก นอกนั้นใช้ uncontrolled<br />สิ่งใหม่ใน React เรียกว่า “form action” ซึ่งถือว่ายังไม่เสถียร อนาคตคุณจะเพียงเพิ่ม <code>&lt;form action=&quot;blah&quot;&gt;[…]&lt;/form&gt;</code> และ form action จะจัดการ form ทั้งหมดให้คุณ</blockquote>
+        <blockquote>ตรงนี้เรากำลังทำ “controlled form” คือใช้ hooks ควบคุมแต่ละส่วนของ form ในความจริงควรปล่อยให้มัน <em>uncontrolled</em> (หรือไม่ตั้ง value) แล้วห่อทั้งหมดด้วย form จากนั้นฟัง submit events และใช้ event นั้นเก็บข้อมูลจาก form วิธีนี้เขียนโค้ดน้อยกว่าและไม่หนักมือ หากคุณต้องเขียน form มาตรฐาน ให้ทำเป็น uncontrolled form หากต้องทำ dynamic validation, ตอบสนองขณะที่ผู้ใช้พิมพ์แบบ typeahead (ความสามารถที่ให้คำแนะนำแบบ real-time) หรือคล้ายกัน controlled input จะเหมาะมาก นอกนั้นใช้ uncontrolled<br />สิ่งใหม่ใน React เรียกว่า “form action” ซึ่งถือว่ายังไม่เสถียร อนาคตคุณจะเพียงเพิ่ม <code>&lt;form action=&quot;blah&quot;&gt;[…]&lt;/form&gt;</code> และ form action จะจัดการ form ทั้งหมดให้คุณ</blockquote>
 
-        <p>ข้อสังเกตอีกอย่าง: event bubbling ใน React ทำงานเหมือนที่คุณคาด ในทางทฤษฎีคุณมี mega event handler ใน React ได้ แต่ lint rules และ React's dev tools จะส่งเสียงเตือนมากหากทำเช่นนั้น ดังนั้นฉันมักทำตามคำแนะนำของมัน</p>
+        <p>ข้อสังเกตอีกอย่าง: event bubbling ใน React ทำงานเหมือนที่คุณคาด ในทางทฤษฎีคุณมี mega event handler ใน React ได้ แต่ lint rules และ React's dev tools จะส่งเสียงเตือนมากหากทำเช่นนั้น ดังนั้นโดยทั่วไปควรทำตามคำแนะนำของมัน</p>
 
         <pre><code class="language-javascript">// you could replace the div surrounding the radio buttons and remove all the onChange handlers
 &lt;div onChange={(e) =&gt; setPizzaSize(e.target.value)}&gt;[…]&lt;/div&gt;

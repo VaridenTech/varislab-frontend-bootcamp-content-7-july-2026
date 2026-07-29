@@ -45,7 +45,7 @@ import Header from "./Header";
 
         <p>Context มีไว้สำหรับ app-level state นี่คือ state ที่มีอยู่กับทั้ง app ของคุณ ผู้ใช้ที่เข้าสู่ระบบอยู่ในขณะนี้เป็นตัวอย่างที่ดี คุณคงไม่ต้องการให้ผู้ใช้มีอยู่แค่ระดับ page เพราะเมื่อคุณไปหน้าอื่น state ทั้งหมดของหน้าก่อนหน้าจะถูกทำลาย คุณย่อมต้องการให้ข้อมูลผู้ใช้นั้นคงอยู่ระหว่าง pages ดังนั้น context จึงเหมาะกับเรื่องนั้น Context ให้คุณเก็บ global state สำหรับ app ของคุณ เราจะใช้กับ shopping cart ซึ่งก็สมเหตุสมผลมาก: หากผู้ใช้ไปหน้าอื่น คุณย่อมต้องการเก็บ shopping cart ไว้ระหว่าง loads นี่เป็นวิธีคิดที่ดีว่าควรใช้ context เมื่อไร: หากคุณต้องการให้ state นั้นคงอยู่ระหว่าง pages</p>
 
-        <p>ดังนั้นมาทำให้มันทำงาน สร้างไฟล์ชื่อ <code>contexts.jsx</code> มันไม่ใช่ component ดังนั้นฉันมักไม่ใช้ตัวพิมพ์ใหญ่ React docs ใช้ตัวพิมพ์ใหญ่ คุณเลือกได้</p>
+        <p>ดังนั้นมาทำให้มันทำงาน สร้างไฟล์ชื่อ <code>contexts.jsx</code> มันไม่ใช่ component คอร์สนี้จึงไม่ขึ้นต้นด้วยตัวพิมพ์ใหญ่ ส่วน React docs ใช้ตัวพิมพ์ใหญ่ เลือกได้ตามถนัด</p>
 
         <pre><code class="language-javascript">import { createContext } from "react";
 
@@ -77,7 +77,7 @@ const App = () =&gt; {
 };
 </code></pre>
 
-        <p>เรากำลังสร้าง hook (สังเกตว่าเราไม่ได้ destructuring) แล้วส่งมันเข้าเป็น value Provider ทำให้ context นั้นใช้ได้เฉพาะภายใน children ของมัน ในทางทฤษฎีคุณมีหลาย providers จาก context เดียวกันได้ แต่พูดตามจริงฉันไม่เคยมีเหตุผลต้องทำ</p>
+        <p>เรากำลังสร้าง hook (สังเกตว่าเราไม่ได้ destructuring) แล้วส่งมันเข้าเป็น value Provider ทำให้ context นั้นใช้ได้เฉพาะภายใน children ของมัน ในทางทฤษฎีคุณมีหลาย providers จาก context เดียวกันได้ แต่ในทางปฏิบัติแทบไม่มีเหตุผลต้องทำ</p>
 
         <p>เอาล่ะ มาทำให้ Order.jsx ใช้งานได้</p>
 
@@ -105,7 +105,7 @@ const [cart] = useContext(CartContext);
 
         <p>แค่นั้น! เราไม่ต้องใช้ function setCart ดังนั้นจึงไม่ import มัน นอกนั้นก็ดูปกติดี!</p>
 
-        <p>นี่คือ context มันมีประโยชน์มากกับเรื่องแบบนี้ที่เราไม่อยาก “prop drill” state ของเราไปทั่ว ตอนนี้ cart ถูกเก็บไว้ระดับ App เราจะเขียน <code>&lt;Header cart={cart} /&gt;</code> แล้วจบก็ได้ และใน use case นี้ฉันคงทำแบบนั้น แต่ลองนึกภาพว่า Header ซ้อนลึกมากและคุณต้องส่ง state นั้นลงผ่าน children components จำนวนมาก — มันจะยุ่งอย่างรวดเร็ว นี่คือสิ่งที่เรียกว่า prop drilling data flow ที่ชัดเจนของ React เป็น feature ไม่ใช่ bug มันทำให้ที่มาของ data และที่ที่ data ไปอ่านง่ายมาก แต่มันทำให้โค้ดยาวโดยไม่เกิดประโยชน์ และ context คือ escape hatch สำหรับเรื่องนั้น โดยทั่วไป ใช้ context อย่างประหยัด และใช้เฉพาะเมื่อการใช้ props ตามวิธีปกติไม่สะดวก<em>จริง ๆ</em></p>
+        <p>นี่คือ context มันมีประโยชน์มากกับเรื่องแบบนี้ที่เราไม่อยาก “prop drill” state ของเราไปทั่ว ตอนนี้ cart ถูกเก็บไว้ระดับ App เราจะเขียน <code>&lt;Header cart={cart} /&gt;</code> แล้วจบก็ได้ และใน use case นี้ก็ทำแบบนั้นได้สบาย ๆ แต่ลองนึกภาพว่า Header ซ้อนลึกมากและคุณต้องส่ง state นั้นลงผ่าน children components จำนวนมาก — มันจะยุ่งอย่างรวดเร็ว นี่คือสิ่งที่เรียกว่า prop drilling data flow ที่ชัดเจนของ React เป็น feature ไม่ใช่ bug มันทำให้ที่มาของ data และที่ที่ data ไปอ่านง่ายมาก แต่มันทำให้โค้ดยาวโดยไม่เกิดประโยชน์ และ context คือ escape hatch สำหรับเรื่องนั้น โดยทั่วไป ใช้ context อย่างประหยัด และใช้เฉพาะเมื่อการใช้ props ตามวิธีปกติไม่สะดวก<em>จริง ๆ</em></p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="14_handling_user_inputs.html" rel="prev">ก่อนหน้า: Handling User Input</a>

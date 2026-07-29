@@ -37,7 +37,7 @@ import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 // add before react() in plugins
 plugins: [TanStackRouterVite(), react()],
 </code></pre>
-      <p>TanStack Router ทำงานด้วย convention ที่อิงไฟล์ คุณสร้าง routes ตามรูปแบบเฉพาะ แล้ว TanStack Router จะเชื่อมทุกอย่างให้เอง โดยสร้างไฟล์ชื่อ <code>routeTree.gen.ts</code> แม้โปรเจกต์นี้จะไม่ใช่ TypeScript แต่การเป็น TypeScript ทำให้ VS Code อ่าน types จาก routes และช่วยด้วยคำแนะนำกับ error อัจฉริยะได้ ฉันแนะนำให้เพิ่มไฟล์นี้ใน <code>.gitignore</code> ด้วย เพราะมันจะถูก generate อัตโนมัติทุกครั้งที่ build เอาล่ะ ไปสร้างไฟล์ที่ต้องใช้กัน</p>
+      <p>TanStack Router ทำงานด้วย convention ที่อิงไฟล์ คุณสร้าง routes ตามรูปแบบเฉพาะ แล้ว TanStack Router จะเชื่อมทุกอย่างให้เอง โดยสร้างไฟล์ชื่อ <code>routeTree.gen.ts</code> แม้โปรเจกต์นี้จะไม่ใช่ TypeScript แต่การเป็น TypeScript ทำให้ VS Code อ่าน types จาก routes และช่วยด้วยคำแนะนำกับ error อัจฉริยะได้ แนะนำให้เพิ่มไฟล์นี้ใน <code>.gitignore</code> ด้วย เพราะมันจะถูก generate อัตโนมัติทุกครั้งที่ build เอาล่ะ ไปสร้างไฟล์ที่ต้องใช้กัน</p>
       <p>สร้างไดเรกทอรี <code>routes</code> ในไดเรกทอรี <code>src</code> สร้างไฟล์ <code>__root.jsx</code> ในที่นั้น ไฟล์นี้จะเป็น template พื้นฐานสำหรับทุก route ส่วนใหญ่จะมาจาก App.jsx</p>
       <pre><code class="language-javascript">import { useState } from "react";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
@@ -108,7 +108,7 @@ function Order() {
         <li>ตรงนี้เรากำลังสร้าง route ใหม่ เรากำหนด URL ของมันคือ <code>/order</code> และ component ที่จะ render คือ <code>Order</code></li>
         <li>เราทำให้มัน lazy ตอนนี้มันจะแยก code และ lazy-load route ให้เรา วิธีนี้ช่วยมากในแอปขนาดใหญ่ ในแอปเล็ก ๆ นี้มันอาจช้าลงจริง ๆ เพราะเพิ่ม 1KB ให้แอปไม่ได้ทำให้ช้า แต่การเดินทางไปกลับเพิ่มหนึ่งครั้งทำให้ช้า เมื่อทำ lazy loading โปรดวัดว่ามันช่วยหรือไม่ อย่างไรก็ดี นี่คือวิธีทำ</li>
       </ul>
-      <p>แค่นั้นเอง! เมื่อก่อนการ code split ยากมาก ในคลาสเก่า ๆ ของฉันเราต้องทำงานหนักกว่าจะได้ผล แต่ตอนนี้มีเพียงเท่านี้ เจ๋งมาก</p>
+      <p>แค่นั้นเอง! เมื่อก่อนการ code split ยากมาก เมื่อก่อนต้องตั้งค่า bundler เองหลายขั้นกว่าจะได้ผล แต่ตอนนี้มีเพียงเท่านี้ เจ๋งมาก</p>
       <p>มาเพิ่มหน้า home กัน! สร้างไฟล์ชื่อ <code>index.lazy.jsx</code> ในโฟลเดอร์ routes</p>
       <pre><code class="language-javascript">import { createLazyFileRoute, Link } from "@tanstack/react-router";
 
@@ -147,7 +147,7 @@ import { Link } from "@tanstack/react-router";
 </code></pre>
       <p>ทั้งหมดนี้ควรทำงานแล้ว เปิดแอปแล้วดูว่ามันโหลดหรือไม่</p>
       <ul>
-        <li>สังเกตว่าจะมี flash เล็กน้อยก่อนโหลด นั่นคือการ lazy-load route หากเป็นแอปจริง เราคงสร้างประสบการณ์ loading ที่น่าพอใจกว่า ฉันขอทิ้งเป็นแบบฝึกหัดให้คุณทำ</li>
+        <li>สังเกตว่าจะมี flash เล็กน้อยก่อนโหลด นั่นคือการ lazy-load route หากเป็นแอปจริง เราคงสร้างประสบการณ์ loading ที่น่าพอใจกว่า ขอทิ้งไว้เป็นแบบฝึกหัดให้คุณลองทำ</li>
         <li>มาคุยเรื่อง cart ไปหน้า order เพิ่มของลง cart หลายอย่าง แล้วกลับหน้า home สังเกตว่ายังมีของอยู่ใน cart! กลับหน้า order ก็ยังอยู่ เพราะ <code>__root.jsx</code> (ที่เก็บ cart state) ไม่เคยถูก un-render หากมันอยู่ใน Cart.jsx หรือ order.lazy.jsx มันจะหายไปทุกครั้งที่ navigate ออกไป เพราะเมื่อ component ถูก un-render มันจะสูญเสีย state ทั้งหมด นี่คือเหตุผลหนึ่งที่ Context ทรงพลังมาก</li>
         <li>ลองดู dev tools ที่ render อยู่มุมซ้ายล่าง (ไม่ต้องห่วง มันจะถูกตัดออกอัตโนมัติใน production) คลิกเข้าไปสำรวจ มีของเจ๋ง ๆ ให้ใช้ฟรีมากมาย</li>
       </ul>

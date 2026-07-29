@@ -17,7 +17,7 @@
 </code></pre>
   <h2>Deploy Node.js API Application</h2>
   <p>เรายังมีงานใน React app แต่ก่อนอื่นมา deploy server application นี่เป็น Node.js application ที่สร้างด้วย Fastify จึงต้องใช้ host ที่รองรับ Node เราจะใช้ Render ดังนั้นสร้าง account ที่นั่นหากยังไม่มี</p>
-  <p>เราจะ deploy ไป Render ด้วย GitHub สร้าง GitHub repo ใหม่สำหรับ API server ฉันใช้ชื่อ <code>pizza-server-app</code> รัน <code>git init</code> ใน local project แล้วเพิ่ม GitHub repo ของคุณเป็น remote repository เพื่อที่เราจะ push app ได้เมื่อพร้อม</p>
+  <p>เราจะ deploy ไป Render ด้วย GitHub สร้าง GitHub repo ใหม่สำหรับ API server ในตัวอย่างนี้ใช้ชื่อ <code>pizza-server-app</code> รัน <code>git init</code> ใน local project แล้วเพิ่ม GitHub repo ของคุณเป็น remote repository เพื่อที่เราจะ push app ได้เมื่อพร้อม</p>
   <p>ทีนี้ refactor เราได้ย้าย directory <code>/public</code> ไป client app แล้ว จึงลบ static file serving ได้:</p>
   <pre><code class="language-javascript">server.register(fastifyStatic, {
     ...
@@ -88,7 +88,7 @@ await fetch(`${apiUrl}/api/order`, {
 const pizzasRes = await fetch(`${apiUrl}/api/pizzas`);
 </code></pre>
   <h2>Deploy ไป Netlify</h2>
-  <p>เฮ้อ! ฉันคิดว่าครบแล้ว Push code ของคุณขึ้น GitHub repo แยกต่างหาก เราพร้อม deploy แล้ว!</p>
+  <p>เฮ้อ! ครบแล้ว Push code ของคุณขึ้น GitHub repo แยกต่างหาก เราพร้อม deploy แล้ว!</p>
   <figure><img src="images/deploy-client-repo.png" alt="React client app files in a GitHub repo" /><figcaption>ไฟล์ React client app ใน GitHub repo</figcaption></figure>
   <p>ไปที่ Netlify สร้าง account หากยังไม่มี แล้วคลิกสร้าง site ใหม่ คุณจะเลือก import project จาก GitHub:</p>
   <figure><img src="images/deploy-netlify.png" alt="Choosing a repo in Netlify" /><figcaption>เลือก repo ใน Netlify</figcaption></figure>

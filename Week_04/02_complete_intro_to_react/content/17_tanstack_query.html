@@ -20,7 +20,7 @@
       <pre><code class="language-bash">npm i @tanstack/react-query@5.59.13
 npm i -D @tanstack/react-query-devtools@5.59.13 @tanstack/eslint-plugin-query@5.59.7
 </code></pre>
-      <p>React Query ทำให้การเรียก async API ง่ายขึ้นมาก ง่ายกว่า/ดีกว่ามากจนฉันแทบไม่ใช้ <code>useEffect</code> อีกแล้วเหมือนที่เราใช้กับรายการ pizzas หรือ pizza of the day โค้ดสะอาดกว่า อ่านง่ายกว่า cache ดีกว่า และมี bug น้อยกว่า สรุปคือมันดีกว่า คุณควรรู้วิธีใช้ effects แต่จากนี้ไปก็ใช้ TanStack Query สำหรับ API calls</p>
+      <p>React Query ทำให้การเรียก async API ง่ายขึ้นมาก ง่ายกว่าและดีกว่ามาก จนหลายทีมแทบไม่ใช้ <code>useEffect</code> ดึงข้อมูลอีกแล้ว แบบที่เราเพิ่งทำกับรายการ pizzas และ pizza of the day โค้ดสะอาดกว่า อ่านง่ายกว่า cache ดีกว่า และมี bug น้อยกว่า สรุปคือมันดีกว่า คุณควรรู้วิธีใช้ effects แต่จากนี้ไปก็ใช้ TanStack Query สำหรับ API calls</p>
       <p>มาเริ่มกัน เริ่มจากเพิ่ม ESLint config ของมันเข้า config ของเรา มันมี rules ที่มีประโยชน์ ใน eslint.config.mjs</p>
       <pre><code class="language-javascript">// at top
 import pluginQuery from "@tanstack/eslint-plugin-query";
@@ -28,7 +28,7 @@ import pluginQuery from "@tanstack/eslint-plugin-query";
 // under reactPlugin.configs.flat["jsx-runtime"]
 ...pluginQuery.configs["flat/recommended"],
 </code></pre>
-      <p>นี่จะเพิ่ม rules ของ ESLint สองสามข้อที่เฉพาะกับ React Query ฉันพบว่ามันมีประโยชน์ และที่สำคัญกว่านั้นคือไม่น่ารำคาญ จึงมักเพิ่มมันทุกครั้ง</p>
+      <p>นี่จะเพิ่ม rules ของ ESLint สองสามข้อที่เฉพาะกับ React Query rules เหล่านี้มีประโยชน์ และที่สำคัญกว่านั้นคือไม่น่ารำคาญ จึงควรเพิ่มไว้ทุกครั้ง</p>
       <p>เพิ่ม dev tools ด้วยเหมือนที่ทำกับ router ใน <code>src/routes/__root.jsx</code>:</p>
       <pre><code class="language-javascript">// at top
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -122,7 +122,7 @@ function PastOrdersRoute() {
         <li>ลองเอา <code>page</code> ออกจาก query key มันจะเตือนคุณ นี่คือ ESLint config ที่เราดึงมาจาก Tanstack Query เพราะเราใช้ <code>page</code> ใน request จึงต้องใช้มันเป็น caching key หากคุณพึ่งพา variable เพื่อ request มันควรเป็นส่วนหนึ่งของ caching key</li>
         <li>เราให้ <code>staleTime</code> เป็น 30 วินาที (30,000 milliseconds) สิ่งนี้ทำให้คนที่ใช้หน้า browse ไปมาเล็กน้อยได้โดยไม่ยิง API มากเกินไป แต่หน้าก็ไม่ stale เกินไป หากไม่ใส่ <code>staleTime</code> มันจะ refetch ทุกครั้ง</li>
       </ul>
-      <p>แค่นั้น! React Query ทั้งใช้ง่ายและยืดหยุ่นมากสำหรับจัดการปัญหาที่ยาก มันเป็นหนึ่งใน libraries React ที่ฉันชอบที่สุด</p>
+      <p>แค่นั้น! React Query ทั้งใช้ง่ายและยืดหยุ่นมากสำหรับจัดการปัญหาที่ยาก มันเป็นหนึ่งใน libraries ที่ได้รับความนิยมที่สุดในระบบนิเวศ React</p>
       <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="16_tanstack_router.html" rel="prev">ก่อนหน้า: TanStack Router</a><a href="index.html">สารบัญบทเรียน</a><a href="18_portals.html" rel="next">ถัดไป: Portals</a></nav>
     </article></main>
   </body>

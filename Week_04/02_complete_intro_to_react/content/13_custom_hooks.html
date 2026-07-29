@@ -18,7 +18,7 @@
 
         <h2>Custom Hooks</h2>
 
-        <p>สิ่งหนึ่งที่พิเศษมากเกี่ยวกับ hooks คือ composability ของมัน คุณใช้ hooks เพื่อสร้าง hooks อื่นได้! คนมักเรียกสิ่งเหล่านี้ว่า custom hooks มีคนถึงขั้นบอกว่า “อย่าทำ API request ใน component ให้ทำใน hook เสมอ” ฉันไม่แน่ใจว่าฉันสุดทางขนาดนั้น แต่ฉันเห็นเหตุผลของมัน หากคุณทำ custom hook สำหรับเรื่องแบบนั้น มันจะทดสอบแยกกันได้ และแยกการแสดง data ออกจาก logic ที่ใช้รับ data ได้ดี ฉันอยู่ฝ่ายที่บอกให้สร้าง custom hooks สำหรับ logic ที่ซับซ้อนหรือใช้ซ้ำได้ แต่กรณีง่าย ๆ ก็ไม่เป็นไรที่จะทำให้ง่าย</p>
+        <p>สิ่งหนึ่งที่พิเศษมากเกี่ยวกับ hooks คือ composability ของมัน คุณใช้ hooks เพื่อสร้าง hooks อื่นได้! คนมักเรียกสิ่งเหล่านี้ว่า custom hooks มีคนถึงขั้นบอกว่า “อย่าทำ API request ใน component ให้ทำใน hook เสมอ” จะสุดทางขนาดนั้นหรือไม่ก็แล้วแต่คน แต่เหตุผลของมันฟังขึ้น หากคุณทำ custom hook สำหรับเรื่องแบบนั้น มันจะทดสอบแยกกันได้ และแยกการแสดง data ออกจาก logic ที่ใช้รับ data ได้ดี คำแนะนำกลาง ๆ คือสร้าง custom hooks สำหรับ logic ที่ซับซ้อนหรือใช้ซ้ำได้ ส่วนกรณีง่าย ๆ ก็ปล่อยให้มันง่ายไว้</p>
 
         <p>โอเค เราต้องการเพิ่ม banner “Pizza of the Day” ที่ท้ายหน้า นี่ทำให้ต้องเรียก API พิเศษเพื่อเอา pizza of the day (ซึ่งควรเปลี่ยนทุกวันตามเวลาของคอมพิวเตอร์คุณ) ก่อนอื่นมาเขียน component ที่จะใช้มัน</p>
 
@@ -67,7 +67,7 @@ export default PizzaOfTheDay;
           <li>ส่วนเจ๋งคือ <code>usePizzaOfTheDay()</code> ตอนนี้เราเพียงเชื่อใจได้ว่าสิ่งนี้จะให้ pizza of the day จากการทำงานภายใน black box ของ hook</li>
         </ul>
 
-        <p>โอเค มาสร้าง hook กัน! สร้างไฟล์ชื่อ usePizzaOfTheDay.jsx (คุณเรียกมันว่า .js แทน jsx ก็ได้ แต่ใน React project ฉันใช้ JSX สำหรับทุกสิ่งที่ “เกี่ยวกับ React”)</p>
+        <p>โอเค มาสร้าง hook กัน! สร้างไฟล์ชื่อ usePizzaOfTheDay.jsx (คุณเรียกมันว่า .js แทน jsx ก็ได้ แต่ใน React project นิยมใช้นามสกุล JSX กับทุกไฟล์ที่ “เกี่ยวกับ React”)</p>
 
         <pre><code class="language-javascript">import { useState, useEffect } from "react";
 
