@@ -30,13 +30,13 @@
 
       <p>Vitest คือ test runner ที่สร้างโดยทีมเดียวกับที่ทำ Vite แนวคิดของมันตรงไปตรงมามาก: ในเมื่อเรามี build pipeline ที่ใช้สร้างแอปอยู่แล้ว ทำไมตอนรันเทสต์ถึงต้องไปตั้งค่า pipeline อีกชุดหนึ่งแยกต่างหาก? สภาพแวดล้อมตอนเทสต์ควรเหมือนสภาพแวดล้อมจริงของแอปให้มากที่สุด</p>
 
-      <p>ผลคือเราแทบไม่ต้องตั้งค่าอะไรเลย เพราะ Vitest ใช้ <code>vite.config.js</code> ตัวเดิมที่เรามีอยู่แล้ว รู้จัก JSX อยู่แล้ว และเข้าใจ import แบบเดียวกับที่แอปเราใช้</p>
+      <p>ผลคือเราแทบไม่ต้องตั้งค่าอะไรเลย เพราะ Vitest ใช้ <code>vite.config.ts</code> ตัวเดิมที่เรามีอยู่แล้ว รู้จัก JSX และ TypeScript อยู่แล้ว และเข้าใจ import แบบเดียวกับที่แอปเราใช้ — เขียนเทสต์เป็น TypeScript ได้ทันทีโดยไม่ต้องตั้งค่าเพิ่มแม้แต่บรรทัดเดียว ซึ่งต่างจากสมัย Jest ที่ต้องไปตั้ง <code>ts-jest</code> หรือ Babel preset กันอีกยกหนึ่ง</p>
 
       <p>Vitest ออกแบบมาให้ API เหมือน <strong>Jest</strong> ซึ่งเป็น test runner ที่ครองวงการ JavaScript มานาน แทบจะสลับกันใช้ได้เลย ข้อดีคือทุกอย่างที่คุณเรียนในบทนี้เอาไปใช้กับ Jest ได้หมด และทั้งคู่ก็ยืมรูปแบบคำสั่งอย่าง <code>describe</code>, <code>it</code>, <code>expect</code> มาจาก Jasmine อีกที ดังนั้นเรียนครั้งเดียวใช้ได้กับเครื่องมือแทบทุกตัวในวงการ</p>
 
       <h2>ติดตั้ง</h2>
 
-      <pre><code class="language-bash">npm install -D vitest@2.1.3 @testing-library/react@16.0.1 happy-dom@15.7.4
+      <pre><code class="language-bash">npm install -D vitest@^4.1.0 @testing-library/react@^16.3.0 happy-dom@^20.11.0
 </code></pre>
 
       <p>เราติดตั้งสามตัวด้วยกัน แต่ละตัวทำคนละหน้าที่</p>
@@ -73,13 +73,18 @@
 
       <h2>ตั้งค่า</h2>
 
-      <p>เพิ่ม config เล็ก ๆ นี้ใน object ของ <code>vite.config.js</code> เพื่อบอก Vitest ว่าให้ใช้ DOM จำลอง</p>
+      <p>เพิ่ม config เล็ก ๆ นี้ใน object ของ <code>vite.config.ts</code> เพื่อบอก Vitest ว่าให้ใช้ DOM จำลอง</p>
 
-      <pre><code class="language-javascript">// เพิ่มเข้าไปใน object ที่ส่งให้ defineConfig
+      <pre><code class="language-typescript">// เปลี่ยน import บรรทัดบนสุด จาก "vite" เป็น "vitest/config"
+import { defineConfig } from "vitest/config";
+
+// เพิ่มเข้าไปใน object ที่ส่งให้ defineConfig
 test: {
   environment: "happy-dom",
 },
 </code></pre>
+
+      <p class="translator-note">💡 สังเกตว่าเราเปลี่ยนที่มาของ <code>defineConfig</code> จาก <code>&quot;vite&quot;</code> เป็น <code>&quot;vitest/config&quot;</code> ด้วย ถ้าไม่เปลี่ยน TypeScript จะฟ้องว่า <code>Object literal may only specify known properties, and 'test' does not exist in type 'UserConfig'</code> — เพราะ <code>defineConfig</code> ของ Vite ไม่รู้จัก key <code>test</code> ส่วนตัวที่มาจาก <code>vitest/config</code> เป็นตัวเดียวกันทุกอย่าง แค่รู้จัก option ของ Vitest เพิ่มเข้ามา นี่คือ error ที่คนเจอกันบ่อยมากตอนเพิ่ม Vitest เข้าโปรเจกต์ TypeScript ครั้งแรก</p>
 
       <p>จากนั้นเพิ่ม npm script ใน <code>package.json</code></p>
 
@@ -88,18 +93,23 @@ test: {
 
       <p class="translator-note">💡 ชื่อ <code>test</code> เป็นชื่อพิเศษที่ npm รู้จัก คุณจึงสั่งได้สั้น ๆ ว่า <code>npm test</code> หรือสั้นกว่านั้นคือ <code>npm t</code> โดยไม่ต้องมีคำว่า <code>run</code></p>
 
-      <p>สุดท้าย เข้าไปใน <code>src</code> แล้วสร้างโฟลเดอร์ชื่อ <code>__tests__</code> — สังเกตว่ามี underscore สองตัวขนาบทั้งสองข้าง Vitest จะถือว่าไฟล์ JS ทุกไฟล์ในโฟลเดอร์นี้คือเทสต์ ธรรมเนียม underscore คู่นี้ยืมมาจาก Python ที่ใช้สื่อว่า “ชื่อนี้มีความหมายพิเศษ มีบางอย่างกำลังมองหาชื่อนี้อยู่” ซึ่งในที่นี้คือตัว Vitest เอง</p>
+      <p>สุดท้าย เข้าไปใน <code>src</code> แล้วสร้างโฟลเดอร์ชื่อ <code>__tests__</code> — สังเกตว่ามี underscore สองตัวขนาบทั้งสองข้าง Vitest จะถือว่าไฟล์ทุกไฟล์ในโฟลเดอร์นี้คือเทสต์ ธรรมเนียม underscore คู่นี้ยืมมาจาก Python ที่ใช้สื่อว่า “ชื่อนี้มีความหมายพิเศษ มีบางอย่างกำลังมองหาชื่อนี้อยู่” ซึ่งในที่นี้คือตัว Vitest เอง</p>
 
       <p>ตอนนี้โครงสร้างโปรเจกต์ควรเป็นแบบนี้</p>
 
       <pre><code class="language-text">pizza-app/
 ├── src/
 │   ├── __tests__/        ← เทสต์อยู่ตรงนี้
+│   ├── api/
 │   ├── routes/
-│   ├── App.jsx
-│   └── Pizza.jsx
-├── vite.config.js
+│   ├── App.tsx
+│   ├── Pizza.tsx
+│   └── types.ts          ← type ที่ใช้ร่วมกัน รวมถึงในเทสต์ด้วย
+├── tsconfig.json
+├── vite.config.ts
 └── package.json</code></pre>
+
+      <p>ไฟล์เทสต์ก็ใช้กฎเดียวกับโค้ดแอป: เทสต์ที่มี JSX (คือเทสต์ที่ render component) ใช้ <code>.test.tsx</code> ส่วนเทสต์ที่เป็น logic ล้วน ๆ ใช้ <code>.test.ts</code></p>
 
       <h2>ลองรันดู</h2>
 
@@ -111,9 +121,9 @@ test: {
 
       <h2>ลองทำเอง</h2>
 
-      <p>ก่อนไปบทถัดไปที่เราจะเขียนเทสต์จริงจัง ลองสร้างไฟล์ <code>src/__tests__/sanity.test.js</code> เพื่อยืนยันว่าเครื่องมือตั้งค่าถูกแล้ว</p>
+      <p>ก่อนไปบทถัดไปที่เราจะเขียนเทสต์จริงจัง ลองสร้างไฟล์ <code>src/__tests__/sanity.test.ts</code> เพื่อยืนยันว่าเครื่องมือตั้งค่าถูกแล้ว</p>
 
-      <pre><code class="language-javascript">import { expect, test } from "vitest";
+      <pre><code class="language-typescript">import { expect, test } from "vitest";
 
 test("ตั้งค่า Vitest เรียบร้อยแล้ว", () =&gt; {
   expect(1 + 1).toBe(2);
@@ -123,8 +133,9 @@ test("ตั้งค่า Vitest เรียบร้อยแล้ว", () 
       <ol>
         <li>รัน <code>npm t</code> แล้วดูว่าเทสต์ผ่านเป็นสีเขียว</li>
         <li>แก้ <code>toBe(2)</code> เป็น <code>toBe(3)</code> แล้วบันทึกไฟล์ โดยไม่ต้องไปสั่งอะไรใหม่ สังเกตว่า Vitest รันใหม่ให้เองทันที และอ่านข้อความ error ดูว่ามันบอกอะไรเราบ้าง</li>
-        <li>แก้กลับให้ผ่าน แล้วลองเปลี่ยนชื่อไฟล์เป็น <code>sanity.js</code> เฉย ๆ (เอา <code>.test</code> ออก) สังเกตว่า Vitest มองไม่เห็นมันแล้ว เพราะมันมองหาเฉพาะไฟล์ที่มี <code>.test.</code> หรือ <code>.spec.</code> ในชื่อ</li>
+        <li>แก้กลับให้ผ่าน แล้วลองเปลี่ยนชื่อไฟล์เป็น <code>sanity.ts</code> เฉย ๆ (เอา <code>.test</code> ออก) สังเกตว่า Vitest มองไม่เห็นมันแล้ว เพราะมันมองหาเฉพาะไฟล์ที่มี <code>.test.</code> หรือ <code>.spec.</code> ในชื่อ</li>
         <li>เปลี่ยนชื่อกลับ แล้วลองเขียนเทสต์เพิ่มอีกหนึ่งข้อในไฟล์เดียวกัน ดูว่าผลลัพธ์แสดงทั้งสองข้ออย่างไร</li>
+        <li>ลองเขียน <code>expect("2").toBe(2)</code> ดู สังเกตว่านอกจากเทสต์จะไม่ผ่านแล้ว TypeScript ยังขีดเส้นแดงให้ตั้งแต่ก่อนรันด้วย เพราะ <code>expect()</code> ของ Vitest เป็น generic — มันจำ type ของสิ่งที่คุณส่งเข้าไป แล้วบังคับให้ <code>.toBe()</code> รับ type เดียวกัน การเทียบข้ามชนิดที่เคยเป็นบั๊กเงียบ ๆ ในเทสต์ JavaScript จึงจับได้ตั้งแต่ตอนพิมพ์</li>
       </ol>
 
       <p>เมื่อทุกอย่างพร้อมแล้ว ลบไฟล์นี้ทิ้งได้ บทถัดไปเราจะเริ่มเทสต์ component จริงของแอปเรา</p>
@@ -133,9 +144,9 @@ test("ตั้งค่า Vitest เรียบร้อยแล้ว", () 
 
       <ul>
         <li>เทสต์ไม่ได้มีไว้พิสูจน์ว่าโค้ดวันนี้ถูก แต่มีไว้กันไม่ให้โค้ดวันหน้าพังโดยที่เราไม่รู้ตัว</li>
-        <li>Vitest ใช้ config เดียวกับ Vite เราจึงแทบไม่ต้องตั้งค่าอะไรเพิ่ม และสิ่งที่เรียนใช้กับ Jest ได้เกือบทั้งหมด</li>
+        <li>Vitest ใช้ config เดียวกับ Vite เราจึงแทบไม่ต้องตั้งค่าอะไรเพิ่ม (ยกเว้นเปลี่ยนที่มาของ <code>defineConfig</code> เป็น <code>vitest/config</code>) และสิ่งที่เรียนใช้กับ Jest ได้เกือบทั้งหมด</li>
         <li>ต้องมีสามชิ้นประกอบกัน: ตัวรันเทสต์ (Vitest), เครื่องมือ render component (Testing Library) และ DOM จำลอง (happy-dom)</li>
-        <li>ไฟล์เทสต์อยู่ใน <code>src/__tests__</code> และต้องมี <code>.test.</code> อยู่ในชื่อไฟล์</li>
+        <li>ไฟล์เทสต์อยู่ใน <code>src/__tests__</code> และต้องมี <code>.test.</code> อยู่ในชื่อไฟล์ ใช้ <code>.test.tsx</code> เมื่อมี JSX และ <code>.test.ts</code> เมื่อไม่มี</li>
         <li>โหมด watch คือค่าเริ่มต้น ส่วน <code>vitest run</code> ไว้ใช้บน CI</li>
       </ul>
 

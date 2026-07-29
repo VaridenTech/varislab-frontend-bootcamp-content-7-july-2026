@@ -18,18 +18,32 @@
 
         <h2>Handling User Input</h2>
 
-        <p>ตอนนี้เราต้องการจัดการ cart ของผู้ใช้และการส่ง order มาเพิ่มสิ่งที่เราต้องใช้ใน Order.jsx กัน</p>
+        <p>ก่อนอื่น ของหนึ่งชิ้นในตะกร้าไม่ใช่แค่พิซซ่า แต่เป็น "พิซซ่า + ขนาดที่เลือก + ราคาที่คิดแล้ว" มาเพิ่ม type ของมันใน <code>src/types.ts</code> กัน</p>
 
-        <pre><code class="language-javascript">// add import
+        <pre><code class="language-typescript">// เพิ่มต่อจาก Pizza
+export type CartItem = {
+  pizza: Pizza;
+  size: PizzaSize;
+  price: string;
+};
+</code></pre>
+
+        <p>สังเกตว่า <code>price</code> เป็น <code>string</code> ไม่ใช่ <code>number</code> เพราะเราเก็บค่าที่ผ่าน <code>intl.format()</code> มาแล้ว (เช่น <code>&quot;$12.50&quot;</code>) นี่เป็นจุดที่ type ช่วยเตือนความจำเราได้ดีมาก — พอเห็นว่ามันเป็น <code>string</code> ก็รู้ทันทีว่าเอาไปบวกลบเลขไม่ได้ ต้องย้อนไปหยิบตัวเลขจริงจาก <code>pizza.sizes</code> แทน ซึ่งเป็นสิ่งที่ <code>Cart</code> ทำอยู่พอดี</p>
+
+        <p>ทีนี้มาเพิ่มสิ่งที่เราต้องใช้ใน Order.tsx กัน</p>
+
+        <pre><code class="language-typescript">// add import
 import Cart from "./Cart";
+import type { CartItem } from "./types";
 
 // add another hook
-const [cart, setCart] = useState([]);
+const [cart, setCart] = useState&lt;CartItem[]&gt;([]);
 
 // replace &lt;form&gt;
 &lt;form
-  onSubmit={(e) =&gt; {
+  onSubmit={(e: React.FormEvent&lt;HTMLFormElement&gt;) =&gt; {
     e.preventDefault();
+    if (!selectedPizza) return;
     setCart([...cart, { pizza: selectedPizza, size: pizzaSize, price }]);
   }}
 &gt;
@@ -44,14 +58,26 @@ const [cart, setCart] = useState([]);
 
         <p>ตอนนี้เราใช้ onSubmit เพื่อจัดการการเพิ่มลง cart ยอดเยี่ยม! จากนั้นเราส่งมันเข้า Cart เพื่อให้แสดงผลอย่างสวยงาม</p>
 
-        <p>มาสร้าง cart กัน สร้างไฟล์ชื่อ Cart.jsx แล้วเพิ่ม</p>
+        <ul>
+          <li><code>useState&lt;CartItem[]&gt;([])</code> — array ว่างเป็นอีกกรณีที่ TypeScript เดา type ไม่ออก ถ้าไม่ใส่ generic มันจะได้ <code>never[]</code> แล้วคุณจะใส่อะไรลงไปไม่ได้เลย เป็นคู่หูของ <code>useState&lt;T | null&gt;(null)</code> ที่เจอในบทที่แล้ว</li>
+          <li><code>if (!selectedPizza) return;</code> เป็นบรรทัดที่ TypeScript บังคับให้เราเพิ่ม เพราะ <code>selectedPizza</code> ยังเป็น <code>Pizza | undefined</code> อยู่ (จำบทที่ 11 ได้ไหม) และ <code>CartItem.pizza</code> รับเฉพาะ <code>Pizza</code> ผลคือเราจะไม่มีวันเผลอใส่ของว่างเปล่าลงตะกร้าตอนที่ยังโหลดข้อมูลไม่เสร็จ</li>
+        </ul>
 
-        <pre><code class="language-javascript">const intl = new Intl.NumberFormat("en-US", {
+        <p>มาสร้าง cart กัน สร้างไฟล์ชื่อ Cart.tsx แล้วเพิ่ม</p>
+
+        <pre><code class="language-typescript">import type { CartItem } from "./types";
+
+const intl = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD", // feel free to change to your local currency
 });
 
-export default function Cart({ cart, checkout }) {
+type CartProps = {
+  cart: CartItem[];
+  checkout?: () =&gt; void;
+};
+
+export default function Cart({ cart, checkout }: CartProps) {
   let total = 0;
   for (let i = 0; i &lt; cart.length; i++) {
     const current = cart[i];
@@ -78,9 +104,11 @@ export default function Cart({ cart, checkout }) {
 
         <blockquote>โดยปกติการทำ key แบบนี้เป็นความคิดที่ไม่ดี แต่เราคงไม่จัดลำดับ list นี้ใหม่ และก็ไม่สนว่ามัน rerender อยู่แล้ว จึงผ่านได้</blockquote>
 
+        <p>เรื่องน่าสังเกตใน <code>CartProps</code> คือ <code>checkout?: () =&gt; void</code> เครื่องหมาย <code>?</code> ทำให้มันเป็น prop ที่จะส่งหรือไม่ส่งก็ได้ ซึ่งจำเป็นตรงนี้ เพราะข้างบนเราเพิ่ง render <code>&lt;Cart cart={cart} /&gt;</code> โดยยังไม่มี <code>checkout</code> — ถ้าไม่ใส่ <code>?</code> TypeScript จะฟ้องทันที ส่วน <code>() =&gt; void</code> อ่านว่า "ฟังก์ชันที่ไม่รับ argument และไม่คืนค่า" นี่คือวิธีให้ type กับ prop ที่เป็นฟังก์ชัน ซึ่งเราจะได้ใช้บ่อยมากตั้งแต่นี้ไป</p>
+
         <p>ตอนนี้เรามีประสบการณ์ shopping cart ที่ดี แล้วจะ checkout บน server จริงอย่างไร? มาทำกัน! เราน่าจะทำที่ระดับ Order มันมี Cart อยู่แล้ว และเราปล่อย Cart ไว้เป็น dumb display component ได้ เราเพียงส่ง function เข้า Cart component แล้วเรียกมัน และรัน function ที่ระดับ Order</p>
 
-        <pre><code class="language-javascript">// inside the render body
+        <pre><code class="language-typescript">// inside the render body
 async function checkout() {
   setLoading(true);
 

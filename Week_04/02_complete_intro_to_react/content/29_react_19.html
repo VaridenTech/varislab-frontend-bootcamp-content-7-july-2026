@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ทำความรู้จักฟีเจอร์ React 19 ที่กำลังมาถึง" /><title>React 19 | เรียน React เริ่มต้น</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
   <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 29 · ก้าวต่อไป (What's Next)</p><h1>React 19: สิ่งที่กำลังมาถึง</h1><p class="lesson-original-title" lang="en">React 19</p></header>
-  <blockquote><p>🚨 ส่วนที่เหลือของหลักสูตรครอบคลุมฟีเจอร์ experimental ของ React 19 หากอยากลองฟีเจอร์เหล่านี้โดยไม่กระทบโปรเจกต์ปัจจุบัน เราแนะนำให้ใช้โปรเจกต์ <code>14-testing</code></p></blockquote>
-  <p>หลักสูตรนี้มุ่งที่เวอร์ชัน 18.3 ข้อดีของ React คือ แม้จะมี breaking changes แต่โดยทั่วไปทีมจะตั้งใจทำและทำอย่างประหยัด กล่าวคือ สิ่งที่คุณเรียนวันนี้ยังมีประโยชน์อีกห้าปีนับจากนี้ คุณหยิบคอร์ส React ที่สอนกันเมื่อห้าปีก่อนมาเรียน ก็ยังตามวิธีเขียน React ได้เกือบทั้งหมด กล่าวคือ แม้ React 19 จะใกล้ออกแล้ว (หรืออาจออกแล้วตอนคุณอ่านอยู่) ก็ไม่ต้องตื่นตระหนก ของใหม่ทั้งหมดจะเพียงเสริมสิ่งที่คุณเรียนมา ไม่ได้เปลี่ยนมัน</p>
-  <p>ฟีเจอร์ของ React 19 หลายตัวเป็นเรื่องระดับถัดไป บทนี้จะพาดูภาพรวมว่ามีอะไรใหม่บ้าง เพื่อให้คุณรู้จักชื่อของมันไว้ก่อน</p>
-  <p>ดังนั้น ในเมื่อ React 19 ใกล้ออกแล้ว และเรารู้แล้ว 95% ว่าจะมีอะไรบ้าง เราจะดูฟีเจอร์บางอย่างเพื่อให้คุณพร้อมสำหรับมัน จำไว้ว่าจะใช้ React 19 release candidate ซึ่งหมายความว่า แม้แนวคิดใหญ่ ๆ ไม่น่าจะเปลี่ยน แต่ API ที่แน่นอนอาจถูกปรับได้ จึงอาจเปลี่ยนเล็กน้อย</p>
+  <p>เราติดตั้ง React 19 กันไปตั้งแต่บทที่ 8 แล้ว และทุกอย่างที่เขียนมาตลอดคอร์สนี้ก็รันอยู่บนมัน แต่จนถึงตอนนี้เรายังไม่ได้แตะฟีเจอร์ที่ <em>ใหม่</em> ใน React 19 เลยสักตัว บทนี้เป็นต้นไปเราจะไปดูของใหม่เหล่านั้นกัน</p>
+  <p>และนั่นแหละคือประเด็นที่ควรสังเกตก่อนอื่น: คุณเขียน React 19 มาทั้งคอร์สโดยไม่รู้ตัว เพราะแทบทุกอย่างที่เรียนมา — components, JSX, hooks, context, effects — ทำงานเหมือนเดิมทุกประการ ข้อดีของ React คือ แม้จะมี breaking changes แต่โดยทั่วไปทีมจะตั้งใจทำและทำอย่างประหยัด สิ่งที่คุณเรียนวันนี้จึงยังมีประโยชน์อีกห้าปีนับจากนี้ คุณหยิบคอร์ส React ที่สอนกันเมื่อห้าปีก่อนมาเรียน ก็ยังตามวิธีเขียน React ได้เกือบทั้งหมด ของใหม่ทั้งหมดใน React 19 เพียงเสริมสิ่งที่คุณเรียนมา ไม่ได้เปลี่ยนมัน</p>
+  <p>ฟีเจอร์ของ React 19 หลายตัวเป็นเรื่องระดับถัดไป บทนี้จะพาดูภาพรวมว่ามีอะไรใหม่บ้าง เพื่อให้คุณรู้จักชื่อของมันไว้ก่อน แล้วสามบทถัดไปเราจะลงมือเขียนโค้ดจริงกับสามตัวที่ใช้ได้ทันทีในแอปฝั่ง client ของเรา คือ form actions, <code>use</code> กับ Suspense และ React Compiler</p>
+
+  <p class="translator-note">💡 อีกเรื่องที่มาพร้อม React 19 และคุณได้ประโยชน์ไปแล้วโดยไม่รู้ตัวคือ <strong>type ของ React ถูกปรับปรุงครั้งใหญ่</strong> ใน <code>@types/react</code> รุ่น 19 เช่น <code>useRef</code> บังคับให้ระบุค่าเริ่มต้นเสมอ, <code>ReactElement</code> ใช้ <code>unknown</code> แทน <code>any</code> เป็นค่าเริ่มต้นของ props, และ <code>ref</code> กลายเป็น prop ปกติที่ส่งผ่าน component ได้โดยไม่ต้องใช้ <code>forwardRef</code> อีกแล้ว ถ้าคุณไปเจอโค้ด React เก่าที่เขียนด้วย TypeScript แล้วเห็น <code>forwardRef</code> เต็มไปหมด นั่นคือรูปแบบก่อน React 19</p>
+
   <p>อย่างแรก มาคุยถึงฟีเจอร์เจ๋ง ๆ บางตัวที่ไม่คุ้มกับการใช้เวลาเขียนโค้ดมากนักก่อน แล้วค่อยดูตัวที่เราจะเพิ่มโค้ดลงในแอปจริง</p>
   <h2><code>'use client'</code> และ <code>'use server'</code></h2>
   <p>เริ่มด้วยหนึ่งในการเปลี่ยนแปลงใหญ่ของ React เรื่องนี้ลงลึกได้อีกมากและเป็นหัวข้อระดับถัดไป ในบทนี้เราจะดูแค่แนวคิดคร่าว ๆ ก่อน โดยพื้นฐานเราสามารถบอก React ได้ว่า “เฮ้ รัน component นี้บน server เท่านั้น” หรือกลับกัน “เฮ้ render เฉพาะฝั่ง client” ทำไปทำไม?</p>
@@ -13,7 +15,7 @@
   <p><code>'use client'</code> คือด้านตรงข้าม — สิ่งที่ไม่มีเหตุผลจะ render บน server ลองนึกถึง component ที่ interactive มาก เช่น text editor หรือ maps widget — มันควรเป็นประสบการณ์ฝั่ง client ดังนั้นส่งทุกอย่างไปยัง client ทันทีแล้วปล่อยให้เขา render จะดีกว่า จำไว้ว่าไม่จำเป็นต้องใช้ directive นี้ เว้นแต่ว่าคุณทำ server-side rendering โดยค่าเริ่มต้น React ยังคงทำ client-side rendering อยู่</p>
   <h2>วางสิ่งต่าง ๆ ใน head</h2>
   <p>ลองจินตนาการว่าคุณอยากให้ React component เพิ่ม <code>&lt;link&gt;</code>, <code>&lt;meta&gt;</code>, <code>&lt;title&gt;</code> หรือ HTML อื่นใน document ปัจจุบันคุณต้องใช้ portal หรือบางอย่างอย่าง react-helmet เพื่อทำสิ่งนี้ แต่ใน React 19 คุณแค่ render tag แล้วมันจะเข้าไปอยู่ใน header โดยอัตโนมัติ</p>
-  <pre><code class="language-javascript">const MyPizza = () =&gt; (
+  <pre><code class="language-typescript">const MyPizza = () =&gt; (
   &lt;div&gt;
     &lt;h1&gt;I love pizza&lt;/h1&gt;
     &lt;title&gt;🍕 Brian Loves Pizza 🍕&lt;/title&gt;
@@ -23,7 +25,7 @@
   <p>ตอนที่ <code>MyPizza</code> ถูก render มันจะเปลี่ยน title ของ document (ซึ่งแสดงบน browser tab)</p>
   <h2><code>preload</code> และ <code>preconnect</code></h2>
   <p>เป็นสอง functions ที่มีประโยชน์มากสำหรับ hint ให้ browser รู้ว่าอาจต้องเริ่มโหลดอะไรบางอย่างเบื้องหลัง หากไม่คุ้นกับแนวคิดนี้ สรุปสั้น ๆ คือใช้กับ images, fonts, scripts, stylesheets และอื่น ๆ คุณบอก browser ได้ว่า “เฮ้ เราน่าจะต้องโหลดสิ่งนี้เร็ว ๆ นี้ ช่วย preconnect URL นี้เพื่อเตรียม download หรือ preload ไปเลยได้ไหม?” ผู้ใช้จึงได้ประสบการณ์ที่แทบจะทันที เพราะไม่ต้องรอโหลดเมื่อต้องใช้ จำไว้ว่านี่เป็นเพียง hints browser สามารถไม่สนใจได้ ตัวอย่างที่ดีคือโทรศัพท์อยู่ใน low-power mode อาจไม่สนใจ hint เพราะอยากประหยัดแบตเตอรี่</p>
-  <pre><code class="language-javascript">const EnterConfirmation = () =&gt; {
+  <pre><code class="language-typescript">const EnterConfirmation = () =&gt; {
   preload("https://example.com/text-editor.js", { as: "script" });
   return (
     &lt;div&gt;

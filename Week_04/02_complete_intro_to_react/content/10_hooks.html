@@ -18,9 +18,9 @@
 
         <h2>Hooks</h2>
 
-        <p>โอเค ตอนนี้เราต้องการให้ผู้คนเพิ่ม pizzas ลงใน order ของตนได้ เราต้องมี form เล็ก ๆ ที่ให้เลือก pizza และขนาด สร้างไฟล์ใหม่ชื่อ Order.jsx แล้วเพิ่มสิ่งต่อไปนี้:</p>
+        <p>โอเค ตอนนี้เราต้องการให้ผู้คนเพิ่ม pizzas ลงใน order ของตนได้ เราต้องมี form เล็ก ๆ ที่ให้เลือก pizza และขนาด สร้างไฟล์ใหม่ชื่อ Order.tsx แล้วเพิ่มสิ่งต่อไปนี้:</p>
 
-        <pre><code class="language-javascript">import Pizza from "./Pizza";
+        <pre><code class="language-typescript">import Pizza from "./Pizza";
 
 export default function Order() {
   const pizzaType = "pepperoni";
@@ -89,12 +89,12 @@ export default function Order() {
 }
 </code></pre>
 
-        <p>ตอนนี้เพิ่มมันใน App.jsx ของคุณ:</p>
+        <p>ตอนนี้เพิ่มมันใน App.tsx ของคุณ:</p>
 
-        <pre><code class="language-javascript">// delete Pizza import, and add Order
+        <pre><code class="language-typescript">// delete Pizza import, and add Order
 import Order from "./Order";
 
-// in App.jsx, replace all the Pizzas
+// in App.tsx, replace all the Pizzas
 &lt;Order /&gt;
 </code></pre>
 
@@ -112,16 +112,28 @@ import Order from "./Order";
 
         <p>ดังนั้นหากเราพิมพ์ลงใน input และมัน re-render อะไรจะออกมาใน tags <code>select</code> หรือ radio button? value ของมันผูกอยู่กับ <code>pizzaType</code> และ <code>pizzaSize</code> และไม่มีอะไรเปลี่ยนสองค่านั้น ดังนั้นมันจึงเหมือนเดิม กล่าวอีกนัยหนึ่ง two way data binding ไม่ได้ได้มาฟรีใน React ถือเป็น feature มากกว่า bug เพราะมันบังคับให้คุณชัดเจนว่าจะจัดการ data อย่างไร มาแก้ให้มันทำงานกัน</p>
 
-        <pre><code class="language-javascript">// in Order.jsx
+        <p>ก่อนอื่น ขนาดพิซซ่าของเรามีได้แค่สามค่าเท่านั้น คือ <code>S</code>, <code>M</code> และ <code>L</code> นี่คือกรณีที่ union type เหมาะที่สุด และเราจะได้ใช้มันอีกหลายที่ในบทถัด ๆ ไป จึงขอเก็บไว้ในไฟล์กลาง สร้างไฟล์ใหม่ชื่อ <code>src/types.ts</code> (สังเกตว่าเป็น <code>.ts</code> ไม่ใช่ <code>.tsx</code> เพราะไม่มี JSX อยู่ในนี้เลย)</p>
+
+        <pre><code class="language-typescript">export type PizzaSize = "S" | "M" | "L";
+</code></pre>
+
+        <p>การรวม type ที่ใช้ร่วมกันหลายไฟล์ไว้ที่เดียวเป็นธรรมเนียมที่พบบ่อยมากในโปรเจกต์ React + TypeScript ข้อดีคือเมื่อรูปร่างของข้อมูลเปลี่ยน คุณแก้ที่เดียวแล้ว TypeScript จะไล่บอกให้เองว่ามีที่ไหนบ้างที่ต้องแก้ตาม</p>
+
+        <p>ทีนี้กลับมาที่ form ของเรา</p>
+
+        <pre><code class="language-typescript">// in Order.tsx
 import { useState } from "react";
+import type { PizzaSize } from "./types";
 
 // pizzaType and pizzaSize location
-const [pizzaType, setPizzaType] = useState("pepperoni");
-const [pizzaSize, setPizzaSize] = useState("medium");
+const [pizzaType, setPizzaType] = useState&lt;string&gt;("pepperoni");
+const [pizzaSize, setPizzaSize] = useState&lt;PizzaSize&gt;("M");
 
 // replace input
 &lt;select
-  onChange={(e) =&gt; setPizzaType(e.target.value)}
+  onChange={(e: React.ChangeEvent&lt;HTMLSelectElement&gt;) =&gt;
+    setPizzaType(e.target.value)
+  }
   name="pizza-type"
   value={pizzaType}
 &gt;
@@ -129,10 +141,24 @@ const [pizzaSize, setPizzaSize] = useState("medium");
 &lt;/select&gt;
 
 // add to all the radio buttons
-onChange={(e) =&gt; setPizzaSize(e.target.value)}
+onChange={(e: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt;
+  setPizzaSize(e.target.value as PizzaSize)
+}
 </code></pre>
 
-        <p class="translator-note">หมายเหตุผู้แปล: ตัวอย่างต้นฉบับใช้ <code>useState(&quot;medium&quot;)</code> แต่ค่าของ radio และ key ใน <code>sizes[pizzaSize]</code> คือ <code>S</code>, <code>M</code> หรือ <code>L</code>; ให้ใช้ <code>useState(&quot;M&quot;)</code> เพื่อให้เลือกขนาดกลางและคำนวณราคาเริ่มต้นได้ถูกต้อง</p>
+        <p class="translator-note">หมายเหตุผู้แปล: ตัวอย่างต้นฉบับ (ซึ่งเป็น JavaScript) ใช้ <code>useState(&quot;medium&quot;)</code> ทั้งที่ค่าของ radio และ key ใน <code>sizes[pizzaSize]</code> คือ <code>S</code>, <code>M</code> หรือ <code>L</code> — เป็นบั๊กที่ทำให้ราคาเริ่มต้นคำนวณไม่ออก ลองพิมพ์ <code>useState&lt;PizzaSize&gt;(&quot;medium&quot;)</code> ดูสักครั้งเพื่อดูสิ่งที่เกิดขึ้น: TypeScript จะฟ้องทันทีว่า <code>Argument of type '&quot;medium&quot;' is not assignable to parameter of type 'PizzaSize'</code> บั๊กที่เคยต้องไปเจอเอาตอนเปิดเบราว์เซอร์ กลายเป็นเส้นแดงใต้ตัวอักษรตั้งแต่ตอนพิมพ์</p>
+
+        <h3>สามเรื่องเกี่ยวกับ TypeScript ในโค้ดชุดนี้</h3>
+
+        <ul>
+          <li><strong><code>import type</code></strong> — เพราะเรา import <code>PizzaSize</code> มาใช้เป็น type เท่านั้น ไม่ได้ใช้เป็นค่าจริงตอนรัน เราจึงเขียน <code>import type</code> นี่คือผลของ <code>verbatimModuleSyntax</code> ที่เราเปิดไว้ใน tsconfig ข้อดีคืออ่านแล้วรู้ทันทีว่าบรรทัดนี้จะหายไปทั้งบรรทัดตอน build ไม่ได้เพิ่มขนาดให้ bundle เลย</li>
+          <li><strong><code>useState&lt;PizzaSize&gt;</code></strong> — วงเล็บมุมคือการบอก type ให้ hook โดยตรง ในกรณีของ <code>pizzaSize</code> มัน<em>จำเป็น</em> เพราะถ้าไม่ใส่ TypeScript จะเดา type จากค่าเริ่มต้น <code>&quot;M&quot;</code> ว่าเป็น <code>string</code> กว้าง ๆ แล้วเราจะเผลอ <code>setPizzaSize(&quot;XL&quot;)</code> ได้โดยไม่มีใครเตือน ส่วน <code>useState&lt;string&gt;</code> ของ <code>pizzaType</code> นั้นใส่หรือไม่ใส่ก็ได้ (TypeScript เดาถูกอยู่แล้ว) แต่คอร์สนี้จะใส่ให้ครบเพื่อให้อ่านแล้วเห็นชัดว่า state แต่ละตัวเก็บอะไร</li>
+          <li><strong><code>React.ChangeEvent&lt;HTMLSelectElement&gt;</code></strong> — event ใน React มี type ของตัวเองที่บอกทั้ง<em>ชนิดของ event</em> และ<em>ชนิดของ element</em> ที่มันเกิดขึ้น ประโยชน์ที่ได้ทันทีคือ <code>e.target.value</code> จะรู้ว่าเป็น <code>string</code> จริง ๆ และถ้าคุณใส่ element ผิด เช่นเขียน <code>HTMLInputElement</code> บน <code>&lt;select&gt;</code> TypeScript ก็จะฟ้อง</li>
+        </ul>
+
+        <p>แล้ว <code>as PizzaSize</code> ตรง radio button ล่ะ? นั่นคือ <strong>type assertion</strong> — เป็นการบอก TypeScript ว่า "ฉันรู้มากกว่าเธอตรงนี้" เหตุผลคือ DOM ไม่รู้จัก <code>PizzaSize</code> ของเรา มันมองว่า <code>e.target.value</code> ของ input ทุกตัวคือ <code>string</code> ธรรมดา แต่เรารู้ว่า radio ทั้งสามตัวมี <code>value</code> เป็น <code>S</code>, <code>M</code>, <code>L</code> เท่านั้น เพราะเราเขียน JSX นั้นเอง</p>
+
+        <blockquote>⚠️ <code>as</code> เป็นเครื่องมือที่ควรใช้ให้น้อยที่สุด เพราะมันปิดการตรวจสอบ ไม่ใช่เพิ่มการตรวจสอบ ถ้าวันหนึ่งมีคนเพิ่ม radio ตัวที่สี่ที่ <code>value=&quot;XL&quot;</code> โค้ดนี้จะยอมรับมันเงียบ ๆ ทั้งที่ type บอกว่าเป็นไปไม่ได้ ทุกครั้งที่คุณเขียน <code>as</code> ให้ถามตัวเองก่อนว่า "ฉันรู้จริงหรือเปล่า" — ถ้าไม่แน่ใจ ให้เขียนฟังก์ชันเช็คค่าจริง ๆ แทน</blockquote>
 
         <ul>
           <li>สิ่งนี้เรียกว่า hook frameworks อื่น เช่น Vue ก็นำมันไปใช้เช่นกัน</li>
@@ -152,9 +178,17 @@ onChange={(e) =&gt; setPizzaSize(e.target.value)}
 
         <p>ข้อสังเกตอีกอย่าง: event bubbling ใน React ทำงานเหมือนที่คุณคาด ในทางทฤษฎีคุณมี mega event handler ใน React ได้ แต่ lint rules และ React's dev tools จะส่งเสียงเตือนมากหากทำเช่นนั้น ดังนั้นโดยทั่วไปควรทำตามคำแนะนำของมัน</p>
 
-        <pre><code class="language-javascript">// you could replace the div surrounding the radio buttons and remove all the onChange handlers
-&lt;div onChange={(e) =&gt; setPizzaSize(e.target.value)}&gt;[…]&lt;/div&gt;
+        <pre><code class="language-typescript">// you could replace the div surrounding the radio buttons and remove all the onChange handlers
+&lt;div
+  onChange={(e: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt;
+    setPizzaSize(e.target.value as PizzaSize)
+  }
+&gt;
+  […]
+&lt;/div&gt;
 </code></pre>
+
+        <p>สังเกตว่าถึงจะวาง handler ไว้บน <code>div</code> เราก็ยังใช้ <code>HTMLInputElement</code> อยู่ เพราะ <code>e.target</code> คือ element ที่<em>เกิด</em> event จริง ๆ ซึ่งก็คือ radio button ไม่ใช่ div ที่รับ event ต่อมา (ถ้าอยากได้ div ให้ใช้ <code>e.currentTarget</code> แทน)</p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="09_jsx.html" rel="prev">ก่อนหน้า: JSX</a>

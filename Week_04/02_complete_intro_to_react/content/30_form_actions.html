@@ -1,18 +1,15 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ใช้ form actions และ useFormStatus ใน React 19" /><title>Form Actions | เรียน React เริ่มต้น</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
   <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 30 · ก้าวต่อไป (What's Next)</p><h1>Form Actions ใน React 19</h1><p class="lesson-original-title" lang="en">Form Actions</p></header>
-  <p>โอเค มาอัปเกรดแอปของเราเป็น React 19 กันจริง ๆ</p>
-  <blockquote><p>🚨 โปรดใส่ใจตรงนี้ เพราะคุณต้องหาว่าควรติดตั้ง React เวอร์ชันใด</p></blockquote>
-  <p>ตรวจสอบเวอร์ชัน React ที่เผยแพร่บน npm ได้ด้วยคำสั่ง <code>npm view react dist-tags</code> หาก React 19 ยังเป็น canary/rc/next (ทั้งสามหมายถึงอย่างเดียวกัน) คุณสามารถรัน <code>npm i react@rc react-dom@rc</code> คุณจะเห็น warnings มากมายเกี่ยวกับเวอร์ชันไม่ตรงกันใน command-line ซึ่งไม่เป็นไรเลย</p>
-  <p>หาก React 19 เป็น latest แล้ว ให้รัน <code>npm install react@19 react-dom@19</code> แล้วทำตามคำแนะนำนี้ ระวังให้มากเพราะสิ่งต่าง ๆ อาจเปลี่ยนไปแล้ว!!</p>
-  <p>มาคุยเรื่อง form actions กัน web interfaces จำนวนมากคือการจัดการ form inputs ดังนั้นทีม React จึงตัดสินใจทำให้เรื่องนี้ง่ายขึ้น จริง ๆ คล้ายสิ่งที่เราทำไปแล้ว เพียงมี boilerplate น้อยกว่า เปิด <code>contact.lazy.jsx</code> แล้วปรับหน้านี้ให้ใช้ form action</p>
-  <pre><code class="language-javascript">mutationFn: function (formData) { // change to formData
+  <p>แอปของเรารันบน React 19 อยู่แล้วตั้งแต่บทที่ 8 เราจึงใช้ฟีเจอร์ในบทนี้ได้ทันที ไม่ต้องติดตั้งหรืออัปเกรดอะไรเพิ่ม</p>
+  <p>มาคุยเรื่อง form actions กัน web interfaces จำนวนมากคือการจัดการ form inputs ดังนั้นทีม React จึงตัดสินใจทำให้เรื่องนี้ง่ายขึ้น จริง ๆ คล้ายสิ่งที่เราทำไปแล้ว เพียงมี boilerplate น้อยกว่า เปิด <code>contact.lazy.tsx</code> แล้วปรับหน้านี้ให้ใช้ form action</p>
+  <pre><code class="language-typescript">mutationFn: function (formData: FormData) { // change to formData
   // remove e.preventDefault
   // remove formData constructor
   return postContact(
-    formData.get("name"),
-    formData.get("email"),
-    formData.get("message"),
+    String(formData.get("name")),
+    String(formData.get("email")),
+    String(formData.get("message")),
   );
 },
 
@@ -20,27 +17,34 @@
 &lt;form action={mutation.mutate}&gt;
 </code></pre>
   <p>เท่านั้นเอง! มันเป็น convenience function ที่ทำให้จัดการ submits ได้ง่ายขึ้น ไม่มีอะไรผิดกับวิธีเดิมของเรา และมันจะยังทำงานเหมือนเดิมต่อไป</p>
-  <p>มาแปลง <code>order.lazy.jsx</code> ด้วย</p>
-  <pre><code class="language-javascript">// extract submission function from form
+
+  <p>สังเกตว่า type ของ parameter เปลี่ยนจาก <code>React.FormEvent&lt;HTMLFormElement&gt;</code> เป็น <code>FormData</code> เฉย ๆ นี่คือสิ่งที่ form action ทำให้เรา — React จัดการ event, กัน default behavior และสร้าง <code>FormData</code> ให้เสร็จสรรพ แล้วส่งเฉพาะสิ่งที่เราต้องการจริง ๆ เข้ามา การที่ type สั้นลงจึงสะท้อนว่าโค้ดเราทำงานน้อยลงจริง ๆ</p>
+
+  <p>ส่วน <code>String(...)</code> ยังต้องอยู่เหมือนเดิม เพราะ <code>formData.get()</code> ก็ยังคืน <code>string | File | null</code> อยู่ดี — form action ช่วยเรื่องการต่อสายกับ form แต่ไม่ได้รับประกันว่าในนั้นมีอะไร (ย้อนดูบทที่ 20 ถ้าอยากทบทวนว่าทำไม)</p>
+
+  <p>มาแปลง <code>order.lazy.tsx</code> ด้วย</p>
+  <pre><code class="language-typescript">// extract submission function from form
 function addToCart() {
+  if (!selectedPizza) return;
   setCart([...cart, { pizza: selectedPizza, size: pizzaSize, price }]);
 }
 // update to action
 &lt;form action={addToCart}&gt;[…]&lt;/form&gt;;
 </code></pre>
   <p>เหมือนด้านบน แต่ที่เจ๋งคือ หากใช้บางอย่างเช่น Next.js หรือ Remix เราใช้ directive <code>'use server'</code> ตรงนี้และทำให้เป็น <em>server</em> action ได้ เช่น</p>
-  <pre><code class="language-javascript">function addToCart(formData) {
+  <pre><code class="language-typescript">function addToCart(formData: FormData) {
   "use server";
   sql(`INSERT INTO cart (user_id, pizza_type, size) VALUES ($1, $2)`, [
-    formData.pizza_type,
-    formData.size,
+    formData.get("pizza_type"),
+    formData.get("size"),
   ]);
 }
 </code></pre>
+  <p class="translator-note">หมายเหตุผู้แปล: ตัวอย่างต้นฉบับเขียน <code>formData.pizza_type</code> ซึ่งใช้ไม่ได้จริง เพราะ <code>FormData</code> ไม่ใช่ object ธรรมดา ต้องอ่านค่าผ่านเมธอด <code>.get()</code> เสมอ — พอเราใส่ type <code>FormData</code> ให้ parameter แล้ว TypeScript ก็ฟ้องข้อผิดพลาดนี้ให้ทันที ทั้งที่มันหลุดรอดมาในเวอร์ชัน JavaScript ได้สบาย ๆ</p>
   <p>เพราะมันอยู่บน server เราจึง insert เข้า database ได้อย่างปลอดภัย จากภายใน React component โดยตรง React/Next.js จะจัดการรายละเอียดทั้งหมดของการ execute บน server ให้ เจ๋งใช่ไหม? นี่เป็นเรื่องของ React ฝั่ง server ซึ่งอยู่นอกขอบเขตคอร์สนี้</p>
   <p>มาทำอีก trick ที่เจ๋งกัน มี hook ใหม่ชื่อ <code>useFormStatus</code> ที่ให้ children components รู้ว่าตัวเองอยู่ใน form ที่กำลัง submit อยู่หรือไม่ โดยไม่ต้องส่งข้อมูลจำนวนมากไปมา</p>
-  <p>ใน <code>contact.lazy.jsx</code></p>
-  <pre><code class="language-javascript">// at top
+  <p>ใน <code>contact.lazy.tsx</code></p>
+  <pre><code class="language-typescript">// at top
 import { useFormStatus } from "react-dom"; // note react-dom, not react
 
 // replace the two inputs
@@ -48,7 +52,13 @@ import { useFormStatus } from "react-dom"; // note react-dom, not react
 &lt;ContactInput name="email" type="email" placeholder="Email" /&gt;
 
 // at the bottom
-function ContactInput(props) {
+type ContactInputProps = {
+  name: string;
+  type: React.HTMLInputTypeAttribute;
+  placeholder: string;
+};
+
+function ContactInput(props: ContactInputProps) {
   const { pending } = useFormStatus();
   return (
     &lt;input
@@ -60,6 +70,12 @@ function ContactInput(props) {
   );
 }
 </code></pre>
+
+  <p><code>React.HTMLInputTypeAttribute</code> คือ union ของค่า <code>type</code> ที่ <code>&lt;input&gt;</code> รับได้จริงทั้งหมด (<code>&quot;text&quot;</code>, <code>&quot;email&quot;</code>, <code>&quot;password&quot;</code>, <code>&quot;checkbox&quot;</code> …) เราจะเขียน <code>type: string</code> เฉย ๆ ก็ได้ แต่การใช้ตัวนี้ทำให้ <code>&lt;ContactInput type="emial" /&gt;</code> ที่พิมพ์ผิดถูกจับได้ และได้ auto-complete รายชื่อ type ทั้งหมดมาให้เลือกด้วย</p>
+
+  <p>นี่เป็นนิสัยที่ดีเวลาเขียน component ที่ห่อ HTML element: <strong>ลองหาดูก่อนว่า React มี type สำเร็จรูปให้อยู่แล้วหรือเปล่า</strong> ก่อนจะเขียน <code>string</code> กว้าง ๆ ไปเอง วิธีหาที่ง่ายที่สุดคือกด <kbd>Ctrl</kbd> (หรือ <kbd>Cmd</kbd>) แล้วคลิกที่ prop <code>type</code> บน <code>&lt;input&gt;</code> ธรรมดาใน editor เพื่อกระโดดเข้าไปดู type จริงของมัน</p>
+
+  <p class="translator-note">💡 ถ้า component ของคุณต้องรับ prop ของ <code>&lt;input&gt;</code> หลายตัวจนเขียนไม่ไหว มีทางลัดที่นิยมกันมากคือ <code>type ContactInputProps = React.ComponentProps&lt;"input"&gt;</code> ซึ่งจะได้ prop ทั้งหมดของ <code>&lt;input&gt;</code> มาในทีเดียว แล้วส่งต่อด้วย <code>&lt;input {...props} disabled={pending} /&gt;</code> ลองดูเป็นแบบฝึกหัดได้</p>
   <ul><li>นี่เป็นตัวอย่างง่าย ๆ แต่ลองนึกภาพว่า inputs ของคุณซับซ้อนมาก มี design system, tool tips และ UI อื่น ๆ อีกมาก ซึ่งพบได้บ่อยใน React codebases ขนาดใหญ่ สิ่งนี้อาจมีประโยชน์มาก</li><li>อีกอย่าง ถ้ามี component เล็กมากอย่าง <code>ContactInput</code> การเก็บไว้ใน file เดียวกันแบบที่ทำตรงนี้ก็เป็น pattern ที่ใช้ได้ บางคนเคร่งครัดกับกฎ one file, one component แต่มันไม่ใช่กฎตายตัว</li><li>เราไม่ได้ทำ button หรือ text area เพื่อความกระชับ แต่คุณทำได้</li><li>เพราะเรารันใน local pending state จะสั้นมาก แต่คุณจะสังเกตเห็น background กระพริบเป็นสีเทา นั่นคือ disabled state</li></ul>
   <p>และนั่นคือ form actions!</p>
   <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="29_react_19.html" rel="prev">ก่อนหน้า: React 19</a><a href="index.html">สารบัญบทเรียน</a><a href="31_use_and_suspense.html" rel="next">ถัดไป: use และ Suspense</a></nav>

@@ -22,11 +22,33 @@
 
         <blockquote>ต้องแน่ใจว่าคุณให้ทั้ง Vite dev server <em>และ</em> API server ทำงานอยู่ ทั้งคู่</blockquote>
 
-        <p>มา refactor Order.jsx</p>
+        <p>ตอนนี้ข้อมูลจะเริ่มมาจาก API แล้ว ก่อนอื่นเราต้องบอก TypeScript ว่าพิซซ่าหนึ่งลูกที่ API ส่งมาหน้าตาเป็นอย่างไร เปิด <code>src/types.ts</code> แล้วเพิ่ม type ใหม่ต่อจาก <code>PizzaSize</code></p>
 
-        <pre><code class="language-javascript">// change import at top
+        <pre><code class="language-typescript">export type PizzaSize = "S" | "M" | "L";
+
+export type Pizza = {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  image: string;
+  sizes: Record&lt;PizzaSize, number&gt;;
+};
+</code></pre>
+
+        <ul>
+          <li><code>Record&lt;PizzaSize, number&gt;</code> อ่านว่า "object ที่มี key เป็น <code>PizzaSize</code> ทุกตัว และ value เป็น <code>number</code>" ซึ่งก็คือ <code>{ S: number; M: number; L: number }</code> นั่นเอง เขียนแบบยาวก็ได้ แต่แบบนี้ผูกกับ <code>PizzaSize</code> ไว้ ถ้าวันหนึ่งเราเพิ่มขนาด <code>XL</code> เข้าไปใน union มันจะบังคับให้แก้ทุกที่ที่เกี่ยวข้องให้ครบเอง</li>
+          <li>ประโยชน์ที่ได้ทันทีคือ <code>selectedPizza.sizes[pizzaSize]</code> จะทำงานได้โดยไม่ต้อง cast อะไรเลย เพราะ <code>pizzaSize</code> ของเราเป็น <code>PizzaSize</code> อยู่แล้ว — type สองตัวนี้เข้ากันได้พอดี</li>
+        </ul>
+
+        <blockquote>⚠️ ข้อควรรู้ที่สำคัญ: type ที่เราเขียนนี้เป็นเพียง<em>ความเชื่อ</em>ของเราว่า API จะส่งอะไรกลับมา TypeScript ตรวจสอบให้ได้แค่ตอน compile มันไม่ได้ไปตรวจ response จริงตอนรัน ถ้า API เปลี่ยนรูปแบบข้อมูล โค้ดจะพังตอนรันเหมือนเดิม (ในระบบจริงที่ต้องการความมั่นใจระดับนั้น คนนิยมใช้ library อย่าง Zod มาตรวจ response จริง ๆ ซึ่งอยู่นอกขอบเขตคอร์สนี้)</blockquote>
+
+        <p>ทีนี้มา refactor Order.tsx</p>
+
+        <pre><code class="language-typescript">// change import at top
 import { useEffect, useState } from "react";
 import Pizza from "./Pizza";
+import type { Pizza as PizzaType, PizzaSize } from "./types";
 
 // outside of the render function
 // feel free to change en-US / USD to your locale
@@ -36,16 +58,13 @@ const intl = new Intl.NumberFormat("en-US", {
 });
 
 // add to the other useStates inside component at top
-const [pizzaTypes, setPizzaTypes] = useState([]);
-const [loading, setLoading] = useState(true);
+const [pizzaTypes, setPizzaTypes] = useState&lt;PizzaType[]&gt;([]);
+const [loading, setLoading] = useState&lt;boolean&gt;(true);
 
-let price, selectedPizza;
-if (!loading) {
-  selectedPizza = pizzaTypes.find((pizza) =&gt; pizzaType === pizza.id);
-  price = intl.format(
-    selectedPizza.sizes ? selectedPizza.sizes[pizzaSize] : ""
-  );
-}
+const selectedPizza = pizzaTypes.find((pizza) =&gt; pizzaType === pizza.id);
+const price = selectedPizza
+  ? intl.format(selectedPizza.sizes[pizzaSize])
+  : "";
 
 useEffect(() =&gt; {
   fetchPizzaTypes();
@@ -55,7 +74,7 @@ async function fetchPizzaTypes() {
   await new Promise((resolve) =&gt; setTimeout(resolve, 3000)); // remove this later, just to show you the loading state
 
   const pizzasRes = await fetch("/api/pizzas");
-  const pizzasJson = await pizzasRes.json();
+  const pizzasJson: PizzaType[] = await pizzasRes.json();
   setPizzaTypes(pizzasJson);
   setLoading(false);
 }
@@ -72,6 +91,29 @@ async function fetchPizzaTypes() {
 // replace &lt;Pizza /&gt; and button at the end
 </code></pre>
 
+        <h3>ทำไมโค้ดชุดนี้ถึงต่างจากต้นฉบับ JavaScript</h3>
+
+        <p>ถ้าคุณเคยเห็นเวอร์ชัน JavaScript ของบทนี้มาก่อน จะสังเกตว่าตรง <code>selectedPizza</code> เราเขียนไม่เหมือนกัน ต้นฉบับเขียนแบบนี้</p>
+
+        <pre><code class="language-javascript">let price, selectedPizza;
+if (!loading) {
+  selectedPizza = pizzaTypes.find((pizza) =&gt; pizzaType === pizza.id);
+  price = intl.format(selectedPizza.sizes[pizzaSize]);
+}
+</code></pre>
+
+        <p>โค้ดนี้จะไม่ผ่าน TypeScript และเหตุผลที่มันไม่ผ่านคือเรื่องที่ควรรู้จริง ๆ: <strong><code>Array.find()</code> คืน <code>undefined</code> ได้</strong> ถ้าหาไม่เจอ type ของ <code>selectedPizza</code> จึงเป็น <code>PizzaType | undefined</code> ไม่ใช่ <code>PizzaType</code> การเขียน <code>selectedPizza.sizes</code> ต่อไปเลยจึงโดนฟ้องว่า <code>'selectedPizza' is possibly 'undefined'</code></p>
+
+        <p>และมันไม่ได้จู้จี้เกินเหตุ ลองนึกถึงจังหวะที่ข้อมูลเพิ่งโหลดเสร็จแต่ <code>pizzaType</code> ยังเป็น <code>&quot;pepperoni&quot;</code> ที่เราตั้งไว้ ถ้า API ไม่มีพิซซ่า id นั้น <code>find</code> จะคืน <code>undefined</code> แล้วแอปจะพังทั้งหน้าด้วย <code>Cannot read properties of undefined</code> ทันที การที่ <code>loading</code> เป็น <code>false</code> ไม่ได้แปลว่าหาพิซซ่าเจอ — TypeScript แค่ชี้ให้เห็นว่าเราสับสนสองเรื่องนี้เข้าด้วยกัน</p>
+
+        <p>เราจึงใช้เงื่อนไขที่เช็คสิ่งที่เราสนใจจริง ๆ แทน คือ "มี <code>selectedPizza</code> หรือเปล่า" กลไกนี้เรียกว่า <strong>type narrowing</strong> — เมื่อ TypeScript เห็นว่าคุณเช็ค <code>selectedPizza</code> แล้ว มันจะรู้เองว่าในกิ่ง <code>true</code> ค่านั้นเป็น <code>PizzaType</code> แน่นอน และปล่อยให้คุณเขียน <code>.sizes</code> ได้โดยไม่บ่น</p>
+
+        <p class="translator-note">💡 เราเปลี่ยนจาก <code>let</code> + <code>if</code> มาเป็น <code>const</code> + ternary ด้วย ไม่ใช่แค่เรื่องความสวยงาม — <code>const</code> ช่วยให้ TypeScript ทำ narrowing ได้แม่นยำกว่ามาก เพราะมันมั่นใจได้ว่าค่าจะไม่ถูกเปลี่ยนทีหลัง เป็นนิสัยที่ติดไว้แล้วดีตลอด</p>
+
+        <p>อีกจุดคือ <code>const pizzasJson: PizzaType[] = await pizzasRes.json()</code> เมธอด <code>.json()</code> คืน <code>Promise&lt;any&gt;</code> เสมอ เพราะไม่มีทางรู้ล่วงหน้าว่า server จะส่งอะไรมา การใส่ type annotation ตรงนี้คือจุดที่เรา "ประกาศความเชื่อ" ว่าข้อมูลหน้าตาแบบไหน และตั้งแต่บรรทัดนั้นเป็นต้นไปทุกอย่างก็จะมี type ครบ</p>
+
+        <p class="translator-note">🔍 <code>import type { Pizza as PizzaType }</code> — เราเปลี่ยนชื่อตอน import เพราะในไฟล์นี้ชื่อ <code>Pizza</code> ถูกใช้ไปแล้วโดย component ที่เรา import มาจาก <code>./Pizza</code> การชนกันแบบนี้เกิดขึ้นบ่อยมากในโปรเจกต์จริง คำว่า <code>as</code> ในบริบทของ import ไม่เกี่ยวกับ type assertion ที่เราคุยกันในบทที่แล้วเลย มันคือการตั้งชื่อเล่นให้สิ่งที่ import มาเฉย ๆ</p>
+
         <ul>
           <li>เราใส่ logic ทั้งหมดสำหรับการดึง pizza types ไว้ใน async function เพื่อให้อ่านง่ายขึ้น คุณทำให้ function ที่ส่งให้ useEffect เป็น async ไม่ได้</li>
           <li><code>[]</code> ท้าย useEffect คือที่ประกาศ data dependencies React ต้องการรู้ว่า<em>เมื่อไร</em>ต้องรัน effect นั้นอีก หากไม่ให้ data dependencies มันจะสมมติว่าทุกครั้งที่ hook ใด ๆ เปลี่ยนควรรัน effect อีก นี่ไม่ดี เพราะหมายความว่าทุกครั้งที่เรียก setPizzaTypes มันจะรัน render และ hooks ทั้งหมดอีก เห็นปัญหาไหม? มันจะรันไม่สิ้นสุด เพราะ fetchPizzaTypes เรียก setPizzaTypes</li>
@@ -82,19 +124,11 @@ async function fetchPizzaTypes() {
 
         <h3>อัปเดต Pizza และ Price ที่เลือก</h3>
 
-        <p>เมื่อเลือก pizza เราต้องอัปเดต pizza และ price ที่เลือก ก่อนอื่น มา format price หลัง state <code>selectedPizza</code> ถูกอัปเดต:</p>
-
-        <pre><code class="language-javascript">  if(!loading){
-    selectedPizza = pizzaTypes.find((pizza) =&gt; pizzaType === pizza.id)
-    price = intl.format(selectedPizza.sizes[pizzaSize])
-  }
-</code></pre>
-
         <p>เมื่อ application โหลด เรายังไม่มี data ดังนั้นเราต้องการ render pizza และ price ที่เลือกเมื่อโหลดเสร็จแล้วเท่านั้น เพิ่ม condition ใน JSX เพื่อแสดง “Loading...” ตอนแรก จากนั้นแสดง pizza ที่เลือกเมื่อโหลดเสร็จ เพิ่ม condition <strong>ก่อน</strong> closing tag <code>&lt;/form&gt;</code>:</p>
 
-        <pre><code class="language-jsx">...
+        <pre><code class="language-tsx">...
   {
-    loading ? (
+    loading || !selectedPizza ? (
       &lt;h3&gt;Loading...&lt;/h3&gt;
     ) : (
       &lt;div className="order-pizza"&gt;
@@ -109,6 +143,12 @@ async function fetchPizzaTypes() {
   }
 &lt;/form&gt;
 </code></pre>
+
+        <p>สังเกตเงื่อนไข <code>loading || !selectedPizza</code> — ถ้าเขียนแค่ <code>loading ?</code> เฉย ๆ อย่างในเวอร์ชัน JavaScript TypeScript จะฟ้องทันทีที่บรรทัด <code>selectedPizza.name</code> ว่า <code>'selectedPizza' is possibly 'undefined'</code> เพราะมันมองไม่ออกว่า <code>loading === false</code> เกี่ยวอะไรกับการที่ <code>find()</code> จะหาเจอ</p>
+
+        <p>พอเราเติม <code>|| !selectedPizza</code> เข้าไป narrowing ก็ทำงาน: ในกิ่ง <code>else</code> TypeScript รู้แน่นอนว่า <code>selectedPizza</code> ไม่ใช่ <code>undefined</code> และปล่อยให้เราเขียน <code>.name</code>, <code>.description</code>, <code>.image</code> ได้สบาย ๆ พร้อม auto-complete ครบทุกตัว</p>
+
+        <p>ผลพลอยได้คือแอปเราแข็งแรงขึ้นจริง ๆ ด้วย: ถ้า API ส่งรายการพิซซ่าที่ไม่มี <code>pepperoni</code> กลับมา ผู้ใช้จะเห็นข้อความ Loading ค้างไว้ แทนที่จะเห็นหน้าขาวเพราะแอปพัง เป็นตัวอย่างที่ดีมากว่าการทำให้ type ผ่านมักจะบังคับให้เราเขียนโค้ดที่ครอบคลุมกรณีจริงมากขึ้นไปด้วย</p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="10_hooks.html" rel="prev">ก่อนหน้า: Hooks</a>

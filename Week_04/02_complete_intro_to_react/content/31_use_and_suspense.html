@@ -5,8 +5,8 @@
   <p>แนวคิดเบื้องหลัง Suspense คือ React component สามารถเริ่ม render แล้ว suspend ตัวเองได้ หาก data ทั้งหมดยังโหลดไม่เสร็จ ซึ่งเจ๋งเพราะโค้ดของคุณอ่านง่ายมาก: มันเหมือนคุณสมมติว่า data มีอยู่แล้ว และ React จัดการการได้มาของมันอยู่เบื้องหลัง</p>
   <p>นี่คือแนวคิดของ hook ใหม่ <code>use</code> จาก React คุณเขียน <code>use(myPromise)</code> แล้ว React component จะ render เมื่อ <code>myPromise</code> resolve แล้วเท่านั้น</p>
   <p>โชคดีที่ TanStack Query มีวิธีทำสิ่งนี้อยู่แล้วหลายแบบ ดังนั้นเราจะใช้มัน แต่ให้รู้ว่า <code>use</code> ใช้กับ promise ใดก็ได้ ไม่ใช่แค่ TanStack Query</p>
-  <p>ก่อนอื่นเปิด <code>App.jsx</code> เราต้องเปิดใช้ experimental support สำหรับสิ่งนี้ใน TanStack Query (อนาคตคุณอาจไม่ต้องทำ)</p>
-  <pre><code class="language-javascript">// replace queryClient
+  <p>ก่อนอื่นเปิด <code>App.tsx</code> เราต้องเปิดใช้ experimental support สำหรับสิ่งนี้ใน TanStack Query (อนาคตคุณอาจไม่ต้องทำ)</p>
+  <pre><code class="language-typescript">// replace queryClient
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -15,12 +15,14 @@ const queryClient = new QueryClient({
   },
 });
 </code></pre>
-  <p>ทีนี้ใน <code>past.lazy.jsx</code> เราต้อง refactor</p>
-  <pre><code class="language-javascript">import { Suspense, useState, use } from "react"; // import Suspense and use
+  <p>ทีนี้ใน <code>past.lazy.tsx</code> เราต้อง refactor</p>
+  <pre><code class="language-typescript">import { Suspense, useState, use } from "react"; // import Suspense and use
+import type { Dispatch, SetStateAction } from "react";
+import type { PastOrder } from "../types";
 
 // move query and page hooks to ErrorBoundary component
 function ErrorBoundaryWrappedPastOrderRoutes() {
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState&lt;number&gt;(1);
   const loadedPromise = useQuery({
     queryKey: ["past-orders", page],
     queryFn: () =&gt; getPastOrders(page),
@@ -45,10 +47,29 @@ function ErrorBoundaryWrappedPastOrderRoutes() {
   );
 }
 
-// first line in PastOrderRoute
-const data = use(loadedPromise);
-// also, we had to remove the useQuery call to getPastOrders (with an S), and the related if (isLoading) return statement
+// PastOrdersRoute now takes props, so it needs a type
+type PastOrdersRouteProps = {
+  loadedPromise: Promise&lt;PastOrder[]&gt;;
+  page: number;
+  setPage: Dispatch&lt;SetStateAction&lt;number&gt;&gt;;
+};
+
+function PastOrdersRoute({ loadedPromise, page, setPage }: PastOrdersRouteProps) {
+  // first line in PastOrdersRoute
+  const data = use(loadedPromise);
+  // also, we had to remove the useQuery call to getPastOrders (with an S), and the related if (isLoading || !data) return statement
+  // …
+}
 </code></pre>
+
+  <h3>สิ่งที่ TypeScript ทำให้เห็นชัดในการ refactor นี้</h3>
+
+  <p>การย้าย state ออกจาก component แล้วส่งลงไปเป็น props แบบนี้เป็นการ refactor ที่เสี่ยงพลาดง่ายมาก เพราะมีตัวแปรสามตัวย้ายที่พร้อมกัน ในเวอร์ชัน JavaScript คุณจะรู้ว่าพลาดตรงไหนก็ตอนเปิดเบราว์เซอร์แล้วเจอ error เท่านั้น แต่พอเราต้องเขียน <code>PastOrdersRouteProps</code> ให้ครบ TypeScript จะไล่เช็คให้ทั้งสองฝั่ง — ทั้งฝั่งที่ส่ง <code>&lt;PastOrdersRoute … /&gt;</code> และฝั่งที่รับ</p>
+
+  <ul>
+    <li><strong><code>loadedPromise: Promise&lt;PastOrder[]&gt;</code></strong> — สังเกตว่า type ยังไล่มาจาก <code>getPastOrders</code> ที่เราใส่ <code>Promise&lt;PastOrder[]&gt;</code> ไว้ตั้งแต่บทที่ 17 เหมือนเดิม ผลคือ <code>const data = use(loadedPromise)</code> ได้ <code>PastOrder[]</code> มาแบบ<em>ไม่มี <code>undefined</code></em> ปนอยู่ด้วย ซึ่งต่างจากตอนใช้ <code>useQuery</code> ตรง ๆ ที่เราต้องเขียน <code>isLoading || !data</code> คอยกัน — นี่คือข้อดีที่แท้จริงของ Suspense ที่สัมผัสได้ผ่าน type: การรอข้อมูลถูกยกออกไปเป็นหน้าที่ของ <code>&lt;Suspense&gt;</code> แล้ว ตัว component จึงมองเห็นแต่กรณีที่ข้อมูลมาถึงแล้วจริง ๆ</li>
+    <li><strong><code>setPage: Dispatch&lt;SetStateAction&lt;number&gt;&gt;</code></strong> — หน้าตาคุ้น ๆ ใช่ไหม? เป็น type เดียวกับที่เราเจอตอนทำ <code>CartHook</code> ในบทที่ 15 เพียงแต่คราวนี้เป็น <code>number</code> แทน <code>CartItem[]</code> การส่ง setter function ลงไปเป็น prop เป็น pattern ที่พบบ่อยมาก และนี่คือวิธีให้ type กับมัน</li>
+  </ul>
   <ul><li>เราใช้ Suspense เพื่อบอก React ว่าจะหยุด render ตรงไหนจนกว่า <em>ทุกอย่าง</em> ข้างในจะ resolve หากมีหลายสิ่ง suspend มันจะไม่ render จนกว่าทั้งหมดจะเสร็จ</li><li><code>fallback</code> บอกสิ่งที่จะ render ระหว่างถูก suspend</li><li>เราต้อง query ภายใน parent component (และจึงเก็บ page ด้วย) เพราะ promise ต้องมีอยู่ภายนอก component ที่กำลังถูก suspend ไม่เช่นนั้นมันจะถูกเรียกใหม่ทุกครั้งที่ component render คล้าย error boundaries</li><li>เราใส่ทุกอย่างใน error-boundary wrapping component ซึ่งน่าจะควรเปลี่ยนชื่อ</li><li>อีกครั้ง เราใช้ support ของ TanStack Query แต่จริง ๆ ใช้กับ promise ใดก็ได้ TanStack Query แค่ทำให้มันง่าย</li><li>TanStack Query มีวิธีอื่นอีกหลายแบบในการใช้ Suspense เราเพียงอยากลอง <code>use</code> hook</li><li>use มีการใช้งานอื่นอีกเล็กน้อย ลองดูใน docs</li><li>ไม่เหมือน hooks ส่วนใหญ่ <code>use</code> ใช้ใน conditionals และ for loops ได้ ค่อนข้างแปลกเมื่อเทียบกับ rules around hooks แต่จริง</li></ul>
   <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="30_form_actions.html" rel="prev">ก่อนหน้า: Form Actions</a><a href="index.html">สารบัญบทเรียน</a><a href="32_react_compiler.html" rel="next">ถัดไป: React Compiler</a></nav>
 </article></main></body></html>

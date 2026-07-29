@@ -18,9 +18,9 @@
 
         <h2>Context</h2>
 
-        <p>มาสร้าง cart indicator ที่มุมขวาบนของหน้า สร้างไฟล์ชื่อ Header.jsx แล้วใส่สิ่งนี้ลงไป</p>
+        <p>มาสร้าง cart indicator ที่มุมขวาบนของหน้า สร้างไฟล์ชื่อ Header.tsx แล้วใส่สิ่งนี้ลงไป</p>
 
-        <pre><code class="language-javascript">export default function Header() {
+        <pre><code class="language-typescript">export default function Header() {
   return (
     &lt;nav&gt;
       &lt;h1 className="logo"&gt;Pizza app&lt;/h1&gt;
@@ -32,37 +32,56 @@
 }
 </code></pre>
 
-        <p>ตอนนี้มาใช้มันใน App.jsx</p>
+        <p>ตอนนี้มาใช้มันใน App.tsx</p>
 
-        <pre><code class="language-javascript">// at top
+        <pre><code class="language-typescript">// at top
 import Header from "./Header";
 
 // replace .logo
 &lt;Header /&gt;
 </code></pre>
 
-        <p>ตอนนี้มันจะแสดง 5 เสมอ แต่เราต้องการให้ตัวเลขใน .nav-cart-number สะท้อนจำนวน items ใน cart ของเรา จะทำอย่างไร? เราอาจย้าย cart ทั้งหมดและ hooks ของมันไป App.jsx แล้วส่งมันเข้า Header และ Order ในแอปเล็กเท่านี้ นั่นอาจเป็นทางเลือกที่ถูกต้อง แต่มาดูอีกวิธีหนึ่ง คือ context</p>
+        <p>ตอนนี้มันจะแสดง 5 เสมอ แต่เราต้องการให้ตัวเลขใน .nav-cart-number สะท้อนจำนวน items ใน cart ของเรา จะทำอย่างไร? เราอาจย้าย cart ทั้งหมดและ hooks ของมันไป App.tsx แล้วส่งมันเข้า Header และ Order ในแอปเล็กเท่านี้ นั่นอาจเป็นทางเลือกที่ถูกต้อง แต่มาดูอีกวิธีหนึ่ง คือ context</p>
 
         <p>Context มีไว้สำหรับ app-level state นี่คือ state ที่มีอยู่กับทั้ง app ของคุณ ผู้ใช้ที่เข้าสู่ระบบอยู่ในขณะนี้เป็นตัวอย่างที่ดี คุณคงไม่ต้องการให้ผู้ใช้มีอยู่แค่ระดับ page เพราะเมื่อคุณไปหน้าอื่น state ทั้งหมดของหน้าก่อนหน้าจะถูกทำลาย คุณย่อมต้องการให้ข้อมูลผู้ใช้นั้นคงอยู่ระหว่าง pages ดังนั้น context จึงเหมาะกับเรื่องนั้น Context ให้คุณเก็บ global state สำหรับ app ของคุณ เราจะใช้กับ shopping cart ซึ่งก็สมเหตุสมผลมาก: หากผู้ใช้ไปหน้าอื่น คุณย่อมต้องการเก็บ shopping cart ไว้ระหว่าง loads นี่เป็นวิธีคิดที่ดีว่าควรใช้ context เมื่อไร: หากคุณต้องการให้ state นั้นคงอยู่ระหว่าง pages</p>
 
-        <p>ดังนั้นมาทำให้มันทำงาน สร้างไฟล์ชื่อ <code>contexts.jsx</code> มันไม่ใช่ component คอร์สนี้จึงไม่ขึ้นต้นด้วยตัวพิมพ์ใหญ่ ส่วน React docs ใช้ตัวพิมพ์ใหญ่ เลือกได้ตามถนัด</p>
+        <p>ดังนั้นมาทำให้มันทำงาน สร้างไฟล์ชื่อ <code>contexts.ts</code> (เป็น <code>.ts</code> เพราะไม่มี JSX) มันไม่ใช่ component คอร์สนี้จึงไม่ขึ้นต้นด้วยตัวพิมพ์ใหญ่ ส่วน React docs ใช้ตัวพิมพ์ใหญ่ เลือกได้ตามถนัด</p>
 
-        <pre><code class="language-javascript">import { createContext } from "react";
+        <pre><code class="language-typescript">import { createContext } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import type { CartItem } from "./types";
 
-export const CartContext = createContext([[], function () {}]);
+export type CartHook = [CartItem[], Dispatch&lt;SetStateAction&lt;CartItem[]&gt;&gt;];
+
+export const CartContext = createContext&lt;CartHook&gt;([[], () =&gt; {}]);
 </code></pre>
 
-        <p>แค่นั้นเอง ง่ายมาก มันชื่อ contexts ที่มี <code>s</code> เพราะถ้าคุณมี contexts อื่น (เช่น UserContext) คุณก็ใส่ทั้งหมดในไฟล์เดียวกันได้ <code>[[], function () {}]</code> ไม่จำเป็นโดยเคร่งครัด; มันคือ default value ที่ context จะใช้หากไม่มี context provider อยู่ (ซึ่งไม่ควรเกิดขึ้น) โดยจริง ๆ แล้วมันมีประโยชน์กับ TypeScript types เท่านั้น — type ที่คุณให้ที่นี่คือสิ่งที่ TypeScript จะใช้ validate ในทางทฤษฎีมันอาจมีประโยชน์กับ testing ได้ด้วย เหตุผลที่ value แปลกคือมันเป็น React hook: array ที่ value แรกเป็น array (เช่น cart ของเรา) และ value ที่สองเป็น function (function setCart)</p>
+        <p>แค่นั้นเอง ง่ายมาก มันชื่อ contexts ที่มี <code>s</code> เพราะถ้าคุณมี contexts อื่น (เช่น UserContext) คุณก็ใส่ทั้งหมดในไฟล์เดียวกันได้ <code>[[], () =&gt; {}]</code> คือ default value ที่ context จะใช้หากไม่มี context provider อยู่ (ซึ่งไม่ควรเกิดขึ้น) เหตุผลที่ value หน้าตาแปลกคือมันเป็น React hook: array ที่ value แรกเป็น array (เช่น cart ของเรา) และ value ที่สองเป็น function (function setCart)</p>
 
-        <p>โอเค มาใส่มันใน App.jsx</p>
+        <p class="translator-note">💡 ในเวอร์ชัน JavaScript ของบทนี้ ต้นฉบับบอกว่า default value <em>"ไม่จำเป็นโดยเคร่งครัด และจริง ๆ แล้วมีประโยชน์กับ TypeScript types เท่านั้น"</em> — ตอนนี้เราเขียน TypeScript แล้ว ประโยคนั้นจึงกลายเป็นเรื่องจริงที่สัมผัสได้: ถ้าคุณลบ <code>&lt;CartHook&gt;</code> ออก TypeScript จะเดา type ของ context จากค่า <code>[[], () =&gt; {}]</code> ว่าเป็น <code>(never[] | (() =&gt; void))[]</code> ซึ่งเละมาก แล้วทุกที่ที่ <code>useContext(CartContext)</code> ก็จะใช้ไม่ได้</p>
 
-        <pre><code class="language-javascript">// at the top
+        <h3>อ่าน <code>Dispatch&lt;SetStateAction&lt;CartItem[]&gt;&gt;</code> ยังไง</h3>
+
+        <p>type ตัวนี้ตาลายที่สุดในคอร์สนี้แล้ว แต่มันมีที่มาที่ตรงไปตรงมามาก มันคือ <strong>type ของฟังก์ชัน <code>setCart</code> ที่ <code>useState</code> คืนมาให้</strong> นั่นเอง เหตุผลที่มันซับซ้อนคือ <code>setCart</code> รับได้สองแบบ</p>
+
+        <pre><code class="language-typescript">setCart([...cart, newItem]);              // ส่งค่าใหม่ตรง ๆ
+setCart((prev) =&gt; [...prev, newItem]);     // ส่งฟังก์ชันที่รับค่าเดิมมาคำนวณ
+</code></pre>
+
+        <p><code>SetStateAction&lt;CartItem[]&gt;</code> คือ "<code>CartItem[]</code> หรือฟังก์ชันที่รับ <code>CartItem[]</code> แล้วคืน <code>CartItem[]</code>" ส่วน <code>Dispatch&lt;T&gt;</code> คือ "ฟังก์ชันที่รับ <code>T</code> แล้วไม่คืนอะไร" ประกอบกันจึงได้ความหมายครบ</p>
+
+        <p>คุณไม่ต้องท่องมัน วิธีที่คนทำงานจริงใช้กันคือเอาเมาส์ไปชี้ที่ <code>setCart</code> ใน VS Code แล้วก๊อป type ที่มันแสดงมาใช้ — และถ้ายังรู้สึกว่ายาวเกินไป เขียนเป็น <code>ReturnType&lt;typeof useState&lt;CartItem[]&gt;&gt;</code> ก็ได้ผลเหมือนกัน แต่คอร์สนี้เลือกเขียนตรง ๆ เพราะอ่านแล้วเห็นว่าเกิดอะไรขึ้นชัดกว่า</p>
+
+        <p>โอเค มาใส่มันใน App.tsx</p>
+
+        <pre><code class="language-typescript">// at the top
 import { StrictMode, useState } from "react"; // need useState
 import { CartContext } from "./contexts";
+import type { CartItem } from "./types";
 
 // replace App
 const App = () =&gt; {
-  const cartHook = useState([]);
+  const cartHook = useState&lt;CartItem[]&gt;([]);
   return (
     &lt;StrictMode&gt;
       &lt;CartContext.Provider value={cartHook}&gt;
@@ -79,9 +98,11 @@ const App = () =&gt; {
 
         <p>เรากำลังสร้าง hook (สังเกตว่าเราไม่ได้ destructuring) แล้วส่งมันเข้าเป็น value Provider ทำให้ context นั้นใช้ได้เฉพาะภายใน children ของมัน ในทางทฤษฎีคุณมีหลาย providers จาก context เดียวกันได้ แต่ในทางปฏิบัติแทบไม่มีเหตุผลต้องทำ</p>
 
-        <p>เอาล่ะ มาทำให้ Order.jsx ใช้งานได้</p>
+        <p>ที่นี่ <code>useState&lt;CartItem[]&gt;([])</code> คืน tuple ที่มี type ตรงกับ <code>CartHook</code> พอดี ถ้าคุณเผลอเขียน <code>useState([])</code> เฉย ๆ TypeScript จะฟ้องตรง <code>value={cartHook}</code> ว่า type ไม่ตรงกัน — นี่คือประโยชน์ที่ชัดที่สุดของการให้ type กับ context ตั้งแต่แรก มันทำให้ provider กับผู้ใช้ context ผูกกันแน่นหนา</p>
 
-        <pre><code class="language-javascript">// at top
+        <p>เอาล่ะ มาทำให้ Order.tsx ใช้งานได้</p>
+
+        <pre><code class="language-typescript">// at top
 import { useState, useEffect, useContext } from "react"; // need useContext
 import { CartContext } from "./contexts";
 
@@ -92,7 +113,7 @@ const [cart, setCart] = useContext(CartContext); // change cart hook to use cont
 
         <p>มาใช้มันใน Header ของเราด้วย</p>
 
-        <pre><code class="language-javascript">// at top
+        <pre><code class="language-typescript">// at top
 import { useContext } from "react";
 import { CartContext } from "./contexts";
 

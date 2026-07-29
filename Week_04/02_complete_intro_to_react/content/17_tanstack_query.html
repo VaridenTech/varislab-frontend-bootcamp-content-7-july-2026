@@ -15,10 +15,10 @@
         <p class="lesson-original-title" lang="en">TanStack Query</p>
       </header>
       <h2>TanStack Query</h2>
-      <p>มาสร้างหน้า past orders กัน สร้างไฟล์ใหม่ชื่อ <code>past.lazy.jsx</code> หาก Vite server ของคุณกำลังทำงานอยู่ มันจะสร้าง stub ให้โดยอัตโนมัติ! ประสบการณ์สำหรับนักพัฒนาที่เจ๋งมากจาก TanStack</p>
+      <p>มาสร้างหน้า past orders กัน สร้างไฟล์ใหม่ชื่อ <code>past.lazy.tsx</code> หาก Vite server ของคุณกำลังทำงานอยู่ มันจะสร้าง stub ให้โดยอัตโนมัติ! ประสบการณ์สำหรับนักพัฒนาที่เจ๋งมากจาก TanStack</p>
       <p>ทีนี้มาติดตั้งเครื่องมือชิ้นถัดไปของเรา TanStack (React) Query</p>
-      <pre><code class="language-bash">npm i @tanstack/react-query@5.59.13
-npm i -D @tanstack/react-query-devtools@5.59.13 @tanstack/eslint-plugin-query@5.59.7
+      <pre><code class="language-bash">npm i @tanstack/react-query@^5.101.0
+npm i -D @tanstack/react-query-devtools@^5.101.0 @tanstack/eslint-plugin-query@^5.101.0
 </code></pre>
       <p>React Query ทำให้การเรียก async API ง่ายขึ้นมาก ง่ายกว่าและดีกว่ามาก จนหลายทีมแทบไม่ใช้ <code>useEffect</code> ดึงข้อมูลอีกแล้ว แบบที่เราเพิ่งทำกับรายการ pizzas และ pizza of the day โค้ดสะอาดกว่า อ่านง่ายกว่า cache ดีกว่า และมี bug น้อยกว่า สรุปคือมันดีกว่า คุณควรรู้วิธีใช้ effects แต่จากนี้ไปก็ใช้ TanStack Query สำหรับ API calls</p>
       <p>มาเริ่มกัน เริ่มจากเพิ่ม ESLint config ของมันเข้า config ของเรา มันมี rules ที่มีประโยชน์ ใน eslint.config.mjs</p>
@@ -29,15 +29,15 @@ import pluginQuery from "@tanstack/eslint-plugin-query";
 ...pluginQuery.configs["flat/recommended"],
 </code></pre>
       <p>นี่จะเพิ่ม rules ของ ESLint สองสามข้อที่เฉพาะกับ React Query rules เหล่านี้มีประโยชน์ และที่สำคัญกว่านั้นคือไม่น่ารำคาญ จึงควรเพิ่มไว้ทุกครั้ง</p>
-      <p>เพิ่ม dev tools ด้วยเหมือนที่ทำกับ router ใน <code>src/routes/__root.jsx</code>:</p>
-      <pre><code class="language-javascript">// at top
+      <p>เพิ่ม dev tools ด้วยเหมือนที่ทำกับ router ใน <code>src/routes/__root.tsx</code>:</p>
+      <pre><code class="language-typescript">// at top
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 // under router dev tools
 &lt;ReactQueryDevtools /&gt;
 </code></pre>
-      <p>สุดท้ายเราต้องเพิ่ม <code>QueryClient</code> ใน <code>App.jsx</code> เพิ่ม:</p>
-      <pre><code class="language-javascript">// Add imports
+      <p>สุดท้ายเราต้องเพิ่ม <code>QueryClient</code> ใน <code>App.tsx</code> เพิ่ม:</p>
+      <pre><code class="language-typescript">// Add imports
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Create a property under the router
@@ -49,16 +49,34 @@ const queryClient = new QueryClient()
 &lt;/QueryClientProvider&gt;
 </code></pre>
       <p>ตอนนี้มุมขวาล่างของหน้าต่างจะเห็น 🏝️ คลิกมันเพื่อเปิด dev tools เรายังไม่ได้ใช้ dev tools จึงยังว่างอยู่</p>
-      <p>react-query ทำให้การทำงานกับ APIs ง่ายมากและอ่านง่าย คุณแค่อ่าน hook แล้วมันจะให้สถานะ <code>isLoading</code> หรือ data กลับมา เมื่อ data กลับมา มันจะ refresh component ด้วย data นั้น เริ่มจากเขียน fetch call ที่ง่ายมาก สร้างโฟลเดอร์ <code>api</code> ใน <code>src</code> แล้วสร้าง <code>getPastOrders.js</code> ใส่:</p>
-      <pre><code class="language-javascript">export default async function getPastOrders(page) {
+      <p>react-query ทำให้การทำงานกับ APIs ง่ายมากและอ่านง่าย คุณแค่อ่าน hook แล้วมันจะให้สถานะ <code>isLoading</code> หรือ data กลับมา เมื่อ data กลับมา มันจะ refresh component ด้วย data นั้น เริ่มจากเขียน fetch call ที่ง่ายมาก</p>
+
+      <p>ก่อนอื่นเพิ่ม type ของ order ย้อนหลังลงใน <code>src/types.ts</code></p>
+      <pre><code class="language-typescript">// เพิ่มต่อจาก CartItem
+export type PastOrder = {
+  order_id: number;
+  date: string;
+  time: string;
+};
+</code></pre>
+
+      <p>จากนั้นสร้างโฟลเดอร์ <code>api</code> ใน <code>src</code> แล้วสร้าง <code>getPastOrders.ts</code> ใส่:</p>
+      <pre><code class="language-typescript">import type { PastOrder } from "../types";
+
+export default async function getPastOrders(page: number): Promise&lt;PastOrder[]&gt; {
   const response = await fetch(`/api/past-orders?page=${page}`);
   const data = await response.json();
   return data;
 }
 </code></pre>
-      <p>เป็น request ที่ง่ายมากไปยัง API ที่ return data แค่นั้น!</p>
-      <p>ทีนี้ไปสร้าง <code>past.lazy.jsx</code></p>
-      <pre><code class="language-javascript">import { useState } from "react";
+      <p>เป็น request ที่ง่ายมากไปยัง API ที่ return data แค่นั้น! แต่การใส่ type สองที่ในไฟล์เล็ก ๆ นี้ให้ผลตอบแทนเยอะกว่าที่คิด</p>
+      <ul>
+        <li><code>page: number</code> — ถ้าเผลอเรียก <code>getPastOrders("1")</code> ด้วย string จะเป็น error ทันที</li>
+        <li><code>Promise&lt;PastOrder[]&gt;</code> คือ return type ของ async function เราต้องห่อด้วย <code>Promise&lt;...&gt;</code> เสมอ เพราะ async function คืน Promise ไม่ใช่ค่าตรง ๆ</li>
+      </ul>
+      <p>จุดที่สองสำคัญเป็นพิเศษ เพราะ <code>response.json()</code> คืน <code>any</code> เสมอ ถ้าเราไม่ประกาศ return type ไว้ตรงนี้ ค่า <code>any</code> จะไหลออกไปทั่วแอปเงียบ ๆ แล้ว <code>data.map(...)</code> ในหน้าถัดไปก็จะไม่มีใครตรวจให้เลย <strong>ชั้น API คือจุดที่ควรใส่ type ให้แน่นที่สุด</strong> เพราะมันคือประตูที่ข้อมูลไร้ type จากภายนอกเข้ามาในแอปเรา ปิดประตูนี้ให้ดี แล้วที่เหลือ TypeScript จะสรุปให้เองได้เกือบทั้งหมด</p>
+      <p>ทีนี้ไปสร้าง <code>past.lazy.tsx</code></p>
+      <pre><code class="language-typescript">import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import getPastOrders from "../api/getPastOrders";
@@ -68,13 +86,13 @@ export const Route = createLazyFileRoute("/past")({
 });
 
 function PastOrdersRoute() {
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState&lt;number&gt;(1);
   const { isLoading, data } = useQuery({
     queryKey: ["past-orders", page],
     queryFn: () =&gt; getPastOrders(page),
     staleTime: 30000,
   });
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       &lt;div className="past-orders"&gt;
         &lt;h2&gt;LOADING …&lt;/h2&gt;
@@ -121,7 +139,18 @@ function PastOrdersRoute() {
         <li>ตอนนี้เปิด dev tools คุณเห็นหน้าทั้งหมดกำลังโหลดอยู่ เจ๋งใช่ไหม?</li>
         <li>ลองเอา <code>page</code> ออกจาก query key มันจะเตือนคุณ นี่คือ ESLint config ที่เราดึงมาจาก Tanstack Query เพราะเราใช้ <code>page</code> ใน request จึงต้องใช้มันเป็น caching key หากคุณพึ่งพา variable เพื่อ request มันควรเป็นส่วนหนึ่งของ caching key</li>
         <li>เราให้ <code>staleTime</code> เป็น 30 วินาที (30,000 milliseconds) สิ่งนี้ทำให้คนที่ใช้หน้า browse ไปมาเล็กน้อยได้โดยไม่ยิง API มากเกินไป แต่หน้าก็ไม่ stale เกินไป หากไม่ใส่ <code>staleTime</code> มันจะ refetch ทุกครั้ง</li>
+        <li>สังเกตว่าเราไม่ได้บอก type ให้ <code>useQuery</code> เลยสักตัว แต่ลองเอาเมาส์ไปชี้ที่ <code>data</code> ดู — มันเป็น <code>PastOrder[] | undefined</code> เรียบร้อย TanStack Query อ่าน type มาจาก return type ของ <code>queryFn</code> ซึ่งก็คือ <code>getPastOrders</code> ที่เราเพิ่งใส่ <code>Promise&lt;PastOrder[]&gt;</code> ไว้ นี่คือผลตอบแทนของการ "ปิดประตูให้แน่น" ที่ชั้น API: เราเขียน type ครั้งเดียว แล้วมันไหลไปทั่วทั้งแอปเอง</li>
       </ul>
+
+      <h3>ทำไมต้องเขียน <code>isLoading || !data</code></h3>
+
+      <p>ถ้าคุณเขียนแค่ <code>if (isLoading)</code> อย่างในเวอร์ชัน JavaScript แล้วเลื่อนลงไปดู <code>data.map(...)</code> ข้างล่าง TypeScript จะฟ้องว่า <code>'data' is possibly 'undefined'</code> ทั้งที่เราเพิ่ง return ไปแล้วตอน loading ทำไมล่ะ?</p>
+
+      <p>เพราะ TypeScript ไม่รู้ความสัมพันธ์ระหว่าง <code>isLoading</code> กับ <code>data</code> มันเห็นแค่ว่าเป็นตัวแปรสองตัวที่ไม่เกี่ยวกัน และจริง ๆ แล้วมันก็มีเหตุผลจากมุมของ TanStack Query ด้วย เพราะยังมีสถานะที่ <code>isLoading</code> เป็น <code>false</code> แต่ <code>data</code> ยังเป็น <code>undefined</code> อยู่ นั่นคือตอนที่ query <strong>error</strong> — API ล่ม เน็ตหลุด หรือ server ตอบ 500 ในกรณีนั้นโหลดจบแล้วแต่ไม่มีข้อมูล และโค้ดเวอร์ชัน JavaScript จะพังทั้งหน้าด้วย <code>Cannot read properties of undefined (reading 'map')</code></p>
+
+      <p>การเช็ค <code>!data</code> ตรง ๆ จึงแก้ทั้งสองเรื่องพร้อมกัน: TypeScript ได้ narrowing ที่ต้องการ และแอปเราก็ไม่พังเวลา API มีปัญหา</p>
+
+      <p class="translator-note">💡 ในแอปจริงคุณควรแยกสองกรณีนี้ออกจากกันเพื่อบอกผู้ใช้ให้ตรงจุด โดยใช้ <code>isError</code> ที่ TanStack Query ให้มา เช่น <code>if (isError) return &lt;p&gt;โหลดรายการไม่สำเร็จ ลองใหม่อีกครั้ง&lt;/p&gt;</code> ลองเพิ่มดูเป็นแบบฝึกหัดได้</p>
       <p>แค่นั้น! React Query ทั้งใช้ง่ายและยืดหยุ่นมากสำหรับจัดการปัญหาที่ยาก มันเป็นหนึ่งใน libraries ที่ได้รับความนิยมที่สุดในระบบนิเวศ React</p>
       <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="16_tanstack_router.html" rel="prev">ก่อนหน้า: TanStack Router</a><a href="index.html">สารบัญบทเรียน</a><a href="18_portals.html" rel="next">ถัดไป: Portals</a></nav>
     </article></main>

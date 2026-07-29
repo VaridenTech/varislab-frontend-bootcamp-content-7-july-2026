@@ -4,8 +4,22 @@
   <p>ยินดีด้วย!! คุณทำได้!</p>
   <p>นี่เป็นเนื้อหาจำนวนมากที่ต้องรับมือ ดังนั้นขอชื่นชมที่คุณเรียนจนจบ หวังว่ามันสนุก และอาจทำให้คุณสนับสนุนร้านพิซซ่าในท้องถิ่นไปด้วย!</p>
   <p>ตอนนี้คุณพร้อมเต็มที่สำหรับการเขียน React อย่างมืออาชีพ ทุกอย่างที่เรียนที่นี่คือ 95%+ ของสิ่งที่คุณต้องใช้เพื่อเขียน React ในบริษัทเทคโนโลยีใด ๆ ส่วนอีก 5% ที่เหลือคือเรื่อง server-side React และเทคนิค performance ขั้นสูง ซึ่งเป็นเนื้อหาระดับถัดไป แต่สำหรับตอนนี้ นี่คือเกือบทั้งหมดที่คุณต้องรู้!</p>
+
+  <p>และอย่าลืมว่าคุณทำสิ่งนี้ด้วย <strong>TypeScript</strong> มาตลอดตั้งแต่บทที่ 8 ซึ่งเป็นสิ่งที่ทีมส่วนใหญ่ในอุตสาหกรรมใช้กันจริงในโปรเจกต์ React วันนี้ ลองย้อนดูสิ่งที่คุณทำได้แล้ว</p>
+
+  <ul>
+    <li>ให้ type กับ props ของ component รวมถึง prop ที่เป็น optional และ prop ที่เป็นฟังก์ชัน</li>
+    <li>ใช้ generic กับ hooks — <code>useState&lt;Pizza[]&gt;</code>, <code>useState&lt;T | null&gt;</code>, <code>useRef&lt;HTMLDivElement | null&gt;</code></li>
+    <li>ให้ type กับ event handler ของ DOM และรู้ว่า <code>e.target</code> ต่างจาก <code>e.currentTarget</code> อย่างไร</li>
+    <li>ปิดประตูที่ชั้น API ด้วย <code>Promise&lt;T&gt;</code> แล้วปล่อยให้ type ไหลไปทั่วแอปเอง</li>
+    <li>ใช้ type narrowing จัดการค่าที่อาจไม่มีอยู่ แทนที่จะปิดปาก TypeScript ด้วย <code>!</code> หรือ <code>as</code></li>
+    <li>ให้ type กับ context, class component, mock data ในเทสต์ และ environment variables</li>
+    <li>augment type ของ library ด้วย <code>declare module</code> และไฟล์ <code>.d.ts</code></li>
+  </ul>
+
+  <p>บทเรียนที่อยากให้ติดตัวไปมากที่สุดคือสิ่งที่เกิดขึ้นซ้ำแล้วซ้ำอีกตลอดคอร์สนี้: <strong>เกือบทุกครั้งที่ TypeScript บ่น มันกำลังชี้ไปที่กรณีจริงที่โค้ดเรายังจัดการไม่ครบ</strong> ไม่ว่าจะเป็น <code>find()</code> ที่หาไม่เจอ, API ที่ error แล้วไม่มี data, หรือ <code>getElementById</code> ที่คืน null เวลาเจอเส้นแดง อย่าเพิ่งรีบหาวิธีทำให้มันหาย — ให้อ่านมันเป็นคำถามว่า "แล้วถ้าเกิดกรณีนี้ขึ้นจริงจะให้ทำยังไง" ก่อนเสมอ</p>
   <p>แล้วจากนี้ควรทำอะไร?</p>
-  <ul><li>สร้างแอปของคุณเอง!! ย้ำเท่าไรก็ไม่พอว่าแนวคิดแบบนี้ต้องลงมือสร้างเองถึงจะติดตัว เลือกไอเดียที่งี่เง่าที่สุดในหัวแล้วทำมันให้เสร็จ ไม่มีอะไรแทนประสบการณ์ได้!<ul><li>เว็บไซต์ e-commerce ขายถุงเท้าข้างเดียว เพื่อจับคู่ถุงเท้าที่ไม่มีคู่</li><li>text editor สำหรับ AI prompts</li><li>แอปเพลงที่ให้เพิ่มเพลงจาก Spotify, Apple Music และ Tidal ได้</li><li>client สำหรับอ่าน Thread, X และ Bluesky ในแอปเดียว</li></ul></li><li>เรียน React ฝั่ง server ต่อ ไม่ว่าจะเป็น Next.js หรือ Remix/React Router (ในไม่ช้าสองอย่างหลังจะเป็นสิ่งเดียวกัน)</li><li>เรียนเครื่องมือจัดการ state ที่ใหญ่ขึ้น เช่น Redux Toolkit หรือ Zustand เมื่อ context เริ่มไม่พอ</li><li>เรียน Tailwind เพื่อเขียน CSS ได้เร็วขึ้นในโปรเจกต์จริง</li><li>เรียน TypeScript แล้วย้อนกลับมาเขียนโปรเจกต์พิซซ่านี้ใหม่ให้มี type ครบ</li></ul>
+  <ul><li>สร้างแอปของคุณเอง!! ย้ำเท่าไรก็ไม่พอว่าแนวคิดแบบนี้ต้องลงมือสร้างเองถึงจะติดตัว เลือกไอเดียที่งี่เง่าที่สุดในหัวแล้วทำมันให้เสร็จ ไม่มีอะไรแทนประสบการณ์ได้!<ul><li>เว็บไซต์ e-commerce ขายถุงเท้าข้างเดียว เพื่อจับคู่ถุงเท้าที่ไม่มีคู่</li><li>text editor สำหรับ AI prompts</li><li>แอปเพลงที่ให้เพิ่มเพลงจาก Spotify, Apple Music และ Tidal ได้</li><li>client สำหรับอ่าน Thread, X และ Bluesky ในแอปเดียว</li></ul></li><li>เรียน React ฝั่ง server ต่อ ไม่ว่าจะเป็น Next.js หรือ Remix/React Router (ในไม่ช้าสองอย่างหลังจะเป็นสิ่งเดียวกัน)</li><li>เรียนเครื่องมือจัดการ state ที่ใหญ่ขึ้น เช่น Redux Toolkit หรือ Zustand เมื่อ context เริ่มไม่พอ</li><li>เรียน Tailwind เพื่อเขียน CSS ได้เร็วขึ้นในโปรเจกต์จริง</li><li>ลง TypeScript ให้ลึกขึ้นอีกขั้น — generic ที่เขียนเอง, utility type อย่าง <code>Pick</code>, <code>Omit</code>, <code>Partial</code> และการตรวจข้อมูลจาก API ตอน runtime ด้วย Zod ซึ่งจะปิดช่องว่างสุดท้ายที่เราพูดถึงไว้ในบทที่ 11 ว่า type ที่เราเขียนเป็นเพียง "ความเชื่อ" ว่า API จะส่งอะไรมา</li></ul>
   <p>มีเส้นทางต่อจากนี้ได้มากมายและทุกทางสนุก! ขอให้สนุกกับการเขียน React ต่อไป!</p>
   <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="33_deploying_the_app.html" rel="prev">ก่อนหน้า: Deploying</a><a href="index.html">สารบัญบทเรียน</a></nav>
 </article></main></body></html>

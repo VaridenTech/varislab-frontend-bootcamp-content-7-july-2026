@@ -13,24 +13,34 @@
       <h2>Portals</h2>
       <p>ถ้าคุณกำลัง render หน้าอยู่ และอยาก render บางอย่างในอีกส่วนของหน้าไปพร้อมกันล่ะ? ลองนึกถึง contextual right navigation และหน้าหนึ่งที่อยาก render เข้า contextual nav เราอาจใช้ context ทำได้และนั่นก็ยอมรับได้ทั้งหมด แต่ยังมีอีกวิธีเจ๋ง ๆ ชื่อ portal สำหรับทำสิ่งนี้ มันยังให้เรา render ออกนอกแอปโดยสิ้นเชิงได้ด้วย เหมือนที่กำลังจะทำ</p>
       <p>เราจะทำ modal หรือ “popover” หลายคนมองว่ามันเป็น user experience ที่ไม่ค่อยดี แต่มันเป็น use case ที่สมบูรณ์แบบสำหรับ portal เราจึงจะลองทำดู! กรณีของเรา เพราะอยากให้ modal render อยู่หน้าทุกอย่าง div ที่ modal render เข้าไปต้องอยู่ก่อนใน DOM ดังนั้นไปสร้าง div ที่ทำสิ่งนั้น เปิดไฟล์ index.html แล้วใส่:</p>
-      <pre><code class="language-javascript">// above #root
+      <pre><code class="language-html">&lt;!-- above #root --&gt;
 &lt;div id="modal"&gt;&lt;/div&gt;
 </code></pre>
-      <p>โดย default มันจะไม่มีอะไรอยู่ข้างใน แต่เมื่อ render modal มันจะ render ใน div นี้แทนที่จะเป็น root สร้างไฟล์ใหม่ใน src ชื่อ Modal.jsx</p>
-      <pre><code class="language-javascript">// basically stolen from the React docs
+      <p>โดย default มันจะไม่มีอะไรอยู่ข้างใน แต่เมื่อ render modal มันจะ render ใน div นี้แทนที่จะเป็น root สร้างไฟล์ใหม่ใน src ชื่อ Modal.tsx</p>
+      <pre><code class="language-typescript">// basically stolen from the React docs
 import { useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-const Modal = ({ children }) =&gt; {
-  const elRef = useRef(null);
+type ModalProps = {
+  children: ReactNode;
+};
+
+const Modal = ({ children }: ModalProps) =&gt; {
+  const elRef = useRef&lt;HTMLDivElement | null&gt;(null);
   if (!elRef.current) {
     elRef.current = document.createElement("div");
   }
 
   useEffect(() =&gt; {
     const modalRoot = document.getElementById("modal");
-    modalRoot.appendChild(elRef.current);
-    return () =&gt; modalRoot.removeChild(elRef.current);
+    const el = elRef.current;
+    if (!modalRoot || !el) return;
+
+    modalRoot.appendChild(el);
+    return () =&gt; {
+      modalRoot.removeChild(el);
+    };
   }, []);
 
   return createPortal(&lt;div&gt;{children}&lt;/div&gt;, elRef.current);
@@ -43,15 +53,46 @@ export default Modal;
         <li>เราใช้ createPortal เพื่อ render เข้า modal div ใหม่นี้ที่เลือกไว้สำหรับ modal แต่จะเป็น contextual nav หรือ DOM div อื่นใดก็ได้</li>
         <li>เราใช้ function ที่ return จาก effect เพื่อ clean up เมื่อ Modal นี้ถูก unmount จาก DOM ไม่เช่นนั้น memory จะรั่ว</li>
       </ul>
-      <p>ก่อนใช้ Modal เราต้องมี API call function อีกตัวเพื่อ get a past order ในตัวอย่างนี้ เราจะให้คุณคลิกแถวหนึ่งในหน้า past orders เพื่อดูว่ามีอะไรใน order นั้น ใน <code>src/api</code> เพิ่มไฟล์ชื่อ <code>getPastOrder.js</code> (ไม่มี <code>s</code>) แล้วใส่:</p>
-      <pre><code class="language-javascript">export default async function getPastOrder(order) {
+
+      <h3>TypeScript ใน component นี้</h3>
+
+      <ul>
+        <li><strong><code>children: ReactNode</code></strong> — <code>ReactNode</code> คือ type สำหรับ "อะไรก็ได้ที่ React render ออกมาได้" ครอบคลุมทั้ง JSX, string, number, array ของสิ่งเหล่านั้น, <code>null</code> และ <code>undefined</code> เมื่อไรที่ component ของคุณรับ <code>children</code> ให้ใช้ตัวนี้ ทุกครั้ง</li>
+        <li><strong><code>useRef&lt;HTMLDivElement | null&gt;(null)</code></strong> — เหมือน <code>useState</code> เลย ถ้าเริ่มด้วย <code>null</code> ต้องบอก type ให้มันรู้ว่าเดี๋ยวจะมีอะไรมาอยู่ในนั้น มิฉะนั้นเราจะกำหนดค่า <code>document.createElement("div")</code> ลงไปไม่ได้</li>
+        <li><strong><code>const el = elRef.current;</code></strong> — บรรทัดนี้สำคัญกว่าที่เห็น ถ้าคุณใช้ <code>elRef.current</code> ตรง ๆ ทั้งใน <code>appendChild</code> และใน cleanup function TypeScript จะฟ้องว่ามันอาจเป็น <code>null</code> ได้ เพราะ <code>.current</code> เป็นค่าที่<em>เปลี่ยนได้</em> — TypeScript จึงไม่ยอมจำ narrowing ข้ามขอบเขตของ closure การคัดลอกมาเก็บใน <code>const</code> ก่อนจึงแก้ปัญหาได้</li>
+      </ul>
+
+      <p>และเช่นเคย จุดที่ TypeScript บ่นคือจุดที่โค้ดเดิมมีปัญหาจริง ๆ ในเวอร์ชัน JavaScript ถ้าคุณลืมใส่ <code>&lt;div id="modal"&gt;&lt;/div&gt;</code> ใน index.html แอปจะพังด้วย <code>Cannot read properties of null (reading 'appendChild')</code> ส่วนการเก็บ <code>elRef.current</code> ไว้ใน <code>const</code> ก่อนก็เป็น pattern ที่ React docs แนะนำอยู่แล้ว เพราะตอน cleanup ทำงาน ค่าใน <code>.current</code> อาจถูกเปลี่ยนไปแล้วก็ได้ — เราจึงอาจเผลอลบ element ผิดตัว</p>
+
+      <p>ก่อนใช้ Modal เราต้องมี API call function อีกตัวเพื่อ get a past order ในตัวอย่างนี้ เราจะให้คุณคลิกแถวหนึ่งในหน้า past orders เพื่อดูว่ามีอะไรใน order นั้น ก่อนอื่นเพิ่ม type ใน <code>src/types.ts</code></p>
+      <pre><code class="language-typescript">// เพิ่มต่อจาก PastOrder
+export type PastOrderItem = {
+  pizzaTypeId: string;
+  name: string;
+  size: PizzaSize;
+  quantity: number;
+  price: number;
+  total: number;
+  image: string;
+};
+
+export type PastOrderDetail = {
+  orderItems: PastOrderItem[];
+};
+</code></pre>
+      <p>จากนั้นใน <code>src/api</code> เพิ่มไฟล์ชื่อ <code>getPastOrder.ts</code> (ไม่มี <code>s</code>) แล้วใส่:</p>
+      <pre><code class="language-typescript">import type { PastOrderDetail } from "../types";
+
+export default async function getPastOrder(
+  order: number
+): Promise&lt;PastOrderDetail&gt; {
   const response = await fetch(`/api/past-order/${order}`);
   const data = await response.json();
   return data;
 }
 </code></pre>
       <p>จากนั้น render modal หากมี <code>focusedOrder</code>:</p>
-      <pre><code class="language-javascript">// import at top
+      <pre><code class="language-typescript">// import at top
 import getPastOrder from "../api/getPastOrder";
 import Modal from "../Modal";
 
@@ -62,11 +103,11 @@ const intl = new Intl.NumberFormat("en-US", {
 });
 
 // top of the render function
-const [focusedOrder, setFocusedOrder] = useState();
+const [focusedOrder, setFocusedOrder] = useState&lt;number | undefined&gt;();
 
-const { isLoading: isLoadingPastOrder, data: pastOrderData } = useQuery({
+const { data: pastOrderData } = useQuery({
   queryKey: ["past-order", focusedOrder],
-  queryFn: () =&gt; getPastOrder(focusedOrder),
+  queryFn: () =&gt; getPastOrder(focusedOrder!),
   enabled: !!focusedOrder,
   staleTime: 24 * 60 * 60 * 1000, // one day in milliseconds,
 });
@@ -76,7 +117,7 @@ const { isLoading: isLoadingPastOrder, data: pastOrderData } = useQuery({
   focusedOrder ? (
     &lt;Modal&gt;
       &lt;h2&gt;Order #{focusedOrder}&lt;/h2&gt;
-      {!isLoadingPastOrder ? (
+      {pastOrderData ? (
         &lt;table&gt;
           &lt;thead&gt;
             &lt;tr&gt;
@@ -106,7 +147,7 @@ const { isLoading: isLoadingPastOrder, data: pastOrderData } = useQuery({
       ) : (
         &lt;p&gt;Loading …&lt;/p&gt;
       )}
-      &lt;button onClick={() =&gt; setFocusedOrder()}&gt;Close&lt;/button&gt;
+      &lt;button onClick={() =&gt; setFocusedOrder(undefined)}&gt;Close&lt;/button&gt;
     &lt;/Modal&gt;
   ) : null
 }
@@ -118,8 +159,17 @@ const { isLoading: isLoadingPastOrder, data: pastOrderData } = useQuery({
         <li>หากมี focusedOrder เรา render modal และแสดง loading indicator ว่ากำลังโหลดข้อมูลที่เหลือ</li>
         <li>เมื่อผู้ใช้คลิก Close เราตั้ง focusedOrder เป็น undefined อีกครั้ง ซึ่งทำให้ Modal unrender</li>
       </ul>
-      <p>สุดท้ายเราต้องมีวิธีเปิด modal เปิด <code>past.lazy.jsx</code> ทำค่า <code>order.order_id</code> ให้เป็น button และเพิ่ม <code>onClick</code> event เพื่อให้การคลิกเปิด Modal:</p>
-      <pre><code class="language-javascript">&lt;td&gt;
+
+      <h3>สามจุดที่ TypeScript เปลี่ยนโค้ดชุดนี้</h3>
+
+      <ul>
+        <li><strong><code>setFocusedOrder(undefined)</code> ต้องใส่ <code>undefined</code> ให้ครบ</strong> — เวอร์ชัน JavaScript เขียน <code>setFocusedOrder()</code> เฉย ๆ ได้ แต่ TypeScript ถือว่า setter จาก <code>useState</code> รับ argument หนึ่งตัวเสมอ จึงต้องส่ง <code>undefined</code> เข้าไปตรง ๆ ความหมายเหมือนกันทุกประการ แค่ต้องเขียนให้ชัดเจนขึ้น</li>
+        <li><strong>เราเปลี่ยนจาก <code>!isLoadingPastOrder</code> เป็น <code>pastOrderData ?</code></strong> — ด้วยเหตุผลเดียวกับบทที่แล้ว: <code>isLoading</code> ไม่ narrow <code>pastOrderData</code> ให้เรา แต่การเช็คตัวข้อมูลเองทำได้ และผลลัพธ์ที่ผู้ใช้เห็นก็เหมือนเดิม (แถมยังครอบคลุมกรณี API error ไปด้วย) พอเราไม่ได้ใช้ <code>isLoadingPastOrder</code> แล้ว ก็ลบมันออกจากการ destructure ไปเลย ไม่งั้น ESLint จะเตือนว่ามีตัวแปรที่ประกาศทิ้งไว้เฉย ๆ</li>
+        <li><strong><code>getPastOrder(focusedOrder!)</code></strong> — จำที่เตือนไว้ในบทที่ 10 ได้ไหมว่า <code>!</code> และ <code>as</code> ควรใช้ให้น้อยที่สุด? ตรงนี้คือหนึ่งในไม่กี่กรณีที่มันสมเหตุสมผลจริง เพราะ <code>enabled: !!focusedOrder</code> รับประกันว่า <code>queryFn</code> จะไม่มีวันถูกเรียกตอนที่ <code>focusedOrder</code> เป็น <code>undefined</code> — แต่ TypeScript มองไม่เห็นความสัมพันธ์ระหว่างสอง option นี้ นี่เป็น pattern ที่เอกสารของ TanStack Query เองก็แนะนำ</li>
+      </ul>
+
+      <p>สุดท้ายเราต้องมีวิธีเปิด modal เปิด <code>past.lazy.tsx</code> ทำค่า <code>order.order_id</code> ให้เป็น button และเพิ่ม <code>onClick</code> event เพื่อให้การคลิกเปิด Modal:</p>
+      <pre><code class="language-typescript">&lt;td&gt;
   &lt;button onClick={() =&gt; setFocusedOrder(order.order_id)}&gt;
     {order.order_id}
   &lt;/button&gt;

@@ -3,14 +3,14 @@
   <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 23 · การทดสอบ (Testing)</p><h1>การทดสอบปฏิสัมพันธ์ของผู้ใช้</h1><p class="lesson-original-title" lang="en">Testing User Interaction</p></header>
   <p>มาทดสอบหน้า Contact กัน มันมี user interaction ที่ดีและเรียบง่าย ผู้ใช้ใส่ข้อมูล เรา submit ไป API แล้วแสดง submitted header ให้พวกเขา มาทดสอบทั้งหมดนั้นกัน</p>
   <p>ก่อนอื่นเราต้องมี helper function, vitest-fetch-mock เราไม่ได้ <em>ต้อง</em> ใช้มัน เพราะ Vitest ทำได้ แต่มันช่วยให้เขียนสั้นลงมาก</p>
-  <pre><code class="language-bash">npm i -D vitest-fetch-mock@0.3.0
+  <pre><code class="language-bash">npm i -D vitest-fetch-mock@^0.4.5
 </code></pre>
-  <p>และตอนนี้มาเขียน code กัน</p>
-  <pre><code class="language-javascript">import { render } from "@testing-library/react";
+  <p>และตอนนี้มาเขียน code กัน สร้างไฟล์ <code>contact.lazy.test.tsx</code> ใน <code>src/__tests__</code></p>
+  <pre><code class="language-typescript">import { render } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 import createFetchMock from "vitest-fetch-mock";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import { Route } from "../routes/contact.lazy";
+import { ContactRoute } from "../routes/contact.lazy";
 
 const queryClient = new QueryClient();
 
@@ -21,13 +21,15 @@ test("can submit contact form", async () =&gt; {
   fetchMocker.mockResponse(JSON.stringify({ status: "ok" }));
   const screen = render(
     &lt;QueryClientProvider client={queryClient}&gt;
-      &lt;Route.options.component /&gt;
+      &lt;ContactRoute /&gt;
     &lt;/QueryClientProvider&gt;
   );
 
-  const nameInput = screen.getByPlaceholderText("Name");
-  const emailInput = screen.getByPlaceholderText("Email");
-  const msgTextArea = screen.getByPlaceholderText("Message");
+  const nameInput = screen.getByPlaceholderText("Name") as HTMLInputElement;
+  const emailInput = screen.getByPlaceholderText("Email") as HTMLInputElement;
+  const msgTextArea = screen.getByPlaceholderText(
+    "Message"
+  ) as HTMLTextAreaElement;
 
   const testData = {
     name: "Brian",
@@ -59,6 +61,21 @@ test("can submit contact form", async () =&gt; {
   });
 });
 </code></pre>
+  <p>ก่อนที่เทสต์นี้จะทำงานได้ ต้องแก้อีกที่หนึ่ง กลับไปที่ <code>src/routes/contact.lazy.tsx</code> แล้วเติม <code>export</code> ให้ component</p>
+  <pre><code class="language-typescript">// เดิม: function ContactRoute() {
+export function ContactRoute() {
+  // …
+}
+</code></pre>
+
+  <h3>ทำไมไม่ใช้ <code>Route.options.component</code></h3>
+
+  <p>ต้นฉบับที่เป็น JavaScript เขียน <code>&lt;Route.options.component /&gt;</code> คือหยิบ component ออกมาจาก route object ซึ่งทำได้เพราะ JavaScript ไม่ได้ตรวจอะไรเลย แต่ใน TypeScript วิธีนี้จะไม่ผ่าน เพราะ TanStack Router ประกาศ <code>component</code> ไว้เป็น optional (<code>component?: RouteComponent</code>) — route หนึ่ง ๆ จะไม่มี component ก็ได้ TypeScript จึงไม่ยอมให้เราเอาสิ่งที่อาจเป็น <code>undefined</code> มาใช้เป็น JSX tag</p>
+
+  <p>เราจะดันทุรังด้วย <code>Route.options.component!</code> ก็ได้ แต่การ <code>export</code> component ออกมาตรง ๆ ดีกว่าในทุกทาง: type ถูกต้องโดยไม่ต้องหลอกใคร อ่านแล้วรู้ทันทีว่ากำลังเทสต์อะไร และที่สำคัญที่สุดคือมันตรงกับหลักที่เราพูดไว้ตลอดว่า <em>ให้เทสต์สิ่งที่ผู้ใช้เห็น</em> — สิ่งที่เราสนใจคือหน้า Contact ทำงานถูกไหม ไม่ใช่ว่า router เก็บ component ไว้ที่ property ไหน</p>
+
+  <p>อีกจุดคือ <code>as HTMLInputElement</code> และ <code>as HTMLTextAreaElement</code> ด้วยเหตุผลเดียวกับ <code>as HTMLImageElement</code> ในบทที่แล้ว: เราต้องเข้าถึง <code>.value</code> ซึ่งไม่มีใน <code>HTMLElement</code> กลาง ๆ สังเกตว่า <code>&lt;textarea&gt;</code> ต้องใช้ <code>HTMLTextAreaElement</code> ไม่ใช่ <code>HTMLInputElement</code> — ถ้าสลับกัน TypeScript จับได้ทันที</p>
+
   <ul><li>เราต้อง wrap React Query ด้วย query provider เสมอ ไม่เช่นนั้นมันไม่ทำงาน กรณีนี้เราให้มันเป็นส่วนหนึ่งของ initial render ได้เลย</li><li>คุณสามารถ pre-populate React Query ด้วย cache ที่ใช้ได้ แล้วทดสอบว่า app ใช้มันถูกต้องหรือไม่ เป็นวิธี test ที่ใช้ได้อย่างสมบูรณ์ ในกรณีนี้เราอยากให้แน่ใจว่า endpoint ของเราถูก post อย่างถูกต้อง (เพื่อให้แน่ใจว่าเราบันทึก contact) ดังนั้นจึงไม่ทำเช่นนั้น</li><li><code>vi</code> คือ spy library ของ Vitest คล้าย sinon</li><li>vitest-fetch-mock เป็นเพียง layer ที่สะดวกบน vi เราใช้ vi โดยตรงก็ได้</li><li>สังเกตว่าเราแค่เรียก <code>click</code> ได้เลย และมันทำทุกอย่างอย่างที่คาด Cool ใช่ไหม?</li><li>จากนั้นเราทำ assertions ว่า h3 ของเราแสดงถูกต้อง API ถูกเรียกครั้งเดียว และถูก submit ไปยัง API ของเราในแบบที่เราคาด นี่อาจดูเน้น implementation เล็กน้อย ซึ่งก็ใช่ แต่โดยทั่วไปใน app ใหญ่กว่านี้เราน่าจะมี library สำหรับเรียก API และทดสอบแยกต่างหาก แต่ที่นี่เราไม่มี เราจึงรวมมันทั้งหมดไว้ด้วยกัน</li></ul>
   <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="22_basic_react_tests.html" rel="prev">ก่อนหน้า: Basic React Tests</a><a href="index.html">สารบัญบทเรียน</a><a href="24_testing_custom_hooks.html" rel="next">ถัดไป: Testing Custom Hooks</a></nav>
 </article></main></body></html>

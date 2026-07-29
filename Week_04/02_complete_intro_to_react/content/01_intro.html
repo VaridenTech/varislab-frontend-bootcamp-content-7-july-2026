@@ -34,9 +34,19 @@
 
         <h2>ปัญหาที่ React เข้ามาแก้</h2>
 
-        <p>ลองนึกถึงการเขียน JavaScript ล้วน ๆ เพื่อทำปุ่มนับจำนวนคลิก ที่ต้องหยุดทำงานเมื่อครบ 10 ครั้ง</p>
+        <p>ลองนึกถึงการเขียน JavaScript ล้วน ๆ เพื่อทำปุ่มนับจำนวนคลิก ที่ต้องหยุดทำงานเมื่อครบ 10 ครั้ง เริ่มจากเขียน HTML ของหน้าจอไว้ก่อน โดยต้องแปะ <code>id</code> ไว้ทุกจุดที่ JavaScript ต้องเข้าไปแก้ทีหลัง</p>
 
-        <pre><code class="language-javascript">const button = document.getElementById("btn");
+        <pre><code class="language-html">&lt;!-- index.html --&gt;
+&lt;p id="count"&gt;คลิกไปแล้ว 0 ครั้ง&lt;/p&gt;
+&lt;button id="btn"&gt;คลิก&lt;/button&gt;
+
+&lt;script src="app.js"&gt;&lt;/script&gt;
+</code></pre>
+
+        <p>แล้วค่อยเขียน JavaScript ไปตามหา element เหล่านั้นเพื่อสั่งแก้</p>
+
+        <pre><code class="language-javascript">// app.js
+const button = document.getElementById("btn");
 const label = document.getElementById("count");
 let count = 0;
 
@@ -47,7 +57,7 @@ button.addEventListener("click", () =&gt; {
 });
 </code></pre>
 
-        <p>โค้ดนี้ทำงานได้ แต่สังเกตให้ดี: ทุกครั้งที่ <code>count</code> เปลี่ยน <em>เรา</em> ต้องเป็นคนไล่สั่งเองว่าต้องไปแก้ <code>label.textContent</code> และ <code>button.disabled</code> เราต้องจำเองว่ามีที่ไหนบ้างบนหน้าจอที่พึ่งพาข้อมูลตัวนี้ วิธีเขียนแบบนี้เรียกว่า <strong>imperative (สั่งการทีละขั้น)</strong></p>
+        <p>โค้ดนี้ทำงานได้ แต่สังเกตให้ดี: หน้าตาของ UI ถูกแบ่งออกเป็นสองที่ — <em>ตอนเริ่มต้น</em> อยู่ในไฟล์ HTML ส่วน <em>ตอนที่ข้อมูลเปลี่ยน</em> อยู่ในไฟล์ JavaScript ถ้าอยากรู้ว่าปุ่มจะถูกปิดเมื่อไหร่ ดูที่ HTML อย่างเดียวไม่พอ และทุกครั้งที่ <code>count</code> เปลี่ยน <em>เรา</em> ต้องเป็นคนไล่สั่งเองว่าต้องไปแก้ <code>label.textContent</code> และ <code>button.disabled</code> เราต้องจำเองว่ามีที่ไหนบ้างบนหน้าจอที่พึ่งพาข้อมูลตัวนี้ วิธีเขียนแบบนี้เรียกว่า <strong>imperative (สั่งการทีละขั้น)</strong></p>
 
         <p>ตราบใดที่หน้าจอมีแค่สองจุด มันก็ยังไหว แต่แอปจริงมีข้อมูลหลายสิบตัวและจุดที่ต้องอัปเดตหลายร้อยจุด ปัญหาที่ตามมาคือ:</p>
 
@@ -59,7 +69,18 @@ button.addEventListener("click", () =&gt; {
 
         <p>React แก้ปัญหานี้ด้วยการกลับด้านความรับผิดชอบ คุณมีหน้าที่แค่ประกาศว่า “ข้อมูลตอนนี้เป็นแบบนี้ หน้าจอต้องออกมาแบบนี้” ส่วนงานไล่แก้ DOM ให้ตรงกันเป็นหน้าที่ของ React</p>
 
-        <pre><code class="language-javascript">function Counter() {
+        <p>เริ่มจาก HTML ก่อนเหมือนเดิม แต่คราวนี้ทั้งไฟล์เหลือแค่ “จุดที่ให้ React เข้ามาแสดงผล” จุดเดียว ไม่มี <code>id</code> ของ label หรือปุ่มให้ต้องดูแลอีกต่อไป</p>
+
+        <pre><code class="language-html">&lt;!-- index.html --&gt;
+&lt;div id="root"&gt;&lt;/div&gt;
+
+&lt;script type="module" src="app.jsx"&gt;&lt;/script&gt;
+</code></pre>
+
+        <p>หน้าตาทั้งหมดย้ายเข้ามาอยู่ในตัว component แทน โดยเขียนเป็น HTML ปนอยู่ในโค้ด JavaScript ได้เลย (ไวยากรณ์นี้เรียกว่า JSX เดี๋ยวเราจะเรียนกันในบทหลัง ๆ)</p>
+
+        <pre><code class="language-jsx">// app.jsx
+function Counter() {
   const [count, setCount] = useState(0);
 
   return (
@@ -74,6 +95,8 @@ button.addEventListener("click", () =&gt; {
 </code></pre>
 
         <p>ในโค้ดนี้ไม่มีบรรทัดไหนสั่งแก้ข้อความหรือสั่งปิดปุ่มเลย มีแค่การบอกว่า “ข้อความคือค่านี้” และ “ปุ่มจะถูกปิดเมื่อเงื่อนไขนี้เป็นจริง” เมื่อ <code>count</code> เปลี่ยน React จะคำนวณหน้าจอใหม่แล้วไปแก้เฉพาะส่วนที่ต่างจากเดิมให้เอง นี่คือวิธีเขียนแบบ <strong>declarative (ประกาศผลลัพธ์)</strong></p>
+
+        <p>เทียบสองเวอร์ชันให้เห็นภาพชัด ๆ: เวอร์ชัน JavaScript ล้วนต้องอ่านสองไฟล์ถึงจะรู้ว่าหน้าจอจะออกมาหน้าตาแบบไหน และต้องมี <code>id</code> เป็นสะพานเชื่อมระหว่างกัน ส่วนเวอร์ชัน React อ่านที่ component ที่เดียวจบ เพราะโครงสร้าง HTML และเงื่อนไขที่ทำให้มันเปลี่ยน อยู่ติดกันในโค้ดชุดเดียว</p>
 
         <p class="translator-note">💡 สูตรที่สรุปหัวใจของ React ได้ดีที่สุดคือ <strong>UI = f(state)</strong> — หน้าจอคือผลลัพธ์ของฟังก์ชันที่รับ state เข้าไป ถ้าอยากเปลี่ยนหน้าจอ ให้เปลี่ยน state ไม่ใช่ไปแก้หน้าจอตรง ๆ ถ้าคุณจำได้แค่ประโยคเดียวจากบทนี้ ขอให้เป็นประโยคนี้</p>
 

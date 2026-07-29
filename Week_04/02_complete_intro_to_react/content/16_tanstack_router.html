@@ -27,28 +27,32 @@
       </ul>
       <p>สรุปคือ คุณมีตัวเลือกดี ๆ มากมาย และ TanStack Router เป็นเครื่องมือที่ดีสำหรับเริ่มต้น มาลุยกัน</p>
       <p>เริ่มจากติดตั้งมันก่อน</p>
-      <pre><code class="language-bash">npm install @tanstack/react-router@1.65.0
-npm install -D @tanstack/router-plugin@1.65.0 @tanstack/router-devtools@1.65.0
+      <pre><code class="language-bash">npm install @tanstack/react-router@^1.170.0
+npm install -D @tanstack/router-plugin@^1.168.0 @tanstack/react-router-devtools@^1.167.0
 </code></pre>
-      <p>เราต้องติดตั้ง router แล้วจะใช้ทั้งเครื่องมือ generate code และ dev tools ของมัน (dev tools ใช้เฉพาะระหว่างพัฒนา จึงเป็น <code>-D</code>) มาเพิ่มมันใน <code>vite.config.js</code> ก่อน</p>
-      <pre><code class="language-javascript">// at top
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+      <p>เราต้องติดตั้ง router แล้วจะใช้ทั้งเครื่องมือ generate code และ dev tools ของมัน (dev tools ใช้เฉพาะระหว่างพัฒนา จึงเป็น <code>-D</code>) มาเพิ่มมันใน <code>vite.config.ts</code> ก่อน</p>
+      <pre><code class="language-typescript">// at top
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 
 // add before react() in plugins
-plugins: [TanStackRouterVite(), react()],
+plugins: [tanstackRouter({ target: "react", autoCodeSplitting: true }), react()],
 </code></pre>
-      <p>TanStack Router ทำงานด้วย convention ที่อิงไฟล์ คุณสร้าง routes ตามรูปแบบเฉพาะ แล้ว TanStack Router จะเชื่อมทุกอย่างให้เอง โดยสร้างไฟล์ชื่อ <code>routeTree.gen.ts</code> แม้โปรเจกต์นี้จะไม่ใช่ TypeScript แต่การเป็น TypeScript ทำให้ VS Code อ่าน types จาก routes และช่วยด้วยคำแนะนำกับ error อัจฉริยะได้ แนะนำให้เพิ่มไฟล์นี้ใน <code>.gitignore</code> ด้วย เพราะมันจะถูก generate อัตโนมัติทุกครั้งที่ build เอาล่ะ ไปสร้างไฟล์ที่ต้องใช้กัน</p>
-      <p>สร้างไดเรกทอรี <code>routes</code> ในไดเรกทอรี <code>src</code> สร้างไฟล์ <code>__root.jsx</code> ในที่นั้น ไฟล์นี้จะเป็น template พื้นฐานสำหรับทุก route ส่วนใหญ่จะมาจาก App.jsx</p>
-      <pre><code class="language-javascript">import { useState } from "react";
+      <p>TanStack Router ทำงานด้วย convention ที่อิงไฟล์ คุณสร้าง routes ตามรูปแบบเฉพาะ แล้ว TanStack Router จะเชื่อมทุกอย่างให้เอง โดยสร้างไฟล์ชื่อ <code>routeTree.gen.ts</code> แนะนำให้เพิ่มไฟล์นี้ใน <code>.gitignore</code> ด้วย เพราะมันจะถูก generate อัตโนมัติทุกครั้งที่ build เอาล่ะ ไปสร้างไฟล์ที่ต้องใช้กัน</p>
+
+      <blockquote>🎉 ตรงนี้คือจุดที่การเลือกใช้ TypeScript ได้ผลตอบแทนมากที่สุดในคอร์สนี้ TanStack Router ถูกออกแบบมาโดยมี type safety เป็นเป้าหมายหลักตั้งแต่แรก ไฟล์ <code>routeTree.gen.ts</code> ที่มันสร้างให้เป็น TypeScript เสมอ (สังเกตนามสกุล <code>.ts</code>) และเมื่อโปรเจกต์ของเราเป็น TypeScript ด้วย เราจะได้ประโยชน์เต็ม ๆ: พิมพ์ <code>&lt;Link to="/</code> แล้ว editor จะขึ้นรายชื่อ route ทั้งหมดที่มีจริงมาให้เลือก และถ้าคุณพิมพ์ path ที่ไม่มีอยู่ หรือลืมส่ง parameter ที่ route นั้นต้องการ มันจะเป็น error ทันทีตั้งแต่ตอนพิมพ์ ในโปรเจกต์ JavaScript ล้วน ลิงก์เสียจะไปโผล่เอาตอนผู้ใช้กดเท่านั้น</blockquote>
+
+      <p>สร้างไดเรกทอรี <code>routes</code> ในไดเรกทอรี <code>src</code> สร้างไฟล์ <code>__root.tsx</code> ในที่นั้น ไฟล์นี้จะเป็น template พื้นฐานสำหรับทุก route ส่วนใหญ่จะมาจาก App.tsx</p>
+      <pre><code class="language-typescript">import { useState } from "react";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import PizzaOfTheDay from "../PizzaOfTheDay";
 import Header from "../Header";
 import { CartContext } from "../contexts";
+import type { CartItem } from "../types";
 
 export const Route = createRootRoute({
   component: () =&gt; {
-    const cartHook = useState([]);
+    const cartHook = useState&lt;CartItem[]&gt;([]);
     return (
       &lt;&gt;
         &lt;CartContext.Provider value={cartHook}&gt;
@@ -69,13 +73,20 @@ export const Route = createRootRoute({
         <li>เราเพิ่ม dev tools ที่ยอดเยี่ยมของ TanStack เราจะดูมันอีกครู่หนึ่ง แต่มันอยู่มุมซ้ายล่าง คลิกมันได้เมื่อแอปโหลดแล้ว</li>
         <li><code>&lt;&gt;</code> และ <code>&lt;/&gt;</code> ใช้เมื่ออยาก render sibling components สองตัว (context กับ dev tools ของเรา) แต่ไม่อยากเพิ่ม div สุ่ม ๆ React กำหนดให้ return top-level component ได้เพียงหนึ่งตัว และเราทำได้ด้วย <code>&lt;&gt;</code> กับ <code>&lt;/&gt;</code></li>
       </ul>
-      <p>เยี่ยมเลย ทีนี้ไปแก้ App.jsx</p>
-      <pre><code class="language-javascript">// add at top
+      <p>เยี่ยมเลย ทีนี้ไปแก้ App.tsx</p>
+      <pre><code class="language-typescript">// add at top
 // remove useState import from react import
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({ routeTree });
+
+// บอก TanStack Router ว่า router ตัวไหนคือตัวของแอปเรา
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
 
 // replace App
 const App = () =&gt; {
@@ -86,9 +97,14 @@ const App = () =&gt; {
   );
 };
 </code></pre>
-      <p>นี่แค่นำ routeTree ที่ generate แล้วเข้ามาและใช้ในโปรเจกต์ ไฟล์นี้ควรใช้สำหรับ render ไฟล์เท่านั้น ส่วนอื่น ๆ น่าจะอยู่ใน <code>__root.jsx</code></p>
-      <p>ย้าย Order.jsx จากไดเรกทอรีฐานเข้าไปใน <code>routes</code> หากระบบถาม ให้ตอบ yes เพื่อ update paths เปลี่ยนชื่อเป็น <code>order.lazy.jsx</code> แล้วแก้ให้เป็น route</p>
-      <pre><code class="language-javascript">// at top
+      <p>นี่แค่นำ routeTree ที่ generate แล้วเข้ามาและใช้ในโปรเจกต์ ไฟล์นี้ควรใช้สำหรับ render ไฟล์เท่านั้น ส่วนอื่น ๆ น่าจะอยู่ใน <code>__root.tsx</code></p>
+
+      <p>ก้อน <code>declare module</code> นั้นคือสิ่งที่เรียกว่า <strong>module augmentation</strong> — เป็นการ "เติม" ข้อมูล type เข้าไปใน library ที่เรา import มา ในที่นี้เรากำลังบอก TanStack Router ว่า router ของแอปนี้คือตัวไหน มันจึงย้อนไปดู <code>routeTree</code> ของเราได้ว่ามี route อะไรบ้าง</p>
+
+      <p>นี่คือกลไกที่ทำให้ <code>&lt;Link to="/order" /&gt;</code> มี auto-complete และเป็น error เมื่อพิมพ์ผิด ลองลบก้อนนี้ออกดูแล้วกลับไปดู <code>&lt;Link&gt;</code> ที่เราจะเขียนอีกสักครู่ — auto-complete จะหายไปทันที คุณเขียน <code>declare module</code> เองแค่ครั้งเดียวตอนตั้งโปรเจกต์ แล้วไม่ต้องยุ่งกับมันอีก แต่รู้ไว้ว่ามันคืออะไรจะช่วยได้มากเวลา type safety ของ router อยู่ ๆ ก็หายไป</p>
+
+      <p>ย้าย Order.tsx จากไดเรกทอรีฐานเข้าไปใน <code>routes</code> หากระบบถาม ให้ตอบ yes เพื่อ update paths เปลี่ยนชื่อเป็น <code>order.lazy.tsx</code> แล้วแก้ให้เป็น route</p>
+      <pre><code class="language-typescript">// at top
 import { createLazyFileRoute } from "@tanstack/react-router";
 
 // make sure you modified the relative paths here – VS Code may have done this for you already
@@ -109,8 +125,8 @@ function Order() {
         <li>เราทำให้มัน lazy ตอนนี้มันจะแยก code และ lazy-load route ให้เรา วิธีนี้ช่วยมากในแอปขนาดใหญ่ ในแอปเล็ก ๆ นี้มันอาจช้าลงจริง ๆ เพราะเพิ่ม 1KB ให้แอปไม่ได้ทำให้ช้า แต่การเดินทางไปกลับเพิ่มหนึ่งครั้งทำให้ช้า เมื่อทำ lazy loading โปรดวัดว่ามันช่วยหรือไม่ อย่างไรก็ดี นี่คือวิธีทำ</li>
       </ul>
       <p>แค่นั้นเอง! เมื่อก่อนการ code split ยากมาก เมื่อก่อนต้องตั้งค่า bundler เองหลายขั้นกว่าจะได้ผล แต่ตอนนี้มีเพียงเท่านี้ เจ๋งมาก</p>
-      <p>มาเพิ่มหน้า home กัน! สร้างไฟล์ชื่อ <code>index.lazy.jsx</code> ในโฟลเดอร์ routes</p>
-      <pre><code class="language-javascript">import { createLazyFileRoute, Link } from "@tanstack/react-router";
+      <p>มาเพิ่มหน้า home กัน! สร้างไฟล์ชื่อ <code>index.lazy.tsx</code> ในโฟลเดอร์ routes</p>
+      <pre><code class="language-typescript">import { createLazyFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createLazyFileRoute("/")({
   component: Index,
@@ -135,9 +151,12 @@ function Index() {
   );
 }
 </code></pre>
-      <ul><li>ไม่มีอะไรใหม่ตรงนี้ ยกเว้นอาจเป็น links link components เหล่านี้ทำให้ TanStack Router ควบคุม browser history ได้ง่าย จึงควรใช้มัน</li></ul>
+      <ul>
+        <li>ไม่มีอะไรใหม่ตรงนี้ ยกเว้นอาจเป็น links link components เหล่านี้ทำให้ TanStack Router ควบคุม browser history ได้ง่าย จึงควรใช้มัน</li>
+        <li>สังเกตว่าเราใส่ <code>&lt;Link to="/past"&gt;</code> ทั้งที่ยังไม่ได้สร้างหน้านั้นเลย TypeScript จะขีดเส้นแดงให้ทันที เพราะ <code>/past</code> ยังไม่มีอยู่ใน route tree ไม่ต้องตกใจ — เราจะสร้างมันในบทถัดไป แล้วเส้นแดงจะหายไปเอง นี่คือ type-safe routing ที่ทำงานอยู่จริง ๆ</li>
+      </ul>
       <p>สุดท้ายแก้ Header เพื่อให้ link กลับหน้า home ได้</p>
-      <pre><code class="language-javascript">// at the top
+      <pre><code class="language-typescript">// at the top
 import { Link } from "@tanstack/react-router";
 
 // surround the logo with a link
@@ -148,7 +167,7 @@ import { Link } from "@tanstack/react-router";
       <p>ทั้งหมดนี้ควรทำงานแล้ว เปิดแอปแล้วดูว่ามันโหลดหรือไม่</p>
       <ul>
         <li>สังเกตว่าจะมี flash เล็กน้อยก่อนโหลด นั่นคือการ lazy-load route หากเป็นแอปจริง เราคงสร้างประสบการณ์ loading ที่น่าพอใจกว่า ขอทิ้งไว้เป็นแบบฝึกหัดให้คุณลองทำ</li>
-        <li>มาคุยเรื่อง cart ไปหน้า order เพิ่มของลง cart หลายอย่าง แล้วกลับหน้า home สังเกตว่ายังมีของอยู่ใน cart! กลับหน้า order ก็ยังอยู่ เพราะ <code>__root.jsx</code> (ที่เก็บ cart state) ไม่เคยถูก un-render หากมันอยู่ใน Cart.jsx หรือ order.lazy.jsx มันจะหายไปทุกครั้งที่ navigate ออกไป เพราะเมื่อ component ถูก un-render มันจะสูญเสีย state ทั้งหมด นี่คือเหตุผลหนึ่งที่ Context ทรงพลังมาก</li>
+        <li>มาคุยเรื่อง cart ไปหน้า order เพิ่มของลง cart หลายอย่าง แล้วกลับหน้า home สังเกตว่ายังมีของอยู่ใน cart! กลับหน้า order ก็ยังอยู่ เพราะ <code>__root.tsx</code> (ที่เก็บ cart state) ไม่เคยถูก un-render หากมันอยู่ใน Cart.tsx หรือ order.lazy.tsx มันจะหายไปทุกครั้งที่ navigate ออกไป เพราะเมื่อ component ถูก un-render มันจะสูญเสีย state ทั้งหมด นี่คือเหตุผลหนึ่งที่ Context ทรงพลังมาก</li>
         <li>ลองดู dev tools ที่ render อยู่มุมซ้ายล่าง (ไม่ต้องห่วง มันจะถูกตัดออกอัตโนมัติใน production) คลิกเข้าไปสำรวจ มีของเจ๋ง ๆ ให้ใช้ฟรีมากมาย</li>
       </ul>
       <p>คุณทำได้แล้ว! การทำ routing ง่ายแค่นี้เอง มันมาไกลมากจากยุคแรก ๆ ของ React</p>

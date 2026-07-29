@@ -3,7 +3,7 @@
   <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="เขียนการทดสอบ React ขั้นพื้นฐานสำหรับ Pizza component" /><title>Basic React Tests | เรียน React เริ่มต้น</title><link rel="stylesheet" href="lesson.css" /></head>
   <body><main><article class="lesson">
     <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 22 · การทดสอบ (Testing)</p><h1>การทดสอบ React ขั้นพื้นฐาน</h1><p class="lesson-original-title" lang="en">Basic React Tests</p></header>
-    <p>มาเขียน test แรกสำหรับ Pizza.jsx กัน โดยทั่วไป นี่คือแนวทางที่คอร์สนี้แนะนำสำหรับการเขียนเทสต์ React:</p>
+    <p>มาเขียน test แรกสำหรับ Pizza.tsx กัน โดยทั่วไป นี่คือแนวทางที่คอร์สนี้แนะนำสำหรับการเขียนเทสต์ React:</p>
     <ul>
       <li>พยายาม test functionality ไม่ใช่ implementation ให้ tests โต้ตอบกับ components อย่างที่ผู้ใช้ทำ ไม่ใช่อย่างที่ developer ทำ ซึ่งหมายถึงคุณพยายามคิดเรื่องอย่าง “ผู้ใช้จะเห็นอะไร” หรือ “ถ้าผู้ใช้คลิกปุ่ม modal จะขึ้น” มากกว่า “ทำให้แน่ใจว่า state นี้ถูกต้อง” หรือ “ให้แน่ใจว่า library นี้ถูกเรียก” นี่ไม่ใช่กฎ; บางครั้งคุณต้อง test สิ่งเหล่านั้นด้วยเพื่อยืนยันว่า app ทำงานถูกต้อง ใช้วิจารณญาณที่ดีที่สุดของคุณ</li>
       <li>UI มักเปลี่ยนบ่อยมากตลอดอายุของโปรเจกต์ พยายามอย่าเสียแรงโดยไม่จำเป็นกับสิ่งที่ไม่สำคัญและมีแนวโน้มจะเปลี่ยน</li>
@@ -12,8 +12,8 @@
       <li>ลบ tests เป็นประจำ Tests มีอายุการใช้งาน</li>
       <li>แก้หรือลบ flaky tests Tests แย่แย่กว่าไม่มี tests</li>
     </ul>
-    <p>โอเค สร้าง file ใหม่ชื่อ <code>Pizza.test.jsx</code> naming convention นี้เป็นแค่นิสัย <code>Pizza.spec.jsx</code> ก็พบได้ทั่วไปเช่นกัน แต่ตราบใดที่อยู่ใน <code>__tests__</code> directory จะเรียกมันว่าอะไรก็ไม่สำคัญนัก</p>
-    <pre><code class="language-javascript">import { render } from "@testing-library/react";
+    <p>โอเค สร้าง file ใหม่ชื่อ <code>Pizza.test.tsx</code> (เป็น <code>.tsx</code> เพราะเทสต์นี้มี JSX อยู่ข้างใน) naming convention นี้เป็นแค่นิสัย <code>Pizza.spec.tsx</code> ก็พบได้ทั่วไปเช่นกัน แต่ตราบใดที่อยู่ใน <code>__tests__</code> directory จะเรียกมันว่าอะไรก็ไม่สำคัญนัก</p>
+    <pre><code class="language-typescript">import { render } from "@testing-library/react";
 import { expect, test } from "vitest";
 import Pizza from "../Pizza";
 
@@ -24,35 +24,76 @@ test("alt text renders on image", async () =&gt; {
     &lt;Pizza name={name} description="super cool pizza" image={src} /&gt;
   );
 
-  const img = screen.getByRole("img");
+  const img = screen.getByRole("img") as HTMLImageElement;
   expect(img.src).toBe(src);
   expect(img.alt).toBe(name);
 });
 </code></pre>
+
+    <p>มีจุดเดียวที่ต่างจากเวอร์ชัน JavaScript คือ <code>as HTMLImageElement</code> เหตุผลคือ <code>getByRole()</code> คืน <code>HTMLElement</code> กลาง ๆ ซึ่งไม่มี property <code>src</code> หรือ <code>alt</code> — สอง property นั้นมีเฉพาะใน <code>HTMLImageElement</code> เราจึงต้องบอก TypeScript ว่าสิ่งที่ได้มาคือ <code>&lt;img&gt;</code> จริง ๆ</p>
+
+    <p>นี่เป็นการใช้ <code>as</code> ที่ยอมรับได้ เพราะเราเพิ่งขอ element ที่มี role เป็น <code>img</code> มาเองกับมือ แต่ถ้าอยากเลี่ยง <code>as</code> ให้หมดจริง ๆ ก็มีทางเลือกที่ปลอดภัยกว่าและ Testing Library แนะนำมากกว่าด้วย คือใช้ matcher ที่ไม่ต้องแตะ property ของ DOM เลย</p>
+
+    <pre><code class="language-typescript">const img = screen.getByRole("img");
+expect(img).toHaveAttribute("src", src);
+expect(img).toHaveAttribute("alt", name);
+</code></pre>
+
+    <p>(วิธีนี้ต้องติดตั้ง <code>@testing-library/jest-dom</code> เพิ่ม ซึ่งคอร์สนี้ไม่ได้ใช้ แต่รู้ไว้ว่ามีทางเลือกนี้อยู่ และในบทที่ 28 เราจะได้เห็นรูปแบบที่คล้ายกันมากตอนเทสต์ในเบราว์เซอร์จริง)</p>
     <p>นี่คือ test ที่พื้นฐานที่สุดของคุณ มัน render React component แล้วเริ่มทำ assertions กับมัน ที่นี่เรากำลัง assert ว่าภาพพิซซ่าของเราลงเอยด้วย alt text ที่ถูกต้อง ไม่ใช่ test ที่มีประโยชน์ที่สุด แต่เป็นจุดเริ่มต้นที่ดีให้เราเห็นวิธี assert บางอย่าง มันจะมีประโยชน์ขึ้นมาทันทีถ้าโปรเจกต์เคยมี bug ที่ alt text หายไปในบางกรณี</p>
     <p>เราใช้ getByRole ที่นี่เพื่อหยิบ image บน page โดยทั่วไป React Testing Library อยากให้คุณใช้แนวคิดแบบผู้ใช้เป็นศูนย์กลางในการ assert สิ่งต่าง ๆ บน page กรณีนี้เรากำลังพยายามหา image ซึ่งเป็นสิ่งที่ผู้ใช้จะเห็น เปรียบกับการใช้ CSS selector เลือก image (ทำได้นะ แค่ไม่ค่อยเป็นที่นิยม) ซึ่งเน้น implementation มาก (ผู้ใช้ไม่รู้และไม่สนใจ CSS classes)</p>
     <p>มาเพิ่มอีก test เพื่อให้แน่ใจว่าเรามี default image หาก pizza ไม่ได้รับ image</p>
     <blockquote><p>🚨 อันนี้ยังไม่ทำงาน นั่นตั้งใจไว้</p></blockquote>
-    <pre><code class="language-javascript">test("to have default image if none is provided", async () =&gt; {
+    <pre><code class="language-typescript">test("to have default image if none is provided", async () =&gt; {
   const screen = render(
     &lt;Pizza name={"Cool Pizza"} description="super cool pizza" /&gt;
   );
 
-  const img = screen.getByRole("img");
+  const img = screen.getByRole("img") as HTMLImageElement;
   expect(img.src).not.toBe("");
 });
 </code></pre>
-    <p>อย่างแรกที่มันจะบ่นคือเราไม่ได้ clean up หลังตัวเองหลังแต่ละ test React Testing Library ต้องการให้เราทำ</p>
-    <pre><code class="language-javascript">// at top
+
+    <h2>คราวนี้ TypeScript บ่นก่อนที่เทสต์จะได้รันด้วยซ้ำ</h2>
+
+    <p>ในเวอร์ชัน JavaScript ของบทนี้ คุณต้องรันเทสต์ก่อนถึงจะรู้ว่ามีปัญหา แต่พอเป็น TypeScript คุณจะเห็นเส้นแดงตั้งแต่ตอนพิมพ์เลย</p>
+
+    <pre><code class="language-text">Property 'image' is missing in type '{ name: string; description: string; }'
+but required in type 'PizzaProps'.</code></pre>
+
+    <p>หยุดคิดสักครู่ตรงนี้ เพราะมันน่าสนใจกว่าที่เห็น TypeScript ไม่ได้บอกว่าเทสต์เราผิด แต่กำลังบอกว่า <strong>เทสต์ของเราขัดแย้งกับสิ่งที่ component ประกาศไว้</strong> เรากำลังจะเทสต์ว่า "ถ้าไม่ส่ง image จะเป็นยังไง" ทั้งที่ <code>PizzaProps</code> บอกว่า image เป็น prop ที่ต้องส่งเสมอ อย่างใดอย่างหนึ่งต้องผิด</p>
+
+    <p>และคำตอบก็ชัด: เราต้องการให้ image ส่งหรือไม่ส่งก็ได้จริง ๆ ดังนั้น <em>type ต่างหากที่ต้องแก้</em> ไปที่ <code>Pizza.tsx</code> แล้วทำให้มันเป็น optional</p>
+
+    <pre><code class="language-typescript">type PizzaProps = {
+  name: string;
+  description: string;
+  image?: string; // เพิ่ม ? เข้าไป
+};
+</code></pre>
+
+    <p>ตอนนี้เทสต์ compile ผ่านแล้ว แต่ยังไม่จบ ถัดมาสิ่งที่มันจะบ่นคือเราไม่ได้ clean up หลังตัวเองหลังแต่ละ test React Testing Library ต้องการให้เราทำ</p>
+    <pre><code class="language-typescript">// at top
 import { render, cleanup } from "@testing-library/react"; // add cleanup
 import { afterEach, expect, test } from "vitest"; // add afterEach
 afterEach(cleanup);
 </code></pre>
-    <p>test ก็ยังไม่ผ่าน? อ้อ เพราะมันจับ bug ได้! ถ้าคุณไม่ส่ง image ให้ มันก็พัง นั่นไม่ใช่ user experience ที่ดี ไปแก้มันใน Pizza.jsx กัน</p>
-    <pre><code class="language-javascript">// replace src
+    <p>test ก็ยังไม่ผ่าน? อ้อ เพราะมันจับ bug ได้! ถ้าคุณไม่ส่ง image ให้ มันก็พัง นั่นไม่ใช่ user experience ที่ดี ไปแก้มันใน Pizza.tsx กัน</p>
+    <pre><code class="language-typescript">// replace src
 src={props.image ? props.image : "https://picsum.photos/200"}
 </code></pre>
-    <p>ตอนนี้มันทำงานแล้ว!</p><p>ปัง! ได้ React testing ง่าย ๆ สำหรับคุณ</p>
+    <p>ตอนนี้มันทำงานแล้ว!</p>
+
+    <p>ลองย้อนดูสิ่งที่เพิ่งเกิดขึ้นทั้งกระบวนการ เราแก้สองอย่างซึ่งเป็นคนละเรื่องกัน</p>
+
+    <ul>
+      <li><strong>แก้ type</strong> (<code>image?: string</code>) — เปลี่ยน "สัญญา" ว่า component นี้รับอะไรได้บ้าง TypeScript จับให้ตั้งแต่ตอนพิมพ์</li>
+      <li><strong>แก้ logic</strong> (ใส่ default image) — เปลี่ยนพฤติกรรมจริงตอนรัน มีแต่เทสต์เท่านั้นที่จับได้</li>
+    </ul>
+
+    <p>นี่คือเหตุผลที่ <strong>type ไม่ได้มาแทนที่เทสต์ และเทสต์ก็ไม่ได้มาแทนที่ type</strong> — สองอย่างนี้จับบั๊กคนละชนิดกัน type ตอบคำถามว่า "ข้อมูลรูปร่างถูกไหม" ส่วนเทสต์ตอบว่า "แล้วมันทำงานถูกหรือเปล่า" คำถามที่ได้ยินบ่อยว่า "ใช้ TypeScript แล้วยังต้องเขียนเทสต์อีกไหม" จึงมีคำตอบตรงนี้เอง</p>
+
+    <p>ปัง! ได้ React testing ง่าย ๆ สำหรับคุณ</p>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="21_vitest.html" rel="prev">ก่อนหน้า: Vitest</a><a href="index.html">สารบัญบทเรียน</a><a href="23_testing_user_interaction.html" rel="next">ถัดไป: Testing User Interaction</a></nav>
   </article></main></body>
 </html>

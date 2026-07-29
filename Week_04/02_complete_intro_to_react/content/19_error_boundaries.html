@@ -13,7 +13,7 @@
       <h2>Error Boundaries</h2>
       <p>บ่อยครั้ง APIs มี errors จากข้อมูลที่ malformed หรือแปลกอย่างอื่น มาตั้งรับเรื่องนี้ เพราะเรายังอยากใช้ API นี้แต่ควบคุมไม่ได้ว่าเมื่อไรจะได้ errors เราจะใช้ feature ชื่อ <code>componentDidCatch</code> เพื่อจัดการ นี่เป็นสิ่งที่ทำด้วย hooks ไม่ได้ ดังนั้นหากต้องการ functionality แบบนี้ คุณจะต้องใช้ class component</p>
       <p>มันจะจับ 404s บน API ของเราด้วย หากใครให้ ID ที่ไม่ถูกต้อง!</p>
-      <p>component จับ errors ได้เฉพาะใน children ของมันเท่านั้น นี่เป็นเรื่องสำคัญที่ต้องจำ มันจับ errors ของตัวเองไม่ได้ ไปสร้าง wrapper สำหรับใช้กับ PastOrdersRoute กัน สร้างไฟล์ใหม่ชื่อ ErrorBoundary.jsx</p>
+      <p>component จับ errors ได้เฉพาะใน children ของมันเท่านั้น นี่เป็นเรื่องสำคัญที่ต้องจำ มันจับ errors ของตัวเองไม่ได้ ไปสร้าง wrapper สำหรับใช้กับ PastOrdersRoute กัน สร้างไฟล์ใหม่ชื่อ ErrorBoundary.tsx</p>
       <p>นี่เป็นครั้งแรกที่เราจะได้เห็นวิธีเขียน components แบบเก่า ที่เรียกว่า class components เมื่อก่อน React code ทุกชิ้นเขียนแบบนี้ แม้มันยังไม่ deprecated แต่ React team ระบุชัดเจนว่าไม่แนะนำให้ใช้กับโค้ดใหม่ ทุกวันนี้แทบไม่มีใครเขียน class component ใหม่กันแล้ว คอร์สระดับเริ่มต้นจึงไม่สอนมันเป็นเรื่องหลัก อย่างไรก็ดี error boundaries เป็นสิ่งเดียวที่ยัง <em>ต้อง</em> เขียนด้วย class เราจึงจะเกริ่นสั้น ๆ ให้พอรู้จักกับของจริง และในโปรเจกต์จริงคุณเลือกใช้ react-error-boundary แทนได้ โดยไม่ต้องเขียน class component เลย!</p>
       <p>class component คล้าย function component (สิ่งที่เราเขียนอยู่) มาก แต่มีความต่างสำคัญบางอย่าง</p>
       <ul>
@@ -23,17 +23,30 @@
         <li>หากจะเปลี่ยน state ใช้ <code>this.setState({ key: "value" })</code> function สิ่งนี้ให้คุณเปลี่ยน state เหมือน <code>setKey</code> hook</li>
         <li>แทน useEffect คุณใช้ lifecycle methods: componentDidMount, componentDidUpdate, componentWillUnmount ฯลฯ อ่านเพิ่มเติมได้ในเอกสารทางการของ React หัวข้อ <code>Component</code></li>
         <li>แทน props parameter ที่ส่งเข้า function คุณจะใช้ <code>this.props</code></li>
+        <li>ใน TypeScript คุณบอก type ของ props และ state ให้ class component ผ่าน generic สองตัวของ <code>Component</code> คือ <code>Component&lt;Props, State&gt;</code> ต่างจาก function component ที่ใส่ type ให้ parameter ตรง ๆ</li>
         <li>เท่านี้พอแล้ว คุณไม่ควรเขียน class components อีกต่อไป ยกเว้น error boundaries แต่อาจพบมันใน React codebases แบบ legacy</li>
       </ul>
-      <pre><code class="language-javascript">import { Component } from "react";
+      <pre><code class="language-typescript">import { Component } from "react";
+import type { ErrorInfo, ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 
-class ErrorBoundary extends Component {
-  state = { hasError: false };
-  static getDerivedStateFromError() {
+type ErrorBoundaryProps = {
+  children: ReactNode;
+};
+
+type ErrorBoundaryState = {
+  hasError: boolean;
+};
+
+class ErrorBoundary extends Component&lt;
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+&gt; {
+  state: ErrorBoundaryState = { hasError: false };
+  static getDerivedStateFromError(): ErrorBoundaryState {
     return { hasError: true };
   }
-  componentDidCatch(error, info) {
+  componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("ErrorBoundary caught an error", error, info);
   }
   render() {
@@ -62,8 +75,17 @@ export default ErrorBoundary;
         <li><code>this.props.children</code> คือ child component ใด ๆ ภายใน component เช่น หากมีคน render <code>&lt;MyComponent&gt;&lt;h1&gt;hi&lt;/h1&gt;&lt;/MyComponent&gt;</code> แล้ว <code>&lt;h1&gt;hi&lt;/h1&gt;</code> ถือเป็น “children” สิ่งนี้ใช้กับ function components ได้ด้วย</li>
         <li>เพราะเรา return children หากไม่มี error ErrorBoundary component จึงไม่ render อะไรเองหากไม่มี errors</li>
       </ul>
+
+      <h3>TypeScript กับ class component</h3>
+
+      <ul>
+        <li><code>Component&lt;ErrorBoundaryProps, ErrorBoundaryState&gt;</code> — generic ตัวแรกคือ type ของ props ตัวที่สองคือ type ของ state ผลคือ <code>this.props.children</code> และ <code>this.state.hasError</code> มี type ครบ และถ้าคุณพิมพ์ <code>this.state.hasErrors</code> (มี s เกินมา) มันจะเป็น error ทันที ซึ่งเป็นบั๊กประเภทที่หายากมากที่จะหาเจอด้วยตาเปล่า</li>
+        <li><code>componentDidCatch(error: Error, info: ErrorInfo)</code> — เราต้องใส่ type ให้ parameter ของ lifecycle method เอง <code>ErrorInfo</code> เป็น type ที่ React ให้มา (มี field <code>componentStack</code> อยู่ข้างใน) ลอง import แล้วเอาเมาส์ชี้ดูได้</li>
+        <li>ทั้ง <code>ReactNode</code> และ <code>ErrorInfo</code> เรา import ด้วย <code>import type</code> เพราะใช้เป็น type อย่างเดียว ส่วน <code>Component</code> ต้อง import แบบปกติ เพราะเรา <code>extends</code> มันจริง ๆ ตอนรัน</li>
+      </ul>
+
       <p>ไปให้ PastOrderRoute ใช้มันในกรณีที่ API throws an error</p>
-      <pre><code class="language-javascript">// add import
+      <pre><code class="language-typescript">// add import
 import ErrorBoundary from "../ErrorBoundary";
 
 // replace Route export
@@ -81,7 +103,7 @@ function ErrorBoundaryWrappedPastOrderRoutes() {
 }
 </code></pre>
       <ul>
-        <li>ตอนนี้มัน self-contained ทั้งหมด ไม่มีใครที่ render PastOrderRoute ต้องรู้ว่ามันมี error boundary ของตัวเอง คุณเลือกได้เองว่าชอบ pattern นี้ หรืออยากทำใน App.js ที่ระดับ Router มากกว่า ทั้งสองแบบมีคนใช้จริง</li>
+        <li>ตอนนี้มัน self-contained ทั้งหมด ไม่มีใครที่ render PastOrderRoute ต้องรู้ว่ามันมี error boundary ของตัวเอง คุณเลือกได้เองว่าชอบ pattern นี้ หรืออยากทำใน App.tsx ที่ระดับ Router มากกว่า ทั้งสองแบบมีคนใช้จริง</li>
         <li>เราสร้าง ErrorBoundary ให้ยืดหยุ่นกว่านี้ได้ และให้มันรับ component ที่จะแสดงเมื่อเกิด errors มีกฎโค้ดที่เรียกว่า “WET” (ตรงข้ามกับ DRY, ฮ่า ๆ): Write Everything Twice หรือบางคนขยับเป็น Write Everything Thrice กรณีนี้เราใช้ component แค่ use case เดียว จึงไม่เสียเวลาทำให้มันยืดหยุ่น หากใช้ซ้ำอีกครั้ง ค่อยทำให้รองรับทั้งสอง use case แต่ไม่ใช่ <em>ทุก</em> use case เมื่อครั้งที่สามหรือสี่ จึงค่อยกลับมาลงทุนให้ยืดหยุ่น</li>
       </ul>
       <p>ทีนี้ หากอยากลอง ให้เพิ่ม <code>throw new Error("lol");</code> ใน render function ของ PastOrderRoute เพื่อดูมันทำงาน!</p>

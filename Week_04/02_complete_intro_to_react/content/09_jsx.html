@@ -22,11 +22,16 @@
 
         <p>ถ้าเราเขียน <code>React.createElement(&quot;h1&quot;, { id: &quot;main-title&quot; }, &quot;My Website&quot;);</code> สิ่งที่เราพยายามให้ render ออกมาจริง ๆ คืออะไร <code>&lt;h1 id=&quot;main-title&quot;&gt;My Website&lt;/h1&gt;</code> ใช่ไหม JSX พยายามตัดชั้นการแปลในสมองของคุณนี้ออกไป เพื่อให้คุณเขียนสิ่งที่คุณหมายถึงได้เลย</p>
 
-        <p>สร้างไฟล์ใหม่ชื่อ Pizza.jsx</p>
+        <p>สร้างไฟล์ใหม่ชื่อ Pizza.tsx</p>
 
-        <blockquote>ต้องแน่ใจว่าเรียกไฟล์ว่า <code>.jsx</code> ไม่ใช่ <code>.js</code> Vite จะไม่ทำ JSX transpilation หากไฟล์ไม่ได้มีนามสกุล JSX</blockquote>
+        <blockquote>ต้องแน่ใจว่าเรียกไฟล์ว่า <code>.tsx</code> ไม่ใช่ <code>.ts</code> Vite จะไม่ทำ JSX transpilation หากไฟล์ไม่ได้มีนามสกุล <code>.tsx</code> (หรือ <code>.jsx</code> ในโปรเจกต์ที่ไม่ได้ใช้ TypeScript)</blockquote>
 
-        <pre><code class="language-javascript">const Pizza = (props) =&gt; {
+        <pre><code class="language-typescript">type PizzaProps = {
+  name: string;
+  description: string;
+};
+
+const Pizza = (props: PizzaProps) =&gt; {
   return (
     &lt;div className="pizza"&gt;
       &lt;h1&gt;{props.name}&lt;/h1&gt;
@@ -40,6 +45,31 @@ export default Pizza;
 
         <p>คนส่วนใหญ่เห็นตรงกันว่าแบบนี้อ่านง่ายกว่ามาก และถ้าการนำ HTML มาไว้ใน JavaScript ทำให้คุณรู้สึกไม่คุ้นเคย ขอชวนให้ลองใช้ไปจนจบคอร์สก่อน เมื่อถึงตอนนั้นมันน่าจะรู้สึกคุ้นขึ้น และคุณก็กลับไปใช้วิธีเดิมได้เสมอ</p>
 
+        <h3>props กับ TypeScript</h3>
+
+        <p>เราเริ่มให้ type กับ props ตอนเปลี่ยน <code>App.js</code> เป็น <code>App.tsx</code> ในบทที่แล้ว และตอนนี้ย้าย type นั้นมาอยู่กับ <code>Pizza.tsx</code> ซึ่งเป็น pattern ที่เราจะใช้ซ้ำตลอดคอร์สนี้ หลักการมีแค่นี้: <strong>props ก็คือ parameter ตัวหนึ่งของฟังก์ชัน</strong> ดังนั้นเราให้ type กับมันเหมือนที่ให้ type กับ parameter ทั่วไป</p>
+
+        <ul>
+          <li>เราประกาศ <code>type PizzaProps</code> ไว้เหนือ component ธรรมเนียมที่พบบ่อยที่สุดคือตั้งชื่อว่า <code>ชื่อคอมโพเนนต์ + Props</code> และวางไว้ในไฟล์เดียวกันกับ component นั้น</li>
+          <li>ทุก field ที่ไม่ได้ใส่ <code>?</code> คือ prop ที่ <strong>บังคับ</strong> ลองลบ <code>description=&quot;...&quot;</code> ออกจากการเรียก <code>&lt;Pizza /&gt;</code> ดู แล้วคุณจะเห็นเส้นแดงขึ้นทันทีตรงที่เรียกใช้ ไม่ใช่ตอนเปิดเบราว์เซอร์</li>
+          <li>ถ้าอยากให้ prop ไหนใส่หรือไม่ใส่ก็ได้ ให้เติม <code>?</code> เช่น <code>image?: string;</code> — แต่แลกมาด้วยการที่ type ของมันจะกลายเป็น <code>string | undefined</code> และ TypeScript จะบังคับให้คุณจัดการกรณีที่ไม่มีค่า เดี๋ยวเราจะได้ทำจริงตอนเขียนเทสต์ในบทที่ 22</li>
+          <li>คุณจะเห็นบางโปรเจกต์ใช้ <code>interface PizzaProps { ... }</code> แทน <code>type</code> ในกรณีนี้ทั้งสองแบบทำงานเหมือนกันแทบทุกประการ คอร์สนี้เลือก <code>type</code> เพราะใช้ได้กับทุกอย่าง (รวมถึง union type ที่เราจะได้ใช้ในบทถัดไป) ไม่ต้องสลับไปมา</li>
+        </ul>
+
+        <p>อีกวิธีที่พบบ่อยพอ ๆ กันคือ destructure props ออกมาเลย ซึ่งทำให้ในตัว component ไม่ต้องเขียน <code>props.</code> นำหน้าทุกครั้ง</p>
+
+        <pre><code class="language-typescript">const Pizza = ({ name, description }: PizzaProps) =&gt; {
+  return (
+    &lt;div className="pizza"&gt;
+      &lt;h1&gt;{name}&lt;/h1&gt;
+      &lt;p&gt;{description}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+};
+</code></pre>
+
+        <p>คอร์สนี้จะใช้แบบ <code>props.name</code> ไปก่อนเพื่อให้เห็นชัดว่าค่าไหนมาจาก props แต่ทั้งสองแบบถูกต้องเท่ากัน เลือกแบบที่คุณอ่านสบายกว่าได้เลย</p>
+
         <p>อย่างไรก็ดี ตอนนี้คุณรู้แล้วว่า JSX ช่วยคุณทำ<em>อะไร</em> มันเพียงแปล HTML tags เหล่านั้นเป็นการเรียก <code>React.createElement</code> <em>แค่นั้นเอง</em> จริง ๆ ไม่มีเวทมนตร์อื่นอีก JSX ไม่ได้ทำอย่างอื่นเลย หลายคนที่เรียน React ไม่ได้เรียนเรื่องนี้</p>
 
         <p>สังเกต syntax แปลก ๆ <code>{props.name}</code>: นี่คือวิธีแสดง JavaScript expressions ใน JSX expression คืออะไรก็ตามที่เป็นด้านขวาของ assignment operator ใน JavaScript ได้ เช่น <code>const x = &lt;anything that can go here&gt;</code> หากเอา <code>{}</code> ออก มันจะแสดง <code>props.name</code> ลงใน DOM ตามตัวอักษร</p>
@@ -48,17 +78,23 @@ export default Pizza;
 
         <h2>ESLint</h2>
 
-        <p>มาแก้ ESLint ของเรากัน เพราะ JSX เพิ่มรายละเอียดใหม่ ๆ ที่เราต้องการความช่วยเหลือ โปรดติดตั้ง</p>
+        <p>มาแก้ ESLint ของเรากัน เพราะ JSX เพิ่มรายละเอียดใหม่ ๆ ที่เราต้องการความช่วยเหลือ และตอนนี้เราเขียน TypeScript แล้ว ESLint ตัวเปล่า ๆ จะอ่านไฟล์ <code>.ts</code> / <code>.tsx</code> ไม่ออกเลย เพราะมันไม่รู้จักไวยากรณ์ type — เราต้องเปลี่ยน parser ให้มันด้วย โปรดติดตั้ง</p>
 
-        <pre><code class="language-bash">npm i -D eslint-plugin-react@7.37.1
+        <pre><code class="language-bash">npm i -D eslint-plugin-react@^7.37.5 typescript-eslint@^8.65.0
 </code></pre>
+
+        <p><code>typescript-eslint</code> เป็นแพ็กเกจรวมที่ให้สองอย่างมาพร้อมกัน: <em>parser</em> ที่ทำให้ ESLint อ่าน TypeScript ได้ และ <em>ชุดกฎ</em> ที่เฉพาะกับ TypeScript (เช่น เตือนเมื่อคุณเผลอใช้ <code>any</code> หรือประกาศตัวแปรทิ้งไว้เฉย ๆ)</p>
 
         <p>จากนั้นใน eslint.config.mjs ของคุณ</p>
 
-        <pre><code class="language-javascript">// at top, import the ESLint reactPlugin
+        <pre><code class="language-javascript">// at top
 import reactPlugin from "eslint-plugin-react";
+import tseslint from "typescript-eslint";
+
+// wrap the whole exported array in tseslint.config(...)
 
 // under js.configs.recommended line
+tseslint.configs.recommended,
 {
   ...reactPlugin.configs.flat.recommended,
   settings: {
@@ -69,8 +105,8 @@ import reactPlugin from "eslint-plugin-react";
 },
 reactPlugin.configs.flat["jsx-runtime"],
 
-// add to files
-files: ["**/*.js", "**/*.jsx"], // add JSX
+// change files from **/*.js to TypeScript
+files: ["**/*.{ts,tsx}"],
 
 //after the languageOptions object:
 rules: {
@@ -85,10 +121,11 @@ rules: {
 import globals from "globals";
 import prettier from "eslint-config-prettier";
 import reactPlugin from "eslint-plugin-react";
+import tseslint from "typescript-eslint";
 
-/** @type {import('eslint').Linter.Config[]} */
-export default [
+export default tseslint.config(
   js.configs.recommended,
+  tseslint.configs.recommended,
   {
     ...reactPlugin.configs.flat.recommended,
     settings: {
@@ -99,7 +136,7 @@ export default [
   },
   reactPlugin.configs.flat["jsx-runtime"],
   {
-    files: ["**/*.js", "**/*.jsx"],
+    files: ["**/*.{ts,tsx}"],
     languageOptions: {
       globals: { ...globals.browser, ...globals.node },
       parserOptions: {
@@ -114,19 +151,26 @@ export default [
     },
   },
   prettier,
-];
+);
 </code></pre>
 
-        <p>เราต้องเพิ่มสอง configs: อันหนึ่งให้ ESLint เข้าใจ React และเพิ่มกฎ React พื้นฐาน และอีกอันทำให้ทันสมัยขึ้น เพราะ React 17 เปลี่ยนวิธีที่ ESLint โต้ตอบกับ React ไปเล็กน้อย</p>
+        <ul>
+          <li>เราห่อทั้งหมดด้วย <code>tseslint.config(...)</code> แทนที่จะเป็น array เปล่า ๆ มันเป็น helper function ที่คืน array หน้าตาเดิมออกมา แต่ระหว่างที่คุณพิมพ์ มันจะช่วย auto-complete และเตือนเวลาเขียน config ผิดรูป — เป็น TypeScript ช่วยเราอีกครั้ง แม้แต่ในไฟล์ที่เป็น <code>.mjs</code></li>
+          <li>เพราะห่อด้วย <code>tseslint.config()</code> แล้ว เราจึงลบคอมเมนต์ <code>/** @type {...} */</code> จากบทที่ 6 ทิ้งได้ เพราะ helper ตัวนี้ให้ type มาในตัวอยู่แล้ว</li>
+          <li><code>tseslint.configs.recommended</code> คือชุดกฎ TypeScript พื้นฐาน และมันจะตั้ง parser ให้เราโดยอัตโนมัติ ทำให้ ESLint อ่านไฟล์ <code>.ts</code> / <code>.tsx</code> ได้</li>
+          <li>เราต้องเพิ่มสอง React configs: อันหนึ่งให้ ESLint เข้าใจ React และเพิ่มกฎ React พื้นฐาน และอีกอันทำให้ทันสมัยขึ้น เพราะ React 17 เปลี่ยนวิธีที่ ESLint โต้ตอบกับ React ไปเล็กน้อย</li>
+          <li>เราเปลี่ยน <code>files</code> จาก <code>**/*.js</code> เป็น <code>**/*.{ts,tsx}</code> เพราะโค้ดในโปรเจกต์ของเราเป็น TypeScript ทั้งหมดแล้ว</li>
+        </ul>
 
-        <p>เรายังปิดสอง rules ที่ไม่ค่อยมีประโยชน์ในทางปฏิบัติ ได้แก่ unescaped entities (ซึ่งทำให้คุณต้องเปลี่ยนสิ่งอย่าง <code>'</code> เป็น <code>&amp;apos</code>) และ prop types ซึ่ง ณ จุดนี้ไม่มีใครใช้มาสิบปีแล้ว นอกนั้นเราก็น่าจะพร้อมใช้งาน</p>
+        <p>เรายังปิดสอง rules ที่ไม่ค่อยมีประโยชน์ในทางปฏิบัติ ได้แก่ unescaped entities (ซึ่งทำให้คุณต้องเปลี่ยนสิ่งอย่าง <code>'</code> เป็น <code>&amp;apos</code>) และ prop types ซึ่ง ณ จุดนี้ไม่มีใครใช้มาสิบปีแล้ว — และยิ่งไม่จำเป็นเข้าไปใหญ่สำหรับเรา เพราะ <code>PropTypes</code> คือความพยายามตรวจ props ตอน runtime ซึ่ง TypeScript ทำให้เราแล้วตั้งแต่ตอนพิมพ์ และทำได้ดีกว่ามาก นอกนั้นเราก็น่าจะพร้อมใช้งาน</p>
+
+        <p class="translator-note">🔍 ถ้ารัน <code>npm run lint</code> แล้วเจอ error ว่า <code>Parsing error: ... 'types' ...</code> หรือ ESLint ยังบ่นไวยากรณ์ TypeScript อยู่ ให้ตรวจว่า <code>tseslint.configs.recommended</code> อยู่<em>ก่อน</em> config object ของคุณเองในลิสต์ เพราะ config ถูกใช้ตามลำดับ</p>
 
         <h2>กลับไปที่ JSX</h2>
 
-        <p>ตอนนี้ JSX ถูกไขความลับไปบ้างแล้ว มาแปลง App.js กัน</p>
+        <p>ตอนนี้ JSX ถูกไขความลับไปบ้างแล้ว มาแปลง App.tsx กัน</p>
 
-        <pre><code class="language-javascript">// rename the file App.jsx
-// delete the React import
+        <pre><code class="language-typescript">// delete the React import
 import { createRoot } from "react-dom/client";
 import Pizza from "./Pizza";
 
@@ -150,13 +194,16 @@ const App = () =&gt; {
 };
 
 const container = document.getElementById("root");
+if (!container) {
+  throw new Error("ไม่พบ element ที่มี id=\"root\" ใน index.html");
+}
 const root = createRoot(container);
 root.render(&lt;App /&gt;);
 </code></pre>
 
-        <p>ไปที่ index.html แล้วเปลี่ยน script tag ด้วย</p>
+        <p>ไฟล์ชื่อ <code>App.tsx</code> อยู่แล้วตั้งแต่บทที่แล้ว จึงไม่ต้องเปลี่ยนชื่อไฟล์หรือแก้ script tag ใน index.html ซ้ำอีก มันควรเป็นแบบนี้อยู่</p>
 
-        <pre><code class="language-html">&lt;script type="module" src="./src/App.jsx"&gt;&lt;/script&gt;
+        <pre><code class="language-html">&lt;script type="module" src="./src/App.tsx"&gt;&lt;/script&gt;
 </code></pre>
 
         <p>สังเกตว่า Pizza เป็น component สังเกตว่าตัว <code>P</code> ใน <code>Pizza</code> เป็นตัวพิมพ์ใหญ่ มัน<em>ต้อง</em>เป็นเช่นนั้น หากทำให้เป็นตัวพิมพ์เล็ก มันจะพยายามใช้ <code>pizza</code> เป็น web component ไม่ใช่ React component</p>
@@ -188,9 +235,9 @@ root.render(&lt;App /&gt;);
 
         <blockquote>หมายเหตุ: นี่แปลว่าคุณต้องเปิด terminal ไว้ <strong>สอง</strong> หน้าต่างพร้อมกัน หน้าต่างหนึ่งสำหรับ API server (เปิดทิ้งไว้ ไม่ต้องแตะอีก) อีกหน้าต่างสำหรับ Vite dev server ของแอปเรา</blockquote>
 
-        <p>เพิ่มสิ่งนี้ใน vite.config.js ของคุณ</p>
+        <p>เพิ่มสิ่งนี้ใน vite.config.ts ของคุณ</p>
 
-        <pre><code class="language-javascript">// replace export
+        <pre><code class="language-typescript">// replace export
 export default defineConfig({
   server: {
     proxy: {
@@ -221,19 +268,28 @@ npm run dev
 
         <p>เซิร์ฟเวอร์จะเริ่มทำงานที่ port 3000 เพื่อยืนยันว่ามันทำงานจริง ให้เปิด <code>http://localhost:3000/api/pizzas</code> ในเบราว์เซอร์ คุณจะเห็นข้อมูลพิซซ่าเป็น JSON ออกมาเป็นชุดยาว ๆ</p>
 
-        <p class="translator-note">🔍 <strong>ถ้าติดปัญหา</strong> — <code>EADDRINUSE</code> แปลว่ามีอย่างอื่นใช้ port 3000 อยู่แล้ว ให้ปิดโปรแกรมนั้นก่อน หรือสั่ง <code>PORT=3001 npm run dev</code> แล้วอย่าลืมแก้ค่า <code>target</code> ใน <code>vite.config.js</code> ให้ตรงกัน · ถ้า <code>npm install</code> ล้มเหลวที่แพ็กเกจ <code>sqlite3</code> ให้ตรวจสอบว่าใช้ Node.js เวอร์ชัน 20 ขึ้นไปด้วย <code>node -v</code> · รายละเอียดเพิ่มเติมเกี่ยวกับเซิร์ฟเวอร์นี้และรายการ endpoint ทั้งหมด อ่านได้ใน <code>README.md</code> ของ repository นั้น</p>
+        <p class="translator-note">🔍 <strong>ถ้าติดปัญหา</strong> — <code>EADDRINUSE</code> แปลว่ามีอย่างอื่นใช้ port 3000 อยู่แล้ว ให้ปิดโปรแกรมนั้นก่อน หรือสั่ง <code>PORT=3001 npm run dev</code> แล้วอย่าลืมแก้ค่า <code>target</code> ใน <code>vite.config.ts</code> ให้ตรงกัน · ถ้า <code>npm install</code> ล้มเหลวที่แพ็กเกจ <code>sqlite3</code> ให้ตรวจสอบว่าใช้ Node.js เวอร์ชัน 20 ขึ้นไปด้วย <code>node -v</code> · รายละเอียดเพิ่มเติมเกี่ยวกับเซิร์ฟเวอร์นี้และรายการ endpoint ทั้งหมด อ่านได้ใน <code>README.md</code> ของ repository นั้น</p>
 
         <p>คุณต้องให้เซิร์ฟเวอร์ทั้งสองตัวทำงานพร้อมกัน ด้วย proxy configuration ข้างต้น Vite จะดักคำขอที่ขึ้นต้นด้วย <code>/api</code> และ <code>/public</code> จากแอป React แล้วส่งต่อไปยัง API server ให้เอง แอปของเราจึงเรียก <code>fetch("/api/pizzas")</code> ได้ตรง ๆ เหมือนกับว่าทุกอย่างอยู่ที่เดียวกัน</p>
 
-        <p>ตอนนี้มาเพิ่ม images ให้ Pizza ของเรา</p>
+        <p>ตอนนี้มาเพิ่ม images ให้ Pizza ของเรา ใน <code>Pizza.tsx</code> เราต้องแก้สองที่ — เพิ่ม prop ใหม่เข้าไปใน type ก่อน แล้วค่อยเอาไปใช้ใน JSX</p>
 
-        <pre><code class="language-javascript">// return inside Pizza, inside div, under &lt;p&gt;
+        <pre><code class="language-typescript">// add to PizzaProps
+type PizzaProps = {
+  name: string;
+  description: string;
+  image: string;
+};
+
+// return inside Pizza, inside div, under &lt;p&gt;
 &lt;img src={props.image} alt={props.name} /&gt;
 </code></pre>
 
-        <p>ตอนนี้ใน App.jsx</p>
+        <p>ถ้าคุณเพิ่มแค่ <code>&lt;img&gt;</code> โดยลืมเพิ่มใน <code>PizzaProps</code> TypeScript จะฟ้องทันทีว่า <code>Property 'image' does not exist on type 'PizzaProps'</code> นี่คือจังหวะที่ type ทำงานให้เรา: มันบังคับให้ "สัญญา" ของ component กับสิ่งที่ component ใช้จริงตรงกันเสมอ</p>
 
-        <pre><code class="language-javascript">// add to first Pizza
+        <p>ตอนนี้ใน App.tsx</p>
+
+        <pre><code class="language-typescript">// add to first Pizza
 image={"/public/pizzas/pepperoni.webp"}
 
 // add to second Pizza

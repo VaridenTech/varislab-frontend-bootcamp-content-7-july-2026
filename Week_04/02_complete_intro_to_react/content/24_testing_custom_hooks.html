@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ทดสอบ React custom hooks ด้วย renderHook" /><title>Testing Custom Hooks | เรียน React เริ่มต้น</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
   <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 24 · การทดสอบ (Testing)</p><h1>การทดสอบ Custom Hooks</h1><p class="lesson-original-title" lang="en">Testing Custom Hooks</p></header>
-  <p>สมมติว่าเราต้องการ tests สำหรับ custom hook ของเรา usePizzaOfTheDay การทดสอบ custom hooks มีเคล็ดเล็กน้อย เพราะมันผูกกับการทำงานภายในของ React โดยเนื้อแท้: เรียกมันนอก component ไม่ได้ แล้วเราจะเลี่ยงเรื่องนี้อย่างไร? เราปลอม component! สร้าง file ชื่อ <code>usePizzaOfTheDay.test.jsx</code> ใน <code>__tests__</code> directory ของเรา</p>
-  <pre><code class="language-javascript">import { expect, test, vi } from "vitest";
+  <p>สมมติว่าเราต้องการ tests สำหรับ custom hook ของเรา usePizzaOfTheDay การทดสอบ custom hooks มีเคล็ดเล็กน้อย เพราะมันผูกกับการทำงานภายในของ React โดยเนื้อแท้: เรียกมันนอก component ไม่ได้ แล้วเราจะเลี่ยงเรื่องนี้อย่างไร? เราปลอม component! สร้าง file ชื่อ <code>usePizzaOfTheDay.test.tsx</code> ใน <code>__tests__</code> directory ของเรา</p>
+  <pre><code class="language-typescript">import { expect, test, vi } from "vitest";
 import { render } from "@testing-library/react";
 import createFetchMock from "vitest-fetch-mock";
 import { usePizzaOfTheDay } from "../usePizzaOfTheDay";
+import type { Pizza } from "../types";
 
 const fetchMocker = createFetchMock(vi);
 fetchMocker.enableMocks();
 
-const testPizza = {
+const testPizza: Pizza = {
   id: "calabrese",
   name: "The Calabrese Pizza",
   category: "Supreme",
@@ -21,7 +22,7 @@ const testPizza = {
 };
 
 function getPizzaOfTheDay() {
-  let pizza;
+  let pizza: Pizza | null = null;
 
   function TestComponent() {
     pizza = usePizzaOfTheDay();
@@ -34,34 +35,50 @@ function getPizzaOfTheDay() {
 }
 
 test("gives null when first called", async () =&gt; {
-  fetch.mockResponseOnce(JSON.stringify(testPizza));
+  fetchMocker.mockResponseOnce(JSON.stringify(testPizza));
   const pizza = getPizzaOfTheDay();
   expect(pizza).toBeNull();
 });
 </code></pre>
+
+  <h3>ข้อมูลทดสอบที่มี type คือข้อมูลทดสอบที่เชื่อถือได้</h3>
+
+  <p>สิ่งที่ควรสังเกตที่สุดในไฟล์นี้คือ <code>const testPizza: Pizza = { … }</code> การใส่ type ให้ข้อมูลทดสอบเป็นนิสัยที่ให้ผลตอบแทนสูงมาก และเป็นสิ่งที่คนมักลืมทำ</p>
+
+  <p>ปัญหาของ mock data ที่ไม่มี type คือมัน<strong>เก่าเงียบ ๆ</strong> สมมติวันหนึ่งเราเพิ่ม field <code>vegetarian: boolean</code> เข้าไปใน <code>Pizza</code> โค้ดแอปทุกที่จะถูก TypeScript ไล่บอกให้แก้ แต่ mock data ในเทสต์จะไม่มีใครแตะเลย ผลคือเทสต์ยังเขียวอยู่ ทั้งที่กำลังทดสอบด้วยข้อมูลที่ไม่มีอยู่จริงในระบบแล้ว — ซึ่งแย่กว่าไม่มีเทสต์ เพราะมันให้ความมั่นใจปลอม ๆ</p>
+
+  <p>พอใส่ <code>: Pizza</code> เข้าไป mock data ของเราก็ถูกผูกกับ type จริงของแอป เพิ่ม field ใหม่เมื่อไร เทสต์จะฟ้องทันทีว่าข้อมูลไม่ครบ ลองพิมพ์ <code>sizes: { S: 12.25 }</code> โดยลบ <code>M</code> กับ <code>L</code> ออกดู แล้วจะเห็นว่ามันจับได้</p>
+
+  <p class="translator-note">💡 อีกจุดคือ <code>let pizza: Pizza | null = null;</code> ต้นฉบับเขียน <code>let pizza;</code> เฉย ๆ ซึ่งทำให้ type เป็น <code>any</code> โดยปริยาย และเราจะเสีย type safety ทั้งหมดตั้งแต่บรรทัดนั้นไป การประกาศ type ให้ชัดเจนทำให้ <code>expect(pizza)</code> ข้างล่างยังรู้ว่ากำลังตรวจอะไรอยู่ · เราเปลี่ยน <code>fetch.mockResponseOnce</code> เป็น <code>fetchMocker.mockResponseOnce</code> ด้วย เพราะ TypeScript ไม่รู้จัก method ที่ mock library แปะเพิ่มลงบน <code>fetch</code> ตัว global แต่ตัวแปร <code>fetchMocker</code> ที่เรารับกลับมาเองนั้นมี type ครบ</p>
+
   <p>การทำ fake component เพื่อ test อะไรบางอย่างดูแปลกนิดหน่อย (เราใกล้เส้นการ test implementation details แบบอันตราย) แต่สิ่งนี้คือ library code โดยแก่น และเราอยากยืนยันว่า code นี้ทำงานหากเราใช้มันบ่อยใน code base ของเรา</p>
   <p>เราทำให้ดีกว่านี้ได้ ลองเขียน test ใหม่ให้เป็นแบบนี้:</p>
-  <pre><code class="language-javascript">import { renderHook } from "@testing-library/react"; // change import
+  <pre><code class="language-typescript">import { renderHook } from "@testing-library/react"; // change import
 
 test("to be null on initial load", async () =&gt; {
-  fetch.mockResponseOnce(JSON.stringify(testPizza));
-  const { result } = renderHook(() =&gt; usePizzaOfTheDay(""));
+  fetchMocker.mockResponseOnce(JSON.stringify(testPizza));
+  const { result } = renderHook(() =&gt; usePizzaOfTheDay());
   expect(result.current).toBeNull();
 });
 </code></pre>
   <p>ที่นี่ helper <code>renderHook</code> นามธรรมความแปลกที่เราต้องทำเพื่อทดสอบ hook นั้นออกไป แต่มั่นใจได้ว่ามันทำสิ่งเดียวกันเป็นหลัก: สร้าง component ภายในที่กำลังรัน hook lifecycle methods อย่างเหมาะสมให้คุณ</p>
+
+  <p class="translator-note">หมายเหตุผู้แปล: ต้นฉบับที่เป็น JavaScript เขียน <code>usePizzaOfTheDay(&quot;&quot;)</code> ทั้งที่ hook ตัวนี้ไม่รับ argument เลย — เป็น argument ที่หลงเหลือมาแล้วไม่มีผลอะไร JavaScript ปล่อยผ่านให้เงียบ ๆ แต่ TypeScript จะฟ้องว่า <code>Expected 0 arguments, but got 1.</code> เราจึงลบมันออก บั๊กประเภทนี้ไม่ทำให้อะไรพัง แต่มันทำให้คนอ่านเข้าใจผิดว่า hook รับค่าอะไรบางอย่าง ซึ่งเป็นหนี้ที่สะสมได้เรื่อย ๆ ใน codebase</p>
+
   <p>มาเพิ่ม test ให้แน่ใจว่ามันทำสิ่งถูกต้องกับ API response และเรียก API ที่ถูกต้อง</p>
-  <pre><code class="language-javascript">import { renderHook, waitFor } from "@testing-library/react"; // add waitFor
+  <pre><code class="language-typescript">import { renderHook, waitFor } from "@testing-library/react"; // add waitFor
 
 test("to call the API and give back the pizza of the day", async () =&gt; {
-  fetch.mockResponseOnce(JSON.stringify(testPizza));
-  const { result } = renderHook(() =&gt; usePizzaOfTheDay(""));
+  fetchMocker.mockResponseOnce(JSON.stringify(testPizza));
+  const { result } = renderHook(() =&gt; usePizzaOfTheDay());
   await waitFor(() =&gt; {
     expect(result.current).toEqual(testPizza);
   });
   expect(fetchMocker).toBeCalledWith("/api/pizza-of-the-day");
 });
 </code></pre>
+
+  <p>ข้อดีที่ได้ฟรีอีกอย่างคือ <code>result.current</code> มี type เป็น <code>Pizza | null</code> โดยที่เราไม่ต้องบอก เพราะ <code>renderHook</code> เป็น generic ที่อ่าน type มาจาก callback ที่เราส่งให้ ดังนั้นถ้าวันหนึ่งมีคนแก้ <code>usePizzaOfTheDay</code> ให้คืนค่ารูปแบบอื่น เทสต์นี้จะรู้ทันทีตั้งแต่ตอน compile</p>
   <ul><li>waitFor เป็นทริกสะดวกเมื่อคุณต้องรอให้ React settle คุณให้ body ที่ throw errors จนกว่าจะเป็น true <code>expect</code> เมื่อใช้ไม่ได้จะ throw error จึงทำงานแบบนี้</li><li>เมื่อมัน resolve เป็น true ก็ผ่าน test และไปต่อ หากมัน fail ราว 20 ครั้ง (ตั้งค่าได้) ก็จะ fail test</li><li>บางคนคิดว่านี่เข้าไปใน implementation details มากเกินไป ซึ่งก็มีส่วนถูก อย่างไรก็ตามมันมีประโยชน์จากมุมที่ hook นี้ต้องทำงานบางแบบ และคาดหวัง API ที่จะเรียก ซึ่งส่งผลต่อ user behavior จึงอาจมีประโยชน์ ถ้าเป็น codebase จริง การ test PizzaOfTheDay component อย่างเดียวก็อาจพอแล้ว แต่ถ้า hook นี้ถูกใช้หลายที่ การเขียน test ให้มันโดยตรงก็คุ้ม</li></ul>
   <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="23_testing_user_interaction.html" rel="prev">ก่อนหน้า: Testing User Interaction</a><a href="index.html">สารบัญบทเรียน</a><a href="25_snapshot_testing.html" rel="next">ถัดไป: Snapshot Testing</a></nav>
 </article></main></body></html>

@@ -12,8 +12,12 @@
       <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 20 · React ขั้นสูง (Advanced React)</p><h1>การใช้ฟอร์มแบบ Uncontrolled</h1><p class="lesson-original-title" lang="en">Uncontrolled Forms</p></header>
       <h2>Uncontrolled Forms</h2>
       <p>ตอนนี้เราจะทำหน้า contact ให้เว็บไซต์ของเรา โดยรับ name, email และ message จากผู้ใช้ แล้ว submit ไป backend ของเรา เช่นเดียวกับ backends ที่ดีทั้งหลาย ของเราจะ log มันใน console แล้วก็ไม่สนใจมัน</p>
-      <p>เราจะได้เห็นสองแนวคิดใหม่: วิธีทำ post ด้วย TanStack Query (ที่เรียกว่า mutation) และวิธีทำ uncontrolled forms ด้วย React เริ่มจาก API query ของเรา ใน src/api สร้างไฟล์ชื่อ <code>postContact.js</code> แล้วใส่:</p>
-      <pre><code class="language-javascript">export default async function postContact(name, email, message) {
+      <p>เราจะได้เห็นสองแนวคิดใหม่: วิธีทำ post ด้วย TanStack Query (ที่เรียกว่า mutation) และวิธีทำ uncontrolled forms ด้วย React เริ่มจาก API query ของเรา ใน src/api สร้างไฟล์ชื่อ <code>postContact.ts</code> แล้วใส่:</p>
+      <pre><code class="language-typescript">export default async function postContact(
+  name: string,
+  email: string,
+  message: string
+) {
   const response = await fetch("/api/contact", {
     method: "POST",
     headers: {
@@ -29,14 +33,14 @@
   return response.json();
 }
 </code></pre>
-      <p>สร้าง link ใหม่ไปหน้าของเราใน index.lazy.jsx</p>
-      <pre><code class="language-javascript">// after past orders
+      <p>สร้าง link ใหม่ไปหน้าของเราใน index.lazy.tsx</p>
+      <pre><code class="language-typescript">// after past orders
 &lt;li&gt;
   &lt;Link to="/contact"&gt;Contact&lt;/Link&gt;
 &lt;/li&gt;
 </code></pre>
-      <p>สร้าง route ใหม่ชื่อ <code>contact.lazy.jsx</code> ใน <code>src/routes</code></p>
-      <pre><code class="language-javascript">import { createLazyFileRoute } from "@tanstack/react-router";
+      <p>สร้าง route ใหม่ชื่อ <code>contact.lazy.tsx</code> ใน <code>src/routes</code></p>
+      <pre><code class="language-typescript">import { createLazyFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import postContact from "../api/postContact";
 
@@ -46,13 +50,13 @@ export const Route = createLazyFileRoute("/contact")({
 
 function ContactRoute() {
   const mutation = useMutation({
-    mutationFn: function (e) {
+    mutationFn: function (e: React.FormEvent&lt;HTMLFormElement&gt;) {
       e.preventDefault();
-      const formData = new FormData(e.target);
+      const formData = new FormData(e.currentTarget);
       return postContact(
-        formData.get("name"),
-        formData.get("email"),
-        formData.get("message")
+        String(formData.get("name")),
+        String(formData.get("email")),
+        String(formData.get("message"))
       );
     },
   });
@@ -81,6 +85,27 @@ function ContactRoute() {
         <li>ยังมี isError และ isIdle ด้วย แต่เราไม่ได้ใช้จาก TanStack Query</li>
         <li>สังเกต mutations ใน dev tools ของ TanStack Query ด้วย (อยู่ในอีก tab)</li>
       </ul>
+
+      <h3>FormData กับ TypeScript</h3>
+
+      <p>uncontrolled form เป็นจุดที่ TypeScript ช่วยได้เยอะเป็นพิเศษ เพราะเรากำลังดึงข้อมูลออกจาก DOM ตรง ๆ ซึ่งเป็นแดนที่ไม่มีใครรับประกันอะไรให้เลย มีสองจุดที่ต่างจากเวอร์ชัน JavaScript</p>
+
+      <ul>
+        <li><strong><code>e.currentTarget</code> ไม่ใช่ <code>e.target</code></strong> — <code>new FormData()</code> ต้องการ <code>HTMLFormElement</code> เท่านั้น แต่ <code>e.target</code> มี type เป็น <code>EventTarget</code> กว้าง ๆ (มันคือ element ที่<em>เกิด</em> event ซึ่งอาจเป็นปุ่มข้างในก็ได้) ส่วน <code>e.currentTarget</code> คือ element ที่ handler ติดอยู่ ซึ่งก็คือ <code>&lt;form&gt;</code> แน่นอน และ <code>React.FormEvent&lt;HTMLFormElement&gt;</code> ก็ให้ type ที่ถูกต้องมาพอดี ไม่ต้อง cast อะไรเลย</li>
+        <li><strong><code>String(formData.get("name"))</code></strong> — <code>formData.get()</code> คืน <code>string | File | null</code> เพราะ form อาจมีช่องอัปโหลดไฟล์ หรืออาจไม่มี field ชื่อนั้นเลย ส่วน <code>postContact</code> ของเรารับ <code>string</code> จึงต้องแปลงก่อน</li>
+      </ul>
+
+      <p>จุดที่สองคือสิ่งที่ควรค่าแก่การหยุดคิดสักนิด ในเวอร์ชัน JavaScript ถ้าคุณพิมพ์ <code>formData.get("nmae")</code> ผิดสักตัว มันจะคืน <code>null</code> เงียบ ๆ แล้วส่ง <code>null</code> ขึ้น API ไปโดยไม่มีใครรู้ TypeScript บังคับให้เรามอง <code>null</code> ตัวนั้นและตัดสินใจกับมัน</p>
+
+      <p>เราเลือก <code>String()</code> เพราะมันง่ายและพอเหมาะกับตัวอย่างนี้ (ถ้าไม่มีค่า จะได้ <code>&quot;null&quot;</code> ซึ่งเห็นได้ชัดใน log ว่าผิด) แต่ในแอปจริงคุณควรตรวจแล้วแจ้งผู้ใช้ เช่น</p>
+
+      <pre><code class="language-typescript">const name = formData.get("name");
+if (typeof name !== "string" || name.trim() === "") {
+  throw new Error("กรุณากรอกชื่อ");
+}
+</code></pre>
+
+      <p>นี่เป็นบทเรียนสำคัญเกี่ยวกับ TypeScript โดยรวม: มันบอกเราได้ว่า "ตรงนี้มีกรณีที่คุณยังไม่ได้จัดการ" แต่มันเลือกวิธีจัดการแทนเราไม่ได้ ส่วนนั้นยังเป็นงานของเราเสมอ</p>
       <p>ลองดู! คุณจะเห็นใน logs ของที่ใดก็ตามที่ API ของคุณกำลังทำงานอยู่ว่ามัน log contact info</p>
       <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="19_error_boundaries.html" rel="prev">ก่อนหน้า: Error Boundaries</a><a href="index.html">สารบัญบทเรียน</a><a href="21_vitest.html" rel="next">ถัดไป: Vitest</a></nav>
     </article></main>

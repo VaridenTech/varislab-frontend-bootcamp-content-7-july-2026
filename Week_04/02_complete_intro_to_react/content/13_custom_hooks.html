@@ -22,9 +22,9 @@
 
         <p>โอเค เราต้องการเพิ่ม banner “Pizza of the Day” ที่ท้ายหน้า นี่ทำให้ต้องเรียก API พิเศษเพื่อเอา pizza of the day (ซึ่งควรเปลี่ยนทุกวันตามเวลาของคอมพิวเตอร์คุณ) ก่อนอื่นมาเขียน component ที่จะใช้มัน</p>
 
-        <p>สร้างไฟล์ชื่อ PizzaOfTheDay.jsx</p>
+        <p>สร้างไฟล์ชื่อ PizzaOfTheDay.tsx</p>
 
-        <pre><code class="language-javascript">import { usePizzaOfTheDay } from "./usePizzaOfTheDay";
+        <pre><code class="language-typescript">import { usePizzaOfTheDay } from "./usePizzaOfTheDay";
 
 // feel free to change en-US / USD to your locale
 const intl = new Intl.NumberFormat("en-US", {
@@ -65,19 +65,24 @@ export default PizzaOfTheDay;
 
         <ul>
           <li>ส่วนเจ๋งคือ <code>usePizzaOfTheDay()</code> ตอนนี้เราเพียงเชื่อใจได้ว่าสิ่งนี้จะให้ pizza of the day จากการทำงานภายใน black box ของ hook</li>
+          <li>สังเกตว่าเราไม่ได้เขียน type ให้ <code>pizzaOfTheDay</code> ตรงนี้เลย แต่ <code>pizzaOfTheDay.sizes.S</code> ยังมี auto-complete ครบ นั่นเพราะ TypeScript ดึง type มาจากสิ่งที่ hook คืนกลับมาให้เอง — เราเขียน type ไว้ที่เดียวคือในตัว hook แล้วทุกที่ที่เรียกใช้ก็ได้ประโยชน์ตาม</li>
+          <li>บรรทัด <code>if (!pizzaOfTheDay) return &lt;div&gt;Loading...&lt;/div&gt;</code> ที่มีอยู่แล้วในโค้ดข้างบนกลายเป็นสิ่งที่ <em>จำเป็น</em> ไปด้วย ไม่ใช่แค่ทางเลือก เพราะ hook คืน <code>Pizza | null</code> ถ้าลบบรรทัดนั้นออก TypeScript จะฟ้องทุกบรรทัดที่แตะ <code>pizzaOfTheDay.</code> ทันที</li>
         </ul>
 
-        <p>โอเค มาสร้าง hook กัน! สร้างไฟล์ชื่อ usePizzaOfTheDay.jsx (คุณเรียกมันว่า .js แทน jsx ก็ได้ แต่ใน React project นิยมใช้นามสกุล JSX กับทุกไฟล์ที่ “เกี่ยวกับ React”)</p>
+        <p>โอเค มาสร้าง hook กัน! สร้างไฟล์ชื่อ <code>usePizzaOfTheDay.ts</code></p>
 
-        <pre><code class="language-javascript">import { useState, useEffect } from "react";
+        <blockquote>คราวนี้เป็น <code>.ts</code> ไม่ใช่ <code>.tsx</code> เพราะไฟล์นี้ไม่มี JSX อยู่เลย มันมีแต่ logic ล้วน ๆ นี่คือกฎที่ตรงไปตรงมาและคอร์สนี้จะใช้ตลอด: <strong>มี JSX ใช้ <code>.tsx</code> ไม่มี JSX ใช้ <code>.ts</code></strong> ต่างจากตอนเขียน JavaScript ที่หลายโปรเจกต์ตั้ง <code>.jsx</code> ให้ทุกไฟล์ที่ "เกี่ยวกับ React" ไปเลย — ใน TypeScript ทำแบบนั้นไม่ค่อยดี เพราะในไฟล์ <code>.tsx</code> ไวยากรณ์ <code>&lt;T&gt;</code> สำหรับ generic จะชนกับ JSX tag ทำให้ต้องเขียนอ้อมโดยไม่จำเป็น</blockquote>
+
+        <pre><code class="language-typescript">import { useState, useEffect } from "react";
+import type { Pizza } from "./types";
 
 export const usePizzaOfTheDay = () =&gt; {
-  const [pizzaOfTheDay, setPizzaOfTheDay] = useState(null);
+  const [pizzaOfTheDay, setPizzaOfTheDay] = useState&lt;Pizza | null&gt;(null);
 
   useEffect(() =&gt; {
     async function fetchPizzaOfTheDay() {
       const response = await fetch("/api/pizza-of-the-day");
-      const data = await response.json();
+      const data: Pizza = await response.json();
       setPizzaOfTheDay(data);
     }
 
@@ -91,11 +96,13 @@ export const usePizzaOfTheDay = () =&gt; {
         <ul>
           <li>นี่ดูเหมือนสิ่งที่คุณจะเห็นตอนบนของ component ใช่ไหม? ตอนนี้มันถูกห่อเป็น hook จึงทดสอบด้วยตัวเองได้ง่าย! 🎉</li>
           <li>เราใช้ <code>useState</code>, <code>useEffect</code> หรือ hook ใด ๆ ที่ต้องการที่นี่ได้! เรายังใช้ custom hooks อื่นได้ด้วย!</li>
+          <li><code>useState&lt;Pizza | null&gt;(null)</code> เป็นอีกกรณีที่ generic <em>จำเป็น</em> จริง ๆ ถ้าไม่ใส่ TypeScript จะเดา type จากค่าเริ่มต้น <code>null</code> ว่าเป็น <code>null</code> เท่านั้น แล้ว <code>setPizzaOfTheDay(data)</code> จะถูกฟ้องทันที รูปแบบ <code>useState&lt;T | null&gt;(null)</code> นี้พบบ่อยมากกับ state ที่ "ยังไม่มีข้อมูล แล้วค่อยมาทีหลัง" จำไว้ให้ขึ้นใจได้เลย</li>
+          <li>สังเกตว่าเราไม่ต้องประกาศ return type ให้ hook เอง TypeScript สรุปให้เองว่าเป็น <code>Pizza | null</code> จาก state ที่เรา return ออกไป การปล่อยให้มันเดาในกรณีแบบนี้เป็นเรื่องปกติและดีด้วย เพราะถ้าวันหนึ่งเราเปลี่ยน state ข้างใน type ที่คนอื่นเห็นก็จะเปลี่ยนตามให้อัตโนมัติ</li>
         </ul>
 
-        <p>สุดท้าย มาเพิ่มสิ่งนี้ใน App.jsx เพื่อให้ component ของเรา render</p>
+        <p>สุดท้าย มาเพิ่มสิ่งนี้ใน App.tsx เพื่อให้ component ของเรา render</p>
 
-        <pre><code class="language-javascript">// import at top
+        <pre><code class="language-typescript">// import at top
 import PizzaOfTheDay from "./PizzaOfTheDay";
 
 // under &lt;Order /&gt;
@@ -104,9 +111,9 @@ import PizzaOfTheDay from "./PizzaOfTheDay";
 
         <p>ตอนนี้คุณควรเห็น component ใหม่ที่ใช้ hook ใหม่ของเราที่ด้านล่าง!</p>
 
-        <p>มาเพิ่มเทคนิค debugging สนุก ๆ อีกหนึ่งอย่างที่ทำมาเพื่อ custom hooks โดยเฉพาะ ใส่สิ่งนี้ใน usePizzaOfTheDay.jsx:</p>
+        <p>มาเพิ่มเทคนิค debugging สนุก ๆ อีกหนึ่งอย่างที่ทำมาเพื่อ custom hooks โดยเฉพาะ ใส่สิ่งนี้ใน usePizzaOfTheDay.ts:</p>
 
-        <pre><code class="language-javascript">// import useDebugValue
+        <pre><code class="language-typescript">// import useDebugValue
 import { useState, useEffect, useDebugValue } from "react";
 
 // add under the hook being used in the render function

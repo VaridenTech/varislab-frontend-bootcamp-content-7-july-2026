@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="ตั้งค่า Vite เพื่อพัฒนาและ build โปรเจกต์ React" />
+    <meta name="description" content="ตั้งค่า Vite และ TypeScript เพื่อพัฒนาและ build โปรเจกต์ React" />
     <title>Vite | เรียน React เริ่มต้น</title>
     <link rel="stylesheet" href="lesson.css" />
   </head>
@@ -12,7 +12,7 @@
       <article class="lesson">
         <header class="lesson-header">
           <p class="lesson-eyebrow">บทเรียน 08 · เครื่องมือ (Tools)</p>
-          <h1>Vite</h1>
+          <h1>Vite และ TypeScript</h1>
           <p class="lesson-original-title" lang="en">Vite</p>
         </header>
 
@@ -34,20 +34,87 @@
 
         <p>ก่อนอื่น มาติดตั้งสิ่งที่เราต้องใช้สำหรับ Vite</p>
 
-        <pre><code class="language-bash">npm install -D vite@5.4.2 @vitejs/plugin-react@4.3.1
+        <pre><code class="language-bash">npm install -D vite@^8.1.1 @vitejs/plugin-react@^5.0.0
 </code></pre>
 
-        <p>ตัวแรกคือตัวเครื่องมือ และตัวหลังคือความสามารถเฉพาะ React ทั้งหมดที่เราต้องใช้ เมื่อติดตั้งแล้ว เราต้องแก้ index.html เล็กน้อย</p>
+        <p>ตัวแรกคือตัวเครื่องมือ และตัวหลังคือความสามารถเฉพาะ React ทั้งหมดที่เราต้องใช้</p>
+
+        <h2>เพิ่ม TypeScript</h2>
+
+        <p>ตั้งแต่บทนี้เป็นต้นไป เราจะเขียนแอปด้วย <strong>TypeScript</strong> ไม่ใช่ JavaScript ล้วนอีกต่อไป คุณได้เรียนพื้นฐาน TypeScript ไปแล้วในสัปดาห์ที่ 3 — type annotation, union type, type alias, <code>tsconfig.json</code> — บทเรียนจากนี้ไปจะเป็นการเอาความรู้ชุดนั้นมาใช้กับของจริง</p>
+
+        <p>ทำไมต้องรอถึงตอนนี้? เพราะ TypeScript ต้องมีขั้นตอน build ถึงจะทำงานได้ เบราว์เซอร์ไม่เข้าใจ type annotation เมื่อกี้เรายังไม่มี build tool จึงเขียน TypeScript ไม่ได้ พอมี Vite แล้วเราถึงเริ่มได้ (Vite ตัด type ทิ้งตอน build ให้เราอัตโนมัติ)</p>
+
+        <p>แล้วทำไมต้องใช้ TypeScript กับ React? สามเหตุผลที่คุณจะสัมผัสได้เองในบทถัด ๆ ไป</p>
+
+        <ul>
+          <li><strong>props ของ component จะมีสัญญาที่ชัดเจน</strong> — ส่ง prop ผิดชื่อ ผิดชนิด หรือลืมส่ง จะรู้ทันทีตอนพิมพ์ ไม่ใช่ตอนเปิดเบราว์เซอร์แล้วเจอหน้าขาว</li>
+          <li><strong>ข้อมูลจาก API จะไม่ลอยเป็น <code>any</code></strong> — เราจะประกาศรูปร่างของข้อมูลพิซซ่าไว้ที่เดียว แล้วทุกที่ที่ใช้มันจะได้ auto-complete และการตรวจสอบตามมา</li>
+          <li><strong>editor จะช่วยคุณมากขึ้นมาก</strong> — auto-complete ชื่อ prop, ชื่อ field, ชื่อ event ได้แม่นยำ เพราะมันรู้ type จริง ๆ ไม่ได้เดา</li>
+        </ul>
+
+        <p>ติดตั้งสามตัวนี้</p>
+
+        <pre><code class="language-bash">npm install -D typescript@~6.0.2 @types/react@^19.2.0 @types/react-dom@^19.2.0
+</code></pre>
+
+        <ul>
+          <li><code>typescript</code> คือตัว compiler เราจะใช้มันเป็น <em>ตัวตรวจ type</em> เป็นหลัก ส่วนการแปลงโค้ดจริงเป็นหน้าที่ของ Vite</li>
+          <li><code>@types/react</code> และ <code>@types/react-dom</code> คือไฟล์ type ของ React ตัว React เองเขียนด้วย JavaScript จึงต้องมี package แยกมาบอก TypeScript ว่า <code>useState</code>, <code>createRoot</code> ฯลฯ รับอะไรและคืนอะไร ธรรมเนียม <code>@types/ชื่อแพ็กเกจ</code> นี้ใช้กับ library เก่า ๆ อีกหลายตัว ส่วน library สมัยใหม่มักแถม type มาในตัวเลย</li>
+        </ul>
+
+        <p>ตอนนี้สร้างไฟล์ <code>tsconfig.json</code> ที่ root ของโปรเจกต์</p>
+
+        <pre><code class="language-json">{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "types": ["vite/client"],
+
+    /* React */
+    "jsx": "react-jsx",
+
+    /* เราให้ Vite เป็นคนแปลงโค้ด tsc มีหน้าที่ตรวจ type อย่างเดียว */
+    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+
+    "strict": true
+  },
+  "include": ["src", "*.ts"]
+}
+</code></pre>
+
+        <p>อธิบายเฉพาะบรรทัดที่สำคัญ</p>
+
+        <ul>
+          <li><code>"jsx": "react-jsx"</code> บอก TypeScript ว่าไฟล์นี้มี JSX อยู่ และให้ใช้ JSX transform แบบใหม่ (แบบที่ไม่ต้อง <code>import React</code>) บทหน้าเราจะได้ใช้ JSX จริง</li>
+          <li><code>"noEmit": true</code> คือหัวใจของการทำงานร่วมกับ Vite เราไม่ให้ <code>tsc</code> สร้างไฟล์ <code>.js</code> ออกมาเลย เพราะ Vite แปลงโค้ดให้อยู่แล้ว <code>tsc</code> จึงเหลือหน้าที่เดียวคือตรวจ type แล้วรายงาน error</li>
+          <li><code>"strict": true</code> เปิดการตรวจสอบชุดเข้มทั้งหมด รวมถึง <code>strictNullChecks</code> ที่จะบังคับให้เราจัดการกรณี <code>null</code> / <code>undefined</code> เอง อาจรู้สึกจู้จี้ในตอนแรก แต่มันคือส่วนที่ให้ประโยชน์มากที่สุด และเดี๋ยวคุณจะได้เจอตัวอย่างแรกในอีกไม่กี่บรรทัดข้างล่างนี้</li>
+          <li><code>"types": ["vite/client"]</code> ดึง type ของ Vite เข้ามา ทำให้เรื่องอย่าง <code>import.meta.env</code> และการ import ไฟล์ <code>.css</code> / <code>.webp</code> มี type ถูกต้อง</li>
+          <li><code>"verbatimModuleSyntax": true</code> บังคับให้เวลา import สิ่งที่เป็น <em>type</em> ล้วน ๆ ต้องเขียน <code>import type</code> ให้ชัดเจน เช่น <code>import type { Pizza } from "./types"</code> ข้อดีคืออ่านแล้วรู้ทันทีว่า import ไหนหายไปตอน build จริง เราจะได้ใช้ตั้งแต่บทที่ 11 เป็นต้นไป</li>
+          <li><code>"include"</code> บอกว่าให้ตรวจไฟล์ในโฟลเดอร์ <code>src</code> และไฟล์ <code>.ts</code> ที่ root (ซึ่งก็คือ <code>vite.config.ts</code> ที่เรากำลังจะสร้าง)</li>
+        </ul>
+
+        <p class="translator-note">💡 ถ้าเคยรัน <code>npm create vite@latest</code> แล้วเลือก template <code>react-ts</code> คุณจะเห็นว่ามันแตก tsconfig ออกเป็นสามไฟล์ (<code>tsconfig.json</code>, <code>tsconfig.app.json</code>, <code>tsconfig.node.json</code>) นั่นเป็นการแยก config ของโค้ดฝั่งเบราว์เซอร์กับฝั่ง Node ออกจากกัน ซึ่งดีในโปรเจกต์ใหญ่ แต่ในคอร์สนี้เราใช้ไฟล์เดียวเพื่อให้เห็นภาพรวมง่ายกว่า</p>
+
+        <p>เมื่อติดตั้งแล้ว เราต้องแก้ index.html เล็กน้อย</p>
 
         <pre><code class="language-html">&lt;!-- delete the two unpkg script lines --&gt;
-&lt;script type="module" src="./src/App.js"&gt;&lt;/script&gt;
+&lt;script type="module" src="./src/App.tsx"&gt;&lt;/script&gt;
 </code></pre>
 
         <p>เราต้องเพิ่ม module ให้ script tag เพื่อให้เบราว์เซอร์รู้ว่ากำลังทำงานกับเทคโนโลยีเบราว์เซอร์สมัยใหม่ ที่อนุญาตให้ใช้ modules ได้โดยตรงใน development mode แทนที่จะต้อง reload ทั้ง bundle ทุกครั้ง เบราว์เซอร์ของคุณ reload เฉพาะ JS ที่เปลี่ยนได้ มันทำให้เบราว์เซอร์ไล่ dependency graph ด้วยตัวเองได้ ซึ่งหมายความว่า Vite ทำงานใน dev mode ได้เร็วมาก มันยังคง package ทุกอย่างสำหรับ production เพื่อให้เรารองรับเบราว์เซอร์ได้หลากหลาย</p>
 
-        <p>ต่อไปมาสร้าง config file สร้างไฟล์ชื่อ <code>vite.config.js</code> ใน root ของโปรเจกต์ แล้วใส่สิ่งนี้ลงไป:</p>
+        <blockquote>สังเกตว่าเราชี้ไปที่ <code>.tsx</code> ไม่ใช่ <code>.ts</code> กฎง่าย ๆ คือ ไฟล์ไหนมี JSX อยู่ข้างในให้ใช้ <code>.tsx</code> ไฟล์ไหนเป็น TypeScript ล้วน (เช่น ไฟล์เก็บ type หรือฟังก์ชันเรียก API) ให้ใช้ <code>.ts</code> เทียบกับตอนเขียน JavaScript ก็คือคู่ของ <code>.jsx</code> กับ <code>.js</code> นั่นเอง</blockquote>
 
-        <pre><code class="language-javascript">import { defineConfig } from "vite";
+        <p>ต่อไปมาสร้าง config file สร้างไฟล์ชื่อ <code>vite.config.ts</code> ใน root ของโปรเจกต์ แล้วใส่สิ่งนี้ลงไป:</p>
+
+        <pre><code class="language-typescript">import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
@@ -55,37 +122,98 @@ export default defineConfig({
 });
 </code></pre>
 
+        <p>สังเกตว่าไฟล์ config เองก็เป็น <code>.ts</code> ได้ ประโยชน์ที่ได้ทันทีคือ <code>defineConfig</code> จะคอย auto-complete ชื่อ option ทั้งหมดให้ และเตือนทันทีถ้าคุณพิมพ์ชื่อ option ผิด — เป็นเรื่องที่เกิดขึ้นบ่อยมากกับไฟล์ config</p>
+
         <p>โดยค่าเริ่มต้น Vite จะมองหาไฟล์ index.html ใน root directory และถือว่ามันเป็นหัวของ source graph มันจะไล่ HTML, CSS และ JavaScript ทั้งหมดที่คุณ link จากตรงนั้น แล้วสร้างโปรเจกต์ให้คุณ เราไม่ต้องตั้งค่าอะไรเพิ่ม Vite จะดูแลส่วนที่เหลือเอง</p>
 
         <p>โอเค มา install React เข้าโปรเจกต์ของเราจริง ๆ กัน</p>
 
-        <pre><code class="language-bash">npm install react@18.3.1 react-dom@18.3.1
+        <pre><code class="language-bash">npm install react@^19.2.0 react-dom@^19.2.0
 </code></pre>
 
         <ul>
           <li>เราไม่ได้ใส่ <code>-D</code> เพราะ React ไม่ใช่ development tool แต่เป็น production dependency</li>
-          <li>React และ ReactDOM ใช้ version ร่วมกัน ดังนั้นคุณถือว่า versions จะเหมือนกันเสมอได้</li>
+          <li>React และ ReactDOM ใช้ version ร่วมกัน ดังนั้นคุณถือว่า versions จะเหมือนกันเสมอได้ และเลข version ของ <code>@types/react</code> ก็ควรอยู่ในรุ่นเดียวกันด้วย</li>
         </ul>
 
-        <p>สุดท้าย ไปที่ App.js แล้วแก้ไขดังนี้</p>
+        <p>สุดท้าย <strong>เปลี่ยนชื่อไฟล์ App.js เป็น App.tsx</strong> โค้ดของ <code>Pizza</code> และ <code>App</code> ที่เขียนไว้ก่อนหน้านี้ยังต้องอยู่ครบ จากนั้นเพิ่ม import, ใส่ type ให้ props และเปลี่ยนการเรียก <code>ReactDOM.createRoot</code> เป็น <code>createRoot</code> ดังนี้</p>
 
-        <pre><code class="language-javascript">// add to the top
-import React from "react";
+        <pre><code class="language-typescript">import React from "react";
 import { createRoot } from "react-dom/client";
 
-// modify the createRoot call, delete "ReactDOM"
+type PizzaProps = {
+  name: string;
+  description: string;
+};
+
+const Pizza = (props: PizzaProps) =&gt; {
+  return React.createElement("div", {}, [
+    React.createElement("h1", {}, props.name),
+    React.createElement("p", {}, props.description),
+  ]);
+};
+
+const App = () =&gt; {
+  return React.createElement("div", {}, [
+    React.createElement("h1", {}, "Pixel Perfect Pizzas"),
+    React.createElement(Pizza, {
+      name: "The Pepperoni Pizza",
+      description: "Mozzarella Cheese, Pepperoni",
+    }),
+    React.createElement(Pizza, {
+      name: "The Hawaiian Pizza",
+      description: "Sliced Ham, Pineapple, Mozzarella Cheese",
+    }),
+    React.createElement(Pizza, {
+      name: "The Big Meat Pizza",
+      description: "Bacon, Pepperoni, Italian Sausage, Chorizo Sausage",
+    }),
+  ]);
+};
+
+const container = document.getElementById("root");
+const root = createRoot(container);
+root.render(React.createElement(App));
+</code></pre>
+
+        <p>บันทึกไฟล์แล้วคุณจะเจอ error แรกจาก TypeScript ทันที ตรงบรรทัด <code>createRoot(container)</code></p>
+
+        <pre><code class="language-text">Argument of type 'HTMLElement | null' is not assignable to parameter of type 'Container'.
+  Type 'null' is not assignable to type 'Container'.</code></pre>
+
+        <p>นี่คือ <code>strictNullChecks</code> กำลังทำงาน และมันพูดถูก: <code>document.getElementById()</code> อาจคืน <code>null</code> ได้ ถ้าในหน้าไม่มี element ที่ id ตรงนั้น TypeScript จึงไม่ยอมให้เราส่งมันเข้า <code>createRoot</code> ตรง ๆ วิธีจัดการมีสองแบบ เลือกแบบไหนก็ได้</p>
+
+        <pre><code class="language-typescript">// แบบที่ 1 — เช็คก่อนใช้ ปลอดภัยที่สุด และได้ error message ที่อ่านรู้เรื่องถ้ามันเกิดขึ้นจริง
+const container = document.getElementById("root");
+if (!container) {
+  throw new Error("ไม่พบ element ที่มี id=\"root\" ใน index.html");
+}
+const root = createRoot(container);
+
+// แบบที่ 2 — non-null assertion บอก TypeScript ว่า "เชื่อฉัน ตรงนี้ไม่มีทางเป็น null"
+const container = document.getElementById("root")!;
 const root = createRoot(container);
 </code></pre>
+
+        <p>คอร์สนี้จะใช้ <strong>แบบที่ 1</strong> เพราะมันซื่อสัตย์กว่า เครื่องหมาย <code>!</code> ในแบบที่ 2 คือการปิดปาก TypeScript ไม่ใช่การแก้ปัญหา ถ้าวันหนึ่งมีคนลบ <code>&lt;div id="root"&gt;</code> ออกจาก index.html แบบที่ 1 จะบอกคุณตรง ๆ ว่าเกิดอะไรขึ้น ส่วนแบบที่ 2 จะพังด้วย error ที่งงกว่ามาก</p>
+
+        <p class="translator-note">💡 นี่คือตัวอย่างแรกของสิ่งที่จะเกิดซ้ำตลอดคอร์สนี้ — TypeScript ไม่ได้แค่ "บ่น" แต่มันชี้ไปที่กรณีที่โค้ดของเราจัดการไม่ครบจริง ๆ เวลาเจอ error แบบนี้ ให้อ่านมันเป็นคำถามว่า "แล้วถ้าค่านี้ไม่มีจริง ๆ จะให้ทำยังไง" แล้วตอบคำถามนั้นในโค้ด</p>
 
         <p>ตอนนี้มาตั้งค่า scripts เพื่อเริ่ม Vite ใน package.json ให้ใส่:</p>
 
         <pre><code class="language-json">// inside scripts
 "dev": "vite",
-"build": "vite build",
-"preview": "vite preview"
+"build": "tsc && vite build",
+"preview": "vite preview",
+"typecheck": "tsc --watch"
 </code></pre>
 
         <p>อย่าลืมเพิ่ม <code>"type": "module"</code> ลงใน package.json ด้วย Vite เลิกสนับสนุน Common.js แล้ว และตอนนี้กำหนดให้คุณใช้ ESM style modules</p>
+
+        <ul>
+          <li><code>build</code> ของเรารัน <code>tsc</code> ก่อน <code>vite build</code> เพราะ <code>tsc</code> จะตรวจ type ทั้งโปรเจกต์และ<em>หยุด build ทันที</em>ถ้ามี type error นี่สำคัญมาก เพราะโดยลำพัง Vite จะ<strong>ตัด type ทิ้งเฉย ๆ โดยไม่ตรวจ</strong> ทำให้ dev server รันผ่านแม้โค้ดจะมี type ผิดอยู่</li>
+          <li>ด้วยเหตุผลเดียวกัน <code>typecheck</code> จึงมีประโยชน์มาก เปิดไว้อีกหน้าต่างหนึ่งข้าง ๆ dev server แล้วมันจะคอยบอกคุณตลอดว่ามี type error ตรงไหน (VS Code ก็ขีดเส้นแดงให้อยู่แล้ว แต่เฉพาะไฟล์ที่คุณเปิดอยู่เท่านั้น)</li>
+        </ul>
 
         <blockquote>หมายเหตุ: คุณจะได้รับคำเตือนจาก Vite เช่น <code>Files in the public directory are served at the root path.
 Instead of /public/style.css, use /style.css.</code> – ไม่ต้องสนใจ เราจะแก้ในอีกสักครู่</blockquote>

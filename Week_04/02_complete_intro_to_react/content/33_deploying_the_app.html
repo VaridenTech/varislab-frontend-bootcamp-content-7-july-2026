@@ -71,12 +71,35 @@ VITE_API_URL="https://[YOUR-SERVER-URL].onrender.com"
 
 </code></pre>
   <p>สรุปสั้น ๆ คือ Vite จะอ่านไฟล์ <code>.env.*</code> แล้วเพิ่ม variables เหล่านี้ใน property <code>import.meta.env</code> ให้เอง (เฉพาะตัวที่ขึ้นต้นด้วย <code>VITE_</code> เท่านั้น ตัวอื่นจะถูกซ่อนไว้ไม่ให้หลุดไปอยู่ในโค้ดฝั่งเบราว์เซอร์) (ขึ้นกับว่าเป็น development หรือ production/build) เราไม่ได้ ignore files เหล่านี้ใน Git จึงไม่ควรใส่ sensitive data ใด ๆ ใน environment files ถ้าเรารัน <code>npm run build</code> ให้เพิ่ม production URL หากรัน <code>npm run dev</code> ก็ไม่ต้องเพิ่มอะไร — เพราะ local proxy จะจัดการให้</p>
-  <p>พูดถึง proxy คุณลบ <code>/public</code> proxy จาก file <code>vite.config.js</code> ได้ ทีนี้ใช้ <code>VITE_API_URL</code> กัน หา API helpers สามตัวของเรา (<code>getPastOrders.js</code>, <code>getPastOrder.js</code> และ <code>usePizzaOfTheDay.js</code>) แล้วอัปเดต fetch call ให้ใช้ environment variable ตัวอย่างเช่น:</p>
-  <pre><code class="language-javascript">const apiUrl = import.meta.env.VITE_API_URL;
+  <h2>ให้ type กับ environment variables</h2>
+
+  <p>ก่อนไปใช้งาน มาทำอีกขั้นที่ใช้เวลาไม่ถึงหนึ่งนาทีแต่คุ้มมาก สร้างไฟล์ <code>src/vite-env.d.ts</code></p>
+
+  <pre><code class="language-typescript">/// &lt;reference types="vite/client" /&gt;
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+</code></pre>
+
+  <p>โดยปกติ Vite ให้ type ของ <code>import.meta.env</code> มาแบบกว้าง ๆ คือ key อะไรก็ได้เป็น <code>string</code> ผลคือถ้าคุณพิมพ์ <code>import.meta.env.VITE_API_UR</code> ตกตัว L ไปตัวหนึ่ง คุณจะได้ <code>undefined</code> เงียบ ๆ แล้วแอปจะยิง request ไปที่ <code>undefined/api/pizzas</code> บน production</p>
+
+  <p>บั๊กแบบนี้เจ็บเป็นพิเศษเพราะ <strong>มันไม่โผล่บนเครื่องคุณเลย</strong> — ในโหมด dev ค่า <code>VITE_API_URL</code> เป็นค่าว่างอยู่แล้ว ทั้ง <code>&quot;&quot;</code> และ <code>undefined</code> จึงให้ผลต่างกันแค่บน production ที่ deploy ไปแล้วเท่านั้น</p>
+
+  <p>พอประกาศ <code>ImportMetaEnv</code> เองแล้ว เราได้สองอย่าง: auto-complete ชื่อ env var ทั้งหมดที่โปรเจกต์นี้มี และ error ทันทีเมื่อพิมพ์ชื่อผิด</p>
+
+  <p>ไฟล์นามสกุล <code>.d.ts</code> คือ <strong>declaration file</strong> — ไฟล์ที่มีแต่ข้อมูล type ไม่มีโค้ดที่รันจริงเลย บรรทัด <code>/// &lt;reference types="vite/client" /&gt;</code> ข้างบนคือการดึง type พื้นฐานของ Vite เข้ามาก่อน (เช่น type ของการ import ไฟล์ <code>.css</code> และ <code>.webp</code>) แล้วเราค่อยเติมของเราทับลงไป — เป็นการ augment แบบเดียวกับ <code>declare module</code> ของ TanStack Router ในบทที่ 16</p>
+
+  <p>พูดถึง proxy คุณลบ <code>/public</code> proxy จาก file <code>vite.config.ts</code> ได้ ทีนี้ใช้ <code>VITE_API_URL</code> กัน หา API helpers สามตัวของเรา (<code>getPastOrders.ts</code>, <code>getPastOrder.ts</code> และ <code>usePizzaOfTheDay.ts</code>) แล้วอัปเดต fetch call ให้ใช้ environment variable ตัวอย่างเช่น:</p>
+  <pre><code class="language-typescript">const apiUrl = import.meta.env.VITE_API_URL;
 const response = await fetch(`${apiUrl}/api/past-order/${order}`);
 </code></pre>
-  <p>คุณต้องทำสิ่งนี้ใน <code>order.lazy.jsx</code> ด้วย:</p>
-  <pre><code class="language-javascript">// create the property at the top
+  <p>คุณต้องทำสิ่งนี้ใน <code>order.lazy.tsx</code> ด้วย:</p>
+  <pre><code class="language-typescript">// create the property at the top
 const apiUrl = import.meta.env.VITE_API_URL;
 
 // update checkout
@@ -94,6 +117,8 @@ const pizzasRes = await fetch(`${apiUrl}/api/pizzas`);
   <figure><img src="images/deploy-netlify.png" alt="Choosing a repo in Netlify" /><figcaption>เลือก repo ใน Netlify</figcaption></figure>
   <p>เมื่อตั้งค่า project ค่าเริ่มต้นควรใช้ได้:</p>
   <figure><img src="images/deploy-netlify-config.png" alt="Netlify configuration settings" /><figcaption>การตั้งค่า Netlify</figcaption></figure>
+
+  <p class="translator-note">🚨 <strong>สิ่งที่ต้องรู้เมื่อ deploy โปรเจกต์ TypeScript</strong> — Netlify จะรัน <code>npm run build</code> ซึ่งของเราคือ <code>tsc &amp;&amp; vite build</code> (ตั้งไว้ตั้งแต่บทที่ 8) นั่นแปลว่า <strong>ถ้ามี type error แม้แต่ที่เดียว การ deploy จะล้มเหลว</strong> ไม่ใช่ deploy โค้ดพัง ๆ ขึ้นไป · นี่เป็นเรื่องดีมาก แต่จะเซอร์ไพรส์ได้ถ้าคุณเคยชินกับการที่ dev server รันผ่านตลอด (จำได้ไหมว่า Vite ตัด type ทิ้งโดยไม่ตรวจ) · ให้รัน <code>npm run build</code> บนเครื่องตัวเองก่อน push ทุกครั้ง มันจะจับ error ให้คุณภายในไม่กี่วินาที แทนที่จะไปรอสองนาทีแล้วเห็นไฟแดงบน dashboard</p>
   <p>เมื่อ site deploy แล้ว คุณเข้าถึงได้ด้วยชื่อที่เลือกตอนตั้งค่า ตัวอย่างเช่น <code>https://[Your-App-Name].netlify.app</code></p>
   <h2>ยินดีด้วย!</h2>
   <p>ตอนนี้คุณมี React client application ที่ deploy บน Netlify และ Node.js server API ที่ deploy บน Render แล้ว!</p>
