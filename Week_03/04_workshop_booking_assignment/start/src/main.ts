@@ -43,6 +43,7 @@ function findWorkshop(workshopId: number): Workshop | undefined {
   return undefined;
 }
 
+// STEP 1: Update the selected seat quantity for a workshop.
 function decreaseQuantity(workshopId: number): void {
   void workshopId;
 }
@@ -51,6 +52,7 @@ function increaseQuantity(workshopId: number): void {
   void workshopId;
 }
 
+// STEP 2: Render workshop cards from workshops.
 function renderWorkshopItems(): void {
   if (!workshopGrid) return;
 
@@ -59,6 +61,7 @@ function renderWorkshopItems(): void {
   workshopGrid.innerHTML = '<p class="starter-message">เริ่มต้นด้วยการแสดงการ์ดเวิร์กช็อปจากข้อมูล workshops</p>';
 }
 
+// STEP 3: Respond to clicks on the workshop quantity controls.
 function setupWorkshopClickEvents(): void {
   if (!workshopGrid) return;
 
@@ -66,10 +69,12 @@ function setupWorkshopClickEvents(): void {
   void increaseQuantity;
 }
 
+// STEP 4: Calculate the booking subtotal from selected workshops.
 function calculateSubtotal(): number {
   return 0;
 }
 
+// STEP 5: Calculate the service fee and final total.
 function calculateServiceFee(subtotal: number): number {
   void subtotal;
   void SERVICE_FEE_RATE;
@@ -86,6 +91,7 @@ function calculateTotalSeats(): number {
   return 0;
 }
 
+// STEP 6: Render the workshops included in the booking.
 function renderBookingItems(): void {
   if (!bookingItems || !emptyBookingMessage) return;
 
@@ -93,6 +99,7 @@ function renderBookingItems(): void {
   emptyBookingMessage.style.display = "block";
 }
 
+// STEP 7: Render the current booking summary.
 function renderSummary(): void {
   if (!subtotalElement || !serviceFeeElement || !totalElement) return;
 
@@ -105,6 +112,7 @@ function renderSummary(): void {
   totalElement.textContent = formatPrice(total);
 }
 
+// STEP 8: Validate and confirm the booking.
 function setupConfirmBookingButton(): void {
   if (
     !(confirmBookingButton instanceof HTMLButtonElement) ||
