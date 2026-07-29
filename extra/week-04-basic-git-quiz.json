@@ -1,0 +1,104 @@
+{
+  "questions": [
+    {
+      "prompt": "Git มีหน้าที่หลักอะไร?",
+      "choices": [
+        "สร้างเว็บไซต์",
+        "บันทึกประวัติการเปลี่ยนแปลงของ Project",
+        "Deploy Website",
+        "ติดตั้ง Package"
+      ],
+      "correctChoice": 2
+    },
+    {
+      "prompt": "GitHub คืออะไร?",
+      "choices": [
+        "Programming Language",
+        "Code Editor",
+        "บริการออนไลน์สำหรับเก็บและแชร์ Git Repository",
+        "Browser"
+      ],
+      "correctChoice": 3
+    },
+    {
+      "prompt": "คำสั่งใดใช้เริ่ม Git Repository?",
+      "choices": [
+        "git start",
+        "git create",
+        "git init",
+        "git new"
+      ],
+      "correctChoice": 3
+    },
+    {
+      "prompt": "คำสั่งใดใช้ตรวจสอบสถานะของไฟล์?",
+      "choices": [
+        "git check",
+        "git status",
+        "git inspect",
+        "git files"
+      ],
+      "correctChoice": 2
+    },
+    {
+      "prompt": "Staging Area คืออะไร?",
+      "choices": [
+        "พื้นที่เลือกไฟล์สำหรับ Commit ถัดไป",
+        "Folder ที่เก็บ Code บน GitHub",
+        "Folder สำหรับไฟล์ที่ถูกลบ",
+        "หน้า Preview Website"
+      ],
+      "correctChoice": 1
+    },
+    {
+      "prompt": "คำสั่งใดใช้เพิ่มไฟล์เข้า Staging Area?",
+      "choices": [
+        "git save",
+        "git add",
+        "git upload",
+        "git stage-file"
+      ],
+      "correctChoice": 2
+    },
+    {
+      "prompt": "Commit คืออะไร?",
+      "choices": [
+        "การลบ Repository",
+        "จุดบันทึกการเปลี่ยนแปลงของ Project",
+        "การสร้าง GitHub Account",
+        "การติดตั้ง Git"
+      ],
+      "correctChoice": 2
+    },
+    {
+      "prompt": "คำสั่งใดใช้ส่ง Commit ขึ้น GitHub?",
+      "choices": [
+        "git add",
+        "git upload",
+        "git commit",
+        "git push"
+      ],
+      "correctChoice": 4
+    },
+    {
+      "prompt": "Branch ใช้ทำอะไร?",
+      "choices": [
+        "ใช้ลบ Project",
+        "ใช้ติดตั้ง Package",
+        "ใช้สร้างเส้นทางแยกสำหรับพัฒนา Code",
+        "ใช้เปิด Browser"
+      ],
+      "correctChoice": 3
+    },
+    {
+      "prompt": "คำสั่งใดสร้างและย้ายไป Branch ใหม่?",
+      "choices": [
+        "git branch-open feature/name",
+        "git switch -c feature/name",
+        "git merge feature/name",
+        "git push feature/name"
+      ],
+      "correctChoice": 2
+    }
+  ]
+}

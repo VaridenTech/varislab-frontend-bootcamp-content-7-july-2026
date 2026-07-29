@@ -1,0 +1,24 @@
+{
+  "questions": [
+    {
+      "prompt": "What does HTML stand for?",
+      "choices": [
+        "HyperText Markup Language",
+        "Home Tool Markup Language",
+        "Hyperlinks and Text Markup Language"
+      ],
+      "correctChoice": 1
+    },
+    {
+      "prompt": "What value does this code log?",
+      "body": "<pre><code>const answer = 6 * 7;\nconsole.log(answer);</code></pre>",
+      "choices": [
+        "13",
+        "42",
+        "67"
+      ],
+      "correctChoice": 2,
+      "explanation": "The expression 6 * 7 evaluates to 42."
+    }
+  ]
+}
