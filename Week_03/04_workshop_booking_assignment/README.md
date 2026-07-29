@@ -1,6 +1,6 @@
 # 🎨 Workshop Hub Assignment
 
-สร้างเว็บแอปสำหรับจองเวิร์กช็อปด้วย HTML, CSS และ Vanilla TypeScript โดยนำความรู้จาก Coffee Master ไปแก้โจทย์ในบริบทใหม่ งานนี้เป็นงานเดี่ยวและมีกำหนดเวลา 1 สัปดาห์
+สร้างเว็บแอปสำหรับจองเวิร์กช็อปด้วย HTML, CSS และ Vanilla TypeScript โดยนำความรู้จาก Coffee Master ไปแก้โจทย์ในบริบทใหม่ งานนี้เป็นงานเดี่ยวและมีกำหนดเวลา 1 สัปดาห์ โดยงานแกนหลักใช้เวลาประมาณ 4–6 ชั่วโมง
 
 ## User Stories
 
@@ -21,7 +21,7 @@
 7. แสดงเฉพาะรายการที่เลือกใน Booking Summary และแสดง empty state เมื่อยังไม่มีรายการ
 8. คำนวณ Subtotal, Service Fee 3% และ Total แบบ real-time
 9. ตรวจว่ากรอกชื่อและเลือกอย่างน้อย 1 ที่นั่งก่อนยืนยัน
-10. แสดงชื่อ จำนวนที่นั่งรวม และ Total เมื่อยืนยันสำเร็จ
+10. เมื่อยืนยันสำเร็จ ให้แสดงชื่อ จำนวนที่นั่งรวม และ Total โดยต้องคงจำนวนที่เลือกและข้อมูลในช่องชื่อไว้
 11. รองรับ desktop และ mobile
 
 ## เริ่มต้นโปรเจกต์
@@ -35,7 +35,7 @@ npm run dev
 ## ข้อกำหนดด้านเทคนิค
 
 - ใช้ Vanilla TypeScript เท่านั้น
-- ไม่ใช้ React, framework, backend หรือ API
+- ไม่ใช้ React, framework, backend, API, authentication, payment integration หรือ automated test framework
 - แยกหน้าที่ของ function ให้ชัดเจนและระบุ parameter/return type
 - แสดงเงินบาทด้วยทศนิยมสองตำแหน่ง
 - ห้ามให้จำนวนติดลบหรือเกิน `maxSeats`
@@ -62,5 +62,5 @@ npm run dev
 - [ ] แสดงเวิร์กช็อปอย่างน้อย 6 รายการจาก array
 - [ ] ปุ่มเพิ่ม–ลดและขอบเขตจำนวนทำงานถูกต้อง
 - [ ] Booking Summary และยอดเงินอัปเดตทันที
-- [ ] Empty state, error state และ success state แสดงถูกต้อง
+- [ ] Empty state, error state และ success state แสดงถูกต้อง โดย success state ไม่ล้างจำนวนที่เลือกหรือข้อมูลในช่องชื่อ
 - [ ] ใช้งานได้ทั้ง desktop และ mobile
