@@ -216,10 +216,14 @@ root.render(&lt;App /&gt;);
 
         <p>ต่อจากนี้แอปของเราจะเริ่มดึงข้อมูลพิซซ่าและรูปภาพจาก backend แทนที่จะเขียนข้อมูลตายตัวไว้ในโค้ด หลักสูตรนี้จึงเตรียม API server ขนาดเล็กที่เขียนด้วย Fastify มาให้พร้อมแล้ว</p>
 
-        <p>เซิร์ฟเวอร์ตัวนี้เป็นคนละโปรเจกต์กับแอป React ของเรา และอยู่คนละ repository ให้ clone มาเก็บไว้ <em>นอก</em> โฟลเดอร์ <code>pizza-app</code> ทำครั้งเดียวแล้วใช้ได้ตลอดทั้งหลักสูตร</p>
+        <p>เซิร์ฟเวอร์ตัวนี้เป็นคนละโปรเจกต์กับแอป React ของเรา และอยู่คนละ repository ที่ <a href="https://github.com/VaridenTech/pizza-shop-api-demo" target="_blank" rel="noreferrer">github.com/VaridenTech/pizza-shop-api-demo</a> ให้ clone มาเก็บไว้ <em>นอก</em> โฟลเดอร์ <code>pizza-app</code> ทำครั้งเดียวแล้วใช้ได้ตลอดทั้งหลักสูตร</p>
 
-        <pre><code class="language-bash">git clone https://github.com/VaridenTech/pizza-shop-api-demo.git
+        <pre><code class="language-bash">git clone git@github.com:VaridenTech/pizza-shop-api-demo.git
 </code></pre>
+
+        <blockquote>คำสั่งนี้ clone ผ่าน SSH ซึ่งต้องตั้งค่า SSH key กับบัญชี GitHub ของคุณไว้แล้ว ถ้าเจอ error ประมาณ <code>Permission denied (publickey)</code> แปลว่ายังไม่ได้ตั้งค่า ให้ทำตามคู่มือ <em>Connecting to GitHub with SSH</em> ของ GitHub ก่อน หรือจะ clone ผ่าน HTTPS ไปก่อนด้วย <code>git clone https://github.com/VaridenTech/pizza-shop-api-demo.git</code> ก็ได้เช่นกัน</blockquote>
+
+        <p>เข้าไปดูโค้ดของ API server ใน repository ได้เลยถ้าสนใจว่าข้อมูลพิซซ่าและออร์เดอร์ถูกเสิร์ฟออกมาอย่างไร แต่ไม่จำเป็นต้องเข้าใจโค้ดฝั่งนี้เพื่อเรียนต่อ</p>
 
         <p>เมื่อ clone เสร็จ โครงสร้างในเครื่องคุณควรเป็นแบบนี้ จะวางไว้ที่ไหนก็ได้ ขอแค่สองโฟลเดอร์นี้ไม่ซ้อนอยู่ข้างในกันและกัน</p>
 
