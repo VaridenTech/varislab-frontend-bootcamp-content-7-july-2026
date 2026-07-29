@@ -430,7 +430,7 @@ input {
 }
 
 input::placeholder {
-  color: #91877d;
+  color: var(--muted);
 }
 
 .summary-row {
@@ -462,7 +462,7 @@ input::placeholder {
   padding: 12px 18px;
   border: 2px solid var(--coral-dark);
   border-radius: 0;
-  background: var(--coral);
+  background: var(--coral-dark);
   box-shadow: 4px 4px 0 var(--coral-dark);
   color: #fffaf1;
   cursor: pointer;

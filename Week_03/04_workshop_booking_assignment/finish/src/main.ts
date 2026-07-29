@@ -97,15 +97,24 @@ function setupWorkshopClickEvents(): void {
     const workshopId = Number(button.dataset.id);
     if (!Number.isFinite(workshopId)) return;
 
-    if (button.dataset.action === "increase") {
+    const action = button.dataset.action;
+
+    if (action === "increase") {
       increaseQuantity(workshopId);
-    } else if (button.dataset.action === "decrease") {
+    } else if (action === "decrease") {
       decreaseQuantity(workshopId);
     } else {
       return;
     }
 
     renderApp();
+
+    const replacementButton = workshopGrid.querySelector(
+      `button[data-action="${action}"][data-id="${workshopId}"]`,
+    );
+    if (replacementButton instanceof HTMLButtonElement) {
+      replacementButton.focus();
+    }
   });
 }
 

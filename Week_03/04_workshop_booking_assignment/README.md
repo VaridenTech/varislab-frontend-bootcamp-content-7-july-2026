@@ -26,6 +26,8 @@
 
 ## เริ่มต้นโปรเจกต์
 
+ข้อกำหนดเบื้องต้น: ติดตั้ง Node.js เวอร์ชัน `^20.19.0 || >=22.12.0`
+
 ```sh
 cd Week_03/04_workshop_booking_assignment/start
 npm install
