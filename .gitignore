@@ -86,6 +86,7 @@ Desktop.ini
 # Temporary files
 tmp/
 temp/
+.worktrees/
 *.tmp
 *.temp
 
