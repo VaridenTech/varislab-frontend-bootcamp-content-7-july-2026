@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="ตั้งค่า ESLint และทำงานร่วมกับ Prettier ในโปรเจกต์ React" />
-    <title>ESLint | เรียน React ฉบับสมบูรณ์</title>
+    <title>ESLint | เรียน React เริ่มต้น</title>
     <link rel="stylesheet" href="lesson.css" />
   </head>
   <body>
@@ -18,11 +18,11 @@
 
         <h2>ESLint</h2>
 
-        <p>นอกเหนือจาก Prettier ที่ดูแลการจัดรูปแบบทั้งหมดแล้ว คุณอาจต้องการบังคับ code style บางอย่างที่เกี่ยวกับการใช้งานมากกว่า ตัวอย่างเช่น คุณอาจต้องการบังคับให้ทุกคนไม่ใช้ <code>with</code> ซึ่งเป็น JS ที่ถูกต้อง แต่ไม่ควรใช้ <a href="https://eslint.org">ESLint</a> เข้ามามีบทบาทตรงนี้ มันจะ lint เพื่อหาปัญหาเหล่านี้</p>
+        <p>นอกเหนือจาก Prettier ที่ดูแลการจัดรูปแบบทั้งหมดแล้ว คุณอาจต้องการบังคับ code style บางอย่างที่เกี่ยวกับการใช้งานมากกว่า ตัวอย่างเช่น คุณอาจต้องการบังคับให้ทุกคนไม่ใช้ <code>with</code> ซึ่งเป็น JS ที่ถูกต้อง แต่ไม่ควรใช้ ESLint เข้ามามีบทบาทตรงนี้ มันจะ lint เพื่อหาปัญหาเหล่านี้</p>
 
         <p>ก่อนอื่น รัน <code>npm install -D eslint@9.9.1 eslint-config-prettier@9.1.0 globals@15.9.0</code> เพื่อติดตั้ง ESLint เป็น development dependencies ของโปรเจกต์ จากนั้นคุณจึงตั้งค่าได้</p>
 
-        <p>มี preset config สำหรับ ESLint หลายสิบชุด และคุณเลือกใช้ชุดใดก็ได้ <a href="https://github.com/airbnb/javascript">config ของ Airbnb</a> เป็นที่นิยมมาก เช่นเดียวกับ standard config (ทั้งสองอย่างที่ฉันเคยสอนในคลาสเวอร์ชันก่อน) ฉันจะใช้ชุดที่ผ่อนปรนกว่าสำหรับคลาสนี้: recommended JS config จาก ESLint มาเริ่ม lint โปรเจกต์ด้วยการสร้างไฟล์ <code>eslint.config.mjs</code> กัน</p>
+        <p>มี preset config สำหรับ ESLint หลายสิบชุด และคุณเลือกใช้ชุดใดก็ได้ config ของ Airbnb เป็นที่นิยมมาก เช่นเดียวกับ standard config (ทั้งสองอย่างที่ฉันเคยสอนในคลาสเวอร์ชันก่อน) ฉันจะใช้ชุดที่ผ่อนปรนกว่าสำหรับคลาสนี้: recommended JS config จาก ESLint มาเริ่ม lint โปรเจกต์ด้วยการสร้างไฟล์ <code>eslint.config.mjs</code> กัน</p>
 
         <blockquote>เราใช้ .mjs (module JS) เพราะเราต้องการใช้ import/export สำหรับ modules แทน require</blockquote>
 
@@ -53,7 +53,7 @@ export default [
         <ul>
           <li>ESLint เปลี่ยนไปมากใน version 9 ในเวอร์ชันก่อนของหลักสูตรนี้ เราใช้ configuration แบบ JSON ซึ่งไม่รองรับอีกต่อไป คุณ <em>ต้อง</em> ใช้ config แบบ “flat” ใหม่กว่า (พูดตรง ๆ ว่ามันดีกว่า)</li>
           <li><code>/** @type {import('eslint').Linter.Config[]} */</code> เป็นเทคนิคของ VS Code / TypeScript เพื่อให้ทำ auto-completions บน config object ได้ การมี type ใช้ได้ใน VS Code มีประโยชน์มาก มันไม่จำเป็น</li>
-          <li><a href="https://www.npmjs.com/package/globals">globals</a> เป็น package ที่เป็นเพียงไฟล์ JSON ขนาดใหญ่ของสิ่งที่ใช้ได้ในแต่ละ environment เราจะอยู่ใน environment ของ Node.js และ Browser จึงใช้สองค่านั้น หากฉันเลือกให้ละเอียดกว่านี้สักหน่อย ฉันจะใช้ browser configs เฉพาะกับ browser files และ Node configs เฉพาะกับ Node.js files อย่างระมัดระวัง</li>
+          <li>globals เป็น package ที่เป็นเพียงไฟล์ JSON ขนาดใหญ่ของสิ่งที่ใช้ได้ในแต่ละ environment เราจะอยู่ใน environment ของ Node.js และ Browser จึงใช้สองค่านั้น หากฉันเลือกให้ละเอียดกว่านี้สักหน่อย ฉันจะใช้ browser configs เฉพาะกับ browser files และ Node configs เฉพาะกับ Node.js files อย่างระมัดระวัง</li>
           <li>config objects ถูกใช้ตามลำดับ เราใส่ JS config ของ ESLint ก่อน แล้วจึงใส่ของเราที่ปรับเองเพื่อให้เขียนทับตรงที่ต้องการ และ config ของ Prettier ควรอยู่ท้ายสุดเสมอ เพราะสิ่งที่มันทำคือปิด rules ที่ Prettier ทำเองเท่านั้น มันไม่ได้เพิ่มอะไร</li>
         </ul>
 
@@ -74,11 +74,11 @@ export default [
           <li>เราจะใช้ทั้ง JS และ JSX</li>
         </ul>
 
-        <p>ESLint ทำงานกับ <a href="https://code.visualstudio.com/">Visual Studio Code</a> ได้ง่ายมาก เพียงดาวน์โหลด <a href="https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint">extension</a></p>
+        <p>ESLint ทำงานกับ Visual Studio Code ได้ง่ายมาก เพียงเปิดแท็บ Extensions ใน VS Code แล้วค้นหา "ESLint" (publisher ชื่อ <code>dbaeumer</code>) จากนั้นกดติดตั้ง</p>
 
         <h2>oxlint และ Biome</h2>
 
-        <p>มีสองโปรเจกต์ที่น่าจับตาต่อจากนี้: <a href="https://biomejs.dev/">Biome</a> (เดิมชื่อ Rome) และ <a href="https://oxc.rs/docs/guide/usage/linter.html">oxlint</a> ทั้งคู่เขียนด้วย Rust และออกแบบมาให้เร็วกว่า ESLint (ที่เขียนด้วย JavaScript) ESLint อาจช้าได้บ้างเมื่อใช้ในระดับใหญ่มาก และสองโปรเจกต์นี้ตั้งเป้าจะแก้ bottleneck นั้น ฉันยังคิดว่ายังอยู่ในช่วงแรกของสองโปรเจกต์นี้ และ 99% ของเวลานั้น ESLint เร็วเพียงพอ ถึงอย่างนั้นก็ยังดีที่จะจับตาดูทั้งสองไว้ ท้ายที่สุดทั้งสองโปรเจกต์ตั้งเป้าจะแทนที่ Prettier ด้วยเช่นกัน</p>
+        <p>มีสองโปรเจกต์ที่น่าจับตาต่อจากนี้: Biome (เดิมชื่อ Rome) และ oxlint ทั้งคู่เขียนด้วย Rust และออกแบบมาให้เร็วกว่า ESLint (ที่เขียนด้วย JavaScript) ESLint อาจช้าได้บ้างเมื่อใช้ในระดับใหญ่มาก และสองโปรเจกต์นี้ตั้งเป้าจะแก้ bottleneck นั้น ฉันยังคิดว่ายังอยู่ในช่วงแรกของสองโปรเจกต์นี้ และ 99% ของเวลานั้น ESLint เร็วเพียงพอ ถึงอย่างนั้นก็ยังดีที่จะจับตาดูทั้งสองไว้ ท้ายที่สุดทั้งสองโปรเจกต์ตั้งเป้าจะแทนที่ Prettier ด้วยเช่นกัน</p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="05_code_formatting.html" rel="prev">ก่อนหน้า: การจัดรูปแบบโค้ด</a>

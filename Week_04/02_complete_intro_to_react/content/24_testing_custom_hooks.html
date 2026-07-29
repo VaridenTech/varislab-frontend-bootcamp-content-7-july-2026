@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ทดสอบ React custom hooks ด้วย renderHook" /><title>Testing Custom Hooks | เรียน React ฉบับสมบูรณ์</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
+<html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ทดสอบ React custom hooks ด้วย renderHook" /><title>Testing Custom Hooks | เรียน React เริ่มต้น</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
   <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 24 · การทดสอบ (Testing)</p><h1>การทดสอบ Custom Hooks</h1><p class="lesson-original-title" lang="en">Testing Custom Hooks</p></header>
   <p>สมมติว่าเราต้องการ tests สำหรับ custom hook ของเรา usePizzaOfTheDay การทดสอบ custom hooks มีเคล็ดเล็กน้อย เพราะมันผูกกับการทำงานภายในของ React โดยเนื้อแท้: เรียกมันนอก component ไม่ได้ แล้วเราจะเลี่ยงเรื่องนี้อย่างไร? เราปลอม component! สร้าง file ชื่อ <code>usePizzaOfTheDay.test.jsx</code> ใน <code>__tests__</code> directory ของเรา</p>
   <pre><code class="language-javascript">import { expect, test, vi } from "vitest";

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="จัดรูปแบบโค้ดให้สม่ำเสมอด้วย Prettier" />
-    <title>การจัดรูปแบบโค้ด | เรียน React ฉบับสมบูรณ์</title>
+    <title>การจัดรูปแบบโค้ด | เรียน React เริ่มต้น</title>
     <link rel="stylesheet" href="lesson.css" />
   </head>
   <body>
@@ -20,19 +20,19 @@
 
         <p>การรักษาคุณภาพให้สูงขณะเขียนโค้ดเป็นเรื่องสำคัญ หรืออย่างน้อยนั่นคือวิธีที่ฉันใช้ขาย ESLint และ Prettier ให้เพื่อนร่วมงาน ความจริงคือฉันขี้เกียจมากและอยากให้เครื่องทำงานให้มากที่สุด เพื่อที่ฉันจะได้โฟกัสกับสถาปัตยกรรมและการแก้ปัญหามากขึ้น และสนใจ syntax กับ style น้อยลง แม้จะมีเครื่องมือมากมายที่ช่วยรักษาคุณภาพโค้ดได้ แต่สองตัวนี้คือแก่นของ workflow ฉัน</p>
 
-        <p><a href="https://github.com/prettier/prettier">Prettier</a> คือเครื่องมืออันยอดเยี่ยมจากหัวสมองของ <a href="https://twitter.com/jlongster">James Long</a> James ก็เหมือนพวกเราหลายคนที่เบื่อการต้องกังวลเรื่อง style ของโค้ดอยู่ตลอด: จะวาง indent ตรงไหน กี่ตัว เมื่อไรควรตัดบรรทัด ฯลฯ เมื่อมาจากภาษาอย่าง Go, Reason หรือ Elm ที่ tooling ของภาษาจัดการทั้งหมดให้ เรื่องนี้ก็ชวนเหนื่อยได้เร็ว James จึงลงมือทำอะไรกับมัน และสร้างเครื่องมือมาจัดการให้: Prettier</p>
+        <p>Prettier คือเครื่องมืออันยอดเยี่ยมจากหัวสมองของ James Long James ก็เหมือนพวกเราหลายคนที่เบื่อการต้องกังวลเรื่อง style ของโค้ดอยู่ตลอด: จะวาง indent ตรงไหน กี่ตัว เมื่อไรควรตัดบรรทัด ฯลฯ เมื่อมาจากภาษาอย่าง Go, Reason หรือ Elm ที่ tooling ของภาษาจัดการทั้งหมดให้ เรื่องนี้ก็ชวนเหนื่อยได้เร็ว James จึงลงมือทำอะไรกับมัน และสร้างเครื่องมือมาจัดการให้: Prettier</p>
 
         <p>Prettier เป็น pretty printer ที่หรูหรามาก มันนำโค้ดที่คุณเขียนมาแยกเป็น abstract syntax tree (AST) ซึ่งเป็นเพียงตัวแทนของโค้ดคุณ จากนั้นมันนำ AST นั้นไป ทิ้ง style โค้ดทั้งหมดที่คุณสร้างไว้ แล้วพิมพ์กลับออกมาโดยใช้ style ที่กำหนดไว้ล่วงหน้า แม้ฟังดูน่ากลัวเล็กน้อย แต่จริง ๆ แล้วเจ๋งมาก เพราะคุณไม่ควบคุม style ของโค้ดอีกต่อไป คุณจึงไม่ต้องคิดถึงมันเลย โค้ดของคุณสม่ำเสมออยู่เสมอ เช่นเดียวกับโค้ดจากทีมที่เหลือ ไม่มีการถกเถียงเรื่องเล็กน้อยอีกต่อไป!! ตามที่ฉันชอบพูด: หากสมองของคุณคือ processor คุณจะได้ปล่อย thread ของสมองที่คอยกังวลเรื่อง style โค้ดและความอ่านง่ายให้ว่างลง เพราะมันเกิดขึ้นเอง ไม่ชอบ semicolon ใช่ไหม? ไม่ต้องเขียน! มันใส่ให้คุณเอง ฉัน <em>รัก</em> Prettier</p>
 
-        <p>อยากลองใช้มันสักหน่อยก่อนเชื่อใจหรือไม่? <a href="https://prettier.io/playground/">ไปที่นี่</a> คุณจะเห็นว่ามันทำงานอย่างไร</p>
+        <p>อยากลองใช้มันสักหน่อยก่อนเชื่อใจหรือไม่? ไม่ต้องไปไหนไกล ในบทนี้เราจะติดตั้งแล้วลองรันกับโค้ดของเราเองเลย คุณจะเห็นว่ามันทำงานอย่างไร</p>
 
         <p>มาเชื่อมสิ่งนี้เข้ากับโปรเจกต์กัน มัน <em>pretty</em> ง่าย (ตั้งแต่ฉันเป็นพ่อแล้ว ฉันมีหน้าที่ตามกฎหมายที่จะเล่นมุกนี้)</p>
 
         <p>ติดตั้ง Prettier แบบ global ด้วย <code>npm install --global prettier</code> หรือทุกครั้งที่ฉันรัน <code>prettier</code> ให้แทนด้วย <code>npx prettier</code> (จาก root ของโปรเจกต์) จากนั้นรัน <code>prettier src/App.js</code> คำสั่งนี้จะ output ไฟล์เวอร์ชันที่จัดรูปแบบแล้ว หากต้องการเขียนทับไฟล์จริง ให้รัน <code>prettier --write src/App.js</code> ไปดู src/App.js แล้วคุณจะเห็นว่ามันถูกจัดรูปแบบใหม่เล็กน้อย ฉันขอบอกว่าสำหรับ React ที่ไม่ใช่ JSX prettier ทำให้โค้ดของคุณอ่านยากขึ้น โชคดีที่ Prettier รองรับ JSX! เราจะไปถึงเรื่องนั้นในไม่ช้า</p>
 
-        <p>Prettier มี configuration อยู่บ้าง แต่โดยหลักมันตั้งใจให้เป็นเครื่องมือที่ทุกคนใช้ และไม่ถกเถียง/bikeshed เกี่ยวกับกฎ style โค้ดต่าง ๆ <a href="https://prettier.io/docs/en/options.html">นี่คือรายการ</a> ฉันใช้ตามค่าเดิมเพราะขี้เกียจ Prettier เข้าใจ <a href="https://flow.org/">flow</a> และ <a href="https://www.typescriptlang.org/">TypeScript</a> ได้เช่นกัน</p>
+        <p>Prettier มี configuration อยู่บ้าง แต่โดยหลักมันตั้งใจให้เป็นเครื่องมือที่ทุกคนใช้ และไม่ถกเถียง/bikeshed เกี่ยวกับกฎ style โค้ดต่าง ๆ ตัวเลือกที่ปรับได้มีไม่มาก เช่น <code>semi</code> (ใส่ semicolon ท้ายบรรทัดหรือไม่), <code>singleQuote</code> (ใช้ single quote หรือ double quote), <code>tabWidth</code> (ย่อหน้ากี่ช่อง) และ <code>trailingComma</code> ในคอร์สนี้เราจะใช้ค่าเริ่มต้นทั้งหมด ซึ่งเป็นสิ่งที่โปรเจกต์ส่วนใหญ่เลือกทำกัน Prettier เข้าใจ flow และ TypeScript ได้เช่นกัน</p>
 
-        <p>Prettier ใช้ร่วมกับ <a href="https://code.visualstudio.com/?WT.mc_id=reactintro-github-brholt">Visual Studio Code</a> ได้ดีมาก เพียงดาวน์โหลด <a href="https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode&amp;WT.mc_id=reactintro-github-brholt">extension นี้</a> (ดู<a href="https://prettier.io/docs/en/editors">เอกสารการใช้กับ editor</a>ได้เช่นกัน) เคล็ดลับ: ตั้งให้มันรัน Prettier เฉพาะเมื่อตรวจพบไฟล์ config ของ Prettier วิธีนี้ทำให้คุณไม่ต้องปิดมันเลย โดยตั้ง <code>prettier.requireConfig</code> เป็น <code>true</code> และ <code>editor.formatOnSave</code> เป็น true</p>
+        <p>Prettier ใช้ร่วมกับ Visual Studio Code ได้ดีมาก เพียงเปิดแท็บ Extensions ใน VS Code แล้วค้นหา "Prettier - Code formatter" (publisher ชื่อ <code>esbenp</code>) จากนั้นกดติดตั้ง เคล็ดลับ: ตั้งให้มันรัน Prettier เฉพาะเมื่อตรวจพบไฟล์ config ของ Prettier วิธีนี้ทำให้คุณไม่ต้องปิดมันเลย โดยตั้ง <code>prettier.requireConfig</code> เป็น <code>true</code> และ <code>editor.formatOnSave</code> เป็น true</p>
 
         <p>เพื่อให้เครื่องมือรู้ว่าโปรเจกต์นี้เป็นโปรเจกต์ Prettier เราจะสร้างไฟล์ชื่อ <code>.prettierrc</code> แล้วใส่ <code>{}</code> ลงไป นี่บอกทุกคนว่าเป็นโปรเจกต์ Prettier ที่ใช้ configuration ค่าเริ่มต้น คุณสามารถใส่ config อื่นในนี้ได้ หากคุณมีความเห็นเรื่องการจัดรูปแบบที่หนักแน่น</p>
 

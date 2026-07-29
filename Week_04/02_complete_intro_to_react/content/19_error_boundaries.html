@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="ป้องกันความผิดพลาดของ component ด้วย React error boundaries" />
-    <title>Error Boundaries | เรียน React ฉบับสมบูรณ์</title>
+    <title>Error Boundaries | เรียน React เริ่มต้น</title>
     <link rel="stylesheet" href="lesson.css" />
   </head>
   <body>
@@ -14,14 +14,14 @@
       <p>บ่อยครั้ง APIs มี errors จากข้อมูลที่ malformed หรือแปลกอย่างอื่น มาตั้งรับเรื่องนี้ เพราะเรายังอยากใช้ API นี้แต่ควบคุมไม่ได้ว่าเมื่อไรจะได้ errors เราจะใช้ feature ชื่อ <code>componentDidCatch</code> เพื่อจัดการ นี่เป็นสิ่งที่ทำด้วย hooks ไม่ได้ ดังนั้นหากต้องการ functionality แบบนี้ คุณจะต้องใช้ class component</p>
       <p>มันจะจับ 404s บน API ของเราด้วย หากใครให้ ID ที่ไม่ถูกต้อง!</p>
       <p>component จับ errors ได้เฉพาะใน children ของมันเท่านั้น นี่เป็นเรื่องสำคัญที่ต้องจำ มันจับ errors ของตัวเองไม่ได้ ไปสร้าง wrapper สำหรับใช้กับ PastOrdersRoute กัน สร้างไฟล์ใหม่ชื่อ ErrorBoundary.jsx</p>
-      <p>นี่เป็นครั้งแรกที่ฉันจะแสดงวิธีเขียน components แบบเก่า เรียกว่า class components เมื่อก่อน React code ทุกชิ้นเขียนแบบนี้ แม้มันยังไม่ deprecated แต่ React team ระบุชัดเจนว่าไม่แนะนำ ใน Complete Intro to React เวอร์ชันก่อนหน้านี้ ฉันยังสอน class components อยู่ ปีที่ผ่านมา ฉันจดไว้และเขียน class components <em>ศูนย์</em> ครั้ง ดังนั้นถึงเวลาหยุดสอนมันในคอร์ส intro แล้ว อย่างไรก็ดี error boundaries เป็นวิธีเดียวที่ต้องเขียนมัน เราจึงจะเกริ่นสั้น ๆ เพื่อเรียนรู้ความเป็นจริง ฉันคงใช้ <a href="https://github.com/bvaughn/react-error-boundary">react-error-boundary</a> และไม่ต้องเขียน class component เลย!</p>
+      <p>นี่เป็นครั้งแรกที่ฉันจะแสดงวิธีเขียน components แบบเก่า เรียกว่า class components เมื่อก่อน React code ทุกชิ้นเขียนแบบนี้ แม้มันยังไม่ deprecated แต่ React team ระบุชัดเจนว่าไม่แนะนำ ใน Complete Intro to React เวอร์ชันก่อนหน้านี้ ฉันยังสอน class components อยู่ ปีที่ผ่านมา ฉันจดไว้และเขียน class components <em>ศูนย์</em> ครั้ง ดังนั้นถึงเวลาหยุดสอนมันในคอร์ส intro แล้ว อย่างไรก็ดี error boundaries เป็นวิธีเดียวที่ต้องเขียนมัน เราจึงจะเกริ่นสั้น ๆ เพื่อเรียนรู้ความเป็นจริง ฉันคงใช้ react-error-boundary และไม่ต้องเขียน class component เลย!</p>
       <p>class component คล้าย function component (สิ่งที่เราเขียนอยู่) มาก แต่มีความต่างสำคัญบางอย่าง</p>
       <ul>
         <li>คุณใช้ hooks ใด ๆ กับ class components ไม่ได้ (useState, useEffect ฯลฯ)</li>
         <li>class component ทุกตัวมี <code>render()</code> function ซึ่งทำงานคล้าย function component เป็นส่วนใหญ่</li>
         <li>แทน useState hook คุณใช้ <code>this.state</code> ซึ่งเป็น object ที่เก็บ state ทั้งหมดของ component นั้น</li>
         <li>หากจะเปลี่ยน state ใช้ <code>this.setState({ key: "value" })</code> function สิ่งนี้ให้คุณเปลี่ยน state เหมือน <code>setKey</code> hook</li>
-        <li>แทน useEffect คุณใช้ lifecycle methods: componentDidMount, componentDidUpdate, componentWillUnmount ฯลฯ อ่านเพิ่มเติมได้ <a href="https://react.dev/reference/react/Component">ที่นี่</a></li>
+        <li>แทน useEffect คุณใช้ lifecycle methods: componentDidMount, componentDidUpdate, componentWillUnmount ฯลฯ อ่านเพิ่มเติมได้ในเอกสารทางการของ React หัวข้อ <code>Component</code></li>
         <li>แทน props parameter ที่ส่งเข้า function คุณจะใช้ <code>this.props</code></li>
         <li>เท่านี้พอแล้ว คุณไม่ควรเขียน class components อีกต่อไป ยกเว้น error boundaries แต่อาจพบมันใน React codebases แบบ legacy</li>
       </ul>
@@ -58,7 +58,7 @@ export default ErrorBoundary;
       <ul>
         <li>ตอนนี้อะไรก็ตามที่เป็น child ของ component นี้จะมี errors ถูกจับที่นี่ คิดเหมือน catch block ของ try/catch</li>
         <li>static method คือ method ที่เรียกบน constructor ได้ คุณจะเรียก method นี้แบบ: <code>ErrorBoundary.getDerivedStateFromError(error)</code> method นี้ต้องเป็น static</li>
-        <li>หากอยากเรียก error logging service <code>componentDidCatch</code> เป็นตำแหน่งที่ยอดเยี่ยม ฉันแนะนำ <a href="https://sentry.io/">Sentry</a> และ <a href="https://trackjs.com/">TrackJS</a></li>
+        <li>หากอยากเรียก error logging service <code>componentDidCatch</code> เป็นตำแหน่งที่ยอดเยี่ยม ฉันแนะนำ Sentry และ TrackJS</li>
         <li><code>this.props.children</code> คือ child component ใด ๆ ภายใน component เช่น หากมีคน render <code>&lt;MyComponent&gt;&lt;h1&gt;hi&lt;/h1&gt;&lt;/MyComponent&gt;</code> แล้ว <code>&lt;h1&gt;hi&lt;/h1&gt;</code> ถือเป็น “children” สิ่งนี้ใช้กับ function components ได้ด้วย</li>
         <li>เพราะเรา return children หากไม่มี error ErrorBoundary component จึงไม่ render อะไรเองหากไม่มี errors</li>
       </ul>
@@ -82,7 +82,7 @@ function ErrorBoundaryWrappedPastOrderRoutes() {
 </code></pre>
       <ul>
         <li>ตอนนี้มัน self-contained ทั้งหมด ไม่มีใครที่ render PastOrderRoute ต้องรู้ว่ามันมี error boundary ของตัวเอง ฉันจะให้คุณตัดสินว่าชอบ pattern นี้ หรืออยากทำใน App.js ที่ Router level มากกว่า ความเห็นอาจต่างกัน</li>
-        <li>เราสร้าง ErrorBoundary ให้ยืดหยุ่นกว่านี้ได้ และให้มันรับ component ที่จะแสดงเมื่อเกิด errors โดยทั่วไปฉันแนะนำกฎโค้ด “WET” (ตรงข้ามกับ <a href="https://en.wikipedia.org/wiki/Don%27t_repeat_yourself">DRY</a>, ฮ่า ๆ): Write Everything Twice (หรือฉันชอบ Write Everything Thrice มากกว่า) กรณีนี้เราใช้ component แค่ use case เดียว จึงไม่เสียเวลาทำให้มันยืดหยุ่น หากใช้ซ้ำอีกครั้ง ค่อยทำให้รองรับทั้งสอง use case แต่ไม่ใช่ <em>ทุก</em> use case เมื่อครั้งที่สามหรือสี่ จึงค่อยกลับมาลงทุนให้ยืดหยุ่น</li>
+        <li>เราสร้าง ErrorBoundary ให้ยืดหยุ่นกว่านี้ได้ และให้มันรับ component ที่จะแสดงเมื่อเกิด errors โดยทั่วไปฉันแนะนำกฎโค้ด “WET” (ตรงข้ามกับ DRY, ฮ่า ๆ): Write Everything Twice (หรือฉันชอบ Write Everything Thrice มากกว่า) กรณีนี้เราใช้ component แค่ use case เดียว จึงไม่เสียเวลาทำให้มันยืดหยุ่น หากใช้ซ้ำอีกครั้ง ค่อยทำให้รองรับทั้งสอง use case แต่ไม่ใช่ <em>ทุก</em> use case เมื่อครั้งที่สามหรือสี่ จึงค่อยกลับมาลงทุนให้ยืดหยุ่น</li>
       </ul>
       <p>ทีนี้ หากอยากลอง ให้เพิ่ม <code>throw new Error("lol");</code> ใน render function ของ PastOrderRoute เพื่อดูมันทำงาน!</p>
       <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="18_portals.html" rel="prev">ก่อนหน้า: Portals</a><a href="index.html">สารบัญบทเรียน</a><a href="20_uncontrolled_forms.html" rel="next">ถัดไป: Uncontrolled Forms</a></nav>

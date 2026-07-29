@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="จัดการ state และ controlled form ด้วย React Hooks" />
-    <title>Hooks | เรียน React ฉบับสมบูรณ์</title>
+    <title>Hooks | เรียน React เริ่มต้น</title>
     <link rel="stylesheet" href="lesson.css" />
   </head>
   <body>
@@ -100,13 +100,13 @@ import Order from "./Order";
 
         <blockquote>🚨 คุณจะมี errors ใน console บ้าง ซึ่งไม่เป็นไร</blockquote>
 
-        <p>ตอนนี้ไปที่ <a href="http://localhost:5173/">http://localhost:5173/</a> แล้วดูว่าคุณมี inputs สองแบบ หนึ่งสำหรับชนิด pizza และ radio buttons ชุดหนึ่งสำหรับขนาด ลองเลือกบางอย่างด้วย inputs คุณจะเห็นว่าคุณเปลี่ยนมันไม่ได้ ทำไม? ลองคิดว่า React ทำงานอย่างไร: เมื่อคุณโต้ตอบกับ inputs React ตรวจพบว่า DOM event เกิดขึ้น เมื่อเกิดขึ้น React คิดว่า<em>บางสิ่ง</em>อาจเปลี่ยน จึงรัน re-render หาก render functions ของคุณเร็ว นี่เป็นการทำงานที่เร็วมาก จากนั้นมัน diff สิ่งที่มีอยู่ตอนนี้กับสิ่งที่ render pass สร้างขึ้น แล้วอัปเดต DOM ให้น้อยที่สุดเท่าที่จำเป็น</p>
+        <p>ตอนนี้ไปที่ <code>http://localhost:5173/</code> แล้วดูว่าคุณมี inputs สองแบบ หนึ่งสำหรับชนิด pizza และ radio buttons ชุดหนึ่งสำหรับขนาด ลองเลือกบางอย่างด้วย inputs คุณจะเห็นว่าคุณเปลี่ยนมันไม่ได้ ทำไม? ลองคิดว่า React ทำงานอย่างไร: เมื่อคุณโต้ตอบกับ inputs React ตรวจพบว่า DOM event เกิดขึ้น เมื่อเกิดขึ้น React คิดว่า<em>บางสิ่ง</em>อาจเปลี่ยน จึงรัน re-render หาก render functions ของคุณเร็ว นี่เป็นการทำงานที่เร็วมาก จากนั้นมัน diff สิ่งที่มีอยู่ตอนนี้กับสิ่งที่ render pass สร้างขึ้น แล้วอัปเดต DOM ให้น้อยที่สุดเท่าที่จำเป็น</p>
 
         <blockquote>ในหลักสูตรวิดีโอ layout เป็นแนวตั้งเพราะ <code>order-pizza</code> DIV อยู่ผิดตำแหน่ง ให้ใช้ markup ข้างบน Layout ควรมีลักษณะดังนี้:</blockquote>
 
-        <p><img src="https://react-v9.holt.courses/images/order-page-layout.webp" alt="Order Page Layout" /></p>
+        <p><img src="images/order-page-layout.webp" alt="ผังหน้าสั่งพิซซ่า" /></p>
 
-        <p>สังเกตว่าเราใช้ <code>className</code> แทน <code>class</code> บน HTML element สำหรับ CSS classes นี่เป็นเพราะ <code>class</code> เป็น reserved word ใน JS และ JSX ก็ยังเป็น JS อยู่ ดังนั้นจึงเลือกใช้ <code>className</code> ซึ่งเป็น <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/className">ชื่อของ JS API</a> สำหรับโต้ตอบกับ class names</p>
+        <p>สังเกตว่าเราใช้ <code>className</code> แทน <code>class</code> บน HTML element สำหรับ CSS classes นี่เป็นเพราะ <code>class</code> เป็น reserved word ใน JS และ JSX ก็ยังเป็น JS อยู่ ดังนั้นจึงเลือกใช้ <code>className</code> ซึ่งเป็น ชื่อของ JS API สำหรับโต้ตอบกับ class names</p>
 
         <p>เช่นเดียวกับ <code>className</code> เราใช้ <code>htmlFor</code> เพราะ <code>for</code> เป็น reserved word ใน JS</p>
 
@@ -155,8 +155,6 @@ onChange={(e) =&gt; setPizzaSize(e.target.value)}
         <pre><code class="language-javascript">// you could replace the div surrounding the radio buttons and remove all the onChange handlers
 &lt;div onChange={(e) =&gt; setPizzaSize(e.target.value)}&gt;[…]&lt;/div&gt;
 </code></pre>
-
-        <!-- Source reference definition retained for parity: https://babeljs.io/ -->
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="09_jsx.html" rel="prev">ก่อนหน้า: JSX</a>

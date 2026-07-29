@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="ตั้งค่า Vite เพื่อพัฒนาและ build โปรเจกต์ React" />
-    <title>Vite | เรียน React ฉบับสมบูรณ์</title>
+    <title>Vite | เรียน React เริ่มต้น</title>
     <link rel="stylesheet" href="lesson.css" />
   </head>
   <body>
@@ -18,9 +18,9 @@
 
         <h2>Vite</h2>
 
-        <p>build tool ที่เราจะใช้วันนี้ชื่อ <a href="https://vitejs.dev/">Vite</a> Vite (ออกเสียงว่า “veet” แปลว่าเร็วในภาษาฝรั่งเศส) เป็นเครื่องมือจากทีม Vue ที่ท้ายที่สุดห่อ <a href="https://www.rollupjs.org/">Rollup</a> ซึ่งเป็นตัวทำ bundling จริง ผลลัพธ์สุดท้ายคือเครื่องมือที่ทั้งใช้ง่ายและสร้างผลลัพธ์ที่ยอดเยี่ยม</p>
+        <p>build tool ที่เราจะใช้วันนี้ชื่อ Vite Vite (ออกเสียงว่า “veet” แปลว่าเร็วในภาษาฝรั่งเศส) เป็นเครื่องมือจากทีม Vue ที่ท้ายที่สุดห่อ Rollup ซึ่งเป็นตัวทำ bundling จริง ผลลัพธ์สุดท้ายคือเครื่องมือที่ทั้งใช้ง่ายและสร้างผลลัพธ์ที่ยอดเยี่ยม</p>
 
-        <blockquote>เรื่องน่าสนใจ: มีโปรเจกต์ใหม่ชื่อ <a href="https://rolldown.rs/">Rolldown</a> กำลังพัฒนาอยู่ ซึ่งเขียนด้วย Rust และตั้งเป้าจะแทนที่ Rollup</blockquote>
+        <blockquote>เรื่องน่าสนใจ: มีโปรเจกต์ใหม่ชื่อ Rolldown กำลังพัฒนาอยู่ ซึ่งเขียนด้วย Rust และตั้งเป้าจะแทนที่ Rollup</blockquote>
 
         <p>ผลลัพธ์สุดท้ายที่เราต้องการจาก build tool คือ</p>
 
@@ -30,7 +30,7 @@
           <li>เครื่องมือจะ optimize โค้ดให้เราด้วยการ minify และเทคนิค optimization อื่น ๆ</li>
         </ul>
 
-        <p>หลักสูตรเวอร์ชันก่อนใช้ <a href="https://parceljs.org/">Parcel</a> ซึ่งเป็นเครื่องมืออีกตัวที่ฉันรักและผูกพัน มันยังเป็นเครื่องมือที่ยอดเยี่ยมและฉันแนะนำให้คุณลองดู เราเปลี่ยนมาใช้ Vite เพราะชุมชน React เลือกมันเป็นเครื่องมือที่นิยมในขณะนี้ และหลักสูตรนี้ตั้งใจให้คุณได้เรียนรู้บรรทัดฐานของชุมชน React แม้หลักสูตรเวอร์ชันที่เก่ากว่านี้จะเคยสอน <a href="https://webpack.js.org/">Webpack</a></p>
+        <p>หลักสูตรเวอร์ชันก่อนใช้ Parcel ซึ่งเป็นเครื่องมืออีกตัวที่ฉันรักและผูกพัน มันยังเป็นเครื่องมือที่ยอดเยี่ยมและฉันแนะนำให้คุณลองดู เราเปลี่ยนมาใช้ Vite เพราะชุมชน React เลือกมันเป็นเครื่องมือที่นิยมในขณะนี้ และหลักสูตรนี้ตั้งใจให้คุณได้เรียนรู้บรรทัดฐานของชุมชน React แม้หลักสูตรเวอร์ชันที่เก่ากว่านี้จะเคยสอน Webpack</p>
 
         <p>ก่อนอื่น มาติดตั้งสิ่งที่เราต้องใช้สำหรับ Vite</p>
 
@@ -90,7 +90,7 @@ const root = createRoot(container);
         <blockquote>หมายเหตุ: คุณจะได้รับคำเตือนจาก Vite เช่น <code>Files in the public directory are served at the root path.
 Instead of /public/style.css, use /style.css.</code> – ไม่ต้องสนใจ เราจะแก้ในอีกสักครู่</blockquote>
 
-        <p><code>dev</code> จะเริ่ม development server โดยทั่วไปที่ <a href="http://localhost:5173/">http://localhost:5173/</a> <code>build</code> จะเตรียม static files เพื่อ deploy (ไปยังที่อย่าง GitHub Pages, Vercel, Netlify, AWS S3 ฯลฯ) <code>preview</code> ให้คุณ preview production build ในเครื่อง</p>
+        <p><code>dev</code> จะเริ่ม development server โดยทั่วไปที่ <code>http://localhost:5173/</code> <code>build</code> จะเตรียม static files เพื่อ deploy (ไปยังที่อย่าง GitHub Pages, Vercel, Netlify, AWS S3 ฯลฯ) <code>preview</code> ให้คุณ preview production build ในเครื่อง</p>
 
         <blockquote>สังเกตว่าเราเปลี่ยน domains แล้ว โดยค่าเริ่มต้น Vite ใช้ localhost:5173 เรื่องน่าสนใจ: 5173 ดูคล้ายสะกดว่า VITE หากคุณทำให้เลข 5 เป็นเวอร์ชันเลขโรมัน คือ V</blockquote>
 
@@ -98,7 +98,7 @@ Instead of /public/style.css, use /style.css.</code> – ไม่ต้อง�
 
         <p>มี developer tools ยอดเยี่ยมมากมายให้เลือกใช้ เราเลือก Vite เพราะอุตสาหกรรมใช้มันมาสักระยะแล้ว แต่ฉันไม่มีปัญหาเลยหากคุณเลือกอย่างอื่น เพียงอยากให้คุณได้รู้จักเครื่องมือดี ๆ</p>
 
-        <p>โดยเฉพาะ <a href="https://esbuild.github.io/">esbuild</a> เป็นเครื่องมือที่ยอดเยี่ยมและควรลองดู</p>
+        <p>โดยเฉพาะ esbuild เป็นเครื่องมือที่ยอดเยี่ยมและควรลองดู</p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="07_git.html" rel="prev">ก่อนหน้า: Git</a>

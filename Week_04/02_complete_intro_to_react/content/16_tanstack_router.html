@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="สร้างหลายหน้าด้วย TanStack Router" />
-    <title>TanStack Router | เรียน React ฉบับสมบูรณ์</title>
+    <title>TanStack Router | เรียน React เริ่มต้น</title>
     <link rel="stylesheet" href="lesson.css" />
   </head>
   <body>
@@ -17,15 +17,15 @@
 
       <h2>TanStack Router</h2>
       <p>ตอนนี้เราเดินทางมาถึงจุดที่อยากมีหลายหน้าในแอปแล้ว เราจึงต้องมีเครื่องมือ router สักอย่างเพื่อทำสิ่งนั้น เรา<em>อาจ</em>ใช้ history API ของเบราว์เซอร์โดยตรงก็ได้ แต่มีหลายวิธีมากที่จะทำพลาด และเราก็มีไลบรารี React สำหรับ routing ที่ยอดเยี่ยมให้เลือกใช้มากมาย</p>
-      <p>ตามประวัติแล้ว ฉันสอน <a href="https://reactrouter.com/">react-router</a> ในคอร์สนี้ มันมีมานานและผ่านการทดสอบมาอย่างดี คอร์สนี้เกือบทุกเวอร์ชันใช้มัน (มีช่วงสั้น ๆ ที่ใช้ Reach Router แต่หลังจากนั้นก็ถูกรวมกลับเข้า React Router) มันเป็นเครื่องมือที่ยอดเยี่ยมและเป็นพื้นฐานของ Remix ซึ่งเป็น React framework แบบ full-stack ที่ยอดเยี่ยม Remix และ React Router กำลังรวมกัน และในที่สุดจะกลายเป็นสิ่งเดียวกัน หากอยากเรียนรู้เพิ่มเติมจากฉัน <a href="https://react-v8.holt.courses/lessons/react-capabilities/react-router">คอร์สเวอร์ชัน 8</a> ใช้ React Router</p>
+      <p>React Router เป็น router ที่อยู่คู่กับ React มายาวนานและผ่านการใช้งานจริงมาอย่างหนัก คอร์ส React ส่วนใหญ่เลือกสอนตัวนี้ มันเป็นเครื่องมือที่ยอดเยี่ยมและเป็นรากฐานของ Remix ซึ่งเป็น React framework แบบ full-stack ปัจจุบัน Remix กับ React Router กำลังหลอมรวมกัน และในที่สุดจะกลายเป็นสิ่งเดียวกัน ถ้าคุณไปเจอโปรเจกต์เก่าหรือบทความส่วนใหญ่บนอินเทอร์เน็ต มีโอกาสสูงมากที่จะเป็น React Router</p>
 
       <h2>TanStack Router</h2>
-      <p>วันนี้เราจะใช้ <a href="https://tanstack.com/router/latest">TanStack Router</a> ซึ่งเป็น router ที่ยอดเยี่ยมอีกตัว เหตุใดจึงเปลี่ยน? มีสองเหตุผล:</p>
+      <p>วันนี้เราจะใช้ TanStack Router ซึ่งเป็น router ที่ยอดเยี่ยมอีกตัว เหตุใดจึงเปลี่ยน? มีสองเหตุผล:</p>
       <ul>
         <li>นี่เป็นคอร์สที่เน้น client-side และ TanStack Router สร้างมาเพื่อ use case ฝั่ง client React Router และ Remix หันไปเน้นประสบการณ์ full-stack มากขึ้น (แม้ยังทำงานแบบ client-side อย่างเดียวได้)</li>
-        <li>ใน Intermediate React เราจะครอบคลุม use case แบบ full-stack มากขึ้น ซึ่งฉันจะใช้ Next.js เพื่อแสดง feature เหล่านั้น</li>
+        <li>use case แบบ full-stack มักจะใช้ framework อย่าง Next.js เข้ามาช่วย ซึ่งอยู่นอกขอบเขตของคอร์สนี้</li>
       </ul>
-      <p>สรุปคือ คุณมีตัวเลือกดี ๆ มากมาย ฉันชอบ TanStack Router และคิดว่ามันเป็นเครื่องมือที่ดีให้คุณเริ่มต้น มาลุยกัน</p>
+      <p>สรุปคือ คุณมีตัวเลือกดี ๆ มากมาย และ TanStack Router เป็นเครื่องมือที่ดีสำหรับเริ่มต้น มาลุยกัน</p>
       <p>เริ่มจากติดตั้งมันก่อน</p>
       <pre><code class="language-bash">npm install @tanstack/react-router@1.65.0
 npm install -D @tanstack/router-plugin@1.65.0 @tanstack/router-devtools@1.65.0

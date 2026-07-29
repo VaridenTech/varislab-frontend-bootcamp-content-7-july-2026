@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ทำความเข้าใจข้อดีข้อจำกัดของ snapshot testing" /><title>Snapshot Testing | เรียน React ฉบับสมบูรณ์</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
+<html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ทำความเข้าใจข้อดีข้อจำกัดของ snapshot testing" /><title>Snapshot Testing | เรียน React เริ่มต้น</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
   <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 25 · การทดสอบ (Testing)</p><h1>การทดสอบแบบ Snapshot</h1><p class="lesson-original-title" lang="en">Snapshot Testing</p></header>
   <p>ฉันไม่ใช่แฟนของการไล่หา 100% test coverage ฉันคิดว่ามันเป็นการไล่ตามสิ่งที่ไร้ประโยชน์และเสียเวลา ฉันอยากให้คุณเขียนห้า tests ที่ครอบคลุมห้าบรรทัดสำคัญที่สุดของ code มากกว่าเห็นคุณเขียนหนึ่ง test สำหรับ UI code ห้าชิ้นที่สำคัญน้อยกว่า</p>
   <p>แต่เรามาดูวิธีโกงง่าย ๆ เพื่อไปถึงจุดนั้นกัน! มาคุยเรื่อง snapshot testing</p>
@@ -76,7 +76,7 @@ test("snapshot with nothing in cart", () =&gt; {
   expect(asFragment()).toMatchSnapshot();
 });
 </code></pre>
-  <p>สิ่งนี้ทำงาน และตอนนี้คุณจะใช้ต่อแบบนี้ก็ได้ แต่มีปัญหา หากดู snapshot ของคุณ มัน render Pizza components ด้วย ตอนนี้ถ้าคุณแก้ Pizza.jsx (ที่มี tests ของตัวเองอยู่แล้ว) test <em>Cart.jsx</em> ของคุณจะ fail นี่ทำให้เข้าใจผิด ไม่มีอะไรผิดหรือเปลี่ยนกับ Cart.jsx ใน class เวอร์ชันก่อน ฉันแสดงวิธีทำสิ่งนี้ด้วย react-test-renderer อย่างไรก็ตามทีม @testing-lib คิดว่า shallow rendering ให้โทษมากกว่าประโยชน์ (ฉันเห็นด้วยราว 75%) เราจึงจะไม่ใส่มัน <a href="https://frontendmasters.com/courses/intermediate-react-v4/snapshots/">คลิกที่นี่</a> เพื่อดูฉันสอนเรื่องนี้ก่อนหน้านี้ มันเหมือนกัน 95% แค่ใช้ Jest แทน Vitest</p>
+  <p>สิ่งนี้ทำงาน และตอนนี้คุณจะใช้ต่อแบบนี้ก็ได้ แต่มีปัญหา หากดู snapshot ของคุณ มัน render Pizza components ด้วย ตอนนี้ถ้าคุณแก้ Pizza.jsx (ที่มี tests ของตัวเองอยู่แล้ว) test <em>Cart.jsx</em> ของคุณจะ fail นี่ทำให้เข้าใจผิด ไม่มีอะไรผิดหรือเปลี่ยนกับ Cart.jsx ทางออกหนึ่งที่เคยนิยมคือ shallow rendering ซึ่ง render เฉพาะ component ชั้นบนสุดโดยไม่ลงไปถึง component ลูก อย่างไรก็ตามทีม @testing-library มองว่า shallow rendering ให้โทษมากกว่าประโยชน์ เพราะมันทดสอบสิ่งที่ผู้ใช้ไม่เคยเห็นจริง เราจึงจะไม่ใช้มัน</p>
   <p>อัปเดต snapshots ได้ด้วยการรัน <code>npm run test -- -u</code> หรือใช้ watcher ด้วย <code>u</code> เพื่ออัปเดตทั้งหมดทีเดียว หรือทำทีละอันด้วย <code>i</code></p>
   <p>คุณควร commit snapshot files เข้า git</p>
   <p>ฉันจะปล่อยให้คุณตัดสินว่าคุณให้คุณค่ากับ tests เหล่านี้มากแค่ไหน ฉันคิดว่ามันมีที่เล็กมากในการทดสอบ UI แต่ช่วยได้น้อยมาก บ่อยครั้งมันกลายเป็น noise มากกว่าความช่วยเหลือ ไม่ว่าอย่างไร เก็บมันไว้ใน toolbox ของคุณ บางครั้งมันก็ช่วยได้</p>
