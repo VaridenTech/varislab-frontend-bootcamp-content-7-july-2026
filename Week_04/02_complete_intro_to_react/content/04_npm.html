@@ -18,6 +18,27 @@
 
         <p>สองบทที่ผ่านมาเราโหลด React ด้วย <code>&lt;script&gt;</code> จาก CDN ซึ่งใช้ได้ดีตอนเรียน แต่พอโปรเจกต์จริงเริ่มโต วิธีนี้จะพังทันที ลองนึกภาพว่าคุณต้องใช้ไลบรารีสิบตัว แต่ละตัวมีเวอร์ชันของตัวเอง บางตัวต้องพึ่งไลบรารีอื่นอีกที และเพื่อนร่วมทีมของคุณต้องได้เวอร์ชันเดียวกันเป๊ะ ๆ กับคุณ ไม่อย่างนั้นโค้ดจะทำงานคนละแบบ</p>
 
+        <p>ถ้าใช้ CDN โปรเจกต์ที่มีไลบรารีเพียงสี่ตัวก็ต้องดูแล URL เวอร์ชัน และลำดับการโหลดเองทั้งหมด</p>
+
+        <pre><code class="language-html">&lt;script src="https://unpkg.com/react@18.3.1/umd/react.development.js"&gt;&lt;/script&gt;
+&lt;script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"&gt;&lt;/script&gt;
+&lt;script src="https://unpkg.com/dayjs@1.11.13/dayjs.min.js"&gt;&lt;/script&gt;
+&lt;script src="https://unpkg.com/lodash@4.17.21/lodash.min.js"&gt;&lt;/script&gt;
+&lt;script src="./src/App.js"&gt;&lt;/script&gt;</code></pre>
+
+        <p>เมื่อใช้ npm รายชื่อและเวอร์ชันของไลบรารีเดียวกันจะถูกรวมไว้ใน <code>package.json</code> จุดเดียว</p>
+
+        <pre><code class="language-json">{
+  "dependencies": {
+    "dayjs": "1.11.13",
+    "lodash": "4.17.21",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}</code></pre>
+
+        <p>npm จะดาวน์โหลดแพ็กเกจเหล่านี้ รวมถึงแพ็กเกจที่มันพึ่งพาต่อให้อัตโนมัติ และใช้ <code>package-lock.json</code> ช่วยให้ทุกคนในทีมติดตั้งได้เวอร์ชันตรงกัน</p>
+
         <p>นี่คือปัญหาที่ <strong>npm</strong> เกิดมาแก้ และบทนี้จะเป็นบทแรกของกลุ่ม “เครื่องมือ” ที่เราจะค่อย ๆ ประกอบขึ้นมาเองทีละชิ้น</p>
 
         <h2>npm คืออะไร</h2>
