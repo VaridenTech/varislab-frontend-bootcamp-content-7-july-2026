@@ -95,6 +95,8 @@ async function fetchPizzaTypes() {
 
         <p class="translator-note">⏱️ บรรทัด <code>await new Promise((resolve) =&gt; setTimeout(resolve, 3000))</code> คือ <code>wait</code> helper ตัวเดียวกับที่เราสร้างเองในบทที่ 11 นั่นแหละ มันคือการหน่วงเวลาปลอม ๆ 3 วินาที เพื่อให้เห็นสถานะ Loading ชัด ๆ ไม่ได้มีประโยชน์อะไรกับแอปจริง อย่าลืมลบทิ้งเมื่อดูเสร็จแล้ว (อีกวิธีที่ไม่ต้องแก้โค้ดคือใช้ Network throttling แบบ Slow 3G จากบทที่ 12)</p>
 
+        <p class="translator-note">📌 สังเกตว่า <code>fetchPizzaTypes</code> ด้านบนไม่มีทั้งการเช็ค <code>res.ok</code> และ <code>try</code> / <code>catch</code> ที่บทที่ 12 ยืนกรานว่าต้องทำทุกครั้งไม่มีข้อยกเว้น — ตัดออกโดยตั้งใจ เพื่อให้บทนี้โฟกัสอยู่ที่ <code>useEffect</code> เพียงอย่างเดียว นี่ไม่ใช่การกลับคำ กฎของบทที่ 12 ยังใช้ได้เต็มร้อยกับแอปจริงเสมอ เพียงแต่ในบทที่ 19 เราจะเปลี่ยนไปใช้ TanStack Query ซึ่งจัดการ loading และ error state ให้อย่างถูกต้องอยู่แล้ว คอร์สนี้จึงไม่ลงมือสร้างกลไกพวกนั้นเองด้วยมือตรงนี้</p>
+
         <h3>ทำไมโค้ดชุดนี้ถึงต่างจากต้นฉบับ JavaScript</h3>
 
         <p>ถ้าคุณเคยเห็นเวอร์ชัน JavaScript ของบทนี้มาก่อน จะสังเกตว่าตรง <code>selectedPizza</code> เราเขียนไม่เหมือนกัน ต้นฉบับเขียนแบบนี้</p>
@@ -116,7 +118,7 @@ if (!loading) {
 
         <p>อีกจุดคือ <code>const pizzasJson: PizzaType[] = await pizzasRes.json()</code> เมธอด <code>.json()</code> คืน <code>Promise&lt;any&gt;</code> เสมอ เพราะไม่มีทางรู้ล่วงหน้าว่า server จะส่งอะไรมา การใส่ type annotation ตรงนี้คือจุดที่เรา "ประกาศความเชื่อ" ว่าข้อมูลหน้าตาแบบไหน และตั้งแต่บรรทัดนั้นเป็นต้นไปทุกอย่างก็จะมี type ครบ</p>
 
-        <p class="translator-note">🔍 <code>import type { Pizza as PizzaType }</code> — เราเปลี่ยนชื่อตอน import เพราะในไฟล์นี้ชื่อ <code>Pizza</code> ถูกใช้ไปแล้วโดย component ที่เรา import มาจาก <code>./Pizza</code> การชนกันแบบนี้เกิดขึ้นบ่อยมากในโปรเจกต์จริง คำว่า <code>as</code> ในบริบทของ import ไม่เกี่ยวกับ type assertion ที่เราคุยกันในบทที่แล้วเลย มันคือการตั้งชื่อเล่นให้สิ่งที่ import มาเฉย ๆ</p>
+        <p class="translator-note">🔍 <code>import type { Pizza as PizzaType }</code> — เราเปลี่ยนชื่อตอน import เพราะในไฟล์นี้ชื่อ <code>Pizza</code> ถูกใช้ไปแล้วโดย component ที่เรา import มาจาก <code>./Pizza</code> การชนกันแบบนี้เกิดขึ้นบ่อยมากในโปรเจกต์จริง คำว่า <code>as</code> ในบริบทของ import ไม่เกี่ยวกับ type assertion ที่เราคุยกันในบทที่ 10 เลย มันคือการตั้งชื่อเล่นให้สิ่งที่ import มาเฉย ๆ</p>
 
         <ul>
           <li>เราใส่ logic ทั้งหมดสำหรับการดึง pizza types ไว้ใน async function เพื่อให้อ่านง่ายขึ้น คุณทำให้ function ที่ส่งให้ useEffect เป็น async ไม่ได้</li>
