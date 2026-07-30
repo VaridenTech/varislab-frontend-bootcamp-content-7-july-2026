@@ -2,7 +2,7 @@
 <html lang="th">
   <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="เขียนการทดสอบ React ขั้นพื้นฐานสำหรับ Pizza component" /><title>Basic React Tests | เรียน React เริ่มต้น</title><link rel="stylesheet" href="lesson.css" /></head>
   <body><main><article class="lesson">
-    <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 22 · การทดสอบ (Testing)</p><h1>การทดสอบ React ขั้นพื้นฐาน</h1><p class="lesson-original-title" lang="en">Basic React Tests</p></header>
+    <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 24 · การทดสอบ (Testing)</p><h1>การทดสอบ React ขั้นพื้นฐาน</h1><p class="lesson-original-title" lang="en">Basic React Tests</p></header>
     <p>มาเขียน test แรกสำหรับ Pizza.tsx กัน โดยทั่วไป นี่คือแนวทางที่คอร์สนี้แนะนำสำหรับการเขียนเทสต์ React:</p>
     <ul>
       <li>พยายาม test functionality ไม่ใช่ implementation ให้ tests โต้ตอบกับ components อย่างที่ผู้ใช้ทำ ไม่ใช่อย่างที่ developer ทำ ซึ่งหมายถึงคุณพยายามคิดเรื่องอย่าง “ผู้ใช้จะเห็นอะไร” หรือ “ถ้าผู้ใช้คลิกปุ่ม modal จะขึ้น” มากกว่า “ทำให้แน่ใจว่า state นี้ถูกต้อง” หรือ “ให้แน่ใจว่า library นี้ถูกเรียก” นี่ไม่ใช่กฎ; บางครั้งคุณต้อง test สิ่งเหล่านั้นด้วยเพื่อยืนยันว่า app ทำงานถูกต้อง ใช้วิจารณญาณที่ดีที่สุดของคุณ</li>
@@ -94,6 +94,6 @@ src={props.image ? props.image : "https://picsum.photos/200"}
     <p>นี่คือเหตุผลที่ <strong>type ไม่ได้มาแทนที่เทสต์ และเทสต์ก็ไม่ได้มาแทนที่ type</strong> — สองอย่างนี้จับบั๊กคนละชนิดกัน type ตอบคำถามว่า "ข้อมูลรูปร่างถูกไหม" ส่วนเทสต์ตอบว่า "แล้วมันทำงานถูกหรือเปล่า" คำถามที่ได้ยินบ่อยว่า "ใช้ TypeScript แล้วยังต้องเขียนเทสต์อีกไหม" จึงมีคำตอบตรงนี้เอง</p>
 
     <p>ปัง! ได้ React testing ง่าย ๆ สำหรับคุณ</p>
-    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="21_vitest.html" rel="prev">ก่อนหน้า: Vitest</a><a href="index.html">สารบัญบทเรียน</a><a href="23_testing_user_interaction.html" rel="next">ถัดไป: Testing User Interaction</a></nav>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="23_vitest.html" rel="prev">ก่อนหน้า: Vitest</a><a href="index.html">สารบัญบทเรียน</a><a href="25_testing_user_interaction.html" rel="next">ถัดไป: Testing User Interaction</a></nav>
   </article></main></body>
 </html>

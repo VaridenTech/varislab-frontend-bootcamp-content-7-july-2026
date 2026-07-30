@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="deploy React client ไป Netlify และ Node.js API ไป Render" /><title>Deploying the App | เรียน React เริ่มต้น</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
-  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 33 · ก้าวต่อไป (What's Next)</p><h1>การ Deploy แอป</h1><p class="lesson-original-title" lang="en">Deploying the App</p></header>
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 35 · ก้าวต่อไป (What's Next)</p><h1>การ Deploy แอป</h1><p class="lesson-original-title" lang="en">Deploying the App</p></header>
   <blockquote><p>📝 มีการพูดถึงการ Deploy ในหลักสูตร แต่ไม่ได้สาธิต คุณสามารถทำตามขั้นตอนด้านล่างหากต้องการ deploy client และ server applications</p></blockquote>
   <p>ด้วย React หรือ client-side framework ใด ๆ deployment ง่ายมาก รัน <code>npm run build</code> เพื่อสร้าง HTML, CSS และ JS files ด้วย Vite แล้วโยนขึ้น static web host ใดก็ได้ โปรเจกต์นี้ต่างออกไปเล็กน้อย เพราะมันเรียก API จาก local Node.js server ดังนั้นเราต้อง deploy ส่วนนั้นด้วย จะมีประโยชน์อะไรกับเว็บไซต์สั่งพิซซ่าที่ไม่มีพิซซ่าล่ะ จริงไหม?</p>
   <p>เพื่อ deploy ทั้ง client และ server applications เราต้อง refactor เล็กน้อย และจะใช้ best practices ระหว่างทาง React client app จะ deploy ไปยัง Netlify และ Node.js server app จะ deploy ไปยัง Render ทั้งสองแพลตฟอร์มมี free tier ให้ใช้ และเราจะใช้ workflow ของ GitHub เพื่อให้ deploy ได้ง่ายมาก</p>
@@ -122,5 +122,5 @@ const pizzasRes = await fetch(`${apiUrl}/api/pizzas`);
   <p>เมื่อ site deploy แล้ว คุณเข้าถึงได้ด้วยชื่อที่เลือกตอนตั้งค่า ตัวอย่างเช่น <code>https://[Your-App-Name].netlify.app</code></p>
   <h2>ยินดีด้วย!</h2>
   <p>ตอนนี้คุณมี React client application ที่ deploy บน Netlify และ Node.js server API ที่ deploy บน Render แล้ว!</p>
-  <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="32_react_compiler.html" rel="prev">ก่อนหน้า: React Compiler</a><a href="index.html">สารบัญบทเรียน</a><a href="34_congrats.html" rel="next">ถัดไป: ยินดีด้วย!</a></nav>
+  <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="34_react_compiler.html" rel="prev">ก่อนหน้า: React Compiler</a><a href="index.html">สารบัญบทเรียน</a><a href="36_congrats.html" rel="next">ถัดไป: ยินดีด้วย!</a></nav>
 </article></main></body></html>

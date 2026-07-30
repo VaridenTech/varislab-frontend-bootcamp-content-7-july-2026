@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ตั้งค่า browser-based tests ด้วย Vitest และ Playwright" /><title>Browser Tests | เรียน React เริ่มต้น</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
-  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 28 · การทดสอบ (Testing)</p><h1>การทดสอบในเบราว์เซอร์</h1><p class="lesson-original-title" lang="en">Browser Tests</p></header>
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 30 · การทดสอบ (Testing)</p><h1>การทดสอบในเบราว์เซอร์</h1><p class="lesson-original-title" lang="en">Browser Tests</p></header>
   <blockquote><p>🚨 สิ่งนี้เป็น experimental และมีแนวโน้มสูงที่จะเปลี่ยนในอนาคต ให้ถือว่านี่เป็น sneak peak ของสิ่งที่จะมา ไม่ใช่สิ่งที่ควรทำในวันนี้</p></blockquote>
   <p>Vitest กำลังเริ่มรองรับ browser-based testing ที่ลึกขึ้น สำหรับพวกเราที่อยู่มานานพอจะจำ Selenium ได้ สิ่งนี้อาจทำให้หวาดกลัวถึงใจ แต่ไม่ต้องกลัว! Browser-based testing tools พัฒนาไปไกลมากตั้งแต่นั้น จนทั้งเร็วและเชื่อถือได้ โดยเฉพาะเพราะ Microsoft project Playwright</p>
   <p>อย่างไรก็ตามนี่ก็ยังเป็นช่วงแรก ๆ เราจะดูวิธีตั้งค่ากัน แต่ระวังว่ามันอาจเปลี่ยนได้ เพราะพวกเขายังทำงานกับมันอย่างแข็งขัน!</p>
@@ -188,5 +188,5 @@ value={[[{ pizza: 1 }, { pizza: 2 }, { pizza: 3 }]]}
 </code></pre>
 
   <p class="translator-note">หมายเหตุผู้แปล: ต้นฉบับของหลักสูตร (ซึ่งอิง Vitest 2) แนะนำให้ถอน <code>@vitest/coverage-v8</code> ออกแล้วเปลี่ยนไปใช้ Istanbul เพราะตอนนั้น coverage ของ V8 ยังใช้กับ browser mode บน React 19 ไม่ได้ ข้อจำกัดนั้นหมดไปแล้วใน Vitest 4 เราจึงใช้ <code>@vitest/coverage-v8</code> ตัวเดิมจากบทที่ 26 ต่อได้เลย ไม่ต้องติดตั้งอะไรเพิ่ม · ถ้าคุณยังอยากลอง Istanbul ชื่อ package ที่ถูกต้องคือ <code>@vitest/coverage-istanbul</code> (ไม่ใช่ <code>@vitest/istanbul</code> อย่างในต้นฉบับ) แล้วเพิ่ม <code>provider: "istanbul"</code> เข้าไปใน object <code>coverage</code></p>
-  <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="27_vitest_ui.html" rel="prev">ก่อนหน้า: Vitest UI</a><a href="index.html">สารบัญบทเรียน</a><a href="29_react_19.html" rel="next">ถัดไป: React 19</a></nav>
+  <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="29_vitest_ui.html" rel="prev">ก่อนหน้า: Vitest UI</a><a href="index.html">สารบัญบทเรียน</a><a href="31_react_19.html" rel="next">ถัดไป: React 19</a></nav>
 </article></main></body></html>
