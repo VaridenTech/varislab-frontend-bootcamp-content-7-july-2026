@@ -20,6 +20,8 @@
 
         <p>ตอนนี้เรามีแอปมากพอที่จะเริ่มทำ API requests ได้แล้ว เราต้องการให้แอปขอ pizzaTypes ชุดแรกเมื่อหน้าโหลดครั้งแรก ดังนั้นมาทำสิ่งนั้นด้วย hook พิเศษชื่อ <code>useEffect</code> <code>useEffect</code> ให้คุณบอกว่า render component นี้ก่อนเพื่อให้ผู้ใช้เห็น<em>บางอย่าง</em> แล้วทันทีที่ render เสร็จ <em>จึง</em>ทำบางอย่าง (สิ่งนั้นในที่นี้คือ effect) กรณีของเรา เราต้องการให้ผู้ใช้เห็น UI ก่อน แล้วจึง request ไปยัง API เพื่อเริ่มต้นรายการ pizzas</p>
 
+        <blockquote>คุณรู้จัก <code>async</code>/<code>await</code>, <code>Promise</code> และ <code>fetch</code> มาแล้วจากบทที่ 11 และ 12 ดังนั้นโค้ดที่ยิง request ในบทนี้จะคุ้นตาทั้งหมด ของใหม่จริง ๆ ในบทนี้มีอย่างเดียวคือ <code>useEffect</code> — วิธีบอก React ว่า "หลัง render เสร็จแล้วค่อยไปทำสิ่งนี้"</blockquote>
+
         <blockquote>ต้องแน่ใจว่าคุณให้ทั้ง Vite dev server <em>และ</em> API server ทำงานอยู่ ทั้งคู่</blockquote>
 
         <p>ตอนนี้ข้อมูลจะเริ่มมาจาก API แล้ว ก่อนอื่นเราต้องบอก TypeScript ว่าพิซซ่าหนึ่งลูกที่ API ส่งมาหน้าตาเป็นอย่างไร เปิด <code>src/types.ts</code> แล้วเพิ่ม type ใหม่ต่อจาก <code>PizzaSize</code></p>
@@ -90,6 +92,8 @@ async function fetchPizzaTypes() {
 
 // replace &lt;Pizza /&gt; and button at the end
 </code></pre>
+
+        <p class="translator-note">⏱️ บรรทัด <code>await new Promise((resolve) =&gt; setTimeout(resolve, 3000))</code> คือ <code>wait</code> helper ตัวเดียวกับที่เราสร้างเองในบทที่ 11 นั่นแหละ มันคือการหน่วงเวลาปลอม ๆ 3 วินาที เพื่อให้เห็นสถานะ Loading ชัด ๆ ไม่ได้มีประโยชน์อะไรกับแอปจริง อย่าลืมลบทิ้งเมื่อดูเสร็จแล้ว (อีกวิธีที่ไม่ต้องแก้โค้ดคือใช้ Network throttling แบบ Slow 3G จากบทที่ 12)</p>
 
         <h3>ทำไมโค้ดชุดนี้ถึงต่างจากต้นฉบับ JavaScript</h3>
 
