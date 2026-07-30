@@ -92,7 +92,7 @@ interface ImportMeta {
 
   <p>พอประกาศ <code>ImportMetaEnv</code> เองแล้ว เราได้สองอย่าง: auto-complete ชื่อ env var ทั้งหมดที่โปรเจกต์นี้มี และ error ทันทีเมื่อพิมพ์ชื่อผิด</p>
 
-  <p>ไฟล์นามสกุล <code>.d.ts</code> คือ <strong>declaration file</strong> — ไฟล์ที่มีแต่ข้อมูล type ไม่มีโค้ดที่รันจริงเลย บรรทัด <code>/// &lt;reference types="vite/client" /&gt;</code> ข้างบนคือการดึง type พื้นฐานของ Vite เข้ามาก่อน (เช่น type ของการ import ไฟล์ <code>.css</code> และ <code>.webp</code>) แล้วเราค่อยเติมของเราทับลงไป — เป็นการ augment แบบเดียวกับ <code>declare module</code> ของ TanStack Router ในบทที่ 16</p>
+  <p>ไฟล์นามสกุล <code>.d.ts</code> คือ <strong>declaration file</strong> — ไฟล์ที่มีแต่ข้อมูล type ไม่มีโค้ดที่รันจริงเลย บรรทัด <code>/// &lt;reference types="vite/client" /&gt;</code> ข้างบนคือการดึง type พื้นฐานของ Vite เข้ามาก่อน (เช่น type ของการ import ไฟล์ <code>.css</code> และ <code>.webp</code>) แล้วเราค่อยเติมของเราทับลงไป — เป็นการ augment แบบเดียวกับ <code>declare module</code> ของ TanStack Router ในบทที่ 18</p>
 
   <p>พูดถึง proxy คุณลบ <code>/public</code> proxy จาก file <code>vite.config.ts</code> ได้ ทีนี้ใช้ <code>VITE_API_URL</code> กัน หา API helpers สามตัวของเรา (<code>getPastOrders.ts</code>, <code>getPastOrder.ts</code> และ <code>usePizzaOfTheDay.ts</code>) แล้วอัปเดต fetch call ให้ใช้ environment variable ตัวอย่างเช่น:</p>
   <pre><code class="language-typescript">const apiUrl = import.meta.env.VITE_API_URL;

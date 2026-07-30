@@ -20,7 +20,7 @@
 
   <p>สังเกตว่า type ของ parameter เปลี่ยนจาก <code>React.FormEvent&lt;HTMLFormElement&gt;</code> เป็น <code>FormData</code> เฉย ๆ นี่คือสิ่งที่ form action ทำให้เรา — React จัดการ event, กัน default behavior และสร้าง <code>FormData</code> ให้เสร็จสรรพ แล้วส่งเฉพาะสิ่งที่เราต้องการจริง ๆ เข้ามา การที่ type สั้นลงจึงสะท้อนว่าโค้ดเราทำงานน้อยลงจริง ๆ</p>
 
-  <p>ส่วน <code>String(...)</code> ยังต้องอยู่เหมือนเดิม เพราะ <code>formData.get()</code> ก็ยังคืน <code>string | File | null</code> อยู่ดี — form action ช่วยเรื่องการต่อสายกับ form แต่ไม่ได้รับประกันว่าในนั้นมีอะไร (ย้อนดูบทที่ 20 ถ้าอยากทบทวนว่าทำไม)</p>
+  <p>ส่วน <code>String(...)</code> ยังต้องอยู่เหมือนเดิม เพราะ <code>formData.get()</code> ก็ยังคืน <code>string | File | null</code> อยู่ดี — form action ช่วยเรื่องการต่อสายกับ form แต่ไม่ได้รับประกันว่าในนั้นมีอะไร (ย้อนดูบทที่ 22 ถ้าอยากทบทวนว่าทำไม)</p>
 
   <p>มาแปลง <code>order.lazy.tsx</code> ด้วย</p>
   <pre><code class="language-typescript">// extract submission function from form

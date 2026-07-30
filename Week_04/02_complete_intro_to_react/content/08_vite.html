@@ -96,7 +96,7 @@
           <li><code>"noEmit": true</code> คือหัวใจของการทำงานร่วมกับ Vite เราไม่ให้ <code>tsc</code> สร้างไฟล์ <code>.js</code> ออกมาเลย เพราะ Vite แปลงโค้ดให้อยู่แล้ว <code>tsc</code> จึงเหลือหน้าที่เดียวคือตรวจ type แล้วรายงาน error</li>
           <li><code>"strict": true</code> เปิดการตรวจสอบชุดเข้มทั้งหมด รวมถึง <code>strictNullChecks</code> ที่จะบังคับให้เราจัดการกรณี <code>null</code> / <code>undefined</code> เอง อาจรู้สึกจู้จี้ในตอนแรก แต่มันคือส่วนที่ให้ประโยชน์มากที่สุด และเดี๋ยวคุณจะได้เจอตัวอย่างแรกในอีกไม่กี่บรรทัดข้างล่างนี้</li>
           <li><code>"types": ["vite/client"]</code> ดึง type ของ Vite เข้ามา ทำให้เรื่องอย่าง <code>import.meta.env</code> และการ import ไฟล์ <code>.css</code> / <code>.webp</code> มี type ถูกต้อง</li>
-          <li><code>"verbatimModuleSyntax": true</code> บังคับให้เวลา import สิ่งที่เป็น <em>type</em> ล้วน ๆ ต้องเขียน <code>import type</code> ให้ชัดเจน เช่น <code>import type { Pizza } from "./types"</code> ข้อดีคืออ่านแล้วรู้ทันทีว่า import ไหนหายไปตอน build จริง เราจะได้ใช้ตั้งแต่บทที่ 11 เป็นต้นไป</li>
+          <li><code>"verbatimModuleSyntax": true</code> บังคับให้เวลา import สิ่งที่เป็น <em>type</em> ล้วน ๆ ต้องเขียน <code>import type</code> ให้ชัดเจน เช่น <code>import type { Pizza } from "./types"</code> ข้อดีคืออ่านแล้วรู้ทันทีว่า import ไหนหายไปตอน build จริง เราจะได้ใช้ตั้งแต่บทที่ 13 เป็นต้นไป</li>
           <li><code>"include"</code> บอกว่าให้ตรวจไฟล์ในโฟลเดอร์ <code>src</code> และไฟล์ <code>.ts</code> ที่ root (ซึ่งก็คือ <code>vite.config.ts</code> ที่เรากำลังจะสร้าง)</li>
         </ul>
 

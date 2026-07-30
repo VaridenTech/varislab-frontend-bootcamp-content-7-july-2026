@@ -60,7 +60,7 @@ const [cart, setCart] = useState&lt;CartItem[]&gt;([]);
 
         <ul>
           <li><code>useState&lt;CartItem[]&gt;([])</code> — array ว่างเป็นอีกกรณีที่ TypeScript เดา type ไม่ออก ถ้าไม่ใส่ generic มันจะได้ <code>never[]</code> แล้วคุณจะใส่อะไรลงไปไม่ได้เลย เป็นคู่หูของ <code>useState&lt;T | null&gt;(null)</code> ที่เจอในบทที่แล้ว</li>
-          <li><code>if (!selectedPizza) return;</code> เป็นบรรทัดที่ TypeScript บังคับให้เราเพิ่ม เพราะ <code>selectedPizza</code> ยังเป็น <code>Pizza | undefined</code> อยู่ (จำบทที่ 11 ได้ไหม) และ <code>CartItem.pizza</code> รับเฉพาะ <code>Pizza</code> ผลคือเราจะไม่มีวันเผลอใส่ของว่างเปล่าลงตะกร้าตอนที่ยังโหลดข้อมูลไม่เสร็จ</li>
+          <li><code>if (!selectedPizza) return;</code> เป็นบรรทัดที่ TypeScript บังคับให้เราเพิ่ม เพราะ <code>selectedPizza</code> ยังเป็น <code>Pizza | undefined</code> อยู่ (จำบทที่ 13 ได้ไหม) และ <code>CartItem.pizza</code> รับเฉพาะ <code>Pizza</code> ผลคือเราจะไม่มีวันเผลอใส่ของว่างเปล่าลงตะกร้าตอนที่ยังโหลดข้อมูลไม่เสร็จ</li>
         </ul>
 
         <p>มาสร้าง cart กัน สร้างไฟล์ชื่อ Cart.tsx แล้วเพิ่ม</p>
