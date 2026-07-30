@@ -11,7 +11,7 @@
     <main>
       <article class="lesson">
         <header class="lesson-header">
-          <p class="lesson-eyebrow">บทเรียน 15 · แนวคิดหลักของ React (Core React Concepts)</p>
+          <p class="lesson-eyebrow">บทเรียน 17 · แนวคิดหลักของ React ภาค 2 (Core React Concepts, cont.)</p>
           <h1>การแชร์ State ด้วย Context</h1>
           <p class="lesson-original-title" lang="en">Context</p>
         </header>
@@ -129,9 +129,9 @@ const [cart] = useContext(CartContext);
         <p>นี่คือ context มันมีประโยชน์มากกับเรื่องแบบนี้ที่เราไม่อยาก “prop drill” state ของเราไปทั่ว ตอนนี้ cart ถูกเก็บไว้ระดับ App เราจะเขียน <code>&lt;Header cart={cart} /&gt;</code> แล้วจบก็ได้ และใน use case นี้ก็ทำแบบนั้นได้สบาย ๆ แต่ลองนึกภาพว่า Header ซ้อนลึกมากและคุณต้องส่ง state นั้นลงผ่าน children components จำนวนมาก — มันจะยุ่งอย่างรวดเร็ว นี่คือสิ่งที่เรียกว่า prop drilling data flow ที่ชัดเจนของ React เป็น feature ไม่ใช่ bug มันทำให้ที่มาของ data และที่ที่ data ไปอ่านง่ายมาก แต่มันทำให้โค้ดยาวโดยไม่เกิดประโยชน์ และ context คือ escape hatch สำหรับเรื่องนั้น โดยทั่วไป ใช้ context อย่างประหยัด และใช้เฉพาะเมื่อการใช้ props ตามวิธีปกติไม่สะดวก<em>จริง ๆ</em></p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-          <a href="14_handling_user_inputs.html" rel="prev">ก่อนหน้า: Handling User Input</a>
+          <a href="16_handling_user_inputs.html" rel="prev">ก่อนหน้า: Handling User Input</a>
           <a href="index.html">สารบัญบทเรียน</a>
-          <a href="16_tanstack_router.html" rel="next">ถัดไป: TanStack Router</a>
+          <a href="18_tanstack_router.html" rel="next">ถัดไป: TanStack Router</a>
         </nav>
       </article>
     </main>

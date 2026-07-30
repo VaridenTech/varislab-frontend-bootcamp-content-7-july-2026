@@ -52,7 +52,7 @@ export default Pizza;
         <ul>
           <li>เราประกาศ <code>type PizzaProps</code> ไว้เหนือ component ธรรมเนียมที่พบบ่อยที่สุดคือตั้งชื่อว่า <code>ชื่อคอมโพเนนต์ + Props</code> และวางไว้ในไฟล์เดียวกันกับ component นั้น</li>
           <li>ทุก field ที่ไม่ได้ใส่ <code>?</code> คือ prop ที่ <strong>บังคับ</strong> ลองลบ <code>description=&quot;...&quot;</code> ออกจากการเรียก <code>&lt;Pizza /&gt;</code> ดู แล้วคุณจะเห็นเส้นแดงขึ้นทันทีตรงที่เรียกใช้ ไม่ใช่ตอนเปิดเบราว์เซอร์</li>
-          <li>ถ้าอยากให้ prop ไหนใส่หรือไม่ใส่ก็ได้ ให้เติม <code>?</code> เช่น <code>image?: string;</code> — แต่แลกมาด้วยการที่ type ของมันจะกลายเป็น <code>string | undefined</code> และ TypeScript จะบังคับให้คุณจัดการกรณีที่ไม่มีค่า เดี๋ยวเราจะได้ทำจริงตอนเขียนเทสต์ในบทที่ 22</li>
+          <li>ถ้าอยากให้ prop ไหนใส่หรือไม่ใส่ก็ได้ ให้เติม <code>?</code> เช่น <code>image?: string;</code> — แต่แลกมาด้วยการที่ type ของมันจะกลายเป็น <code>string | undefined</code> และ TypeScript จะบังคับให้คุณจัดการกรณีที่ไม่มีค่า เดี๋ยวเราจะได้ทำจริงตอนเขียนเทสต์ในบทที่ 24</li>
           <li>คุณจะเห็นบางโปรเจกต์ใช้ <code>interface PizzaProps { ... }</code> แทน <code>type</code> ในกรณีนี้ทั้งสองแบบทำงานเหมือนกันแทบทุกประการ คอร์สนี้เลือก <code>type</code> เพราะใช้ได้กับทุกอย่าง (รวมถึง union type ที่เราจะได้ใช้ในบทถัดไป) ไม่ต้องสลับไปมา</li>
         </ul>
 

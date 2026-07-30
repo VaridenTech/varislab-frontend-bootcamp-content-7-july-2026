@@ -2,7 +2,7 @@
 <html lang="th">
   <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="เขียนการทดสอบ React ขั้นพื้นฐานสำหรับ Pizza component" /><title>Basic React Tests | เรียน React เริ่มต้น</title><link rel="stylesheet" href="lesson.css" /></head>
   <body><main><article class="lesson">
-    <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 22 · การทดสอบ (Testing)</p><h1>การทดสอบ React ขั้นพื้นฐาน</h1><p class="lesson-original-title" lang="en">Basic React Tests</p></header>
+    <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 24 · การทดสอบ (Testing)</p><h1>การทดสอบ React ขั้นพื้นฐาน</h1><p class="lesson-original-title" lang="en">Basic React Tests</p></header>
     <p>มาเขียน test แรกสำหรับ Pizza.tsx กัน โดยทั่วไป นี่คือแนวทางที่คอร์สนี้แนะนำสำหรับการเขียนเทสต์ React:</p>
     <ul>
       <li>พยายาม test functionality ไม่ใช่ implementation ให้ tests โต้ตอบกับ components อย่างที่ผู้ใช้ทำ ไม่ใช่อย่างที่ developer ทำ ซึ่งหมายถึงคุณพยายามคิดเรื่องอย่าง “ผู้ใช้จะเห็นอะไร” หรือ “ถ้าผู้ใช้คลิกปุ่ม modal จะขึ้น” มากกว่า “ทำให้แน่ใจว่า state นี้ถูกต้อง” หรือ “ให้แน่ใจว่า library นี้ถูกเรียก” นี่ไม่ใช่กฎ; บางครั้งคุณต้อง test สิ่งเหล่านั้นด้วยเพื่อยืนยันว่า app ทำงานถูกต้อง ใช้วิจารณญาณที่ดีที่สุดของคุณ</li>
@@ -39,7 +39,7 @@ expect(img).toHaveAttribute("src", src);
 expect(img).toHaveAttribute("alt", name);
 </code></pre>
 
-    <p>(วิธีนี้ต้องติดตั้ง <code>@testing-library/jest-dom</code> เพิ่ม ซึ่งคอร์สนี้ไม่ได้ใช้ แต่รู้ไว้ว่ามีทางเลือกนี้อยู่ และในบทที่ 28 เราจะได้เห็นรูปแบบที่คล้ายกันมากตอนเทสต์ในเบราว์เซอร์จริง)</p>
+    <p>(วิธีนี้ต้องติดตั้ง <code>@testing-library/jest-dom</code> เพิ่ม ซึ่งคอร์สนี้ไม่ได้ใช้ แต่รู้ไว้ว่ามีทางเลือกนี้อยู่ และในบทที่ 30 เราจะได้เห็นรูปแบบที่คล้ายกันมากตอนเทสต์ในเบราว์เซอร์จริง)</p>
     <p>นี่คือ test ที่พื้นฐานที่สุดของคุณ มัน render React component แล้วเริ่มทำ assertions กับมัน ที่นี่เรากำลัง assert ว่าภาพพิซซ่าของเราลงเอยด้วย alt text ที่ถูกต้อง ไม่ใช่ test ที่มีประโยชน์ที่สุด แต่เป็นจุดเริ่มต้นที่ดีให้เราเห็นวิธี assert บางอย่าง มันจะมีประโยชน์ขึ้นมาทันทีถ้าโปรเจกต์เคยมี bug ที่ alt text หายไปในบางกรณี</p>
     <p>เราใช้ getByRole ที่นี่เพื่อหยิบ image บน page โดยทั่วไป React Testing Library อยากให้คุณใช้แนวคิดแบบผู้ใช้เป็นศูนย์กลางในการ assert สิ่งต่าง ๆ บน page กรณีนี้เรากำลังพยายามหา image ซึ่งเป็นสิ่งที่ผู้ใช้จะเห็น เปรียบกับการใช้ CSS selector เลือก image (ทำได้นะ แค่ไม่ค่อยเป็นที่นิยม) ซึ่งเน้น implementation มาก (ผู้ใช้ไม่รู้และไม่สนใจ CSS classes)</p>
     <p>มาเพิ่มอีก test เพื่อให้แน่ใจว่าเรามี default image หาก pizza ไม่ได้รับ image</p>
@@ -94,6 +94,6 @@ src={props.image ? props.image : "https://picsum.photos/200"}
     <p>นี่คือเหตุผลที่ <strong>type ไม่ได้มาแทนที่เทสต์ และเทสต์ก็ไม่ได้มาแทนที่ type</strong> — สองอย่างนี้จับบั๊กคนละชนิดกัน type ตอบคำถามว่า "ข้อมูลรูปร่างถูกไหม" ส่วนเทสต์ตอบว่า "แล้วมันทำงานถูกหรือเปล่า" คำถามที่ได้ยินบ่อยว่า "ใช้ TypeScript แล้วยังต้องเขียนเทสต์อีกไหม" จึงมีคำตอบตรงนี้เอง</p>
 
     <p>ปัง! ได้ React testing ง่าย ๆ สำหรับคุณ</p>
-    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="21_vitest.html" rel="prev">ก่อนหน้า: Vitest</a><a href="index.html">สารบัญบทเรียน</a><a href="23_testing_user_interaction.html" rel="next">ถัดไป: Testing User Interaction</a></nav>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="23_vitest.html" rel="prev">ก่อนหน้า: Vitest</a><a href="index.html">สารบัญบทเรียน</a><a href="25_testing_user_interaction.html" rel="next">ถัดไป: Testing User Interaction</a></nav>
   </article></main></body>
 </html>

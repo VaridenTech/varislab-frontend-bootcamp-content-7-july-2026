@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="th"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="ตั้งค่า browser-based tests ด้วย Vitest และ Playwright" /><title>Browser Tests | เรียน React เริ่มต้น</title><link rel="stylesheet" href="lesson.css" /></head><body><main><article class="lesson">
-  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 28 · การทดสอบ (Testing)</p><h1>การทดสอบในเบราว์เซอร์</h1><p class="lesson-original-title" lang="en">Browser Tests</p></header>
+  <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 30 · การทดสอบ (Testing)</p><h1>การทดสอบในเบราว์เซอร์</h1><p class="lesson-original-title" lang="en">Browser Tests</p></header>
   <blockquote><p>🚨 สิ่งนี้เป็น experimental และมีแนวโน้มสูงที่จะเปลี่ยนในอนาคต ให้ถือว่านี่เป็น sneak peak ของสิ่งที่จะมา ไม่ใช่สิ่งที่ควรทำในวันนี้</p></blockquote>
   <p>Vitest กำลังเริ่มรองรับ browser-based testing ที่ลึกขึ้น สำหรับพวกเราที่อยู่มานานพอจะจำ Selenium ได้ สิ่งนี้อาจทำให้หวาดกลัวถึงใจ แต่ไม่ต้องกลัว! Browser-based testing tools พัฒนาไปไกลมากตั้งแต่นั้น จนทั้งเร็วและเชื่อถือได้ โดยเฉพาะเพราะ Microsoft project Playwright</p>
   <p>อย่างไรก็ตามนี่ก็ยังเป็นช่วงแรก ๆ เราจะดูวิธีตั้งค่ากัน แต่ระวังว่ามันอาจเปลี่ยนได้ เพราะพวกเขายังทำงานกับมันอย่างแข็งขัน!</p>
@@ -54,7 +54,7 @@ export default defineConfig({
 
   <ul>
     <li><code>extends: true</code> บอกให้แต่ละ project สืบทอด <code>plugins</code> และ <code>server</code> จาก config ตัวนอก ถ้าไม่ใส่ Vitest จะไม่รู้จัก React plugin แล้วเทสต์ที่มี JSX จะพังทันที</li>
-    <li>เพราะเราใช้ <code>defineConfig</code> จาก <code>&quot;vitest/config&quot;</code> อยู่แล้วตั้งแต่บทที่ 21 ทุก option ในนี้จึงมี auto-complete ครบ ลองพิมพ์ <code>browser:</code> แล้วกด <kbd>Ctrl</kbd>+<kbd>Space</kbd> ดู</li>
+    <li>เพราะเราใช้ <code>defineConfig</code> จาก <code>&quot;vitest/config&quot;</code> อยู่แล้วตั้งแต่บทที่ 23 ทุก option ในนี้จึงมี auto-complete ครบ ลองพิมพ์ <code>browser:</code> แล้วกด <kbd>Ctrl</kbd>+<kbd>Space</kbd> ดู</li>
     <li><code>provider: playwright()</code> — สังเกตว่าใน Vitest 4 provider เป็น<em>ฟังก์ชัน</em>ที่ import มาจาก package แยก ไม่ใช่ string <code>&quot;playwright&quot;</code> แบบเดิมแล้ว ข้อดีคือ option ของ Playwright ทั้งหมดมี type ตรวจให้ด้วย</li>
     <li><code>instances</code> เป็น array เพราะ Vitest 4 รันเทสต์ชุดเดียวกันในหลายเบราว์เซอร์พร้อมกันได้ แค่เพิ่ม <code>{ browser: &quot;chromium&quot; }</code> เข้าไปอีกตัว</li>
   </ul>
@@ -83,7 +83,7 @@ test("alt text renders on image", async () =&gt; {
 </code></pre>
 
   <blockquote>⚠️ สังเกตว่าเราเขียน <code>await render(...)</code> ต่างจาก <code>render()</code> ของ <code>@testing-library/react</code> ที่ใช้มาตลอด — ใน <code>vitest-browser-react</code> ฟังก์ชัน <code>render</code> คืน Promise เพราะมันต้องรอเบราว์เซอร์จริง render ให้เสร็จก่อน ถ้าลืม <code>await</code> TypeScript จะฟ้องทันทีว่า <code>Property 'getByRole' does not exist on type 'Promise&lt;RenderResult&gt;'</code> ซึ่งเป็นตัวอย่างที่ดีมากของบั๊ก async ที่ TypeScript จับให้ก่อนที่คุณจะเสียเวลาไล่หาว่าทำไมเทสต์ถึงพัง</blockquote>
-  <ul><li><code>render</code> จะรับ React component แล้ว render มันในสุญญากาศ จากนั้นคุณ poke และ prod มันได้ตามต้องการเพื่อ test</li><li>ส่วนสำคัญมากของสิ่งที่ Playwright และ vitest-browser-react อยากให้คุณทำคืออย่า test implementation details แต่ให้ test user experiences จริง อย่า test internal state ของ React component แต่ test สิ่งที่ผู้ใช้จะเห็นและสัมผัส ด้วยเหตุนี้ สิ่งที่เราจะ test จำนวนมากจึงอยู่รอบ roles, attributes เป็นต้น</li><li>@testing-library มี document ดี ๆ ว่าทำไมพวกเขาเลือกทดสอบแบบนี้</li><li>โดยทั่วไป vitest-browser-react มุ่งเป็น drop in replacement สำหรับ @testing-library/react</li><li>สังเกตว่าเทสต์เวอร์ชันเบราว์เซอร์<strong>ไม่ต้องใช้ <code>as HTMLImageElement</code></strong> เหมือนเวอร์ชัน happy-dom ในบทที่ 22 เพราะเราไม่ได้ไปแตะ <code>.src</code> หรือ <code>.alt</code> บน element ตรง ๆ แต่ใช้ <code>toHaveAttribute()</code> ซึ่งรับ element อะไรก็ได้ นี่เป็นตัวอย่างที่ดีว่าการเขียนเทสต์แบบที่ Testing Library แนะนำ (ยึด role และ attribute แทน property ของ DOM) มักจะทำให้ TypeScript พอใจไปด้วยโดยไม่ต้องพยายาม — เวลาเจอตัวเองต้องเขียน <code>as</code> ในเทสต์บ่อย ๆ นั่นมักเป็นสัญญาณว่ากำลังเทสต์ลึกเกินไปในรายละเอียดการทำงาน</li></ul>
+  <ul><li><code>render</code> จะรับ React component แล้ว render มันในสุญญากาศ จากนั้นคุณ poke และ prod มันได้ตามต้องการเพื่อ test</li><li>ส่วนสำคัญมากของสิ่งที่ Playwright และ vitest-browser-react อยากให้คุณทำคืออย่า test implementation details แต่ให้ test user experiences จริง อย่า test internal state ของ React component แต่ test สิ่งที่ผู้ใช้จะเห็นและสัมผัส ด้วยเหตุนี้ สิ่งที่เราจะ test จำนวนมากจึงอยู่รอบ roles, attributes เป็นต้น</li><li>@testing-library มี document ดี ๆ ว่าทำไมพวกเขาเลือกทดสอบแบบนี้</li><li>โดยทั่วไป vitest-browser-react มุ่งเป็น drop in replacement สำหรับ @testing-library/react</li><li>สังเกตว่าเทสต์เวอร์ชันเบราว์เซอร์<strong>ไม่ต้องใช้ <code>as HTMLImageElement</code></strong> เหมือนเวอร์ชัน happy-dom ในบทที่ 24 เพราะเราไม่ได้ไปแตะ <code>.src</code> หรือ <code>.alt</code> บน element ตรง ๆ แต่ใช้ <code>toHaveAttribute()</code> ซึ่งรับ element อะไรก็ได้ นี่เป็นตัวอย่างที่ดีว่าการเขียนเทสต์แบบที่ Testing Library แนะนำ (ยึด role และ attribute แทน property ของ DOM) มักจะทำให้ TypeScript พอใจไปด้วยโดยไม่ต้องพยายาม — เวลาเจอตัวเองต้องเขียน <code>as</code> ในเทสต์บ่อย ๆ นั่นมักเป็นสัญญาณว่ากำลังเทสต์ลึกเกินไปในรายละเอียดการทำงาน</li></ul>
   <p>ดูคล้ายมากใช่ไหม? โอเค มารันมัน <code>npm run test</code> คุณควรเห็น Vitest UI เดิม แต่ตอนนี้บาง tests กำลัง run ใน browser จริง</p>
   <blockquote><p>มันน่าจะ prompt ให้คุณรัน command อย่าง <code>npx playwright install</code> คุณจะติดตั้ง local copies ของ browsers เพื่อให้รันได้เร็วมาก</p></blockquote>
   <p>เจ๋งใช่ไหม และเร็วจริง ๆ! มาทำอีกอัน สร้าง <code>Header.tsx</code> test เราจะ test ว่า cart number ถูกต้อง จำได้ไหมที่ Facebook notification numbers ผิดตลอด? เราจะทำให้แน่ใจว่าสิ่งนั้นไม่เกิดกับ cart indicator ของเรา ใน Header.tsx file ของคุณ:</p>
@@ -162,7 +162,7 @@ value={[[{ pizza: 1 }, { pizza: 2 }, { pizza: 3 }]]}
   <p>ทั้งสองบรรทัดจะไม่ผ่าน TypeScript และทั้งสองบรรทัดมีปัญหาจริง ๆ ซ่อนอยู่</p>
 
   <ul>
-    <li><strong><code>[[]]</code> ขาดของไปครึ่งหนึ่ง</strong> — <code>CartHook</code> ที่เราประกาศไว้ในบทที่ 15 คือ tuple สองช่อง คือ <code>[cart, setCart]</code> แต่ตรงนี้ส่งมาช่องเดียว ในเวอร์ชัน JavaScript มันรอดมาได้เพราะบังเอิญ <code>Header</code> ใช้แค่ <code>cart</code> ไม่เคยเรียก <code>setCart</code> — แต่วันที่มีคนเพิ่มปุ่ม "ล้างตะกร้า" เข้าไปใน Header เทสต์นี้จะพังด้วย error ที่งงมาก เราจึงส่ง <code>() =&gt; {}</code> เป็นช่องที่สองให้ครบ</li>
+    <li><strong><code>[[]]</code> ขาดของไปครึ่งหนึ่ง</strong> — <code>CartHook</code> ที่เราประกาศไว้ในบทที่ 17 คือ tuple สองช่อง คือ <code>[cart, setCart]</code> แต่ตรงนี้ส่งมาช่องเดียว ในเวอร์ชัน JavaScript มันรอดมาได้เพราะบังเอิญ <code>Header</code> ใช้แค่ <code>cart</code> ไม่เคยเรียก <code>setCart</code> — แต่วันที่มีคนเพิ่มปุ่ม "ล้างตะกร้า" เข้าไปใน Header เทสต์นี้จะพังด้วย error ที่งงมาก เราจึงส่ง <code>() =&gt; {}</code> เป็นช่องที่สองให้ครบ</li>
     <li><strong><code>{ pizza: 1 }</code> ไม่ใช่ของในตะกร้า</strong> — มันไม่มี <code>size</code> ไม่มี <code>price</code> และ <code>pizza</code> ก็เป็นเลข 1 ไม่ใช่ object พิซซ่า มันผ่านได้เพราะเทสต์นี้สนใจแค่ <code>cart.length</code> — แต่นั่นแปลว่าถ้าวันหนึ่ง Header เปลี่ยนไปแสดงราคารวมด้วย เทสต์นี้จะพังทันทีทั้งที่ Header ทำงานถูกต้อง เราจึงเขียน <code>makeCart()</code> ที่สร้างข้อมูลจริงตาม type ให้แทน</li>
   </ul>
 
@@ -172,7 +172,7 @@ value={[[{ pizza: 1 }, { pizza: 2 }, { pizza: 3 }]]}
   <p>อีกครั้ง นี่เป็นช่วงแรก ๆ ของ browser-based testing ด้วย Vite ดังนั้นใน professional settings ของคุณให้ทำด้วยความระมัดระวัง อย่างไรก็ตามอนาคตสดใสด้วย Playwright!</p>
   <h2>coverage เมื่อแบ่งเป็นหลาย project</h2>
 
-  <p>coverage ที่เราตั้งไว้ในบทที่ 26 ยังใช้ได้อยู่ แต่ตอนนี้ config ของเราย้ายเข้าไปอยู่ใน <code>projects</code> แล้ว จึงต้องย้าย <code>coverage</code> ขึ้นมาไว้ที่ระดับ <code>test</code> ตัวนอกแทน เพื่อให้รายงานผลรวมของทั้งสอง project เข้าด้วยกัน</p>
+  <p>coverage ที่เราตั้งไว้ในบทที่ 28 ยังใช้ได้อยู่ แต่ตอนนี้ config ของเราย้ายเข้าไปอยู่ใน <code>projects</code> แล้ว จึงต้องย้าย <code>coverage</code> ขึ้นมาไว้ที่ระดับ <code>test</code> ตัวนอกแทน เพื่อให้รายงานผลรวมของทั้งสอง project เข้าด้วยกัน</p>
 
   <pre><code class="language-typescript">export default defineConfig({
   // …
@@ -187,6 +187,6 @@ value={[[{ pizza: 1 }, { pizza: 2 }, { pizza: 3 }]]}
 });
 </code></pre>
 
-  <p class="translator-note">หมายเหตุผู้แปล: ต้นฉบับของหลักสูตร (ซึ่งอิง Vitest 2) แนะนำให้ถอน <code>@vitest/coverage-v8</code> ออกแล้วเปลี่ยนไปใช้ Istanbul เพราะตอนนั้น coverage ของ V8 ยังใช้กับ browser mode บน React 19 ไม่ได้ ข้อจำกัดนั้นหมดไปแล้วใน Vitest 4 เราจึงใช้ <code>@vitest/coverage-v8</code> ตัวเดิมจากบทที่ 26 ต่อได้เลย ไม่ต้องติดตั้งอะไรเพิ่ม · ถ้าคุณยังอยากลอง Istanbul ชื่อ package ที่ถูกต้องคือ <code>@vitest/coverage-istanbul</code> (ไม่ใช่ <code>@vitest/istanbul</code> อย่างในต้นฉบับ) แล้วเพิ่ม <code>provider: "istanbul"</code> เข้าไปใน object <code>coverage</code></p>
-  <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="27_vitest_ui.html" rel="prev">ก่อนหน้า: Vitest UI</a><a href="index.html">สารบัญบทเรียน</a><a href="29_react_19.html" rel="next">ถัดไป: React 19</a></nav>
+  <p class="translator-note">หมายเหตุผู้แปล: ต้นฉบับของหลักสูตร (ซึ่งอิง Vitest 2) แนะนำให้ถอน <code>@vitest/coverage-v8</code> ออกแล้วเปลี่ยนไปใช้ Istanbul เพราะตอนนั้น coverage ของ V8 ยังใช้กับ browser mode บน React 19 ไม่ได้ ข้อจำกัดนั้นหมดไปแล้วใน Vitest 4 เราจึงใช้ <code>@vitest/coverage-v8</code> ตัวเดิมจากบทที่ 28 ต่อได้เลย ไม่ต้องติดตั้งอะไรเพิ่ม · ถ้าคุณยังอยากลอง Istanbul ชื่อ package ที่ถูกต้องคือ <code>@vitest/coverage-istanbul</code> (ไม่ใช่ <code>@vitest/istanbul</code> อย่างในต้นฉบับ) แล้วเพิ่ม <code>provider: "istanbul"</code> เข้าไปใน object <code>coverage</code></p>
+  <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="29_vitest_ui.html" rel="prev">ก่อนหน้า: Vitest UI</a><a href="index.html">สารบัญบทเรียน</a><a href="31_react_19.html" rel="next">ถัดไป: React 19</a></nav>
 </article></main></body></html>

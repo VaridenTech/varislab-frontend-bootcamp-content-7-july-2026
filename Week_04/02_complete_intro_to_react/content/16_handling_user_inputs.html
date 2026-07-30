@@ -11,7 +11,7 @@
     <main>
       <article class="lesson">
         <header class="lesson-header">
-          <p class="lesson-eyebrow">บทเรียน 14 · แนวคิดหลักของ React (Core React Concepts)</p>
+          <p class="lesson-eyebrow">บทเรียน 16 · แนวคิดหลักของ React ภาค 2 (Core React Concepts, cont.)</p>
           <h1>การจัดการข้อมูลที่ผู้ใช้ป้อน</h1>
           <p class="lesson-original-title" lang="en">Handling User Inputs</p>
         </header>
@@ -60,7 +60,7 @@ const [cart, setCart] = useState&lt;CartItem[]&gt;([]);
 
         <ul>
           <li><code>useState&lt;CartItem[]&gt;([])</code> — array ว่างเป็นอีกกรณีที่ TypeScript เดา type ไม่ออก ถ้าไม่ใส่ generic มันจะได้ <code>never[]</code> แล้วคุณจะใส่อะไรลงไปไม่ได้เลย เป็นคู่หูของ <code>useState&lt;T | null&gt;(null)</code> ที่เจอในบทที่แล้ว</li>
-          <li><code>if (!selectedPizza) return;</code> เป็นบรรทัดที่ TypeScript บังคับให้เราเพิ่ม เพราะ <code>selectedPizza</code> ยังเป็น <code>Pizza | undefined</code> อยู่ (จำบทที่ 11 ได้ไหม) และ <code>CartItem.pizza</code> รับเฉพาะ <code>Pizza</code> ผลคือเราจะไม่มีวันเผลอใส่ของว่างเปล่าลงตะกร้าตอนที่ยังโหลดข้อมูลไม่เสร็จ</li>
+          <li><code>if (!selectedPizza) return;</code> เป็นบรรทัดที่ TypeScript บังคับให้เราเพิ่ม เพราะ <code>selectedPizza</code> ยังเป็น <code>Pizza | undefined</code> อยู่ (จำบทที่ 13 ได้ไหม) และ <code>CartItem.pizza</code> รับเฉพาะ <code>Pizza</code> ผลคือเราจะไม่มีวันเผลอใส่ของว่างเปล่าลงตะกร้าตอนที่ยังโหลดข้อมูลไม่เสร็จ</li>
         </ul>
 
         <p>มาสร้าง cart กัน สร้างไฟล์ชื่อ Cart.tsx แล้วเพิ่ม</p>
@@ -133,9 +133,9 @@ async function checkout() {
         <p>ตอนนี้เราส่ง checkout function เข้าไปได้ และเมื่อใครคลิกใน form มันจะรัน checkout function จาก Order components เรากำลังทำ loading animation ง่าย ๆ ทำ fetch แล้วล้าง status เมื่อทุกอย่างเสร็จ ไม่เลวเลย!</p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-          <a href="13_custom_hooks.html" rel="prev">ก่อนหน้า: Custom Hooks</a>
+          <a href="15_custom_hooks.html" rel="prev">ก่อนหน้า: Custom Hooks</a>
           <a href="index.html">สารบัญบทเรียน</a>
-          <a href="15_context.html" rel="next">ถัดไป: Context</a>
+          <a href="17_context.html" rel="next">ถัดไป: Context</a>
         </nav>
       </article>
     </main>

@@ -11,7 +11,7 @@
     <main>
       <article class="lesson">
         <header class="lesson-header">
-          <p class="lesson-eyebrow">บทเรียน 11 · แนวคิดหลักของ React (Core React Concepts)</p>
+          <p class="lesson-eyebrow">บทเรียน 13 · แนวคิดหลักของ React ภาค 2 (Core React Concepts, cont.)</p>
           <h1>เอฟเฟกต์</h1>
           <p class="lesson-original-title" lang="en">Effects</p>
         </header>
@@ -19,6 +19,8 @@
         <h2>Effects</h2>
 
         <p>ตอนนี้เรามีแอปมากพอที่จะเริ่มทำ API requests ได้แล้ว เราต้องการให้แอปขอ pizzaTypes ชุดแรกเมื่อหน้าโหลดครั้งแรก ดังนั้นมาทำสิ่งนั้นด้วย hook พิเศษชื่อ <code>useEffect</code> <code>useEffect</code> ให้คุณบอกว่า render component นี้ก่อนเพื่อให้ผู้ใช้เห็น<em>บางอย่าง</em> แล้วทันทีที่ render เสร็จ <em>จึง</em>ทำบางอย่าง (สิ่งนั้นในที่นี้คือ effect) กรณีของเรา เราต้องการให้ผู้ใช้เห็น UI ก่อน แล้วจึง request ไปยัง API เพื่อเริ่มต้นรายการ pizzas</p>
+
+        <blockquote>คุณรู้จัก <code>async</code>/<code>await</code>, <code>Promise</code> และ <code>fetch</code> มาแล้วจากบทที่ 11 และ 12 ดังนั้นโค้ดที่ยิง request ในบทนี้จะคุ้นตาทั้งหมด ของใหม่จริง ๆ ในบทนี้มีอย่างเดียวคือ <code>useEffect</code> — วิธีบอก React ว่า "หลัง render เสร็จแล้วค่อยไปทำสิ่งนี้"</blockquote>
 
         <blockquote>ต้องแน่ใจว่าคุณให้ทั้ง Vite dev server <em>และ</em> API server ทำงานอยู่ ทั้งคู่</blockquote>
 
@@ -91,6 +93,10 @@ async function fetchPizzaTypes() {
 // replace &lt;Pizza /&gt; and button at the end
 </code></pre>
 
+        <p class="translator-note">⏱️ บรรทัด <code>await new Promise((resolve) =&gt; setTimeout(resolve, 3000))</code> คือ <code>wait</code> helper ตัวเดียวกับที่เราสร้างเองในบทที่ 11 นั่นแหละ มันคือการหน่วงเวลาปลอม ๆ 3 วินาที เพื่อให้เห็นสถานะ Loading ชัด ๆ ไม่ได้มีประโยชน์อะไรกับแอปจริง อย่าลืมลบทิ้งเมื่อดูเสร็จแล้ว (อีกวิธีที่ไม่ต้องแก้โค้ดคือใช้ Network throttling แบบ Slow 3G จากบทที่ 12)</p>
+
+        <p class="translator-note">📌 สังเกตว่า <code>fetchPizzaTypes</code> ด้านบนไม่มีทั้งการเช็ค <code>res.ok</code> และ <code>try</code> / <code>catch</code> ที่บทที่ 12 ยืนกรานว่าต้องทำทุกครั้งไม่มีข้อยกเว้น — ตัดออกโดยตั้งใจ เพื่อให้บทนี้โฟกัสอยู่ที่ <code>useEffect</code> เพียงอย่างเดียว นี่ไม่ใช่การกลับคำ กฎของบทที่ 12 ยังใช้ได้เต็มร้อยกับแอปจริงเสมอ เพียงแต่ในบทที่ 19 เราจะเปลี่ยนไปใช้ TanStack Query ซึ่งจัดการ loading และ error state ให้อย่างถูกต้องอยู่แล้ว คอร์สนี้จึงไม่ลงมือสร้างกลไกพวกนั้นเองด้วยมือตรงนี้</p>
+
         <h3>ทำไมโค้ดชุดนี้ถึงต่างจากต้นฉบับ JavaScript</h3>
 
         <p>ถ้าคุณเคยเห็นเวอร์ชัน JavaScript ของบทนี้มาก่อน จะสังเกตว่าตรง <code>selectedPizza</code> เราเขียนไม่เหมือนกัน ต้นฉบับเขียนแบบนี้</p>
@@ -112,7 +118,7 @@ if (!loading) {
 
         <p>อีกจุดคือ <code>const pizzasJson: PizzaType[] = await pizzasRes.json()</code> เมธอด <code>.json()</code> คืน <code>Promise&lt;any&gt;</code> เสมอ เพราะไม่มีทางรู้ล่วงหน้าว่า server จะส่งอะไรมา การใส่ type annotation ตรงนี้คือจุดที่เรา "ประกาศความเชื่อ" ว่าข้อมูลหน้าตาแบบไหน และตั้งแต่บรรทัดนั้นเป็นต้นไปทุกอย่างก็จะมี type ครบ</p>
 
-        <p class="translator-note">🔍 <code>import type { Pizza as PizzaType }</code> — เราเปลี่ยนชื่อตอน import เพราะในไฟล์นี้ชื่อ <code>Pizza</code> ถูกใช้ไปแล้วโดย component ที่เรา import มาจาก <code>./Pizza</code> การชนกันแบบนี้เกิดขึ้นบ่อยมากในโปรเจกต์จริง คำว่า <code>as</code> ในบริบทของ import ไม่เกี่ยวกับ type assertion ที่เราคุยกันในบทที่แล้วเลย มันคือการตั้งชื่อเล่นให้สิ่งที่ import มาเฉย ๆ</p>
+        <p class="translator-note">🔍 <code>import type { Pizza as PizzaType }</code> — เราเปลี่ยนชื่อตอน import เพราะในไฟล์นี้ชื่อ <code>Pizza</code> ถูกใช้ไปแล้วโดย component ที่เรา import มาจาก <code>./Pizza</code> การชนกันแบบนี้เกิดขึ้นบ่อยมากในโปรเจกต์จริง คำว่า <code>as</code> ในบริบทของ import ไม่เกี่ยวกับ type assertion ที่เราคุยกันในบทที่ 10 เลย มันคือการตั้งชื่อเล่นให้สิ่งที่ import มาเฉย ๆ</p>
 
         <ul>
           <li>เราใส่ logic ทั้งหมดสำหรับการดึง pizza types ไว้ใน async function เพื่อให้อ่านง่ายขึ้น คุณทำให้ function ที่ส่งให้ useEffect เป็น async ไม่ได้</li>
@@ -151,9 +157,9 @@ if (!loading) {
         <p>ผลพลอยได้คือแอปเราแข็งแรงขึ้นจริง ๆ ด้วย: ถ้า API ส่งรายการพิซซ่าที่ไม่มี <code>pepperoni</code> กลับมา ผู้ใช้จะเห็นข้อความ Loading ค้างไว้ แทนที่จะเห็นหน้าขาวเพราะแอปพัง เป็นตัวอย่างที่ดีมากว่าการทำให้ type ผ่านมักจะบังคับให้เราเขียนโค้ดที่ครอบคลุมกรณีจริงมากขึ้นไปด้วย</p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-          <a href="10_hooks.html" rel="prev">ก่อนหน้า: Hooks</a>
+          <a href="12_fetch_and_apis.html" rel="prev">ก่อนหน้า: Fetch & APIs</a>
           <a href="index.html">สารบัญบทเรียน</a>
-          <a href="12_dev_tools.html" rel="next">ถัดไป: Dev Tools</a>
+          <a href="14_dev_tools.html" rel="next">ถัดไป: Dev Tools</a>
         </nav>
       </article>
     </main>
