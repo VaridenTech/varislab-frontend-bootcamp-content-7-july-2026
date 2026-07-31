@@ -146,6 +146,96 @@ onChange={(e: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt;
 }
 </code></pre>
 
+        <p>เมื่อรวมทุกจุดที่แก้ไขเข้าด้วยกัน ไฟล์ <code>Order.tsx</code> ฉบับสมบูรณ์จะมีหน้าตาดังนี้:</p>
+
+        <pre><code class="language-typescript">import { useState } from "react"; // new
+import Pizza from "./Pizza";
+import type { PizzaSize } from "./types"; // new
+
+export default function Order() {
+  // new: pizzaType and pizzaSize are now hooks instead of plain consts
+  const [pizzaType, setPizzaType] = useState&lt;string&gt;("pepperoni");
+  const [pizzaSize, setPizzaSize] = useState&lt;PizzaSize&gt;("M");
+
+  return (
+    &lt;div className="order"&gt;
+      &lt;h2&gt;Create Order&lt;/h2&gt;
+      &lt;form&gt;
+        &lt;div&gt;
+          &lt;div&gt;
+            &lt;label htmlFor="pizza-type"&gt;Pizza Type&lt;/label&gt;
+            &lt;select
+              onChange={(e: React.ChangeEvent&lt;HTMLSelectElement&gt;) =&gt; // new
+                setPizzaType(e.target.value) // new
+              } // new
+              name="pizza-type"
+              value={pizzaType}
+            &gt;
+              &lt;option value="pepperoni"&gt;The Pepperoni Pizza&lt;/option&gt;
+              &lt;option value="hawaiian"&gt;The Hawaiian Pizza&lt;/option&gt;
+              &lt;option value="big_meat"&gt;The Big Meat Pizza&lt;/option&gt;
+            &lt;/select&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label htmlFor="pizza-size"&gt;Pizza Size&lt;/label&gt;
+            &lt;div&gt;
+              &lt;span&gt;
+                &lt;input
+                  checked={pizzaSize === "S"}
+                  type="radio"
+                  name="pizza-size"
+                  value="S"
+                  id="pizza-s"
+                  onChange={(e: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt; // new
+                    setPizzaSize(e.target.value as PizzaSize) // new
+                  } // new
+                /&gt;
+                &lt;label htmlFor="pizza-s"&gt;Small&lt;/label&gt;
+              &lt;/span&gt;
+              &lt;span&gt;
+                &lt;input
+                  checked={pizzaSize === "M"}
+                  type="radio"
+                  name="pizza-size"
+                  value="M"
+                  id="pizza-m"
+                  onChange={(e: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt; // new
+                    setPizzaSize(e.target.value as PizzaSize) // new
+                  } // new
+                /&gt;
+                &lt;label htmlFor="pizza-m"&gt;Medium&lt;/label&gt;
+              &lt;/span&gt;
+              &lt;span&gt;
+                &lt;input
+                  checked={pizzaSize === "L"}
+                  type="radio"
+                  name="pizza-size"
+                  value="L"
+                  id="pizza-l"
+                  onChange={(e: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt; // new
+                    setPizzaSize(e.target.value as PizzaSize) // new
+                  } // new
+                /&gt;
+                &lt;label htmlFor="pizza-l"&gt;Large&lt;/label&gt;
+              &lt;/span&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+          &lt;button type="submit"&gt;Add to Cart&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div className="order-pizza"&gt;
+          &lt;Pizza
+            name="Pepperoni"
+            description="Mozzarella Cheese, Pepperoni"
+            image="/public/pizzas/pepperoni.webp"
+          /&gt;
+          &lt;p&gt;$13.37&lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/form&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
         <p class="translator-note">หมายเหตุผู้แปล: ตัวอย่างต้นฉบับ (ซึ่งเป็น JavaScript) ใช้ <code>useState(&quot;medium&quot;)</code> ทั้งที่ค่าของ radio และ key ใน <code>sizes[pizzaSize]</code> คือ <code>S</code>, <code>M</code> หรือ <code>L</code> — เป็นบั๊กที่ทำให้ราคาเริ่มต้นคำนวณไม่ออก ลองพิมพ์ <code>useState&lt;PizzaSize&gt;(&quot;medium&quot;)</code> ดูสักครั้งเพื่อดูสิ่งที่เกิดขึ้น: TypeScript จะฟ้องทันทีว่า <code>Argument of type '&quot;medium&quot;' is not assignable to parameter of type 'PizzaSize'</code> บั๊กที่เคยต้องไปเจอเอาตอนเปิดเบราว์เซอร์ กลายเป็นเส้นแดงใต้ตัวอักษรตั้งแต่ตอนพิมพ์</p>
 
         <h3>สามเรื่องเกี่ยวกับ TypeScript ในโค้ดชุดนี้</h3>
