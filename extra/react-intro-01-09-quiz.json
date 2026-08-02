@@ -1,0 +1,128 @@
+{
+  "questions": [
+    {
+      "prompt": "ข้อใดอธิบายการเขียน React แบบ declarative ได้ถูกต้องที่สุด?",
+      "choices": [
+        "เขียนคำสั่งทีละขั้นว่า element ไหนต้องเพิ่ม ลบ หรือแก้ไขเมื่อข้อมูลเปลี่ยน",
+        "บอกว่าหน้าจอควรเป็นอย่างไรเมื่อข้อมูลเป็นแบบนั้น แล้ว React จัดการอัปเดตให้",
+        "เก็บผลลัพธ์ UI ที่ render แล้วไว้ใน state แล้วนำมาใช้ซ้ำ"
+      ],
+      "correctChoice": 2,
+      "explanation": "การเขียนแบบ declarative คือบอกผลลัพธ์ของหน้าจอตามข้อมูล แล้ว React จะคำนวณและแก้เฉพาะส่วนที่เปลี่ยนให้เอง ไม่ต้องสั่งแก้ element ทีละขั้น."
+    },
+    {
+      "prompt": "สูตร UI = f(state) ในบทนำสรุปแนวคิดใดของ React?",
+      "choices": [
+        "หน้าจอเป็นผลลัพธ์ที่คำนวณจาก state ดังนั้นให้เปลี่ยน state เมื่อต้องการเปลี่ยนหน้าจอ",
+        "state เป็นที่เก็บสำเนา UI ที่ render เสร็จแล้ว เพื่อใช้แสดงผลครั้งต่อไป",
+        "เมื่อ state เปลี่ยน ต้องเรียก root.render ด้วยตนเองทุกครั้งเพื่อให้ UI เปลี่ยน"
+      ],
+      "correctChoice": 1,
+      "explanation": "บทเรียนสรุปว่า UI เป็นฟังก์ชันของ state: เมื่อ state เปลี่ยน React จะคำนวณหน้าจอใหม่ จึงเปลี่ยน state แทนการแก้หน้าจอตรง ๆ."
+    },
+    {
+      "prompt": "จากโค้ดนี้ บรรทัดใดทำหน้าที่นำ component App ไปแสดงผลใน root ที่สร้างไว้?",
+      "body": "<pre><code>const container = document.getElementById(\"root\");\nconst root = ReactDOM.createRoot(container);\nroot.render(React.createElement(App));</code></pre>",
+      "choices": [
+        "const container = document.getElementById(\"root\");",
+        "const root = ReactDOM.createRoot(container);",
+        "root.render(React.createElement(App));"
+      ],
+      "correctChoice": 3,
+      "explanation": "createRoot สร้าง root ที่ผูกกับ container ส่วน root.render(React.createElement(App)) คือคำสั่งให้ React แสดง component App ใน root นั้น."
+    },
+    {
+      "prompt": "props ในตัวอย่าง component Pizza มีหน้าที่อะไร?",
+      "choices": [
+        "เก็บข้อมูล name และ description ไว้ภายใน Pizza จน component แม่ส่งค่าใหม่ไม่ได้",
+        "รับข้อมูลที่ component แม่ส่งให้ เพื่อให้ Pizza แต่ละตัวแสดงข้อมูลต่างกันได้",
+        "สร้าง component Pizza ตัวใหม่โดยอัตโนมัติทุกครั้งที่ App render"
+      ],
+      "correctChoice": 2,
+      "explanation": "Props คือ variable ที่ component แม่ เช่น App ส่งให้ component ลูก เช่น Pizza ทำให้ component เดิมนำกลับมาใช้กับข้อมูลต่างกันได้."
+    },
+    {
+      "prompt": "เมื่อใช้ npm ส่วน dependencies ใน package.json มีไว้บันทึกอะไร?",
+      "choices": [
+        "รายชื่อและเวอร์ชันของแพ็กเกจที่โปรเจกต์ต้องใช้",
+        "เฉพาะคำสั่ง npm ที่ใช้รันโปรเจกต์ เช่น npm run dev",
+        "เวอร์ชันของ Node.js ที่ติดตั้งอยู่ในเครื่องของผู้พัฒนา"
+      ],
+      "correctChoice": 1,
+      "explanation": "package.json เป็นไฟล์ที่บันทึกว่าโปรเจกต์ต้องใช้แพ็กเกจใดและเวอร์ชันใด ส่วนโค้ดที่ดาวน์โหลดจริงอยู่ใน node_modules."
+    },
+    {
+      "prompt": "หลังรันคำสั่งนี้ในโปรเจกต์ npm แล้ว ผลใดเป็นสิ่งที่บทเรียนระบุว่าจะเกิดขึ้น?",
+      "body": "<pre><code>npm install dayjs</code></pre>",
+      "choices": [
+        "ดาวน์โหลด dayjs ไว้ใน node_modules เท่านั้น โดย package.json และ package-lock.json ไม่เปลี่ยน",
+        "เพิ่ม dayjs เป็นตัวแปร global ที่ใช้ได้ทันทีในทุกไฟล์ของโปรเจกต์",
+        "package.json จะมี dependency ของ dayjs เพิ่มขึ้น และจะมี package-lock.json บันทึกเวอร์ชันที่ติดตั้งจริง"
+      ],
+      "correctChoice": 3,
+      "explanation": "npm install จะดาวน์โหลดแพ็กเกจและเพิ่ม dependency ใน package.json ขณะที่ package-lock.json บันทึกเวอร์ชันจริงของแพ็กเกจและ dependencies ที่ติดมาด้วย."
+    },
+    {
+      "prompt": "Prettier มีความรับผิดชอบหลักข้อใดในโปรเจกต์?",
+      "choices": [
+        "เปลี่ยนตรรกะของโปรแกรมเพื่อป้องกันบั๊กที่อาจเกิดขึ้น",
+        "จัดรูปแบบโค้ดให้สม่ำเสมอตามกติกา เช่น การเยื้องและเครื่องหมายท้ายบรรทัด",
+        "เปลี่ยนชื่อตัวแปรในทุกไฟล์ให้ตรงกันโดยอัตโนมัติ"
+      ],
+      "correctChoice": 2,
+      "explanation": "Prettier เป็นเครื่องมือจัดรูปแบบโค้ดอัตโนมัติ เพื่อให้โค้ดในทีมมีรูปแบบสม่ำเสมอ โดยไม่ได้มีหน้าที่หลักในการหาบั๊กเชิงตรรกะ."
+    },
+    {
+      "prompt": "ESLint ช่วยทีมพัฒนาในเรื่องใดเป็นหลัก?",
+      "choices": [
+        "วิเคราะห์โค้ดเพื่อเตือนปัญหาหรือรูปแบบที่เสี่ยงต่อข้อผิดพลาด",
+        "จัดการเยื้องและเครื่องหมายท้ายบรรทัดให้เหมือนกันทุกไฟล์",
+        "แปลง TypeScript เป็น JavaScript เพื่อให้เบราว์เซอร์รันได้"
+      ],
+      "correctChoice": 1,
+      "explanation": "ESLint เป็น linter ที่วิเคราะห์โค้ดและเตือนปัญหาที่กำหนดไว้ เช่น ตัวแปรที่ประกาศแล้วไม่ได้ใช้ ช่วยพบข้อผิดพลาดก่อนรันโปรแกรม."
+    },
+    {
+      "prompt": "ชุดใดคือเครื่องมือ Git ขั้นพื้นฐานที่บทเรียนระบุว่าเพียงพอสำหรับสิ่งที่จะทำต่อจากนี้?",
+      "choices": [
+        "git clone, git pull, git push และ GitHub Actions",
+        "git branch, git merge, git rebase และ pull request",
+        "git init, git add, git commit และ .gitignore"
+      ],
+      "correctChoice": 3,
+      "explanation": "บทเรียนระบุว่า git init, git add, git commit และ .gitignore เพียงพอกับงานที่จะทำต่อจากนี้ ส่วน branch, merge, rebase และ pull request อยู่นอกขอบเขตของคอร์สนี้."
+    },
+    {
+      "prompt": "ตามค่าเริ่มต้น Vite ใช้ไฟล์ใดเป็นหัวของ source graph ของโปรเจกต์?",
+      "choices": [
+        "src/App.tsx",
+        "index.html ที่ root directory",
+        "vite.config.ts"
+      ],
+      "correctChoice": 2,
+      "explanation": "Vite จะมองหา index.html ที่ root directory เป็นจุดเริ่มต้น แล้วไล่ไฟล์ HTML, CSS และ JavaScript ที่เชื่อมจากตรงนั้น."
+    },
+    {
+      "prompt": "จากโค้ด JSX นี้ เมื่อ App แสดงผล ข้อความใดจะปรากฏใน h1?",
+      "body": "<pre><code>const name = \"Mali\";\nconst count = 2;\n\nconst App = () =&gt; (\n  &lt;h1&gt;{name} has {count + 1} pizzas&lt;/h1&gt;\n);</code></pre>",
+      "choices": [
+        "Mali has 3 pizzas",
+        "{name} has {count + 1} pizzas",
+        "Mali has 2 + 1 pizzas"
+      ],
+      "correctChoice": 1,
+      "explanation": "ใน JSX วงเล็บปีกกา {} ใช้ฝังและประเมิน JavaScript expression ใน markup ดังนั้น {name} ได้ค่า Mali และ {count + 1} ได้ค่า 3."
+    },
+    {
+      "prompt": "จากโค้ดนี้ ข้อใดถูกต้อง?",
+      "body": "<pre><code>type PizzaProps = {\n  name: string;\n  description: string;\n};\n\nconst Pizza = (props: PizzaProps) =&gt; (\n  &lt;div&gt;\n    &lt;h1&gt;{props.name}&lt;/h1&gt;\n    &lt;p&gt;{props.description}&lt;/p&gt;\n  &lt;/div&gt;\n);</code></pre>",
+      "choices": [
+        "description เป็น prop ที่ใส่หรือไม่ใส่ก็ได้ เพราะ type เป็น string",
+        "ไฟล์นี้ควรใช้ .ts เพราะ type PizzaProps ทำให้ JSX ใช้ได้ในไฟล์ TypeScript ทุกนามสกุล",
+        "name และ description เป็น props ที่บังคับ เพราะไม่มีเครื่องหมาย ? ใน PizzaProps และไฟล์ที่มี JSX ควรใช้ .tsx"
+      ],
+      "correctChoice": 3,
+      "explanation": "ใน TypeScript field ของ PizzaProps ที่ไม่มี ? เป็น prop ที่บังคับ และไฟล์ที่มี JSX ควรใช้นามสกุล .tsx ไม่ใช่ .ts."
+    }
+  ]
+}
