@@ -83,7 +83,7 @@
 
         <h2>แล้วทำไมไม่ใช้ @apply รวม class ยาว ๆ ไว้เป็นชื่อเดียว</h2>
 
-        <p>Tailwind มี directive ชื่อ <code>@apply</code> ที่รวมหลาย utility ไว้เป็น class เดียวได้ เช่น <code>.btn { @apply rounded-lg bg-primary px-4 py-2; }</code> เห็นแล้วอาจคิดว่านี่คือทางออกของ class soup — แต่ลองสังเกตให้ดี นี่คือการย้อนกลับไปทำสิ่งเดียวกับที่ SCSS module ทำในบทที่ 2 ทุกประการ: <strong>ต้องตั้งชื่อ <code>.btn</code> อีกครั้ง</strong> เสีย locality อีกครั้ง (ต้องเปิดไฟล์ CSS แยกดูว่า <code>.btn</code> มีอะไรบ้าง) และสร้าง naming fatigue กลับมาอีกครั้ง — พูดง่าย ๆ คือ <code>@apply</code> พาเรากลับไปเจอปัญหาเดิมที่ utility-first ตั้งใจแก้ตั้งแต่แรก</p>
+        <p>Tailwind มี directive ชื่อ <code>@apply</code> ที่รวมหลาย utility ไว้เป็น class เดียวได้ เช่น <code>.btn { @apply rounded-lg bg-primary px-4 py-2; }</code> เห็นแล้วอาจคิดว่านี่คือทางออกของ class soup — แต่ลองสังเกตให้ดี นี่คือการย้อนกลับไปทำสิ่งเดียวกับไฟล์ CSS แบบเดิมที่เจอในบทที่ 2 ทุกประการ: <strong>ต้องตั้งชื่อ <code>.btn</code> อีกครั้ง</strong> เสีย locality อีกครั้ง (ต้องเปิดไฟล์ CSS แยกดูว่า <code>.btn</code> มีอะไรบ้าง) และสร้าง naming fatigue กลับมาอีกครั้ง — พูดง่าย ๆ คือ <code>@apply</code> พาเรากลับไปเจอปัญหาเดิมที่ utility-first ตั้งใจแก้ตั้งแต่แรก</p>
 
         <p>คำตอบของ Tailwind ต่อการนำสไตล์กลับมาใช้ซ้ำไม่ใช่ CSS class ใหม่ แต่คือ <strong>React component</strong> — ห่อ <code>&lt;button className="rounded-lg bg-primary px-4 py-2 ..."&gt;</code> ไว้ใน <code>&lt;AddToCartButton /&gt;</code> ตัวเดียว แล้วเรียกใช้ซ้ำได้ทั้งแอป สไตล์ยังคงอยู่ที่เดียวกับ markup เหมือนเดิม (locality ไม่เสีย) เพียงแต่ห่อด้วยฟังก์ชัน JavaScript แทนที่จะห่อด้วยชื่อ CSS class เราจะฝึก refactor แบบนี้จริงในบทที่ 13</p>
 
