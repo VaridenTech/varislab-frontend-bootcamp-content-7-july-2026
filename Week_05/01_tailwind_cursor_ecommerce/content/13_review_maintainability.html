@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ตรวจ maintainability ของโค้ดที่ Agent สร้างซ้ำ ๆ แล้วแยกปุ่มที่ซ้ำออกเป็น shared Button component ตาม variant pattern พร้อม checklist ปิดท้ายบทตรวจทานทั้งสามเลนส์" />
+    <title>ตรวจ Maintainability และแยก Reusable Component | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 13 · ตรวจทานโค้ดที่ AI สร้าง (Reviewing AI Code)</p>
+          <h1>ตรวจ Maintainability และแยก Reusable Component</h1>
+          <p class="lesson-original-title" lang="en">Maintainability &amp; Refactoring</p>
+        </header>
+
+        <p>สองเลนส์แรกจบแล้ว — Header ใช้งานได้ดีทั้งบนมือถือและด้วยคีย์บอร์ด แต่บทที่แล้วปิดท้ายด้วยข้อสังเกตหนึ่งที่ยังไม่ได้แตะ: <code>focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50</code> ถูกพิมพ์ซ้ำอยู่ถึง 6 รอบในไฟล์เดียว นี่ไม่ใช่บั๊กที่ทำให้อะไรพัง หน้าตาและพฤติกรรมยังถูกต้องทุกอย่าง แต่มันคือกลิ่นของปัญหาคนละแบบ — เลนส์สุดท้ายของสัปดาห์นี้: <strong>maintainability</strong> ว่าด้วยโค้ดที่ "ใช้งานได้" วันนี้ จะยังแก้ง่ายอยู่ไหมในอีกสามเดือนข้างหน้า</p>
+
+        <h2>กลิ่นของโค้ดที่ Agent สร้างสะสมไว้</h2>
+
+        <p>Agent ทำงานเป็นครั้ง ๆ ไม่มีความจำข้ามแชท ทุกครั้งที่สั่งสร้างหน้าใหม่ มันเริ่มจากศูนย์ ไม่รู้ว่าเคยเขียนปุ่มหน้าตาแบบนี้ไว้ที่ไฟล์อื่นแล้ว ผลคือ pattern เดียวกันถูกพิมพ์ซ้ำหลายรอบ ทีละนิดทีละหน่อย จนกลายเป็นโค้ดที่ดูแลยากโดยไม่มีใครตั้งใจ ลองดูตัวอย่างจริงจากหน้าต่าง ๆ ที่เราจะสร้างในบทถัดไป — สมมุติว่า Agent สร้างปุ่ม "Add to Cart" แยกกันคนละไฟล์สามรอบ และปุ่ม "Place Order" อีกหนึ่งรอบ</p>
+
+        <pre><code class="language-tsx">// src/pages/Home.tsx — ปุ่ม Add to Cart ในการ์ดสินค้า
+&lt;button className="rounded-lg bg-primary px-4 py-2 font-medium text-white transition-colors hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"&gt;
+  Add to Cart
+&lt;/button&gt;
+
+// src/pages/Category.tsx — ปุ่มเดียวกัน คัดลอกมาอีกไฟล์ เรียง class คนละลำดับ
+&lt;button className="rounded-lg bg-primary px-4 py-2 font-medium text-white hover:bg-primary-dark focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"&gt;
+  Add to Cart
+&lt;/button&gt;
+
+// src/pages/Product.tsx — ปุ่มเดียวกันอีกรอบ คนละไฟล์ padding ขยับนิดหน่อย
+&lt;button className="rounded-lg bg-primary px-6 py-2 font-medium text-white hover:bg-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"&gt;
+  Add to Cart
+&lt;/button&gt;
+
+// src/features/checkout/components/CheckoutForm.tsx — ปุ่ม Place Order ที่ผูก state
+&lt;button
+  className={`rounded-lg px-4 py-2 font-medium text-white transition-colors ${
+    isSubmitting ? "cursor-not-allowed bg-gray-300" : "bg-primary hover:bg-primary-dark"
+  }`}
+&gt;
+  {isSubmitting ? "กำลังส่ง..." : "Place Order"}
+&lt;/button&gt;
+
+// src/pages/Category.tsx — ปุ่ม Previous ของ pagination
+&lt;button className="w-[100px] rounded-lg border border-primary px-4 py-2 font-medium text-primary hover:bg-primary/10"&gt;
+  Previous
+&lt;/button&gt;</code></pre>
+
+        <p>สี่ปุ่มแรกหน้าตาเหมือนกันแทบทุกประการ — สีพื้น สีตัวหนังสือ ขนาดตัวอักษร มุมโค้ง แต่ class string ไม่ตรงกันเป๊ะสักคู่ (ลำดับ class สลับกัน padding ขยับนิดหน่อย) เพราะแต่ละไฟล์ถูกเขียนแยกกันคนละรอบ แก้สีแบรนด์ทีหนึ่งต้องไล่หาให้ครบ 4 ที่ ลืมที่ไหนที่หนึ่งก็เผลอทำให้ปุ่มหน้าตาไม่ตรงกันทั้งแอป ปุ่ม Place Order ยังมีปัญหาเพิ่มอีกชั้น — ตรรกะ disabled ถูกเขียนเป็น ternary ซ้อนอยู่<em>ใน</em> className โดยตรง ยิ่งเงื่อนไขเยอะขึ้น string นี้จะยิ่งอ่านยากขึ้นเรื่อย ๆ ส่วนปุ่ม Previous มี <code>w-[100px]</code> เป็นตัวเลข arbitrary ที่ไม่มีใครรู้ว่าทำไมต้อง 100 พิกเซลเป๊ะ — ตัวเลขแบบนี้มักโผล่มาโดย Agent เดาเอาจาก screenshot ไม่ได้มาจาก design system ที่ตั้งใจไว้</p>
+
+        <h2>กติกา: เห็น class string ซ้ำ ≥ 2 ที่ = แยก component</h2>
+
+        <p>บทที่ 6 เคยตั้งคำถามไว้ว่าทำไมไม่ใช้ <code>@apply</code> รวม class ยาว ๆ แล้วสรุปว่าคำตอบของ Tailwind ต่อการนำสไตล์กลับมาใช้ซ้ำไม่ใช่ CSS class ใหม่ แต่คือ <strong>React component</strong> นี่คือจุดที่เอาหลักการนั้นมาใช้จริง กติกาที่จำง่ายที่สุดคือ: <strong>เจอ class string หน้าตาเดียวกัน (หรือใกล้เคียงกันมาก) ตั้งแต่ 2 จุดขึ้นไป ให้แยกเป็น component ทันที ไม่ต้องรอให้ซ้ำถึง 5-6 จุดก่อน</strong> ยิ่งรอนาน ยิ่งมีจุดให้ไล่แก้ทีหลังมากขึ้น</p>
+
+        <h2>สร้าง shared/components/Button/Button.tsx</h2>
+
+        <p>ปุ่มทั้งสี่แบบด้านบนต่างกันแค่ "สไตล์กลุ่ม" — บางปุ่มพื้นทึบสีแบรนด์ (primary) บางปุ่มกรอบเปล่า (outline) และปุ่มบางแบบที่ยังไม่เจอในตัวอย่างนี้แต่จะเจอในบทหน้าคือปุ่มจาง ๆ ไม่มีพื้นหลัง (ghost) เขียน component เดียวที่รับ <code>variant</code> เป็น prop แล้วครอบคลุมทั้งสามแบบไปเลย</p>
+
+        <pre><code class="language-tsx">// src/shared/components/Button/Button.tsx
+import { ButtonHTMLAttributes } from "react";
+
+type Variant = "primary" | "outline" | "ghost";
+
+const variantClasses: Record&lt;Variant, string&gt; = {
+  primary: "bg-primary text-white hover:bg-primary-dark",
+  outline: "border border-primary text-primary hover:bg-primary/10",
+  ghost: "text-gray-600 hover:bg-gray-100",
+};
+
+interface ButtonProps extends ButtonHTMLAttributes&lt;HTMLButtonElement&gt; {
+  variant?: Variant;
+}
+
+export default function Button({
+  variant = "primary",
+  className = "",
+  ...rest
+}: ButtonProps) {
+  return (
+    &lt;button
+      className={`inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${variantClasses[variant]} ${className}`}
+      {...rest}
+    /&gt;
+  );
+}
+</code></pre>
+
+        <p>ไล่ทีละจุดที่น่าสังเกต: <code>variantClasses</code> เป็น object ธรรมดาที่ map ชื่อ variant ไปหา class ของมัน — วิธีนี้อ่านง่ายกว่า ternary ซ้อนกันหลายชั้นมาก เพราะเพิ่ม variant ใหม่แค่เพิ่ม key ใหม่เข้าไปในตาราง ไม่ต้องไล่แก้เงื่อนไข if/else ที่ไหนเลย <code>...rest</code> รับ prop ที่เหลือทั้งหมดที่ <code>&lt;button&gt;</code> ปกติรับได้ (<code>onClick</code>, <code>disabled</code>, <code>type</code> ฯลฯ) แล้วกระจายลง element จริง ทำให้ <code>Button</code> ใช้แทน <code>&lt;button&gt;</code> ธรรมดาได้ทุกที่โดยไม่เสียความสามารถอะไรไป <code>className = ""</code> เป็น "ทางออกฉุกเฉิน" (escape hatch) เผื่อบางจุดต้องการเพิ่ม class พิเศษที่ variant ไม่ได้ครอบคลุมไว้ และสุดท้าย <code>focus-visible:...</code> กับ <code>disabled:pointer-events-none disabled:opacity-50</code> ถูกเขียนไว้<strong>ครั้งเดียว</strong>ในไฟล์นี้ ทุกปุ่มที่เรียกใช้ <code>Button</code> จะได้ focus ring และสไตล์ disabled ที่ถูกต้องโดยอัตโนมัติ ไม่ต้องมานั่งจำว่าต้องแปะ class ไหนอีกแล้ว</p>
+
+        <h2>ใช้งานจริง: แทนที่ปุ่มที่ซ้ำให้เหลือจุดเดียว</h2>
+
+        <p>เมื่อมี <code>Button</code> แล้ว โค้ดในตัวอย่างก่อนหน้าย่อลงเหลือแค่นี้</p>
+
+        <pre><code class="language-tsx">// src/pages/Home.tsx, src/pages/Category.tsx, src/pages/Product.tsx
+&lt;Button&gt;Add to Cart&lt;/Button&gt;
+
+// src/features/checkout/components/CheckoutForm.tsx
+&lt;Button disabled={isSubmitting}&gt;
+  {isSubmitting ? "กำลังส่ง..." : "Place Order"}
+&lt;/Button&gt;
+
+// src/pages/Category.tsx — pagination
+&lt;Button variant="outline"&gt;Previous&lt;/Button&gt;</code></pre>
+
+        <p>ternary ที่เคยซ้อนอยู่ใน className ของปุ่ม Place Order หายไปเลย เหลือแค่ <code>disabled={isSubmitting}</code> ตรง ๆ เพราะสไตล์ตอน disabled ถูกเขียนไว้ใน <code>Button</code> แล้วครั้งเดียว และปุ่ม Previous ไม่มี <code>w-[100px]</code> ติดมาด้วยอีกต่อไป เพราะความกว้างของปุ่มควรปล่อยให้ยืดตามเนื้อหาข้างในแทนการล็อกตัวเลขตายตัว</p>
+
+        <p class="translator-note">🔍 สังเกตว่าปุ่ม disabled หน้าตาเปลี่ยนไปเล็กน้อยจากเดิม — เดิมใช้ <code>bg-gray-300</code> กับ <code>cursor-not-allowed</code> ตอนนี้ <code>Button</code> ใช้ <code>disabled:opacity-50</code> แทน สีพื้นจึงจางลงแทนที่จะเปลี่ยนเป็นเทาไปเลย นี่คือตัวอย่างจริงของสิ่งที่ต้องเช็คด้วยตาหลัง refactor ทุกครั้ง — โครงสร้างโค้ดสะอาดขึ้นไม่ได้แปลว่า UI จะหน้าตาเหมือนเดิม 100% เสมอไป</p>
+
+        <h2>Checklist: ตรวจ Maintainability (บทเรียน 13)</h2>
+
+        <ul>
+          <li>class string หน้าตาเดียวกันซ้ำตั้งแต่ 2 จุดขึ้นไป → แยกเป็น component</li>
+          <li>ตัวเลข arbitrary (<code>[...]</code>) ที่ไม่มีที่มาชัดเจน → เปลี่ยนเป็น design token หรือ scale ปกติของ Tailwind</li>
+          <li>ternary ซ้อนกันอยู่ใน className → เปลี่ยนเป็น variant map (object lookup แบบ <code>Button</code> ด้านบน)</li>
+          <li>component ไฟล์ไหนยาวเกินประมาณ 150 บรรทัด → พิจารณาแตกเป็นไฟล์ย่อย</li>
+          <li>ชื่อ component ที่ไม่สื่อความหมาย (<code>Card2</code>, <code>NewSection</code>) → ตั้งชื่อตาม domain จริงที่มันแทน</li>
+          <li>ทุกอย่างที่ต้อง import ข้าม feature (ใช้ร่วมกันมากกว่าหนึ่งฟีเจอร์) ต้องย้ายไปอยู่ใน <code>shared/</code></li>
+        </ul>
+
+        <h2>สั่ง refactor ด้วย Agent</h2>
+
+        <p>การไล่แทนที่ปุ่มซ้ำ ๆ หลายไฟล์เป็นงานที่ทำซ้ำ ๆ ตรงไปตรงมา เหมาะกับ Agent มาก แต่ต้องบอกให้ชัดว่า "แยก" หมายถึงอะไร ไม่ใช่แค่ "ทำให้สวยขึ้น" เฉย ๆ</p>
+
+        <pre><code class="language-text">แยกปุ่มที่ซ้ำใน Header, Footer, Home, Category, Product และ CheckoutForm ออกเป็น shared component เดียวที่ src/shared/components/Button/Button.tsx ตาม variant pattern (primary / outline / ghost) — ปุ่มพื้นสีแบรนด์ทึบใช้ primary, ปุ่มกรอบใช้ outline
+
+หลังสร้าง Button แล้ว แทนที่ &lt;button&gt; เดิมทุกจุดที่ซ้ำด้วย &lt;Button&gt; ตัวใหม่ ส่ง prop ที่จำเป็น (onClick, disabled, type) ผ่านไปตามปกติ
+
+ขอบเขต: ห้ามเปลี่ยนข้อความหรือ layout รอบ ๆ ปุ่ม แก้แค่ตัวปุ่มเท่านั้น</code></pre>
+
+        <p>เหมือนทุกครั้งที่ผ่านมา อ่าน diff ก่อน accept เสมอ แต่รอบนี้มีอีกขั้นตอนที่สำคัญไม่แพ้กัน: เปิด dev server แล้วเทียบหน้าตาก่อน-หลัง refactor ด้วยตาจริง ๆ ที่ทุก breakpoint (390 / 768 / 1024 / 1440 จาก checklist บทที่ 11) เพราะเป้าหมายของการ refactor คือให้ <strong>โครงสร้างโค้ดดีขึ้นโดยที่ผู้ใช้ไม่เห็นความต่างเลย</strong> ถ้า UI เปลี่ยนไปแม้แต่นิดเดียวโดยไม่ได้ตั้งใจ (แบบปุ่ม disabled ในตัวอย่างด้านบน) ต้องจับให้ได้ก่อน commit เสมอ</p>
+
+        <h2>ปิดท้ายบทที่ 5: สามเลนส์ครบแล้ว</h2>
+
+        <p>ตอนนี้เรามี checklist ครบสามเลนส์แล้ว — responsive (บทที่ 11), accessibility (บทที่ 12), maintainability (บทนี้) — และมี <code>Button</code> component ตัวแรกที่จะใช้ซ้ำไปตลอดทั้งแอป ทุกหน้าที่เหลือของสัปดาห์นี้ ตั้งแต่บทที่ 14 เป็นต้นไป จะวน The Loop เต็มรูปแบบซ้ำ ๆ: 🎯 ตั้งเป้าหมาย → 📝 เขียน prompt → 🤖 ดู Agent สร้าง → 🔍 ตรวจทานผ่านสามเลนส์นี้ → 🔧 refactor จนสะอาด แล้ววนใหม่กับชิ้นถัดไป การตรวจทานสามเลนส์นี้จะไม่ใช่ขั้นตอนพิเศษที่ต้องนึกถึงอีกต่อไป แต่จะกลายเป็นนิสัยที่ทำโดยอัตโนมัติทุกครั้งที่ Agent ส่งโค้ดกลับมา — เริ่มจากหน้า Home ในบทถัดไป</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="12_review_accessibility.html" rel="prev">ก่อนหน้า: ตรวจ Accessibility</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="14_home_page.html" rel="next">ถัดไป: หน้า Home</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

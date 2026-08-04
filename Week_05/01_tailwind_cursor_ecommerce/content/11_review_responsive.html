@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ไล่จับปัญหา responsive ในโค้ดที่ Agent สร้าง ตั้งแต่ container กว้างตายตัวไปจนถึงเมนูที่หายไปบนมือถือ พร้อม checklist ตรวจ responsive ที่ใช้ซ้ำได้ทุกบทที่เหลือ" />
+    <title>ตรวจ Responsive ของโค้ดจาก AI | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 11 · ตรวจทานโค้ดที่ AI สร้าง (Reviewing AI Code)</p>
+          <h1>ตรวจ Responsive ของโค้ดจาก AI</h1>
+          <p class="lesson-original-title" lang="en">Reviewing Responsiveness</p>
+        </header>
+
+        <p>บทที่แล้วปิดท้ายด้วย TODO สามข้อที่จดไว้จาก Header ที่ Agent สร้าง — container กว้างตายตัว, เมนูที่เป็น div ปลอมตัวเป็นลิงก์, และไม่มี focus style ที่ไหนเลย บทนี้เป็นบทแรกที่เรากลับมาที่ขั้นตอน 🔍 ตรวจทานของ The Loop อย่างจริงจัง โดยใช้เลนส์แรกจากสามเลนส์ของสัปดาห์นี้: <strong>responsive</strong> เราจะไล่จับ TODO ข้อแรกให้จบ พร้อมสร้าง checklist ที่จะใช้ซ้ำทุกครั้งที่ Agent ส่งโค้ดมาให้ตรวจตลอดทั้งสัปดาห์ที่เหลือ</p>
+
+        <h2>ทำไม Agent ถึงสร้าง UI ที่ใช้ได้ดีแค่บนจอเดสก์ท็อป</h2>
+
+        <p>ย้อนกลับไปดู prompt ที่ใช้สร้าง Header ในบทที่แล้ว มีข้อกำหนดทางเทคนิคว่า "mobile-first" อยู่ในนั้นจริง แต่ screenshot ที่แนบไปมีแค่ภาพเดียว — <code>home_desktop.png</code> Agent เห็นแค่หน้าตาบนจอกว้าง แล้วต้อง<em>เดา</em>เอาเองว่าจอแคบควรเป็นยังไง คำว่า "mobile-first" ในข้อความอย่างเดียวแข่งกับภาพที่เห็นจริงตรง ๆ ไม่ได้ ผลลัพธ์ที่ได้จึงมักเป็น UI ที่ตรงกับภาพทุกพิกเซลบนจอกว้าง แล้วค่อย "พอทำได้" บนจอแคบ หรือแย่กว่านั้นคือพังไปเลยแบบที่เห็นใน Header — รูปแบบนี้พบซ้ำ ๆ เวลาให้ AI สร้าง UI จาก screenshot: <strong>คุณแนบรูป desktop มันก็ตอบ desktop</strong> ไม่ใช่เพราะ Agent เขียนโค้ด responsive ไม่เป็น แต่เพราะมันไม่มีข้อมูลพอจะรู้ว่าจอแคบควรมีหน้าตาแบบไหน</p>
+
+        <p>แม้แต่ทีมที่สร้างแอปต้นแบบเองก็ยังพลาดจุดนี้ ย้อนกลับไปดูภาพจากบทที่ 5 อีกครั้ง</p>
+
+        <img src="images/home_mobile.png" alt="ภาพหน้าจอหน้า Home ของแอปต้นแบบบนมือถือ sidebar หมวดหมู่และ grid สินค้าทับซ้อนกันจนตัวหนังสือและรูปภาพอ่านไม่ออก" />
+
+        <p>sidebar หมวดหมู่กับ grid สินค้าทับกันจนอ่านไม่ออก เพราะเลย์เอาต์แบบเคียงข้างกันถูกล็อกไว้ตายตัวโดยไม่มี breakpoint คอยสลับกลับเป็นแนวตั้งบนจอแคบ ปัญหาเดียวกันนี้เกิดกับหน้า Category ด้วย ถ้าแม้แต่ทีมที่ออกแบบแอปต้นแบบเองยังปล่อยบั๊กแบบนี้หลุดออกไปได้ เวอร์ชันที่ Agent ร่างให้เราในไม่กี่วินาทีก็ยิ่งมีโอกาสพลาดสูงกว่านั้นอีก นี่คือเหตุผลที่การตรวจทาน responsive ต้องเป็นขั้นตอนที่ทำ<strong>ทุกครั้ง</strong> ไม่ใช่แค่ตอนที่ "รู้สึกว่าน่าจะมีปัญหา"</p>
+
+        <h2>จับผิดข้อแรก: container กว้างตายตัว</h2>
+
+        <p>เปิด DevTools แล้วสลับไปโหมด device toolbar เหมือนที่ทำในบทที่ 5 (<code>Cmd+Shift+M</code> บน Mac) ตั้งความกว้างจอไว้ที่ <strong>390px</strong> (ขนาด iPhone ทั่วไป) แล้วดูที่ Header — จะเห็น scrollbar แนวนอนโผล่มาด้านล่างจอ ทั้งที่หน้าเว็บทั่วไปไม่ควรมี scrollbar แนวนอนเลย สาเหตุอยู่ที่บรรทัดนี้ใน <code>Header.tsx</code> ที่เห็นในบทที่แล้ว</p>
+
+        <pre><code class="language-tsx">&lt;div className="mx-auto flex h-16 w-[1200px] items-center justify-between px-4"&gt;</code></pre>
+
+        <p><code>w-[1200px]</code> คือ arbitrary value ของ Tailwind ที่แปลตรงตัวว่า "ความกว้าง 1200 พิกเซล เสมอ ไม่ว่าจอจะกว้างแค่ไหน" บนจอกว้างกว่า 1200px มันแค่ถูกจัดกึ่งกลางด้วย <code>mx-auto</code> จนดูปกติ แต่บนจอแคบกว่านั้น div นี้ไม่ยอมหดตาม มันดันความกว้างของทั้งหน้าให้กว้างกว่าตัวจอจริง เบราว์เซอร์เลยต้องเติม scrollbar แนวนอนมาให้เลื่อนดูส่วนที่ล้นออกไป</p>
+
+        <p class="translator-note">🚨 กับดักนี้พบบ่อยเวลา Agent แปลง screenshot มาเป็นโค้ด เพราะในไฟล์ภาพวัดได้ 1200px เป๊ะที่ความกว้างตอน export Agent เลยเขียนตัวเลขนั้นตรง ๆ โดยไม่รู้ว่าเลขนั้นมาจากขนาดจอตอนแคปเจอร์รูป ไม่ใช่ค่าที่ควร hardcode ไว้ในโค้ดจริง</p>
+
+        <p>ทางแก้คือแทนที่ตัวเลขตายตัวด้วย <code>max-w-7xl</code> (จำกัดความกว้าง<em>สูงสุด</em> ไม่ใช่บังคับความกว้างตายตัว) แล้วเติม padding ที่ขยับตามขนาดจอแบบเดียวกับ container pattern ที่เรียนในบทที่ 5</p>
+
+        <pre><code class="language-tsx">&lt;div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"&gt;</code></pre>
+
+        <p>ตอนนี้บนจอกว้างเนื้อหาก็ยังจำกัดความกว้างสูงสุดไม่ให้ยืดเกิน 1280px (<code>max-w-7xl</code>) เหมือนเดิม แต่บนจอแคบ div จะหดตามความกว้างจริงของจอเสมอ ไม่มี scrollbar แนวนอนอีกต่อไป</p>
+
+        <h2>Checklist: ตรวจ Responsive (บทเรียน 11)</h2>
+
+        <p>เก็บ checklist นี้ไว้ใช้ทุกครั้งที่ Agent ส่งโค้ด UI มาให้ตรวจ ตั้งแต่บทที่ 14 เป็นต้นไปเราจะอ้างถึงรายการนี้ซ้ำ ๆ ในทุกขั้นตอน 🔍 ตรวจทาน</p>
+
+        <ul>
+          <li>ทดสอบที่ความกว้างจอ <strong>390 / 768 / 1024 / 1440</strong> ทุกครั้ง ไม่ใช่แค่จอที่เปิดอยู่ตอนนั้น</li>
+          <li>หา <code>w-[...px]</code> หรือ <code>h-[...px]</code> ที่เป็นเลขตายตัว → เปลี่ยนเป็น <code>max-w-*</code> ร่วมกับ <code>w-full</code></li>
+          <li>ทุก grid ต้องมีลำดับจำนวนคอลัมน์ mobile → desktop ระบุไว้ครบ ไม่ใช่ค่าคงที่ค่าเดียว</li>
+          <li>รูปทุกรูปมี <code>object-cover</code> คู่กับ <code>aspect-*</code> เพื่อไม่ให้บิดเบี้ยวเมื่อขนาดกล่องเปลี่ยน</li>
+          <li>ข้อความที่อาจยาวเกินกล่อง มี <code>truncate</code> หรือ <code>line-clamp-*</code> กันล้น</li>
+          <li>ไม่มี <code>overflow-x</code> โผล่มาที่หน้าไหนเลย ไม่ว่าจะจอขนาดใด</li>
+          <li>ของที่ถูก <code>hidden</code> ไว้บนมือถือ ต้องมีทางเข้าถึงเนื้อหาเดียวกันด้วยวิธีอื่นเสมอ ห้ามหายไปเฉย ๆ</li>
+        </ul>
+
+        <h2>ใช้ checklist ข้อสุดท้าย: สร้างเมนู Hamburger สำหรับมือถือ</h2>
+
+        <p>ข้อสุดท้ายในรายการด้านบนคือสิ่งที่ Header ของเรากำลังทำผิดอยู่พอดี ย้อนกลับไปดู <code>nav</code> ในบทที่แล้ว</p>
+
+        <pre><code class="language-tsx">&lt;nav className="hidden items-center gap-6 md:flex"&gt;
+  &lt;div className="cursor-pointer text-gray-700 hover:text-primary"&gt;Home&lt;/div&gt;
+  &lt;div className="cursor-pointer text-gray-700 hover:text-primary"&gt;Products&lt;/div&gt;
+&lt;/nav&gt;</code></pre>
+
+        <p><code>hidden md:flex</code> ซ่อนเมนูนี้ไว้บนทุกจอที่แคบกว่า <code>md</code> (768px) โดยไม่มีอะไรมาแทนเลย บนมือถือผู้ใช้จึงไม่มีทางไปหน้า Home หรือ Products จากตรงนี้ได้เลย — ผิด checklist ข้อสุดท้ายเต็ม ๆ ทางแก้มาตรฐานของปัญหานี้คือปุ่ม hamburger ที่เปิด/ปิดเมนูแบบเลื่อนลง (slide-down panel) โค้ดเต็มของ <code>Header.tsx</code> หลังเพิ่มส่วนนี้เข้าไปหน้าตาเป็นแบบนี้</p>
+
+        <pre><code class="language-tsx">// src/shared/components/Header/Header.tsx
+import { useState } from "react";
+import { Link } from "react-router";
+
+export default function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  return (
+    &lt;header className="border-b border-gray-200 bg-white"&gt;
+      &lt;div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"&gt;
+        &lt;Link to="/" className="text-xl font-bold text-gray-900"&gt;
+          My Store
+        &lt;/Link&gt;
+
+        &lt;nav className="hidden items-center gap-6 md:flex"&gt;
+          &lt;div className="cursor-pointer text-gray-700 hover:text-primary"&gt;Home&lt;/div&gt;
+          &lt;div className="cursor-pointer text-gray-700 hover:text-primary"&gt;Products&lt;/div&gt;
+        &lt;/nav&gt;
+
+        &lt;div className="flex items-center gap-4"&gt;
+          &lt;div className="relative"&gt;
+            &lt;svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"&gt;
+              &lt;path d="M3 3h18l-2 12H5L3 3z" strokeWidth="2" /&gt;
+            &lt;/svg&gt;
+            &lt;span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white"&gt;
+              0
+            &lt;/span&gt;
+          &lt;/div&gt;
+
+          &lt;button
+            type="button"
+            className="md:hidden"
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-nav"
+            onClick={() =&gt; setIsMenuOpen((open) =&gt; !open)}
+          &gt;
+            &lt;svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"&gt;
+              &lt;path d="M4 6h16M4 12h16M4 18h16" strokeWidth="2" /&gt;
+            &lt;/svg&gt;
+          &lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      {isMenuOpen &amp;&amp; (
+        &lt;nav id="mobile-nav" className="flex flex-col gap-1 border-t border-gray-200 px-4 pb-4 md:hidden"&gt;
+          &lt;div className="cursor-pointer py-2 text-gray-700"&gt;Home&lt;/div&gt;
+          &lt;div className="cursor-pointer py-2 text-gray-700"&gt;Products&lt;/div&gt;
+        &lt;/nav&gt;
+      )}
+    &lt;/header&gt;
+  );
+}
+</code></pre>
+
+        <p>โครงสร้างสำคัญสามจุด: <code>isMenuOpen</code> เป็น state ธรรมดาที่เก็บว่าเมนูเปิดอยู่หรือไม่ ปุ่ม hamburger สลับค่านั้นเมื่อถูกกด และ <code>aria-expanded={isMenuOpen}</code> ประกาศสถานะเปิด/ปิดให้ screen reader รู้เสมอ ไม่ใช่แค่คนที่มองเห็นเท่านั้นที่รู้ว่าเมนูเปิดอยู่ ส่วนแผงเมนูมือถือ (<code>id="mobile-nav"</code>) render แบบมีเงื่อนไข — โผล่มาเฉพาะตอน <code>isMenuOpen</code> เป็น true และมี <code>md:hidden</code> กำกับไว้ เพื่อไม่ให้โผล่มาซ้อนกับเมนู desktop เวลาจอกว้างขึ้น</p>
+
+        <p class="translator-note">💡 สังเกตว่ารายการเมนูในแผงมือถือยังเป็น <code>&lt;div&gt;</code> เหมือนเดิม ยังไม่ได้แก้ให้เป็นลิงก์จริง และปุ่ม hamburger เองก็ยังไม่มี focus style — ตั้งใจเว้นไว้แบบนี้ เพราะสองเรื่องนี้คือ TODO ข้อที่ 2 และ 3 ที่จดไว้จากบทที่แล้ว บทที่ 12 (ตรวจ Accessibility) จะกลับมาแก้ทั้งสองจุดนี้ให้ครบทั้งไฟล์ในคราวเดียว บทนี้แก้เฉพาะเรื่อง responsive เท่านั้น</p>
+
+        <h2>สั่ง Agent แก้ไข แล้วอ่าน diff</h2>
+
+        <p>การแก้ container กว้างตายตัวเป็นงานเล็กและชัดเจนพอที่จะมอบให้ Agent ทำแทนได้ — prompt ที่ดีสำหรับงานแก้บั๊กเล็ก ๆ แบบนี้ไม่ต้องยาวเหมือนตอนสร้างหน้าใหม่ทั้งหน้า แค่ชี้ไฟล์ ชี้ปัญหา และชี้วิธีแก้ที่ต้องการให้ชัดพอ</p>
+
+        <pre><code class="language-text">ไฟล์ src/shared/components/Header/Header.tsx
+
+ปัญหา: div ที่ครอบเนื้อหาด้านในใช้ w-[1200px] (ความกว้างตายตัว) ทำให้เกิด scrollbar แนวนอนบนจอทุกขนาดที่แคบกว่า 1200px
+
+แก้: เปลี่ยน w-[1200px] เป็น max-w-7xl แล้วเพิ่ม sm:px-6 lg:px-8 ต่อจาก px-4 เดิม ตาม container pattern ที่ใช้ทั้งแอป
+
+ขอบเขต: แก้เฉพาะบรรทัดนี้ อย่าเปลี่ยนโครงสร้างอื่นในไฟล์</code></pre>
+
+        <p>วางใน Agent panel แล้วก่อนกด Accept ทุกครั้ง เปิดดู diff ที่ Agent เสนอมาก่อนเสมอ — เช็คว่ามันแก้ตรงจุดที่ขอจริง ไม่ได้แอบไปแตะไฟล์อื่นหรือเปลี่ยนโครงสร้างที่ไม่ได้ขอ นิสัยนี้สำคัญพอ ๆ กับการเขียน prompt ให้ดีตั้งแต่แรก เพราะต่อให้ prompt ชัดแค่ไหน Agent ก็ยังมีโอกาสตีความคลาดเคลื่อนได้เสมอ</p>
+
+        <p>defect ข้อแรกจบแล้ว เหลืออีกสองข้อจาก TODO ของบทที่แล้ว — nav ที่เป็น div ปลอมตัวเป็นลิงก์ และไม่มี focus style ที่ไหนเลย บทหน้าเราจะกลับมาที่ Header ตัวเดิมนี้อีกครั้ง คราวนี้มองผ่านเลนส์ accessibility</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="10_first_layout.html" rel="prev">ก่อนหน้า: สร้าง Layout แรกด้วย Agent</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="12_review_accessibility.html" rel="next">ถัดไป: ตรวจ Accessibility</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
