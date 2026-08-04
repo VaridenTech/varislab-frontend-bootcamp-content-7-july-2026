@@ -51,7 +51,9 @@ test("can submit contact form", async () =&gt; {
 
   const requests = fetchMocker.requests();
   expect(requests.length).toBe(1);
-  expect(requests[0].url).toBe("/api/contact");
+  // requests() เก็บ URL ที่ resolve เป็น absolute แล้ว (http://localhost:3000/api/contact)
+  // เทียบเฉพาะ pathname จึงตรงประเด็นกว่าและไม่ผูกกับ base URL ของ happy-dom
+  expect(new URL(requests[0].url).pathname).toBe("/api/contact");
   expect(fetchMocker).toHaveBeenCalledWith("/api/contact", {
     body: JSON.stringify(testData),
     headers: {
@@ -61,6 +63,8 @@ test("can submit contact form", async () =&gt; {
   });
 });
 </code></pre>
+  <p class="translator-note">หมายเหตุผู้แปล: ต้นฉบับเขียนบรรทัดนั้นว่า <code>expect(requests[0].url).toBe("/api/contact")</code> ซึ่งจะไม่ผ่าน เพราะ <code>fetchMocker.requests()</code> เก็บ URL ที่ resolve เป็น absolute เทียบกับ base URL ของ happy-dom แล้ว (<code>http://localhost:3000/api/contact</code>) ไม่ใช่ string ที่เราส่งเข้า <code>fetch()</code> · เราจึงเทียบเฉพาะ <code>pathname</code> ซึ่งนอกจากจะผ่านแล้วยังตรงกับสิ่งที่เราสนใจจริง ๆ มากกว่าด้วย คือ "ยิงไปที่ endpoint ถูกตัวไหม" ไม่ใช่ "host คืออะไร" · สังเกตว่าบรรทัด <code>toHaveBeenCalledWith("/api/contact", …)</code> ถัดลงไปไม่ต้องแก้ เพราะมันดู argument ที่เราส่งเข้า <code>fetch()</code> จริง ๆ ไม่ใช่ค่าที่ resolve แล้ว</p>
+
   <p>ก่อนที่เทสต์นี้จะทำงานได้ ต้องแก้อีกที่หนึ่ง กลับไปที่ <code>src/routes/contact.lazy.tsx</code> แล้วเติม <code>export</code> ให้ component</p>
   <pre><code class="language-typescript">// เดิม: function ContactRoute() {
 export function ContactRoute() {

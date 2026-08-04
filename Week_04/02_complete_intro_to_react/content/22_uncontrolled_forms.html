@@ -50,9 +50,7 @@ export const Route = createLazyFileRoute("/contact")({
 
 function ContactRoute() {
   const mutation = useMutation({
-    mutationFn: function (e: React.FormEvent&lt;HTMLFormElement&gt;) {
-      e.preventDefault();
-      const formData = new FormData(e.currentTarget);
+    mutationFn: function (formData: FormData) {
       return postContact(
         String(formData.get("name")),
         String(formData.get("email")),
@@ -67,7 +65,15 @@ function ContactRoute() {
       {mutation.isSuccess ? (
         &lt;h3&gt;Submitted!&lt;/h3&gt;
       ) : (
-        &lt;form onSubmit={mutation.mutate}&gt;
+        &lt;form
+          onSubmit={(e: React.FormEvent&lt;HTMLFormElement&gt;) =&gt; {
+            e.preventDefault();
+            // ต้องอ่าน FormData ตรงนี้เลย เพราะ React ล้าง currentTarget ทิ้ง
+            // ทันทีที่ handler จบ ส่วน mutationFn ถูกเรียกทีหลังแบบ async
+            // currentTarget คือ &lt;form&gt; เสมอ ส่วน target อาจเป็นปุ่มข้างในได้
+            mutation.mutate(new FormData(e.currentTarget));
+          }}
+        &gt;
           &lt;input name="name" placeholder="Name" /&gt;
           &lt;input type="email" name="email" placeholder="Email" /&gt;
           &lt;textarea placeholder="Message" name="message"&gt;&lt;/textarea&gt;
@@ -78,6 +84,8 @@ function ContactRoute() {
   );
 }
 </code></pre>
+      <p class="translator-note">หมายเหตุผู้แปล: ต้นฉบับของหลักสูตรส่ง <code>mutation.mutate</code> ให้ <code>onSubmit</code> ตรง ๆ แล้วให้ <code>mutationFn</code> รับ event เข้าไปสร้าง <code>FormData</code> เอง วิธีนั้น<strong>ใช้ไม่ได้จริง</strong> เพราะ React จะล้าง <code>e.currentTarget</code> ทิ้งทันทีที่ handler ตัวนั้นจบ แต่ TanStack Query เรียก <code>mutationFn</code> ทีหลังแบบ async กว่าจะถึงตอนนั้น <code>e.currentTarget</code> เป็น <code>null</code> ไปแล้ว · อาการที่เจอคือ <code>new FormData(null)</code> โยน error แล้ว TanStack Query กลืนมันเข้าไปเก็บใน mutation error state ผลคือฟอร์ม<strong>ไม่ทำอะไรเลย</strong> ไม่มี request ไม่มีคำว่า Submitted! และไม่มี error ใน console ให้เห็นด้วย · เราจึงอ่าน <code>FormData</code> ให้เสร็จใน handler แบบ synchronous แล้วส่งเข้า <code>mutate()</code> เป็น parameter แทน สังเกตว่าพอถึงบทที่ 32 form actions ของ React 19 ก็พาเรามาลงที่รูปแบบเดียวกันนี้พอดี</p>
+
       <ul>
         <li>เราใช้ mutation จาก TanStack React Query มันทำงานคล้าย normal gets มาก ยกเว้นตัวนี้ส่งข้อมูลไปยัง API แทนที่จะ get มัน</li>
         <li>สังเกตว่าเราใช้ <code>isSuccess</code> เพื่อแสดงหรือซ่อน form เมื่อ mutation submit สำเร็จ เราแค่อยากแสดงสิ่งนั้นแก่ผู้ใช้ แล้วซ่อน form</li>

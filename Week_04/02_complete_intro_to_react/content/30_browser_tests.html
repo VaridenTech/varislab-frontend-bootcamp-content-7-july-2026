@@ -32,6 +32,11 @@ export default defineConfig({
       },
       {
         extends: true,
+        // ต้อง pre-bundle เอง ไม่งั้น react-dom/client ถูกเสิร์ฟดิบ ๆ
+        // แล้ว vitest-browser-react จะ import default export ไม่เจอ
+        optimizeDeps: {
+          include: ["react", "react-dom", "react-dom/client"],
+        },
         test: {
           name: "browser",
           include: ["**/*.browser.test.{ts,tsx}"],
@@ -40,7 +45,9 @@ export default defineConfig({
             enabled: true,
             provider: playwright(),
             instances: [
-              { browser: "firefox" }, // you can use chromium or webkit here too
+              // ใช้ chromium เพราะ coverage v8 จากบทที่ 28 รองรับเฉพาะ chromium
+              // ถ้าอยากใช้ firefox/webkit ต้องเปลี่ยนไปใช้ provider istanbul แทน
+              { browser: "chromium" },
             ],
           },
         },
@@ -56,7 +63,8 @@ export default defineConfig({
     <li><code>extends: true</code> บอกให้แต่ละ project สืบทอด <code>plugins</code> และ <code>server</code> จาก config ตัวนอก ถ้าไม่ใส่ Vitest จะไม่รู้จัก React plugin แล้วเทสต์ที่มี JSX จะพังทันที</li>
     <li>เพราะเราใช้ <code>defineConfig</code> จาก <code>&quot;vitest/config&quot;</code> อยู่แล้วตั้งแต่บทที่ 23 ทุก option ในนี้จึงมี auto-complete ครบ ลองพิมพ์ <code>browser:</code> แล้วกด <kbd>Ctrl</kbd>+<kbd>Space</kbd> ดู</li>
     <li><code>provider: playwright()</code> — สังเกตว่าใน Vitest 4 provider เป็น<em>ฟังก์ชัน</em>ที่ import มาจาก package แยก ไม่ใช่ string <code>&quot;playwright&quot;</code> แบบเดิมแล้ว ข้อดีคือ option ของ Playwright ทั้งหมดมี type ตรวจให้ด้วย</li>
-    <li><code>instances</code> เป็น array เพราะ Vitest 4 รันเทสต์ชุดเดียวกันในหลายเบราว์เซอร์พร้อมกันได้ แค่เพิ่ม <code>{ browser: &quot;chromium&quot; }</code> เข้าไปอีกตัว</li>
+    <li><code>instances</code> เป็น array เพราะ Vitest 4 รันเทสต์ชุดเดียวกันในหลายเบราว์เซอร์พร้อมกันได้ แค่เพิ่ม <code>{ browser: &quot;firefox&quot; }</code> หรือ <code>{ browser: &quot;webkit&quot; }</code> เข้าไปอีกตัว (แต่อ่านหมายเหตุเรื่อง coverage ท้ายบทก่อน)</li>
+    <li><code>optimizeDeps.include</code> สั่งให้ Vite pre-bundle React ให้ก่อน ถ้าไม่ใส่ เบราว์เซอร์จะได้ <code>react-dom/client</code> มาแบบดิบ ๆ แล้ว <code>vitest-browser-react</code> จะหา default export ไม่เจอ เทสต์พังตั้งแต่ตัวแรกด้วย error <code>doesn't provide an export named: 'default'</code> — เป็นจุดที่หาสาเหตุยากมากถ้าไม่รู้มาก่อน</li>
   </ul>
 
   <p>ตอนนี้หาก test ลงท้ายด้วย <code>.node.test.tsx</code> มันจะ run ผ่าน happy-dom based environment และถ้าลงท้ายด้วย <code>.browser.test.tsx</code> มันจะ run ใน browser-based environment ใหม่ของเราพร้อม Playwright ไป rename tests ของเราให้สะท้อนสิ่งนี้กัน</p>
@@ -187,6 +195,6 @@ value={[[{ pizza: 1 }, { pizza: 2 }, { pizza: 3 }]]}
 });
 </code></pre>
 
-  <p class="translator-note">หมายเหตุผู้แปล: ต้นฉบับของหลักสูตร (ซึ่งอิง Vitest 2) แนะนำให้ถอน <code>@vitest/coverage-v8</code> ออกแล้วเปลี่ยนไปใช้ Istanbul เพราะตอนนั้น coverage ของ V8 ยังใช้กับ browser mode บน React 19 ไม่ได้ ข้อจำกัดนั้นหมดไปแล้วใน Vitest 4 เราจึงใช้ <code>@vitest/coverage-v8</code> ตัวเดิมจากบทที่ 28 ต่อได้เลย ไม่ต้องติดตั้งอะไรเพิ่ม · ถ้าคุณยังอยากลอง Istanbul ชื่อ package ที่ถูกต้องคือ <code>@vitest/coverage-istanbul</code> (ไม่ใช่ <code>@vitest/istanbul</code> อย่างในต้นฉบับ) แล้วเพิ่ม <code>provider: "istanbul"</code> เข้าไปใน object <code>coverage</code></p>
+  <p class="translator-note">หมายเหตุผู้แปล: ต้นฉบับของหลักสูตร (ซึ่งอิง Vitest 2) แนะนำให้ถอน <code>@vitest/coverage-v8</code> ออกแล้วเปลี่ยนไปใช้ Istanbul เพราะ coverage ของ V8 ใช้กับ browser mode ไม่ได้ · ใน Vitest 4 ข้อจำกัดนี้<strong>ยังอยู่ แต่แคบลง</strong> คือ <code>@vitest/coverage-v8</code> ทำงานกับ Playwright ได้เฉพาะ <code>chromium</code> เท่านั้น ถ้าตั้ง <code>instances</code> เป็น firefox หรือ webkit แล้วสั่ง <code>npm run coverage</code> จะได้ error ว่า <code>@vitest/coverage-v8 does not work with { browser: { provider: playwright(), instances: [{ browser: 'firefox' }] } }</code> · เราจึงเลือก <code>chromium</code> ใน config ข้างบน แล้วใช้ <code>@vitest/coverage-v8</code> ตัวเดิมจากบทที่ 28 ต่อได้เลย ไม่ต้องติดตั้งอะไรเพิ่ม · ถ้าคุณอยากรันเทสต์บน firefox หรือ webkit จริง ๆ ให้เปลี่ยนไปใช้ Istanbul แทน ชื่อ package ที่ถูกต้องคือ <code>@vitest/coverage-istanbul</code> (ไม่ใช่ <code>@vitest/istanbul</code> อย่างในต้นฉบับ) แล้วเพิ่ม <code>provider: "istanbul"</code> เข้าไปใน object <code>coverage</code></p>
   <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="29_vitest_ui.html" rel="prev">ก่อนหน้า: Vitest UI</a><a href="index.html">สารบัญบทเรียน</a><a href="31_react_19.html" rel="next">ถัดไป: React 19</a></nav>
 </article></main></body></html>

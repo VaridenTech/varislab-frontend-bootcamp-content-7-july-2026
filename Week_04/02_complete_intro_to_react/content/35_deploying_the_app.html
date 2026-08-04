@@ -70,6 +70,12 @@ VITE_API_URL=""
 VITE_API_URL="https://[YOUR-SERVER-URL].onrender.com"
 
 </code></pre>
+
+  <p class="translator-note">หมายเหตุผู้แปล: ให้สร้างไฟล์ที่สามด้วยคือ <code>.env.test</code> ใส่ <code>VITE_API_URL=""</code> เหมือน <code>.env.development</code> · เหตุผลคือ Vitest รันในโหมด <code>test</code> ไม่ใช่ <code>development</code> หรือ <code>production</code> ดังนั้นถ้าไม่มีไฟล์นี้ Vite จะไม่โหลด env ตัวไหนให้เลย <code>import.meta.env.VITE_API_URL</code> จะเป็น <code>undefined</code> แล้วเทสต์ทั้งชุดที่เขียนมาตั้งแต่บทที่ 23 จะพังพร้อมกันด้วย URL หน้าตาแบบ <code>undefined/api/pizza-of-the-day</code> · เป็นกับดักที่เจ็บเป็นพิเศษเพราะมันโผล่ในบทท้าย ๆ หลังจากเทสต์ผ่านมาตลอดสิบกว่าบท</p>
+
+  <pre><code class="language-bash"># Add this to .env.test
+VITE_API_URL=""
+</code></pre>
   <p>สรุปสั้น ๆ คือ Vite จะอ่านไฟล์ <code>.env.*</code> แล้วเพิ่ม variables เหล่านี้ใน property <code>import.meta.env</code> ให้เอง (เฉพาะตัวที่ขึ้นต้นด้วย <code>VITE_</code> เท่านั้น ตัวอื่นจะถูกซ่อนไว้ไม่ให้หลุดไปอยู่ในโค้ดฝั่งเบราว์เซอร์) (ขึ้นกับว่าเป็น development หรือ production/build) เราไม่ได้ ignore files เหล่านี้ใน Git จึงไม่ควรใส่ sensitive data ใด ๆ ใน environment files ถ้าเรารัน <code>npm run build</code> ให้เพิ่ม production URL หากรัน <code>npm run dev</code> ก็ไม่ต้องเพิ่มอะไร — เพราะ local proxy จะจัดการให้</p>
   <h2>ให้ type กับ environment variables</h2>
 
@@ -94,7 +100,7 @@ interface ImportMeta {
 
   <p>ไฟล์นามสกุล <code>.d.ts</code> คือ <strong>declaration file</strong> — ไฟล์ที่มีแต่ข้อมูล type ไม่มีโค้ดที่รันจริงเลย บรรทัด <code>/// &lt;reference types="vite/client" /&gt;</code> ข้างบนคือการดึง type พื้นฐานของ Vite เข้ามาก่อน (เช่น type ของการ import ไฟล์ <code>.css</code> และ <code>.webp</code>) แล้วเราค่อยเติมของเราทับลงไป — เป็นการ augment แบบเดียวกับ <code>declare module</code> ของ TanStack Router ในบทที่ 18</p>
 
-  <p>พูดถึง proxy คุณลบ <code>/public</code> proxy จาก file <code>vite.config.ts</code> ได้ ทีนี้ใช้ <code>VITE_API_URL</code> กัน หา API helpers สามตัวของเรา (<code>getPastOrders.ts</code>, <code>getPastOrder.ts</code> และ <code>usePizzaOfTheDay.ts</code>) แล้วอัปเดต fetch call ให้ใช้ environment variable ตัวอย่างเช่น:</p>
+  <p>พูดถึง proxy คุณลบ <code>/public</code> proxy จาก file <code>vite.config.ts</code> ได้ ทีนี้ใช้ <code>VITE_API_URL</code> กัน หา API helpers สี่ตัวของเรา (<code>getPastOrders.ts</code>, <code>getPastOrder.ts</code>, <code>postContact.ts</code> และ <code>usePizzaOfTheDay.ts</code>) แล้วอัปเดต fetch call ให้ใช้ environment variable ตัวอย่างเช่น:</p>
   <pre><code class="language-typescript">const apiUrl = import.meta.env.VITE_API_URL;
 const response = await fetch(`${apiUrl}/api/past-order/${order}`);
 </code></pre>
@@ -110,6 +116,9 @@ await fetch(`${apiUrl}/api/order`, {
 // update fetchPizzaTypes
 const pizzasRes = await fetch(`${apiUrl}/api/pizzas`);
 </code></pre>
+
+  <p class="translator-note">หมายเหตุผู้แปล: ต้นฉบับบอกให้แก้ helper แค่สามตัว แต่ลืม <code>postContact.ts</code> ไป ทั้งที่มันก็ <code>fetch</code> เหมือนกัน · ถ้าไม่แก้ ทุกอย่างจะยังดูปกติดีตอน dev (proxy จัดการให้) แล้วไปพังเฉพาะบน production ที่ deploy แล้ว ซึ่งเป็นอาการเดียวกับที่ <code>ImportMetaEnv</code> ข้างบนพยายามป้องกัน · เทสต์ในบทที่ 25 ยังผ่านเหมือนเดิม เพราะ <code>VITE_API_URL</code> เป็นค่าว่างในโหมด test ทำให้ <code>`${apiUrl}/api/contact`</code> ได้ผลลัพธ์เป็น <code>"/api/contact"</code> พอดี</p>
+
   <h2>Deploy ไป Netlify</h2>
   <p>เฮ้อ! ครบแล้ว Push code ของคุณขึ้น GitHub repo แยกต่างหาก เราพร้อม deploy แล้ว!</p>
   <figure><img src="images/deploy-client-repo.png" alt="React client app files in a GitHub repo" /><figcaption>ไฟล์ React client app ใน GitHub repo</figcaption></figure>
