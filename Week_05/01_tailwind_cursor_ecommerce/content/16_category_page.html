@@ -320,6 +320,16 @@ const totalPages = data ? calculateTotalPages(data.total, PAGE_LIMIT) : 0;</code
 
         <p>บนมือถือ (ค่าเริ่มต้นไม่มี prefix) <code>flex</code> จัดปุ่มหมวดหมู่เรียงแนวนอน และ <code>overflow-x-auto</code> ทำให้แถวนี้เลื่อนซ้าย-ขวาได้แทนที่จะตกบรรทัดเป็นลิสต์ยาว — ผู้ใช้ปัดนิ้วผ่านหมวดหมู่ได้เร็วกว่าการเลื่อนจอทั้งหน้าขึ้นลงมาก บน <code>lg:</code> ขึ้นไป <code>lg:flex-col</code> สลับกลับเป็นลิสต์แนวตั้งแบบ sidebar เดิม ส่วน <code>shrink-0</code> บนปุ่มแต่ละอันกันไม่ให้ชื่อหมวดหมู่ยาว ๆ ถูกบีบจนตัวหนังสือตกบรรทัดตอนอยู่ในแถวแนวนอน — นี่คือของจริงที่ดีกว่าแอปต้นแบบ ไม่ใช่แค่ "ไม่ทับกัน" แต่ใช้งานสะดวกจริงบนมือถือ</p>
 
+        <p>hook เดียวกันนี้ยังปิดสัญญาที่บทที่ 14 ทิ้งไว้ด้วย — ตอนนั้น <code>ProductCard</code> บนหน้า Home มี <code>onClick</code> เป็น prop ทางเลือกที่ยังไม่ได้ส่งอะไรเข้าไปเลย เพราะยังไม่มีหน้า Product Detail ให้ไป ตอนนี้กลับไปที่ <code>Home.tsx</code> เพิ่ม <code>useProductRoute</code> แล้วส่ง <code>goToProductDetails</code> ให้การ์ดสินค้าทั้งสองกริดเหมือนที่ <code>Category.tsx</code> เพิ่งทำไปด้านบน</p>
+
+        <pre><code class="language-tsx">// src/pages/Home/Home.tsx — เติม onClick ตามที่บทที่ 14 สัญญาไว้
+import useProductRoute from "@/shared/hooks/useProductRoute";
+
+// ...
+const { goToProductDetails } = useProductRoute();
+// ...
+&lt;ProductCard key={product.id} product={product} onClick={() =&gt; goToProductDetails(product.id)} /&gt;</code></pre>
+
         <p>ก่อน commit เพิ่ม route <code>/categories</code> เข้า <code>router.tsx</code> ตอนนี้ router มีสอง path ที่ตรงกับตาราง routes ของทั้งโปรเจกต์แล้ว</p>
 
         <pre><code class="language-tsx">// src/app/router.tsx

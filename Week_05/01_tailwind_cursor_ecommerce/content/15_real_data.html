@@ -98,7 +98,7 @@ apiClient.interceptors.response.use(
 
         <h2>Types: models ของ Product</h2>
 
-        <p>บทที่แล้วมี <code>features/products/types.ts</code> แบบย่ออยู่แล้ว มีแค่ 5 field ที่ <code>ProductCard</code> ต้องใช้ ตอนนี้เติมให้ครบตามที่แอปทั้งเวอร์ชันนี้จะใช้จริง — dummyjson ส่ง field กลับมามากกว่านี้อีกมาก (<code>tags</code>, <code>sku</code>, <code>weight</code>, <code>dimensions</code> ฯลฯ) แต่กฎที่ยึดตลอดคือ<strong>โมเดลเฉพาะ field ที่แอปเราใช้จริง</strong> ไม่ใช่ copy ทุก field ที่ API ส่งมา เพิ่ม field ใหม่เข้า type ก็ต่อเมื่อมีหน้าจอไหนต้องใช้จริง ๆ เท่านั้น (เหมือนกับที่บทที่ 17 จะเพิ่ม field รีวิวเข้ามาตอนสร้างหน้า Product Detail)</p>
+        <p>บทที่แล้วมี <code>features/products/types.ts</code> แบบย่ออยู่แล้ว มีแค่ 5 field ที่ <code>ProductCard</code> ต้องใช้ ตอนนี้เติมให้ครบตามที่แอปทั้งเวอร์ชันนี้จะใช้จริง — dummyjson ส่ง field กลับมามากกว่านี้อีกมาก (<code>tags</code>, <code>weight</code>, <code>dimensions</code> ฯลฯ) แต่กฎที่ยึดตลอดคือ<strong>โมเดลเฉพาะ field ที่แอปเราใช้จริง</strong> ไม่ใช่ copy ทุก field ที่ API ส่งมา เพิ่ม field ใหม่เข้า type ก็ต่อเมื่อมีหน้าจอไหนต้องใช้จริง ๆ เท่านั้น (เหมือนกับที่บทที่ 17 จะเพิ่ม field <code>sku</code>, <code>availabilityStatus</code>, <code>shippingInformation</code>, <code>warrantyInformation</code> เข้ามาตอนสร้างหน้า Product Detail)</p>
 
         <pre><code class="language-typescript">// src/shared/types/generic.type.ts
 export interface Pagination {

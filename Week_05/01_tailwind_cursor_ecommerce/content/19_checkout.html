@@ -224,7 +224,7 @@ export default function RadioInputOption({ id, name, checked, title, description
   return (
     &lt;label htmlFor={id} className="block cursor-pointer"&gt;
       &lt;input type="radio" id={id} name={name} checked={checked} onChange={onSelect} className="peer sr-only" /&gt;
-      &lt;span className="block rounded-lg border border-gray-200 p-4 peer-checked:border-primary peer-checked:bg-primary/5"&gt;
+      &lt;span className="block rounded-lg border border-gray-200 p-4 peer-checked:border-primary peer-checked:bg-primary/5 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50"&gt;
         &lt;span className="block font-medium"&gt;{title}&lt;/span&gt;
         &lt;span className="block text-sm text-gray-500"&gt;{description}&lt;/span&gt;
       &lt;/span&gt;
@@ -282,18 +282,18 @@ export default function Checkout() {
       &lt;div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-3 lg:px-8"&gt;
         &lt;div className="space-y-6 lg:col-span-2"&gt;
           &lt;div className="rounded-lg border border-gray-200 p-5"&gt;
-            &lt;h3 className="mb-4 font-bold"&gt;Shipping Address&lt;/h3&gt;
+            &lt;h2 className="mb-4 font-bold"&gt;Shipping Address&lt;/h2&gt;
             &lt;CheckoutAddressForm onSubmit={setCheckoutAddress} /&gt;
           &lt;/div&gt;
           &lt;div className="rounded-lg border border-gray-200 p-5"&gt;
-            &lt;h3 className="mb-4 font-bold"&gt;Delivery Options&lt;/h3&gt;
+            &lt;h2 className="mb-4 font-bold"&gt;Delivery Options&lt;/h2&gt;
             &lt;div className="space-y-3"&gt;
               &lt;RadioInputOption id="delivery-1" name="delivery" checked={deliveryId === 1} title="Standard Delivery" description="Approx 5 to 7 Days" onSelect={() =&gt; setDeliveryId(1)} /&gt;
               &lt;RadioInputOption id="delivery-2" name="delivery" checked={deliveryId === 2} title="Express Delivery" description="Approx 1 - 2 Days" onSelect={() =&gt; setDeliveryId(2)} /&gt;
             &lt;/div&gt;
           &lt;/div&gt;
           &lt;div className="rounded-lg border border-gray-200 p-5"&gt;
-            &lt;h3 className="mb-4 font-bold"&gt;Payment Options&lt;/h3&gt;
+            &lt;h2 className="mb-4 font-bold"&gt;Payment Options&lt;/h2&gt;
             &lt;div className="space-y-3"&gt;
               &lt;RadioInputOption id="payment-3" name="payment" checked={paymentId === 3} title="Cash on Delivery" description="Pay cash when your order is delivered." onSelect={() =&gt; setPaymentId(3)} /&gt;
               &lt;RadioInputOption id="payment-4" name="payment" checked={paymentId === 4} title="Bank Transfer" description="Pay directly from your bank account." onSelect={() =&gt; setPaymentId(4)} /&gt;
@@ -303,7 +303,7 @@ export default function Checkout() {
 
         &lt;div className="space-y-6"&gt;
           &lt;div className="rounded-lg border border-gray-200 p-5"&gt;
-            &lt;h3 className="mb-4 font-bold"&gt;Summary Order&lt;/h3&gt;
+            &lt;h2 className="mb-4 font-bold"&gt;Summary Order&lt;/h2&gt;
             {cart.items.map((item) =&gt; (
               &lt;div key={item.id} className="flex items-center gap-3 py-2"&gt;
                 &lt;img src={item.image} alt={item.title} className="h-12 w-12 rounded object-cover" /&gt;
@@ -317,7 +317,7 @@ export default function Checkout() {
           &lt;/div&gt;
 
           &lt;div className="rounded-lg border border-gray-200 p-5"&gt;
-            &lt;h3 className="mb-4 font-bold"&gt;Billing Summary&lt;/h3&gt;
+            &lt;h2 className="mb-4 font-bold"&gt;Billing Summary&lt;/h2&gt;
             &lt;div className="flex justify-between py-1"&gt;&lt;span className="text-gray-500"&gt;Sub Total&lt;/span&gt;&lt;span&gt;{formatPrice(subtotal)}&lt;/span&gt;&lt;/div&gt;
             &lt;div className="flex justify-between py-1"&gt;&lt;span className="text-gray-500"&gt;Shipping&lt;/span&gt;&lt;span&gt;{formatPrice(shipping)}&lt;/span&gt;&lt;/div&gt;
             &lt;div className="mt-2 flex justify-between border-t border-gray-200 pt-2 text-lg font-bold"&gt;&lt;span&gt;Total&lt;/span&gt;&lt;span&gt;{formatPrice(total)}&lt;/span&gt;&lt;/div&gt;
@@ -338,9 +338,9 @@ export default function Checkout() {
 
         <p><strong>responsive</strong> — คอนเทนเนอร์นอกสุดใช้ <code>grid gap-8 lg:grid-cols-3</code> เฉย ๆ ไม่มีการจัดลำดับใหม่สำหรับจอแคบ ย่อจอลงมาที่ 390px แล้วลำดับ DOM เดิม (ฟอร์ม → Delivery → Payment → Summary → Billing) กลายเป็นลำดับที่เห็นบนจอไปตรง ๆ ผู้ใช้ต้องเลื่อนผ่านฟอร์มที่อยู่และตัวเลือกทั้งหมดก่อน ถึงจะเห็นว่าต้องจ่ายเท่าไหร่และเจอปุ่ม Place Order — ปัญหารูปแบบเดียวกับ <code>CategoryMenu</code> ในบทที่ 16: ไม่ได้ทับกันเหมือนบั๊กที่เจอในแอปต้นแบบตรง ๆ แต่เป็น UX ที่แย่กว่าที่ควรเป็น prompt สั่งไว้ชัดเจนแล้วว่า mobile ต้องเห็นสรุปก่อนฟอร์ม แต่ Agent ไม่ได้ทำตาม</p>
 
-        <p><strong>accessibility</strong> — <code>Input</code> และ <code>RadioInputOption</code> ที่เขียนไว้เองก่อนหน้านี้ผ่านหมดตั้งแต่รอบแรก (label จริงทุกช่อง, <code>aria-invalid</code> ติดเมื่อ error, radio เลือกด้วยคีย์บอร์ดได้เพราะเป็น <code>&lt;input type="radio"&gt;</code> จริง) แต่ปุ่ม Place Order ยังไม่ผ่านเต็มที่ — ตอน <code>disabled</code> screen reader จะอ่านแค่ "Place Order, dimmed" โดยไม่บอกเลยว่าทำไมถึงกดไม่ได้ ผู้ใช้ที่มองไม่เห็นจอไม่มีทางรู้ว่าต้องกลับไปกรอกและ Submit ที่อยู่ก่อน — "disabled อ่านรู้เรื่อง" ต้องมีมากกว่าแค่ปิดปุ่มเฉย ๆ ต้องอธิบายด้วยว่าทำไม</p>
+        <p><strong>accessibility</strong> — <code>Input</code> และ <code>RadioInputOption</code> ที่เขียนไว้เองก่อนหน้านี้ผ่านหมดตั้งแต่รอบแรก (label จริงทุกช่อง, <code>aria-invalid</code> ติดเมื่อ error, radio เลือกด้วยคีย์บอร์ดได้เพราะเป็น <code>&lt;input type="radio"&gt;</code> จริง, และการ์ดที่มองเห็นก็มี <code>peer-focus-visible:ring-2</code> วาดกรอบ focus ให้ด้วยตั้งแต่แรก ไม่ปล่อยให้โฟกัสหายไปทั้งที่กด Tab ไปถึงจริง) แต่ปุ่ม Place Order ยังไม่ผ่านเต็มที่ — ตอน <code>disabled</code> screen reader จะอ่านแค่ "Place Order, dimmed" โดยไม่บอกเลยว่าทำไมถึงกดไม่ได้ ผู้ใช้ที่มองไม่เห็นจอไม่มีทางรู้ว่าต้องกลับไปกรอกและ Submit ที่อยู่ก่อน — "disabled อ่านรู้เรื่อง" ต้องมีมากกว่าแค่ปิดปุ่มเฉย ๆ ต้องอธิบายด้วยว่าทำไม</p>
 
-        <p><strong>maintainability</strong> — สามจุด จุดแรก: <code>deliveryId === 1 ? 5.99 : 15.99</code> กับ delivery/payment ที่เขียนเป็น <code>&lt;RadioInputOption&gt;</code> สองตัวแยกกันตรง ๆ ในทั้ง Delivery และ Payment ทั้งที่ <code>deliveryOptions</code>/<code>paymentOptions</code> จาก <code>consts.ts</code> มีข้อมูลชุดเดียวกันเป๊ะอยู่แล้ว — Agent เขียนซ้ำแทนที่จะ <code>.map()</code> จาก array ที่มีอยู่ ราคา 5.99/15.99 ก็ถูกพิมพ์ตรง ๆ ในไฟล์นี้อีกรอบ ทั้งที่ควรอ่านจาก <code>consts.ts</code> จุดเดียว แก้ราคาที่เดียวไม่ครบทุกจุดถ้ายังเป็นแบบนี้ จุดที่สอง: <code>Checkout.tsx</code> ยาวขึ้นเรื่อย ๆ และทำหลายหน้าที่ปนกันในไฟล์เดียว — state ของฟอร์ม, สูตรคำนวณเงิน, การยิง mutation, และ JSX ทั้งหมด ตรงกับ checklist ข้อ "component ไฟล์ไหนยาวเกินประมาณ 150 บรรทัด → พิจารณาแตกเป็นไฟล์ย่อย" จากบทที่ 13 — ไฟล์นี้ยังไม่ถึง 150 บรรทัดเป๊ะ แต่ทิศทางกำลังไปทางนั้น และปัญหาไม่ใช่แค่จำนวนบรรทัด แต่คือการปนกันของ "ตรรกะทางธุรกิจ" กับ "การแสดงผล" ในที่เดียว ทดสอบหรือแก้ตรรกะการคำนวณเงินแยกจาก JSX ไม่ได้เลย จุดที่สาม — จุดที่ควรจับได้ตั้งนานแล้วแต่เพิ่งมาสังเกตเอาตอนนี้: แถบเทา "Checkout" ด้านบนของหน้านี้คือ <code>&lt;div className="bg-gray-100 py-8 text-center"&gt;&lt;h1 className="text-2xl font-bold"&gt;...&lt;/h1&gt;&lt;/div&gt;</code> ตัวเดียวกันเป๊ะกับที่ <code>Product.tsx</code> เขียนไว้เองในบทที่ 17 และ <code>Cart.tsx</code> เขียนไว้เองในบทที่ 18 — นี่คือครั้งที่<strong>สาม</strong>ที่พิมพ์ markup หน้าตาเดียวกันนี้ซ้ำ กติกาจากบทที่ 13 ชัดเจนอยู่แล้วตั้งแต่ต้น: เจอ class string หน้าตาเดียวกันซ้ำตั้งแต่ 2 จุดขึ้นไปต้องแยกเป็น component ทันที ไม่ต้องรอถึงจุดที่สาม — บทที่ 18 เคยจดข้อสังเกตนี้ไว้แล้วตอนจุดที่สองแต่ปล่อยผ่านไปก่อน ตอนนี้ปล่อยต่อไม่ได้อีกแล้ว</p>
+        <p><strong>maintainability</strong> — สามจุด จุดแรก: <code>deliveryId === 1 ? 5.99 : 15.99</code> กับ delivery/payment ที่เขียนเป็น <code>&lt;RadioInputOption&gt;</code> สองตัวแยกกันตรง ๆ ในทั้ง Delivery และ Payment ทั้งที่ <code>deliveryOptions</code>/<code>paymentOptions</code> จาก <code>consts.ts</code> มีข้อมูลชุดเดียวกันเป๊ะอยู่แล้ว — Agent เขียนซ้ำแทนที่จะ <code>.map()</code> จาก array ที่มีอยู่ ราคา 5.99/15.99 ก็ถูกพิมพ์ตรง ๆ ในไฟล์นี้อีกรอบ ทั้งที่ควรอ่านจาก <code>consts.ts</code> จุดเดียว แก้ราคาที่เดียวไม่ครบทุกจุดถ้ายังเป็นแบบนี้ จุดที่สอง: <code>Checkout.tsx</code> ยาวขึ้นเรื่อย ๆ และทำหลายหน้าที่ปนกันในไฟล์เดียว — state ของฟอร์ม, สูตรคำนวณเงิน, การยิง mutation, และ JSX ทั้งหมด ตรงกับ checklist ข้อ "component ไฟล์ไหนยาวเกินประมาณ 150 บรรทัด → พิจารณาแตกเป็นไฟล์ย่อย" จากบทที่ 13 — ไฟล์นี้ยังไม่ถึง 150 บรรทัดเป๊ะ แต่ทิศทางกำลังไปทางนั้น และปัญหาไม่ใช่แค่จำนวนบรรทัด แต่คือการปนกันของ "ตรรกะทางธุรกิจ" กับ "การแสดงผล" ในที่เดียว ทดสอบหรือแก้ตรรกะการคำนวณเงินแยกจาก JSX ไม่ได้เลย จุดที่สาม — จุดที่ควรจับได้ตั้งนานแล้วแต่เพิ่งมาสังเกตเอาตอนนี้: แถบเทา "Checkout" ด้านบนของหน้านี้คือ <code>&lt;div className="bg-gray-100 py-8 text-center"&gt;&lt;h1 className="text-2xl font-bold"&gt;...&lt;/h1&gt;&lt;/div&gt;</code> เกือบเป๊ะกับที่ <code>Category.tsx</code> เขียนไว้เองในบทที่ 16 เป็นจุดแรกสุด (มี <code>mb-8</code> ติดมาด้วย เพราะวางอยู่ในคอนเทนเนอร์เดียวกับเนื้อหาด้านล่าง ต่างจากอีกสามหน้าที่แยกแถบไว้นอกคอนเทนเนอร์) ตามด้วย <code>Product.tsx</code> เขียนไว้เองในบทที่ 17 และ <code>Cart.tsx</code> เขียนไว้เองในบทที่ 18 — นี่คือครั้งที่<strong>สี่</strong>ที่พิมพ์ markup หน้าตาเดียวกันนี้ซ้ำ กติกาจากบทที่ 13 ชัดเจนอยู่แล้วตั้งแต่ต้น: เจอ class string หน้าตาเดียวกันซ้ำตั้งแต่ 2 จุดขึ้นไปต้องแยกเป็น component ทันที ไม่ต้องรอถึงจุดที่สี่ — บทที่ 18 เคยจดข้อสังเกตนี้ไว้แล้วตอนจุดที่สองแต่ปล่อยผ่านไปก่อน ตอนนี้ปล่อยต่อไม่ได้อีกแล้ว</p>
 
         <h2>🔧 Refactor</h2>
 
@@ -397,23 +397,30 @@ export default function useCheckout() {
 }
 </code></pre>
 
-        <p>อีกจุดที่ต้องแก้พร้อมกัน — แยกแถบเทาที่ซ้ำมาสามจุดออกเป็น <code>PageBanner</code> เดียว รับแค่ <code>title</code></p>
+        <p>อีกจุดที่ต้องแก้พร้อมกัน — แยกแถบเทาที่ซ้ำมาสี่จุดออกเป็น <code>PageBanner</code> เดียว รับ <code>title</code> เป็นหลัก บวก <code>className</code> เสริมสำหรับจุดที่ต้องการ margin เพิ่ม (<code>Category.tsx</code> วางแถบไว้ในคอนเทนเนอร์เดียวกับเนื้อหาด้านล่าง เลยต้องมี <code>mb-8</code> คั่นกลาง ต่างจากอีกสามหน้าที่แยกแถบไว้นอกคอนเทนเนอร์)</p>
 
         <pre><code class="language-tsx">// src/shared/components/PageBanner/PageBanner.tsx
 interface PageBannerProps {
   title: string;
+  className?: string;
 }
 
-export default function PageBanner({ title }: PageBannerProps) {
+export default function PageBanner({ title, className = "" }: PageBannerProps) {
   return (
-    &lt;div className="bg-gray-100 py-8 text-center"&gt;
+    &lt;div className={`bg-gray-100 py-8 text-center ${className}`}&gt;
       &lt;h1 className="text-2xl font-bold"&gt;{title}&lt;/h1&gt;
     &lt;/div&gt;
   );
 }
 </code></pre>
 
-        <p>แล้วย้อนกลับไปแทนที่ทั้งสามจุดด้วย <code>&lt;PageBanner /&gt;</code> ตัวเดียวกัน — สองจุดแรกเป็นแค่การแก้เฉพาะจุดในไฟล์ที่มีอยู่แล้ว</p>
+        <p>แล้วย้อนกลับไปแทนที่ทั้งสี่จุดด้วย <code>&lt;PageBanner /&gt;</code> ตัวเดียวกัน — สามจุดแรกเป็นแค่การแก้เฉพาะจุดในไฟล์ที่มีอยู่แล้ว</p>
+
+        <pre><code class="language-tsx">// src/pages/Category/Category.tsx (แก้เฉพาะจุด — บทที่ 16)
+import PageBanner from "@/shared/components/PageBanner/PageBanner";
+
+// แทนที่ &lt;div className="mb-8 bg-gray-100 py-8 text-center"&gt;&lt;h1 ...&gt;{currentCategory?.name ?? "Category"}&lt;/h1&gt;&lt;/div&gt;
+&lt;PageBanner title={currentCategory?.name ?? "Category"} className="mb-8" /&gt;</code></pre>
 
         <pre><code class="language-tsx">// src/pages/Product/Product.tsx (แก้เฉพาะจุด — บทที่ 17)
 import PageBanner from "@/shared/components/PageBanner/PageBanner";
@@ -427,7 +434,7 @@ import PageBanner from "@/shared/components/PageBanner/PageBanner";
 // แทนที่ &lt;div className="bg-gray-100 py-8 text-center"&gt;&lt;h1 ...&gt;Cart&lt;/h1&gt;&lt;/div&gt;
 &lt;PageBanner title="Cart" /&gt;</code></pre>
 
-        <p>ส่วนจุดที่สาม — <code>Checkout.tsx</code> ที่กำลังประกอบใหม่ด้านล่างนี้พร้อม hook ที่แยกไว้แล้ว — ใช้ <code>&lt;PageBanner title="Checkout" /&gt;</code> ตั้งแต่ต้นเลย ไม่ต้องมีรอบ "ก่อนแก้" อีกจุด เพราะรู้ปัญหาอยู่แล้วก่อนเขียน</p>
+        <p>ส่วนจุดที่สี่ — <code>Checkout.tsx</code> ที่กำลังประกอบใหม่ด้านล่างนี้พร้อม hook ที่แยกไว้แล้ว — ใช้ <code>&lt;PageBanner title="Checkout" /&gt;</code> ตั้งแต่ต้นเลย ไม่ต้องมีรอบ "ก่อนแก้" อีกจุด เพราะรู้ปัญหาอยู่แล้วก่อนเขียน</p>
 
         <p>ตอนนี้ <code>Checkout.tsx</code> เหลือแค่ประกอบ hook กับ <code>PageBanner</code> เข้ากับ JSX — map จาก <code>deliveryOptions</code>/<code>paymentOptions</code> จริงแทนการพิมพ์ซ้ำ, สลับลำดับ Summary ขึ้นก่อนบนมือถือด้วย <code>flex flex-col-reverse lg:grid lg:grid-cols-3</code>, และเพิ่มข้อความอธิบายเมื่อปุ่ม Place Order ถูกปิดใช้งาน</p>
 
@@ -463,11 +470,11 @@ export default function Checkout() {
       &lt;div className="mx-auto flex max-w-7xl flex-col-reverse gap-8 px-4 py-10 sm:px-6 lg:grid lg:grid-cols-3 lg:px-8"&gt;
         &lt;div className="space-y-6 lg:col-span-2"&gt;
           &lt;div className="rounded-lg border border-gray-200 p-5"&gt;
-            &lt;h3 className="mb-4 font-bold"&gt;Shipping Address&lt;/h3&gt;
+            &lt;h2 className="mb-4 font-bold"&gt;Shipping Address&lt;/h2&gt;
             &lt;CheckoutAddressForm onSubmit={storeCheckoutAddress} /&gt;
           &lt;/div&gt;
           &lt;div className="rounded-lg border border-gray-200 p-5"&gt;
-            &lt;h3 className="mb-4 font-bold"&gt;Delivery Options&lt;/h3&gt;
+            &lt;h2 className="mb-4 font-bold"&gt;Delivery Options&lt;/h2&gt;
             &lt;div className="space-y-3"&gt;
               {deliveryOptions.map((option) =&gt; (
                 &lt;RadioInputOption
@@ -483,7 +490,7 @@ export default function Checkout() {
             &lt;/div&gt;
           &lt;/div&gt;
           &lt;div className="rounded-lg border border-gray-200 p-5"&gt;
-            &lt;h3 className="mb-4 font-bold"&gt;Payment Options&lt;/h3&gt;
+            &lt;h2 className="mb-4 font-bold"&gt;Payment Options&lt;/h2&gt;
             &lt;div className="space-y-3"&gt;
               {paymentOptions.map((option) =&gt; (
                 &lt;RadioInputOption
@@ -502,7 +509,7 @@ export default function Checkout() {
 
         &lt;div className="space-y-6"&gt;
           &lt;div className="rounded-lg border border-gray-200 p-5"&gt;
-            &lt;h3 className="mb-4 font-bold"&gt;Summary Order&lt;/h3&gt;
+            &lt;h2 className="mb-4 font-bold"&gt;Summary Order&lt;/h2&gt;
             {cart.items.map((item) =&gt; (
               &lt;div key={item.id} className="flex items-center gap-3 py-2"&gt;
                 &lt;img src={item.image} alt={item.title} className="h-12 w-12 rounded object-cover" /&gt;
@@ -516,7 +523,7 @@ export default function Checkout() {
           &lt;/div&gt;
 
           &lt;div className="rounded-lg border border-gray-200 p-5"&gt;
-            &lt;h3 className="mb-4 font-bold"&gt;Billing Summary&lt;/h3&gt;
+            &lt;h2 className="mb-4 font-bold"&gt;Billing Summary&lt;/h2&gt;
             &lt;div className="flex justify-between py-1"&gt;&lt;span className="text-gray-500"&gt;Sub Total&lt;/span&gt;&lt;span&gt;{formatPrice(subtotal)}&lt;/span&gt;&lt;/div&gt;
             &lt;div className="flex justify-between py-1"&gt;&lt;span className="text-gray-500"&gt;Shipping&lt;/span&gt;&lt;span&gt;{formatPrice(shipping)}&lt;/span&gt;&lt;/div&gt;
             &lt;div className="mt-2 flex justify-between border-t border-gray-200 pt-2 text-lg font-bold"&gt;&lt;span&gt;Total&lt;/span&gt;&lt;span&gt;{formatPrice(total)}&lt;/span&gt;&lt;/div&gt;
@@ -564,7 +571,7 @@ export default function OrderSuccess() {
 }
 </code></pre>
 
-        <p>ปิดท้ายด้วย <code>router.tsx</code> เวอร์ชันสมบูรณ์ — ครบทั้ง 6 route ตามตาราง routes ของทั้งโปรเจกต์ และมี field ที่หายไปตลอดตั้งแต่บทที่ 10: <code>errorElement</code> ย้อนกลับไปที่ translator note ท้ายบทที่ 12 อีกครั้ง — ตอนนั้นบอกไว้ว่าคลิก path ที่ยังไม่มี route จะเจอ <code>RouteErrorFallback</code> ไปก่อน คำนี้ถูกพูดถึงลอย ๆ มาตั้งแต่บทที่ 12 โดยไม่มีโค้ดจริงรองรับเลยสักบรรทัด รวมถึง <code>router.tsx</code> ที่โผล่มาในบทที่ 10, 16, 17 และ 18 ก็ไม่เคยมี <code>errorElement</code> ติดมาด้วยเลยสักครั้ง เพราะตอนนั้นแอปยังมีแค่ 1-4 route เกิด error จาก path ที่ไม่มีจริงหรือ id สินค้าที่ไม่มีจริงได้ยาก แต่ตอนนี้ครบ 6 route แล้ว ถึงเวลาเติมของจริงเสียที</p>
+        <p>ปิดท้ายด้วย <code>router.tsx</code> เวอร์ชันสมบูรณ์ — ครบทั้ง 6 route ตามตาราง routes ของทั้งโปรเจกต์ และมี field ที่หายไปตลอดตั้งแต่บทที่ 10: <code>errorElement</code> ย้อนกลับไปที่ translator note ท้ายบทที่ 12 อีกครั้ง — ตอนนั้นบอกไว้ว่าคลิก path ที่ยังไม่มี route จะเจอหน้า error เริ่มต้นของ react-router เองไปก่อน พร้อมสัญญาไว้ว่าหน้า error ที่ออกแบบเอง (<code>RouteErrorFallback</code>) จะมาในบทนี้ — ชื่อนี้ถูกพูดถึงลอย ๆ มาตั้งแต่บทที่ 12 โดยไม่มีโค้ดจริงรองรับเลยสักบรรทัด รวมถึง <code>router.tsx</code> ที่โผล่มาในบทที่ 10, 16, 17 และ 18 ก็ไม่เคยมี <code>errorElement</code> ติดมาด้วยเลยสักครั้ง เพราะตอนนั้นแอปยังมีแค่ 1-4 route เกิด error จาก path ที่ไม่มีจริงหรือ id สินค้าที่ไม่มีจริงได้ยาก แต่ตอนนี้ครบ 6 route แล้ว ถึงเวลาเติมของจริงเสียที</p>
 
         <pre><code class="language-tsx">// src/app/RouteErrorFallback.tsx
 import { Link, isRouteErrorResponse, useRouteError } from "react-router";
