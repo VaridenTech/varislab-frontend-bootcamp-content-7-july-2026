@@ -159,7 +159,7 @@ export default function Header() {
 
         <p>วางแนบไฟล์ที่ต้องการตรวจ Agent จะไล่เช็คทีละข้อในกฎแล้วรายงานกลับมา แต่อย่าเชื่อรายงานนั้นแบบไม่ตรวจซ้ำ — เครื่องมืออย่าง Lighthouse, axe และตัว Agent เองล้วนช่วย<em>หา</em>จุดที่พลาดได้เร็วกว่าคนไล่ดูเองทีละบรรทัด แต่ตัดสินว่าอะไรคือ "พอ" สำหรับผู้ใช้จริงยังคงเป็นหน้าที่ของคน ลองกด Tab ไล่ทั้งหน้าด้วยตัวเองอีกครั้งเสมอ ก่อนเชื่อว่าจบแล้วจริง ๆ</p>
 
-        <p>Header.tsx ตอนนี้ผ่านทั้งสองเลนส์แรกแล้ว — responsive จากบทที่ 11 และ accessibility จากบทนี้ แต่ลองเพ่งดู class string ในโค้ดด้านบนอีกรอบ: <code>focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50</code> ถูกพิมพ์ซ้ำอยู่ 6 รอบในไฟล์เดียว นี่คือกลิ่นที่เลนส์ที่สามจะจับ — บทหน้าไปตรวจ maintainability กัน</p>
+        <p>Header.tsx ตอนนี้ผ่านทั้งสองเลนส์แรกแล้ว — responsive จากบทที่ 11 และ accessibility จากบทนี้ แต่ลองเพ่งดู class string ในโค้ดด้านบนอีกรอบ: <code>focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50</code> ถูกพิมพ์ซ้ำอยู่ 7 รอบในไฟล์เดียว (โลโก้, ลิงก์ Home/Products บน desktop, ลิงก์ตะกร้า, ปุ่ม hamburger, ลิงก์ Home/Products บนแผงมือถือ) นี่คือกลิ่นที่เลนส์ที่สามจะจับ — บทหน้าไปตรวจ maintainability กัน</p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="11_review_responsive.html" rel="prev">ก่อนหน้า: ตรวจ Responsive ของโค้ดจาก AI</a>
