@@ -52,7 +52,7 @@ export default defineConfig({
 
         <p>แค่นี้จริง ๆ — บรรทัดเดียวนี้ทำให้ utility class ทุกตัวของ Tailwind (<code>flex</code>, <code>p-4</code>, <code>bg-blue-600</code> และอีกหลายพัน) พร้อมใช้งานทันทีในทุกไฟล์ของโปรเจกต์</p>
 
-        <p class="translator-note">💡 Tailwind v4 เก็บ config ไว้เป็น CSS ผ่าน <code>@theme</code> (เดี๋ยวเจอในบทที่ 6) <strong>ไม่มี</strong> ไฟล์ config JavaScript แยกต่างหากที่เคยต้องสร้างด้วยคำสั่ง <code>npx tailwindcss init</code> อีกต่อไป — ถ้าไปเจอบทความหรือวิดีโอสอนที่บอกให้สร้างไฟล์ config แยกแบบนั้น หรือให้เขียน <code>@tailwind</code> directive สามบรรทัดต่อท้ายด้วย base, components, utilities นั่นคือไวยากรณ์ของ Tailwind v3 ซึ่งเก่าแล้วและใช้กับ v4 ไม่ได้</p>
+        <p class="translator-note">💡 Tailwind v4 เก็บ config ไว้เป็น CSS ผ่าน <code>@theme</code> (เดี๋ยวเจอในบทที่ 6) <strong>ไม่มี</strong> ไฟล์ <code>tailwind.config.js</code> และไม่ต้องรัน <code>npx tailwindcss init</code> อีกต่อไป — ถ้าไปเจอบทความหรือวิดีโอสอนที่บอกให้สร้างไฟล์ config แยก หรือให้เขียน <code>@tailwind base; @tailwind components; @tailwind utilities;</code> สามบรรทัด นั่นคือไวยากรณ์ของ Tailwind v3 ซึ่งเก่าแล้วและใช้กับ v4 ไม่ได้</p>
 
         <h2>พิสูจน์ว่ามันทำงาน</h2>
 
