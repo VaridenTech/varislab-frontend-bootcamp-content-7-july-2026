@@ -3,22 +3,24 @@
   <header class="lesson-header"><p class="lesson-eyebrow">บทเรียน 32 · ก้าวต่อไป (What's Next)</p><h1>Form Actions ใน React 19</h1><p class="lesson-original-title" lang="en">Form Actions</p></header>
   <p>แอปของเรารันบน React 19 อยู่แล้วตั้งแต่บทที่ 8 เราจึงใช้ฟีเจอร์ในบทนี้ได้ทันที ไม่ต้องติดตั้งหรืออัปเกรดอะไรเพิ่ม</p>
   <p>มาคุยเรื่อง form actions กัน web interfaces จำนวนมากคือการจัดการ form inputs ดังนั้นทีม React จึงตัดสินใจทำให้เรื่องนี้ง่ายขึ้น จริง ๆ คล้ายสิ่งที่เราทำไปแล้ว เพียงมี boilerplate น้อยกว่า เปิด <code>contact.lazy.tsx</code> แล้วปรับหน้านี้ให้ใช้ form action</p>
-  <pre><code class="language-typescript">mutationFn: function (formData: FormData) { // change to formData
-  // remove e.preventDefault
-  // remove formData constructor
-  return postContact(
-    String(formData.get("name")),
-    String(formData.get("email")),
-    String(formData.get("message")),
-  );
-},
+  <pre><code class="language-typescript">// mutationFn เหมือนเดิม ไม่ต้องแก้ — มันรับ FormData อยู่แล้วตั้งแต่บทที่ 22
 
-// change onSubmit to action
+// เปลี่ยนจาก onSubmit handler ทั้งก้อน
+&lt;form
+  onSubmit={(e: React.FormEvent&lt;HTMLFormElement&gt;) =&gt; {
+    e.preventDefault();
+    mutation.mutate(new FormData(e.currentTarget));
+  }}
+&gt;
+
+// ให้เหลือแค่บรรทัดเดียว
 &lt;form action={mutation.mutate}&gt;
 </code></pre>
   <p>เท่านั้นเอง! มันเป็น convenience function ที่ทำให้จัดการ submits ได้ง่ายขึ้น ไม่มีอะไรผิดกับวิธีเดิมของเรา และมันจะยังทำงานเหมือนเดิมต่อไป</p>
 
-  <p>สังเกตว่า type ของ parameter เปลี่ยนจาก <code>React.FormEvent&lt;HTMLFormElement&gt;</code> เป็น <code>FormData</code> เฉย ๆ นี่คือสิ่งที่ form action ทำให้เรา — React จัดการ event, กัน default behavior และสร้าง <code>FormData</code> ให้เสร็จสรรพ แล้วส่งเฉพาะสิ่งที่เราต้องการจริง ๆ เข้ามา การที่ type สั้นลงจึงสะท้อนว่าโค้ดเราทำงานน้อยลงจริง ๆ</p>
+  <p>สังเกตว่างานสามอย่างที่เราเขียนเองในบทที่ 22 — ดัก event, กัน default behavior และสร้าง <code>FormData</code> จาก <code>e.currentTarget</code> — หายไปทั้งหมด เพราะ React ทำให้แล้วส่งเฉพาะสิ่งที่เราต้องการจริง ๆ เข้ามา คือ <code>FormData</code> ก้อนเดียว · <code>mutationFn</code> ของเราจึงไม่ต้องแก้อะไรเลย มันประกาศ parameter เป็น <code>FormData</code> มาตั้งแต่แรกอยู่แล้ว</p>
+
+  <p class="translator-note">หมายเหตุผู้แปล: ต้นฉบับบอกให้ "เปลี่ยน parameter เป็น <code>formData</code>, ลบ <code>e.preventDefault</code>, ลบ <code>FormData</code> constructor" ที่ตรงนี้ เพราะโค้ดในบทที่ 22 ของต้นฉบับให้ <code>mutationFn</code> รับ event เข้าไป · เราแก้บทที่ 22 ไปแล้ว (ด้วยเหตุผลที่อธิบายไว้ในบทนั้น) โค้ดฝั่ง mutation จึงมาถึงจุดนี้ในรูปแบบที่ถูกต้องอยู่ก่อนแล้ว เหลือให้เปลี่ยนแค่ <code>onSubmit</code> เป็น <code>action</code> อย่างเดียว · นี่เป็นเรื่องที่น่าสนใจในตัวมันเอง คือทางที่เรา<em>จำเป็น</em>ต้องเดินในบทที่ 22 เพื่อเลี่ยงบั๊ก กลายเป็นทางเดียวกับที่ React 19 เลือกให้เป็นมาตรฐานพอดี</p>
 
   <p>ส่วน <code>String(...)</code> ยังต้องอยู่เหมือนเดิม เพราะ <code>formData.get()</code> ก็ยังคืน <code>string | File | null</code> อยู่ดี — form action ช่วยเรื่องการต่อสายกับ form แต่ไม่ได้รับประกันว่าในนั้นมีอะไร (ย้อนดูบทที่ 22 ถ้าอยากทบทวนว่าทำไม)</p>
 
