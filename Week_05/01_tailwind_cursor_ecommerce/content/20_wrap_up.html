@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สรุปสิ่งที่สร้างเสร็จตลอดสัปดาห์ เทียบกับ repo ต้นแบบ และไอเดียต่อยอดหลังจบคอร์ส" />
+    <title>สรุปและก้าวต่อไป | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 20 · สร้างแอปทีละหน้า (Building Page by Page)</p>
+          <h1>สรุปและก้าวต่อไป</h1>
+          <p class="lesson-original-title" lang="en">Wrap Up</p>
+        </header>
+
+        <p>ย้อนกลับไปบทที่ 1 — ตอนนั้น 6 หน้าของ My Store เป็นแค่ screenshot ที่ให้ดูเป็นเป้าหมายปลายทาง พร้อมทักษะสี่ข้อที่บอกไว้ว่าจะฝึกซ้ำตลอดสัปดาห์ ตอนนี้ทั้ง 6 หน้านั้นเป็นโค้ดจริงที่คุณเขียนเอง ตรวจทานเอง และ refactor เอง ทุกบรรทัด ยินดีด้วยที่มาถึงบทสุดท้ายของสัปดาห์นี้ — มาย้อนดูกันว่าตลอดทางที่ผ่านมาสร้างอะไรไว้บ้าง</p>
+
+        <h2>ครบทั้ง 6 route แล้ว</h2>
+
+        <p><code>router.tsx</code> เวอร์ชันสมบูรณ์ที่ประกอบเสร็จในบทที่ 19 มี 6 route ครบตามตารางในบทที่ 1 ทั้งหมดเป็น children ของ <code>MainLayout</code> เดียวกัน พร้อม <code>errorElement</code> ที่ <code>RouteErrorFallback</code> ดักจับทั้ง path ที่ไม่มีจริงและ error ที่ไม่มีใครดักจับไว้ก่อนหน้า</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>หน้า</th>
+              <th>สร้างในบทที่</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/</code></td>
+              <td>Home</td>
+              <td>14–15</td>
+            </tr>
+            <tr>
+              <td><code>/categories</code></td>
+              <td>Category</td>
+              <td>16</td>
+            </tr>
+            <tr>
+              <td><code>/products/:id</code></td>
+              <td>Product Detail</td>
+              <td>17</td>
+            </tr>
+            <tr>
+              <td><code>/cart</code></td>
+              <td>Cart</td>
+              <td>18</td>
+            </tr>
+            <tr>
+              <td><code>/checkout</code></td>
+              <td>Checkout</td>
+              <td>19</td>
+            </tr>
+            <tr>
+              <td><code>/order/success</code></td>
+              <td>Order Success</td>
+              <td>19</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>ทักษะทั้งสี่ที่ฝึกซ้ำทั้งสัปดาห์</h2>
+
+        <p>บทที่ 1 เขียนทักษะสี่ข้อไว้เป็นรายการเปล่า ๆ ที่ยังไม่มีบทเรียนไหนรองรับ ตอนนี้ทุกข้อผูกกับบทจริงที่คุณลงมือทำมาแล้ว</p>
+
+        <ul>
+          <li><strong>แปลง screenshot เป็น prompt</strong> → บทเรียน 08 สอนโครงสี่ส่วนของ prompt ที่ดี (บริบท / โครงสร้าง / ข้อกำหนดทางเทคนิค / ขอบเขต) ที่ใช้ซ้ำทุกครั้งตั้งแต่นั้นมา</li>
+          <li><strong>ใช้ Cursor Agent สร้าง UI</strong> → บทเรียน 10 วน <strong>The Loop</strong> เต็มรูปแบบครั้งแรกกับ Layout แล้วทุกบทที่สร้างหน้า (14–19) ใช้ Loop เดียวกันนี้ซ้ำกับ Home, Category, Product Detail, Cart และ Checkout</li>
+          <li><strong>ตรวจทานโค้ด Tailwind</strong> → บทเรียน 11–13 สร้างสามเลนส์ตรวจทาน (responsive, accessibility, maintainability) ที่ทุกบทหลังจากนั้นใช้ซ้ำที่ขั้นตอน 🔍 ของ Loop</li>
+          <li><strong>refactor เป็น reusable component</strong> → บทเรียน 13 สร้าง <code>Button</code> ตัวแรกด้วยเหตุผลนี้โดยตรง แล้วทุก section 🔧 ตั้งแต่บทที่ 14 เป็นต้นไปทำซ้ำแบบเดียวกันกับโค้ดชิ้นใหม่ทุกครั้ง</li>
+        </ul>
+
+        <p>ผลลัพธ์ของการวน Loop ซ้ำ ๆ ทั้งสัปดาห์คือคลัง shared component และ utility ที่ใช้ร่วมกันทั่วทั้งแอป — <code>Button</code>, <code>PageBanner</code>, <code>ProductCard</code>, <code>FeatureCard</code>, <code>CountdownTimer</code>, <code>StarIcon</code>, <code>CategoryMenu</code>, ฟังก์ชัน <code>formatPrice</code> และ <code>calculateOffset</code>/<code>calculateTotalPages</code> จาก <code>shared/utils</code>, hook <code>useCart</code> และ <code>useProductRoute</code>, และชั้น data ที่วางรากฐานไว้ตั้งแต่บทที่ 15 อย่าง <code>apiClient</code> กับ <code>productQueries</code> ไม่มีชิ้นไหนถูกออกแบบไว้ล่วงหน้าตั้งแต่ต้น ทุกชิ้นโผล่ออกมาจากการเจอโค้ดซ้ำจริง ๆ ระหว่างตรวจทาน แล้วค่อยแยกออกมาตอน 🔧 — นี่คือหลักฐานว่า Loop ทำงานได้จริงตลอดทั้งสัปดาห์ ไม่ใช่แค่ทฤษฎีที่พูดถึงในบทที่ 1</p>
+
+        <h2>เทียบกับ Repo ต้นแบบ</h2>
+
+        <p>My Store ที่คุณสร้างอ้างอิงจาก <a href="https://github.com/manjarb/varis-lab-project-06-react-ecommerce-app" target="_blank" rel="noreferrer">github.com/manjarb/varis-lab-project-06-react-ecommerce-app</a> ตลอดทั้งสัปดาห์ ทั้ง routes, types และ endpoint แต่ไม่ได้ copy โค้ดมาทั้งหมด — ลองเปิด repo ต้นแบบเทียบกับสิ่งที่คุณสร้างเองดู จะเห็นความต่างที่ตั้งใจไว้สามจุด</p>
+
+        <ul>
+          <li><strong>Styling</strong> — repo ต้นแบบใช้ <strong>SCSS modules</strong> (ไฟล์ <code>.module.scss</code> แยกต่อ component) ส่วนของเราใช้ Tailwind utility ล้วนตามที่ตั้งเป้าไว้ตั้งแต่บทที่ 2 ลองเปิดไฟล์ SCSS สักไฟล์ในต้นแบบเทียบกับ JSX ของเราดู จะเห็นชัดว่า utility-first เปลี่ยน "จะเขียน class ชื่ออะไร" ให้กลายเป็น "จะประกอบ utility ไหนเข้าด้วยกัน" ไปเลย</li>
+          <li><strong>Tests</strong> — repo ต้นแบบมีชุดทดสอบด้วย Vitest, React Testing Library และ MSW (mock service worker สำหรับดัก API call ในเทสต์) ครบทุก feature สัปดาห์นี้เราโฟกัสที่ Tailwind กับ Cursor workflow เท่านั้น เลยยังไม่ได้แตะเทสต์ของ My Store เลยสักบรรทัด ถ้าอยากอ่านต่อ ทักษะเทสต์ React ทั้งหมดสอนไว้แล้วที่ Week_04 บทเรียน 23–30 (Vitest, React Testing Library, custom hook, snapshot, coverage, browser tests) — ลองกลับไปเขียนเทสต์ให้ <code>useCart</code> หรือ <code>CheckoutAddressForm</code> ของ My Store เองดูเป็นแบบฝึกหัดต่อยอด</li>
+          <li><strong>Library เสริม</strong> — repo ต้นแบบพึ่ง FontAwesome (ไอคอน), dayjs (จัดรูปแบบวันที่ในรีวิว) และ react-spinners (loading indicator) เพิ่มเติม ของเราตั้งใจใช้แค่สิ่งที่จำเป็นจริง ๆ (Swiper, react-paginate, react-modal, react-hook-form + zod) เพื่อให้เห็น Tailwind utility ทำงานเองโดยไม่มี library ช่วยบัง</li>
+        </ul>
+
+        <p class="translator-note">💡 สองจุดที่น่าพูดถึงเป็นพิเศษ — ไม่ใช่แค่ "ต่างจากต้นแบบ" แต่คือจุดที่เวอร์ชันของเรา<strong>ดีกว่า</strong>ต้นแบบจริง ๆ อย่างแรก: sidebar หมวดหมู่กับ grid สินค้าทับกันบนมือถือในแอปต้นแบบ (พบครั้งแรกตอนตรวจทาน responsive บทที่ 5 ยืนยันซ้ำในบทที่ 11 และแก้จริงตอนสร้างหน้า Category บทที่ 16) เวอร์ชันของเราเรียงต่อกันแนวตั้งอย่างถูกต้องและปรับเมนูให้ปัดซ้าย-ขวาได้บนมือถือด้วย อย่างที่สอง: บั๊กสเกลคะแนนดาว — component ดาวของต้นแบบเขียนไว้รองรับสเกล 0-10 แต่ดันรับ <code>product.rating</code> ที่เป็นสเกล 0-5 ตรง ๆ ทำให้ดาวเต็มแสดงต่ำกว่าความจริงเสมอ (พบและแก้ตอนสร้างหน้า Product Detail บทที่ 17) ทั้งสองจุดไม่ใช่บั๊กที่เราจงใจสร้างขึ้นเพื่อสอน แต่เป็นบั๊กจริงในแอปต้นแบบที่ตรวจทานอย่างละเอียดถึงจะเจอ — นี่คือใจความสำคัญที่สุดของทั้งสัปดาห์: <strong>ต้องตรวจทานโค้ดทุกจุดจริง ๆ แม้แต่โค้ดที่มาจาก repo ต้นแบบซึ่งดูน่าเชื่อถือ ไม่ใช่แค่โค้ดที่ AI สร้างให้เท่านั้น</strong></p>
+
+        <h2>ไอเดียต่อยอด</h2>
+
+        <p>My Store ที่มีตอนนี้ใช้งานได้ครบ flow การซื้อของจริงแล้ว แต่ยังมีของอีกหลายอย่างที่เพิ่มได้ด้วยทักษะที่เพิ่งฝึกมาทั้งสัปดาห์ ลองหยิบไปทำต่อเป็นแบบฝึกหัดหลังคอร์ส</p>
+
+        <ul>
+          <li><strong>ช่องค้นหา</strong> — dummyjson มี endpoint <code>GET /products/search?q=</code> พร้อมใช้อยู่แล้ว วน The Loop เดิมกับหน้าใหม่ได้เลย: prompt → generate → review → refactor ด้วย <code>productQueries</code> pattern เดียวกับบทที่ 15</li>
+          <li><strong>Favorites</strong> — ใช้ pattern เดียวกับตะกร้าในบทที่ 18 เป๊ะ (Context + <code>useReducer</code> + <code>localStorage</code>) แค่เปลี่ยนจาก "จำนวนในตะกร้า" เป็น "ถูกใจหรือไม่" เท่านั้น</li>
+          <li><strong>Dark mode</strong> — เพิ่ม <code>dark:</code> variant ให้ utility ที่มีอยู่แล้วทั่วแอป ทดสอบว่า design tokens ที่วางไว้ตั้งแต่บทที่ 6 (<code>--color-primary</code> ฯลฯ) รองรับการสลับธีมได้ดีแค่ไหนโดยไม่ต้องเขียน override กระจัดกระจาย</li>
+          <li><strong>Deploy จริง</strong> — ขั้นตอน deploy React app ขึ้น production สอนไว้ครบแล้วที่ Week_04 บทเรียน 35 — ใช้ขั้นตอนเดียวกันนั้นกับ My Store ได้ทันที</li>
+        </ul>
+
+        <h2>ส่งท้าย</h2>
+
+        <p>สัปดาห์นี้เริ่มจาก Agent ที่เขียนโค้ดได้เร็วกว่าที่คุณเคยเขียนมือมาก แต่สิ่งที่ทำให้โค้ดนั้นใช้งานได้จริงไม่ใช่ความเร็วของ Agent — คือสามเลนส์ตรวจทานที่คุณฝึกซ้ำจนเป็นนิสัย ยิ่ง Agent generate โค้ดได้เร็วและเยอะขึ้นเท่าไหร่ ทักษะ<strong>review</strong>ก็ยิ่งสำคัญขึ้นเท่านั้น เพราะปริมาณโค้ดที่ต้องรับผิดชอบเพิ่มขึ้นเร็วกว่าที่คนคนเดียวจะเขียนเองไหวมาก</p>
+
+        <p>ทักษะที่ฝึกมาทั้งสัปดาห์นี้ — เขียน prompt ให้ชัดเจนพอที่ AI จะทำตามได้ ตรวจทานโค้ดที่ AI สร้างอย่างเป็นระบบ (responsive, accessibility, maintainability) และรู้ว่าเมื่อไหร่ควร refactor ออกเป็น component ที่ใช้ซ้ำได้ — คือทักษะเดียวกับที่ senior developer ใช้คุมงานของ AI agent ในทีมจริงทุกวันนี้ ไม่ว่า tool จะเปลี่ยนไปเป็นตัวไหนต่อจากนี้ วงจร <strong>prompt → generate → review → refactor</strong> ที่คุณเพิ่งฝึกจนคล่องจะยังใช้ได้เหมือนเดิม เพราะปัญหาที่มันแก้ไม่ใช่ "AI เขียนโค้ดไม่เก่ง" แต่คือ "คนที่ ship โค้ดออกไปต้องรับผิดชอบมันเสมอ ไม่ว่าใครจะเป็นคนพิมพ์บรรทัดแรก"</p>
+
+        <p>ขอบคุณที่ตามมาจนจบสัปดาห์นี้ — ไปสร้างต่อกันเลย 🎉</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="19_checkout.html" rel="prev">ก่อนหน้า: Checkout และ Order Success</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <span></span>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
