@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เรียนรู้ utility class หลักที่ใช้บ่อยที่สุดผ่านการสร้างการ์ดสินค้าทีละขั้น" />
+    <title>Utilities หลักที่ใช้บ่อย | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 04 · Tailwind CSS พื้นฐาน (Tailwind Fundamentals)</p>
+          <h1>Utilities หลักที่ใช้บ่อย</h1>
+          <p class="lesson-original-title" lang="en">Core Utilities</p>
+        </header>
+
+        <p>Tailwind มี utility class หลายพันตัว แต่ในทางปฏิบัติคุณจะใช้แค่กลุ่มเล็ก ๆ ซ้ำ ๆ ตลอด บทนี้จะพาสร้างการ์ดสินค้าหนึ่งใบทีละขั้น โดยใช้ข้อมูลสินค้าจริงจาก dummyjson (สินค้า id 1: <em>Essence Mascara Lash Princess</em> ราคา $9.99) เพื่อให้เห็นหน้าตาใกล้เคียงกับสิ่งที่ My Store จะแสดงจริงในบทที่ 14</p>
+
+        <h2>1. Spacing — ระยะห่าง</h2>
+
+        <p>เริ่มจากกล่องเปล่า ๆ ที่มีแค่ระยะห่างภายใน (padding)</p>
+
+        <pre><code class="language-tsx">function ProductCard() {
+  return &lt;div className="p-4"&gt;{/* เนื้อหาการ์ด */}&lt;/div&gt;;
+}
+</code></pre>
+
+        <p>ตัวเลขใน spacing utility ของ Tailwind ไม่ใช่ px แต่อิงกับสเกล <strong>4 หน่วยต่อ 1rem</strong> — ตัวเลข 1 หน่วยเท่ากับ <code>0.25rem</code> เสมอ ดังนั้น <code>p-1</code> คือ <code>padding: 0.25rem</code>, <code>p-2</code> คือ <code>0.5rem</code>, และ <code>p-4</code> ที่ใช้ข้างบนคือ <code>padding: 1rem</code> พอดี ตัวย่อ <code>m-*</code> ทำหน้าที่เดียวกันกับ <code>margin</code>, <code>gap-*</code> กำหนดระยะห่างระหว่างลูกใน flex/grid และ <code>space-y-*</code> เติม margin-top ให้ลูกทุกตัวยกเว้นตัวแรก — สะดวกมากเวลาเรียงลูกในแนวตั้งโดยไม่ต้องใส่ <code>gap</code> ที่ parent</p>
+
+        <h2>2. Typography — ตัวอักษร</h2>
+
+        <p>เพิ่มชื่อสินค้าและแบรนด์เข้าไป</p>
+
+        <pre><code class="language-tsx">function ProductCard() {
+  return (
+    &lt;div className="p-4"&gt;
+      &lt;p className="text-sm text-gray-600"&gt;Essence&lt;/p&gt;
+      &lt;h3 className="text-base font-medium"&gt;Essence Mascara Lash Princess&lt;/h3&gt;
+      &lt;p className="text-sm text-gray-600 line-clamp-2"&gt;
+        The Essence Mascara Lash Princess is a popular mascara known for its volumizing and lengthening effects.
+      &lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <p><code>text-sm</code>, <code>text-base</code>, <code>text-lg</code>, <code>text-xl</code> ไล่ขนาดตัวอักษรตามสเกล (<code>text-sm</code> = <code>0.875rem</code>, <code>text-base</code> = <code>1rem</code>) <code>font-medium</code> และ <code>font-semibold</code> คุม <code>font-weight</code> ส่วน <code>text-gray-600</code> คุมสี ที่น่าสนใจคือ <code>line-clamp-2</code> ใน CSS ธรรมดาต้องเขียนหลายบรรทัดผสม vendor prefix กว่าจะตัดข้อความยาว ๆ ให้เหลือ 2 บรรทัดแล้วใส่ <code>…</code> ต่อท้าย แต่ Tailwind ย่อทั้งหมดนั้นไว้ใน class เดียว</p>
+
+        <h2>3. Colors &amp; Surfaces — สีและพื้นผิว</h2>
+
+        <p>ใส่พื้นหลังให้ตัวการ์ดและราคาสินค้า</p>
+
+        <pre><code class="language-tsx">&lt;div className="bg-white p-4"&gt;
+  {/* ... */}
+  &lt;p className="text-lg font-semibold text-blue-600"&gt;$9.99&lt;/p&gt;
+&lt;/div&gt;
+</code></pre>
+
+        <p><code>bg-white</code> และ <code>bg-gray-50</code> คือพื้นหลังที่ใช้บ่อยที่สุดสำหรับพื้นผิวการ์ดกับพื้นหลังหน้า ส่วน <code>text-blue-600</code> คือสีน้ำเงินของแบรนด์ที่จะใช้เน้นราคา สังเกต modifier <code>/50</code> ที่ต่อท้ายสีได้ เช่น <code>bg-black/50</code> คือสีดำแต่มี <code>opacity: 50%</code> — มีประโยชน์มากตอนทำ overlay ป้ายส่วนลดทับบนรูปสินค้า ซึ่งเราจะใช้ตอนประกอบร่างการ์ดฉบับเต็ม</p>
+
+        <h2>4. Borders &amp; Shadows — ขอบและเงา</h2>
+
+        <pre><code class="language-tsx">&lt;div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"&gt;
+  {/* ... */}
+&lt;/div&gt;
+</code></pre>
+
+        <p><code>rounded-lg</code> คือ <code>border-radius</code> ขนาดกลาง ๆ ที่ใช้ได้กับแทบทุกการ์ด <code>border</code> เปิดเส้นขอบหนา 1px แล้ว <code>border-gray-200</code> กำหนดสีของเส้นนั้น (สังเกตว่า <code>border</code> เปล่า ๆ ไม่มีสีจะได้เส้นสีดำเริ่มต้น จึงต้องระบุสีตามด้วยเสมอ) <code>shadow-sm</code> เป็นเงาบาง ๆ ที่ทำให้การ์ดลอยขึ้นจากพื้นหลังเล็กน้อยโดยไม่ดูหนักเกินไป</p>
+
+        <h2>5. Flexbox</h2>
+
+        <p>จัดแถวราคากับคะแนนรีวิวให้อยู่คนละฝั่งของบรรทัดเดียวกัน</p>
+
+        <pre><code class="language-tsx">&lt;div className="flex items-center justify-between gap-2"&gt;
+  &lt;p className="text-lg font-semibold text-blue-600"&gt;$9.99&lt;/p&gt;
+  &lt;span className="text-sm text-gray-600"&gt;⭐ 2.56&lt;/span&gt;
+&lt;/div&gt;
+</code></pre>
+
+        <p>สาม class นี้ใช้คู่กันบ่อยจนแทบเป็นสูตรสำเร็จ: <code>flex</code> เปิดโหมด flexbox, <code>items-center</code> จัดแนวตั้งให้อยู่กึ่งกลาง, <code>justify-between</code> ดันลูกตัวแรกไปซ้ายสุดตัวสุดท้ายไปขวาสุด และ <code>gap-2</code> กันไม่ให้ลูกชิดกันเกินไปเวลาที่พื้นที่แคบ</p>
+
+        <h2>6. Grid</h2>
+
+        <p>การ์ดหนึ่งใบใช้ flexbox ก็พอ แต่หน้า listing ที่มีการ์ดหลายสิบใบต้องใช้ grid</p>
+
+        <pre><code class="language-tsx">&lt;div className="grid grid-cols-4 gap-4"&gt;
+  &lt;ProductCard /&gt;
+  &lt;ProductCard /&gt;
+  &lt;ProductCard /&gt;
+  &lt;ProductCard /&gt;
+&lt;/div&gt;
+</code></pre>
+
+        <p><code>grid-cols-4</code> แบ่งพื้นที่เป็น 4 คอลัมน์เท่า ๆ กันในบรรทัดเดียว ส่วน <code>gap-4</code> ตัวเดียวกันกับที่เพิ่งใช้ใน flexbox ก็ใช้เว้นระยะระหว่างการ์ดในกริดได้เหมือนกัน — ในบทที่ 5 เราจะเปลี่ยนตัวเลขนี้ตามขนาดจอ</p>
+
+        <h2>7. Sizing</h2>
+
+        <p>สุดท้ายคุมขนาดของรูปภาพและความกว้างของทั้งหน้า</p>
+
+        <pre><code class="language-tsx">&lt;div className="mx-auto w-full max-w-7xl p-4"&gt;
+  &lt;img
+    src="https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp"
+    alt="Essence Mascara Lash Princess"
+    className="aspect-square w-full rounded-lg object-cover"
+  /&gt;
+&lt;/div&gt;
+</code></pre>
+
+        <p><code>w-full</code> ให้กว้างเต็มพื้นที่ parent ส่วน <code>max-w-7xl</code> คู่กับ <code>mx-auto</code> คือสูตรมาตรฐานสำหรับ “คอนเทนเนอร์หน้าเว็บ” — จำกัดความกว้างสูงสุดไว้ (<code>7xl</code> = 80rem) แล้วดันให้อยู่กึ่งกลางจอด้วย margin ซ้ายขวาอัตโนมัติ ส่วนที่รูปภาพ <code>aspect-square</code> บังคับสัดส่วนกว้าง:สูง เป็น 1:1 เสมอไม่ว่ารูปต้นฉบับจะเป็นสัดส่วนอะไร แล้ว <code>object-cover</code> ครอบตัดรูปให้เต็มกรอบนั้นโดยไม่บิดเบี้ยว — คู่นี้สำคัญมากสำหรับ grid สินค้าที่ต้องการให้ทุกการ์ดสูงเท่ากันแม้รูปต้นฉบับจะไม่เท่ากัน</p>
+
+        <h2>ประกอบร่างการ์ดฉบับเต็ม</h2>
+
+        <pre><code class="language-tsx">function ProductCard() {
+  return (
+    &lt;div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"&gt;
+      &lt;div className="relative"&gt;
+        &lt;img
+          src="https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp"
+          alt="Essence Mascara Lash Princess"
+          className="aspect-square w-full rounded-lg object-cover"
+        /&gt;
+        &lt;span className="absolute top-2 left-2 rounded bg-black/50 px-2 py-1 text-xs text-white"&gt;
+          -10%
+        &lt;/span&gt;
+      &lt;/div&gt;
+
+      &lt;p className="mt-3 text-sm text-gray-600"&gt;Essence&lt;/p&gt;
+      &lt;h3 className="text-base font-medium"&gt;Essence Mascara Lash Princess&lt;/h3&gt;
+      &lt;p className="text-sm text-gray-600 line-clamp-2"&gt;
+        The Essence Mascara Lash Princess is a popular mascara known for its volumizing and lengthening effects.
+      &lt;/p&gt;
+
+      &lt;div className="mt-2 flex items-center justify-between gap-2"&gt;
+        &lt;p className="text-lg font-semibold text-blue-600"&gt;$9.99&lt;/p&gt;
+        &lt;span className="text-sm text-gray-600"&gt;⭐ 2.56&lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <p>ลองวางโค้ดนี้แทนเนื้อหาใน <code>App.tsx</code> ของ playground แล้วดูผลลัพธ์จริง จากนั้นลองเปลี่ยนตัวเลขไปมา เช่น <code>p-4</code> เป็น <code>p-8</code> หรือ <code>text-blue-600</code> เป็น <code>text-red-600</code> เพื่อสร้างความคุ้นเคยกับสเกลตัวเลขและชื่อสี</p>
+
+        <p class="translator-note">💡 คุณไม่มีทางจำ utility ทุกตัวได้หมด และไม่จำเป็นต้องจำ — เปิด <a href="https://tailwindcss.com/docs" target="_blank" rel="noreferrer">tailwindcss.com/docs</a> คู่กันไว้เสมอแล้วใช้ช่องค้นหาบนเว็บ พิมพ์ชื่อ CSS property ที่ต้องการ (เช่น “line-clamp” หรือ “object-fit”) ก็จะเจอ utility class ที่ตรงกันทันที</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="03_tailwind_setup.html" rel="prev">ก่อนหน้า: เริ่มใช้ Tailwind v4 กับ Vite</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="05_responsive.html" rel="next">ถัดไป: Responsive แบบ Mobile-first</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
