@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="แทนที่ mock data ทั้งหมดด้วยข้อมูลจริงจาก dummyjson — api client, types, query factory ด้วย TanStack Query และการต่อเข้ากับหน้า Home โดยไม่แตะดีไซน์" />
+    <title>ต่อข้อมูลจริงด้วย TanStack Query | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 15 · สร้างแอปทีละหน้า (Building Page by Page)</p>
+          <h1>ต่อข้อมูลจริงด้วย TanStack Query</h1>
+          <p class="lesson-original-title" lang="en">Real Data with TanStack Query</p>
+        </header>
+
+        <p>หน้า Home เสร็จแล้วด้วย mock data บทนี้ไม่มี screenshot ใหม่ให้ดู เพราะดีไซน์จะไม่เปลี่ยนแม้แต่พิกเซลเดียว — สิ่งที่เปลี่ยนคือข้อมูลข้างใต้เท่านั้น จาก <code>MOCK_PRODUCTS</code> ที่นอนอยู่เฉย ๆ ในไฟล์ ไปเป็นข้อมูลจริงที่ดึงจาก dummyjson แบบ real-time และบทนี้ก็ต่างจากบททั่วไปอีกอย่างหนึ่ง — งานส่วนใหญ่จะ<strong>เขียนเอง ไม่ใช้ Agent</strong> ด้วยเหตุผลเดียวกับที่ตั้งโครงโปรเจกต์เองในบทที่ 9: การออกแบบ shape ของ API layer เป็นงาน deterministic ที่รู้คำตอบอยู่แล้ว ไม่ใช่งานสร้างสรรค์ที่ควรปล่อยให้ Agent เดา</p>
+
+        <h2>dummyjson: API ปลอมที่ทำตัวเหมือนของจริง</h2>
+
+        <p><a href="https://dummyjson.com" target="_blank" rel="noreferrer">dummyjson.com</a> เป็น REST API สาธารณะที่สร้างไว้ให้ทดลองเชื่อมต่อโดยเฉพาะ ไม่ต้องสมัคร ไม่ต้องมี API key ส่งข้อมูลสินค้าจริง (ชื่อ, ราคา, รูป, รีวิว) กลับมาเป็น JSON เอนด์พอยต์ที่แอปนี้ใช้มีอยู่ห้าตัว</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>คืนค่า</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>GET /products?limit&amp;skip</code></td>
+              <td><code>{ products: Product[], total, skip, limit }</code></td>
+            </tr>
+            <tr>
+              <td><code>GET /products/categories</code></td>
+              <td><code>Category[]</code> — <code>{ slug, name, url }</code></td>
+            </tr>
+            <tr>
+              <td><code>GET /products/category/:slug?limit&amp;skip</code></td>
+              <td>โครงเดียวกับ <code>/products</code></td>
+            </tr>
+            <tr>
+              <td><code>GET /products/:id</code></td>
+              <td><code>Product</code></td>
+            </tr>
+            <tr>
+              <td><code>POST /carts/add</code></td>
+              <td>จำลองการสั่งซื้อ คืน <code>{ id }</code> (ใช้จริงบทที่ 19)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>base URL ไม่ hardcode ไว้ในโค้ด แต่เก็บใน environment variable เพิ่มไฟล์ <code>.env</code> ที่ root ของโปรเจกต์</p>
+
+        <pre><code class="language-bash"># .env
+VITE_API_BASE_URL=https://dummyjson.com
+</code></pre>
+
+        <p class="translator-note">💡 Vite เปิดเผยเฉพาะตัวแปรที่ขึ้นต้นด้วย <code>VITE_</code> ให้โค้ดฝั่ง client อ่านได้ผ่าน <code>import.meta.env</code> — ตัวแปรอื่นที่ไม่มี prefix นี้จะถูกซ่อนไว้ ไม่ถูก bundle ไปกับโค้ดที่ส่งให้เบราว์เซอร์ ป้องกันความลับหลุดโดยไม่ตั้งใจ</p>
+
+        <h2>Shared API Client: จุดเดียวที่คุยกับเซิร์ฟเวอร์</h2>
+
+        <p>ก่อนเขียนฟังก์ชันเรียก endpoint ทีละตัว ต้องมี "ประตูทางเดียว" ที่ทุก request ผ่านก่อนเสมอ — เหตุผลคือ error จากเซิร์ฟเวอร์มาได้หลายรูปแบบ (timeout, 404, 500, network ล่ม) ถ้าปล่อยให้แต่ละ component ดัก error เองตามใจชอบ แต่ละที่จะจัดการไม่เหมือนกัน สร้าง <code>apiClient</code> ตัวเดียวที่ทุกฟังก์ชันเรียกผ่าน แล้วแปลง error ทุกแบบให้เป็นรูปทรงเดียวกันตั้งแต่จุดนี้</p>
+
+        <pre><code class="language-typescript">// src/shared/api/client.ts
+import axios, { AxiosError } from "axios";
+
+export class ApiError extends Error {
+  readonly status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+export const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+});
+
+apiClient.interceptors.response.use(
+  (response) =&gt; response,
+  (error: AxiosError&lt;{ message?: string }&gt;) =&gt;
+    Promise.reject(
+      new ApiError(
+        error.response?.data?.message ?? "Something went wrong. Please try again.",
+        error.response?.status,
+      ),
+    ),
+);
+</code></pre>
+
+        <p><code>ApiError</code> เป็น error class ของเราเอง — สืบทอดจาก <code>Error</code> มาตรฐานแต่เพิ่ม <code>status</code> (HTTP status code) เข้าไป ส่วน <strong>response interceptor</strong> คือฟังก์ชันที่ axios เรียกทุกครั้งหลังได้ response กลับมา ไม่ว่าจะจาก request ไหนก็ตาม ถ้าสำเร็จก็ปล่อยผ่าน (<code>(response) =&gt; response</code>) แต่ถ้า error เกิดขึ้น ไม่ว่าจะเป็น error รูปแบบไหนจากฝั่งเซิร์ฟเวอร์ ก็จะถูกจับแล้วห่อใหม่เป็น <code>ApiError</code> เสมอ ผลคือทุกจุดในแอปที่เรียก <code>apiClient</code> ไม่ว่าจะเป็น query ไหน รับประกันได้ว่า error ที่เจอจะมีรูปทรงเดียวกันเป๊ะ ไม่ต้องเขียน error handling ซ้ำที่ทุกจุดเรียก — นี่คือหลักการเดียวกับ <code>Button</code> ในบทที่ 13 แค่ย้ายจาก UI มาเป็น data layer</p>
+
+        <h2>Types: models ของ Product</h2>
+
+        <p>บทที่แล้วมี <code>features/products/types.ts</code> แบบย่ออยู่แล้ว มีแค่ 5 field ที่ <code>ProductCard</code> ต้องใช้ ตอนนี้เติมให้ครบตามที่แอปทั้งเวอร์ชันนี้จะใช้จริง — dummyjson ส่ง field กลับมามากกว่านี้อีกมาก (<code>tags</code>, <code>sku</code>, <code>weight</code>, <code>dimensions</code> ฯลฯ) แต่กฎที่ยึดตลอดคือ<strong>โมเดลเฉพาะ field ที่แอปเราใช้จริง</strong> ไม่ใช่ copy ทุก field ที่ API ส่งมา เพิ่ม field ใหม่เข้า type ก็ต่อเมื่อมีหน้าจอไหนต้องใช้จริง ๆ เท่านั้น (เหมือนกับที่บทที่ 17 จะเพิ่ม field รีวิวเข้ามาตอนสร้างหน้า Product Detail)</p>
+
+        <pre><code class="language-typescript">// src/shared/types/generic.type.ts
+export interface Pagination {
+  total: number;
+  skip: number;
+  limit: number;
+}
+</code></pre>
+
+        <pre><code class="language-typescript">// src/features/products/types.ts
+import { Pagination } from "@/shared/types/generic.type";
+
+export interface ProductReview {
+  rating: number;
+  comment: string;
+  date: string;
+  reviewerName: string;
+}
+
+export interface Product {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  discountPercentage?: number;
+  rating: number;
+  stock: number;
+  brand: string;
+  reviews: ProductReview[];
+  images: string[];
+  thumbnail: string;
+}
+
+export interface Category {
+  slug: string;
+  name: string;
+  url: string;
+}
+
+export interface FetchProductsResponse extends Pagination {
+  products: Product[];
+}
+</code></pre>
+
+        <p><code>FetchProductsResponse extends Pagination</code> แทนที่จะประกาศ <code>total</code>/<code>skip</code>/<code>limit</code> ซ้ำเอง เพราะ endpoint สินค้าทุกตัวที่คืนค่าเป็น list (<code>/products</code> และ <code>/products/category/:slug</code>) มีโครง pagination เดียวกันเป๊ะ ประกาศ shape นี้ไว้ที่เดียวใน <code>shared/</code> แล้วนำกลับมาใช้ซ้ำ</p>
+
+        <h2>features/products/api.ts: ฟังก์ชันเรียก endpoint</h2>
+
+        <p>ชั้นถัดไปคือฟังก์ชันธรรมดาที่ห่อ <code>apiClient</code> ไว้ ฟังก์ชันละหนึ่ง endpoint คืนค่าเป็น <code>Promise</code> ที่ type ตรงกับ interface ด้านบนเป๊ะ</p>
+
+        <pre><code class="language-typescript">// src/features/products/api.ts
+import { apiClient } from "@/shared/api/client";
+import { Category, FetchProductsResponse, Product } from "@/features/products/types";
+
+export interface ProductListParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface CategoryProductsParams extends ProductListParams {
+  category: string;
+}
+
+export async function getProducts({
+  page = 1,
+  limit = 20,
+}: ProductListParams = {}): Promise&lt;FetchProductsResponse&gt; {
+  const { data } = await apiClient.get&lt;FetchProductsResponse&gt;("/products", {
+    params: { skip: (page - 1) * limit, limit },
+  });
+  return data;
+}
+
+export async function getProductsByCategory({
+  category,
+  page = 1,
+  limit = 20,
+}: CategoryProductsParams): Promise&lt;FetchProductsResponse&gt; {
+  const { data } = await apiClient.get&lt;FetchProductsResponse&gt;(
+    `/products/category/${category}`,
+    { params: { skip: (page - 1) * limit, limit } },
+  );
+  return data;
+}
+
+export async function getCategories(): Promise&lt;Category[]&gt; {
+  const { data } = await apiClient.get&lt;Category[]&gt;("/products/categories");
+  return data;
+}
+
+export async function getProduct(id: string | number): Promise&lt;Product&gt; {
+  const { data } = await apiClient.get&lt;Product&gt;(`/products/${id}`);
+  return data;
+}
+</code></pre>
+
+        <p>dummyjson ใช้ <code>skip</code>/<code>limit</code> แบบ offset ไม่ใช่เลขหน้าโดยตรง — หน้า UI ของเราคิดเป็น "หน้าที่เท่าไหร่" (<code>page</code>) แต่ API ต้องการ "ข้ามกี่ชิ้น" (<code>skip</code>) สูตรแปลงคือ <code>skip = (page - 1) * limit</code>: หน้า 1 ข้าม 0 ชิ้น, หน้า 2 ข้าม <code>limit</code> ชิ้นแรกไป ฯลฯ ตอนนี้เขียนสูตรนี้ตรง ๆ ไว้ในทั้งสองฟังก์ชันไปก่อน — บทที่ 16 จะกลับมาที่จุดนี้อีกครั้งตอนตรวจ maintainability</p>
+
+        <h2>Query Factory: features/products/queries.ts</h2>
+
+        <p>TanStack Query ต้องการ <code>queryKey</code> (ตัวระบุ cache) คู่กับ <code>queryFn</code> (ฟังก์ชันที่ไปดึงข้อมูล) ทุกครั้งที่เรียก <code>useQuery</code> ถ้าเขียนคู่นี้กระจายอยู่ทุก component ที่ต้องการข้อมูลสินค้า จะเจอปัญหาเดียวกับปุ่มซ้ำในบทที่ 13 — พิมพ์ผิดหนึ่งตัวใน <code>queryKey</code> แล้ว cache จะไม่ sync กันเงียบ ๆ โดยไม่มี error ใด ๆ เตือน ทางแก้คือรวมทุก query ของ feature นี้ไว้ในไฟล์เดียว เรียกว่า <strong>query factory</strong></p>
+
+        <pre><code class="language-typescript">// src/features/products/queries.ts
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import {
+  CategoryProductsParams,
+  ProductListParams,
+  getCategories,
+  getProduct,
+  getProducts,
+  getProductsByCategory,
+} from "./api";
+
+export const productKeys = {
+  all: ["products"] as const,
+  lists: () =&gt; [...productKeys.all, "list"] as const,
+  list: (params: ProductListParams) =&gt; [...productKeys.lists(), params] as const,
+  byCategory: (params: CategoryProductsParams) =&gt;
+    [...productKeys.lists(), "category", params] as const,
+  categories: () =&gt; [...productKeys.all, "categories"] as const,
+  details: () =&gt; [...productKeys.all, "detail"] as const,
+  detail: (id: string | number) =&gt; [...productKeys.details(), String(id)] as const,
+};
+
+export const productQueries = {
+  list: (params: ProductListParams = {}) =&gt;
+    queryOptions({
+      queryKey: productKeys.list(params),
+      queryFn: () =&gt; getProducts(params),
+    }),
+
+  byCategory: (params: CategoryProductsParams) =&gt;
+    queryOptions({
+      queryKey: productKeys.byCategory(params),
+      queryFn: () =&gt; getProductsByCategory(params),
+      placeholderData: keepPreviousData,
+    }),
+
+  categories: () =&gt;
+    queryOptions({
+      queryKey: productKeys.categories(),
+      queryFn: getCategories,
+      staleTime: 5 * 60 * 1000,
+    }),
+
+  detail: (id: string | number) =&gt;
+    queryOptions({
+      queryKey: productKeys.detail(id),
+      queryFn: () =&gt; getProduct(id),
+    }),
+};
+</code></pre>
+
+        <p><code>productKeys</code> สร้าง key เป็น array ซ้อนกันเป็นลำดับชั้น (<code>["products"]</code> → <code>["products", "list"]</code> → <code>["products", "list", { limit: 5 }]</code>) ลำดับชั้นแบบนี้ทำให้ invalidate cache แบบกว้าง ๆ ได้ง่าย เช่นสั่ง invalidate ทุกอย่างที่ขึ้นต้นด้วย <code>productKeys.all</code> ก็เคลียร์ cache สินค้าทั้งหมดในทีเดียว <code>productQueries</code> ห่อ <code>queryOptions</code> ไว้ให้แต่ละ query พร้อมใช้ทันทีผ่าน <code>useQuery(productQueries.list(...))</code> โดยไม่ต้องพิมพ์ <code>queryKey</code>/<code>queryFn</code> เองที่ component เลย สองตัวเลือกที่แปะเพิ่มเข้ามาคุ้มค่าที่จะสังเกต: <code>staleTime: 5 * 60 * 1000</code> บน <code>categories</code> บอกว่าข้อมูลนี้ "ยังสดอยู่" ได้นานถึง 5 นาที ไม่ต้อง fetch ซ้ำทุกครั้งที่ component mount ใหม่ เพราะรายชื่อหมวดหมู่แทบไม่เปลี่ยนระหว่าง session ส่วน <code>placeholderData: keepPreviousData</code> บน <code>byCategory</code> บอกว่าเวลาเปลี่ยนพารามิเตอร์ (เปลี่ยนหมวดหรือเปลี่ยนหน้า) ให้โชว์ข้อมูลชุดเก่าค้างไว้ก่อนระหว่างรอข้อมูลใหม่ แทนที่จะเคลียร์จอเป็นค่าว่างแล้วโชว์ spinner กระพริบ — จะเห็นผลจริงตอนสร้าง pagination ในบทที่ 16</p>
+
+        <h2>ต่อ Provider: QueryClientProvider</h2>
+
+        <p><code>useQuery</code> ทำงานได้ก็ต่อเมื่อทั้งแอปถูกห่อด้วย <code>QueryClientProvider</code> ก่อน สร้าง <code>QueryClient</code> ตัวเดียวที่ใช้ทั้งแอป</p>
+
+        <pre><code class="language-typescript">// src/app/queryClient.ts
+import { QueryClient } from "@tanstack/react-query";
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      retry: 1,
+    },
+  },
+});
+</code></pre>
+
+        <pre><code class="language-tsx">// src/app/providers.tsx
+import { ReactNode } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./queryClient";
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  return &lt;QueryClientProvider client={queryClient}&gt;{children}&lt;/QueryClientProvider&gt;;
+}
+</code></pre>
+
+        <p class="translator-note">💡 <code>AppProviders</code> ตั้งใจแยกไว้เป็นจุดเดียวที่รวม provider ทั้งหมดของแอป ตอนนี้มีแค่ TanStack Query แต่บทที่ 18 จะกลับมาเพิ่ม <code>CartProvider</code> เป็นอีกชั้นในไฟล์เดียวกันนี้ ไม่ต้องไปแก้ <code>main.tsx</code> ซ้ำอีกรอบ</p>
+
+        <p>แล้วห่อ <code>RouterProvider</code> ที่มีอยู่แล้วจากบทที่ 10 ด้วย <code>AppProviders</code> อีกชั้นใน <code>main.tsx</code></p>
+
+        <pre><code class="language-tsx">// src/main.tsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { RouterProvider } from "react-router";
+import router from "@/app/router";
+import { AppProviders } from "@/app/providers";
+import "./index.css";
+
+createRoot(document.getElementById("root")!).render(
+  &lt;StrictMode&gt;
+    &lt;AppProviders&gt;
+      &lt;RouterProvider router={router} /&gt;
+    &lt;/AppProviders&gt;
+  &lt;/StrictMode&gt;,
+);
+</code></pre>
+
+        <h2>ใช้ของจริงในหน้า Home</h2>
+
+        <p>ทุกชั้นพร้อมแล้ว กลับไปที่ <code>Home.tsx</code> แทนที่ <code>MOCK_PRODUCTS</code> ทั้งสามจุดที่เคยใช้มันด้วย <code>useQuery</code> สามตัว — หนึ่งตัวสำหรับ Deals of the Day (5 ชิ้น), หนึ่งตัวสำหรับรายชื่อหมวดหมู่, และหนึ่งตัวสำหรับกริดสินค้าตามหมวดที่เลือก</p>
+
+        <pre><code class="language-tsx">// src/pages/Home/Home.tsx (ส่วนที่เปลี่ยน)
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { productQueries } from "@/features/products/queries";
+import { Category } from "@/features/products/types";
+import ProductCard from "@/features/products/components/ProductCard/ProductCard";
+import ErrorMessage from "@/shared/components/ErrorMessage/ErrorMessage";
+
+const CATEGORY_PRODUCTS_LIMIT = 12;
+
+export default function Home() {
+  const [selectedCategory, setSelectedCategory] = useState&lt;Category | null&gt;(null);
+
+  const dealsQuery = useQuery(productQueries.list({ limit: 5 }));
+  const categoriesQuery = useQuery(productQueries.categories());
+  const currentCategory = selectedCategory ?? categoriesQuery.data?.[0] ?? null;
+
+  const categoryProductsQuery = useQuery({
+    ...productQueries.byCategory({
+      category: currentCategory?.slug ?? "",
+      limit: CATEGORY_PRODUCTS_LIMIT,
+    }),
+    enabled: currentCategory !== null,
+  });
+
+  // ...
+}
+</code></pre>
+
+        <p class="translator-note">🔍 สังเกตว่ากริดสินค้าตามหมวดขอ <code>limit: 12</code> แต่ screenshot บทที่ 8 แสดงหมวด Beauty แค่ 5 ชิ้น — ไม่ใช่บั๊ก dummyjson แค่คืนสินค้าเท่าที่มีจริงในหมวดนั้น หมวด Beauty ของ dummyjson มีสินค้าอยู่จริงแค่ 5 ชิ้น ขอ 12 ก็ได้แค่ 5 กลับมา ตรงกับที่เห็นในภาพเป๊ะ ส่วนหมวดอื่นที่มีสินค้ามากกว่า 12 ชิ้น ก็จะได้ครบ 12 ตามที่ขอ — นี่คือความต่างระหว่าง "limit ที่ขอ" กับ "จำนวนที่มีอยู่จริง" ต้องแยกสองเรื่องนี้ออกจากกันเสมอเวลาต่อ API จริง</p>
+
+        <p>ระหว่างรอข้อมูล UI ต้องไม่ใช่จอว่างเปล่า ใช้ Tailwind <code>animate-pulse</code> ทำ loading skeleton — กล่องเทาที่กระพริบเบา ๆ บอกผู้ใช้ว่ากำลังโหลดอยู่ ไม่ใช่หน้าพัง</p>
+
+        <pre><code class="language-tsx">// skeleton ระหว่างรอ (ใช้ซ้ำได้ทั้งสาม section)
+&lt;div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"&gt;
+  {Array.from({ length: 5 }).map((_, i) =&gt; (
+    &lt;div key={i} className="animate-pulse"&gt;
+      &lt;div className="aspect-square w-full rounded-md bg-gray-200" /&gt;
+      &lt;div className="mt-2 h-4 w-3/4 rounded bg-gray-200" /&gt;
+      &lt;div className="mt-1 h-4 w-1/2 rounded bg-gray-200" /&gt;
+    &lt;/div&gt;
+  ))}
+&lt;/div&gt;</code></pre>
+
+        <p class="translator-note">💡 แอปต้นแบบใช้ไลบรารี <code>react-loading-skeleton</code> สำหรับส่วนนี้ แต่เราตั้งใจใช้ <code>animate-pulse</code> ของ Tailwind แทน เพื่อให้ยังอยู่ในโลก utility ล้วน ๆ ไม่ต้องติดตั้งไลบรารีเพิ่มสำหรับ effect ที่ทำได้ด้วย utility class บรรทัดเดียวอยู่แล้ว</p>
+
+        <p>ถ้า query ล้มเหลว (เช่นเน็ตหลุด หรือ dummyjson ล่ม) โชว์ <code>ErrorMessage</code> component เล็ก ๆ แทนกริดที่ว่างเปล่า</p>
+
+        <pre><code class="language-tsx">// src/shared/components/ErrorMessage/ErrorMessage.tsx
+interface ErrorMessageProps {
+  message?: string;
+}
+
+export default function ErrorMessage({
+  message = "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+}: ErrorMessageProps) {
+  return (
+    &lt;div role="alert" className="py-8 text-center text-gray-500"&gt;
+      &lt;p&gt;{message}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <p>รูปแบบการเช็คสามสถานะ (loading / error / success) ซ้ำเหมือนกันทั้งสาม section ของ Home — เขียนเป็น ternary ซ้อนสั้น ๆ ในแต่ละจุด <code>isLoading ? &lt;Skeleton /&gt; : isError ? &lt;ErrorMessage /&gt; : &lt;ProductGrid /&gt;</code> ก็เพียงพอสำหรับตอนนี้ เพราะทั้งสามจุดมี layout กริดที่ต่างกัน (จำนวนคอลัมน์ไม่เท่ากัน) การรวมเป็น component เดียวตอนนี้จะยิ่งซับซ้อนกว่าเดิม — จำกฎจากบทที่ 13 ไว้: รอให้เห็น pattern ซ้ำจริง ๆ ก่อนค่อยแยก ไม่ใช่แยกล่วงหน้าเผื่อไว้</p>
+
+        <h2>ให้ Agent ช่วยตรงไหนในบทนี้</h2>
+
+        <p>โครงของ <code>api.ts</code> และ <code>queries.ts</code> ทั้งหมดด้านบนควรออกแบบเองตาม pattern ที่ทีมตกลงกันไว้ ไม่ใช่ปล่อยให้ Agent เดาโครงสร้างเอง เพราะถ้าแชทสองแชทออกแบบ query factory ไม่เหมือนกัน โค้ดทั้งแอปจะไม่สอดคล้องกันทันที แต่มีงานหนึ่งในบทนี้ที่เหมาะกับ Agent มาก — งานแปล JSON response ให้เป็น TypeScript interface เป็นงาน mechanical ล้วน ๆ ไม่ต้องตัดสินใจเชิงสถาปัตยกรรมอะไรเลย เปิด <code>https://dummyjson.com/products/1</code> ในเบราว์เซอร์ คัดลอก JSON ที่ได้ วางในแชทของ Agent แล้วสั่ง</p>
+
+        <pre><code class="language-text">เขียน TypeScript interface จาก JSON นี้</code></pre>
+
+        <p>Agent จะไล่ทุก field ในตัวอย่างแล้วสร้าง interface ให้ครบทันที เร็วกว่าพิมพ์เองทีละบรรทัดมาก แต่ขั้นตอนที่ยังต้องเป็นคนตัดสินใจอยู่ดีคือ<strong>เลือกว่า field ไหนแอปเราใช้จริง</strong> — interface เต็มที่ Agent สร้างจาก JSON จะมี field ที่เราไม่เคยใช้อีกสิบกว่าตัว หน้าที่ของคนคือตัดให้เหลือแค่ที่จำเป็น แบบที่ <code>Product</code> ด้านบนทำไว้ ไม่ใช่ copy ทุกอย่างที่ Agent เสนอมา</p>
+
+        <p>ข้อมูลจริงต่อครบทุกจุดของหน้า Home แล้ว หน้าตาเหมือนเดิมทุกประการ แต่ตอนนี้เชื่อมกับ dummyjson จริง ๆ บทหน้าเราจะใช้ <code>productQueries</code> กับ <code>ProductCard</code> ชุดเดียวกันนี้ซ้ำ สร้างหน้า Category ที่มีทั้งเมนูหมวดหมู่แบบเต็มและ pagination</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="14_home_page.html" rel="prev">ก่อนหน้า: หน้า Home</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="16_category_page.html" rel="next">ถัดไป: หน้า Category และ Pagination</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
