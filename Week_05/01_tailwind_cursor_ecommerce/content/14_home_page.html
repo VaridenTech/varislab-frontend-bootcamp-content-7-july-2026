@@ -116,10 +116,11 @@ export const MOCK_PRODUCTS: Product[] = [
   { id: 2, title: "Eyeshadow Palette with Mirror", price: 19.99, discountPercentage: 18.19, thumbnail: "/images/mock/product-2.png" },
   { id: 3, title: "Powder Canister", price: 14.99, discountPercentage: 9.84, thumbnail: "/images/mock/product-3.png" },
   { id: 4, title: "Red Lipstick", price: 12.99, discountPercentage: 12.16, thumbnail: "/images/mock/product-4.png" },
+  { id: 5, title: "Red Nail Polish", price: 8.99, discountPercentage: 11.44, thumbnail: "/images/mock/product-5.png" },
 ];
 </code></pre>
 
-        <p>ตัวเลขราคาและเปอร์เซ็นต์ส่วนลดในนี้ไม่ได้สุ่มมาลอย ๆ — คัดลอกมาจากสินค้าจริงที่เห็นใน screenshot หมวด Beauty ด้านบน (Essence Mascara $9.99 ลด 10.48%, Eyeshadow Palette $19.99 ลด 18.19% ฯลฯ) ตอนต่อ API จริงในบทที่ 15 ตัวเลขพวกนี้จะถูกแทนที่ด้วยของจริงจาก dummyjson พอดี เพราะร้าน "Beauty" ใน dummyjson มีสินค้าชุดนี้อยู่จริง และนี่คือ <code>ProductCard</code> ที่ Agent สร้างตามที่ prompt ขอ — component ที่จะกลายเป็นตัวเอกของบทนี้</p>
+        <p>ตัวเลขราคาและเปอร์เซ็นต์ส่วนลดในนี้ไม่ได้สุ่มมาลอย ๆ — คัดลอกมาจากสินค้าจริงทั้ง 5 ชิ้นที่เห็นใน screenshot หมวด Beauty ด้านบน (Essence Mascara $9.99 ลด 10.48%, Eyeshadow Palette $19.99 ลด 18.19%, Powder Canister $14.99 ลด 9.84%, Red Lipstick $12.99 ลด 12.16%, Red Nail Polish $8.99 ลด 11.44%) ครบตามจำนวนที่ระบุไว้ในเป้าหมายด้านบนเป๊ะ ตอนต่อ API จริงในบทที่ 15 ตัวเลขพวกนี้จะถูกแทนที่ด้วยของจริงจาก dummyjson พอดี เพราะร้าน "Beauty" ใน dummyjson มีสินค้าชุดนี้อยู่จริง และนี่คือ <code>ProductCard</code> ที่ Agent สร้างตามที่ prompt ขอ — component ที่จะกลายเป็นตัวเอกของบทนี้</p>
 
         <pre><code class="language-tsx">// src/features/products/components/ProductCard/ProductCard.tsx
 import { Product } from "@/features/products/types";
