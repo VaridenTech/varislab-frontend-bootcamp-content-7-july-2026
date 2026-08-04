@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ครั้งแรกที่วน The Loop เต็มรูปแบบ: เขียน prompt ให้ Agent สร้าง MainLayout, Header และ Footer แล้วตรวจทานผลลัพธ์เบื้องต้น" />
+    <title>สร้าง Layout แรกด้วย Agent | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 10 · เริ่มสร้างโปรเจกต์ (Project Kickoff)</p>
+          <h1>สร้าง Layout แรกด้วย Agent</h1>
+          <p class="lesson-original-title" lang="en">First Layout with the Agent</p>
+        </header>
+
+        <p>บทที่ 9 ตั้งโครงโปรเจกต์เสร็จแล้ว บทนี้เป็นครั้งแรกที่เราจะเปิด Agent panel สั่งงานจริงในโปรเจกต์ <code>my-store</code> และเป็นครั้งแรกที่ใช้ขั้นตอนการทำงานที่จะวนซ้ำทุกบทตั้งแต่นี้ไปจนจบสัปดาห์ เรียกว่า <strong>The Loop</strong>: ตั้งเป้าหมายให้ชัด (🎯) เขียน prompt ตามโครงสี่ส่วนจากบทที่ 8 (📝) ดูว่า Agent สร้างอะไรมา (🤖) ตรวจทานตามเช็กลิสต์ (🔍) แล้วค่อย refactor ให้สะอาด (🔧) — ทำทีละชิ้นเล็ก ๆ วนแบบนี้ไปเรื่อย ๆ จนกว่าจะครบทั้งแอป บทนี้เราจะวนครบทุกขั้นตอนของ Loop เป็นครั้งแรก โดยใช้ Layout เป็นชิ้นแรก</p>
+
+        <h2>🎯 เป้าหมาย</h2>
+
+        <p>งานของบทนี้คือ Layout โครงหลักของทั้งแอป — ส่วนที่ทุกหน้าต้องมีเหมือนกัน (Header, Footer) กับจุดที่แต่ละหน้าจะมาสลับแสดงผลกันทีหลัง (<code>&lt;Outlet /&gt;</code>) ดูภาพหน้า Home ของแอปต้นแบบอีกครั้ง แต่รอบนี้ให้โฟกัสเฉพาะแถบบนสุดกับแถบล่างสุดเท่านั้น ตรงกลางทั้งหมด (banner, deals, สินค้าตามหมวด) ยังไม่แตะ เก็บไว้บทที่ 14</p>
+
+        <img src="images/home_desktop.png" alt="ภาพหน้าจอหน้า Home ของแอปต้นแบบ My Store บนจอเดสก์ท็อป บทนี้ให้ดูเฉพาะแถบบนสุด (header: โลโก้ My Store, เมนู Home/Products, ไอคอนตะกร้า) และแถบล่างสุด (footer: สามคอลัมน์ My Store/Categories/Pages)" />
+
+        <p>ถือว่า "เสร็จ" เมื่อ:</p>
+
+        <ul>
+          <li><code>src/app/router.tsx</code> มี <code>createBrowserRouter</code> ที่มี <code>MainLayout</code> เป็น layout route และ path <code>"/"</code> ที่ยัง render หน้า Home ว่าง ๆ ไปก่อน</li>
+          <li><code>src/main.tsx</code> ครอบทั้งแอปด้วย <code>RouterProvider</code> แล้ว</li>
+          <li><code>MainLayout</code> เรียง Header บน, เนื้อหาของแต่ละหน้าอยู่กลาง (ผ่าน <code>Outlet</code>), Footer อยู่ล่าง โดยส่วนกลางดันความสูงเต็มจอเสมอแม้เนื้อหาจะน้อย</li>
+          <li>Header มีโลโก้ข้อความ "My Store" ที่ลิงก์กลับหน้าแรก, เมนู Home / Products, และไอคอนตะกร้าพร้อม badge ตัวเลข 0</li>
+          <li>Footer แสดงผลเป็นโครงสามคอลัมน์ตาม screenshot</li>
+          <li>รัน <code>npm run dev</code> แล้วเห็น layout นี้จริงที่ <code>http://localhost:5173/</code></li>
+        </ul>
+
+        <h2>📝 เขียน Prompt</h2>
+
+        <p>ทบทวนโครงสี่ส่วนจากบทที่ 8 อีกครั้ง — บริบท / โครงสร้าง (หรืองาน) / ข้อกำหนดทางเทคนิค / ขอบเขต ครั้งนี้ต่างจากบทที่ 8 ตรงที่เราขอแค่ layout ไม่ใช่ทั้งหน้า ส่วน "โครงสร้าง" จึงเขียนเป็นรายการงานทีละไฟล์แทน เพราะ layout ไม่ได้มี section เรียงจากบนลงล่างแบบหน้า Home สังเกตด้วยว่าบรรทัด Footer อ้างอิงของจริงที่เห็นใน screenshot เป๊ะ ๆ — ข้อมูลติดต่อ My Store, Categories, Pages ไม่ใช่ Shop / Support / About ที่มักเจอในเทมเพลตทั่วไปตามอินเทอร์เน็ต เพราะ prompt ที่ดีต้องอ้างอิงของจริงที่แนบไป ไม่ใช่เดาจากเว็บอื่นที่ Agent เคยเห็นมาก่อน</p>
+
+        <pre><code class="language-text">สร้างโครง layout ของแอปตาม screenshot ที่แนบ (ดูเฉพาะส่วน header และ footer)
+
+บริบท: โปรเจกต์ my-store ตามโครงสร้างใน rules มี react-router ติดตั้งแล้ว
+
+งาน:
+- src/app/router.tsx: createBrowserRouter มี MainLayout เป็น layout route และหน้า Home ว่าง ๆ ที่ path "/"
+- src/main.tsx: ครอบด้วย RouterProvider
+- MainLayout: Header บน, &lt;Outlet /&gt; ตรงกลาง (main ที่ดันความสูงเต็มจอ), Footer ล่าง
+- Header: โลโก้ข้อความ "My Store" (ลิงก์กลับ "/"), nav มีลิงก์ Home และ Products, ไอคอนตะกร้า SVG พร้อม badge ตัวเลข 0 ด้านขวา
+- Footer: 3 คอลัมน์ตาม screenshot — ข้อมูลติดต่อ My Store (ที่อยู่, เบอร์โทร, อีเมล), Categories (รายชื่อหมวดหมู่), Pages (ลิงก์ Home, Products, Cart)
+
+ข้อกำหนด: Tailwind เท่านั้น, mobile-first, semantic HTML, focus-visible ทุกลิงก์
+ขอบเขต: ยังไม่ต้องทำหน้าอื่น ยังไม่ต้องมี state ตะกร้าจริง</code></pre>
+
+        <h2>🤖 สิ่งที่ Agent สร้าง</h2>
+
+        <p>วาง prompt นี้ในโหมด Agent พร้อมแนบรูป <code>home_desktop.png</code> แล้วปล่อยให้มันทำงาน ไฟล์ที่ได้ตรงตามที่ขอเป๊ะ — <code>router.tsx</code> กับ <code>main.tsx</code> ต่อสายกันครบ และ <code>MainLayout</code> เรียงลำดับ Header / Outlet / Footer ถูกต้องตามที่สั่ง</p>
+
+        <pre><code class="language-tsx">// src/app/layouts/MainLayout/MainLayout.tsx
+import { Outlet } from "react-router";
+import Header from "@/shared/components/Header/Header";
+import Footer from "@/shared/components/Footer/Footer";
+
+export default function MainLayout() {
+  return (
+    &lt;div className="flex min-h-screen flex-col"&gt;
+      &lt;Header /&gt;
+      &lt;main className="flex-1"&gt;
+        &lt;Outlet /&gt;
+      &lt;/main&gt;
+      &lt;Footer /&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <p>ส่วนที่น่าดูใกล้ ๆ กว่าคือ <code>Header.tsx</code> — อ่านเผิน ๆ มันทำงานได้จริง เปิดจอกว้าง ๆ แล้วหน้าตาตรงกับ screenshot ทุกจุด</p>
+
+        <pre><code class="language-tsx">// src/shared/components/Header/Header.tsx
+import { Link } from "react-router";
+
+export default function Header() {
+  return (
+    &lt;header className="border-b border-gray-200 bg-white"&gt;
+      &lt;div className="mx-auto flex h-16 w-[1200px] items-center justify-between px-4"&gt;
+        &lt;Link to="/" className="text-xl font-bold text-gray-900"&gt;
+          My Store
+        &lt;/Link&gt;
+
+        &lt;nav className="hidden items-center gap-6 md:flex"&gt;
+          &lt;div className="cursor-pointer text-gray-700 hover:text-primary"&gt;Home&lt;/div&gt;
+          &lt;div className="cursor-pointer text-gray-700 hover:text-primary"&gt;Products&lt;/div&gt;
+        &lt;/nav&gt;
+
+        &lt;div className="relative"&gt;
+          &lt;svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"&gt;
+            &lt;path d="M3 3h18l-2 12H5L3 3z" strokeWidth="2" /&gt;
+          &lt;/svg&gt;
+          &lt;span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white"&gt;
+            0
+          &lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/header&gt;
+  );
+}
+</code></pre>
+
+        <p>Agent ยังสร้าง <code>Footer.tsx</code> ที่มีสามคอลัมน์ตามที่สั่งไว้ด้วยเช่นกัน (ไม่แปะโค้ดเต็มตรงนี้ เพราะไม่มีอะไรน่าสงสัยเป็นพิเศษ) และแก้ <code>main.tsx</code> ให้ครอบด้วย <code>RouterProvider</code> ตามที่ขอ</p>
+
+        <p class="translator-note">🔍 โค้ดหน้าตาดี ใช้งานได้บนจอใหญ่ — แต่มีของซ่อนอยู่ บทที่ 5 (ตรวจทานโค้ดที่ AI สร้าง) จะพาไล่จับทีละตัว ตอนนี้แค่รู้ไว้ก่อนว่ามันมีอยู่จริง ยังไม่ต้องรีบแก้</p>
+
+        <h2>🔍 ตรวจทาน</h2>
+
+        <p>รอบนี้เป็นแค่การตรวจผ่าน ๆ ให้ทันที ยังไม่ใช้เช็กลิสต์เต็มรูปแบบ (เช็กลิสต์จริงมาบทที่ 11–13) รัน <code>npm run dev</code> แล้วลองสามอย่างนี้</p>
+
+        <ul>
+          <li>ย่อหน้าต่างเบราว์เซอร์ให้แคบกว่า 1200px แล้วเกิด scrollbar แนวนอนโผล่มา ทั้งที่หน้าจออื่น ๆ ของเว็บสมัยนี้ไม่ค่อยเป็นแบบนี้ — ทำไม container ถึงไม่ยอมหดตามขนาดจอ</li>
+          <li>คลิกที่ "Home" กับ "Products" ใน nav ดู ไม่มีอะไรเกิดขึ้นเลย ทั้งที่หน้าตาเหมือนลิงก์ทุกประการ (สีเปลี่ยนตอน hover, cursor เป็นมือ) — เป็นลิงก์จริงหรือแค่หน้าตาเหมือนลิงก์</li>
+          <li>กด Tab ไล่ผ่านทั้งหน้าโดยไม่แตะเมาส์เลย ไม่เห็นกรอบ focus ที่โลโก้หรือไอคอนตะกร้าจุดไหนเลย — ใครที่ใช้คีย์บอร์ดล้วนนำทางเว็บจะไม่รู้เลยว่าตอนนี้โฟกัสอยู่ตรงไหน</li>
+        </ul>
+
+        <p>สามข้อนี้จดไว้เป็น TODO ก่อน ยังไม่ต้องแก้ตอนนี้ — บทที่ 5 (ตรวจทานโค้ดที่ AI สร้าง) จะพาคุณกลับมาไล่จับทีละข้อ พร้อมเหตุผลว่าทำไมมันถึงเป็นปัญหาและวิธีแก้ที่ถูกต้อง (สังเกตเพิ่มอีกจุดหนึ่งด้วยว่า พอจอแคบกว่า 768px เมนู Home/Products หายไปเฉย ๆ เพราะ class <code>hidden md:flex</code> ซ่อนมันไว้ตั้งแต่มือถือ โดยไม่มีอะไรมาแทนเลย — เรื่องนี้ไม่ใช่บั๊กที่ซ่อนอยู่ แต่เป็นสิ่งที่ Agent จงใจข้ามไปเพราะ prompt ไม่ได้ขอ เมนูมือถือจะเป็นงานหลักของบทที่ 11)</p>
+
+        <h2>🔧 Refactor</h2>
+
+        <p>ปกติขั้นตอนนี้คือที่เราแก้โค้ดจริงตามสิ่งที่เจอในขั้นตรวจทาน แต่รอบนี้ตั้งใจเว้นว่างไว้ก่อน สามข้อที่เพิ่งจดไว้ต้องใช้เครื่องมือและเช็กลิสต์เฉพาะทางที่ยังไม่ได้เรียน — breakpoint กับ container จริง ๆ มาในบทที่ 11, semantic link กับ accessibility เต็มรูปแบบมาในบทที่ 12 รีบแก้ตอนนี้โดยไม่มีเช็กลิสต์รองรับ เสี่ยงแก้ไม่ครบหรือแก้ผิดจุด บทที่ 5 ทั้งหมด (บทที่ 11–13) จะพาไล่จับและแก้ทีละข้อให้ครบถ้วน นี่คือเหตุผลที่ Loop รอบนี้ไม่มี refactor จริง — แต่สิ่งที่ยังต้องทำเสมอไม่ว่าจะมีบั๊กซ่อนอยู่หรือไม่คือ commit</p>
+
+        <pre><code class="language-bash">git add -A
+git commit -m "feat: add MainLayout, Header, Footer skeleton"
+</code></pre>
+
+        <p>โค้ดใช้งานได้ ไม่พัง คอมไพล์ผ่าน แค่นี้ก็คุ้มค่าที่จะ commit ไว้เป็นจุดย้อนกลับที่ปลอดภัยแล้ว ค่อยแก้ทีละเรื่องในบทหน้า</p>
+
+        <p>ปิดท้ายบทนี้ด้วยหน้าตา <code>router.tsx</code> ที่ใช้งานอยู่ตอนนี้ — มี path เดียวคือ <code>"/"</code> ตรงกับจุดแรกในตาราง routes ของทั้งโปรเจกต์ ส่วนที่เหลือ (<code>/categories</code>, <code>/products/:id</code>, <code>/cart</code>, <code>/checkout</code>, <code>/order/success</code>) จะทยอยเพิ่มเข้ามาเป็น children ตัวใหม่ในบทถัด ๆ ไป ด้วย pattern เดียวกันนี้</p>
+
+        <pre><code class="language-tsx">// src/app/router.tsx
+import { createBrowserRouter } from "react-router";
+import MainLayout from "@/app/layouts/MainLayout/MainLayout";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: &lt;MainLayout /&gt;,
+    children: [{ index: true, element: &lt;div&gt;Home (ว่างไว้ก่อน)&lt;/div&gt; }],
+  },
+]);
+
+export default router;
+</code></pre>
+
+        <p>Layout แรกของ My Store พร้อมใช้งานแล้ว บทหน้าเราจะกลับมาที่ Header ตัวนี้เพื่อไล่จับปัญหาข้อแรกในสามข้อที่จดไว้ — เรื่อง responsive</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="09_project_setup.html" rel="prev">ก่อนหน้า: ตั้งโครงโปรเจกต์ E-commerce</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="11_review_responsive.html" rel="next">ถัดไป: ตรวจ Responsive ของโค้ดจาก AI</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
