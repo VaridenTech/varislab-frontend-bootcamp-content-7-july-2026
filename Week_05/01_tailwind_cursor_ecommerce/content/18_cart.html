@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ออกแบบ state ของตะกร้าสินค้าเองด้วย Context + useReducer, persist ลง localStorage, ต่อ badge จริงที่ Header, สร้างหน้า Cart ที่ path /cart แล้วย้อนกลับไปต่อ modal จากบทเรียน 17 ให้ใช้งานได้จริง" />
+    <title>ระบบตะกร้าสินค้า | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 18 · สร้างแอปทีละหน้า (Building Page by Page)</p>
+          <h1>ระบบตะกร้าสินค้า</h1>
+          <p class="lesson-original-title" lang="en">The Shopping Cart</p>
+        </header>
+
+        <p>หน้า Product Detail เสร็จแล้ว แต่ปุ่ม Add To Cart ยังไม่ทำอะไรจริงสักอย่าง เปิด modal ได้ก็จริง แต่ไม่มีตะกร้าให้เพิ่มอะไรเข้าไปเลย บทนี้ต่างจากบททั่วไปในสัปดาห์นี้ตรงที่งานส่วนแรกไม่ใช่การวน <strong>The Loop</strong> กับ Agent ทันที แต่เป็นการออกแบบ state ของทั้งแอปด้วยมือก่อน ด้วยเหตุผลเดียวกับบทที่ 15 ตอนออกแบบ query factory เอง: โครงสร้างตะกร้าสินค้าใช้ร่วมกันทั้งแอป พลาดจุดเดียวกระทบทุกหน้า จึงสำคัญเกินกว่าจะปล่อยให้ Agent เดาโครงเอง แล้วค่อยให้ Agent ช่วยส่วน UI ที่เหลือผ่าน The Loop ตามปกติ ถ้าจำได้ Week_04 บทเรียน 17 เคยสร้างตะกร้าด้วย Context + <code>useState</code> มาแล้วครั้งหนึ่ง รอบนี้จะทำแบบเดียวกันแต่เปลี่ยนมาใช้ <code>useReducer</code> แทน เพราะการกระทำกับตะกร้ามีมากกว่าหนึ่งแบบ (เพิ่ม ลบ แก้จำนวน ล้างทั้งหมด) — <code>useReducer</code> จัดการ action หลายแบบได้เป็นระเบียบกว่า <code>useState</code> เปล่า ๆ มาก</p>
+
+        <h2>🎯 เป้าหมาย</h2>
+
+        <img src="images/cart_desktop.png" alt="ภาพหน้าจอหน้า Cart ของแอปต้นแบบ My Store บนจอเดสก์ท็อป ไอคอนตะกร้าที่ Header มี badge สีแดงเลข 3 ตารางสินค้ามีคอลัมน์ Action, Image, Product Name, Price, Quantity, Total แสดงสินค้า 2 รายการ (Essence Mascara Lash Princess ราคา $9.99 จำนวน 1 รวม $9.99, Eyeshadow Palette with Mirror ราคา $19.99 จำนวน 2 รวม $39.98) แต่ละแถวมีปุ่ม × ลบทางซ้ายสุดและปุ่ม น้อยกว่า/มากกว่า ปรับจำนวนตรงคอลัมน์ Quantity ด้านล่างตารางแสดง Total Price: $49.97 และปุ่ม Checkout สีน้ำเงินชิดขวา" />
+
+        <p>เทียบกับเวอร์ชันมือถือ — รอบนี้มีอะไรน่าสังเกตกว่าปกติ</p>
+
+        <img src="images/cart_mobile.png" alt="ภาพหน้าจอหน้า Cart ของแอปต้นแบบบนมือถือ ตารางหกคอลัมน์เดิมไม่ได้ปรับเป็น card ต่อแถวเลย ยังคงเป็นตารางแคบที่ทุกคอลัมน์เบียดกันอยู่ ไฟล์ภาพนี้กว้างถึง 643 พิกเซล ในขณะที่ภาพมือถือหน้าอื่น ๆ ในคอร์สนี้กว้างแค่ประมาณ 390-460 พิกเซล เพราะเบราว์เซอร์ต้องขยายพื้นที่ทั้งหน้าให้กว้างกว่าจอมือถือจริงเพื่อให้ตารางไม่บี้จนอ่านไม่ออก" />
+
+        <p>สังเกตความกว้างของไฟล์ภาพ mobile ให้ดี — 643 พิกเซล กว้างกว่าภาพมือถือทุกภาพที่เคยเห็นมาในคอร์สนี้เกือบเท่าตัว นั่นเพราะตารางหกคอลัมน์ของแอปต้นแบบไม่มี breakpoint ใด ๆ เลย เบราว์เซอร์เลยต้องขยายทั้งหน้าให้กว้างพอสำหรับตาราง แทนที่จะบีบตารางให้พอดีจอ 390px แบบที่ควรจะเป็น ปัญหาแบบเดียวกับที่บทที่ 11 เจอกับ Header คือ layout ที่ไม่ปรับตามขนาดจอ แต่คราวนี้ร้ายแรงกว่าเดิมเพราะทำให้ทั้งหน้าต้องเลื่อนแนวนอน ไม่ใช่แค่บาง section ถือว่างานของบทนี้ "เสร็จ" เมื่อ:</p>
+
+        <ul>
+          <li>ตะกร้ามี state กลางที่ทุกหน้าอ่าน/แก้ได้ (Context + <code>useReducer</code>) และข้อมูล persist ข้าม reload ผ่าน localStorage</li>
+          <li>badge ตัวเลขที่ไอคอนตะกร้าใน Header นับจำนวนชิ้นจริงจากตะกร้า ไม่ใช่ "0" ที่ hardcode ไว้แบบตั้งแต่บทที่ 10</li>
+          <li>หน้า Cart ที่ path <code>/cart</code>: ตารางคอลัมน์ Action/Image/Product Name/Price/Quantity/Total ตรงกับ screenshot, ปุ่ม +/− ปรับจำนวน, ปุ่มลบ, Total Price รวม, ปุ่ม Checkout</li>
+          <li>บนมือถือ ตารางยุบเป็น card ต่อแถว ไม่ใช่ตารางแคบที่ต้องเลื่อนแนวนอนแบบใน <code>cart_mobile.png</code></li>
+          <li>ปุ่ม Add To Cart กับปุ่ม "ไปที่ตะกร้า" ใน modal จากบทที่ 17 ทำงานได้จริงแล้ว — เพิ่มสินค้าเข้าตะกร้าจริงและนำทางไปหน้า Cart จริง</li>
+        </ul>
+
+        <h2>ออกแบบ Context: CartContext.tsx</h2>
+
+        <p>เริ่มจาก shape ของข้อมูล — <code>CartItem</code> หนึ่งชิ้นต้องรู้พอที่จะแสดงในตารางและคำนวณราคาได้โดยไม่ต้องย้อนไปถามหน้า Product Detail อีก และ <code>CartActionTypes</code> เป็น enum ที่รวมชื่อ action ทั้งหมดไว้ที่เดียว กัน typo ตอนเขียน <code>dispatch</code> ในไฟล์อื่น ๆ</p>
+
+        <pre><code class="language-tsx">// src/features/cart/store/CartContext.tsx
+import { createContext } from "react";
+
+export interface CartItem {
+  id: number;
+  title: string;
+  price: number;
+  quantity: number;
+  image: string;
+  originalPrice?: number;
+}
+
+export interface CartState {
+  items: CartItem[];
+}
+
+export interface CartContextProps {
+  cart: CartState;
+  addToCart: (item: CartItem) =&gt; void;
+  removeFromCart: (id: number) =&gt; void;
+  updateQuantity: (id: number, quantity: number) =&gt; void;
+  clearCart: () =&gt; void;
+}
+
+export enum CartActionTypes {
+  ADD_TO_CART = "ADD_TO_CART",
+  REMOVE_FROM_CART = "REMOVE_FROM_CART",
+  UPDATE_QUANTITY = "UPDATE_QUANTITY",
+  CLEAR_CART = "CLEAR_CART",
+}
+
+export const CartContext = createContext&lt;CartContextProps | undefined&gt;(undefined);
+</code></pre>
+
+        <p><code>originalPrice</code> เป็น optional เพราะไม่ใช่สินค้าทุกชิ้นมีส่วนลด ส่วน <code>createContext&lt;CartContextProps | undefined&gt;(undefined)</code> ใช้ <code>undefined</code> เป็นค่าเริ่มต้นแทนที่จะปั้น mock object ปลอม ๆ ขึ้นมา — ทบทวนจากบทที่ 6/6b ของ Week_04 (บทเรียน Context): generic ตรงนี้บอก TypeScript ว่า "ค่าจริงจะมาจาก Provider เสมอ ถ้าไม่มี Provider ห่ออยู่ ให้ถือว่าเป็นข้อผิดพลาด" ซึ่งเป็นสิ่งที่ <code>useCart</code> hook ด้านล่างจะตรวจสอบและ throw error ออกมาจริง ๆ ถ้าลืมห่อ Provider</p>
+
+        <h2>cartReducer.ts: ตรรกะการเปลี่ยน state</h2>
+
+        <p>action ทั้งสี่แบบ แต่ละแบบทำสิ่งเดียวเท่านั้น: <code>ADD_TO_CART</code> เช็คก่อนว่าสินค้าชิ้นนี้อยู่ในตะกร้าแล้วหรือยัง ถ้าอยู่แล้วบวกจำนวนเพิ่มเข้าไปแทนที่จะสร้างแถวซ้ำ, <code>REMOVE_FROM_CART</code> กรองชิ้นที่ id ตรงออก, <code>UPDATE_QUANTITY</code> map หาชิ้นที่ id ตรงแล้วแทนที่จำนวน, <code>CLEAR_CART</code> ล้าง items ทั้งหมด</p>
+
+        <pre><code class="language-typescript">// src/features/cart/store/cartReducer.ts
+import { CartActionTypes, CartItem, CartState } from "./CartContext";
+
+export type CartAction =
+  | { type: CartActionTypes.ADD_TO_CART; payload: CartItem }
+  | { type: CartActionTypes.REMOVE_FROM_CART; payload: { id: number } }
+  | { type: CartActionTypes.UPDATE_QUANTITY; payload: { id: number; quantity: number } }
+  | { type: CartActionTypes.CLEAR_CART };
+
+export function cartReducer(state: CartState, action: CartAction): CartState {
+  switch (action.type) {
+    case CartActionTypes.ADD_TO_CART: {
+      const { id, title, price, quantity = 1, image, originalPrice } = action.payload;
+      const existingItem = state.items.find((item) =&gt; item.id === id);
+
+      if (existingItem) {
+        return {
+          ...state,
+          items: state.items.map((item) =&gt;
+            item.id === id ? { ...item, quantity: item.quantity + quantity } : item,
+          ),
+        };
+      }
+
+      return {
+        ...state,
+        items: [...state.items, { id, title, price, quantity, image, originalPrice }],
+      };
+    }
+    case CartActionTypes.REMOVE_FROM_CART: {
+      return { ...state, items: state.items.filter((item) =&gt; item.id !== action.payload.id) };
+    }
+    case CartActionTypes.UPDATE_QUANTITY: {
+      return {
+        ...state,
+        items: state.items.map((item) =&gt;
+          item.id === action.payload.id ? { ...item, quantity: action.payload.quantity } : item,
+        ),
+      };
+    }
+    case CartActionTypes.CLEAR_CART: {
+      return { ...state, items: [] };
+    }
+    default:
+      return state;
+  }
+}
+</code></pre>
+
+        <p><code>CartAction</code> เป็น discriminated union — TypeScript รู้เองว่า <code>action.payload</code> มี shape อะไรใน <code>case</code> แต่ละอันจาก <code>action.type</code> โดยไม่ต้อง cast เอง นี่คือเหตุผลที่คุ้มค่าจะเขียน type ของ action ให้ครบทุกแบบตั้งแต่แรก แทนที่จะปล่อยเป็น <code>any</code></p>
+
+        <h2>cartStorage.ts: เก็บตะกร้าไว้ใน localStorage</h2>
+
+        <p>ต้องมีจุดเดียวที่รู้วิธีอ่าน/เขียน localStorage ของตะกร้า ไม่กระจายให้ไฟล์อื่นเรียก <code>localStorage.getItem</code> ตรง ๆ เอง</p>
+
+        <pre><code class="language-typescript">// src/features/cart/store/cartStorage.ts
+import { CartState } from "./CartContext";
+
+export const CART_STORAGE_KEY = "ecommerce-cart:v1";
+
+const EMPTY: CartState = { items: [] };
+
+export function loadCartState(): CartState {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return EMPTY;
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed === "object" &amp;&amp; parsed !== null &amp;&amp; Array.isArray((parsed as CartState).items)) {
+      return parsed as CartState;
+    }
+    return EMPTY;
+  } catch {
+    return EMPTY;
+  }
+}
+
+export function saveCartState(state: CartState): void {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // Storage เต็มหรือถูกปิดใช้งาน — ตะกร้าแค่ไม่ persist รอบนี้ ไม่ต้อง throw ทำแอปพัง
+  }
+}
+</code></pre>
+
+        <p>ทำไมต้อง <code>try</code> ทั้งสองทิศทางแยกกัน — ฝั่งอ่าน (<code>loadCartState</code>) อาจพังได้จากหลายสาเหตุที่ควบคุมไม่ได้: ผู้ใช้แก้ค่าใน DevTools เอง, เวอร์ชันเก่าของแอปเขียน shape ไม่ตรงกัน, หรือ private browsing บางเบราว์เซอร์บล็อก localStorage ทั้งหมด ถ้าไม่ดัก error ตรงนี้ แอปจะ crash ตั้งแต่โหลดหน้าแรก ก่อนแม้แต่จะแสดงอะไรได้เลย ส่วนฝั่งเขียน (<code>saveCartState</code>) พังได้จาก storage เต็มโควต้าหรือถูกปิดสิทธิ์ — เคสนี้ปล่อยผ่านเงียบ ๆ ได้ เพราะตะกร้ายังใช้งานได้ปกติใน session ปัจจุบัน แค่จะไม่ค้างอยู่ตอน reload เท่านั้น ทั้งสองเคสมีระดับความร้ายแรงต่างกัน แต่ทั้งคู่ต้องไม่ทำให้ทั้งแอปพัง — นี่คือเหตุผลว่าทำไมต้องแยก <code>try</code> เป็นสองจุด ไม่ใช่ครอบทั้งไฟล์ด้วยอันเดียว</p>
+
+        <h2>CartProvider.tsx และ useCart hook</h2>
+
+        <p>ประกอบทุกอย่างเข้าด้วยกัน — <code>useReducer(cartReducer, undefined, loadCartState)</code> คือ lazy initialization: อาร์กิวเมนต์ที่สามเป็นฟังก์ชันที่ React เรียกแค่ครั้งเดียวตอน mount แรกเท่านั้นเพื่อคำนวณ state เริ่มต้น ต่างจากการเรียก <code>loadCartState()</code> ตรง ๆ เป็นอาร์กิวเมนต์ที่สอง (ซึ่งจะเรียกทุก render โดยไม่จำเป็น) แล้ว <code>useEffect</code> คอย save ทุกครั้งที่ <code>cart</code> เปลี่ยน</p>
+
+        <pre><code class="language-tsx">// src/features/cart/store/CartProvider.tsx
+import { ReactNode, useCallback, useEffect, useReducer } from "react";
+import { CartActionTypes, CartContext, CartItem } from "./CartContext";
+import { cartReducer } from "./cartReducer";
+import { loadCartState, saveCartState } from "./cartStorage";
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [cart, dispatch] = useReducer(cartReducer, undefined, loadCartState);
+
+  useEffect(() =&gt; {
+    saveCartState(cart);
+  }, [cart]);
+
+  const addToCart = useCallback((item: CartItem) =&gt; {
+    dispatch({ type: CartActionTypes.ADD_TO_CART, payload: item });
+  }, []);
+
+  const removeFromCart = useCallback((id: number) =&gt; {
+    dispatch({ type: CartActionTypes.REMOVE_FROM_CART, payload: { id } });
+  }, []);
+
+  const updateQuantity = useCallback((id: number, quantity: number) =&gt; {
+    dispatch({ type: CartActionTypes.UPDATE_QUANTITY, payload: { id, quantity } });
+  }, []);
+
+  const clearCart = useCallback(() =&gt; {
+    dispatch({ type: CartActionTypes.CLEAR_CART });
+  }, []);
+
+  return (
+    &lt;CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart }}&gt;
+      {children}
+    &lt;/CartContext.Provider&gt;
+  );
+}
+</code></pre>
+
+        <p class="translator-note">💡 ห่อ action ทั้งสี่ด้วย <code>useCallback</code> (deps ว่าง) แม้ต้นฉบับจะไม่ได้ทำไว้ก็ตาม — <code>dispatch</code> จาก <code>useReducer</code> มี reference คงที่ตลอดอายุ component อยู่แล้วตามสัญญาของ React ดังนั้นห่อด้วย <code>useCallback</code> จึงปลอดภัยเสมอ และทำให้ <code>addToCart</code>/<code>removeFromCart</code>/ฯลฯ มี reference คงที่ข้าม re-render ไปด้วย มีประโยชน์ถ้า component ลูกเอาไปใส่ dependency array ของ <code>useEffect</code> ตัวเอง เป็นการปรับเล็กน้อยจากต้นฉบับที่ทำได้ฟรีโดยไม่มีข้อเสีย</p>
+
+        <p>ปิดท้ายด้วย hook ที่ทุก component จะเรียกใช้จริง — มี guard กัน component ที่อยู่นอก <code>CartProvider</code> ไม่ให้ได้ <code>undefined</code> มาเงียบ ๆ แล้วพังตอนพยายามอ่าน <code>cart.items</code></p>
+
+        <pre><code class="language-typescript">// src/features/cart/useCart.ts
+import { useContext } from "react";
+import { CartContext } from "./store/CartContext";
+
+export function useCart() {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
+  return context;
+}
+</code></pre>
+
+        <p>สุดท้ายห่อทั้งแอปด้วย <code>CartProvider</code> ใน <code>providers.tsx</code> — ไฟล์เดียวกับที่บทที่ 15 ทิ้งท้ายไว้ว่าจะกลับมาเพิ่ม</p>
+
+        <pre><code class="language-tsx">// src/app/providers.tsx
+import { ReactNode } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./queryClient";
+import { CartProvider } from "@/features/cart/store/CartProvider";
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  return (
+    &lt;QueryClientProvider client={queryClient}&gt;
+      &lt;CartProvider&gt;{children}&lt;/CartProvider&gt;
+    &lt;/QueryClientProvider&gt;
+  );
+}
+</code></pre>
+
+        <p>state ของตะกร้าพร้อมใช้งานจริงทั้งแอปแล้ว ตอนนี้ถึงเวลาเปิด Agent panel วน The Loop สร้าง UI ที่ใช้ของทั้งหมดนี้</p>
+
+        <h2>📝 เขียน Prompt</h2>
+
+        <pre><code class="language-text">สร้าง CartTable และหน้า Cart ของเว็บ "My Store" ตาม screenshot ที่แนบมา (path /cart)
+
+บริบท: โปรเจกต์ my-store มี useCart() hook อยู่แล้วที่ features/cart/useCart.ts คืนค่า { cart, addToCart, removeFromCart, updateQuantity, clearCart } และมี Button component ที่ shared/components/Button
+
+โครงสร้างจากบนลงล่าง:
+- แถบเทาด้านบนแสดงคำว่า Cart (แบบเดียวกับแถบชื่อสินค้าในหน้า Product Detail)
+- ตารางสินค้า คอลัมน์ Action / Image / Product Name / Price / Quantity / Total: Action เป็นปุ่มลบ (×), Price แสดงราคาปัจจุบันและถ้ามี originalPrice ให้ขีดฆ่าราคาก่อนลด, Quantity มีปุ่มลดและปุ่มเพิ่มจำนวน, Total คือ price คูณ quantity ต่อแถว
+- ใต้ตาราง: Total Price รวมทุกแถว และปุ่ม Checkout สีน้ำเงิน ชิดขวา
+
+ข้อกำหนดทางเทคนิค:
+- ดึงข้อมูลตะกร้าและฟังก์ชันทั้งหมดจาก useCart() ที่มีอยู่แล้ว ไม่ต้องสร้าง state ใหม่เอง
+- บนจอ md ขึ้นไปแสดงเป็นตาราง บนมือถือ (ต่ำกว่า md) ให้ยุบเป็น card ต่อแถวแทน ไม่ใช่ตารางแคบที่ต้องเลื่อนแนวนอน
+- ใช้ Button component ที่มีอยู่สำหรับปุ่มทุกปุ่ม (variant outline สำหรับปุ่มปรับจำนวน)
+- ทุกรูปมี alt, mobile-first, semantic HTML
+
+ขอบเขต: ยังไม่ต้องทำ empty state แบบมีรูปประกอบสวยงาม ข้อความธรรมดาพอ</code></pre>
+
+        <h2>🤖 สิ่งที่ Agent สร้าง</h2>
+
+        <p>วาง prompt พร้อมรูป <code>cart_desktop.png</code> แล้วปล่อยให้ Agent ทำงาน — นี่คือแถวหนึ่งของ <code>CartTable</code> ที่ได้มา ตัดมาเฉพาะส่วนที่น่าสนใจ</p>
+
+        <pre><code class="language-tsx">// src/features/cart/components/CartTable/CartTable.tsx (ตัดมาเฉพาะแถวเดียว จากเวอร์ชันแรก)
+&lt;tr key={item.id}&gt;
+  &lt;td&gt;
+    &lt;button onClick={() =&gt; onRemoveItem(item.id)} className="text-gray-400 hover:text-danger"&gt;
+      ×
+    &lt;/button&gt;
+  &lt;/td&gt;
+  &lt;td&gt;&lt;img src={item.image} alt={item.title} className="h-16 w-16 rounded object-cover" /&gt;&lt;/td&gt;
+  &lt;td&gt;{item.title}&lt;/td&gt;
+  &lt;td&gt;
+    &lt;span className="font-semibold"&gt;${item.price.toFixed(2)}&lt;/span&gt;
+    {item.originalPrice &amp;&amp; (
+      &lt;span className="ml-2 text-sm text-gray-400 line-through"&gt;${item.originalPrice.toFixed(2)}&lt;/span&gt;
+    )}
+  &lt;/td&gt;
+  &lt;td&gt;
+    &lt;div className="flex items-center gap-2"&gt;
+      &lt;Button variant="outline" onClick={() =&gt; onUpdateQuantity(item.id, item.quantity - 1)}&gt;&lt;&lt;/Button&gt;
+      &lt;span&gt;{item.quantity}&lt;/span&gt;
+      &lt;Button variant="outline" onClick={() =&gt; onUpdateQuantity(item.id, item.quantity + 1)}&gt;&gt;&lt;/Button&gt;
+    &lt;/div&gt;
+  &lt;/td&gt;
+  &lt;td&gt;${(item.price * item.quantity).toFixed(2)}&lt;/td&gt;
+&lt;/tr&gt;</code></pre>
+
+        <p>ครบทุกคอลัมน์ตามที่ขอ แต่ยังเป็นแค่ตารางเดสก์ท็อปเพียวเดียว ไม่มีเวอร์ชันมือถือมาให้เลย และหลายจุดยังไม่ผ่านการตรวจทาน</p>
+
+        <h2>🔍 ตรวจทาน</h2>
+
+        <p><strong>responsive</strong> — Agent ไม่ได้ทำ mobile card list ตามที่ prompt ขอเลย ปล่อยตารางเดสก์ท็อปแบบเดียวไว้ทุกขนาดจอ ย่อจอลงมาที่ 390px แล้วเจอปัญหาเดียวกับที่เห็นใน <code>cart_mobile.png</code> เป๊ะ — ตารางไม่ยอมยุบ ต้องเลื่อนแนวนอนถึงจะเห็นครบทุกคอลัมน์ ทั้งที่ prompt สั่งไว้ชัดเจนว่ามือถือต้องยุบเป็น card</p>
+
+        <p><strong>accessibility</strong> — ปุ่ม +/− ไม่มี <code>aria-label</code> เลย มีแค่สัญลักษณ์ &lt; และ &gt; ซึ่งไม่บอกอะไรกับ screen reader ว่ากำลังปรับจำนวนของสินค้าชิ้นไหน ปัญหาเดียวกับไอคอนตะกร้าที่ Header เจอในบทที่ 12 ปุ่มลบก็เช่นกัน มีแค่ "×" ลอย ๆ และปุ่มลดจำนวนกดได้เรื่อย ๆ แม้จำนวนจะเหลือ 1 อยู่แล้ว (กดต่อจะได้ 0 หรือติดลบ ซึ่งไม่ควรเกิดขึ้น) จุดที่ผ่านคือราคาทุกจุดเป็นข้อความจริง ไม่ใช่รูปภาพ ตรงตาม checklist บทที่ 12 อยู่แล้วตั้งแต่รอบแรก</p>
+
+        <p><strong>maintainability</strong> — <code>${item.price.toFixed(2)}</code> ปรากฏอยู่ 4 ครั้งในไฟล์เดียวนี้ไฟล์เดียว (ราคา, ราคาก่อนลด, total ต่อแถว, และจะมีอีกจุดที่ Total Price รวมท้ายตาราง) รูปแบบเดียวกับปัญหาปุ่มซ้ำในบทที่ 13 — สูตร format เงินควรมีจุดเดียวทั้งแอป โดยเฉพาะเมื่อรู้อยู่แล้วว่าบทที่ 19 (Checkout) จะต้องโชว์ตัวเลขเงินอีกหลายจุด ยิ่งไม่รวมตอนนี้ ยิ่งมีจุดให้ไล่แก้ทีหลังมากขึ้น</p>
+
+        <h2>🔧 Refactor</h2>
+
+        <p>แก้ maintainability ก่อน เพราะกระทบไฟล์อื่นน้อยที่สุดและ 🔍 จุดอื่นจะพึ่งพาผลลัพธ์ตรงนี้</p>
+
+        <pre><code class="language-typescript">// src/shared/utils/price.utils.ts
+export function formatPrice(amount: number): string {
+  return `$${amount.toFixed(2)}`;
+}
+</code></pre>
+
+        <p>แล้วประกอบ <code>CartTable</code> ใหม่ทั้งไฟล์ — ใช้ <code>formatPrice</code> แทน <code>toFixed(2)</code> สด ๆ ทุกจุด เพิ่ม <code>aria-label</code> ให้ปุ่มทั้งหมด ปิดปุ่มลดจำนวนตอนเหลือ 1 ชิ้น และเพิ่มเวอร์ชันมือถือเป็น card list คู่กับตารางเดสก์ท็อป สลับกันด้วย <code>hidden md:table</code> / <code>md:hidden</code></p>
+
+        <pre><code class="language-tsx">// src/features/cart/components/CartTable/CartTable.tsx — เวอร์ชันสมบูรณ์
+import { useCart } from "@/features/cart/useCart";
+import Button from "@/shared/components/Button/Button";
+import { formatPrice } from "@/shared/utils/price.utils";
+
+interface CartTableProps {
+  onRemoveItem: (id: number) =&gt; void;
+  onUpdateQuantity: (id: number, quantity: number) =&gt; void;
+}
+
+export default function CartTable({ onRemoveItem, onUpdateQuantity }: CartTableProps) {
+  const { cart } = useCart();
+
+  return (
+    &lt;&gt;
+      &lt;table className="hidden w-full md:table"&gt;
+        &lt;thead&gt;
+          &lt;tr className="border-b border-gray-200 text-left text-sm text-gray-500"&gt;
+            &lt;th className="py-2"&gt;Action&lt;/th&gt;
+            &lt;th&gt;Image&lt;/th&gt;
+            &lt;th&gt;Product Name&lt;/th&gt;
+            &lt;th&gt;Price&lt;/th&gt;
+            &lt;th&gt;Quantity&lt;/th&gt;
+            &lt;th&gt;Total&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          {cart.items.map((item) =&gt; (
+            &lt;tr key={item.id} className="border-b border-gray-100"&gt;
+              &lt;td className="py-4"&gt;
+                &lt;button
+                  type="button"
+                  aria-label={`ลบ ${item.title} ออกจากตะกร้า`}
+                  onClick={() =&gt; onRemoveItem(item.id)}
+                  className="text-gray-400 hover:text-danger"
+                &gt;
+                  ×
+                &lt;/button&gt;
+              &lt;/td&gt;
+              &lt;td&gt;&lt;img src={item.image} alt={item.title} className="h-16 w-16 rounded object-cover" /&gt;&lt;/td&gt;
+              &lt;td&gt;{item.title}&lt;/td&gt;
+              &lt;td&gt;
+                &lt;span className="font-semibold"&gt;{formatPrice(item.price)}&lt;/span&gt;
+                {item.originalPrice &amp;&amp; (
+                  &lt;span className="ml-2 text-sm text-gray-400 line-through"&gt;{formatPrice(item.originalPrice)}&lt;/span&gt;
+                )}
+              &lt;/td&gt;
+              &lt;td&gt;
+                &lt;div className="flex items-center gap-2"&gt;
+                  &lt;Button
+                    variant="outline"
+                    disabled={item.quantity &lt;= 1}
+                    aria-label={`ลดจำนวน ${item.title}`}
+                    onClick={() =&gt; onUpdateQuantity(item.id, item.quantity - 1)}
+                  &gt;
+                    &lt;
+                  &lt;/Button&gt;
+                  &lt;span&gt;{item.quantity}&lt;/span&gt;
+                  &lt;Button
+                    variant="outline"
+                    aria-label={`เพิ่มจำนวน ${item.title}`}
+                    onClick={() =&gt; onUpdateQuantity(item.id, item.quantity + 1)}
+                  &gt;
+                    &gt;
+                  &lt;/Button&gt;
+                &lt;/div&gt;
+              &lt;/td&gt;
+              &lt;td&gt;{formatPrice(item.price * item.quantity)}&lt;/td&gt;
+            &lt;/tr&gt;
+          ))}
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+
+      &lt;ul className="flex flex-col gap-4 md:hidden"&gt;
+        {cart.items.map((item) =&gt; (
+          &lt;li key={item.id} className="rounded-lg border border-gray-200 p-4"&gt;
+            &lt;div className="flex gap-3"&gt;
+              &lt;img src={item.image} alt={item.title} className="h-16 w-16 rounded object-cover" /&gt;
+              &lt;div className="flex-1"&gt;
+                &lt;p className="font-medium"&gt;{item.title}&lt;/p&gt;
+                &lt;p className="text-sm text-gray-500"&gt;{formatPrice(item.price)}&lt;/p&gt;
+              &lt;/div&gt;
+              &lt;button
+                type="button"
+                aria-label={`ลบ ${item.title} ออกจากตะกร้า`}
+                onClick={() =&gt; onRemoveItem(item.id)}
+                className="text-gray-400 hover:text-danger"
+              &gt;
+                ×
+              &lt;/button&gt;
+            &lt;/div&gt;
+            &lt;div className="mt-3 flex items-center justify-between"&gt;
+              &lt;div className="flex items-center gap-2"&gt;
+                &lt;Button
+                  variant="outline"
+                  disabled={item.quantity &lt;= 1}
+                  aria-label={`ลดจำนวน ${item.title}`}
+                  onClick={() =&gt; onUpdateQuantity(item.id, item.quantity - 1)}
+                &gt;
+                  &lt;
+                &lt;/Button&gt;
+                &lt;span&gt;{item.quantity}&lt;/span&gt;
+                &lt;Button
+                  variant="outline"
+                  aria-label={`เพิ่มจำนวน ${item.title}`}
+                  onClick={() =&gt; onUpdateQuantity(item.id, item.quantity + 1)}
+                &gt;
+                  &gt;
+                &lt;/Button&gt;
+              &lt;/div&gt;
+              &lt;span className="font-semibold"&gt;{formatPrice(item.price * item.quantity)}&lt;/span&gt;
+            &lt;/div&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/&gt;
+  );
+}
+</code></pre>
+
+        <p>ตารางกับ card list ดึงจาก <code>cart.items</code> เดียวกันเป๊ะ แค่คนละ markup — <code>hidden md:table</code> ซ่อนตารางบนจอแคบแล้วโชว์เป็น <code>table</code> จริงตั้งแต่ <code>md</code> ขึ้นไป ส่วน <code>md:hidden</code> ทำตรงข้าม การมีสอง markup คู่กันแบบนี้ยอมรับได้เพราะโครงสร้าง HTML ของตารางกับ card ต่างกันจริง (ตารางต้องการ <code>&lt;table&gt;&lt;tr&gt;&lt;td&gt;</code> ที่ browser คาดหวังโครงสร้างเฉพาะ ผสมกับ <code>flex</code> card ไม่ได้ในสวยงาม) ไม่เหมือนกรณี Home.tsx ในบทที่ 14 ที่เป็นแค่กริดที่เปลี่ยนจำนวนคอลัมน์ตาม breakpoint เดียวกันได้</p>
+
+        <p>ประกอบ <code>CartTable</code> เข้ากับหน้า <code>Cart.tsx</code> จริง — ปุ่ม Checkout เรียก <code>goToCheckout</code> จาก <code>useProductRoute</code> ที่สร้างไว้ตั้งแต่บทที่ 16 (อีกหนึ่งฟังก์ชันที่รอปลายทางมานาน เพิ่งได้ใช้ครั้งแรกที่นี่)</p>
+
+        <pre><code class="language-tsx">// src/pages/Cart/Cart.tsx
+import { useMemo } from "react";
+import { useCart } from "@/features/cart/useCart";
+import useProductRoute from "@/shared/hooks/useProductRoute";
+import CartTable from "@/features/cart/components/CartTable/CartTable";
+import Button from "@/shared/components/Button/Button";
+import { formatPrice } from "@/shared/utils/price.utils";
+
+export default function Cart() {
+  const { cart, removeFromCart, updateQuantity } = useCart();
+  const { goToCheckout } = useProductRoute();
+
+  const totalPrice = useMemo(
+    () =&gt; cart.items.reduce((sum, item) =&gt; sum + item.price * item.quantity, 0),
+    [cart.items],
+  );
+
+  return (
+    &lt;div&gt;
+      &lt;div className="bg-gray-100 py-8 text-center"&gt;
+        &lt;h1 className="text-2xl font-bold"&gt;Cart&lt;/h1&gt;
+      &lt;/div&gt;
+
+      &lt;div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8"&gt;
+        {cart.items.length === 0 ? (
+          &lt;p className="py-20 text-center text-gray-500"&gt;ตะกร้าของคุณยังว่างอยู่&lt;/p&gt;
+        ) : (
+          &lt;&gt;
+            &lt;CartTable onRemoveItem={removeFromCart} onUpdateQuantity={updateQuantity} /&gt;
+            &lt;div className="mt-6 flex flex-col items-end gap-3"&gt;
+              &lt;p className="text-xl font-bold"&gt;Total Price: {formatPrice(totalPrice)}&lt;/p&gt;
+              &lt;Button onClick={goToCheckout}&gt;Checkout&lt;/Button&gt;
+            &lt;/div&gt;
+          &lt;/&gt;
+        )}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <p>ต่อ Header — badge เคยเป็นเลข "0" ตายตัวมาตั้งแต่บทที่ 10 ตอนนี้อ่านจากตะกร้าจริงแล้ว</p>
+
+        <pre><code class="language-tsx">// src/shared/components/Header/Header.tsx (แก้เฉพาะจุด)
+import { useCart } from "@/features/cart/useCart";
+
+export default function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { cart } = useCart();
+  const itemCount = cart.items.reduce((sum, item) =&gt; sum + item.quantity, 0);
+
+  return (
+    // ...
+    &lt;Link
+      to="/cart"
+      aria-label={`ตะกร้าสินค้า มี ${itemCount} ชิ้น`}
+      className="relative rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+    &gt;
+      &lt;svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"&gt;
+        &lt;path d="M3 3h18l-2 12H5L3 3z" strokeWidth="2" /&gt;
+      &lt;/svg&gt;
+      {itemCount &gt; 0 &amp;&amp; (
+        &lt;span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white"&gt;
+          {itemCount}
+        &lt;/span&gt;
+      )}
+    &lt;/Link&gt;</code></pre>
+
+        <p class="translator-note">💡 badge ตอนนี้ซ่อนไปเลยเมื่อ <code>itemCount</code> เป็น 0 แทนที่จะโชว์ "0" ค้างไว้ — สังเกตจาก <code>product_desktop.png</code> ในบทที่แล้ว: ไอคอนตะกร้าไม่มี badge ติดอยู่เลยตอนตะกร้ายังว่าง แต่ <code>cart_desktop.png</code>/<code>checkout_desktop.png</code> ใน screenshot ของบทนี้มี badge แดงเลข 3 ทั้งคู่ ตอนตะกร้ามีของแล้ว — พฤติกรรมสอดคล้องกับที่เห็นในทั้งสองภาพ</p>
+
+        <p class="translator-note">💡 <code>Header.tsx</code> อยู่ใน <code>shared/components/</code> แต่ตอนนี้ import <code>useCart</code> จาก <code>features/cart/</code> เข้ามาโดยตรง — เทคนิคๆ แล้วขัดกับกฎ "shared ไม่ควรพึ่งพา features" ที่เข้มงวด แต่เป็นทางลัดที่ยอมรับได้ในสเกลของแอปนี้ เพราะ Header เป็น component เดียวในแอปที่ต้องรู้จักตะกร้า ถ้าจะให้ถูกหลักเป๊ะ ต้องยก <code>useCart()</code> ไปเรียกที่ <code>MainLayout</code> แล้วส่ง <code>itemCount</code> ลงมาเป็น prop แทน — ทางเลือกที่ใช้ได้เหมือนกัน แต่เพิ่ม prop drilling ให้กับ component ที่มีจุดประสงค์เดียว ในแอปที่ใหญ่ขึ้นค่อยพิจารณาใหม่</p>
+
+        <p>สุดท้ายกลับไปที่ modal จากบทที่ 17 — ปุ่ม Add To Cart บนหน้า Product Detail ต้องเรียก <code>addToCart</code> จริงก่อนเปิด modal</p>
+
+        <pre><code class="language-tsx">// src/pages/Product/Product.tsx (แก้เฉพาะจุด)
+import { useCart } from "@/features/cart/useCart";
+
+export default function Product() {
+  // ...
+  const { addToCart } = useCart();
+
+  const onAddToCart = () =&gt; {
+    if (!product) return;
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      quantity: 1,
+      image: product.thumbnail,
+      originalPrice: originalPrice ?? undefined,
+    });
+    setIsModalOpen(true);
+  };
+
+  // ...
+  &lt;Button onClick={onAddToCart}&gt;Add To Cart&lt;/Button&gt;</code></pre>
+
+        <p>และปุ่ม "ไปที่ตะกร้า" ใน modal เปลี่ยนจาก <code>console.log</code> เป็น <code>goToCartSummary</code> จริงจาก <code>useProductRoute</code> ที่สร้างไว้ตั้งแต่บทที่ 16</p>
+
+        <pre><code class="language-tsx">// src/features/products/components/ProductAddedModal/ProductAddedModal.tsx (แก้เฉพาะจุด)
+import useProductRoute from "@/shared/hooks/useProductRoute";
+
+export default function ProductAddedModal({ isOpen, productTitle, onClose }: ProductAddedModalProps) {
+  const { goToCartSummary } = useProductRoute();
+
+  const onGoToCart = () =&gt; {
+    goToCartSummary();
+  };
+
+  // ปุ่ม "ไปที่ตะกร้า" เรียก onGoToCart เหมือนเดิม ไม่ต้องแก้ JSX เพิ่ม</code></pre>
+
+        <p>เพิ่ม route <code>/cart</code> เข้า <code>router.tsx</code> — ครบสี่ route แล้ว</p>
+
+        <pre><code class="language-tsx">// src/app/router.tsx
+import { createBrowserRouter } from "react-router";
+import MainLayout from "@/app/layouts/MainLayout/MainLayout";
+import Home from "@/pages/Home/Home";
+import Category from "@/pages/Category/Category";
+import Product from "@/pages/Product/Product";
+import Cart from "@/pages/Cart/Cart";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: &lt;MainLayout /&gt;,
+    children: [
+      { index: true, element: &lt;Home /&gt; },
+      { path: "categories", element: &lt;Category /&gt; },
+      { path: "products/:id", element: &lt;Product /&gt; },
+      { path: "cart", element: &lt;Cart /&gt; },
+    ],
+  },
+]);
+
+export default router;
+</code></pre>
+
+        <pre><code class="language-bash">git add -A
+git commit -m "feat: add cart state, wire header badge, and build Cart page"
+</code></pre>
+
+        <p>ตะกร้าใช้งานได้จริงครบวงจรเป็นครั้งแรก — เพิ่มสินค้าจากหน้า Product Detail, badge ที่ Header นับจริง, ปรับจำนวนหรือลบสินค้าที่หน้า Cart, ปิดเบราว์เซอร์แล้วเปิดใหม่ก็ยังอยู่ครบเพราะ localStorage เก็บไว้ให้ ปุ่ม Checkout ที่หน้า Cart พาไป <code>/checkout</code> ที่ยังไม่มีจริงเช่นกัน บทหน้าเราจะสร้างปลายทางนั้น พร้อมกับหน้า Order Success ปิดท้ายทั้งแอป</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="17_product_page.html" rel="prev">ก่อนหน้า: หน้า Product Detail</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="19_checkout.html" rel="next">ถัดไป: Checkout และ Order Success</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
