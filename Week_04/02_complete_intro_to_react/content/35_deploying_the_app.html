@@ -15,6 +15,9 @@
   <p>สุดท้าย อัปเดต stylesheet link ใน <code>index.html</code> head:</p>
   <pre><code class="language-html">&lt;link rel="stylesheet" href="/style.css" /&gt;
 </code></pre>
+
+  <p class="translator-note">หมายเหตุผู้แปล — เรื่อง <code>/public</code> proxy: บทนี้จะบอกให้ลบ <code>/public</code> proxy ออกจาก <code>vite.config.ts</code> (อยู่ท้ายบท) พร้อมกับแก้ API ให้เลิกใส่ <code>/public</code> นำหน้า path ของรูป · สองอย่างนี้<strong>ต้องทำคู่กันเสมอ</strong> ถ้าลบ proxy แต่ API ยังตอบ <code>/public/pizzas/…</code> อยู่ รูปพิซซ่าจะหายทั้งเว็บ · อาการหลอกตรงที่ Vite จะตอบ <code>200</code> กลับมาให้ด้วย เพราะมันเข้าใจว่าเป็น route ของ SPA แล้วส่ง <code>index.html</code> มาแทน (ดูจาก <code>Content-Type: text/html</code> ใน DevTools แท็บ Network) ไม่ใช่ <code>404</code> ที่จะสังเกตได้ง่ายกว่า · ใน repo ตัวอย่างของคอร์สนี้เราเก็บ proxy ไว้ เพราะ API server ตัวเดียวถูกใช้ร่วมกันทุกบท ถ้าไปแก้ path ในนั้นจะทำให้รูปในบทที่ 1–34 พังหมด เราจึงย้ายมาแค่ <code>style.css</code>, ฟอนต์ และ svg ส่วนรูปพิซซ่ายังดึงผ่าน proxy เหมือนเดิม · ถ้าคุณจะ deploy ขึ้นจริงตามบทนี้ ให้ทำทั้งสองอย่างพร้อมกันตามที่บทเรียนบอก</p>
+
   <h2>Deploy Node.js API Application</h2>
   <p>เรายังมีงานใน React app แต่ก่อนอื่นมา deploy server application นี่เป็น Node.js application ที่สร้างด้วย Fastify จึงต้องใช้ host ที่รองรับ Node เราจะใช้ Render ดังนั้นสร้าง account ที่นั่นหากยังไม่มี</p>
   <p>เราจะ deploy ไป Render ด้วย GitHub สร้าง GitHub repo ใหม่สำหรับ API server ในตัวอย่างนี้ใช้ชื่อ <code>pizza-server-app</code> รัน <code>git init</code> ใน local project แล้วเพิ่ม GitHub repo ของคุณเป็น remote repository เพื่อที่เราจะ push app ได้เมื่อพร้อม</p>
