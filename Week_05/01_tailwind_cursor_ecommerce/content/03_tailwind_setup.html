@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ติดตั้งและตั้งค่า Tailwind CSS v4 กับ Vite ในโปรเจกต์ทดลอง" />
+    <title>เริ่มใช้ Tailwind v4 กับ Vite | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 03 · Tailwind CSS พื้นฐาน (Tailwind Fundamentals)</p>
+          <h1>เริ่มใช้ Tailwind v4 กับ Vite</h1>
+          <p class="lesson-original-title" lang="en">Tailwind Setup</p>
+        </header>
+
+        <p>ตอนนี้เข้าใจแนวคิดแล้ว มาติดตั้ง Tailwind จริง ๆ กัน แต่ยังไม่ใช่ในโปรเจกต์ My Store — โปรเจกต์นั้นจะเริ่มในบทที่ 9 ตอนนี้เราจะสร้าง <strong>โปรเจกต์ทดลอง (playground)</strong> แยกต่างหากสำหรับฝึก utility ต่าง ๆ ในบทที่ 4–6 ก่อน เพื่อไม่ให้การลองผิดลองถูกไปปนกับโค้ดจริง</p>
+
+        <h2>สร้างโปรเจกต์ทดลอง</h2>
+
+        <pre><code class="language-bash">npm create vite@latest tailwind-playground -- --template react-ts
+cd tailwind-playground
+npm install
+npm install tailwindcss @tailwindcss/vite
+</code></pre>
+
+        <p>สองคำสั่งแรกสร้างโปรเจกต์ React + TypeScript เปล่า ๆ ด้วย Vite เหมือนที่คุณคุ้นเคยจาก Week_04 ส่วนคำสั่งสุดท้ายติดตั้งตัว Tailwind เองและปลั๊กอินสำหรับ Vite โดยเฉพาะ</p>
+
+        <h2>ลงทะเบียนปลั๊กอินใน Vite</h2>
+
+        <p>เปิด <code>vite.config.ts</code> แล้วเพิ่ม <code>tailwindcss()</code> เข้าไปในลิสต์ปลั๊กอิน</p>
+
+        <pre><code class="language-typescript">// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+});
+</code></pre>
+
+        <h2>เปิดใช้งานด้วย CSS บรรทัดเดียว</h2>
+
+        <p>เปิด <code>src/index.css</code> ลบทุกอย่างที่มีอยู่เดิมออก แล้วเหลือไว้บรรทัดเดียว</p>
+
+        <pre><code class="language-css">/* src/index.css */
+@import "tailwindcss";
+</code></pre>
+
+        <p>แค่นี้จริง ๆ — บรรทัดเดียวนี้ทำให้ utility class ทุกตัวของ Tailwind (<code>flex</code>, <code>p-4</code>, <code>bg-blue-600</code> และอีกหลายพัน) พร้อมใช้งานทันทีในทุกไฟล์ของโปรเจกต์</p>
+
+        <p class="translator-note">💡 Tailwind v4 เก็บ config ไว้เป็น CSS ผ่าน <code>@theme</code> (เดี๋ยวเจอในบทที่ 6) <strong>ไม่มี</strong> ไฟล์ <code>tailwind.config.js</code> และไม่ต้องรัน <code>npx tailwindcss init</code> อีกต่อไป — ถ้าไปเจอบทความหรือวิดีโอสอนที่บอกให้สร้างไฟล์ config แยก หรือให้เขียน <code>@tailwind base; @tailwind components; @tailwind utilities;</code> สามบรรทัด นั่นคือไวยากรณ์ของ Tailwind v3 ซึ่งเก่าแล้วและใช้กับ v4 ไม่ได้</p>
+
+        <h2>พิสูจน์ว่ามันทำงาน</h2>
+
+        <p>แทนที่เนื้อหาใน <code>src/App.tsx</code> ด้วยการ์ดกึ่งกลางหน้าจอเล็ก ๆ ที่ใช้แต่ utility class ล้วน ๆ</p>
+
+        <pre><code class="language-tsx">function App() {
+  return (
+    &lt;div className="flex min-h-screen items-center justify-center bg-gray-100"&gt;
+      &lt;div className="rounded-xl bg-white p-8 shadow-md"&gt;
+        &lt;h1 className="text-2xl font-bold text-blue-600"&gt;Tailwind ทำงานแล้ว!&lt;/h1&gt;
+        &lt;p className="mt-2 text-gray-600"&gt;ถ้าเห็นการ์ดสีขาวลอยอยู่กลางพื้นหลังสีเทา แปลว่าสำเร็จ&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+export default App;
+</code></pre>
+
+        <p>รัน <code>npm run dev</code> แล้วเปิด URL ที่ terminal แสดง (ปกติคือ <code>http://localhost:5173/</code>) ถ้าเห็นการ์ดสีขาวมีเงา ตัวหนังสือสีน้ำเงิน ลอยอยู่กึ่งกลางพื้นหลังสีเทา แปลว่า Tailwind ทำงานถูกต้องแล้ว</p>
+
+        <h2>ตั้งค่า editor</h2>
+
+        <p>ติดตั้ง extension ชื่อ <strong>Tailwind CSS IntelliSense</strong> เพิ่ม เพราะ Cursor เป็น editor ที่ fork มาจาก VS Code จึงใช้ extension ของ VS Code ได้ทั้งหมด extension ตัวนี้ทำสามอย่างที่ช่วยได้มากตลอดสัปดาห์นี้: autocomplete รายชื่อ class ขณะพิมพ์ ขีดเส้นใต้แดงถ้าพิมพ์ผิด และที่มีประโยชน์ที่สุดคือ — เอาเมาส์ไปวางบน class ใด ๆ เช่น <code>px-4</code> แล้วมันจะโชว์ CSS จริงที่ class นั้นแปลออกมา (<code>padding-left: 1rem; padding-right: 1rem;</code>) ให้ทันทีโดยไม่ต้องเปิด docs</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="02_utility_first.html" rel="prev">ก่อนหน้า: แนวคิด Utility-First</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="04_core_utilities.html" rel="next">ถัดไป: Utilities หลักที่ใช้บ่อย</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

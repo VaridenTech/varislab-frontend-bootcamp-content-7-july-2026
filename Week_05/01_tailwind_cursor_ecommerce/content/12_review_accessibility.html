@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ไล่จับปัญหา accessibility ที่ซ่อนอยู่ในโค้ดที่ Agent สร้าง — div ปลอมตัวเป็นลิงก์ ไม่มี focus style พร้อม checklist และวิธีให้ Agent self-audit งานตัวเอง" />
+    <title>ตรวจ Accessibility | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 12 · ตรวจทานโค้ดที่ AI สร้าง (Reviewing AI Code)</p>
+          <h1>ตรวจ Accessibility</h1>
+          <p class="lesson-original-title" lang="en">Reviewing Accessibility</p>
+        </header>
+
+        <p>เลนส์แรกจบไปแล้ว — Header ตอนนี้ไม่มี scrollbar แนวนอนบนมือถืออีกต่อไป และมีทางเข้าเมนูผ่านปุ่ม hamburger แล้ว แต่เมนูข้างในยังเป็น <code>&lt;div&gt;</code> เปล่า ๆ อยู่ และทั้งไฟล์ยังไม่มี focus style ที่ไหนเลย บทนี้ใช้เลนส์ที่สองของ The Loop: <strong>accessibility</strong> เพื่อไล่จับ TODO ที่เหลืออีกสองข้อจากบทที่ 10 ให้จบ</p>
+
+        <h2>ทำไม accessibility คือจุดที่โค้ด AI พังแบบเงียบที่สุด</h2>
+
+        <p>สองเลนส์ก่อนหน้านี้ (responsive) ตรวจง่ายมาก — แค่ลากขนาดจอแล้วก็เห็นด้วยตาเลยว่าอะไรพัง แต่ accessibility ต่างออกไปโดยสิ้นเชิง โค้ดที่หน้าตาถูกทุกพิกเซล เปิดด้วยเมาส์แล้วใช้งานได้ปกติทุกอย่าง อาจใช้<em>คีย์บอร์ดไม่ได้เลย</em> หรือ<em>screen reader อ่านแล้วไม่รู้เรื่อง</em> โดยที่ไม่มีสัญญาณอะไรเตือนบนหน้าจอสักนิดเดียว — ต้องลองกดจริง ๆ ถึงจะรู้ นี่คือเหตุผลที่ Agent ที่ optimize เพื่อให้ "หน้าตาตรงกับ screenshot" มักพลาดเรื่องนี้แบบเงียบ ๆ เพราะ screenshot ไม่มีทางบอกได้เลยว่า element ไหนควรรับ keyboard focus ได้หรือไม่ได้</p>
+
+        <h2>จับผิดข้อสอง-สาม: div ปลอมตัวเป็นลิงก์ กับไม่มี focus style ที่ไหนเลย</h2>
+
+        <p>ทวนโค้ด nav จากบทที่แล้วอีกครั้ง</p>
+
+        <pre><code class="language-tsx">&lt;div className="cursor-pointer text-gray-700 hover:text-primary"&gt;Home&lt;/div&gt;
+&lt;div className="cursor-pointer text-gray-700 hover:text-primary"&gt;Products&lt;/div&gt;</code></pre>
+
+        <p>class <code>cursor-pointer</code> กับ <code>hover:text-primary</code> ทำให้ element นี้<em>ดูเหมือน</em>ลิงก์ทุกอย่าง — เคอร์เซอร์เปลี่ยนเป็นรูปมือ สีเปลี่ยนตอน hover แต่มันคือ <code>&lt;div&gt;</code> เปล่า ๆ ไม่มี <code>onClick</code> ไม่มี <code>href</code> คลิกแล้วไม่มีอะไรเกิดขึ้นเลยตามที่บทที่ 10 เคยจดไว้ และที่แย่กว่านั้นคือ <code>&lt;div&gt;</code> ธรรมดาไม่อยู่ใน tab order ของเบราว์เซอร์เลย — กด Tab ไล่ทั้งหน้า โฟกัสจะข้าม Home กับ Products ไปเฉย ๆ เหมือนสอง element นี้ไม่มีอยู่จริง ผู้ใช้คีย์บอร์ดล้วนจึงไปหน้า Products ไม่ได้เลยไม่ว่าจะกดปุ่มไหน ทางแก้คือเปลี่ยนเป็น <code>&lt;Link&gt;</code> จริงจาก react-router ซึ่งเป็น element ที่รับ focus ได้เองตามธรรมชาติ ไม่ต้องเติมอะไรพิเศษ</p>
+
+        <p>ส่วนปัญหาที่สามคือทั้งไฟล์ไม่มี <code>focus-visible</code> ประกาศไว้เลยสักจุด — ทบทวนจากบทที่ 6: <code>focus-visible:</code> แสดงกรอบ focus เฉพาะตอนที่คาดว่าผู้ใช้กำลังนำทางด้วยคีย์บอร์ด รูปแบบมาตรฐานที่จะใช้ตลอดทั้งแอปคือ</p>
+
+        <pre><code class="language-tsx">focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50</code></pre>
+
+        <p><code>focus-visible:outline-none</code> ปิด outline เริ่มต้นของเบราว์เซอร์ก่อน แล้ว <code>focus-visible:ring-2 focus-visible:ring-primary/50</code> วาดกรอบวงแหวนสีของแบรนด์ขึ้นมาแทน — ต้องเติมไว้ที่<strong>ทุก</strong> element ที่รับ focus ได้ ไม่ใช่แค่บางจุด นี่คือ <code>Header.tsx</code> เวอร์ชันที่แก้ครบทั้งสอง TODO ที่เหลือแล้ว</p>
+
+        <pre><code class="language-tsx">// src/shared/components/Header/Header.tsx
+import { useState } from "react";
+import { Link } from "react-router";
+
+export default function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  return (
+    &lt;header className="border-b border-gray-200 bg-white"&gt;
+      &lt;div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"&gt;
+        &lt;Link
+          to="/"
+          className="rounded text-xl font-bold text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        &gt;
+          My Store
+        &lt;/Link&gt;
+
+        &lt;nav className="hidden items-center gap-6 md:flex"&gt;
+          &lt;Link
+            to="/"
+            className="rounded text-gray-700 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          &gt;
+            Home
+          &lt;/Link&gt;
+          &lt;Link
+            to="/categories"
+            className="rounded text-gray-700 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          &gt;
+            Products
+          &lt;/Link&gt;
+        &lt;/nav&gt;
+
+        &lt;div className="flex items-center gap-4"&gt;
+          &lt;Link
+            to="/cart"
+            aria-label="ตะกร้าสินค้า มี 0 ชิ้น"
+            className="relative rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          &gt;
+            &lt;svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"&gt;
+              &lt;path d="M3 3h18l-2 12H5L3 3z" strokeWidth="2" /&gt;
+            &lt;/svg&gt;
+            &lt;span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white"&gt;
+              0
+            &lt;/span&gt;
+          &lt;/Link&gt;
+
+          &lt;button
+            type="button"
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-nav"
+            aria-label="เปิดเมนู"
+            className="rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 md:hidden"
+            onClick={() =&gt; setIsMenuOpen((open) =&gt; !open)}
+          &gt;
+            &lt;svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"&gt;
+              &lt;path d="M4 6h16M4 12h16M4 18h16" strokeWidth="2" /&gt;
+            &lt;/svg&gt;
+          &lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      {isMenuOpen &amp;&amp; (
+        &lt;nav id="mobile-nav" className="flex flex-col gap-1 border-t border-gray-200 px-4 pb-4 md:hidden"&gt;
+          &lt;Link
+            to="/"
+            className="rounded py-2 text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          &gt;
+            Home
+          &lt;/Link&gt;
+          &lt;Link
+            to="/categories"
+            className="rounded py-2 text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          &gt;
+            Products
+          &lt;/Link&gt;
+        &lt;/nav&gt;
+      )}
+    &lt;/header&gt;
+  );
+}
+</code></pre>
+
+        <p>สามจุดที่เปลี่ยนไปจากเดิม: (1) <code>&lt;div&gt;</code> ทั้งสองใน nav กลายเป็น <code>&lt;Link&gt;</code> จริง ทั้งในเมนู desktop และแผงเมนูมือถือ (2) ทุก element ที่รับ focus ได้ — โลโก้, ลิงก์ nav ทั้งสอง, ไอคอนตะกร้า, ปุ่ม hamburger — มี <code>focus-visible</code> ครบ (3) ไอคอนตะกร้าที่แต่เดิมเป็นแค่ <code>&lt;div&gt;</code> ตกแต่งเฉย ๆ กลายเป็น <code>&lt;Link to="/cart"&gt;</code> พร้อม <code>aria-label</code> เพราะมันมีแค่ไอคอน SVG ไม่มีข้อความให้ screen reader อ่าน — เป็นปัญหารูปแบบเดียวกับ nav div ทุกประการ: หน้าตาสื่อว่ากดได้ แต่ไม่มี element ที่แท้จริงรองรับ จึงแก้ไปพร้อมกันในรอบนี้ ส่วน <code>aria-hidden="true"</code> บน SVG ไอคอนบอก screen reader ให้ข้ามรูปไอคอนไปเลย เพราะ <code>aria-label</code> บน element แม่พูดแทนความหมายไปหมดแล้ว ไม่ต้องอ่านซ้ำสอง</p>
+
+        <p class="translator-note">💡 route <code>/categories</code> และ <code>/cart</code> ยังไม่ถูกสร้างจริงในตอนนี้ — <code>router.tsx</code> ปัจจุบันมีแค่ path <code>"/"</code> ตามที่ทิ้งไว้ในบทที่ 10 และยังไม่มี <code>errorElement</code> ผูกไว้เลยสักจุด คลิกลิงก์เหล่านี้ตอนนี้จะเจอหน้า error เริ่มต้นของ react-router เอง (ข้อความประมาณ <code>Unexpected Application Error!</code> ไม่มีสไตล์ใด ๆ ทั้งสิ้น) ไปก่อน แต่นั่นไม่ใช่เหตุผลที่จะปล่อยให้ href ผิดหรือไม่มี href เลย ใส่ path ที่ถูกต้องไว้ตั้งแต่ตอนนี้ พอ route จริงถูกเพิ่มเข้ามาในบทที่ 16 และ 18 ลิงก์พวกนี้จะทำงานได้ทันทีโดยไม่ต้องแก้อะไรเพิ่มอีกเลย ส่วนหน้า error ที่ออกแบบเองจริง ๆ (<code>RouteErrorFallback</code>) ต้องรอถึงบทเรียน 19 ตอนที่ router ผูก <code>errorElement</code> เป็นครั้งแรก</p>
+
+        <h2>Checklist: ตรวจ Accessibility (บทเรียน 12)</h2>
+
+        <ul>
+          <li>heading ไล่ระดับถูกต้อง — h1 เดียวต่อหน้า ไม่กระโดดข้ามระดับ (เช่น h2 ตามด้วย h4 ทันที)</li>
+          <li>landmark ครบ — <code>header</code>, <code>nav</code>, <code>main</code>, <code>footer</code> อยู่ในตำแหน่งที่ควรอยู่</li>
+          <li><code>alt</code> ครบทุกรูป — รูปตกแต่งล้วน ๆ ที่ไม่มีความหมายให้ใช้ <code>alt=""</code></li>
+          <li>ปุ่มที่มีแค่ไอคอนล้วนต้องมี <code>aria-label</code> อธิบายว่าปุ่มนี้ทำอะไร</li>
+          <li>ช่อง input ทุกช่องมี <code>&lt;label htmlFor&gt;</code> คู่กัน ไม่ใช่แค่ placeholder</li>
+          <li>interactive element เป็น <code>&lt;button&gt;</code> หรือ <code>&lt;a&gt;</code>/<code>&lt;Link&gt;</code> เท่านั้น ห้ามใช้ <code>&lt;div&gt;</code>/<code>&lt;span&gt;</code> ที่มี onClick</li>
+          <li>contrast (สัดส่วนความต่างสี) ผ่านเกณฑ์ — กับดักคลาสสิกคือ <code>text-gray-400</code> บนพื้นขาว อ่านยากกว่าที่คิด</li>
+          <li>ทดลองกด Tab ไล่ให้ครบทุกหน้า ไม่ใช่แค่แตะเมาส์ดูเฉย ๆ</li>
+          <li>modal ต้อง trap focus ไว้ข้างในและปิดได้ด้วย Esc (ไลบรารี react-modal จัดการเรื่องนี้ให้อัตโนมัติ — จะได้ใช้จริงในบทที่ 17)</li>
+        </ul>
+
+        <h2>เครื่องมือ: Lighthouse และ axe DevTools</h2>
+
+        <p>Checklist ด้านบนตรวจด้วยมือได้ทั้งหมด แต่มีเครื่องมือที่ช่วยหาจุดที่พลาดได้เร็วกว่า สองตัวที่ใช้บ่อยที่สุดคือ <strong>Lighthouse</strong> ที่มากับ Chrome DevTools อยู่แล้ว (แท็บ Lighthouse เลือกหมวด Accessibility แล้วกด Analyze page load) กับส่วนขยาย <strong>axe DevTools</strong> ที่ติดตั้งเพิ่มได้ฟรี ทั้งสองตัวสแกน DOM ที่ render จริงแล้วเทียบกับกฎ WCAG อัตโนมัติ</p>
+
+        <p>ลองรันที่หน้า Home ตอนนี้ (path <code>"/"</code> ที่ยังเป็นแค่ <code>&lt;div&gt;Home (ว่างไว้ก่อน)&lt;/div&gt;</code> จากบทที่ 10) จะเจอ finding จริงทันที: หน้านี้ไม่มี heading ระดับ h1 อยู่เลยสักตัว — Header ไม่มี h1 (โลโก้เป็น <code>Link</code> ไม่ใช่ heading) และเนื้อหากลางหน้าก็เป็นแค่ข้อความเปล่า ๆ axe DevTools จะขึ้นเตือนในหมวด best practice ว่าหน้าควรมี heading ระดับ 1 finding นี้ไม่ใช่เรื่องน่าแปลกใจ เพราะหน้า Home ตัวจริงยังไม่ถูกสร้าง (รอบทที่ 14) แต่มันสาธิตให้เห็นว่าเครื่องมือพวกนี้ตรวจตาม DOM ที่ render จริงเท่านั้น ไม่สนใจว่าคุณ "ตั้งใจจะใส่ทีหลัง" — เก็บ finding นี้ไว้เป็นข้อเตือนใจของบทที่ 14 ด้วยว่าเมื่อสร้างหน้า Home จริง ต้องมี h1 อยู่ในนั้น</p>
+
+        <h2>ให้ Agent self-audit: เพิ่มกติกาเข้า rules ไฟล์</h2>
+
+        <p>Checklist ด้านบนมีประโยชน์มากขึ้นไปอีกถ้า Agent อ่านมันได้เองทุกครั้งที่สร้างหรือแก้โค้ด เปิด <code>.cursor/rules/project.mdc</code> ที่เขียนไว้ตั้งแต่บทที่ 9 แล้วเพิ่มกฎ accessibility เข้าไป</p>
+
+        <pre><code class="language-text">- ทุกรูปต้องมี alt (รูปตกแต่งล้วนใช้ alt="")
+- ปุ่มที่มีแค่ไอคอนต้องมี aria-label
+- interactive element เป็น &lt;button&gt; หรือ &lt;a&gt;/&lt;Link&gt; เท่านั้น ห้ามใช้ &lt;div&gt;/&lt;span&gt; ที่มี onClick
+- ทุก element ที่รับ focus ได้ต้องมี focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50
+- แต่ละหน้ามี h1 เดียว และ heading ไล่ระดับไม่กระโดด</code></pre>
+
+        <p>บรรทัดพวกนี้ทำให้กฎ accessibility ที่เพิ่งเรียนกลายเป็นสิ่งที่ Agent รู้ทุกแชทอัตโนมัติ เหมือนกับ mobile-first และ Tailwind-only ที่ตั้งไว้ตั้งแต่บทที่ 9 นอกจากนั้นยังสั่งให้ Agent ตรวจสอบงานตัวเองได้ด้วย prompt สั้น ๆ แบบนี้ หลังจากมันสร้างหรือแก้ component ใด ๆ เสร็จ</p>
+
+        <pre><code class="language-text">ตรวจ accessibility ของไฟล์นี้ตาม checklist ใน rules ให้ครบทุกข้อ ถ้าเจอจุดที่ไม่ผ่าน ให้แก้ให้เลย แล้วสรุปว่าแก้อะไรไปบ้าง</code></pre>
+
+        <p>วางแนบไฟล์ที่ต้องการตรวจ Agent จะไล่เช็คทีละข้อในกฎแล้วรายงานกลับมา แต่อย่าเชื่อรายงานนั้นแบบไม่ตรวจซ้ำ — เครื่องมืออย่าง Lighthouse, axe และตัว Agent เองล้วนช่วย<em>หา</em>จุดที่พลาดได้เร็วกว่าคนไล่ดูเองทีละบรรทัด แต่ตัดสินว่าอะไรคือ "พอ" สำหรับผู้ใช้จริงยังคงเป็นหน้าที่ของคน ลองกด Tab ไล่ทั้งหน้าด้วยตัวเองอีกครั้งเสมอ ก่อนเชื่อว่าจบแล้วจริง ๆ</p>
+
+        <p>Header.tsx ตอนนี้ผ่านทั้งสองเลนส์แรกแล้ว — responsive จากบทที่ 11 และ accessibility จากบทนี้ แต่ลองเพ่งดู class string ในโค้ดด้านบนอีกรอบ: <code>focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50</code> ถูกพิมพ์ซ้ำอยู่ 7 รอบในไฟล์เดียว (โลโก้, ลิงก์ Home/Products บน desktop, ลิงก์ตะกร้า, ปุ่ม hamburger, ลิงก์ Home/Products บนแผงมือถือ) นี่คือกลิ่นที่เลนส์ที่สามจะจับ — บทหน้าไปตรวจ maintainability กัน</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="11_review_responsive.html" rel="prev">ก่อนหน้า: ตรวจ Responsive ของโค้ดจาก AI</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="13_review_maintainability.html" rel="next">ถัดไป: ตรวจ Maintainability และแยก Reusable Component</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

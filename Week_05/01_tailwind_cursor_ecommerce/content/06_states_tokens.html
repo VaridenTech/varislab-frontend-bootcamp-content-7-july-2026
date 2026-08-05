@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="จัดการ states อย่าง hover และ focus, ตั้ง design tokens ด้วย @theme และจัดระเบียบ class ให้อ่านง่าย" />
+    <title>States, Design Tokens และการจัดระเบียบ Class | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 06 · Tailwind CSS พื้นฐาน (Tailwind Fundamentals)</p>
+          <h1>States, Design Tokens และการจัดระเบียบ Class</h1>
+          <p class="lesson-original-title" lang="en">States &amp; Design Tokens</p>
+        </header>
+
+        <p>บทสุดท้ายของหมวด Tailwind fundamentals จะปิดสามเรื่องที่เหลือ: ทำให้ UI ตอบสนองต่อการโต้ตอบของผู้ใช้ (states) ผูกสีของแบรนด์ My Store ไว้ที่เดียว (design tokens) และวิธีจัดระเบียบ class string ยาว ๆ ไม่ให้อ่านยากเกินไป หลังจากบทนี้คุณจะมีพื้นฐาน Tailwind ครบพอที่จะเริ่มทำงานกับ Cursor Agent ในบทถัดไป</p>
+
+        <h2>States: hover, focus, active, disabled</h2>
+
+        <p>เติมพฤติกรรมโต้ตอบให้ปุ่มจากบทที่ 2 ด้วย state modifier</p>
+
+        <pre><code class="language-tsx">&lt;button
+  className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white
+    hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-blue-600
+    active:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+&gt;
+  Add to Cart
+&lt;/button&gt;
+</code></pre>
+
+        <p><code>hover:</code> มีผลตอนเมาส์ชี้อยู่, <code>active:</code> มีผลระหว่างกดค้าง และ <code>disabled:</code> มีผลเมื่อ element มี attribute <code>disabled</code> ทั้งสามตัวนี้ตรงไปตรงมา ส่วนที่ต้องอธิบายเพิ่มคือ <code>focus-visible:</code></p>
+
+        <p class="translator-note">🔍 ทำไมไม่ใช้ <code>focus:</code> เฉย ๆ — <code>focus:</code> จะแสดงกรอบ focus <strong>ทุกครั้ง</strong> ที่ element ได้รับ focus ไม่ว่าจะกดเมาส์คลิกหรือกด Tab บนคีย์บอร์ด ซึ่งทำให้ผู้ใช้เมาส์เห็นกรอบฟ้อง ๆ ทุกครั้งที่คลิกปุ่มโดยไม่จำเป็น ส่วน <code>focus-visible:</code> ฉลาดกว่า — เบราว์เซอร์จะแสดงกรอบเฉพาะตอนที่<em>คาดว่า</em>ผู้ใช้กำลังนำทางด้วยคีย์บอร์ด (เช่นกด Tab) เท่านั้น ผู้ใช้คีย์บอร์ดยังเห็นกรอบชัดเจนเพื่อ accessibility ส่วนผู้ใช้เมาส์ก็ไม่เห็นกรอบรบกวนสายตา — บทที่ 12 ที่ว่าด้วยการตรวจ accessibility จะพูดเรื่องนี้ต่ออีกครั้ง</p>
+
+        <p>ตัวสุดท้ายที่มีประโยชน์มากคือ <code>group</code> กับ <code>group-hover:</code> ใช้เมื่ออยากให้ hover ที่ parent ไปกระตุ้นสไตล์ของ <em>ลูก</em> เช่น การซูมรูปสินค้าตอนเมาส์ชี้ที่การ์ดทั้งใบ (ไม่ใช่แค่ตัวรูป)</p>
+
+        <pre><code class="language-tsx">&lt;div className="group overflow-hidden rounded-lg border border-gray-200"&gt;
+  &lt;img
+    src="/thumbnail.webp"
+    alt="Essence Mascara Lash Princess"
+    className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+  /&gt;
+&lt;/div&gt;
+</code></pre>
+
+        <p>ใส่ <code>group</code> ไว้ที่ parent (การ์ดทั้งใบ) แล้วใน <code>&lt;img&gt;</code> ใช้ <code>group-hover:scale-105</code> แทน <code>hover:scale-105</code> ธรรมดา — ผลคือแค่เอาเมาส์ไปชี้ที่ไหนก็ได้บนการ์ด รูปก็จะซูมขึ้น 5% แม้เมาส์จะไม่ได้อยู่บนตัวรูปโดยตรงก็ตาม (<code>overflow-hidden</code> ที่ parent ป้องกันไม่ให้รูปที่ซูมล้นออกนอกกรอบการ์ด)</p>
+
+        <h2>Design Tokens ด้วย @theme</h2>
+
+        <p>จนถึงตอนนี้เราใช้สีสำเร็จรูปของ Tailwind อย่าง <code>blue-600</code> มาตลอด แต่ My Store มีสีแบรนด์ของตัวเองที่ไม่ตรงกับสีไหนใน palette เป๊ะ ๆ — Tailwind v4 ให้ประกาศสีของแบรนด์เป็น token ของตัวเองได้ตรง ๆ ใน CSS ผ่าน <code>@theme</code></p>
+
+        <pre><code class="language-css">@import "tailwindcss";
+
+@theme {
+  --color-primary: #0d6efd;
+  --color-primary-dark: #0b5ed7;
+  --color-accent: #ffa200;
+  --color-danger: #ff4136;
+}
+</code></pre>
+
+        <p>เพิ่มบล็อกนี้ต่อจาก <code>@import "tailwindcss"</code> ใน <code>src/index.css</code> แล้ว Tailwind จะ generate utility class ใหม่ให้อัตโนมัติจากชื่อ token ทุกตัว — <code>bg-primary</code>, <code>text-primary</code>, <code>border-primary</code>, <code>hover:bg-primary-dark</code> ใช้ได้ทันทีทุกที่ในโปรเจกต์ เหมือนกับที่ <code>bg-blue-600</code> ใช้ได้</p>
+
+        <pre><code class="language-tsx">&lt;button className="rounded-lg bg-primary px-4 py-2 font-medium text-white hover:bg-primary-dark"&gt;
+  Add to Cart
+&lt;/button&gt;
+</code></pre>
+
+        <p>ค่าสีทั้งสี่ตัวนี้ไม่ได้เดามาลอย ๆ แต่คัดลอกมาจาก <code>_variables.scss</code> ของแอปต้นแบบตรง ๆ — <code>#0d6efd</code> คือสีน้ำเงินหลักของแบรนด์ My Store, <code>#ffa200</code> เป็นสีส้ม accent สำหรับดึงความสนใจ (เช่นป้ายส่วนลด), <code>#ff4136</code> เป็นสีแดงสำหรับข้อความเตือนหรือ error ประโยชน์ของการรวมไว้ที่จุดเดียวคือถ้าแบรนด์เปลี่ยนสีวันหนึ่ง คุณแก้แค่ 4 บรรทัดนี้บรรทัดเดียว ทุก <code>bg-primary</code> ทั่วทั้งแอปจะเปลี่ยนตามทันทีโดยไม่ต้องไล่หาทีละไฟล์</p>
+
+        <h2>ควบคุม class soup: ลำดับที่แนะนำ</h2>
+
+        <p>ยิ่ง component ซับซ้อนขึ้น class string ก็ยิ่งยาวขึ้น เพื่อไม่ให้อ่านยากจนเกินไป ให้เรียง class ตามลำดับหมวดหมู่นี้อย่างสม่ำเสมอ</p>
+
+        <p><strong>layout → sizing → spacing → typography → color → border/shadow → states</strong></p>
+
+        <p>สังเกตปุ่มที่เพิ่งเห็นด้านบน: <code>px-4 py-2</code> (spacing) และ <code>font-medium</code> (typography) มาก่อน ส่วน state modifier อย่าง <code>hover:bg-primary-dark</code> ควรอยู่ท้ายสุดเสมอ เพราะเป็นสไตล์ที่ “ทับ” สไตล์ปกติเฉพาะบางสถานการณ์ ยิ่งไว้ท้ายยิ่งเห็นชัดว่าคืออะไร พอทุกคนในทีมเรียงแบบเดียวกัน การอ่าน diff ที่ Agent สร้างให้จะเร็วขึ้นมาก เพราะรู้ว่าต้องมองหาอะไรตรงไหน</p>
+
+        <p>ไม่ต้องจำกฎนี้ให้แม่นแล้วมานั่งเรียงเองด้วยมือ ติดตั้ง <code>prettier-plugin-tailwindcss</code> แล้วให้ Prettier เรียงให้อัตโนมัติทุกครั้งที่ save ไฟล์ — ปลั๊กอินนี้เรียงตามลำดับมาตรฐานที่ทีม Tailwind กำหนดไว้ (ใกล้เคียงกับลำดับด้านบนมาก) ทำให้ทั้งโปรเจกต์เรียง class เหมือนกันหมดโดยไม่ต้องมีใครจำกฎเอง</p>
+
+        <h2>แล้วทำไมไม่ใช้ @apply รวม class ยาว ๆ ไว้เป็นชื่อเดียว</h2>
+
+        <p>Tailwind มี directive ชื่อ <code>@apply</code> ที่รวมหลาย utility ไว้เป็น class เดียวได้ เช่น <code>.btn { @apply rounded-lg bg-primary px-4 py-2; }</code> เห็นแล้วอาจคิดว่านี่คือทางออกของ class soup — แต่ลองสังเกตให้ดี นี่คือการย้อนกลับไปทำสิ่งเดียวกับไฟล์ CSS แบบเดิมที่เจอในบทที่ 2 ทุกประการ: <strong>ต้องตั้งชื่อ <code>.btn</code> อีกครั้ง</strong> เสีย locality อีกครั้ง (ต้องเปิดไฟล์ CSS แยกดูว่า <code>.btn</code> มีอะไรบ้าง) และสร้าง naming fatigue กลับมาอีกครั้ง — พูดง่าย ๆ คือ <code>@apply</code> พาเรากลับไปเจอปัญหาเดิมที่ utility-first ตั้งใจแก้ตั้งแต่แรก</p>
+
+        <p>คำตอบของ Tailwind ต่อการนำสไตล์กลับมาใช้ซ้ำไม่ใช่ CSS class ใหม่ แต่คือ <strong>React component</strong> — ห่อ <code>&lt;button className="rounded-lg bg-primary px-4 py-2 ..."&gt;</code> ไว้ใน <code>&lt;AddToCartButton /&gt;</code> ตัวเดียว แล้วเรียกใช้ซ้ำได้ทั้งแอป สไตล์ยังคงอยู่ที่เดียวกับ markup เหมือนเดิม (locality ไม่เสีย) เพียงแต่ห่อด้วยฟังก์ชัน JavaScript แทนที่จะห่อด้วยชื่อ CSS class เราจะฝึก refactor แบบนี้จริงในบทที่ 13</p>
+
+        <h2>แบบฝึกหัดเล็ก ๆ</h2>
+
+        <p>กลับไปที่การ์ดสินค้าฉบับเต็มจากบทที่ 4 แล้วลองทำสองอย่าง: (1) เพิ่มบล็อก <code>@theme</code> ด้านบนเข้าไปใน <code>src/index.css</code> ของ playground แล้วเปลี่ยนราคาสินค้า (<code>text-blue-600</code>) ให้เป็น <code>text-primary</code> แทน ดูว่าสีเปลี่ยนไปยังไง (2) เพิ่ม <code>hover:shadow-md</code> และ <code>transition-shadow</code> ให้ตัวการ์ด แล้วลองเอาเมาส์ไปชี้ดู — นี่คือแบบฝึกหัดเดียวกับสิ่งที่ Cursor Agent จะทำให้อัตโนมัติในบทถัดไป แต่ลองทำเองมือก่อนสักครั้งจะช่วยให้คุณตรวจทานงานของ Agent ได้แม่นยำขึ้นมาก</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="05_responsive.html" rel="prev">ก่อนหน้า: Responsive แบบ Mobile-first</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="07_cursor_agent.html" rel="next">ถัดไป: รู้จัก Cursor และ Cursor Agent</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

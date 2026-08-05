@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ภาพรวมสิ่งที่จะได้สร้างในสัปดาห์นี้ เครื่องมือที่ต้องเตรียม และแผนที่บทเรียนทั้งหมด" />
+    <title>บทนำ: สัปดาห์นี้เราจะสร้างอะไร | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 01 · ปฐมนิเทศ (Orientation)</p>
+          <h1>บทนำ: สัปดาห์นี้เราจะสร้างอะไร</h1>
+          <p class="lesson-original-title" lang="en">Intro</p>
+        </header>
+
+        <p>ใน Week_04 คุณใช้เวลาสร้างพื้นฐาน React ตั้งแต่ component, props, state ไปจนถึง hooks และการทดสอบ — นั่นคือทักษะที่ทำให้คุณ <em>เขียนแอปที่ทำงานได้</em> สัปดาห์นี้เราจะเติมอีกสองทักษะที่ทำให้คุณ <em>เขียนแอปที่หน้าตาดีและทำงานได้จริงบนหน้าจอทุกขนาด</em> ได้เร็วขึ้นมาก: <strong>Tailwind CSS</strong> สำหรับจัดสไตล์ และ <strong>Cursor</strong> เครื่องมือ editor ที่มี AI agent ช่วยเขียนโค้ดให้ โดยมีโปรเจกต์เดียวที่จะพาคุณเดินทางไปจนจบ — เว็บอีคอมเมิร์ซชื่อ <strong>My Store</strong></p>
+
+        <h2>สิ่งที่เราจะสร้างในสัปดาห์นี้</h2>
+
+        <p>My Store เป็นเว็บขายของออนไลน์แบบเต็มรูปแบบ มี 6 หน้าที่เชื่อมกันเป็น flow การซื้อของจริง ตั้งแต่เปิดเข้ามาดูสินค้าจนถึงยืนยันคำสั่งซื้อ ลองไล่ดูทีละหน้ากัน</p>
+
+        <p>หน้า <strong>Home</strong> คือหน้าแรกที่ลูกค้าเห็น รวมสินค้าแนะนำและทางเข้าไปยังหมวดหมู่ต่าง ๆ</p>
+
+        <img src="images/home_desktop.png" alt="ภาพหน้าจอหน้า Home ของแอปต้นแบบ My Store บนจอเดสก์ท็อป" />
+
+        <p>จากหน้า Home ลูกค้ากด <strong>เข้าหมวดหมู่ (Category)</strong> เพื่อดูสินค้าตามประเภท เช่น beauty, smartphones, groceries พร้อมแบ่งหน้า (pagination) เมื่อสินค้ามีเยอะ</p>
+
+        <img src="images/category_desktop.png" alt="ภาพหน้าจอหน้า Category ของแอปต้นแบบ My Store บนจอเดสก์ท็อป" />
+
+        <p>กดเข้าไปที่สินค้าชิ้นใดชิ้นหนึ่งจะเจอหน้า <strong>Product Detail</strong> ที่มีรูปสินค้า ราคา คำอธิบาย และ <strong>รีวิวจากลูกค้าคนอื่น</strong> — ข้อมูลทั้งหมดนี้ดึงมาจาก API จริง ไม่ใช่ข้อมูลปลอมที่เขียนตายตัวไว้ในโค้ด</p>
+
+        <img src="images/product_desktop.png" alt="ภาพหน้าจอหน้า Product Detail ของแอปต้นแบบ My Store บนจอเดสก์ท็อป" />
+
+        <p>กด “เพิ่มลงตะกร้า” แล้วไปที่หน้า <strong>Cart</strong> สินค้าที่เพิ่มไว้จะยังอยู่ครบแม้ปิดแท็บแล้วเปิดใหม่ เพราะตะกร้าถูกเก็บไว้ใน <code>localStorage</code> ของเบราว์เซอร์</p>
+
+        <img src="images/cart_desktop.png" alt="ภาพหน้าจอหน้า Cart ของแอปต้นแบบ My Store บนจอเดสก์ท็อป" />
+
+        <p>ขั้นตอนสุดท้ายคือหน้า <strong>Checkout</strong> ให้เลือกวิธีจัดส่งและวิธีชำระเงิน (เป็นการจำลอง ไม่มีการตัดเงินจริง) เมื่อกดยืนยันจะพาไปหน้า <strong>Order Success</strong> ที่สรุปคำสั่งซื้อ — สองหน้านี้คุณจะได้ลงมือสร้างเองในบทที่ 19</p>
+
+        <img src="images/checkout_desktop.png" alt="ภาพหน้าจอหน้า Checkout ของแอปต้นแบบ My Store บนจอเดสก์ท็อป" />
+
+        <p>นี่คือหน้าตาปลายทางที่คุณจะสร้างขึ้นเองทีละหน้าตลอดสัปดาห์นี้ โดยอ้างอิงจาก reference repo ที่ทีมงานเตรียมไว้ให้แล้ว — <a href="https://github.com/manjarb/varis-lab-project-06-react-ecommerce-app" target="_blank" rel="noreferrer">github.com/manjarb/varis-lab-project-06-react-ecommerce-app</a></p>
+
+        <h2>สิ่งที่จะได้เรียน</h2>
+
+        <p>ตลอดสัปดาห์นี้ เราจะฝึกสี่ทักษะหลักซ้ำ ๆ จนกลายเป็นความเคยชิน</p>
+
+        <ul>
+          <li>แปลง screenshot เป็น prompt</li>
+          <li>ใช้ Cursor Agent สร้าง UI</li>
+          <li>ตรวจทานโค้ด Tailwind</li>
+          <li>refactor เป็น component</li>
+        </ul>
+
+        <h2>วงจรการทำงานของสัปดาห์นี้: Prompt → Generate → Review → Refactor</h2>
+
+        <p>สังเกตว่าสี่ข้อด้านบนไม่ใช่รายการทักษะที่แยกจากกัน แต่มันคือ <strong>วงจรเดียวกัน</strong> ที่เราจะวนซ้ำในทุกหน้าที่สร้าง: ดู screenshot ต้นแบบแล้วเขียน <strong>prompt</strong> บอก Agent ว่าต้องการอะไร ปล่อยให้ Agent <strong>generate</strong> โค้ดออกมา จากนั้น <strong>review</strong> สิ่งที่มันสร้างอย่างละเอียด — ดู responsive ดู accessibility ดูว่าโครงสร้างสมเหตุสมผลไหม แล้วค่อย <strong>refactor</strong> ส่วนที่ควรแยกเป็น component ที่ใช้ซ้ำได้</p>
+
+        <p class="translator-note">🚨 ข้อความที่สำคัญที่สุดของสัปดาห์นี้: <strong>โค้ดที่ AI สร้างให้คือ first draft เท่านั้น ไม่ใช่ผลงานสุดท้าย</strong> Agent เขียนโค้ดได้เร็วมาก แต่มันไม่รู้ว่าโปรเจกต์ของคุณมีธรรมเนียมการตั้งชื่ออะไร ไม่รู้ว่า component ไหนควรใช้ซ้ำ และบางครั้งก็ลืมทำ responsive หรือ accessibility ให้ครบ <strong>คุณคือวิศวกรที่ต้องรับผิดชอบโค้ดที่ ship ออกไปจริง</strong> ไม่ใช่ Agent — บทเรียน 11–13 จะสอนวิธีตรวจทานโค้ดที่ AI สร้างอย่างเป็นระบบ</p>
+
+        <h2>เตรียมเครื่องมือ</h2>
+
+        <p>ก่อนเริ่มบทเรียนถัดไป เตรียมสิ่งเหล่านี้ให้พร้อม</p>
+
+        <ul>
+          <li>ติดตั้ง <strong>Cursor</strong> จาก <a href="https://cursor.com" target="_blank" rel="noreferrer">cursor.com</a> — เวอร์ชันฟรี (free tier) เพียงพอสำหรับหลักสูตรนี้ทั้งหมด</li>
+          <li><strong>Node.js เวอร์ชัน 22 ขึ้นไป</strong> ตรวจสอบด้วย <code>node -v</code></li>
+          <li>เปิดดู reference repo ที่ <a href="https://github.com/manjarb/varis-lab-project-06-react-ecommerce-app" target="_blank" rel="noreferrer">github.com/manjarb/varis-lab-project-06-react-ecommerce-app</a> ไว้เป็นเป้าหมายปลายทาง — ไม่ต้อง clone ตอนนี้ก็ได้ แค่เปิดดูโครงสร้างคร่าว ๆ</li>
+        </ul>
+
+        <h2>แผนที่บทเรียน</h2>
+
+        <p>หลักสูตรสัปดาห์นี้แบ่งเป็น 6 บทใหญ่ เรียงกันเป็นเส้นทางเดียว จากปูพื้นฐานไปจนถึงสร้างแอปจริงครบทุกหน้า</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>บท</th>
+              <th>เนื้อหา</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1. ปฐมนิเทศ</td>
+              <td>ภาพรวมสัปดาห์นี้ (บทที่คุณกำลังอ่านอยู่)</td>
+            </tr>
+            <tr>
+              <td>2. Tailwind CSS พื้นฐาน</td>
+              <td>utility-first, การติดตั้ง Tailwind v4, utility หลัก, responsive, states และ design tokens</td>
+            </tr>
+            <tr>
+              <td>3. Cursor Workflow</td>
+              <td>รู้จัก Cursor Agent และวิธีแปลง screenshot เป็น prompt ที่ใช้งานได้จริง</td>
+            </tr>
+            <tr>
+              <td>4. เริ่มสร้างโปรเจกต์</td>
+              <td>ตั้งโครงโปรเจกต์ My Store และให้ Agent สร้าง layout แรก</td>
+            </tr>
+            <tr>
+              <td>5. ตรวจทานโค้ดที่ AI สร้าง</td>
+              <td>เช็กลิสต์ตรวจ responsive, accessibility และ maintainability ของโค้ดจาก AI</td>
+            </tr>
+            <tr>
+              <td>6. สร้างแอปทีละหน้า</td>
+              <td>ใช้วงจร prompt → generate → review → refactor สร้างทุกหน้าของ My Store จนจบ</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>พร้อมแล้วก็ไปทำความรู้จักแนวคิดที่เป็นหัวใจของ Tailwind กันเลย — utility-first</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <span></span>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="02_utility_first.html" rel="next">ถัดไป: แนวคิด Utility-First</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
