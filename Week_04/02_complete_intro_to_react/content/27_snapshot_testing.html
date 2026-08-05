@@ -84,5 +84,10 @@ test("snapshot with some stuff in cart", () =&gt; {
   <p>คุณควร commit snapshot files เข้า git</p>
   <p>คุณตัดสินเองได้ว่าให้คุณค่ากับ tests เหล่านี้มากแค่ไหน โดยรวมแล้วมันพอมีที่ทางอยู่บ้างในการทดสอบ UI แต่ช่วยได้ไม่มาก บ่อยครั้งมันกลายเป็น noise มากกว่าความช่วยเหลือ ไม่ว่าอย่างไร เก็บมันไว้ใน toolbox ของคุณ บางครั้งมันก็ช่วยได้</p>
   <blockquote><p>เกร็ดเพิ่มเติม: จุดหนึ่งที่ snapshot tests มีประโยชน์ชัดเจน (เพราะมันติดตาม object shape ใดก็ได้ตามเวลา ไม่ใช่แค่ React components) คือ backend ใน API response shapes เราจะเขียน snapshot test ว่า API response นี้จะหน้าตาแบบนี้เสมอ และควร fail test หากมันพัง สิ่งนี้ทำให้ทุกครั้งที่คุณแก้ API response เป็นไปอย่างตั้งใจมาก (เพราะ API clients ของคุณน่าจะพึ่งพาให้มันมี shape แบบหนึ่ง) ยิ่งกว่านั้น มันหมายความว่า frontend devs ใช้ snapshot files เหล่านี้เพื่อดูว่า API response จะมีหน้าตาแบบใดได้ เฉพาะทางมาก แต่ในโปรเจกต์ที่ใช้แบบนี้ก็ช่วยได้จริง</p></blockquote>
+  <blockquote class="lesson-source-code">
+    <strong>โค้ดอ้างอิงของบทนี้</strong> — เทียบโค้ดของคุณกับสาขานี้ได้เมื่อทำตามบทนี้จบ:
+    <a href="https://github.com/VaridenTech/react-intro-pizza-app/tree/19-snapshot-testing" target="_blank" rel="noreferrer">github.com/VaridenTech/react-intro-pizza-app — branch <code>19-snapshot-testing</code></a>
+  </blockquote>
+
   <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="26_testing_custom_hooks.html" rel="prev">ก่อนหน้า: Testing Custom Hooks</a><a href="index.html">สารบัญบทเรียน</a><a href="28_v8_coverage.html" rel="next">ถัดไป: v8</a></nav>
 </article></main></body></html>

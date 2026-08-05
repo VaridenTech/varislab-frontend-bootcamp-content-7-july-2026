@@ -194,6 +194,15 @@ blockquote,
   color: var(--muted);
 }
 
+.lesson-source-code {
+  border-inline-start-color: var(--blue-dark);
+}
+
+.lesson-source-code-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .course-header {
   padding-bottom: 1.5rem;
   border-bottom: 2px solid var(--blue-soft);

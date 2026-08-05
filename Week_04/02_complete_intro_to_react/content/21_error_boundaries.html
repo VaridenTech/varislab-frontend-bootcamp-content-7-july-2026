@@ -107,6 +107,11 @@ function ErrorBoundaryWrappedPastOrderRoutes() {
         <li>เราสร้าง ErrorBoundary ให้ยืดหยุ่นกว่านี้ได้ และให้มันรับ component ที่จะแสดงเมื่อเกิด errors มีกฎโค้ดที่เรียกว่า “WET” (ตรงข้ามกับ DRY, ฮ่า ๆ): Write Everything Twice หรือบางคนขยับเป็น Write Everything Thrice กรณีนี้เราใช้ component แค่ use case เดียว จึงไม่เสียเวลาทำให้มันยืดหยุ่น หากใช้ซ้ำอีกครั้ง ค่อยทำให้รองรับทั้งสอง use case แต่ไม่ใช่ <em>ทุก</em> use case เมื่อครั้งที่สามหรือสี่ จึงค่อยกลับมาลงทุนให้ยืดหยุ่น</li>
       </ul>
       <p>ทีนี้ หากอยากลอง ให้เพิ่ม <code>throw new Error("lol");</code> ใน render function ของ PastOrderRoute เพื่อดูมันทำงาน!</p>
+      <blockquote class="lesson-source-code">
+        <strong>โค้ดอ้างอิงของบทนี้</strong> — เทียบโค้ดของคุณกับสาขานี้ได้เมื่อทำตามบทนี้จบ:
+        <a href="https://github.com/VaridenTech/react-intro-pizza-app/tree/13-error-boundaries" target="_blank" rel="noreferrer">github.com/VaridenTech/react-intro-pizza-app — branch <code>13-error-boundaries</code></a>
+      </blockquote>
+
       <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="20_portals.html" rel="prev">ก่อนหน้า: Portals</a><a href="index.html">สารบัญบทเรียน</a><a href="22_uncontrolled_forms.html" rel="next">ถัดไป: Uncontrolled Forms</a></nav>
     </article></main>
   </body>

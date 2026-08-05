@@ -80,5 +80,10 @@ test("to call the API and give back the pizza of the day", async () =&gt; {
 
   <p>ข้อดีที่ได้ฟรีอีกอย่างคือ <code>result.current</code> มี type เป็น <code>Pizza | null</code> โดยที่เราไม่ต้องบอก เพราะ <code>renderHook</code> เป็น generic ที่อ่าน type มาจาก callback ที่เราส่งให้ ดังนั้นถ้าวันหนึ่งมีคนแก้ <code>usePizzaOfTheDay</code> ให้คืนค่ารูปแบบอื่น เทสต์นี้จะรู้ทันทีตั้งแต่ตอน compile</p>
   <ul><li>waitFor เป็นทริกสะดวกเมื่อคุณต้องรอให้ React settle คุณให้ body ที่ throw errors จนกว่าจะเป็น true <code>expect</code> เมื่อใช้ไม่ได้จะ throw error จึงทำงานแบบนี้</li><li>เมื่อมัน resolve เป็น true ก็ผ่าน test และไปต่อ หากมัน fail ราว 20 ครั้ง (ตั้งค่าได้) ก็จะ fail test</li><li>บางคนคิดว่านี่เข้าไปใน implementation details มากเกินไป ซึ่งก็มีส่วนถูก อย่างไรก็ตามมันมีประโยชน์จากมุมที่ hook นี้ต้องทำงานบางแบบ และคาดหวัง API ที่จะเรียก ซึ่งส่งผลต่อ user behavior จึงอาจมีประโยชน์ ถ้าเป็น codebase จริง การ test PizzaOfTheDay component อย่างเดียวก็อาจพอแล้ว แต่ถ้า hook นี้ถูกใช้หลายที่ การเขียน test ให้มันโดยตรงก็คุ้ม</li></ul>
+  <blockquote class="lesson-source-code">
+    <strong>โค้ดอ้างอิงของบทนี้</strong> — เทียบโค้ดของคุณกับสาขานี้ได้เมื่อทำตามบทนี้จบ:
+    <a href="https://github.com/VaridenTech/react-intro-pizza-app/tree/18-testing-custom-hooks" target="_blank" rel="noreferrer">github.com/VaridenTech/react-intro-pizza-app — branch <code>18-testing-custom-hooks</code></a>
+  </blockquote>
+
   <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="25_testing_user_interaction.html" rel="prev">ก่อนหน้า: Testing User Interaction</a><a href="index.html">สารบัญบทเรียน</a><a href="27_snapshot_testing.html" rel="next">ถัดไป: Snapshot Testing</a></nav>
 </article></main></body></html>

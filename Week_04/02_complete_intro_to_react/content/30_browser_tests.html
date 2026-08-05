@@ -196,5 +196,10 @@ value={[[{ pizza: 1 }, { pizza: 2 }, { pizza: 3 }]]}
 </code></pre>
 
   <p class="translator-note">หมายเหตุผู้แปล: ต้นฉบับของหลักสูตร (ซึ่งอิง Vitest 2) แนะนำให้ถอน <code>@vitest/coverage-v8</code> ออกแล้วเปลี่ยนไปใช้ Istanbul เพราะ coverage ของ V8 ใช้กับ browser mode ไม่ได้ · ใน Vitest 4 ข้อจำกัดนี้<strong>ยังอยู่ แต่แคบลง</strong> คือ <code>@vitest/coverage-v8</code> ทำงานกับ Playwright ได้เฉพาะ <code>chromium</code> เท่านั้น ถ้าตั้ง <code>instances</code> เป็น firefox หรือ webkit แล้วสั่ง <code>npm run coverage</code> จะได้ error ว่า <code>@vitest/coverage-v8 does not work with { browser: { provider: playwright(), instances: [{ browser: 'firefox' }] } }</code> · เราจึงเลือก <code>chromium</code> ใน config ข้างบน แล้วใช้ <code>@vitest/coverage-v8</code> ตัวเดิมจากบทที่ 28 ต่อได้เลย ไม่ต้องติดตั้งอะไรเพิ่ม · ถ้าคุณอยากรันเทสต์บน firefox หรือ webkit จริง ๆ ให้เปลี่ยนไปใช้ Istanbul แทน ชื่อ package ที่ถูกต้องคือ <code>@vitest/coverage-istanbul</code> (ไม่ใช่ <code>@vitest/istanbul</code> อย่างในต้นฉบับ) แล้วเพิ่ม <code>provider: "istanbul"</code> เข้าไปใน object <code>coverage</code></p>
+  <blockquote class="lesson-source-code">
+    <strong>โค้ดอ้างอิงของบทนี้</strong> — เทียบโค้ดของคุณกับสาขานี้ได้เมื่อทำตามบทนี้จบ:
+    <a href="https://github.com/VaridenTech/react-intro-pizza-app/tree/22-browser-tests" target="_blank" rel="noreferrer">github.com/VaridenTech/react-intro-pizza-app — branch <code>22-browser-tests</code></a>
+  </blockquote>
+
   <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="29_vitest_ui.html" rel="prev">ก่อนหน้า: Vitest UI</a><a href="index.html">สารบัญบทเรียน</a><a href="31_react_19.html" rel="next">ถัดไป: React 19</a></nav>
 </article></main></body></html>

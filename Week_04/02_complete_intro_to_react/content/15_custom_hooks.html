@@ -63,8 +63,6 @@ const PizzaOfTheDay = () =&gt; {
 export default PizzaOfTheDay;
 </code></pre>
 
-        <blockquote>ดูโค้ดฉบับสมบูรณ์หลังแก้ไขตามบทนี้ได้ที่ <a href="https://github.com/VaridenTech/react-intro-pizza-app/tree/07-custom-hooks/src" target="_blank" rel="noreferrer">github.com/VaridenTech/react-intro-pizza-app (branch 07-custom-hooks)</a></blockquote>
-
         <ul>
           <li>ส่วนเจ๋งคือ <code>usePizzaOfTheDay()</code> ตอนนี้เราเพียงเชื่อใจได้ว่าสิ่งนี้จะให้ pizza of the day จากการทำงานภายใน black box ของ hook</li>
           <li>สังเกตว่าเราไม่ได้เขียน type ให้ <code>pizzaOfTheDay</code> ตรงนี้เลย แต่ <code>pizzaOfTheDay.sizes.S</code> ยังมี auto-complete ครบ นั่นเพราะ TypeScript ดึง type มาจากสิ่งที่ hook คืนกลับมาให้เอง — เราเขียน type ไว้ที่เดียวคือในตัว hook แล้วทุกที่ที่เรียกใช้ก็ได้ประโยชน์ตาม</li>
@@ -123,6 +121,11 @@ useDebugValue(pizzaOfTheDay ? `${pizzaOfTheDay.name}` : "Loading...");
 </code></pre>
 
         <p>ตอนนี้เปิด React Dev Tools และ inspect component PizzaOfTheDay ของเรา คุณจะเห็น debug value อยู่ตรงนั้น สิ่งนี้มีประโยชน์เมื่อคุณมี custom hooks <em>จำนวนมาก</em> และโดยเฉพาะ custom hooks ที่ใช้ซ้ำมากและมี values ต่างกัน มันช่วยให้แยกออกได้อย่างรวดเร็วว่า hook ไหนมี data ใดอยู่ข้างใน</p>
+
+        <blockquote class="lesson-source-code">
+          <strong>โค้ดอ้างอิงของบทนี้</strong> — เทียบโค้ดของคุณกับสาขานี้ได้เมื่อทำตามบทนี้จบ:
+          <a href="https://github.com/VaridenTech/react-intro-pizza-app/tree/07-custom-hooks" target="_blank" rel="noreferrer">github.com/VaridenTech/react-intro-pizza-app — branch <code>07-custom-hooks</code></a>
+        </blockquote>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="14_dev_tools.html" rel="prev">ก่อนหน้า: Dev Tools</a>

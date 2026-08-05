@@ -71,5 +71,10 @@ function PastOrdersRoute({ loadedPromise, page, setPage }: PastOrdersRouteProps)
     <li><strong><code>setPage: Dispatch&lt;SetStateAction&lt;number&gt;&gt;</code></strong> — หน้าตาคุ้น ๆ ใช่ไหม? เป็น type เดียวกับที่เราเจอตอนทำ <code>CartHook</code> ในบทที่ 17 เพียงแต่คราวนี้เป็น <code>number</code> แทน <code>CartItem[]</code> การส่ง setter function ลงไปเป็น prop เป็น pattern ที่พบบ่อยมาก และนี่คือวิธีให้ type กับมัน</li>
   </ul>
   <ul><li>เราใช้ Suspense เพื่อบอก React ว่าจะหยุด render ตรงไหนจนกว่า <em>ทุกอย่าง</em> ข้างในจะ resolve หากมีหลายสิ่ง suspend มันจะไม่ render จนกว่าทั้งหมดจะเสร็จ</li><li><code>fallback</code> บอกสิ่งที่จะ render ระหว่างถูก suspend</li><li>เราต้อง query ภายใน parent component (และจึงเก็บ page ด้วย) เพราะ promise ต้องมีอยู่ภายนอก component ที่กำลังถูก suspend ไม่เช่นนั้นมันจะถูกเรียกใหม่ทุกครั้งที่ component render คล้าย error boundaries</li><li>เราใส่ทุกอย่างใน error-boundary wrapping component ซึ่งน่าจะควรเปลี่ยนชื่อ</li><li>อีกครั้ง เราใช้ support ของ TanStack Query แต่จริง ๆ ใช้กับ promise ใดก็ได้ TanStack Query แค่ทำให้มันง่าย</li><li>TanStack Query มีวิธีอื่นอีกหลายแบบในการใช้ Suspense เราเพียงอยากลอง <code>use</code> hook</li><li>use มีการใช้งานอื่นอีกเล็กน้อย ลองดูใน docs</li><li>ไม่เหมือน hooks ส่วนใหญ่ <code>use</code> ใช้ใน conditionals และ for loops ได้ ค่อนข้างแปลกเมื่อเทียบกับ rules around hooks แต่จริง</li></ul>
+  <blockquote class="lesson-source-code">
+    <strong>โค้ดอ้างอิงของบทนี้</strong> — เทียบโค้ดของคุณกับสาขานี้ได้เมื่อทำตามบทนี้จบ:
+    <a href="https://github.com/VaridenTech/react-intro-pizza-app/tree/25-use-and-suspense" target="_blank" rel="noreferrer">github.com/VaridenTech/react-intro-pizza-app — branch <code>25-use-and-suspense</code></a>
+  </blockquote>
+
   <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="32_form_actions.html" rel="prev">ก่อนหน้า: Form Actions</a><a href="index.html">สารบัญบทเรียน</a><a href="34_react_compiler.html" rel="next">ถัดไป: React Compiler</a></nav>
 </article></main></body></html>

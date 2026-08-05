@@ -280,6 +280,11 @@ export default function Order() {
 
         <p>สังเกตว่าถึงจะวาง handler ไว้บน <code>div</code> เราก็ยังใช้ <code>HTMLInputElement</code> อยู่ เพราะ <code>e.target</code> คือ element ที่<em>เกิด</em> event จริง ๆ ซึ่งก็คือ radio button ไม่ใช่ div ที่รับ event ต่อมา (ถ้าอยากได้ div ให้ใช้ <code>e.currentTarget</code> แทน)</p>
 
+        <blockquote class="lesson-source-code">
+          <strong>โค้ดอ้างอิงของบทนี้</strong> — เทียบโค้ดของคุณกับสาขานี้ได้เมื่อทำตามบทนี้จบ:
+          <a href="https://github.com/VaridenTech/react-intro-pizza-app/tree/05-Hooks" target="_blank" rel="noreferrer">github.com/VaridenTech/react-intro-pizza-app — branch <code>05-Hooks</code></a>
+        </blockquote>
+
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="09_jsx.html" rel="prev">ก่อนหน้า: JSX</a>
           <a href="index.html">สารบัญบทเรียน</a>

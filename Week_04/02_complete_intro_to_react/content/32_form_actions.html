@@ -80,5 +80,10 @@ function ContactInput(props: ContactInputProps) {
   <p class="translator-note">💡 ถ้า component ของคุณต้องรับ prop ของ <code>&lt;input&gt;</code> หลายตัวจนเขียนไม่ไหว มีทางลัดที่นิยมกันมากคือ <code>type ContactInputProps = React.ComponentProps&lt;"input"&gt;</code> ซึ่งจะได้ prop ทั้งหมดของ <code>&lt;input&gt;</code> มาในทีเดียว แล้วส่งต่อด้วย <code>&lt;input {...props} disabled={pending} /&gt;</code> ลองดูเป็นแบบฝึกหัดได้</p>
   <ul><li>นี่เป็นตัวอย่างง่าย ๆ แต่ลองนึกภาพว่า inputs ของคุณซับซ้อนมาก มี design system, tool tips และ UI อื่น ๆ อีกมาก ซึ่งพบได้บ่อยใน React codebases ขนาดใหญ่ สิ่งนี้อาจมีประโยชน์มาก</li><li>อีกอย่าง ถ้ามี component เล็กมากอย่าง <code>ContactInput</code> การเก็บไว้ใน file เดียวกันแบบที่ทำตรงนี้ก็เป็น pattern ที่ใช้ได้ บางคนเคร่งครัดกับกฎ one file, one component แต่มันไม่ใช่กฎตายตัว</li><li>เราไม่ได้ทำ button หรือ text area เพื่อความกระชับ แต่คุณทำได้</li><li>เพราะเรารันใน local pending state จะสั้นมาก แต่คุณจะสังเกตเห็น background กระพริบเป็นสีเทา นั่นคือ disabled state</li></ul>
   <p>และนั่นคือ form actions!</p>
+  <blockquote class="lesson-source-code">
+    <strong>โค้ดอ้างอิงของบทนี้</strong> — เทียบโค้ดของคุณกับสาขานี้ได้เมื่อทำตามบทนี้จบ:
+    <a href="https://github.com/VaridenTech/react-intro-pizza-app/tree/24-form-actions" target="_blank" rel="noreferrer">github.com/VaridenTech/react-intro-pizza-app — branch <code>24-form-actions</code></a>
+  </blockquote>
+
   <nav class="lesson-navigation" aria-label="การนำทางบทเรียน"><a href="31_react_19.html" rel="prev">ก่อนหน้า: React 19</a><a href="index.html">สารบัญบทเรียน</a><a href="33_use_and_suspense.html" rel="next">ถัดไป: use และ Suspense</a></nav>
 </article></main></body></html>
