@@ -176,6 +176,8 @@ const root = createRoot(container);
 root.render(React.createElement(App));
 </code></pre>
 
+        <p class="translator-note">หมายเหตุผู้แปล: พอหน้านี้รันได้ คุณจะเห็นคำเตือน <code>Each child in a list should have a unique "key" prop.</code> ใน console เหมือนที่เจอในบทที่ 3 · สาเหตุเดิมคือเราส่ง child เป็น array เข้า <code>createElement</code> และมันยัง<strong>ไม่ใช่ความผิดพลาด</strong> ที่ต้องแก้ตอนนี้ · บทหน้าเราจะเปลี่ยนไปเขียน JSX แล้วคำเตือนนี้จะหายไปเอง</p>
+
         <p>บันทึกไฟล์แล้วคุณจะเจอ error แรกจาก TypeScript ทันที ตรงบรรทัด <code>createRoot(container)</code></p>
 
         <pre><code class="language-text">Argument of type 'HTMLElement | null' is not assignable to parameter of type 'Container'.
