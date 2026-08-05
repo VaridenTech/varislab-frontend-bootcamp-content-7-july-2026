@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ต่อปุ่ม Add to Cart เข้ากับ Cart Store, แสดง modal ยืนยัน และเพิ่ม badge นับจำนวนสินค้าบน Header" />
+    <title>ปุ่ม Add to Cart และ Mini Cart | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 20 · ตะกร้าสินค้า (Cart)</p>
+          <h1>ปุ่ม Add to Cart และ Mini Cart</h1>
+          <p class="lesson-original-title" lang="en">Add to Cart &amp; Mini Cart</p>
+        </header>
+
+        <p>บทที่แล้วเราสร้างเครื่องยนต์ของตะกร้าเสร็จแล้ว แต่ยังไม่มีใครได้ใช้มันเลย บทนี้เราจะต่อสายให้ครบวงจรแรก: กดปุ่ม Add To Cart บนหน้า Product → สินค้าเข้า store → modal เด้งยืนยัน → ตัวเลขบนไอคอนตะกร้าที่ Header ขยับตาม งานแบ่งเป็นสามชิ้น: modal ยืนยัน, การอัปเดตหน้า Product และ mini cart (badge) บน Header</p>
+
+        <h2>AddToCartModalContent — modal ยืนยันการเพิ่มสินค้า</h2>
+
+        <p>เวลาผู้ใช้กดเพิ่มสินค้า ต้องมี feedback ทันทีว่า "สำเร็จแล้วนะ" ไม่อย่างนั้นเขาจะกดซ้ำอีกสามรอบเพราะไม่แน่ใจ (แล้วได้ของ 4 ชิ้นโดยไม่ตั้งใจ) เราจะทำ modal ยืนยันโดย<em>ไม่เขียน modal ใหม่</em> — component <code>Modal</code> กลางที่สร้างไว้ตั้งแต่บทที่ 10 กับ <code>Button</code> จากบทที่ 09 รอเราหยิบมาประกอบอยู่แล้ว</p>
+
+        <p>สร้าง <code>src/features/cart/components/AddToCartModalContent/AddToCartModalContent.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import Button from "@/shared/components/Button/Button";
+import Modal from "@/shared/components/Modal/Modal";
+
+interface AddToCartModalContentProps {
+  isOpen: boolean;
+  onClose: () =&gt; void;
+}
+
+const AddToCartModalContent: React.FC&lt;AddToCartModalContentProps&gt; = ({
+  isOpen,
+  onClose,
+}) =&gt; (
+  &lt;Modal isOpen={isOpen} onRequestClose={onClose}&gt;
+    &lt;div className="text-center"&gt;
+      &lt;h3 className="fs-20 fw-bold mb-10"&gt;Product Added to Cart&lt;/h3&gt;
+      &lt;p className="mb-20"&gt;
+        The product has been successfully added to your cart!
+      &lt;/p&gt;
+      &lt;div className="inline-block"&gt;
+        &lt;Button onClick={onClose}&gt;Close&lt;/Button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/Modal&gt;
+);
+
+export default AddToCartModalContent;
+</code></pre>
+
+        <p>จุดที่น่าสังเกต:</p>
+
+        <ul>
+          <li><strong>เป็นการ compose ล้วน ๆ</strong> — ไฟล์นี้ไม่รู้จัก react-modal เลยด้วยซ้ำ มันรับ <code>isOpen</code>/<code>onClose</code> แล้วส่งต่อให้ <code>Modal</code> กลาง (prop ฝั่ง Modal ชื่อ <code>onRequestClose</code> ตามธรรมเนียมของ react-modal) — เนื้อในเป็นแค่ข้อความกับปุ่ม Close นี่คือผลตอบแทนของการลงทุนสร้าง shared components ไว้ก่อนในบทที่ 9–10: feature ใหม่ประกอบเสร็จใน 20 กว่าบรรทัด</li>
+          <li><strong>ไม่มี logic ตะกร้าอยู่ในนี้</strong> — component นี้ไม่เรียก <code>useCart</code> ไม่รู้ว่าสินค้าอะไรถูกเพิ่ม มันเป็น "หน้าตา" เพียว ๆ ที่ถูกควบคุมจากพ่อ (หน้า Product) ผ่าน props สองตัว ทำให้ทดสอบง่ายและเอาไปใช้ที่อื่นได้ถ้าต้องการ</li>
+          <li><strong>class ที่ใช้คือ utility กลางทั้งหมด</strong> — <code>text-center</code>, <code>fs-20</code>, <code>mb-20</code> จาก <code>_utilities.scss</code> บทที่ 04 ไม่ต้องมี <code>.module.scss</code> ของตัวเอง</li>
+        </ul>
+
+        <h2>อัปเดตหน้า Product — ต่อปุ่มเข้ากับ store จริง</h2>
+
+        <p>ย้อนไปบทที่ 18 เราจงใจปล่อยให้ handler ของปุ่ม Add To Cart บน <code>ProductDetailInfo</code> เป็นแค่ตัวหลอก เพราะตอนนั้นยังไม่มี store ให้เรียก ตอนนี้มีครบแล้ว เปิด <code>src/pages/Product/Product.tsx</code> แล้วอัปเกรดเป็นเวอร์ชันสมบูรณ์ สิ่งที่เปลี่ยนมี 4 จุด:</p>
+
+        <p><strong>หนึ่ง — import เพิ่มสามรายการ:</strong> ดึง <code>useState</code> เข้ามาในบรรทัด import React เดิม และเพิ่ม import ของ modal กับ hook ตะกร้า:</p>
+
+        <pre><code class="language-typescript">import React, { useState } from "react";
+// ...import เดิมจากบทที่ 18 คงอยู่ครบ...
+import AddToCartModalContent from "@/features/cart/components/AddToCartModalContent/AddToCartModalContent";
+import { useCart } from "@/features/cart/useCart";
+</code></pre>
+
+        <p><strong>สอง — state ของ modal และ hook ตะกร้า:</strong> บนหัว component เพิ่ม state คุมการเปิดปิด modal, ดึง <code>addToCart</code> จาก store และฟังก์ชันเปิด/ปิดสั้น ๆ สองตัว:</p>
+
+        <pre><code class="language-typescript">const [isModalOpen, setIsModalOpen] = useState(false);
+// ...useParams และ useQuery เดิม...
+const { addToCart } = useCart();
+
+const onOpenModal = () =&gt; setIsModalOpen(true);
+const onCloseModal = () =&gt; setIsModalOpen(false);
+</code></pre>
+
+        <p><strong>สาม — handler ตัวจริง:</strong> <code>onAddToCart</code> เลิกเป็นตัวหลอก มันแปลงข้อมูลสินค้าจาก API ให้เป็น <code>CartItem</code> แล้วส่งเข้า store จากนั้นเปิด modal:</p>
+
+        <pre><code class="language-typescript">const onAddToCart = () =&gt; {
+  if (productDetail) {
+    addToCart({
+      id: productDetail.id,
+      title: productDetail.title,
+      price: productDetail.price,
+      quantity: 1,
+      image: productDetail.thumbnail,
+      originalPrice: calculateOriginalPrice(
+        productDetail.price,
+        productDetail.discountPercentage,
+      ),
+    });
+    onOpenModal();
+  }
+};
+</code></pre>
+
+        <p><strong>สี่ — วาง modal ใน JSX:</strong> ก่อนปิด <code>&lt;div&gt;</code> นอกสุด เพิ่มหนึ่งบรรทัด:</p>
+
+        <pre><code class="language-typescript">&lt;AddToCartModalContent isOpen={isModalOpen} onClose={onCloseModal} /&gt;
+</code></pre>
+
+        <p>รวมทุกจุดแล้ว <code>Product.tsx</code> ฉบับสมบูรณ์หน้าตาแบบนี้:</p>
+
+        <pre><code class="language-typescript">import React, { useState } from "react";
+import ClipLoader from "react-spinners/ClipLoader";
+import { useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+import ReviewSection from "./components/ReviewSection";
+import CategoryBanner from "@/pages/Category/components/CategoryBanner/CategoryBanner";
+import ProductImageGallery from "@/features/products/components/ProductImageGallery/ProductImageGallery";
+import { calculateOriginalPrice } from "@/shared/utils/price.utils";
+import ProductDetailInfo from "@/features/products/components/ProductDetailInfo/ProductDetailInfo";
+import AddToCartModalContent from "@/features/cart/components/AddToCartModalContent/AddToCartModalContent";
+import { useCart } from "@/features/cart/useCart";
+import { productQueries } from "@/features/products/queries";
+import ErrorMessage from "@/shared/components/ErrorMessage/ErrorMessage";
+
+const Product: React.FC = () =&gt; {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { id } = useParams&lt;{ id: string }&gt;();
+  const {
+    data: productDetail,
+    isLoading,
+    isError,
+  } = useQuery({
+    ...productQueries.detail(id ?? ""),
+    enabled: !!id,
+  });
+  const { addToCart } = useCart();
+
+  const onOpenModal = () =&gt; setIsModalOpen(true);
+  const onCloseModal = () =&gt; setIsModalOpen(false);
+
+  const onAddToCart = () =&gt; {
+    if (productDetail) {
+      addToCart({
+        id: productDetail.id,
+        title: productDetail.title,
+        price: productDetail.price,
+        quantity: 1,
+        image: productDetail.thumbnail,
+        originalPrice: calculateOriginalPrice(
+          productDetail.price,
+          productDetail.discountPercentage,
+        ),
+      });
+      onOpenModal();
+    }
+  };
+
+  if (isLoading) {
+    return (
+      &lt;div className="text-center mb-30"&gt;
+        &lt;ClipLoader
+          size={40}
+          aria-label="Loading Spinner"
+          data-testid="loader"
+        /&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  if (isError || !productDetail) {
+    return (
+      &lt;div className="container"&gt;
+        &lt;ErrorMessage message="We couldn't load this product. Please try again." /&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  const {
+    title,
+    images,
+    description,
+    brand,
+    reviews,
+    rating,
+    price,
+    discountPercentage,
+    sku,
+    stock,
+    availabilityStatus,
+    shippingInformation,
+    warrantyInformation,
+  } = productDetail;
+  const originalPrice = calculateOriginalPrice(price, discountPercentage);
+
+  return (
+    &lt;div&gt;
+      &lt;CategoryBanner name={title} /&gt;
+      &lt;section className="pt-60"&gt;
+        &lt;div className="container"&gt;
+          &lt;div className="flex mb-35"&gt;
+            &lt;div className="width-50"&gt;
+              &lt;div className="pr-10"&gt;
+                &lt;ProductImageGallery images={images} /&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div className="width-50"&gt;
+              &lt;div className="pl-10"&gt;
+                &lt;ProductDetailInfo
+                  title={title}
+                  brand={brand}
+                  rating={rating}
+                  reviewsCount={reviews.length}
+                  price={price}
+                  originalPrice={originalPrice}
+                  discountPercentage={discountPercentage}
+                  description={description}
+                  sku={sku}
+                  stock={stock}
+                  availabilityStatus={availabilityStatus}
+                  shippingInfo={shippingInformation}
+                  warrantyInfo={warrantyInformation}
+                  onButtonClick={onAddToCart}
+                /&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div className="pb-30"&gt;
+            &lt;h3 className="fs-24"&gt;Reviews&lt;/h3&gt;
+            &lt;ReviewSection rating={rating} reviews={reviews} /&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+
+      &lt;AddToCartModalContent isOpen={isModalOpen} onClose={onCloseModal} /&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default Product;
+</code></pre>
+
+        <p>เรื่องที่ควรหยุดคิดสักนิดใน handler นี้:</p>
+
+        <ul>
+          <li><strong>การแปลงร่างข้อมูลเกิดที่นี่</strong> — API ให้ <code>Product</code> ก้อนใหญ่ แต่ store ต้องการ <code>CartItem</code> ที่เราออกแบบไว้บทที่แล้ว หน้า Product คือคนแปลง: <code>thumbnail</code> กลายเป็น <code>image</code>, <code>quantity</code> ตั้งเป็น <code>1</code> เสมอ (กดหนึ่งครั้ง = หนึ่งชิ้น และถ้ากดซ้ำ reducer จะรวมเข้าแถวเดิมให้เอง — เราจ่ายค่ากติกานี้ไว้แล้วใน <code>ADD_TO_CART</code>)</li>
+          <li><strong><code>originalPrice</code> คำนวณแล้วเก็บติดไปเลย</strong> — เราใช้ <code>calculateOriginalPrice</code> ตัวเดียวกับที่หน้านี้ใช้แสดงราคาก่อนลดอยู่แล้ว เก็บผลลัพธ์ลงตะกร้าไปด้วย เพื่อให้หน้า Cart โชว์ราคาเต็มกับยอด "You Save" ได้ในบทหน้าโดยไม่ต้องยิง API ถามราคาสินค้าซ้ำทีละตัว</li>
+          <li><strong>ลำดับใน handler สื่อความหมาย</strong> — <code>addToCart(...)</code> ก่อน แล้วค่อย <code>onOpenModal()</code>: ยืนยันหลังจากของเข้าตะกร้าแล้วจริง ๆ ส่วน <code>if (productDetail)</code> กันกรณีที่ type บอกว่า data อาจยังไม่มา (ในทางปฏิบัติปุ่มยังไม่ render ถ้าข้อมูลไม่มา แต่ TypeScript ไม่รู้เรื่องนั้น)</li>
+          <li><strong><code>useCart</code> ใช้ได้เพราะบทที่แล้วเราเสียบ provider ไว้แล้ว</strong> — หน้า Product render อยู่ใต้ <code>AppProviders</code> ผ่าน router ดังนั้น <code>CartContext</code> หาเจอแน่นอน ถ้าคุณลืมแก้ <code>providers.tsx</code> ในบทที่ 19 บรรทัดนี้จะโยน error "useCart must be used within a CartProvider" ใส่หน้าคุณทันที — ยามที่เราตั้งไว้ทำงานแล้ว</li>
+        </ul>
+
+        <h2>CartSummary — mini cart บน Header</h2>
+
+        <p>ผู้ใช้เพิ่มของแล้วก็จริง แต่พอปิด modal ไปก็ไม่เหลือร่องรอยอะไรบนจอว่าตะกร้ามีของ ธรรมเนียมของเว็บขายของคือไอคอนตะกร้ามุมขวาบนพร้อมตัวเลขจำนวนชิ้น สร้าง <code>src/features/cart/components/CartSummary/CartSummary.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React, { useMemo } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
+import styles from "./CartSummary.module.scss";
+import { useCart } from "@/features/cart/useCart";
+
+interface CartSummaryProps {
+  onIconClick: () =&gt; void;
+}
+
+const CartSummary: React.FC&lt;CartSummaryProps&gt; = ({ onIconClick }) =&gt; {
+  const { cart } = useCart();
+
+  const totalItems = useMemo(
+    () =&gt; cart.items.reduce((sum, item) =&gt; sum + item.quantity, 0),
+    [cart.items],
+  );
+
+  return (
+    &lt;div className="relative" onClick={onIconClick}&gt;
+      &lt;FontAwesomeIcon className="pointer fs-20" icon={faCartShopping} /&gt;
+      {totalItems &gt; 0 &amp;&amp; (
+        &lt;span
+          className={`${styles.cartCount} fs-12 fw-bold text-center`}
+          aria-label="Cart item count"
+        &gt;
+          {totalItems}
+        &lt;/span&gt;
+      )}
+    &lt;/div&gt;
+  );
+};
+
+export default CartSummary;
+</code></pre>
+
+        <p>และไฟล์คู่กัน <code>src/features/cart/components/CartSummary/CartSummary.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.cartCount {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background-color: variables.$red01;
+  color: variables.$white;
+  border-radius: 50%;
+  padding: 3px 6px;
+  min-width: 18px;
+}
+</code></pre>
+
+        <p>แกะทีละส่วน:</p>
+
+        <ul>
+          <li><strong>นับ "จำนวนชิ้น" ไม่ใช่ "จำนวนแถว"</strong> — <code>reduce</code> บวก <code>quantity</code> ของทุกแถวรวมกัน ถ้าตะกร้ามีสินค้าตัวเดียวจำนวน 3 ชิ้น badge ต้องโชว์ 3 ไม่ใช่ 1 (<code>cart.items.length</code> จะให้คำตอบผิดทันทีที่มีการกดซ้ำ)</li>
+          <li><strong><code>useMemo</code> กับ dependency <code>[cart.items]</code></strong> — คำนวณผลรวมใหม่เฉพาะตอน items เปลี่ยนจริง และเพราะ reducer ของเรา immutable ทุกการแก้ไขจะได้ array reference ใหม่เสมอ <code>useMemo</code> จึงจับการเปลี่ยนแปลงได้แม่นยำ — วินัยจากบทที่แล้วมาส่งผลตรงนี้</li>
+          <li><strong>badge โผล่เฉพาะตอนมีของ</strong> — <code>{totalItems &gt; 0 &amp;&amp; ...}</code> ตะกร้าว่าง = ไอคอนเกลี้ยง ๆ ไม่มีเลข 0 แปะให้รก และ <code>aria-label="Cart item count"</code> ช่วยให้ screen reader อ่านตัวเลขลอย ๆ นี้รู้เรื่อง (แถมเราจะใช้ label นี้หา element ตอนเขียนเทสต์ด้วย)</li>
+          <li><strong>การจัดตำแหน่ง badge</strong> — ตัวเลขใช้ <code>position: absolute</code> เกาะมุมขวาบนของกล่องที่มี class <code>relative</code> (utility จากบทที่ 04) ดันขึ้น-ออกไป 12px ให้ลอยเหนือไอคอน สีพื้นดึงจาก <code>variables.$red01</code> ผ่าน <code>@use</code> ตามแพตเทิร์น SCSS module ที่ใช้กันมาทั้งโปรเจกต์</li>
+          <li><strong><code>onIconClick</code> เป็น prop</strong> — component นี้ไม่ตัดสินใจเองว่าคลิกแล้วไปไหน คนใช้ (Header) เป็นคนบอก การแยกแบบนี้ทำให้ CartSummary ไม่ต้องรู้จัก router เลย</li>
+        </ul>
+
+        <h2>อัปเดต Header — เสียบ CartSummary เข้ามุมขวา</h2>
+
+        <p>Header เวอร์ชันบทที่ 07 ของเรามีโลโก้กับเมนู แต่มุมขวายังโล่ง ตอนนี้ได้เวลาเติมของที่ค้างไว้ เปิด <code>src/shared/components/Header/Header.tsx</code>: จุดที่เพิ่มคือ import <code>CartSummary</code>, ดึง <code>goToCartSummary</code> จาก <code>useProductRoute</code> (hook บทที่ 07 ที่มีเมธอดนี้รออยู่แล้ว — พาไป <code>/cart</code>) และวาง <code>&lt;CartSummary /&gt;</code> ปิดท้ายแถว flex ไฟล์ฉบับสมบูรณ์:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { Link } from "react-router";
+import CartSummary from "@/features/cart/components/CartSummary/CartSummary";
+import useProductRoute from "@/shared/hooks/useProductRoute";
+
+const Header: React.FC = () =&gt; {
+  const { goToCartSummary } = useProductRoute();
+
+  return (
+    &lt;header className="pt-25 pb-25"&gt;
+      &lt;div className="container"&gt;
+        &lt;div className="flex space-between align-item-center"&gt;
+          &lt;Link className="nav-link fw-bold fs-24" to="/"&gt;
+            My Store
+          &lt;/Link&gt;
+
+          &lt;nav&gt;
+            &lt;ul className="flex gap-20 m-0 p-0 list-none"&gt;
+              &lt;li&gt;
+                &lt;Link to="/" className="nav-link"&gt;
+                  Home
+                &lt;/Link&gt;
+              &lt;/li&gt;
+              &lt;li&gt;
+                &lt;Link to="/categories" className="nav-link"&gt;
+                  Products
+                &lt;/Link&gt;
+              &lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/nav&gt;
+
+          &lt;CartSummary onIconClick={goToCartSummary} /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/header&gt;
+  );
+};
+
+export default Header;
+</code></pre>
+
+        <p>สังเกตทิศทางของ dependency ตรงนี้สักนิด: <code>Header</code> เป็น shared component แต่ import ของจาก <code>features/cart</code> ได้ เพราะ Header คือจุด<em>ประกอบ</em>ของทั้งแอปอยู่แล้ว ส่วน <code>CartSummary</code> เองอยู่ใน <code>features/cart/components</code> ไม่ใช่ <code>shared</code> — มันรู้จัก <code>useCart</code> จึงเป็นสมบัติของ feature cart เต็มตัว การวางไฟล์ตามว่า "ใครรู้จักอะไร" แบบนี้คือแก่นของโครงสร้าง feature-based ที่เราคุยกันไว้ในบทที่ 05</p>
+
+        <p>อีกจุดคือ Header render อยู่ใน <code>MainLayout</code> ซึ่งอยู่ใต้ <code>AppProviders</code> — ดังนั้น <code>useCart</code> ใน CartSummary ทำงานได้จากทุกหน้า และเพราะทุกคนอ่านจาก context ใบเดียวกัน การกดปุ่มบนหน้า Product จะทำให้ badge บน Header ขยับ<em>ทันที</em>โดยที่สอง component นี้ไม่รู้จักกันเลย — นี่แหละพลังของการยก state ขึ้นไปไว้บน Context</p>
+
+        <blockquote>💡 <strong>Checkpoint</strong> — รัน <code>npm run dev</code> แล้วไล่ตาม flow นี้: เปิดสินค้าสักตัว → กด Add To Cart → modal "Product Added to Cart" เด้งขึ้น → กด Close → มุมขวาบนมี badge สีแดงเลข 1 บนไอคอนตะกร้า → กด Add To Cart ซ้ำอีกครั้ง → badge กลายเป็น 2 (สินค้าเดิมถูก<em>รวมจำนวน</em> ไม่ใช่เพิ่มแถวใหม่ — ฝีมือ reducer บทที่แล้ว) → refresh หน้า → badge ยังอยู่ครบ เพราะ localStorage จากบทที่ 19 ทำงานเงียบ ๆ ให้ตลอด → คลิกไอคอนตะกร้า → ไปโผล่หน้า <code>/cart</code> ที่ยังเป็น stub ว่าง ๆ อยู่ ถูกต้องแล้ว — หน้านั้นคืองานของบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="19_cart_store.html" rel="prev">ก่อนหน้า: Cart Store</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="21_cart_page.html" rel="next">ถัดไป: หน้า Cart</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

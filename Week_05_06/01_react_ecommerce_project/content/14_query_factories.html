@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้าง query key factory และ queryOptions ของข้อมูลสินค้าให้เป็นแหล่งความจริงเดียวของ cache พร้อมติดตั้ง ESLint plugin ของ TanStack Query" />
+    <title>Query Key Factory และ queryOptions | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 14 · ชั้นข้อมูลสินค้า (Products Data Layer)</p>
+          <h1>Query Key Factory และ queryOptions</h1>
+          <p class="lesson-original-title" lang="en">Query Factories</p>
+        </header>
+
+        <p>ชิ้นสุดท้ายของชั้นข้อมูลสินค้ามาถึงแล้ว เรามีฟังก์ชัน typed ครบสี่ตัวจากบทที่แล้ว และมี <code>QueryClientProvider</code> ครอบแอปไว้ตั้งแต่บทเรียน 08 — เหลือแค่ตอบคำถามเดียว: <strong>หน้าเพจควรเรียก <code>useQuery</code> อย่างไร?</strong> คำตอบแบบที่เราเรียนมาจาก Week 4 คือเขียน <code>queryKey</code> กับ <code>queryFn</code> สด ๆ ในคอมโพเนนต์ ซึ่งใช้ได้ดีในแอปที่มี query สองสามตัว แต่แอปของเรากำลังจะมี query กระจายอยู่หลายหน้า และวิธีนั้นมีกับดักซ่อนอยู่</p>
+
+        <h2>ปัญหา: query key ที่เขียนด้วยมือจะค่อย ๆ เพี้ยน</h2>
+
+        <p>ลองดูสถานการณ์สมมติที่เกิดจริงในทุกทีม — สองหน้าต้องการข้อมูลชุดเดียวกัน แต่เขียนคนละวัน:</p>
+
+        <pre><code class="language-typescript">// หน้า Home — เขียนวันจันทร์
+useQuery({
+  queryKey: ["products", page],
+  queryFn: () =&gt; getProducts({ page }),
+});
+
+// หน้า Category — เขียนวันพฤหัส
+useQuery({
+  queryKey: ["product-list", category, page],
+  queryFn: () =&gt; getProductsByCategory({ category, page }),
+});
+</code></pre>
+
+        <p>โค้ดนี้รันได้ ไม่มี error ไม่มี warning แต่มันป่วยแล้ว:</p>
+
+        <ul>
+          <li><strong>ข้อมูลชนิดเดียวกัน สะกด key คนละแบบ</strong> — <code>"products"</code> กับ <code>"product-list"</code> ทำให้คำสั่งกวาดล้าง cache อย่าง <code>invalidateQueries({ queryKey: ["products"] })</code> โดนแค่ตัวแรก ตัวที่สองรอดไปหน้าตาเฉย แสดงข้อมูลเก่าต่อไปเงียบ ๆ</li>
+          <li><strong>สะกดผิดคือ cache ใหม่ ไม่ใช่ error</strong> — พิมพ์ <code>"prodcuts"</code> ที่ไหนสักแห่ง TypeScript ไม่ว่าอะไรเลย เพราะ key เป็นแค่ array ธรรมดา ผลคือได้ cache แยกอีกก้อน ยิง request ซ้ำโดยไม่มีใครรู้</li>
+          <li><strong>ลืมใส่ตัวแปรใน key</strong> — ถ้า <code>queryFn</code> ใช้ <code>page</code> แต่ key ไม่มี <code>page</code> การเปลี่ยนหน้าจะไม่ refetch เพราะ TanStack Query มองว่า key เดิม = ข้อมูลเดิม นี่คือ bug คลาสสิกที่ debug ยากที่สุดตระกูลหนึ่ง</li>
+        </ul>
+
+        <p>ต้นตอของทั้งหมดคือ query key เป็น "ข้อความอิสระ" ที่ไม่มีแหล่งความจริงกลาง วิธีแก้แบบมืออาชีพมีสองท่อนประกอบกัน:</p>
+
+        <ul>
+          <li><strong>Query key factory</strong> — object เดียวที่เป็นเจ้าของ key ทุกตัวของฟีเจอร์ ใครอยากได้ key ต้องมาขอจากที่นี่ จะไม่มีการสะกดมือกระจายตามหน้าอีกเลย</li>
+          <li><strong><code>queryOptions()</code></strong> — helper ของ TanStack Query v5 ที่มัด <code>queryKey</code> + <code>queryFn</code> + option อื่น ๆ เป็นก้อนเดียวที่ type ครบสมบูรณ์ หน้าเพจแค่ <code>useQuery(productQueries.list())</code> แล้วได้ <code>data</code> ที่ TypeScript รู้ type เป๊ะ ๆ โดยไม่ต้องประกาศอะไรเพิ่ม</li>
+        </ul>
+
+        <h2>สร้าง src/features/products/queries.ts</h2>
+
+        <p>สร้างไฟล์ <code>queries.ts</code> ใน <code>src/features/products</code>:</p>
+
+        <pre><code class="language-typescript">import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import {
+  CategoryProductsParams,
+  ProductListParams,
+  getCategories,
+  getProduct,
+  getProducts,
+  getProductsByCategory,
+} from "./api";
+
+export const productKeys = {
+  all: ["products"] as const,
+  lists: () =&gt; [...productKeys.all, "list"] as const,
+  list: (params: ProductListParams) =&gt;
+    [...productKeys.lists(), params] as const,
+  byCategory: (params: CategoryProductsParams) =&gt;
+    [...productKeys.lists(), "category", params] as const,
+  categories: () =&gt; [...productKeys.all, "categories"] as const,
+  details: () =&gt; [...productKeys.all, "detail"] as const,
+  detail: (id: string | number) =&gt;
+    [...productKeys.details(), String(id)] as const,
+};
+
+export const productQueries = {
+  list: (params: ProductListParams = {}) =&gt;
+    queryOptions({
+      queryKey: productKeys.list(params),
+      queryFn: () =&gt; getProducts(params),
+    }),
+
+  byCategory: (params: CategoryProductsParams) =&gt;
+    queryOptions({
+      queryKey: productKeys.byCategory(params),
+      queryFn: () =&gt; getProductsByCategory(params),
+      placeholderData: keepPreviousData,
+    }),
+
+  categories: () =&gt;
+    queryOptions({
+      queryKey: productKeys.categories(),
+      queryFn: getCategories,
+      staleTime: 5 * 60 * 1000,
+    }),
+
+  detail: (id: string | number) =&gt;
+    queryOptions({
+      queryKey: productKeys.detail(id),
+      queryFn: () =&gt; getProduct(id),
+    }),
+};
+</code></pre>
+
+        <h3>productKeys — ลำดับชั้นของ key</h3>
+
+        <p>สังเกตว่าแต่ละ key ไม่ได้เขียนขึ้นมาลอย ๆ แต่<em>ต่อยอด</em>จาก key ชั้นบนด้วย spread (<code>...</code>) เสมอ ทำให้ key ทั้งหมดเรียงเป็นต้นไม้:</p>
+
+        <ul>
+          <li><code>productKeys.all</code> → <code>["products"]</code> — รากของทุกอย่างเกี่ยวกับสินค้า</li>
+          <li><code>productKeys.lists()</code> → <code>["products", "list"]</code> — กิ่ง "รายการสินค้า" ทุกแบบ</li>
+          <li><code>productKeys.list({ page: 1 })</code> → <code>["products", "list", { page: 1 }]</code> — รายการรวม หน้า 1</li>
+          <li><code>productKeys.byCategory({ category: "beauty", page: 2 })</code> → <code>["products", "list", "category", { category: "beauty", page: 2 }]</code> — รายการตามหมวด</li>
+          <li><code>productKeys.categories()</code> → <code>["products", "categories"]</code> — รายชื่อหมวดหมู่</li>
+          <li><code>productKeys.details()</code> → <code>["products", "detail"]</code> — กิ่ง "รายละเอียดสินค้า"</li>
+          <li><code>productKeys.detail(42)</code> → <code>["products", "detail", "42"]</code> — สินค้าชิ้นเดียว</li>
+        </ul>
+
+        <p>โครงต้นไม้นี้ไม่ใช่ความสวยงามเปล่า ๆ — มันคือกลไก เพราะเวลา TanStack Query จับคู่ key มันจับแบบ prefix: สั่ง <code>invalidateQueries({ queryKey: productKeys.lists() })</code> ครั้งเดียว รายการ<em>ทุกแบบทุกหน้า</em>โดนหมด (ทั้ง <code>list</code> และ <code>byCategory</code> เพราะขึ้นต้นด้วย <code>["products", "list"]</code> เหมือนกัน) แต่ cache ของหน้ารายละเอียดสินค้าไม่ถูกแตะเลย อยากล้างทุกอย่างของฟีเจอร์นี้ก็ <code>productKeys.all</code> จบ — ระดับความละเอียดของการ invalidate ออกแบบไว้ล่วงหน้าแล้วในโครงต้นไม้</p>
+
+        <p>ส่วน <code>as const</code> ที่ห้อยท้ายทุกบรรทัด บอก TypeScript ว่า array เหล่านี้เป็น tuple ค่าตายตัว ไม่ใช่ <code>string[]</code> กว้าง ๆ ซึ่งทำให้ type ของแต่ละ key แม่นยำและ <code>queryOptions</code> นำไป infer ต่อได้เต็มที่</p>
+
+        <h3>productQueries — เมนูสำเร็จรูปสี่จาน</h3>
+
+        <p><code>productQueries</code> คือชั้นที่หน้าเพจจะใช้จริง แต่ละตัว return ผลของ <code>queryOptions()</code> ซึ่งมัด key (จาก factory) + ฟังก์ชัน (จาก <code>api.ts</code>) + พฤติกรรมเฉพาะตัว เป็นก้อนเดียว มาดูการตัดสินใจในแต่ละจาน:</p>
+
+        <p><strong><code>list</code></strong> — จานพื้นฐานที่สุด: key คู่กับ <code>getProducts</code> ตรง ๆ ให้ default <code>= {}</code> เพื่อให้หน้า Home เรียก <code>productQueries.list()</code> เปล่า ๆ ได้เลย สังเกตว่า <code>params</code> ก้อนเดียวกันถูกส่งเข้าทั้ง key และ <code>queryFn</code> — ตัวแปรที่มีผลต่อข้อมูลอยู่ใน key ครบเสมอโดยโครงสร้าง ไม่ใช่โดยความจำของคนเขียน bug "ลืมใส่ตัวแปรใน key" ตายตั้งแต่เกิด</p>
+
+        <p><strong><code>byCategory</code> กับ <code>placeholderData: keepPreviousData</code></strong> — จานนี้แก้ปัญหา UX ที่ชื่อว่า pagination flash: ลองนึกภาพหน้า Category ตอนผู้ใช้กดไปหน้า 2 — เลขหน้าที่เปลี่ยนทำให้ query key เปลี่ยน กลายเป็น query ใหม่เอี่ยมที่ยังไม่มีข้อมูลใน cache ผลคือ <code>data</code> เป็น <code>undefined</code> ชั่วขณะ รายการสินค้าทั้งกริดหายวับกลายเป็น spinner แล้วค่อยเด้งกลับมา — จอกะพริบ ความสูงหน้ากระโดด scroll หลุด ทุกครั้งที่เปลี่ยนหน้า <code>keepPreviousData</code> สั่งว่า "ระหว่างรอข้อมูลหน้าใหม่ ให้โชว์ข้อมูลหน้าเก่าไปพลาง ๆ" หน้าจอเลยนิ่งสนิท พอของใหม่มาถึงค่อยสลับเนียน ๆ (ข้อมูลเก่าที่ยืมมาโชว์เป็นแค่ placeholder — ไม่ได้ถูกบันทึกเป็น cache ของ key ใหม่) ในบทเรียน 17 เราจะใช้ flag <code>isPlaceholderData</code> หรี่ความทึบของกริดระหว่างรอ เพื่อบอกผู้ใช้ว่ากำลังโหลดอยู่นะ โดยไม่ต้องพรากเนื้อหาไปจากตา</p>
+
+        <p><strong><code>categories</code> กับ <code>staleTime: 5 * 60 * 1000</code></strong> — รายชื่อหมวดหมู่เป็นข้อมูลที่แทบไม่เคยเปลี่ยน แต่ถูกใช้แสดงเมนูซึ่งโผล่บ่อยมาก ถ้าปล่อยตาม default ของแอป (60 วินาที ที่ตั้งไว้ใน <code>queryClient.ts</code> บทเรียน 08) เราจะ refetch รายชื่อหมวดหมู่ถี่เกินเหตุ จานนี้จึง override เป็น 5 นาที: ภายในช่วงนั้นทุกหน้าที่ mount ขึ้นมาได้ข้อมูลจาก cache ทันทีโดยไม่ยิง network เลย นี่คือความสวยของ <code>queryOptions</code> — นโยบาย cache ของข้อมูลแต่ละชนิดถูกประกาศไว้<em>ที่เดียว</em>คู่กับตัว query ไม่ใช่ให้แต่ละหน้าไปตั้งกันเอง</p>
+
+        <p><strong><code>detail</code> กับ <code>String(id)</code></strong> — จำที่ <code>getProduct</code> รับ <code>string | number</code> ได้ไหม? id จาก URL param เป็น string <code>"42"</code> แต่ id จาก object สินค้าเป็น number <code>42</code> สำหรับ TanStack Query สองค่านี้คือ key คนละตัว! ถ้าไม่จัดการ เราจะได้ cache สองก้อนของสินค้าชิ้นเดียวกัน และยิง request ซ้ำฟรี ๆ factory จึง normalize ด้วย <code>String(id)</code> ตรงชั้น key — ไม่ว่าใครส่งอะไรมา key ลงเอยเป็น <code>["products", "detail", "42"]</code> ก้อนเดียวเสมอ ปัญหาทั้งตระกูลถูกปิดที่บรรทัดเดียว</p>
+
+        <blockquote>💡 ตำแหน่งของไฟล์นี้ก็สื่อสารเจตนา: <code>queries.ts</code> อยู่ใน <code>features/products</code> ประกบ <code>api.ts</code> และ <code>types.ts</code> — ฟีเจอร์สินค้าเป็นเจ้าของข้อมูลของตัวเองครบวงจร ตั้งแต่รูปร่างข้อมูล การเรียก ยันนโยบาย cache ภายหลังถ้าเพิ่มฟีเจอร์ที่มีข้อมูลฝั่ง server ของตัวเอง ก็ทำซ้ำแพตเทิร์นเดิมนี้ได้เลย</blockquote>
+
+        <h2>ติดตั้งยามเฝ้าระวัง: ESLint plugin ของ TanStack Query</h2>
+
+        <p>factory ป้องกัน key เพี้ยนได้เกือบหมด แต่ "เกือบ" ยังไม่พอสำหรับเรา — TanStack ทำ ESLint plugin ที่ตรวจจับการใช้ query ผิดท่าให้ตั้งแต่ตอนเขียน ติดตั้งเป็น dev dependency:</p>
+
+        <pre><code class="language-bash">npm i -D @tanstack/eslint-plugin-query
+</code></pre>
+
+        <p>แล้วเปิด <code>eslint.config.js</code> ที่เราตั้งไว้ตั้งแต่บทเรียน 03 มาเพิ่มของสองจุด: import ตัว plugin และ spread config แนะนำของมันเข้าไปใน <code>extends</code> ไฟล์ฉบับสมบูรณ์เป็นแบบนี้ (สองบรรทัดที่เพิ่มคือบรรทัด <code>import pluginQuery</code> กับบรรทัด <code>...pluginQuery.configs["flat/recommended"]</code> — ที่เหลือเหมือนเดิมทุกตัวอักษร):</p>
+
+        <pre><code class="language-typescript">import js from "@eslint/js";
+import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
+import importX from "eslint-plugin-import-x";
+import pluginQuery from "@tanstack/eslint-plugin-query";
+import prettierConfig from "eslint-config-prettier";
+
+export default tseslint.config(
+  { ignores: ["dist", "coverage"] },
+  {
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+      ...pluginQuery.configs["flat/recommended"],
+    ],
+    files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.browser,
+    },
+    plugins: {
+      "react-hooks": reactHooks,
+      "react-refresh": reactRefresh,
+      "import-x": importX,
+    },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true },
+      ],
+      "import-x/order": "error",
+    },
+  },
+  prettierConfig,
+);
+</code></pre>
+
+        <p>ตัวอย่างกฎที่ได้มา:</p>
+
+        <ul>
+          <li><strong><code>@tanstack/query/exhaustive-deps</code></strong> — ตัวจับ bug คลาสสิกที่เล่าไว้ต้นบท: ถ้า <code>queryFn</code> ใช้ตัวแปรที่ไม่อยู่ใน <code>queryKey</code> จะโดนขีดเส้นเตือนทันทีตั้งแต่ใน editor ไม่ต้องรอไปงงตอนหน้าเว็บไม่ refetch</li>
+          <li><strong><code>@tanstack/query/stable-query-client</code></strong> — เตือนถ้าเผลอสร้าง <code>QueryClient</code> ข้างในคอมโพเนนต์ ซึ่งจะทำให้ cache ถูกโยนทิ้งทุก re-render (เราทำถูกไปแล้วในบทเรียน 08 — สร้างไว้นอกคอมโพเนนต์)</li>
+          <li><strong><code>@tanstack/query/no-rest-destructuring</code></strong> — เตือนการ destructure ผลของ <code>useQuery</code> ด้วย rest spread ซึ่งทำลายการ optimize เรื่อง re-render ของ TanStack Query</li>
+        </ul>
+
+        <p>ลองรันดู:</p>
+
+        <pre><code class="language-bash">npm run lint
+</code></pre>
+
+        <p>ต้องผ่านเงียบ ๆ ไม่มี error — และต่อจากนี้ทุกครั้งที่ใครเขียน query ผิดท่า lint จะฟ้องก่อนโค้ดจะถึงเบราว์เซอร์เสียอีก</p>
+
+        <h2>Checkpoint: ชั้นข้อมูลเสร็จสมบูรณ์</h2>
+
+        <blockquote>💡 <code>npm run lint</code> และ <code>npm run typecheck</code> ต้องผ่านทั้งคู่ ส่วนหน้าเว็บ? ยังเหมือนเดิมทุกประการ — และนั่นตั้งใจแล้ว สามบทที่ผ่านมาเราวางท่อครบทั้งเส้น: <code>client.ts</code> คุยกับ server และ normalize error → <code>types.ts</code> ให้รูปร่างข้อมูล → <code>api.ts</code> ให้ฟังก์ชันเรียกแบบ typed → <code>queries.ts</code> ให้ cache ที่มีระเบียบ สิ่งเดียวที่ยังไม่มีคือคนเปิดก๊อก ในบทหน้าเราจะเริ่มสร้างคอมโพเนนต์รายการสินค้า แล้วหลังจากนั้นหน้า Home ทั้งหน้าจะมีชีวิตขึ้นมาด้วยโค้ดสั้นแค่ <code>useQuery(productQueries.list())</code> — ความง่ายขนาดนั้นคือรางวัลของงานระบบที่เราเพิ่งทำเสร็จ</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="13_product_types_api.html" rel="prev">ก่อนหน้า: Types และ Products API</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="15_product_list_components.html" rel="next">ถัดไป: คอมโพเนนต์รายการสินค้า</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

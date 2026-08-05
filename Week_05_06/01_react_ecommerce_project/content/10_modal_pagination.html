@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ห่อ react-modal และ react-paginate เป็นคอมโพเนนต์ Modal และ Pagination ของเราเอง พร้อมเหตุผลว่าทำไมการห่อไลบรารีภายนอกถึงเป็นแพตเทิร์นที่ดี" />
+    <title>Modal และ Pagination | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 10 · คอมโพเนนต์กลาง (Shared UI)</p>
+          <h1>สร้าง Modal และ Pagination</h1>
+          <p class="lesson-original-title" lang="en">Modal &amp; Pagination</p>
+        </header>
+
+        <p>บทที่แล้วเราสร้างคอมโพเนนต์จากศูนย์ทั้งหมด บทนี้เปลี่ยนโจทย์: เราจะสร้างคอมโพเนนต์ที่<strong>ห่อ (wrap) ไลบรารีภายนอก</strong>อีกชั้น — <code>Modal</code> ที่ห่อ react-modal และ <code>Pagination</code> ที่ห่อ react-paginate ทั้งสองตัวมีนัดใช้งานชัดเจน: Modal จะเด้งยืนยันตอนกด Add to Cart ในบทที่ 20 ส่วน Pagination จะพาผู้ใช้ไล่ดูสินค้าทีละหน้าใน Category บทที่ 17</p>
+
+        <p>ทำไมไม่ใช้ไลบรารีตรง ๆ ในแต่ละหน้า? นี่คือแพตเทิร์นที่อยากให้จำไปใช้ตลอดชีวิตนักพัฒนา: <strong>อย่าปล่อยให้ API ของไลบรารีภายนอกกระจายทั่ว codebase</strong> ห่อมันไว้ในคอมโพเนนต์ของเราหนึ่งชั้น แล้วให้ทั้งแอปรู้จักแค่ API ของเรา ผลที่ได้:</p>
+
+        <ul>
+          <li><strong>เปลี่ยนไลบรารีได้โดยแก้ไฟล์เดียว</strong> — วันหนึ่ง react-modal เลิกพัฒนา หรือทีมอยากย้ายไปใช้ <code>&lt;dialog&gt;</code> ของ HTML แท้ ๆ เราแก้แค่ <code>Modal.tsx</code> ไฟล์เดียว หน้าที่เหลือไม่ต้องแตะ</li>
+          <li><strong>API แคบลงเหลือแค่ที่เราใช้จริง</strong> — react-modal มี props เป็นสิบตัว แต่แอปเราต้องการแค่ เปิด/ปิด/เนื้อหา คนในทีมไม่ต้องอ่าน docs ของไลบรารีก็ใช้ Modal เราเป็น</li>
+          <li><strong>หน้าตาสม่ำเสมอ</strong> — ปุ่มกากบาทปิด modal อยู่มุมเดิมทุกครั้ง ไม่ต้องเขียนซ้ำในทุกจุดที่ใช้</li>
+        </ul>
+
+        <h2>ติดตั้งไลบรารี</h2>
+
+        <pre><code class="language-bash">npm i react-modal react-paginate
+npm i -D @types/react-modal
+</code></pre>
+
+        <p>สังเกตความไม่สมมาตร: ทำไม react-modal ต้องลง <code>@types/react-modal</code> เพิ่ม แต่ react-paginate ไม่ต้อง? เพราะ <strong>react-modal เขียนด้วย JavaScript ล้วนและไม่แถม type declarations มาในตัว</strong> — ถ้า import เฉย ๆ TypeScript จะฟ้อง <code>Could not find a declaration file for module 'react-modal'</code> ชุมชนเลยเขียน type ให้แยกต่างหากในโปรเจกต์กลางชื่อ DefinitelyTyped ซึ่งเผยแพร่ทุกตัวใต้ชื่อ <code>@types/...</code> (ลงเป็น <code>-D</code> เพราะ type ใช้ตอน dev/compile เท่านั้น ไม่ไปกับ bundle) ส่วน react-paginate แถมไฟล์ <code>.d.ts</code> มาในแพ็กเกจแล้ว ลงตัวเดียวจบ — เวลาเจอไลบรารีใหม่ วิธีเช็กง่ายสุดคือ import แล้วดูว่า TypeScript บ่นไหม</p>
+
+        <blockquote>💡 ทั้ง react-modal และ react-paginate เป็นแพ็กเกจ CJS แบบเดียวกับ react-spinners — ที่มันทำงานบน Vite 8 ได้เพราะ <code>legacy.inconsistentCjsInterop</code> ที่เราตั้งไว้บทที่แล้ว ถ้าคุณข้ามบทนั้นมา กลับไปทำก่อน</blockquote>
+
+        <h2>Modal</h2>
+
+        <p>ย้อนความจาก Week 4 เรื่อง portals: modal เป็น UI ที่<em>อยู่ผิดที่โดยธรรมชาติ</em> — ตัวมันถูกเรียกจากลึก ๆ ในหน้าเพจ แต่ต้องแสดงลอยทับทุกอย่าง ถ้า render ตรงนั้นเลยจะโดน <code>overflow: hidden</code> หรือ stacking context ของ parent เล่นงาน ทางแก้คือ <code>createPortal</code> ที่พาไป render นอก DOM tree ของ parent — react-modal จัดการเรื่องนี้ให้เราหมดแล้ว แถม overlay, การกด ESC เพื่อปิด, การคลิกนอกกล่องเพื่อปิด และการจัดการ focus มาให้ครบ เราแค่ห่อมันให้เข้ากับแอปเรา</p>
+
+        <pre><code class="language-bash">mkdir -p src/shared/components/Modal
+</code></pre>
+
+        <p>สร้าง <code>src/shared/components/Modal/Modal.module.scss</code> — มี style เดียวคือปุ่มปิดมุมขวาบน (ไฟล์นี้ไม่ได้ <code>@use</code> variables เพราะไม่ได้ใช้ตัวแปรสีเลย):</p>
+
+        <pre><code class="language-scss">.closeButton {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+</code></pre>
+
+        <p>แล้วสร้าง <code>src/shared/components/Modal/Modal.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import React from "react";
+import ReactModal from "react-modal";
+import { faTimes } from "@fortawesome/free-solid-svg-icons";
+import styles from "./Modal.module.scss";
+
+const customStyles = {
+  content: {
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    transform: "translate(-50%, -50%)",
+  },
+};
+interface ModalProps {
+  isOpen: boolean;
+  onRequestClose: () =&gt; void;
+  children: React.ReactNode;
+}
+
+const Modal: React.FC&lt;ModalProps&gt; = ({ isOpen, onRequestClose, children }) =&gt; {
+  return (
+    &lt;ReactModal
+      isOpen={isOpen}
+      onRequestClose={onRequestClose}
+      style={customStyles}
+      ariaHideApp={false}
+    &gt;
+      &lt;button
+        onClick={onRequestClose}
+        className={styles.closeButton}
+        aria-label="Close Modal"
+      &gt;
+        &lt;FontAwesomeIcon icon={faTimes} className="fs-20" /&gt;
+      &lt;/button&gt;
+      &lt;div&gt;{children}&lt;/div&gt;
+    &lt;/ReactModal&gt;
+  );
+};
+
+export default Modal;
+</code></pre>
+
+        <p>ไล่ดูทีละส่วน:</p>
+
+        <ul>
+          <li><strong>API ของเราเหลือ 3 props</strong> — <code>isOpen</code> (เปิดอยู่ไหม), <code>onRequestClose</code> (จะให้ทำอะไรตอนผู้ใช้ขอปิด) และ <code>children</code> (เนื้อหาใน modal) — สังเกตว่า modal เป็น controlled component เหมือน radio บทที่แล้ว: ตัวมันไม่ตัดสินใจเองว่าเปิดหรือปิด state อยู่กับหน้าที่เรียกใช้เสมอ</li>
+          <li><strong><code>onRequestClose</code> ถูกใช้สองทาง</strong> — ส่งให้ react-modal (ครอบคลุมการกด ESC และคลิกที่ overlay ด้านนอก) และผูกกับปุ่มกากบาทของเราเอง ทุกช่องทางปิดวิ่งมาที่ callback เดียวกัน</li>
+          <li><strong><code>customStyles</code> จัดกึ่งกลางจอ</strong> — react-modal รับ inline style ผ่าน prop <code>style</code> โดยแยกเป็นส่วน <code>content</code> (ตัวกล่อง) กับ <code>overlay</code> (ฉากหลัง) ตรงนี้เราใช้ท่าจัดกึ่งกลางคลาสสิก: ปักหมุดมุมบนซ้ายของกล่องไว้กลางจอ (<code>top/left: 50%</code>) แล้ว <code>translate(-50%, -50%)</code> ดึงกลับมาครึ่งหนึ่งของ<em>ขนาดกล่องเอง</em> — ได้กึ่งกลางเป๊ะไม่ว่ากล่องจะกว้างยาวเท่าไร ส่วน <code>right/bottom: "auto"</code> ล้างค่า default ของไลบรารีที่ตั้งให้กล่องขยายเต็มจอ</li>
+          <li><strong><code>ariaHideApp={false}</code></strong> — ปกติ react-modal อยากรู้ว่า "ตัวแอปหลัก" คือ element ไหน (ผ่าน <code>ReactModal.setAppElement("#root")</code>) เพื่อใส่ <code>aria-hidden</code> ให้ฉากหลังตอน modal เปิด — screen reader จะได้ไม่หลงไปอ่านเนื้อหาข้างหลัง ถ้าไม่ตั้งค่านี้มันจะเตือนใน console ตลอด โปรเจกต์นี้เลือกปิด feature นี้ด้วย <code>ariaHideApp={false}</code> เพื่อให้ wrapper เรียบง่าย ซึ่งเป็น trade-off ที่ต้องรู้ตัว: แอปที่จริงจังเรื่อง accessibility ควรเรียก <code>setAppElement</code> ให้ถูกต้องแทนการปิด</li>
+          <li><strong><code>aria-label="Close Modal"</code></strong> — ปุ่มปิดมีแต่ icon ไม่มีข้อความ ถ้าไม่ใส่ label ผู้ใช้ screen reader จะได้ยินแค่ "button" เฉย ๆ ไม่รู้ว่ากดแล้วเกิดอะไร</li>
+        </ul>
+
+        <h2>Pagination</h2>
+
+        <p>หน้า Category จะแสดงสินค้าทีละ 12 ชิ้น ผู้ใช้ต้องกดเปลี่ยนหน้าได้ — ตัวเลข, ปุ่ม Previous/Next, จุดไข่ปลาตอนหน้าเยอะ ๆ ทั้งหมดนี้ react-paginate ทำให้ แต่มันมีเรื่องกวนใจหนึ่งอย่างที่เราจะซ่อนไว้ใน wrapper: <strong>react-paginate นับหน้าจากศูนย์</strong> (หน้าแรกคือ index 0) ในขณะที่มนุษย์และ URL ของเรานับจากหนึ่ง</p>
+
+        <pre><code class="language-bash">mkdir -p src/shared/components/Pagination
+</code></pre>
+
+        <p>สร้าง <code>src/shared/components/Pagination/Pagination.module.scss</code>:</p>
+
+        <pre><code class="language-scss">.pagination {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+}
+
+.pagination li {
+  margin: 0 5px;
+}
+
+.pagination li a {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.pagination li.active a {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination li.previous a,
+.pagination li.next a {
+  font-weight: bold;
+}
+
+.pagination li.disabled a {
+  color: #ccc;
+  cursor: not-allowed;
+}
+</code></pre>
+
+        <p>ไฟล์นี้มีเทคนิค CSS Modules ที่ควรสังเกต: react-paginate เป็นคน render <code>&lt;ul&gt;</code>/<code>&lt;li&gt;</code>/<code>&lt;a&gt;</code> ข้างในเอง เราคุมได้แค่ชื่อ class ที่ยื่นให้มัน ดังนั้น style ทั้งหมดเลยเขียนแบบ <em>selector ลูก</em> ใต้ class ที่ถูก scope (<code>.pagination li a</code>) — ตัว <code>.pagination</code>, <code>.active</code>, <code>.previous</code>, <code>.next</code>, <code>.disabled</code> ถูกแปลงชื่อโดย CSS Modules แล้วเราส่งชื่อที่แปลงแล้วให้ไลบรารีเอาไปแปะ ส่วน <code>li</code> กับ <code>a</code> เป็น element selector ธรรมดาที่จับเฉพาะลูกหลานของ class เรา — ไม่รั่วไปโดน li อื่นในแอปแน่นอน</p>
+
+        <p>แล้วสร้าง <code>src/shared/components/Pagination/Pagination.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import ReactPaginate from "react-paginate";
+import styles from "./Pagination.module.scss";
+
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) =&gt; void;
+}
+
+const Pagination: React.FC&lt;PaginationProps&gt; = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+}) =&gt; {
+  return (
+    &lt;ReactPaginate
+      previousLabel={"Previous"}
+      nextLabel={"Next"}
+      breakLabel={"..."}
+      pageCount={totalPages}
+      forcePage={currentPage - 1} // ReactPaginate is zero-indexed
+      pageRangeDisplayed={5}
+      onPageChange={(data) =&gt; onPageChange(data.selected + 1)} // Add 1 to convert zero-indexed to one-indexed
+      containerClassName={`${styles.pagination} flex gap-10`} // Use custom or predefined classes
+      activeClassName={styles.active} // Highlight active page
+      previousClassName={styles.previous}
+      nextClassName={styles.next}
+      disabledClassName={styles.disabled}
+    /&gt;
+  );
+};
+
+export default Pagination;
+</code></pre>
+
+        <p>หัวใจของไฟล์นี้คือ <strong>contract ที่เราออกแบบให้คนใช้</strong> — สาม props เท่านั้น และ<em>นับจากหนึ่งทั้งหมด</em>:</p>
+
+        <ul>
+          <li><code>currentPage</code> — หน้าปัจจุบัน (1, 2, 3, …)</li>
+          <li><code>totalPages</code> — จำนวนหน้าทั้งหมด</li>
+          <li><code>onPageChange</code> — callback ที่ได้รับ<em>เลขหน้าใหม่</em> (นับจากหนึ่งเช่นกัน)</li>
+        </ul>
+
+        <p>การแปลงระหว่างสองโลกเกิดขึ้นในไฟล์นี้ที่เดียว: ขาเข้า <code>forcePage={currentPage - 1}</code> แปลงเลขหน้ามนุษย์เป็น index ของไลบรารี ขาออก <code>data.selected + 1</code> แปลงกลับก่อนส่งให้คนเรียก — หน้า Category (บทที่ 17) จะได้ทำงานกับเลขหน้าปกติโดยไม่ต้องรู้เลยว่าเบื้องหลังมีการ +1/-1 อยู่ นี่แหละคุณค่าของ wrapper: <em>ความประหลาดของไลบรารีถูกขังไว้ในไฟล์เดียว</em> ส่วน <code>totalPages</code> นั้นหน้า Category จะคำนวณจากจำนวนสินค้าทั้งหมดที่ API ตอบมา (ด้วย utility ที่เราจะเขียนในบทที่ 13)</p>
+
+        <p>ปิดท้ายด้วย props ตกแต่ง: <code>pageRangeDisplayed={5}</code> โชว์เลขหน้ารอบ ๆ หน้าปัจจุบันสูงสุด 5 ตัวก่อนย่อเป็น <code>breakLabel</code> จุดไข่ปลา และ className ทั้งห้าตัวคือจุดที่เรายื่นชื่อ class จาก module ของเราให้ไลบรารีแปะลง element ที่มัน render — <code>containerClassName</code> ยังผสม utility <code>flex gap-10</code> ของเราเข้าไปด้วย เหมือนสูตรที่ใช้มาตลอด</p>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> ตอนนี้ <code>src/shared/components/</code> ควรมีโฟลเดอร์เพิ่มเป็น <code>Modal/</code> และ <code>Pagination/</code> (อย่างละสองไฟล์) รัน <code>npm run dev</code> แล้วแอปยังปกติ และลอง <code>npm run typecheck</code> — ถ้าเจอ <code>Could not find a declaration file for module 'react-modal'</code> แปลว่าลืมติดตั้ง <code>@types/react-modal</code> อยากลองของจริงก็แปะทดสอบชั่วคราวในหน้า stub ได้: สร้าง state <code>const [isOpen, setIsOpen] = useState(false)</code> ผูกกับปุ่มเปิดและ <code>&lt;Modal isOpen={isOpen} onRequestClose={() =&gt; setIsOpen(false)}&gt;สวัสดี!&lt;/Modal&gt;</code> — เล่นเสร็จอย่าลืมลบออก</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="09_button_input_radio.html" rel="prev">ก่อนหน้า: Button, Input และ RadioInput</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="11_display_components.html" rel="next">ถัดไป: คอมโพเนนต์แสดงผล</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

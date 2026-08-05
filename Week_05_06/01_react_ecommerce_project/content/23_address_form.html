@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างฟอร์มที่อยู่จัดส่งด้วย react-hook-form + zodResolver ต่อยอดแนวคิด uncontrolled forms จาก Week 4" />
+    <title>ฟอร์มที่อยู่ด้วย react-hook-form | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 23 · ชำระเงิน (Checkout)</p>
+          <h1>ฟอร์มที่อยู่ด้วย react-hook-form</h1>
+          <p class="lesson-original-title" lang="en">Address Form</p>
+        </header>
+
+        <p>schema พร้อมแล้วจากบทที่แล้ว บทนี้เราจะสร้างฟอร์มที่อยู่จัดส่งตัวจริง — และได้เจอกับ <strong>react-hook-form</strong> ซึ่งเป็น library จัดการฟอร์มที่ครองตลาด React มาหลายปี ก่อนเขียนโค้ด มาทำความเข้าใจกันก่อนว่ามันแก้ปัญหาอะไร เพราะปรัชญาของมันต่อตรงกับสิ่งที่คุณเรียนมาแล้วใน Week 4 พอดี</p>
+
+        <h2>ปรัชญาของ react-hook-form: uncontrolled แต่สบายกว่า</h2>
+
+        <p>ย้อนกลับไปบท Hooks และบท Uncontrolled Forms ของ Week 4 — ตอนนั้นเราสรุปกันว่าฟอร์มมาตรฐานควรเป็น <em>uncontrolled</em>: ปล่อยให้ DOM เก็บค่าของ input เอง แล้วค่อยไปอ่านค่าทีเดียวตอน submit ส่วน <em>controlled form</em> (ผูกทุก input กับ <code>useState</code>) เก็บไว้ใช้เมื่อจำเป็นจริง ๆ เช่นต้องตอบสนองทุกตัวอักษรที่พิมพ์ เหตุผลเรื่อง performance ก็ชัดเจน: controlled form ทำให้ทั้งฟอร์ม re-render <em>ทุกครั้งที่กดคีย์บอร์ดหนึ่งที</em> ในขณะที่ uncontrolled ไม่ re-render อะไรเลยระหว่างพิมพ์</p>
+
+        <p>แต่ uncontrolled แบบดิบ ๆ (อ่าน <code>FormData</code> เองตอน submit) ก็มีงานน่าเบื่อ: ต้องแปลงค่าเป็น type ที่ถูกต้องเอง ต้อง validate เอง ต้องจัดการแสดง error ต่อ field เอง <strong>react-hook-form คือ uncontrolled form ที่มีคนทำงานน่าเบื่อพวกนั้นให้หมดแล้ว</strong>:</p>
+
+        <ul>
+          <li>input ยังเป็น uncontrolled — react-hook-form เกาะกับ DOM ผ่าน <code>ref</code> ค่าอยู่ใน DOM ไม่อยู่ใน state → พิมพ์เร็วแค่ไหนก็ไม่มี re-render</li>
+          <li>ตอน submit มันรวบรวมค่าทุก field, ส่งให้ resolver validate (ของเราคือ zod schema จากบทที่แล้ว), แล้วเรียก callback ของเราพร้อมข้อมูลที่<em>ผ่านการตรวจและมี type ถูกต้อง</em>แล้วเท่านั้น</li>
+          <li>ถ้าไม่ผ่าน มันเก็บข้อความ error รายฟิลด์ไว้ใน <code>formState.errors</code> แล้ว re-render เฉพาะตอนที่ชุด error เปลี่ยนจริง ๆ</li>
+        </ul>
+
+        <h2>สร้าง CheckoutAddressForm</h2>
+
+        <p>สร้างไฟล์ <code>src/features/checkout/components/CheckoutAddressForm/CheckoutAddressForm.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  checkoutAddressSchema,
+  CheckoutAddressFormData,
+} from "@/features/checkout/schema";
+import Input from "@/shared/components/Input/Input";
+import Button from "@/shared/components/Button/Button";
+
+export type { CheckoutAddressFormData };
+
+interface CheckoutAddressFormProps {
+  onSubmit: (data: CheckoutAddressFormData) =&gt; void;
+}
+
+const CheckoutAddressForm: React.FC&lt;CheckoutAddressFormProps&gt; = ({
+  onSubmit,
+}) =&gt; {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm&lt;CheckoutAddressFormData&gt;({
+    resolver: zodResolver(checkoutAddressSchema),
+  });
+
+  const onFormSubmit = (data: CheckoutAddressFormData) =&gt; {
+    onSubmit({ ...data });
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit(onFormSubmit)}&gt;
+      &lt;div className="mb-15"&gt;
+        &lt;Input
+          label="Address"
+          type="text"
+          placeholder="Enter Address"
+          {...register("address")}
+          error={errors.address?.message}
+        /&gt;
+      &lt;/div&gt;
+
+      &lt;div className="flex gap-15 mb-15"&gt;
+        &lt;div className="width-50"&gt;
+          &lt;Input
+            label="Email"
+            type="email"
+            placeholder="Enter Email"
+            {...register("email")}
+            error={errors.email?.message}
+          /&gt;
+        &lt;/div&gt;
+        &lt;div className="width-50"&gt;
+          &lt;Input
+            label="Phone Number"
+            type="text"
+            placeholder="Enter Phone Number"
+            {...register("phone")}
+            error={errors.phone?.message}
+          /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;Button type="submit"&gt;Submit&lt;/Button&gt;
+    &lt;/form&gt;
+  );
+};
+
+export default CheckoutAddressForm;
+</code></pre>
+
+        <p>ไฟล์ไม่ยาว แต่ทุกบรรทัดมีเรื่องเล่า ไล่จากบนลงล่าง:</p>
+
+        <h3><code>useForm</code> + <code>zodResolver</code></h3>
+
+        <pre><code class="language-typescript">const {
+  register,
+  handleSubmit,
+  formState: { errors },
+} = useForm&lt;CheckoutAddressFormData&gt;({
+  resolver: zodResolver(checkoutAddressSchema),
+});
+</code></pre>
+
+        <p><code>useForm</code> คือศูนย์บัญชาการของฟอร์ม เราส่ง generic <code>CheckoutAddressFormData</code> (type ที่ <code>z.infer</code> สกัดให้เมื่อบทที่แล้ว) เพื่อบอกว่าฟอร์มนี้มี field อะไรบ้าง — ผลคือ <code>register("address")</code> จะ autocomplete ชื่อ field ให้ และถ้าพิมพ์ <code>register("adress")</code> TypeScript ฟ้องทันที ส่วน <code>resolver: zodResolver(checkoutAddressSchema)</code> คือการเสียบ schema ของเราเข้าเป็นกติกา validate ของฟอร์ม — สังเกตว่าเราไม่ต้องเขียน logic validate ในคอมโพเนนต์นี้เลยแม้แต่บรรทัดเดียว กติกาทั้งหมดอยู่ใน <code>schema.ts</code> ที่เดียว</p>
+
+        <h3><code>register</code> — จุดเชื่อมระหว่าง input กับฟอร์ม</h3>
+
+        <p><code>{...register("address")}</code> เป็นท่าที่ดูแปลกตาตอนแรก แต่จริง ๆ ตรงไปตรงมา: <code>register("address")</code> คืน object ที่มี <code>name</code>, <code>ref</code>, <code>onChange</code>, <code>onBlur</code> แล้วเรา spread ทั้งก้อนลงบน <code>&lt;Input /&gt;</code> — เท่ากับสมัคร input ตัวนี้เข้าระบบของ react-hook-form ตัวสำคัญที่สุดในก้อนคือ <code>ref</code>: react-hook-form ใช้มันจับ DOM element ตรง ๆ เพื่ออ่านค่าโดยไม่ต้องพึ่ง state</p>
+
+        <p>และตรงนี้เองที่การบ้านเก่าของเราออกดอกผล — จำได้ไหมว่าตอนสร้าง <code>Input</code> ในบทที่ 09 เราห่อมันด้วย <code>forwardRef</code>? เพราะ <code>ref</code> ไม่ใช่ prop ธรรมดา คอมโพเนนต์ที่รับ <code>ref</code> แล้วส่งต่อให้ <code>&lt;input&gt;</code> ข้างในต้องประกาศตัวเป็น <code>forwardRef</code> อย่างชัดเจน ถ้าตอนนั้นเราสร้าง <code>Input</code> แบบธรรมดา วันนี้ <code>register</code> จะจับ input ข้างในไม่ได้ และฟอร์มจะอ่านค่าไม่ออกแบบเงียบ ๆ อาการงง ๆ อันดับหนึ่งของคนใช้ react-hook-form กับ custom component คือเรื่องนี้แหละ</p>
+
+        <p>ส่วน <code>error={errors.address?.message}</code> คือปลายทางของ zod: ถ้า validate ไม่ผ่าน ข้อความอย่าง "Address is required" จะมาอยู่ใน <code>errors.address.message</code> แล้ว <code>Input</code> ของเรา (ที่มี prop <code>error</code> เตรียมไว้ตั้งแต่บทที่ 09 เช่นกัน) ก็แสดงเป็นตัวหนังสือสีแดงใต้ช่องกรอก — ใช้ optional chaining (<code>?.</code>) เพราะตอนที่ยังไม่มี error <code>errors.address</code> เป็น <code>undefined</code></p>
+
+        <h3><code>handleSubmit</code> — ด่านตรวจก่อนถึงมือเรา</h3>
+
+        <p><code>&lt;form onSubmit={handleSubmit(onFormSubmit)}&gt;</code> ไม่ได้เรียก <code>onFormSubmit</code> ตรง ๆ แต่ห่อไว้ด้วย <code>handleSubmit</code> ซึ่งทำงานตามลำดับนี้ทุกครั้งที่ผู้ใช้กด submit:</p>
+
+        <ol>
+          <li>กัน default behavior ของเบราว์เซอร์ (ไม่ต้องเขียน <code>e.preventDefault()</code> เอง)</li>
+          <li>รวบรวมค่าทุก field จาก DOM แล้วส่งให้ zod ตรวจ</li>
+          <li>ถ้า<em>ไม่ผ่าน</em> — เติม <code>formState.errors</code> แล้ว re-render ให้ข้อความ error โผล่ <code>onFormSubmit</code> ไม่ถูกเรียกเลย</li>
+          <li>ถ้า<em>ผ่าน</em> — เรียก <code>onFormSubmit(data)</code> โดย <code>data</code> เป็น <code>CheckoutAddressFormData</code> ที่การันตีแล้วว่าครบและถูกต้อง</li>
+        </ol>
+
+        <p>แปลว่าโค้ดฝั่งเราไม่มีทางได้รับข้อมูลครึ่ง ๆ กลาง ๆ — ทุกเส้นทางที่ <code>onSubmit</code> ของ parent ถูกเรียก ข้อมูลผ่าน schema มาแล้วเสมอ ส่วนใน <code>onFormSubmit</code> เรา spread เป็น object ใหม่ (<code>{ ...data }</code>) ก่อนส่งขึ้นไป เพื่อให้ parent ได้สำเนาของตัวเอง ไม่แชร์ reference กับ object ภายในของ library</p>
+
+        <p>เกร็ดอีกสองจุด: <code>export type { CheckoutAddressFormData };</code> เป็นการ re-export type จาก schema ให้ไฟล์อื่น import ได้จากคอมโพเนนต์นี้โดยตรง (เดี๋ยวเห็น <code>CheckoutAddressBox</code> ใช้ท่านี้) และ class อย่าง <code>mb-15</code>, <code>flex gap-15</code>, <code>width-50</code> คือ utility classes จาก <code>_utilities.scss</code> ที่เราวางไว้ตั้งแต่บทที่ 04 — สอง input ล่างเลยเรียงเป็นสองคอลัมน์เท่า ๆ กันโดยไม่ต้องมี SCSS module ของตัวเอง</p>
+
+        <h2>สร้าง CheckoutAddressBox</h2>
+
+        <p>ฟอร์มอย่างเดียวยังไม่พอ — บนหน้า Checkout จริง เราอยากให้ผู้ใช้กด Submit แล้ว<em>เห็นที่อยู่ที่ตัวเองกรอกแสดงยืนยันอยู่ด้านบน</em> พร้อมยังแก้ไขซ้ำได้ นั่นคือหน้าที่ของกล่องห่อชั้นนอก สร้าง <code>src/features/checkout/components/CheckoutAddressBox/CheckoutAddressBox.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./CheckoutAddressBox.module.scss";
+import CheckoutAddressForm, {
+  CheckoutAddressFormData,
+} from "@/features/checkout/components/CheckoutAddressForm/CheckoutAddressForm";
+
+interface CheckoutAddressBoxProps {
+  title: string;
+  checkoutAddress: CheckoutAddressFormData | null;
+  onUpdateAddress: (data: CheckoutAddressFormData) =&gt; void;
+}
+
+const CheckoutAddressBox: React.FC&lt;CheckoutAddressBoxProps&gt; = ({
+  title,
+  checkoutAddress,
+  onUpdateAddress,
+}) =&gt; {
+  const onSubmitAddress = (data: CheckoutAddressFormData) =&gt; {
+    onUpdateAddress(data);
+  };
+
+  return (
+    &lt;div className={`${styles.container} p-20`}&gt;
+      &lt;h3 className="fs-20 pb-10"&gt;{title}&lt;/h3&gt;
+      &lt;hr className="mb-20" /&gt;
+      {checkoutAddress &amp;&amp; (
+        &lt;p className="lh-1-5 mb-20"&gt;
+          &lt;span className="fw-bold"&gt;Address&lt;/span&gt; : {checkoutAddress.address}
+          &lt;br /&gt;
+          &lt;span className="fw-bold"&gt;email&lt;/span&gt; : {checkoutAddress.email}
+          &lt;br /&gt;
+          &lt;span className="fw-bold"&gt;phone&lt;/span&gt; : {checkoutAddress.phone}
+        &lt;/p&gt;
+      )}
+
+      &lt;CheckoutAddressForm onSubmit={onSubmitAddress} /&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default CheckoutAddressBox;
+</code></pre>
+
+        <p>แล้วก็ style ของกล่อง สร้าง <code>CheckoutAddressBox.module.scss</code> ไว้ข้าง ๆ กัน:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.container {
+  background-color: variables.$grey05;
+}
+</code></pre>
+
+        <h3>อ่านการส่งไม้ต่อของ state ให้ขาด</h3>
+
+        <p>จุดที่ต้องอ่านให้ขาดคือ <em>state ของ "ที่อยู่ที่ submit แล้ว" อยู่ที่ไหน</em> — คำตอบ: <strong>ไม่ได้อยู่ในสองไฟล์นี้เลย</strong> ไล่เส้นทางของข้อมูลดู:</p>
+
+        <ol>
+          <li>ระหว่างพิมพ์ ค่าของแต่ละช่องอยู่ใน DOM ภายใต้การดูแลของ react-hook-form (เรื่องของ <code>CheckoutAddressForm</code> ล้วน ๆ)</li>
+          <li>กด Submit ผ่าน validation → ฟอร์มเรียก <code>onSubmit</code> → กล่องรับต่อใน <code>onSubmitAddress</code> → ส่งขึ้นไปอีกชั้นผ่าน <code>onUpdateAddress</code></li>
+          <li>เจ้าของ state ตัวจริงคือ hook <code>useCheckout</code> ที่เราจะเขียนในบทที่ 25 — มัน <code>setState</code> เก็บที่อยู่ไว้ แล้วส่ง<em>กลับลงมา</em>เป็น prop <code>checkoutAddress</code></li>
+          <li>กล่องเห็น <code>checkoutAddress</code> ไม่เป็น <code>null</code> แล้ว จึง render บล็อกสรุปที่อยู่ (เงื่อนไข <code>{checkoutAddress &amp;&amp; ...}</code>) โผล่เหนือฟอร์ม</li>
+        </ol>
+
+        <p>นี่คือ pattern <em>lifting state up</em> ที่คุณรู้จักดี: กล่องเป็นแค่ตัวแสดงผลที่ถูกควบคุมจากข้างบน ตัวมันเองไม่มี <code>useState</code> สักตัว ผลพลอยได้ที่เนียนมากคือ<strong>ฟอร์มยัง render อยู่ตลอด</strong>แม้ submit ไปแล้ว — ผู้ใช้กรอกใหม่แล้วกด Submit ซ้ำเพื่อแก้ที่อยู่ได้ทุกเมื่อ ค่าที่ submit ล่าสุดจะทับของเดิมเฉย ๆ ไม่ต้องมีปุ่ม Edit ไม่ต้องมี mode สลับไปมา</p>
+
+        <p>ส่วนดีไซน์ของกล่อง (พื้นเทา <code>$grey05</code> + padding จาก utility class <code>p-20</code> + หัวข้อ + เส้นคั่น) จะกลายเป็นหน้าตามาตรฐานของ<em>ทุกกล่อง</em>บนหน้า Checkout — บทหน้าคุณจะเห็นกล่อง Delivery, Payment และ Summary ใช้สูตรเดียวกันเป๊ะ</p>
+
+        <blockquote>🚨 บทนี้ยังทดสอบบนหน้าจอไม่ได้ — <code>Checkout.tsx</code> ของเรายังเป็น stub จากบทที่ 06 อยู่ ยังไม่มีใคร render คอมโพเนนต์ที่เพิ่งสร้าง ทุกอย่างจะถูกประกอบเข้าหน้า Checkout จริงพร้อมกันในบทที่ 25 ตอนนี้ checkpoint ของคุณคือโค้ดต้อง compile ผ่าน ไม่มีเส้นแดง และโครงไฟล์ตรงนี้: <code>features/checkout/components/CheckoutAddressForm/CheckoutAddressForm.tsx</code>, <code>CheckoutAddressBox/CheckoutAddressBox.tsx</code> + <code>.module.scss</code> ถ้าอยากเห็นฟอร์มตอนนี้จริง ๆ จะลองเอา <code>&lt;CheckoutAddressBox title="Shipping Address" checkoutAddress={null} onUpdateAddress={console.log} /&gt;</code> ไปวางชั่วคราวในหน้าไหนสักหน้าก็ได้ แต่อย่าลืมถอดออกก่อนไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="22_checkout_schema.html" rel="prev">ก่อนหน้า: Zod Schema</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="24_delivery_payment_summary.html" rel="next">ถัดไป: จัดส่ง ชำระเงิน และสรุปรายการ</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

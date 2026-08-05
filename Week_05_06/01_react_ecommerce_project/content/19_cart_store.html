@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้าง Cart Store ด้วย Context, useReducer และ localStorage — แยก client state ออกจาก server state อย่างถูกวิธี" />
+    <title>สร้าง Cart Store ด้วย Context และ useReducer | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 19 · ตะกร้าสินค้า (Cart)</p>
+          <h1>สร้าง Cart Store ด้วย Context และ useReducer</h1>
+          <p class="lesson-original-title" lang="en">Cart Store</p>
+        </header>
+
+        <p>ถึงตอนนี้หน้า Home, Category และ Product ของเราดึงข้อมูลจริงมาแสดงได้ครบแล้ว แต่ปุ่ม Add To Cart บนหน้า Product ยังกดแล้วเงียบกริบ — เพราะแอปเรายังไม่มี "ตะกร้า" ให้ใส่ของเลย ในบทนี้เราจะสร้างหัวใจของตะกร้าสินค้า: <strong>Cart Store</strong> ที่เก็บ state, กติกาการแก้ไข state และการบันทึกลง localStorage ให้ตะกร้าอยู่รอดแม้ผู้ใช้ปิดเบราว์เซอร์ไปแล้ว ส่วนการเอา store ไปต่อกับปุ่มและหน้าจอจริง ๆ จะเป็นเรื่องของสองบทถัดไป</p>
+
+        <h2>Client state vs Server state — ทำไมตะกร้าไม่ใช้ TanStack Query</h2>
+
+        <p>ข้อมูลทุกอย่างที่เราจัดการมาจนถึงตอนนี้ — รายการสินค้า, รายละเอียดสินค้า, หมวดหมู่ — เป็น <strong>server state</strong>: เจ้าของตัวจริงของข้อมูลคือ server (dummyjson) ฝั่งเราแค่ขอสำเนามาแสดง ข้อมูลแบบนี้มีปัญหาเฉพาะตัว เช่น อาจล้าสมัย ต้อง refetch ต้องมี cache — ซึ่ง TanStack Query เกิดมาเพื่อแก้ปัญหาชุดนี้โดยเฉพาะ</p>
+
+        <p>แต่ตะกร้าสินค้าไม่เหมือนกัน dummyjson ไม่รู้จักตะกร้าของผู้ใช้แต่ละคน ไม่มี endpoint ให้ sync ตะกร้าขึ้นไป ข้อมูลตะกร้า<em>เกิดและตาย</em>ในเบราว์เซอร์ของผู้ใช้ล้วน ๆ — นี่คือ <strong>client state</strong> เจ้าของตัวจริงคือแอปของเราเอง ถ้าเอา TanStack Query มาเก็บมันจะผิดฝาผิดตัวทันที เพราะไม่มีอะไรให้ fetch ไม่มีอะไรให้ stale เครื่องมือที่ถูกต้องคือของที่คุณเรียนมาแล้วใน Week 4: <strong>useReducer + Context</strong></p>
+
+        <p>ทำไมไม่ใช้ <code>useState</code> เฉย ๆ? เพราะตะกร้ามีการแก้ไขหลายแบบที่เล่นกับข้อมูลก้อนเดียวกัน — เพิ่มสินค้า (ซึ่งต้องเช็คว่ามีอยู่แล้วหรือยัง), ลบสินค้า, ปรับจำนวน, ล้างตะกร้า ถ้ากระจาย logic พวกนี้ไปตาม event handler ของแต่ละ component กติกาจะซ้ำซ้อนและหลุดง่าย <code>useReducer</code> บังคับให้กติกาทั้งหมดรวมอยู่ในฟังก์ชันเดียวที่ทดสอบได้ ส่วน Context ทำให้ทุก component — ตั้งแต่ Header ยันหน้า Checkout — เห็นตะกร้าใบเดียวกันโดยไม่ต้องส่ง props ทะลุลงไปหลายชั้น</p>
+
+        <h2>โครงสร้างไฟล์ของ feature cart</h2>
+
+        <p>เราจะสร้าง 5 ไฟล์ในบทนี้ วางตามโครง feature-based ที่ตกลงกันไว้ตั้งแต่บทที่ 05:</p>
+
+        <pre><code class="language-bash">src/features/cart/
+├── store/
+│   ├── CartContext.tsx    # types + ตัว context
+│   ├── cartReducer.ts     # กติกาการแก้ state (pure function)
+│   ├── cartStorage.ts     # โหลด/บันทึก localStorage
+│   └── CartProvider.tsx   # ประกอบทุกอย่างเข้าด้วยกัน
+└── useCart.ts             # hook เดียวที่ component อื่นเรียกใช้
+</code></pre>
+
+        <p>สังเกตว่าเราไม่ยัดทุกอย่างลงไฟล์เดียว: types และ context อยู่ที่หนึ่ง, reducer เป็น pure function ล้วน ๆ อยู่อีกไฟล์, ส่วนที่คุย localStorage แยกไปอีกไฟล์ การแบ่งแบบนี้ไม่ใช่ความเยอะ — มันคือเหตุผลที่บทที่ 27 เราจะเขียน unit test ให้ <code>cartReducer</code> และ <code>cartStorage</code> ได้ง่าย ๆ โดยไม่ต้อง render อะไรเลยสักตัว</p>
+
+        <h2>CartContext.tsx — รูปร่างของข้อมูลและ context</h2>
+
+        <p>เริ่มจากไฟล์ที่ประกาศว่า "ตะกร้าหน้าตาเป็นอย่างไร" สร้าง <code>src/features/cart/store/CartContext.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import { createContext } from "react";
+
+export interface CartItem {
+  id: number;
+  title: string;
+  price: number;
+  quantity: number;
+  image: string;
+  originalPrice?: number;
+}
+
+export interface CartState {
+  items: CartItem[];
+}
+
+export interface CartContextProps {
+  cart: CartState;
+  addToCart: (item: CartItem) =&gt; void;
+  removeFromCart: (id: number) =&gt; void;
+  updateQuantity: (id: number, quantity: number) =&gt; void;
+  clearCart: () =&gt; void;
+}
+
+export enum CartActionTypes {
+  ADD_TO_CART = "ADD_TO_CART",
+  REMOVE_FROM_CART = "REMOVE_FROM_CART",
+  UPDATE_QUANTITY = "UPDATE_QUANTITY",
+  CLEAR_CART = "CLEAR_CART",
+}
+
+export const CartContext = createContext&lt;CartContextProps | undefined&gt;(
+  undefined,
+);
+</code></pre>
+
+        <p>ไฟล์นี้มีของอยู่ 4 กลุ่ม ไล่ดูทีละตัว:</p>
+
+        <ul>
+          <li><strong><code>CartItem</code></strong> — สินค้าหนึ่งแถวในตะกร้า สังเกตว่าเราไม่เก็บ <code>Product</code> ทั้งก้อนจาก API แต่คัดเฉพาะที่ตะกร้าต้องใช้จริง: ราคา รูป ชื่อ และ <code>quantity</code> ที่ API ไม่มี (เป็นของที่ผู้ใช้เลือกเอง) ส่วน <code>originalPrice?</code> เป็น optional — เก็บราคาก่อนลดไว้เพื่อให้หน้า Cart โชว์ "You Save" ได้โดยไม่ต้องยิง API ซ้ำ</li>
+          <li><strong><code>CartState</code></strong> — ทั้ง store คือ object ที่มี <code>items</code> หนึ่ง array ทำไมไม่ใช้ array ตรง ๆ? เพราะห่อเป็น object ไว้ก่อน วันหน้าจะเพิ่ม field อื่น (เช่น coupon code) ได้โดย type ของ state ไม่ต้องเปลี่ยนรูปทรงทั้งยวง</li>
+          <li><strong><code>CartContextProps</code></strong> — นี่คือ "หน้าสัญญา" (public API) ของ store: component ภายนอกจะเห็นตะกร้าผ่าน <code>cart</code> และแก้ไขผ่าน 4 ฟังก์ชันนี้เท่านั้น ไม่มีใครเห็น <code>dispatch</code> หรือ action โดยตรง</li>
+          <li><strong><code>CartActionTypes</code></strong> — enum รวมชื่อ action ทุกตัวไว้ที่เดียว ถ้าใช้ string literal หว่านไปตามไฟล์ พิมพ์ผิดหนึ่งตัวอักษร reducer ก็จะเงียบ ๆ ไม่ทำงาน แต่พอเป็น enum การพิมพ์ผิดกลายเป็น compile error ทันที</li>
+        </ul>
+
+        <p>บรรทัดสุดท้ายคือการสร้าง context ด้วยค่าเริ่มต้น <code>undefined</code> — จงใจครับ ไม่ใช่ขี้เกียจใส่ค่า default ถ้าเราใส่ค่า default ปลอม ๆ ไว้ component ที่เผลอใช้ context นอก provider จะทำงานต่อแบบผิด ๆ โดยไม่มีใครรู้ แต่พอ default เป็น <code>undefined</code> เราจะดักจับพลาดนี้ได้ใน <code>useCart</code> (เดี๋ยวเจอด้านล่าง) แล้วโยน error ที่อ่านรู้เรื่องออกมาแทน</p>
+
+        <h2>cartReducer.ts — กติกาทั้งหมดในฟังก์ชันเดียว</h2>
+
+        <p>ต่อไปคือสมองของ store สร้าง <code>src/features/cart/store/cartReducer.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { CartActionTypes, CartItem, CartState } from "./CartContext";
+
+export type CartAction =
+  | { type: CartActionTypes.ADD_TO_CART; payload: CartItem }
+  | { type: CartActionTypes.REMOVE_FROM_CART; payload: { id: number } }
+  | {
+      type: CartActionTypes.UPDATE_QUANTITY;
+      payload: { id: number; quantity: number };
+    }
+  | { type: CartActionTypes.CLEAR_CART };
+
+export const cartReducer = (
+  state: CartState,
+  action: CartAction,
+): CartState =&gt; {
+  switch (action.type) {
+    case CartActionTypes.ADD_TO_CART: {
+      const {
+        id,
+        title,
+        price,
+        quantity = 1,
+        image,
+        originalPrice,
+      } = action.payload;
+
+      const existingItem = state.items.find((item) =&gt; item.id === id);
+      if (existingItem) {
+        return {
+          ...state,
+          items: state.items.map((item) =&gt;
+            item.id === id
+              ? { ...item, quantity: item.quantity + quantity }
+              : item,
+          ),
+        };
+      }
+
+      return {
+        ...state,
+        items: [
+          ...state.items,
+          { id, title, price, quantity, image, originalPrice },
+        ],
+      };
+    }
+    case CartActionTypes.REMOVE_FROM_CART: {
+      return {
+        ...state,
+        items: state.items.filter((item) =&gt; item.id !== action.payload.id),
+      };
+    }
+    case CartActionTypes.UPDATE_QUANTITY: {
+      return {
+        ...state,
+        items: state.items.map((item) =&gt;
+          item.id === action.payload.id
+            ? { ...item, quantity: action.payload.quantity }
+            : item,
+        ),
+      };
+    }
+    case CartActionTypes.CLEAR_CART: {
+      return { ...state, items: [] };
+    }
+    default:
+      return state;
+  }
+};
+</code></pre>
+
+        <p><code>CartAction</code> เป็น discriminated union แบบเดียวกับที่คุณเจอใน Week 4: แต่ละ action ประกาศ <code>payload</code> ของตัวเองชัดเจน พอ TypeScript เห็น <code>case CartActionTypes.ADD_TO_CART</code> มันจะ narrow type ให้เองว่า <code>action.payload</code> ในบล็อกนั้นคือ <code>CartItem</code> เต็ม ๆ ส่วน <code>CLEAR_CART</code> ไม่ต้องมี payload เลย</p>
+
+        <p>ไล่กติกาทีละ case:</p>
+
+        <ul>
+          <li><strong><code>ADD_TO_CART</code></strong> — case ที่ฉลาดสุดในนี้ เรา destructure payload พร้อมตั้ง default <code>quantity = 1</code> กันเหนียว จากนั้นเช็คก่อนว่าสินค้าตัวนี้อยู่ในตะกร้าแล้วหรือยัง ถ้ามีอยู่แล้ว เราไม่เพิ่มแถวใหม่ให้ซ้ำ แต่ <code>map</code> ทั้ง array แล้วบวก quantity เข้าไปในแถวเดิม (กด Add To Cart สินค้าเดิมสองครั้ง = แถวเดียว จำนวน 2) ถ้ายังไม่มี ค่อย spread array เดิมแล้วต่อ item ใหม่ท้ายสุด</li>
+          <li><strong><code>REMOVE_FROM_CART</code></strong> — <code>filter</code> เอาทุกแถวที่ id ไม่ตรงเก็บไว้ ได้ array ใหม่ที่ไม่มีแถวนั้น</li>
+          <li><strong><code>UPDATE_QUANTITY</code></strong> — <code>map</code> หาแถวที่ id ตรงแล้วเขียนทับ quantity ด้วยค่าใหม่ตรง ๆ (ไม่ใช่บวกเพิ่ม — ตัวนี้ไว้ใช้กับปุ่ม +/− ในหน้า Cart บทที่ 21)</li>
+          <li><strong><code>CLEAR_CART</code></strong> — คืน state ที่ <code>items</code> เป็น array ว่าง เราจะได้ใช้ตัวนี้จริงตอนสั่งซื้อสำเร็จในบทที่ 25</li>
+          <li><strong><code>default</code></strong> — action ที่ไม่รู้จักให้คืน state เดิมเฉย ๆ ไม่พัง ไม่เดา</li>
+        </ul>
+
+        <blockquote>🚨 สังเกตว่าไม่มีบรรทัดไหนแก้ state เดิมเลย — ไม่มี <code>push</code>, ไม่มี <code>item.quantity += 1</code> ทุก case สร้าง object และ array <em>ใหม่</em>ด้วย spread, <code>map</code>, <code>filter</code> เสมอ นี่ไม่ใช่แค่สไตล์: React เทียบ state เก่า-ใหม่ด้วย reference ถ้าคุณ mutate ของเดิมแล้วคืนก้อนเดิมกลับไป React จะคิดว่าไม่มีอะไรเปลี่ยนและไม่ re-render — bug คลาสสิกที่เจอกันทุกออฟฟิศ</blockquote>
+
+        <p>อีกเรื่องที่ควรเห็นค่า: <code>cartReducer</code> เป็น <strong>pure function</strong> — รับ state กับ action คืน state ใหม่ จบ ไม่แตะ localStorage ไม่ยิง API ไม่รู้จัก React ด้วยซ้ำ ผลคือเราทดสอบมันได้เหมือนทดสอบฟังก์ชันบวกเลข ซึ่งเราจะทำจริงในบทที่ 27</p>
+
+        <h2>cartStorage.ts — ให้ตะกร้าจำของได้ข้ามการปิดเบราว์เซอร์</h2>
+
+        <p>ตะกร้าที่หายเกลี้ยงทุกครั้งที่ refresh คือตะกร้าที่ไล่ลูกค้าหนี เราจะเก็บ state ลง localStorage สร้าง <code>src/features/cart/store/cartStorage.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { CartState } from "./CartContext";
+
+export const CART_STORAGE_KEY = "ecommerce-cart:v1";
+
+const EMPTY: CartState = { items: [] };
+
+export function loadCartState(): CartState {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return EMPTY;
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      typeof parsed === "object" &amp;&amp;
+      parsed !== null &amp;&amp;
+      Array.isArray((parsed as CartState).items)
+    ) {
+      return parsed as CartState;
+    }
+    return EMPTY;
+  } catch {
+    return EMPTY;
+  }
+}
+
+export function saveCartState(state: CartState): void {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // Storage full or unavailable — cart just won't persist.
+  }
+}
+</code></pre>
+
+        <p>ไฟล์สั้น แต่ทุกบรรทัดคือบทเรียนจากแผลจริง:</p>
+
+        <ul>
+          <li><strong>key มีเลขเวอร์ชัน</strong> — <code>"ecommerce-cart:v1"</code> ไม่ใช่แค่ <code>"cart"</code> เพราะข้อมูลใน localStorage อยู่ยาวกว่าโค้ดของเรา ถ้าอนาคตเราเปลี่ยนรูปร่างของ <code>CartState</code> จนไม่ compatible แค่ขยับเป็น <code>:v2</code> ข้อมูลเก่ารูปแบบเก่าก็จะถูกมองข้ามไปเฉย ๆ แทนที่จะถูก parse มาทำแอปพัง</li>
+          <li><strong>ทำไมต้อง <code>try/catch</code> ตอนโหลด</strong> — สองเหตุ: หนึ่ง <code>JSON.parse</code> โยน <code>SyntaxError</code> ทันทีถ้าข้อมูลใน storage เพี้ยน (ผู้ใช้ไปแก้เองใน DevTools, extension บางตัวเขียนทับ, ข้อมูลครึ่ง ๆ กลาง ๆ) สอง แค่<em>แตะ</em> <code>localStorage</code> ก็โยน error ได้แล้วในบางสภาพแวดล้อม เช่น เบราว์เซอร์ที่ผู้ใช้ปิด storage หรือ iframe ที่ถูก block cookie/storage — โค้ดที่ถือว่า localStorage "มีแน่ ๆ" คือโค้ดที่รอวันล้ม</li>
+          <li><strong>เช็ครูปร่างก่อนเชื่อ</strong> — ต่อให้ parse ผ่าน เราก็ยังรับค่าเป็น <code>unknown</code> แล้วตรวจว่าเป็น object ที่มี <code>items</code> เป็น array จริงก่อนถึงยอม <code>as CartState</code> — จำที่ Week 4 เตือนเรื่อง <code>as</code> ได้ไหม? ตรงนี้เราใช้มัน<em>หลัง</em>ตรวจสอบด้วยมือแล้ว ไม่ใช่ใช้แทนการตรวจสอบ</li>
+          <li><strong>ตอนบันทึกก็ห้ามพัง</strong> — <code>setItem</code> โยน error ได้เมื่อ storage เต็ม (quota) หรือถูกปิด เราเลือกกลืน error เงียบ ๆ เพราะผลลัพธ์ที่แย่ที่สุดคือ "ตะกร้าไม่ถูกจำข้าม session" ซึ่งดีกว่า "ทั้งแอป crash เพราะบันทึกตะกร้าไม่ได้" หลายขุม</li>
+          <li><strong>ทุกทางล้มเหลวจบที่ <code>EMPTY</code></strong> — โหลดไม่ได้ด้วยเหตุใดก็ตาม ผู้ใช้ได้ตะกร้าว่างเปล่าที่ใช้งานต่อได้ ไม่ใช่หน้าขาว</li>
+        </ul>
+
+        <h2>CartProvider.tsx — ประกอบร่าง</h2>
+
+        <p>ได้ types, กติกา และที่เก็บของครบแล้ว ทีนี้เอามาต่อกันเป็น component เดียว สร้าง <code>src/features/cart/store/CartProvider.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React, { useEffect, useReducer } from "react";
+import { CartActionTypes, CartContext, CartItem } from "./CartContext";
+import { cartReducer } from "./cartReducer";
+import { loadCartState, saveCartState } from "./cartStorage";
+
+export const CartProvider: React.FC&lt;{ children: React.ReactNode }&gt; = ({
+  children,
+}) =&gt; {
+  const [cart, dispatch] = useReducer(cartReducer, undefined, loadCartState);
+
+  useEffect(() =&gt; {
+    saveCartState(cart);
+  }, [cart]);
+
+  const addToCart = (item: CartItem) =&gt; {
+    dispatch({ type: CartActionTypes.ADD_TO_CART, payload: item });
+  };
+
+  const removeFromCart = (id: number) =&gt; {
+    dispatch({ type: CartActionTypes.REMOVE_FROM_CART, payload: { id } });
+  };
+
+  const updateQuantity = (id: number, quantity: number) =&gt; {
+    dispatch({
+      type: CartActionTypes.UPDATE_QUANTITY,
+      payload: { id, quantity },
+    });
+  };
+
+  const clearCart = () =&gt; {
+    dispatch({ type: CartActionTypes.CLEAR_CART });
+  };
+
+  return (
+    &lt;CartContext.Provider
+      value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart }}
+    &gt;
+      {children}
+    &lt;/CartContext.Provider&gt;
+  );
+};
+</code></pre>
+
+        <p>สองบรรทัดแรกในตัว component คือของสำคัญที่สุดของบทนี้:</p>
+
+        <ul>
+          <li><strong><code>useReducer(cartReducer, undefined, loadCartState)</code></strong> — นี่คือ <code>useReducer</code> แบบ 3 arguments ตัวที่สามคือ <strong>lazy initializer</strong>: React จะเรียก <code>loadCartState()</code> แค่<em>ครั้งเดียว</em>ตอน mount เพื่อสร้าง state เริ่มต้น (argument ที่สองคือค่าที่จะส่งให้ initializer — เราไม่ต้องการอะไรจึงเป็น <code>undefined</code>) จำ lazy initial state ของ <code>useState</code> จาก Week 4 ได้ไหม? หลักการเดียวกันเป๊ะ: การอ่าน localStorage + <code>JSON.parse</code> เป็นงานที่มีต้นทุน ถ้าเราเขียน <code>useReducer(cartReducer, loadCartState())</code> แบบสองอาร์กิวเมนต์ ฟังก์ชันนั้นจะถูกเรียกซ้ำ<em>ทุก render</em> แล้วโยนผลลัพธ์ทิ้งเปล่า ๆ ทุกครั้งที่ไม่ใช่ mount แรก</li>
+          <li><strong>write-through effect</strong> — <code>useEffect</code> ที่มี dependency <code>[cart]</code> แปลว่า "ทุกครั้งที่ state ตะกร้าเปลี่ยน ให้เขียนทับลง localStorage ทันที" การ persist จึงเป็นไปเองอัตโนมัติ ไม่มีวันลืม ไม่ต้องให้ action ไหนจำหน้าที่นี้เอง (สังเกตว่า reducer ยังบริสุทธิ์เหมือนเดิม — side effect ทั้งหมดอยู่ใน effect ตามชื่อของมัน) และเนื่องจาก effect รันหลัง render แรกด้วย state เริ่มต้นก็จะถูกเขียนลง storage ตั้งแต่เปิดแอปครั้งแรกเลย</li>
+        </ul>
+
+        <p>ที่เหลือคือฟังก์ชัน 4 ตัวที่ห่อ <code>dispatch</code> ไว้ให้เรียบร้อย — component ภายนอกจะได้เรียก <code>addToCart(item)</code> สั้น ๆ โดยไม่ต้องรู้จัก action object เลย แล้วทั้งหมดถูกส่งออกผ่าน <code>CartContext.Provider</code> ใน prop <code>value</code></p>
+
+        <h2>useCart.ts — ประตูทางเข้าเดียวของ feature</h2>
+
+        <p>สุดท้ายในฝั่ง store คือ hook ที่ component ทั่วแอปจะใช้ สร้าง <code>src/features/cart/useCart.ts</code> (อยู่ที่รากของ feature ไม่ใช่ใน <code>store/</code>):</p>
+
+        <pre><code class="language-typescript">import { useContext } from "react";
+import { CartContext } from "./store/CartContext";
+
+export const useCart = () =&gt; {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
+  return context;
+};
+</code></pre>
+
+        <p>สิบบรรทัด แต่ทำงานสองอย่างที่คุ้มมาก:</p>
+
+        <ul>
+          <li><strong>เป็นยามเฝ้าประตู</strong> — จำได้ไหมว่า context เราสร้างด้วยค่า default <code>undefined</code>? ตรงนี้แหละที่เก็บดอก: ถ้าใครเรียก <code>useCart()</code> ใน component ที่ไม่ได้อยู่ใต้ <code>CartProvider</code> จะได้ error ข้อความตรงไปตรงมาว่าต้องแก้อะไร แทนที่จะเป็น <code>Cannot read properties of undefined</code> ลึกลับที่โผล่คนละที่กับต้นเหตุ และผลพลอยได้จากการ throw คือ TypeScript รู้เองว่าค่าที่ return พ้นบรรทัดนั้นไม่มีทางเป็น <code>undefined</code> — คนเรียกใช้ไม่ต้อง optional chaining ให้รก</li>
+          <li><strong>เป็น API เดียวของ feature</strong> — component อื่นทั้งแอปจะ import แค่ <code>useCart</code> ตัวเดียว ได้ <code>{ cart, addToCart, removeFromCart, updateQuantity, clearCart }</code> ครบมือ ไม่มีใครต้อง import <code>CartContext</code>, reducer หรือ storage ตรง ๆ อีกเลย — โครงข้างในจะ refactor ยังไงก็ไม่กระเทือนคนใช้</li>
+        </ul>
+
+        <h2>เสียบ CartProvider เข้ากับแอป</h2>
+
+        <p>store พร้อมแล้ว แต่ยังไม่มีใครอยู่ใต้ provider เลย เปิด <code>src/app/providers.tsx</code> ที่เราเขียนไว้ตั้งแต่บทที่ 08 แล้วเพิ่ม <code>CartProvider</code> เข้าไปห่อ <code>children</code> — นี่คือเวอร์ชันสมบูรณ์ของไฟล์ (จุดที่เพิ่มคือ import บรรทัดสุดท้าย และการห่อ <code>{children}</code>):</p>
+
+        <pre><code class="language-typescript">import { ReactNode } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { queryClient } from "./queryClient";
+import { CartProvider } from "@/features/cart/store/CartProvider";
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  return (
+    &lt;QueryClientProvider client={queryClient}&gt;
+      &lt;CartProvider&gt;{children}&lt;/CartProvider&gt;
+      {import.meta.env.DEV &amp;&amp; &lt;ReactQueryDevtools initialIsOpen={false} /&gt;}
+    &lt;/QueryClientProvider&gt;
+  );
+}
+</code></pre>
+
+        <p>สังเกตสองจุด: หนึ่ง <code>CartProvider</code> อยู่<em>ข้างใน</em> <code>QueryClientProvider</code> — สำหรับสองตัวนี้ลำดับไม่ได้มีผลอะไรเป็นพิเศษ (ต่างคนต่างไม่พึ่งกัน) แต่หลักคิดคือ provider ที่ "ทั้งแอปต้องเห็น" ให้ซ้อนกันไว้ที่จุดเดียวแบบนี้ ไม่กระจายไปหลายไฟล์ สอง Devtools อยู่นอก <code>CartProvider</code> ได้สบายเพราะมันสนใจแค่ query cache — และตอนนี้ทุกหน้า ทุก component ในแอปเข้าถึงตะกร้าใบเดียวกันได้แล้วผ่าน <code>useCart</code></p>
+
+        <blockquote>💡 <strong>Checkpoint</strong> — รัน <code>npm run dev</code> แล้วตรวจสองที่: (1) เปิด React DevTools แท็บ Components จะเห็น <code>CartProvider</code> อยู่ในต้นไม้ใต้ <code>AppProviders</code> คลิกดู hooks ของมันจะเห็น Reducer state เป็น <code>{items: []}</code> (2) เปิด DevTools ของเบราว์เซอร์ แท็บ Application → Local Storage → origin ของเรา จะเห็น key <code>ecommerce-cart:v1</code> ค่า <code>{"items":[]}</code> โผล่มาแล้ว — นั่นคือฝีมือ write-through effect ที่รันตั้งแต่ mount แรก หน้าเว็บยังไม่มีอะไรเปลี่ยนและปุ่ม Add To Cart ยังใบ้อยู่ ถูกต้องแล้ว — เครื่องยนต์พร้อม แต่ยังไม่มีใครเหยียบคันเร่ง บทหน้าเราจะต่อสายทั้งหมดให้เห็นของจริง</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="18_product_page.html" rel="prev">ก่อนหน้า: หน้า Product</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="20_add_to_cart.html" rel="next">ถัดไป: Add to Cart</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

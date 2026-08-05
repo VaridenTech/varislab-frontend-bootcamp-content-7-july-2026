@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ทดสอบ query factories และ useCheckout ด้วย renderHook, QueryClientProvider และ MSW พร้อมเรียนรู้วิธีอ่าน error ของเทสต์ async" />
+    <title>การทดสอบ Hooks และ Queries | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 28 · การทดสอบ (Testing)</p>
+          <h1>การทดสอบ Hooks และ Queries</h1>
+          <p class="lesson-original-title" lang="en">Hook Tests</p>
+        </header>
+
+        <p>ชั้นถัดไปของพีระมิด: <strong>hook</strong> ปัญหาแรกที่เจอทันทีคือกฎเหล็กของ React — hook เรียกได้เฉพาะข้างใน component เท่านั้น เราจะเรียก <code>useQuery(...)</code> ตรง ๆ ในไฟล์เทสต์ไม่ได้ ทางออกคือ <code>renderHook</code> จาก React Testing Library: มันสร้าง component จิ๋ว ๆ ที่มองไม่เห็นขึ้นมาหนึ่งตัว เรียก hook ของเราข้างในนั้น แล้วส่งผลลัพธ์ล่าสุดออกมาให้เราทาง <code>result.current</code> — อ่านค่าได้ทุกเมื่อ และมันอัปเดตเองทุกครั้งที่ hook re-render</p>
+
+        <p>ปัญหาที่สอง: hook ของเราไม่ได้ลอยอยู่เดี่ยว ๆ — <code>useQuery</code> ต้องการ <code>QueryClientProvider</code>, <code>useCart</code> ต้องการ <code>CartProvider</code>, <code>useNavigate</code> ต้องการ router ดังนั้นหัวใจของบทนี้คือการประกอบ <strong>wrapper</strong> ที่จัด provider ให้ครบเท่าที่ hook แต่ละตัวต้องใช้ — ไม่มากกว่านั้น ไม่น้อยกว่านั้น</p>
+
+        <h2>ทดสอบ query factories</h2>
+
+        <p><code>productQueries</code> จากบทที่ 14 คือประตูสู่ข้อมูลสินค้าทั้งหมดของแอป เทสต์ชุดนี้จะพิสูจน์ว่าทั้งสี่ query ประกอบ <code>queryKey</code>/<code>queryFn</code> ถูก, เรียก API ถูกเส้นทาง และส่ง parameter ครบทั้งสาย สร้าง <code>src/features/products/queries.test.tsx</code> (สังเกตนามสกุล <code>.tsx</code> — ไฟล์เทสต์ฝั่ง React ของโปรเจกต์นี้ใช้ <code>.tsx</code> ทั้งหมด):</p>
+
+        <pre><code class="language-typescript">import { renderHook, waitFor } from "@testing-library/react";
+import { useQuery } from "@tanstack/react-query";
+import { productQueries } from "./queries";
+import { createQueryWrapper } from "@/test/utils";
+
+describe("productQueries", () =&gt; {
+  it("list fetches products with the given limit", async () =&gt; {
+    const { result } = renderHook(
+      () =&gt; useQuery(productQueries.list({ limit: 5 })),
+      { wrapper: createQueryWrapper() },
+    );
+
+    await waitFor(() =&gt; expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.products).toHaveLength(5);
+  });
+
+  it("byCategory fetches products for a category and page", async () =&gt; {
+    const { result } = renderHook(
+      () =&gt;
+        useQuery(
+          productQueries.byCategory({ category: "beauty", page: 2, limit: 20 }),
+        ),
+      { wrapper: createQueryWrapper() },
+    );
+
+    await waitFor(() =&gt; expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.skip).toBe(20);
+    expect(result.current.data?.products[0]?.title).toBe("beauty product 21");
+  });
+
+  it("categories fetches the category list", async () =&gt; {
+    const { result } = renderHook(() =&gt; useQuery(productQueries.categories()), {
+      wrapper: createQueryWrapper(),
+    });
+
+    await waitFor(() =&gt; expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.map((c) =&gt; c.slug)).toEqual([
+      "beauty",
+      "fragrances",
+      "furniture",
+    ]);
+  });
+
+  it("detail fetches a single product", async () =&gt; {
+    const { result } = renderHook(() =&gt; useQuery(productQueries.detail(7)), {
+      wrapper: createQueryWrapper(),
+    });
+
+    await waitFor(() =&gt; expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.id).toBe(7);
+  });
+});
+</code></pre>
+
+        <p>โครงของทุกเทสต์เหมือนกันเป๊ะ — เรียก <code>renderHook</code> พร้อม wrapper, รอให้ query สำเร็จ, แล้ว assert ข้อมูล มาแกะทีละชิ้น:</p>
+
+        <ul>
+          <li><strong><code>renderHook(() =&gt; useQuery(...), { wrapper })</code></strong> — argument แรกคือฟังก์ชันที่เรียก hook (จะถูกรันข้างใน component จิ๋วที่ว่า) ส่วน <code>wrapper</code> คือ component ที่จะห่อรอบมัน — เราส่ง <code>createQueryWrapper()</code> ที่สร้างไว้ในบทที่ 26 ซึ่งก็คือ <code>QueryClientProvider</code> ดี ๆ นี่เอง</li>
+          <li><strong>ทำไมต้อง QueryClient ใหม่ทุกเทสต์?</strong> — สังเกตว่าเราเรียก <code>createQueryWrapper()</code> ใหม่ในทุก <code>it</code> ไม่ได้สร้างครั้งเดียวแชร์กัน เหตุผล: QueryClient คือที่อยู่ของ <em>cache</em> ถ้าแชร์กัน เทสต์ <code>detail(7)</code> ที่รันทีหลังอาจได้ข้อมูลจาก cache ของเทสต์ก่อนหน้าแบบทันทีโดยไม่ยิง request เลย — เทสต์จะ "ผ่าน" หรือ "พัง" ด้วยเหตุผลผิด ๆ ตามลำดับการรัน ซึ่งเป็นเทสต์ประเภทอันตรายที่สุด: flaky test ที่ผลเปลี่ยนไปมา cache สดใหม่ทุกเทสต์ = ทุกเทสต์เป็นอิสระต่อกัน 100% (แถม <code>retry: false</code> ที่ตั้งไว้ใน <code>createTestQueryClient</code> ยังทำให้กรณี fail ไม่ต้องรอ retry ให้เสียเวลา)</li>
+          <li><strong><code>waitFor</code></strong> — query เป็นงาน async: ตอน <code>renderHook</code> จบใหม่ ๆ <code>result.current.isLoading</code> ยังเป็น <code>true</code> อยู่ <code>waitFor</code> จะรัน callback ซ้ำ ๆ จนกว่า assertion ข้างในจะไม่โยน error (หรือครบ timeout ~1 วินาทีแล้วยอมแพ้) — อย่าลืม <code>await</code> เด็ดขาด ไม่งั้นเทสต์จะวิ่งเลยไป assert ข้อมูลทั้งที่ยังโหลดไม่เสร็จ</li>
+          <li><strong>assertion แต่ละตัวพิสูจน์คนละเรื่อง</strong> — <code>list({ limit: 5 })</code> ได้ 5 ชิ้นพอดี แปลว่า <code>limit</code> เดินทางจาก parameter → <code>api.ts</code> → query string → MSW ครบสาย ส่วน <code>byCategory({ page: 2, limit: 20 })</code> เด็ดกว่านั้น: <code>skip</code> ต้องเป็น 20 และสินค้าตัวแรกต้องชื่อ <code>beauty product 21</code> — ชื่อนี้ handler ประกอบขึ้นจาก slug + ลำดับที่คำนวณจาก <code>skip</code> (บทที่ 26) ดังนั้นถ้าเห็นชื่อนี้ แปลว่าทั้งชื่อ category และการคำนวณหน้า 2 → skip 20 ของ <code>calculateOffset</code> ทำงานถูกต้องจริงในบริบทจริง ไม่ใช่แค่ใน unit test</li>
+        </ul>
+
+        <h2>ทดสอบ useCheckout — mutation, cart และ navigation</h2>
+
+        <p><code>useCheckout</code> จากบทที่ 25 คือ hook ที่ยุ่งที่สุดของแอป: มันใช้ <code>useCart</code> (ต้องการ CartProvider), <code>useMutation</code> (ต้องการ QueryClientProvider) และ <code>useProductRoute</code> ซึ่งข้างในคือ <code>useNavigate</code> (ต้องการ router) เทสต์มันจึงต้องประกอบ provider ครบสามชั้น สร้าง <code>src/features/checkout/useCheckout.test.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import { ReactNode } from "react";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router";
+import useCheckout from "./useCheckout";
+import { CartProvider } from "@/features/cart/store/CartProvider";
+import { CART_STORAGE_KEY } from "@/features/cart/store/cartStorage";
+import { useCart } from "@/features/cart/useCart";
+import { createTestQueryClient } from "@/test/utils";
+
+function wrapper({ children }: { children: ReactNode }) {
+  return (
+    &lt;MemoryRouter initialEntries={["/checkout"]}&gt;
+      &lt;QueryClientProvider client={createTestQueryClient()}&gt;
+        &lt;CartProvider&gt;{children}&lt;/CartProvider&gt;
+      &lt;/QueryClientProvider&gt;
+    &lt;/MemoryRouter&gt;
+  );
+}
+
+describe("useCheckout", () =&gt; {
+  it("clears the cart after a successful order", async () =&gt; {
+    localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify({
+        items: [
+          { id: 1, title: "Widget", price: 10, quantity: 2, image: "/w.png" },
+        ],
+      }),
+    );
+
+    const { result } = renderHook(
+      () =&gt; ({ checkout: useCheckout(), cart: useCart() }),
+      { wrapper },
+    );
+
+    expect(result.current.cart.cart.items).toHaveLength(1);
+    expect(result.current.checkout.billingSummary.subtotal).toBe(20);
+
+    act(() =&gt; {
+      result.current.checkout.storeCheckoutAddress({
+        address: "1 Main St",
+        email: "jane@example.com",
+        phone: "0812345678",
+      });
+    });
+
+    act(() =&gt; {
+      result.current.checkout.onPlaceOrder();
+    });
+
+    await waitFor(() =&gt; expect(result.current.cart.cart.items).toHaveLength(0));
+  });
+
+  it("errors and keeps the cart when no address is set", async () =&gt; {
+    localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify({
+        items: [
+          { id: 1, title: "Widget", price: 10, quantity: 2, image: "/w.png" },
+        ],
+      }),
+    );
+
+    const { result } = renderHook(
+      () =&gt; ({ checkout: useCheckout(), cart: useCart() }),
+      { wrapper },
+    );
+
+    act(() =&gt; {
+      result.current.checkout.onPlaceOrder();
+    });
+
+    await waitFor(() =&gt;
+      expect(result.current.checkout.isPlaceOrderLoading).toBe(false),
+    );
+    expect(result.current.cart.cart.items).toHaveLength(1);
+  });
+});
+</code></pre>
+
+        <p>ไฟล์นี้มีเทคนิคใหม่หลายตัว ไล่ตามลำดับที่เจอ:</p>
+
+        <ul>
+          <li><strong>wrapper เขียนเองเต็ม ๆ</strong> — คราวนี้ <code>createQueryWrapper()</code> ไม่พอ เราประกาศ component <code>wrapper</code> ที่ซ้อนสามชั้น: <code>MemoryRouter</code> คือ router ที่เก็บ history ในหน่วยความจำ (แบบเบาของ <code>createMemoryRouter</code> — พอสำหรับกรณีที่ hook แค่<em>เรียก</em> navigate โดยไม่ต้อง render route ปลายทาง) ตามด้วย <code>QueryClientProvider</code> และ <code>CartProvider</code> <em>ตัวจริง</em>จากแอป — เราไม่ mock cart เลย เพราะพฤติกรรมที่อยากพิสูจน์คือ "checkout สั่ง cart ให้ล้างจริงไหม" ซึ่งต้องใช้ของจริงถึงจะพิสูจน์ได้</li>
+          <li><strong>สังเกตว่า navigation ก็ไม่ได้ mock</strong> — <code>goToOrderSuccess()</code> จะ navigate จริง ๆ ใน MemoryRouter แค่ไม่มีหน้าไหน render ออกมาให้ดู เทสต์นี้เลือก assert ผ่านตะกร้าแทน (การ assert ตัว URL ปลายทางเป็นหน้าที่ของ integration test บทหน้า)</li>
+          <li><strong>เตรียมตะกร้าผ่าน localStorage</strong> — เราเขียนตะกร้า (Widget ราคา 10 จำนวน 2) ลง <code>CART_STORAGE_KEY</code> <em>ก่อน</em> <code>renderHook</code> พอ <code>CartProvider</code> mount มันจะ lazy init จาก <code>loadCartState()</code> แล้วเจอของที่เราวางไว้ — ได้เทสต์ที่เดินผ่านโค้ด persistence จริงอีกรอบ ฟรี ๆ (และไม่ต้องเก็บกวาด เพราะ <code>afterEach</code> ใน setup ล้าง localStorage ให้แล้ว)</li>
+          <li><strong>เรียกสอง hook ในครั้งเดียว</strong> — callback ของ <code>renderHook</code> คืน object <code>{ checkout: useCheckout(), cart: useCart() }</code> สอง hook นี้จึงรันใน component เดียวกัน ใต้ <code>CartProvider</code> ตัวเดียวกัน — <code>cart</code> กลายเป็น "หน้าต่าง" ให้เราแอบดู state ของตะกร้าจากข้างนอก ระหว่างที่ <code>checkout</code> คือตัวที่เราสั่งงาน</li>
+          <li><strong><code>act(...)</code></strong> — ทุกครั้งที่เราเรียกฟังก์ชันที่ทำให้ state เปลี่ยน (เช่น <code>storeCheckoutAddress</code> ที่ <code>setState</code> ข้างใน) ต้องห่อด้วย <code>act</code> เพื่อบอก React ว่า "ประมวลผล update ให้จบก่อน แล้วค่อยให้เทสต์ไปต่อ" — ไม่งั้นจะเจอ warning และ <code>result.current</code> อาจยังเป็นค่าเก่า</li>
+          <li><strong>เส้นทางของเทสต์แรก (happy path)</strong> — assert ค่าตั้งต้นก่อน (ตะกร้ามี 1 รายการ, <code>billingSummary.subtotal</code> = 10 × 2 = 20 — ได้เทสต์ logic ใน <code>useMemo</code> แถมมาด้วย) จากนั้นบันทึกที่อยู่ → กดสั่งซื้อ → <code>placeOrder</code> ยิง <code>POST /carts/add</code> ซึ่ง MSW ตอบ 201 → <code>onSuccess</code> ของ mutation รัน <code>clearCart()</code> — เราพิสูจน์ทั้งหมดนั้นด้วย <code>waitFor</code> บรรทัดเดียว: รอจนตะกร้าว่าง</li>
+          <li><strong>เส้นทางของเทสต์ที่สอง (error path)</strong> — กดสั่งซื้อโดย<em>ไม่</em>บันทึกที่อยู่ <code>mutationFn</code> จะ <code>throw new Error("Delivery Address is Missing")</code> ทันที mutation กลายเป็นสถานะ error, <code>onSuccess</code> ไม่รัน เรารอให้ <code>isPlaceOrderLoading</code> กลับเป็น <code>false</code> แล้ว assert ว่าตะกร้า<em>ยังอยู่ครบ</em> — เทสต์ error path แบบนี้สำคัญไม่แพ้ happy path: ผู้ใช้ต้องไม่เสียตะกร้าเพราะการสั่งซื้อที่ล้มเหลว</li>
+        </ul>
+
+        <h2>อ่าน error ของเทสต์ async ให้เป็น</h2>
+
+        <p>เทสต์ async พังแล้วอ่านยากกว่า unit test เยอะ เพราะสิ่งที่รายงานมักเป็น<em>ปลายเหตุ</em> สี่อาการที่จะเจอบ่อยและวิธีไล่:</p>
+
+        <ul>
+          <li><strong><code>waitFor</code> timeout</strong> — ข้อความจะเป็น assertion ล่าสุดที่ยังไม่ผ่าน เช่น <code>expected true, received false</code> ของ <code>isSuccess</code> อย่าเพิ่งงมที่ assertion — ถามก่อนว่า "ทำไม query ไม่สำเร็จ?" ลอง log <code>result.current.error</code> ดู มักเจอคำตอบทันที (URL ผิด, handler ไม่ match, provider ไม่ครบ)</li>
+          <li><strong>MSW ฟ้อง unhandled request</strong> — เพราะเราตั้ง <code>onUnhandledRequest: "error"</code> ไว้ ถ้า request หลุดไปโดยไม่มี handler จะเห็นข้อความบอก method + URL เต็ม ๆ เอา URL นั้นไปเทียบกับ <code>handlers.ts</code> ทีละตัวอักษร — เกือบทุกครั้งคือ path สะกดผิด, ลืมสร้าง handler หรือ <code>VITE_API_BASE_URL</code> ไม่ตรง</li>
+          <li><strong>warning "not wrapped in act(...)"</strong> — แปลว่ามี state update เกิดขึ้นนอก <code>act</code>/<code>waitFor</code> มักเพราะเรียกฟังก์ชันของ hook ตรง ๆ โดยไม่ห่อ <code>act</code> หรือเทสต์จบก่อนที่งาน async จะเสร็จ</li>
+          <li><strong>เทสต์ผ่านบ้างพังบ้าง (flaky)</strong> — เกือบทั้งหมดมาจากการลืม <code>await</code> หน้า <code>waitFor</code> (เทสต์วิ่งจบก่อนงานเสร็จ) หรือ state ที่รั่วข้ามเทสต์ เช่น แชร์ QueryClient หรือลืมว่ามีอะไรค้างใน localStorage — ถ้าเจอ ให้รันเทสต์ไฟล์นั้นเดี่ยว ๆ เทียบกับรันทั้งชุด ผลต่างกันเมื่อไหร่ แปลว่ามี state รั่วแน่นอน</li>
+        </ul>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run test</code> — ต้องได้ <strong>8 test files ผ่านทั้งหมด รวม 28 tests</strong> (22 ตัวเดิมจากบทที่แล้ว + queries 4 + useCheckout 2) ถ้า useCheckout พังด้วย error ทำนอง "useNavigate may be used only in the context of a Router" ให้เช็คว่า wrapper ซ้อนครบสามชั้นและสะกด <code>MemoryRouter</code> ถูก</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="27_unit_tests.html" rel="prev">ก่อนหน้า: Unit Tests</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="29_integration_tests.html" rel="next">ถัดไป: Integration Tests</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

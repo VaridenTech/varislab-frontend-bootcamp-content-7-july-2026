@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างคอมโพเนนต์กลาง Button, Input และ RadioInput พร้อมเจาะลึก SCSS Modules และแก้ปัญหา CJS interop ของ Vite 8" />
+    <title>Button, Input และ RadioInput | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 09 · คอมโพเนนต์กลาง (Shared UI)</p>
+          <h1>สร้าง Button, Input และ RadioInput</h1>
+          <p class="lesson-original-title" lang="en">Button, Input &amp; RadioInput</p>
+        </header>
+
+        <p>โครงแอปของเราพร้อมแล้ว — router พาไปแต่ละหน้าได้, MainLayout มี Header/Footer ครบ และ QueryClient รอให้เราเรียกใช้ ก่อนจะลงมือสร้างหน้าเพจจริง เราจะหยุดสามบทเพื่อสร้าง<strong>คอมโพเนนต์กลาง (shared components)</strong> — ชิ้นส่วน UI ที่หลายหน้าหยิบไปใช้ซ้ำ เหมือนทีมจริงที่มักสร้าง design system เล็ก ๆ ก่อนประกอบหน้าเพจ</p>
+
+        <p>ทำไมไม่เขียน <code>&lt;button&gt;</code> สด ๆ ในแต่ละหน้าไปเลย? เพราะปุ่มของเราต้องหน้าตาเหมือนกันทุกหน้า มี loading state เหมือนกัน มี icon ได้เหมือนกัน — ถ้าเขียนซ้ำ 5 ที่ วันที่ดีไซน์เปลี่ยน คุณต้องไล่แก้ 5 ที่ แต่ถ้ามี <code>Button</code> กลางตัวเดียว แก้ที่เดียวจบ ในบทนี้เราจะสร้างสามตัวแรก และแต่ละตัวจะถูกใช้จริงในบทถัด ๆ ไป:</p>
+
+        <ul>
+          <li><strong><code>Button</code></strong> — ปุ่มหลักของทั้งแอป: Add to Cart ในหน้า Product, ปุ่มในหน้า Cart และปุ่มยืนยันในหน้า Checkout</li>
+          <li><strong><code>Input</code></strong> — ช่องกรอกข้อความ จะเป็นพระเอกของฟอร์มที่อยู่จัดส่งในบทที่ 23 (คู่กับ react-hook-form)</li>
+          <li><strong><code>RadioInput</code></strong> — ตัวเลือกแบบ radio สำหรับเลือกวิธีจัดส่งและวิธีชำระเงินในบทที่ 24</li>
+        </ul>
+
+        <p>ข้อควรรู้ก่อนเริ่ม: บทนี้ (และอีกสองบทถัดไป) สร้างเสร็จแล้วหน้าเว็บจะ<em>ยังไม่เปลี่ยน</em> เพราะยังไม่มีหน้าไหนเรียกใช้คอมโพเนนต์เหล่านี้ นี่เป็นเรื่องปกติของการทำงานแบบ bottom-up — เราสร้างเครื่องมือให้พร้อมก่อน แล้วบทสร้างหน้าเพจจะไหลลื่นมาก</p>
+
+        <h2>ติดตั้ง react-spinners</h2>
+
+        <p><code>Button</code> ของเราจะมี loading state — ตอนกำลังส่งคำสั่งซื้อ ปุ่มจะเปลี่ยนเป็นวงกลมหมุน ๆ เราไม่ต้องเขียน animation เอง ใช้ไลบรารี <a href="https://www.npmjs.com/package/react-spinners">react-spinners</a> ที่มี spinner สำเร็จรูปให้เลือกหลายแบบ:</p>
+
+        <pre><code class="language-bash">npm i react-spinners
+</code></pre>
+
+        <h2>ทางแยกสำคัญ: Vite 8 กับ CJS interop</h2>
+
+        <p>ก่อนใช้ react-spinners ได้ เราต้องแก้ config หนึ่งจุด และนี่คือบทเรียนของจริงที่คุณจะเจอในงาน: <strong>ไลบรารีบางตัวใน npm ยังเผยแพร่เป็น CommonJS (CJS)</strong> ซึ่งเป็นระบบ module รุ่นเก่าของ Node (แบบ <code>require</code>/<code>module.exports</code>) ในขณะที่โปรเจกต์เราเป็น ES Modules (ESM แบบ <code>import</code>/<code>export</code>) เต็มตัว — <code>package.json</code> ของเราประกาศ <code>"type": "module"</code> ไว้ตั้งแต่ scaffold</p>
+
+        <p>ปัญหาคือไลบรารี CJS ที่ compile มาจาก TypeScript/Babel จะเก็บของที่ export ไว้ที่ <code>module.exports.default</code> (ธรรมเนียมที่เรียกว่า esModuleInterop) — Vite รุ่นก่อน ๆ ใจดี แกะ <code>.default</code> ให้เราอัตโนมัติเวลาเขียน <code>import ClipLoader from "react-spinners/ClipLoader"</code> แต่ <strong>Vite 8 (ที่เปลี่ยนมาใช้ Rolldown เป็น bundler) เข้มงวดขึ้น</strong>: default import ของ CJS ในโปรเจกต์ ESM จะได้<em>ก้อน module ทั้งก้อน</em>แทนที่จะเป็นตัวคอมโพเนนต์ พอ React พยายาม render object แทนที่จะเป็น function ก็จะพังตอนรันด้วย error หน้าตาแบบนี้:</p>
+
+        <pre><code class="language-bash">Uncaught Error: Element type is invalid: expected a string (for built-in components)
+or a class/function (for composite components) but got: object.
+</code></pre>
+
+        <p>ทางแก้คือเปิด option ที่ Vite เตรียมไว้ให้สำหรับกรณีนี้โดยเฉพาะ เปิด <code>vite.config.ts</code> แล้วเพิ่ม block <code>legacy</code> เข้าไป ไฟล์ทั้งไฟล์ตอนนี้จะเป็นแบบนี้ (เราเก็บ comment ภาษาอังกฤษไว้ด้วย — เดี๋ยวอธิบายว่าทำไม):</p>
+
+        <pre><code class="language-typescript">import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+  // Vite 8 (Rolldown) tightened CJS default-import interop: since this project's
+  // package.json has "type": "module", default imports of CJS deps that use the
+  // TS/Babel esModuleInterop convention (module.exports.default, e.g.
+  // react-spinners, react-paginate) now resolve to the whole module object
+  // instead of unwrapping `.default`, breaking those components at runtime
+  // ("Element type is invalid"). This restores the pre-Vite-8 unwrapping
+  // behavior. See https://vite.dev/guide/migration (CJS interop changes).
+  legacy: {
+    inconsistentCjsInterop: true,
+  },
+});
+</code></pre>
+
+        <p><code>legacy.inconsistentCjsInterop: true</code> บอก Vite ว่า "ขอพฤติกรรมแกะ <code>.default</code> แบบเดิมกลับมา" ซึ่งทำให้ react-spinners (และ react-paginate ที่เราจะติดตั้งบทหน้า) กลับมา render ได้ตามปกติ</p>
+
+        <p>ส่วนเหตุผลที่เราเขียน comment ยาว ๆ กำกับไว้: config บรรทัดนี้อ่านแล้ว<em>ไม่มีทางเดา</em>ได้เลยว่ามีไว้ทำไม ถ้าไม่มี comment อีกหกเดือนข้างหน้า (หรือเพื่อนร่วมทีม) อาจลบทิ้งเพราะคิดว่าไม่จำเป็น แล้วแอปจะพังแบบงง ๆ — การจดเหตุผลของ workaround ไว้<em>ตรงที่มันอยู่</em>คือนิสัยที่ทีมจริงคาดหวัง</p>
+
+        <blockquote>💡 ไฟล์ <code>vite.config.ts</code> ยังไม่จบแค่นี้ — บทที่ 26 (ติดตั้งชุดทดสอบ) เราจะกลับมาเพิ่ม block <code>test</code> สำหรับ Vitest อีกครั้ง</blockquote>
+
+        <h2>รู้จัก SCSS Modules ก่อนเขียนคอมโพเนนต์แรก</h2>
+
+        <p>ในบทที่ 4 เราวางโครง SCSS ส่วนกลางไว้แล้ว (variables, utility classes อย่าง <code>flex</code>, <code>py-15</code>, <code>fw-medium</code>) — พวกนั้นเป็น <em>global CSS</em> คือประกาศครั้งเดียวใช้ได้ทุกที่ ซึ่งเหมาะกับ utility ที่ตั้งใจให้ใช้ร่วมกันทั้งแอป แต่พอเป็น style เฉพาะของคอมโพเนนต์ global CSS มีปัญหาคลาสสิก: <strong>class ชนกัน</strong> ลองนึกภาพ <code>.button</code> ของเรากับ <code>.button</code> ของอีกไฟล์ที่เพื่อนเขียน — ตัวที่โหลดทีหลังจะทับตัวแรกเงียบ ๆ โดยไม่มีใครเตือน</p>
+
+        <p><strong>CSS Modules</strong> แก้ปัญหานี้ที่ราก: ตั้งชื่อไฟล์ลงท้ายด้วย <code>.module.scss</code> แล้ว Vite จะเปลี่ยนพฤติกรรมของไฟล์นั้นทันที — แทนที่ class จะไปอยู่ใน scope global ตัว build tool จะ<em>เปลี่ยนชื่อ class ให้ไม่ซ้ำใคร</em> เช่น <code>.button</code> ใน <code>Button.module.scss</code> อาจกลายเป็น <code>_button_x7f2k_3</code> ตอนรันจริง แล้วเราเข้าถึงชื่อที่ถูกแปลงแล้วผ่านการ import:</p>
+
+        <pre><code class="language-typescript">import styles from "./Button.module.scss";
+
+// styles คือ object เช่น { button: "_button_x7f2k_3", primary: "_primary_x7f2k_11" }
+&lt;button className={styles.button}&gt;
+</code></pre>
+
+        <p>ผลคือ style ของแต่ละคอมโพเนนต์ถูก scope อยู่กับตัวเอง 100% — ต่อให้สิบไฟล์ตั้งชื่อ class ว่า <code>.button</code> เหมือนกันหมดก็ไม่มีทางชนกัน และจำได้ไหมว่าบทที่ 4 เราสร้าง <code>src/shared/types/global.d.ts</code> ที่ประกาศ <code>declare module "*.scss"</code> ไว้ — นั่นแหละคือสิ่งที่ทำให้ TypeScript เข้าใจว่าการ import ไฟล์ <code>.module.scss</code> ได้ object กลับมา</p>
+
+        <p>สรุปกติกาที่เราจะใช้ทั้งโปรเจกต์: <strong>utility class ใช้แบบ global, style เฉพาะตัวใช้ CSS Modules</strong> — สองอย่างนี้อยู่ร่วมกันได้สบายมาก และคุณจะเห็นมันผสมกันในคอมโพเนนต์แรกของเราเดี๋ยวนี้เลย</p>
+
+        <h2>Button</h2>
+
+        <p>สร้างโฟลเดอร์สำหรับคอมโพเนนต์กลางชุดนี้ ธรรมเนียมของโปรเจกต์เราคือหนึ่งคอมโพเนนต์ = หนึ่งโฟลเดอร์ (เก็บ <code>.tsx</code> คู่กับ <code>.module.scss</code> ของมัน):</p>
+
+        <pre><code class="language-bash">mkdir -p src/shared/components/Button
+</code></pre>
+
+        <p>เริ่มจาก style ก่อน สร้าง <code>src/shared/components/Button/Button.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../styles/variables";
+
+.button {
+  border: none;
+
+  &amp;:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &amp;.primary {
+    background-color: variables.$primary-color;
+    color: #fff;
+
+    &amp;:hover:not(:disabled) {
+      background-color: variables.$blue02;
+    }
+  }
+
+  .icon {
+    font-size: 18px;
+  }
+}
+</code></pre>
+
+        <p>สังเกตว่าไฟล์ module ก็ยัง <code>@use</code> ตัวแปรกลางจากบทที่ 4 ได้ตามปกติ — ที่ถูก scope คือ<em>ชื่อ class</em> ไม่ใช่ตัวแปร ส่วน <code>&amp;.primary</code> คือ selector ที่จับตอน element มีทั้งสอง class พร้อมกัน (เราจะประกอบมันใน JSX เดี๋ยวนี้) และ <code>&amp;:hover:not(:disabled)</code> กันไม่ให้ปุ่มที่ถูก disable เปลี่ยนสีตอน hover ให้ผู้ใช้เข้าใจผิดว่ากดได้</p>
+
+        <p>ต่อด้วยตัวคอมโพเนนต์ <code>src/shared/components/Button/Button.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import ClipLoader from "react-spinners/ClipLoader";
+import styles from "./Button.module.scss";
+
+interface ButtonProps {
+  onClick?: () =&gt; void;
+  icon?: IconProp; // Accepts FontAwesomeIcon props
+  variant?: "primary";
+  disabled?: boolean;
+  isLoading?: boolean;
+  children: React.ReactNode;
+  type?: "button" | "reset" | "submit";
+  className?: string;
+}
+
+const Button: React.FC&lt;ButtonProps&gt; = ({
+  type = "button",
+  onClick,
+  icon,
+  children,
+  variant = "primary",
+  disabled = false,
+  isLoading = false,
+  className = "",
+}) =&gt; {
+  return (
+    &lt;button
+      type={type}
+      className={`${styles.button} ${styles[variant]} ${className} flex flex-center py-15 px-20 fw-medium pointer`}
+      onClick={() =&gt; {
+        if (onClick) {
+          onClick();
+        }
+      }}
+      disabled={disabled}
+    &gt;
+      {isLoading ? (
+        &lt;ClipLoader size={20} aria-label="Loading Spinner" color="white" /&gt;
+      ) : (
+        &lt;&gt;
+          {icon &amp;&amp; (
+            &lt;FontAwesomeIcon icon={icon} className={`${styles.icon} mr-10`} /&gt;
+          )}
+          {children}
+        &lt;/&gt;
+      )}
+    &lt;/button&gt;
+  );
+};
+
+export default Button;
+</code></pre>
+
+        <p>ไล่ดูการตัดสินใจสำคัญทีละจุด:</p>
+
+        <ul>
+          <li><strong><code>ButtonProps</code> เลือก props เอง ไม่รับหมด</strong> — เราประกาศ interface ที่คัดเฉพาะ props ที่อยากเปิดให้ใช้: <code>onClick</code>, <code>type</code>, <code>disabled</code>, <code>className</code> บวกของที่เราเพิ่มเอง (<code>icon</code>, <code>variant</code>, <code>isLoading</code>) วิธีนี้ทำให้ API ของปุ่มแคบและควบคุมได้ — ใครจะใช้ปุ่มเราต้องใช้ตามกติกา สังเกตว่า <code>type</code> เรา default เป็น <code>"button"</code> เพราะค่า default จริงของ HTML คือ <code>"submit"</code> ซึ่งเป็นต้นเหตุ bug คลาสสิก "กดปุ่มแล้วฟอร์ม submit เอง" (เดี๋ยวบท Input จะเห็นแนวทางตรงข้าม: รับ props native ทั้งหมด — สองแนวทางนี้ใช้คู่กันได้ตามสถานการณ์)</li>
+          <li><strong><code>styles[variant]</code></strong> — lookup แบบ dynamic: ถ้า <code>variant</code> คือ <code>"primary"</code> ก็หยิบ <code>styles.primary</code> ตอนนี้เรามี variant เดียว แต่โครงนี้พร้อมรองรับ <code>"secondary"</code> ในอนาคตโดยแก้แค่ type กับ SCSS</li>
+          <li><strong>ผสม class สามชั้น</strong> — ใน template literal เดียวมีทั้ง class จาก module (<code>styles.button</code>), class ที่คนเรียกส่งเพิ่มมา (<code>className</code>) และ utility กลางจากบทที่ 4 (<code>flex flex-center py-15 px-20 fw-medium pointer</code>) — นี่คือภาพจริงของกติกา "module สำหรับของเฉพาะตัว, utility สำหรับของทั่วไป"</li>
+          <li><strong><code>isLoading</code> สลับเนื้อในปุ่ม</strong> — ตอนโหลด เนื้อหาปกติ (icon + ข้อความ) หายไป เหลือ <code>ClipLoader</code> จาก react-spinners หมุนแทน พร้อม <code>aria-label</code> ให้ screen reader รู้ว่ากำลังโหลด</li>
+          <li><strong><code>icon?: IconProp</code></strong> — รับ icon ของ Font Awesome (ที่ติดตั้งไว้บทที่ 7) แบบ optional โดยใช้ type <code>IconProp</code> ของไลบรารีเอง คนเรียกส่ง <code>icon={faCartShopping}</code> มาได้เลยแล้ว TypeScript ตรวจให้ว่าเป็น icon จริง</li>
+        </ul>
+
+        <h2>Input</h2>
+
+        <pre><code class="language-bash">mkdir -p src/shared/components/Input
+</code></pre>
+
+        <p>สร้าง <code>src/shared/components/Input/Input.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../styles/variables";
+
+.inputWrapper {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid variables.$grey04;
+  outline: none;
+  transition: border-color 0.3s;
+
+  &amp;::placeholder {
+    color: variables.$grey02;
+  }
+
+  &amp;:focus {
+    border-color: variables.$primary-color;
+  }
+}
+
+.error {
+  color: variables.$red01;
+}
+</code></pre>
+
+        <p>แล้วสร้าง <code>src/shared/components/Input/Input.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React, { forwardRef } from "react";
+import styles from "./Input.module.scss";
+
+interface InputProps extends React.InputHTMLAttributes&lt;HTMLInputElement&gt; {
+  label?: string;
+  error?: string;
+}
+
+const Input = forwardRef&lt;HTMLInputElement, InputProps&gt;(
+  ({ label, error, ...props }, ref) =&gt; {
+    return (
+      &lt;div className={styles.inputWrapper}&gt;
+        {label &amp;&amp; &lt;label className="mb-5 inline-block"&gt;{label}&lt;/label&gt;}
+        &lt;input ref={ref} className={styles.input} {...props} /&gt;
+        {error &amp;&amp; &lt;p className={`${styles.error} fs-12 mt-5`}&gt;{error}&lt;/p&gt;}
+      &lt;/div&gt;
+    );
+  },
+);
+
+Input.displayName = "Input";
+
+export default Input;
+</code></pre>
+
+        <p>ไฟล์นี้สั้นแต่อัดแน่นด้วยแพตเทิร์นสำคัญสองเรื่อง:</p>
+
+        <p><strong>เรื่องแรก: extend props ของ input จริง</strong> — ต่างจาก Button ที่คัด props เอง <code>InputProps</code> ประกาศ <code>extends React.InputHTMLAttributes&lt;HTMLInputElement&gt;</code> แปลว่า Input ของเรารับ prop ทุกตัวที่ <code>&lt;input&gt;</code> ธรรมดารับได้ (<code>placeholder</code>, <code>type</code>, <code>name</code>, <code>value</code>, <code>onChange</code>, <code>autoComplete</code>, …) โดยไม่ต้องประกาศเองสักตัว แล้วเราเติมของเราเพิ่มสองตัว: <code>label</code> (ข้อความกำกับช่อง) กับ <code>error</code> (ข้อความ validation สีแดงใต้ช่อง) ตอน destructure เราดึง <code>label</code> กับ <code>error</code> ออกมาใช้เอง ส่วนที่เหลือ (<code>...props</code>) เท<em>ทั้งก้อน</em>ลง <code>&lt;input&gt;</code> ผ่าน spread — ทำไมช่องกรอกถึงเหมาะกับแนวทางนี้? เพราะ input มี attribute ที่จำเป็นเยอะมากและเดาล่วงหน้าไม่ได้หมด การ extend จึงประหยัดกว่าและไม่ต้องกลับมาแก้ interface ทุกครั้งที่ฟอร์มต้องการ attribute ใหม่</p>
+
+        <p><strong>เรื่องที่สอง: <code>forwardRef</code></strong> — โดยปกติ function component รับ <code>ref</code> ตรง ๆ ไม่ได้ ใครพยายามส่ง <code>ref</code> มาจะเข้าไม่ถึง DOM ข้างใน <code>forwardRef</code> คือวิธีบอก React ว่า "ref ที่ส่งมาให้ฉัน ช่วยส่งต่อไปที่ <code>&lt;input&gt;</code> จริง ๆ ข้างในด้วย" แล้วทำไมต้องมี? เฉลยล่วงหน้า: บทที่ 23 เราจะใช้ react-hook-form ซึ่งทำงานกับฟอร์มผ่านการเกาะ <code>ref</code> ของ input จริงในหน้าเว็บ (จำแนวคิด uncontrolled form จาก Week 4 ได้ไหม? react-hook-form คือ uncontrolled แบบจัดเต็ม) ถ้า Input ของเราไม่ forward ref ให้ react-hook-form จะอ่านค่าจากช่องไม่ได้เลย ส่วน <code>Input.displayName = "Input"</code> ช่วยให้ React DevTools แสดงชื่อคอมโพเนนต์สวย ๆ แทนที่จะเป็น <code>ForwardRef</code> เฉย ๆ</p>
+
+        <blockquote>💡 React 19 อนุญาตให้ส่ง <code>ref</code> เป็น prop ธรรมดาได้แล้ว แต่ <code>forwardRef</code> ยังใช้ได้ปกติและยังเป็นแพตเทิร์นที่คุณจะเจอบ่อยที่สุดในโค้ดจริงตอนนี้ — อ่านท่านี้ให้ขาด แล้วคุณจะอ่าน codebase ของบริษัทไหนก็รู้เรื่อง</blockquote>
+
+        <h2>RadioInput</h2>
+
+        <pre><code class="language-bash">mkdir -p src/shared/components/RadioInput
+</code></pre>
+
+        <p>ตัวสุดท้ายของบทนี้เบาที่สุด สร้าง <code>src/shared/components/RadioInput/RadioInput.tsx</code> — สังเกตว่าคอมโพเนนต์นี้<strong>ไม่มีไฟล์ <code>.module.scss</code></strong> เพราะหน้าตาของมันจัดได้ครบด้วย utility class ล้วน ๆ ไม่มี style เฉพาะตัวเลย ก็ไม่ต้องสร้างไฟล์เปล่าให้รก:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+
+interface RadioInputProps {
+  id: string;
+  name: string;
+  checked: boolean;
+  onChange: () =&gt; void;
+  label: React.ReactNode;
+  className?: string;
+}
+
+const RadioInput: React.FC&lt;RadioInputProps&gt; = ({
+  id,
+  name,
+  checked,
+  onChange,
+  label,
+  className = "",
+}) =&gt; {
+  return (
+    &lt;div className={`flex align-item-start ${className}`}&gt;
+      &lt;input
+        className="mr-10 mt-3"
+        type="radio"
+        id={id}
+        name={name}
+        checked={checked}
+        onChange={onChange}
+      /&gt;
+      &lt;label htmlFor={id}&gt;{label}&lt;/label&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default RadioInput;
+</code></pre>
+
+        <p>จุดที่น่าสนใจ:</p>
+
+        <ul>
+          <li><strong>controlled radio เต็มรูปแบบ</strong> — เหมือน radio ในบท Hooks ของ Week 4 เป๊ะ: ตัวคอมโพเนนต์ไม่เก็บ state เอง คนเรียกส่ง <code>checked</code> มาบอกว่าติ๊กอยู่ไหม และส่ง <code>onChange</code> มารับเหตุการณ์ตอนผู้ใช้เลือก — state จริงอยู่ที่หน้า Checkout ที่เป็นเจ้าของข้อมูล</li>
+          <li><strong><code>label: React.ReactNode</code></strong> — ไม่ใช่ <code>string</code>! แปลว่า label ยัด JSX ได้ทั้งก้อน บทที่ 24 เราจะใช้ประโยชน์เต็ม ๆ: ตัวเลือกวิธีจัดส่งมี label เป็นชื่อ + ราคา + คำอธิบาย จัดรูปแบบสวย ๆ ในก้อนเดียว</li>
+          <li><strong><code>id</code> + <code>htmlFor</code></strong> — ผูก label กับ input เข้าด้วยกัน ผู้ใช้กดที่ข้อความ (ซึ่งพื้นที่ใหญ่กว่าวงกลมเยอะ) แล้ว radio ติ๊กให้ ส่วน <code>name</code> ทำให้ radio หลายตัวรู้ว่าอยู่กลุ่มเดียวกัน — เลือกได้ทีละตัว</li>
+        </ul>
+
+        <p>มองย้อนกลับไป สามคอมโพเนนต์ = สามแนวทางออกแบบ props ที่ต่างกัน: <code>Button</code> คัด props เองเพื่อคุม API, <code>Input</code> extend props ของ native element เพื่อความยืดหยุ่น, <code>RadioInput</code> ประกาศ contract แบบ controlled ล้วน ทั้งสามท่าถูกหมด — ศิลปะอยู่ที่เลือกท่าให้เข้ากับงาน</p>
+
+        <h2>ทดสอบของที่เพิ่งสร้าง</h2>
+
+        <p>อยากเห็นปุ่มของจริง (และพิสูจน์ว่า config CJS ของเราทำงาน) ลองแปะทดสอบชั่วคราวในหน้า stub อย่าง <code>src/pages/Home/Home.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import Button from "@/shared/components/Button/Button";
+
+// วางในหน้า Home ชั่วคราว
+&lt;Button isLoading&gt;Loading...&lt;/Button&gt;
+&lt;Button&gt;Add to Cart&lt;/Button&gt;
+</code></pre>
+
+        <p>ถ้าเห็นปุ่มน้ำเงินหนึ่งอันกับวงกลมหมุน ๆ หนึ่งอัน แปลว่าทุกอย่างครบ: SCSS Modules ทำงาน, ตัวแปรสีมา, และ ClipLoader render ได้เพราะ <code>inconsistentCjsInterop</code> ของเรา — เสร็จแล้ว<strong>ลบโค้ดทดสอบออกให้เรียบร้อย</strong>ก่อนไปบทต่อไป</p>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> ตอนนี้คุณควรมีโฟลเดอร์ <code>src/shared/components/</code> ที่มี <code>Button/</code> (สองไฟล์), <code>Input/</code> (สองไฟล์) และ <code>RadioInput/</code> (ไฟล์เดียว), <code>vite.config.ts</code> มี block <code>legacy</code> พร้อม comment, รัน <code>npm run dev</code> แล้วแอปยังทำงานปกติ และ <code>npm run lint</code> ไม่มี error ถ้าเจอ "Element type is invalid" ตอนทดสอบปุ่ม isLoading ให้กลับไปเช็ก <code>vite.config.ts</code> แล้ว<em>restart dev server</em> — การแก้ config ต้อง restart เสมอ</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="08_providers_query_client.html" rel="prev">ก่อนหน้า: Providers และ QueryClient</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="10_modal_pagination.html" rel="next">ถัดไป: Modal และ Pagination</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

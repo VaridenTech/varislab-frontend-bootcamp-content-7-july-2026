@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ทำความเข้าใจสถาปัตยกรรมแบบ feature-based: ชั้น app, pages, features, shared กติกาการเป็นเจ้าของโค้ด และทิศทางการ import ระหว่างชั้น" />
+    <title>สถาปัตยกรรม Feature-based | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 05 · ติดตั้งโปรเจกต์ (Project Setup)</p>
+          <h1>สถาปัตยกรรม Feature-based</h1>
+          <p class="lesson-original-title" lang="en">Feature-based Architecture</p>
+        </header>
+
+        <p>บทนี้แทบไม่มีโค้ดให้พิมพ์ — และนั่นแหละคือประเด็น ก่อนจะสร้างไฟล์อีกหลายสิบไฟล์ในบทถัด ๆ ไป เราต้องตอบคำถามที่โปรเจกต์จริงทุกโปรเจกต์ต้องตอบ: <strong>ไฟล์แต่ละไฟล์ควรอยู่ตรงไหน และเพราะอะไร</strong> ถ้าคุณเข้าใจแผนที่ในบทนี้ บทที่เหลือทั้งคอร์สจะรู้สึกเหมือนแค่เติมของลงช่องที่เตรียมไว้แล้ว ไม่ใช่การงมว่าไฟล์ใหม่ควรไปกองไว้ที่ไหน</p>
+
+        <h2>ทำไมไม่แบ่งตามชนิดไฟล์</h2>
+
+        <p>สัญชาตญาณแรกของหลายคน (และ tutorial จำนวนมาก) คือแบ่งโฟลเดอร์ตาม<em>ชนิด</em>ของไฟล์:</p>
+
+        <pre><code class="language-bash">src/
+├── components/     # component ทั้ง 40 ตัวของทั้งแอป
+├── hooks/          # hook ทุกตัว
+├── types/          # type ทุกตัว
+├── api/            # ฟังก์ชันเรียก API ทุกตัว
+└── utils/</code></pre>
+
+        <p>โครงแบบนี้ดูเป็นระเบียบดี — ตอนที่มีไฟล์อยู่สิบไฟล์ แต่พอแอปโตขึ้น มันสร้างปัญหาซ้ำ ๆ สามข้อ:</p>
+
+        <ul>
+          <li><strong>งานหนึ่งชิ้น กระจายทั่วโปรเจกต์</strong> — แก้ฟีเจอร์ตะกร้าสินค้าทีเดียว ต้องเปิด <code>components/CartTable.tsx</code>, <code>hooks/useCart.ts</code>, <code>types/cart.ts</code>, <code>api/cart.ts</code> กระโดดไปมาสี่โฟลเดอร์ ทั้งที่ไฟล์พวกนี้เปลี่ยนพร้อมกันเสมอ</li>
+          <li><strong>โฟลเดอร์กลายเป็นกองรวม</strong> — <code>components/</code> ที่มี component 40 ตัวปนกันหมด ไม่บอกอะไรเลยว่าตัวไหนเป็นของฟีเจอร์ไหน ตัวไหนใช้ที่เดียว ตัวไหนใช้ทุกที่</li>
+          <li><strong>ลบฟีเจอร์ = ผ่าตัดใหญ่</strong> — อยากถอดระบบ checkout ออก? ขอให้โชคดีกับการไล่เก็บเศษไฟล์ที่กระจายอยู่ทุกโฟลเดอร์ให้ครบโดยไม่ลบของคนอื่นติดมือไปด้วย</li>
+        </ul>
+
+        <p>ทางแก้คือกลับหลักคิด: <strong>โค้ดที่เปลี่ยนด้วยกัน ควรอยู่ด้วยกัน</strong> — แบ่งตาม<em>ฟีเจอร์</em>ก่อน แล้วค่อยแบ่งตามชนิดไฟล์ข้างในถ้าจำเป็น นี่คือที่มาของชื่อ feature-based architecture</p>
+
+        <h2>สี่ชั้นของแอปเรา</h2>
+
+        <p><code>src/</code> ของเราแบ่งเป็นสี่ชั้นหลัก (บวกสองโฟลเดอร์เสริม) แต่ละชั้นมีหน้าที่ตอบคำถามคนละข้อ:</p>
+
+        <ul>
+          <li><strong><code>app/</code> — แอปประกอบร่างอย่างไร</strong> จุดศูนย์รวมระดับบนสุด: router, providers, query client และ layout เป็นชั้นเดียวที่ได้รับอนุญาตให้รู้จัก<em>ทุกอย่าง</em>ในแอป</li>
+          <li><strong><code>pages/</code> — แต่ละ URL แสดงอะไร</strong> หนึ่งโฟลเดอร์ต่อหนึ่ง route ทำหน้าที่เป็น "ผู้กำกับฉาก": หยิบข้อมูลจาก query และ component ของ feature มาเรียงเป็นหน้า แต่ต้อง<em>บาง</em> — ไม่มี business logic ของตัวเอง</li>
+          <li><strong><code>features/</code> — ความสามารถของแอปมีอะไรบ้าง</strong> หัวใจของสถาปัตยกรรม: <code>products</code>, <code>cart</code>, <code>checkout</code> แต่ละตัวคือ vertical slice ที่เป็นเจ้าของทุกอย่างของโดเมนตัวเอง — types, การเรียก api, queries, components ไปจนถึง store</li>
+          <li><strong><code>shared/</code> — ของกลางที่ไม่ผูกกับใคร</strong> component และเครื่องมือที่ generic จริง ๆ: Button, Modal, axios client, ฟังก์ชันคำนวณ ฯลฯ กติกาเหล็กคือห้ามมีความรู้เรื่องโดเมนของแอปปนอยู่ในนี้</li>
+          <li><code>styles/</code> — SCSS ชั้น global จากบทที่แล้ว</li>
+          <li><code>test/</code> — โครงพื้นฐานของชุดทดสอบ (มาถึงในบทที่ 26)</li>
+        </ul>
+
+        <h2>แผนที่ปลายทาง</h2>
+
+        <p>นี่คือหน้าตา <code>src/</code> เมื่อจบคอร์ส เก็บภาพนี้ไว้ในหัว (หรือ bookmark หน้านี้ไว้) — ทุกไฟล์ที่เราจะสร้างต่อจากนี้มีที่อยู่ในผังนี้แล้ว:</p>
+
+        <pre><code class="language-bash">src/
+├── app/
+│   ├── App.tsx                  # ประกอบ providers + router (บท 06)
+│   ├── providers.tsx            # QueryClientProvider, CartProvider (บท 08, 19)
+│   ├── queryClient.ts           # การตั้งค่า TanStack Query (บท 08)
+│   ├── router.tsx               # ผังเส้นทางทั้งแอป (บท 06)
+│   ├── RouteErrorFallback.tsx   # หน้าแสดง error ของ router (บท 06)
+│   └── layouts/
+│       └── MainLayout/          # Header + เนื้อหา + Footer (บท 06-07)
+├── pages/                       # route ละหนึ่งโฟลเดอร์ — บางเสมอ
+│   ├── Home/                    # (บท 16)
+│   ├── Category/                # (บท 17)
+│   ├── Product/                 # (บท 18, 20)
+│   ├── Cart/                    # (บท 21)
+│   ├── Checkout/                # (บท 25)
+│   └── Order/                   # หน้า OrderSuccess (บท 25)
+├── features/
+│   ├── products/
+│   │   ├── types.ts             # รูปร่างข้อมูลสินค้า (บท 13)
+│   │   ├── api.ts               # ฟังก์ชันเรียก dummyjson (บท 13)
+│   │   ├── queries.ts           # query key factory + queryOptions (บท 14)
+│   │   └── components/          # ProductCard, ProductsList, ... (บท 15, 18)
+│   ├── cart/
+│   │   ├── store/               # context + reducer + localStorage (บท 19)
+│   │   ├── useCart.ts           # hook สำหรับใช้งานตะกร้า (บท 19)
+│   │   └── components/          # CartSummary, CartTable, ... (บท 20-21)
+│   └── checkout/
+│       ├── schema.ts            # zod schema ของฟอร์ม (บท 22)
+│       ├── types.ts             # (บท 22)
+│       ├── consts.ts            # ตัวเลือกจัดส่ง/ชำระเงิน (บท 22)
+│       ├── api.ts               # ยิงคำสั่งซื้อ (บท 25)
+│       ├── useCheckout.ts       # mutation + ล้างตะกร้า + นำทาง (บท 25)
+│       └── components/          # ฟอร์มและกล่องสรุปต่าง ๆ (บท 23-24)
+├── shared/
+│   ├── api/                     # axios client กลาง (บท 12)
+│   ├── components/              # Button, Input, Modal, Header, ... (บท 07-11)
+│   ├── hooks/                   # useProductRoute (บท 07)
+│   ├── types/                   # global.d.ts (บท 04), generic.type.ts (บทนี้)
+│   └── utils/                   # price.utils, pagination.utils (บท 13, 15)
+├── styles/                      # จากบทที่แล้ว
+└── test/                        # setup, MSW, ตัวช่วย render (บท 26)</code></pre>
+
+        <h2>กติกาการเป็นเจ้าของ</h2>
+
+        <p>โฟลเดอร์เป็นแค่ครึ่งเดียวของสถาปัตยกรรม อีกครึ่งคือ<em>กติกา</em>ว่าอะไรอยู่ที่ไหนและใครเรียกใครได้:</p>
+
+        <ul>
+          <li><strong>pages ต้องบาง</strong> — หน้าที่ของมันคือประกอบร่าง ไม่ใช่คิดเอง ถ้าคุณเริ่มเขียนตรรกะคำนวณหรือการเรียก API ในไฟล์ page แปลว่าโค้ดนั้นกำลังหลงทาง — มันควรไปอยู่ใน feature</li>
+          <li><strong>feature เป็นเจ้าของโดเมนตัวเอง</strong> — ทุกอย่างเกี่ยวกับสินค้า (type, api, query, component แสดงสินค้า) อยู่ใน <code>features/products</code> ที่เดียว อยากรู้ว่าแอปนี้จัดการสินค้าอย่างไร เปิดโฟลเดอร์เดียวเห็นครบ และวันไหนอยากลบฟีเจอร์ทิ้ง ก็ลบโฟลเดอร์เดียวจบ</li>
+          <li><strong>shared รับเฉพาะของ generic</strong> — เกณฑ์ตัดสินง่าย ๆ: "component นี้ยกไปใช้ในแอปอื่นที่ไม่ใช่ E-commerce ได้เลยไหม?" <code>Button</code> กับ <code>Modal</code> ได้ — อยู่ shared ส่วน <code>ProductCard</code> ไม่ได้ (มันรู้จัก type <code>Product</code>) — อยู่ features แม้ <code>Header</code> ของเราจะดูเฉพาะทาง แต่มันเป็นโครงของ<em>เปลือกแอป</em>ที่ไม่ผูกกับ feature ไหนเป็นพิเศษ จึงอยู่ shared ได้</li>
+          <li><strong>import ไหลทางเดียว</strong> — <code>app → pages → features → shared</code> ชั้นบนเรียกชั้นล่างได้เสมอ แต่ห้ามย้อนกลับ: <code>shared</code> ห้าม import จาก <code>features</code> (ไม่งั้นมันไม่ generic แล้ว), <code>features</code> ห้าม import จาก <code>pages</code> และไม่มีใครนอกจาก <code>main.tsx</code> ควรแตะ <code>app</code> เมื่อไหร่ที่คุณพบว่าต้องฝืนกติกานี้ นั่นคือสัญญาณว่าไฟล์สักตัววางผิดชั้น — ย้ายไฟล์ ไม่ใช่ฝืน import</li>
+        </ul>
+
+        <blockquote>💡 กติกาข้อสุดท้ายคือเหตุผลที่สถาปัตยกรรมนี้ "อ่านง่าย": เห็นชื่อไฟล์ก็เดาได้ทันทีว่ามันรู้จักใครได้บ้าง component ใน <code>shared</code> การันตีว่าอ่านจบในตัวเอง ไม่มีสายใยลับไปแตะ state ของ feature ไหน</blockquote>
+
+        <h2>สร้างโครงโฟลเดอร์</h2>
+
+        <p>ลงมือสร้างโครงกระดูกกันเลย จาก root ของโปรเจกต์:</p>
+
+        <pre><code class="language-bash">mkdir -p src/app/layouts
+mkdir -p src/pages
+mkdir -p src/features/products src/features/cart src/features/checkout
+mkdir -p src/shared/api src/shared/components src/shared/hooks src/shared/utils</code></pre>
+
+        <p>(<code>src/shared/types</code> กับ <code>src/styles</code> มีอยู่แล้วจากบทที่แล้ว) ข้อสังเกตเล็ก ๆ สำหรับคนใช้ git: git ไม่บันทึกโฟลเดอร์เปล่า ดังนั้นถ้ารัน <code>git status</code> ตอนนี้จะยังไม่เห็นโฟลเดอร์ใหม่พวกนี้ — ไม่ใช่บั๊ก พวกมันจะเริ่มปรากฏเมื่อมีไฟล์แรกเข้าไปอยู่ในบทถัด ๆ ไป</p>
+
+        <h2>ไฟล์แรกของ shared/types</h2>
+
+        <p>ปิดบทด้วยไฟล์จริงหนึ่งไฟล์ที่เข้ากติกา "generic เท่านั้น" แบบเต็มตัว สร้างไฟล์ <code>src/shared/types/generic.type.ts</code>:</p>
+
+        <pre><code class="language-typescript">export interface Pagination {
+  total: number;
+  skip: number;
+  limit: number;
+}</code></pre>
+
+        <p>สามฟิลด์นี้คือภาษากลางของการแบ่งหน้าข้อมูลที่ dummyjson (และ API แบบ REST จำนวนมาก) ใช้: ทุกครั้งที่ขอ<em>รายการ</em>อะไรก็ตาม เซิร์ฟเวอร์จะแนบมาด้วยว่าของทั้งหมดมีกี่ชิ้น (<code>total</code>) ข้ามมากี่ชิ้น (<code>skip</code>) และหน้านี้ขอมากี่ชิ้น (<code>limit</code>) interface นี้จะได้ทำงานจริงในบทที่ 13 เมื่อ <code>FetchProductsResponse</code> ของ feature products มา <code>extends</code> มัน, ในฟังก์ชันคำนวณของ <code>pagination.utils.ts</code> และในหน้า Category (บทที่ 17) ที่แปลงสามตัวเลขนี้เป็นแถบเลขหน้าให้ผู้ใช้กด</p>
+
+        <p>สังเกตว่าทำไมมันอยู่ <code>shared/types</code> ไม่ใช่ <code>features/products</code>: ในนั้นไม่มีคำว่า product สักคำ — มันคือรูปร่างของ "การแบ่งหน้า" ล้วน ๆ ที่ list ไหน ๆ ก็ใช้ได้ ผ่านเกณฑ์ "ยกไปแอปอื่นได้ไหม" สบาย ๆ ในทางกลับกัน ถ้าวันหน้าเราเผลอเพิ่มฟิลด์ <code>products</code> เข้าไปใน interface นี้ นั่นคือวินาทีที่มันต้องย้ายบ้านออกจาก shared ทันที</p>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> บทนี้ไม่มีอะไรเปลี่ยนบนหน้าจอ — ตัวชี้วัดคือโครงสร้าง รัน <code>find src -type d | sort</code> แล้วผลลัพธ์ต้องมีครบ: <code>src/app/layouts</code>, <code>src/pages</code>, <code>src/features/products</code>, <code>src/features/cart</code>, <code>src/features/checkout</code>, <code>src/shared/api</code>, <code>src/shared/components</code>, <code>src/shared/hooks</code>, <code>src/shared/types</code>, <code>src/shared/utils</code>, <code>src/styles</code> จากนั้น <code>npm run typecheck</code> กับ <code>npm run lint</code> ต้องผ่านเหมือนเดิม ได้แผนที่ครบแล้ว — บทหน้าเราจะเริ่มเทของลงช่องแรก: react-router 8</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="04_scss_foundation.html" rel="prev">ก่อนหน้า: โครงสร้าง SCSS</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="06_react_router.html" rel="next">ถัดไป: react-router 8</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

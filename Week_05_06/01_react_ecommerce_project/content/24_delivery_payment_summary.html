@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างคอมโพเนนต์ตัวเลือกจัดส่ง ตัวเลือกชำระเงิน สรุปคำสั่งซื้อ และ Billing Summary ครบทุกชิ้นก่อนประกอบหน้า Checkout" />
+    <title>ตัวเลือกจัดส่ง ชำระเงิน และสรุปคำสั่งซื้อ | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 24 · ชำระเงิน (Checkout)</p>
+          <h1>ตัวเลือกจัดส่ง ชำระเงิน และสรุปคำสั่งซื้อ</h1>
+          <p class="lesson-original-title" lang="en">Delivery, Payment &amp; Order Summary</p>
+        </header>
+
+        <p>บทนี้เป็นบทสายผลิต: เราจะสร้างคอมโพเนนต์ที่เหลือทั้งหมดของหน้า Checkout รวดเดียว 6 ตัว แต่ก่อนลงมือ มาดูพิมพ์เขียวกันก่อน เพราะทั้ง 6 ตัวถูกออกแบบเป็น<strong>ชั้น ๆ ตามหน้าที่</strong> และการเห็นภาพนี้สำคัญกว่าโค้ดของตัวใดตัวหนึ่ง:</p>
+
+        <ul>
+          <li><strong>ชั้นล่างสุด — option components:</strong> <code>DeliveryOption</code>, <code>PaymentOption</code> เป็นคอมโพเนนต์ "โง่" (dumb/presentational) สุด ๆ — รับ props มา render เป็น radio หนึ่งแถว ไม่มี state ไม่รู้ด้วยซ้ำว่ามีตัวเลือกอื่นกี่ตัว</li>
+          <li><strong>ชั้นกลาง — box components:</strong> <code>CheckoutDeliveryBox</code>, <code>CheckoutPaymentBox</code> วนลูปรายการจาก <code>consts.ts</code> มาสร้าง option หลาย ๆ แถว และรับ "id ที่ถูกเลือก" กับ callback มาเป็น props — <em>ตัวมันก็ยังไม่ own state การเลือก</em> แค่ส่งต่อ</li>
+          <li><strong>ฝั่งขวาของหน้า:</strong> <code>SummaryOrder</code> + <code>SummaryOrderItem</code> แสดงรายการสินค้าจากตะกร้า และ <code>BillingSummary</code> แสดงยอดรวมพร้อมปุ่ม Place Order</li>
+          <li><strong>เจ้าของ state ตัวจริง:</strong> hook <code>useCheckout</code> ในบทที่ 25 — มันจะถือทั้งที่อยู่ ทั้ง id จัดส่ง/ชำระเงินที่เลือก แล้วแจกลงมาให้ทุกกล่องผ่านหน้าเพจ</li>
+        </ul>
+
+        <p>ท่านี้คือท่าเดียวกับ <code>CheckoutAddressBox</code> เมื่อบทที่แล้ว: <em>คอมโพเนนต์เล็กโง่ที่สุดเท่าที่จะโง่ได้ state ลอยขึ้นไปรวมที่จุดเดียวข้างบน</em> ผลตอบแทนคือทุกตัวในบทนี้ทดสอบง่าย ใช้ซ้ำได้ และอ่านจบใน 30 วินาที</p>
+
+        <h2>DeliveryOption — radio หนึ่งแถวของวิธีจัดส่ง</h2>
+
+        <p>สร้าง <code>src/features/checkout/components/DeliveryOption/DeliveryOption.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import RadioInput from "@/shared/components/RadioInput/RadioInput";
+
+interface DeliveryOptionProps {
+  id: number;
+  name: string;
+  description: string;
+  selected: boolean;
+  onSelect: (id: number) =&gt; void;
+}
+
+const DeliveryOption: React.FC&lt;DeliveryOptionProps&gt; = ({
+  id,
+  name,
+  description,
+  selected,
+  onSelect,
+}) =&gt; {
+  return (
+    &lt;RadioInput
+      id={`delivery-option-${id}`}
+      name="deliveryOption"
+      checked={selected}
+      onChange={() =&gt; onSelect(id)}
+      label={
+        &lt;&gt;
+          &lt;span className="mr-5"&gt;{name}&lt;/span&gt;|
+          &lt;span className="ml-5"&gt;{description}&lt;/span&gt;
+        &lt;/&gt;
+      }
+    /&gt;
+  );
+};
+
+export default DeliveryOption;
+</code></pre>
+
+        <p>นี่คือผลตอบแทนของแรงที่ลงไปในบทที่ 09 — <code>RadioInput</code> ที่เราสร้างไว้จัดการเรื่อง input + label + การจับคู่ <code>htmlFor</code> ให้หมดแล้ว คอมโพเนนต์นี้เลยเหลือแค่งานแปลงร่าง: รับข้อมูล delivery หนึ่งตัว มาประกอบเป็น props ให้ <code>RadioInput</code></p>
+
+        <ul>
+          <li><code>id={`delivery-option-${id}`}</code> — DOM id ต้องไม่ซ้ำกันทั้งหน้า เราเลยผูกกับ id ของตัวเลือก จะได้ <code>delivery-option-1</code>, <code>delivery-option-2</code> คลิกที่ label แล้ว radio ติดเพราะ id นี้แหละ</li>
+          <li><code>name="deliveryOption"</code> — radio ที่ <code>name</code> เดียวกันเป็นกลุ่มเดียวกันในสายตาเบราว์เซอร์ เลือกได้ทีละตัว</li>
+          <li><code>checked={selected}</code> กับ <code>onChange={() =&gt; onSelect(id)}</code> — ตัวมันไม่ตัดสินใจอะไรเอง ข้างบนบอกว่าถูกเลือกก็แสดงว่าถูกเลือก ผู้ใช้คลิกก็แค่ตะโกน id ของตัวเองขึ้นไป</li>
+          <li><code>label</code> รับ JSX ได้ — จำได้ไหมว่าเราประกาศ prop นี้เป็น <code>React.ReactNode</code> ไว้ ทำให้ยัด markup อย่าง ชื่อ + เส้นคั่น + คำอธิบาย ลงไปได้เลย ไม่ใช่แค่ string</li>
+        </ul>
+
+        <h2>PaymentOption — สูตรเดียวกัน หน้าตาต่างกัน</h2>
+
+        <p>สร้าง <code>src/features/checkout/components/PaymentOption/PaymentOption.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import RadioInput from "@/shared/components/RadioInput/RadioInput";
+
+interface PaymentOptionProps {
+  id: number;
+  name: string;
+  description: string;
+  selected: boolean;
+  onSelect: (id: number) =&gt; void;
+}
+
+const PaymentOption: React.FC&lt;PaymentOptionProps&gt; = ({
+  id,
+  name,
+  description,
+  selected,
+  onSelect,
+}) =&gt; {
+  return (
+    &lt;RadioInput
+      id={`payment-option-${id}`}
+      name="paymentOption"
+      checked={selected}
+      onChange={() =&gt; onSelect(id)}
+      label={
+        &lt;&gt;
+          &lt;span className="fw-medium"&gt;{name}&lt;/span&gt;
+          &lt;br /&gt;
+          &lt;span className="text-muted"&gt;{description}&lt;/span&gt;
+        &lt;/&gt;
+      }
+    /&gt;
+  );
+};
+
+export default PaymentOption;
+</code></pre>
+
+        <p>โครงเหมือน <code>DeliveryOption</code> ทั้งดุ้น ต่างกันแค่ <code>name</code> ของกลุ่ม radio กับหน้าตาของ label — ฝั่ง payment ใช้สองบรรทัด: ชื่อวิธีจ่ายตัวหนา คำอธิบายสีจางข้างใต้ คุณอาจสงสัยว่าทำไมไม่ยุบสองตัวนี้เป็นคอมโพเนนต์เดียวแล้วส่ง label เข้ามา — ทำได้ แต่สองตัวนี้เป็นคนละ concept ทางธุรกิจที่บังเอิญหน้าตาคล้ายกัน<em>วันนี้</em> วันที่ payment ต้องโชว์ไอคอนบัตรเครดิตหรือ delivery ต้องโชว์ราคา การแยกไว้แต่แรกทำให้ต่างคนต่างโตได้โดยไม่พันกัน</p>
+
+        <h2>CheckoutDeliveryBox — กล่องรวมตัวเลือกจัดส่ง</h2>
+
+        <p>ขยับขึ้นชั้นกลาง สร้าง <code>src/features/checkout/components/CheckoutDeliveryBox/CheckoutDeliveryBox.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import styles from "./CheckoutDeliveryBox.module.scss";
+import { DeliveryOption as TDeliveryOption } from "@/features/checkout/types";
+import DeliveryOption from "@/features/checkout/components/DeliveryOption/DeliveryOption";
+
+interface CheckoutDeliveryBox {
+  title: string;
+  selectedDeliveryId: number;
+  deliveryOptions: TDeliveryOption[];
+  onSelectOption: (id: number) =&gt; void;
+}
+
+const CheckoutDeliveryBox: React.FC&lt;CheckoutDeliveryBox&gt; = ({
+  title,
+  deliveryOptions,
+  selectedDeliveryId,
+  onSelectOption,
+}) =&gt; {
+  return (
+    &lt;div className={`${styles.container} p-20`}&gt;
+      &lt;h3 className="fs-20 pb-10"&gt;{title}&lt;/h3&gt;
+      &lt;hr className="mb-20" /&gt;
+
+      {deliveryOptions.map(({ id, name, description }) =&gt; (
+        &lt;div key={id} className="mb-10"&gt;
+          &lt;DeliveryOption
+            id={id}
+            name={name}
+            description={description}
+            selected={id === selectedDeliveryId}
+            onSelect={onSelectOption}
+          /&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+
+export default CheckoutDeliveryBox;
+</code></pre>
+
+        <p>คู่กับ style ของมัน <code>CheckoutDeliveryBox.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.container {
+  background-color: variables.$grey05;
+}
+</code></pre>
+
+        <p>สามจุดที่น่าหยุดดู:</p>
+
+        <ul>
+          <li><strong><code>import { DeliveryOption as TDeliveryOption }</code></strong> — ไฟล์นี้อยากใช้ชื่อ <code>DeliveryOption</code> สองความหมาย: เป็น <em>type</em> จาก <code>types.ts</code> และเป็น <em>component</em> จากบนหัวบทนี้ ชื่อชนกันตรง ๆ เราเลย rename ฝั่ง type ตอน import เป็น <code>TDeliveryOption</code> (T นำหน้า = type) — ท่ามาตรฐานเวลา type กับ component ชื่อพ้องกัน</li>
+          <li><strong>บรรทัดสำคัญที่สุดคือ <code>selected={id === selectedDeliveryId}</code></strong> — กล่องแปลง "id ที่ถูกเลือก" (ข้อมูลชิ้นเดียว) ให้กลายเป็น boolean รายตัว: ตัวที่ id ตรงได้ <code>true</code> ที่เหลือได้ <code>false</code> การเลือกทีละตัวเลยเกิดขึ้นเองโดยไม่ต้องมี logic ยกเลิกตัวเก่า</li>
+          <li><strong><code>onSelect={onSelectOption}</code></strong> — callback ถูกส่งผ่านลงไปเฉย ๆ พอผู้ใช้คลิก Express Delivery ข้อความ "เลือก id 2 แล้วนะ" จะวิ่งจาก <code>RadioInput</code> → <code>DeliveryOption</code> → กล่องนี้ → หน้าเพจ → <code>useCheckout</code> แล้วค่าที่อัปเดตก็ไหลย้อนกลับลงมาเป็น <code>selectedDeliveryId</code> ตัวใหม่ — วงจร one-way data flow ครบรอบ</li>
+        </ul>
+
+        <p>เกร็ด TypeScript: ไฟล์นี้ประกาศ <code>interface CheckoutDeliveryBox</code> ชื่อเดียวกับตัว component เป๊ะ ๆ ซึ่ง TypeScript ยอมให้ทำได้ เพราะ type กับค่า (value) อยู่คนละ namespace กัน — อ่านแล้วอย่าเพิ่งงงว่าทำไม compile ผ่าน</p>
+
+        <h2>CheckoutPaymentBox — ฝาแฝดฝั่งชำระเงิน</h2>
+
+        <p>สร้าง <code>src/features/checkout/components/CheckoutPaymentBox/CheckoutPaymentBox.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import styles from "./CheckoutPaymentBox.module.scss";
+import { PaymentOption as TPaymentOption } from "@/features/checkout/types";
+import PaymentOption from "@/features/checkout/components/PaymentOption/PaymentOption";
+
+interface CheckoutPaymentBoxProps {
+  title: string;
+  selectedPaymentId: number;
+  paymentOptions: TPaymentOption[];
+  onSelectOption: (id: number) =&gt; void;
+}
+
+const CheckoutPaymentBox: React.FC&lt;CheckoutPaymentBoxProps&gt; = ({
+  title,
+  paymentOptions,
+  selectedPaymentId,
+  onSelectOption,
+}) =&gt; {
+  return (
+    &lt;div className={`${styles.container} p-20`}&gt;
+      &lt;h3 className="fs-20 pb-10"&gt;{title}&lt;/h3&gt;
+      &lt;hr className="mb-20" /&gt;
+
+      {paymentOptions.map(({ id, name, description }) =&gt; (
+        &lt;div key={id} className="mb-10"&gt;
+          &lt;PaymentOption
+            id={id}
+            name={name}
+            description={description}
+            selected={id === selectedPaymentId}
+            onSelect={onSelectOption}
+          /&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+
+export default CheckoutPaymentBox;
+</code></pre>
+
+        <p>และ <code>CheckoutPaymentBox.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.container {
+  background-color: variables.$grey05;
+}
+</code></pre>
+
+        <p>โครงสร้างล้อกับกล่อง delivery ทุกประการ — รับรายการ, รับ id ที่เลือก, map เป็น option, ส่ง callback ต่อ สังเกตว่า<em>ทั้งสองกล่องไม่ hardcode รายการตัวเลือกเอง</em> แต่รับผ่าน props: คนที่ import <code>deliveryOptions</code> / <code>paymentOptions</code> จาก <code>consts.ts</code> ตัวจริงคือ <code>useCheckout</code> ในบทหน้า นี่คือเหตุผลที่บทที่ 22 เราย้ำว่าข้อมูลต้องอยู่นอกคอมโพเนนต์</p>
+
+        <h2>SummaryOrderItem — สินค้าหนึ่งแถวในใบสรุป</h2>
+
+        <p>ข้ามมาฝั่งขวาของหน้า: ใบสรุปคำสั่งซื้อ เริ่มจากหน่วยเล็กสุดก่อน สร้าง <code>src/features/checkout/components/SummaryOrderItem/SummaryOrderItem.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./SummaryOrderItem.module.scss";
+import { CartItem } from "@/features/cart/store/CartContext";
+
+interface SummaryOrderItemProps {
+  item: CartItem;
+}
+
+const SummaryOrderItem: React.FC&lt;SummaryOrderItemProps&gt; = ({ item }) =&gt; {
+  const { title, price, quantity, id, image } = item;
+
+  return (
+    &lt;div key={id} className={`flex align-item-center`}&gt;
+      &lt;img className={`${styles.image} mr-10`} src={image} alt={title} /&gt;
+      &lt;div className="flex-grow"&gt;
+        &lt;p className="fs-16 fw-medium mb-5"&gt;{title}&lt;/p&gt;
+        &lt;p className="fs-14 text-muted"&gt;
+          ${price.toFixed(2)} X {quantity}
+        &lt;/p&gt;
+      &lt;/div&gt;
+      &lt;div className="fs-16 fw-bold text-primary"&gt;
+        ${(price * quantity).toFixed(2)}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default SummaryOrderItem;
+</code></pre>
+
+        <p>กับ <code>SummaryOrderItem.module.scss</code> ที่สั้นที่สุดในคอร์ส:</p>
+
+        <pre><code class="language-scss">.image {
+  width: 60px;
+}
+</code></pre>
+
+        <p>จุดที่น่าสนใจที่สุดของไฟล์นี้คือบรรทัด import: <code>import { CartItem } from "@/features/cart/store/CartContext";</code> — คอมโพเนนต์ของ feature <em>checkout</em> ไป import type จาก feature <em>cart</em> นี่ไม่ใช่การละเมิดสถาปัตยกรรม แต่เป็นการ<strong>ยอมรับความจริงของ domain</strong>: ใบสรุปคำสั่งซื้อแสดง "ของในตะกร้า" โดยนิยาม ข้อมูลนั้นเป็นของ cart และ cart เป็นคนนิยามรูปร่างมัน การประกาศ type ใหม่ฝั่ง checkout ให้หน้าตาเหมือนกันจะสร้าง drift แบบเดียวกับที่เราหนีมาตั้งแต่บทที่ 22 — feature หนึ่งพึ่ง <em>type สาธารณะ</em> ของอีก feature ได้ ตราบใดที่พึ่งในทิศทางที่ make sense ตาม flow ของธุรกิจ (checkout เกิดหลัง cart เสมอ)</p>
+
+        <p>ที่เหลือคืองานแสดงผลตรง ๆ: รูปเล็ก 60px, ชื่อสินค้า, <code>${price.toFixed(2)} X {quantity}</code> บรรทัดจาง ๆ และราคารวมต่อรายการ (<code>price * quantity</code>) ตัวหนาสีแบรนด์ชิดขวาด้วย <code>flex-grow</code> ตรงกลางที่ดันมันออกไป</p>
+
+        <h2>SummaryOrder — ใบสรุปที่อ่านตะกร้าเอง</h2>
+
+        <p>สร้าง <code>src/features/checkout/components/SummaryOrder/SummaryOrder.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./SummaryOrder.module.scss";
+import { useCart } from "@/features/cart/useCart";
+import SummaryOrderItem from "@/features/checkout/components/SummaryOrderItem/SummaryOrderItem";
+
+const SummaryOrder: React.FC = () =&gt; {
+  const { cart } = useCart();
+
+  return (
+    &lt;div className={`${styles.container} p-20`}&gt;
+      &lt;h3 className="fs-20 mb-5"&gt;Summary Order&lt;/h3&gt;
+      &lt;p className="fs-14 text-muted mb-15"&gt;
+        For a better experience, verify your goods and choose your shipping
+        option.
+      &lt;/p&gt;
+      &lt;hr className="mb-15" /&gt;
+      {cart.items.map((item) =&gt; (
+        &lt;div className="mb-15" key={item.id}&gt;
+          &lt;SummaryOrderItem item={item} /&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+
+export default SummaryOrder;
+</code></pre>
+
+        <p>และ <code>SummaryOrder.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.container {
+  background-color: variables.$grey05;
+}
+</code></pre>
+
+        <p>ตัวนี้แหวกแนวจากเพื่อนร่วมบทนิดหนึ่ง: มัน<em>ไม่รับ props เลย</em> แต่เรียก <code>useCart()</code> ดึงข้อมูลตะกร้าจาก context ตรง ๆ (hook จากบทที่ 19) ทำไมไม่ส่ง <code>cart.items</code> ลงมาเป็น prop เหมือนตัวอื่น? เพราะข้อมูลตะกร้า<em>มีเจ้าของอยู่แล้ว</em>ใน <code>CartProvider</code> ระดับแอป การให้หน้าเพจอ่านจาก context แล้วส่งต่อลงมาอีกทอดเป็นแค่การเพิ่ม prop-drilling โดยไม่ได้อะไรเพิ่ม ต่างจาก "id ที่เลือก" ของ delivery/payment ซึ่งเป็น state ที่<em>เกิดในหน้า Checkout เอง</em>จึงต้องไหลผ่าน props — เกณฑ์การตัดสินใจคือ <strong>state เป็นของใคร</strong> ไม่ใช่ความเคยชิน</p>
+
+        <h2>BillingSummary — ยอดเงินและปุ่มชี้ชะตา</h2>
+
+        <p>ชิ้นสุดท้ายของบท สร้าง <code>src/features/checkout/components/BillingSummary/BillingSummary.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./BillingSummary.module.scss";
+import Button from "@/shared/components/Button/Button";
+
+interface BillingSummaryProps {
+  subTotal: number;
+  shipping: number;
+  total: number;
+  isLoading: boolean;
+  isDisabled: boolean;
+  onPlaceOrder: () =&gt; void;
+}
+
+const BillingSummary: React.FC&lt;BillingSummaryProps&gt; = ({
+  subTotal,
+  shipping,
+  total,
+  isLoading = false,
+  isDisabled = false,
+  onPlaceOrder,
+}) =&gt; {
+  return (
+    &lt;div className={`${styles.container} p-20`}&gt;
+      &lt;h3 className="fs-20 fw-bold mb-20"&gt;Billing Summary&lt;/h3&gt;
+      &lt;hr className="mb-20" /&gt;
+      &lt;div className="flex justify-between mb-10"&gt;
+        &lt;span className="fs-18 text-muted"&gt;Sub Total&lt;/span&gt;
+        &lt;span className="fs-18 text-primary"&gt;${subTotal.toFixed(2)}&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div className="flex justify-between mb-10"&gt;
+        &lt;span className="fs-18 text-muted"&gt;Shipping&lt;/span&gt;
+        &lt;span className="fs-18 fw-medium text-primary"&gt;
+          ${shipping.toFixed(2)}
+        &lt;/span&gt;
+      &lt;/div&gt;
+      &lt;hr className="mb-20" /&gt;
+      &lt;div className="flex justify-between mb-20"&gt;
+        &lt;span className="fs-24 fw-bold"&gt;Total&lt;/span&gt;
+        &lt;span className="fs-24 fw-bold text-primary"&gt;${total.toFixed(2)}&lt;/span&gt;
+      &lt;/div&gt;
+
+      &lt;Button
+        className="width-full"
+        onClick={onPlaceOrder}
+        isLoading={isLoading}
+        disabled={isDisabled}
+      &gt;
+        Place Order
+      &lt;/Button&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default BillingSummary;
+</code></pre>
+
+        <p>ปิดท้ายด้วย <code>BillingSummary.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.container {
+  background-color: variables.$grey05;
+}
+</code></pre>
+
+        <p><code>BillingSummary</code> เป็น presentational แท้ ๆ อีกตัว: รับตัวเลขสามตัว (<code>subTotal</code>, <code>shipping</code>, <code>total</code>) มาแสดง ไม่คำนวณอะไรเองเลยสักบาท — การคำนวณทั้งหมดจะอยู่ใน <code>useCheckout</code> ซึ่งเป็นที่เดียวที่รู้ทั้งของในตะกร้าและค่าส่งของ delivery ที่ถูกเลือก การแยกแบบนี้ทำให้บทที่ 27–29 เราเทสต์ "คำนวณถูกไหม" กับ "แสดงผลถูกไหม" แยกจากกันได้อย่างสะอาด</p>
+
+        <p>ส่วนปุ่ม Place Order ใช้ของเก่าจากบทที่ 09 คุ้มมาก:</p>
+
+        <ul>
+          <li><code>isLoading</code> — ตอนบทหน้าเรายิงคำสั่งซื้อขึ้น API ปุ่มจะเปลี่ยนเป็น <code>ClipLoader</code> หมุน ๆ อัตโนมัติ เพราะ <code>Button</code> ของเรารองรับ prop นี้อยู่แล้ว</li>
+          <li><code>disabled={isDisabled}</code> — บทหน้าเราจะส่งเงื่อนไข "ยังไม่ได้กรอกที่อยู่" เข้ามาทางนี้ กันผู้ใช้กดสั่งซื้อทั้งที่ข้อมูลไม่ครบ</li>
+          <li><code>onClick={onPlaceOrder}</code> — เช่นเคย ตัวปุ่มไม่รู้ว่า "สั่งซื้อ" แปลว่าอะไร แค่ส่งสัญญาณขึ้นไป</li>
+        </ul>
+
+        <blockquote>💡 Checkpoint: จบบทนี้ feature checkout ของคุณควรมีคอมโพเนนต์ครบ 9 ตัว — <code>CheckoutAddressForm</code>, <code>CheckoutAddressBox</code> (บทที่แล้ว), <code>DeliveryOption</code>, <code>PaymentOption</code>, <code>CheckoutDeliveryBox</code>, <code>CheckoutPaymentBox</code>, <code>SummaryOrder</code>, <code>SummaryOrderItem</code> และ <code>BillingSummary</code> โดยกล่องที่มี <code>.module.scss</code> คือกล่องพื้นเทาทั้งห้า (Address/Delivery/Payment/Summary/Billing) กับรูปสินค้าใน <code>SummaryOrderItem</code> ทั้งหมด compile ผ่าน ไม่มีเส้นแดง — หน้าจอยังไม่มีอะไรเปลี่ยนเหมือนเดิม เพราะชิ้นส่วนทุกชิ้นกำลังรอบทที่ 25 บทเดียวที่จะประกอบร่างทั้งหมดแล้วกดสั่งซื้อจริง</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="23_address_form.html" rel="prev">ก่อนหน้า: ฟอร์มที่อยู่</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="25_place_order.html" rel="next">ถัดไป: สั่งซื้อ</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ประกอบหน้า Home เต็มรูปแบบ: แบนเนอร์ carousel ด้วย Swiper, ดีลพิเศษพร้อม CountdownTimer, รายการสินค้าตามหมวดหมู่ และการจัดการ loading/error" />
+    <title>หน้า Home | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 16 · สร้างหน้าเพจ (Pages)</p>
+          <h1>หน้า Home: ประกอบทุกอย่างเป็นหน้าแรก</h1>
+          <p class="lesson-original-title" lang="en">Home Page</p>
+        </header>
+
+        <p>ถึงเวลาเก็บเกี่ยวผลงานแล้ว! ตั้งแต่บทเรียน 09 เป็นต้นมาเราสร้างคอมโพเนนต์เก็บไว้เต็มกล่อง — FeatureCard, CountdownTimer, ImageZoom จากบทเรียน 11, query factories จากบทเรียน 14, แล้วก็ ProductCard, ProductsList, CategoryMenu สด ๆ จากบทที่แล้ว บทนี้เราจะเอาทั้งหมดมาประกอบเป็นหน้า Home จริง แทนที่ stub เปล่า ๆ ที่ค้างมาตั้งแต่บทเรียน 06 พอจบบทนี้ เปิด <code>http://localhost:5173/</code> แล้วคุณจะเห็นหน้าแรกของเว็บ E-commerce เต็มรูปแบบ: แบนเนอร์เลื่อนอัตโนมัติ, ดีลประจำวันพร้อมตัวนับถอยหลัง, แถวรูปโปรโมชัน และรายการสินค้าตามหมวดหมู่ ทั้งหมดขับเคลื่อนด้วยข้อมูลจริงจาก dummyjson</p>
+
+        <h2>ขั้นแรก: เตรียมรูปภาพประกอบ</h2>
+
+        <p>หน้า Home ใช้รูปภาพนิ่งอยู่ชุดหนึ่ง — แบนเนอร์ 3 รูปและรูปดีลโปรโมชัน 4 รูป — ซึ่งเป็นไฟล์ design ไม่ใช่ข้อมูลจาก API รูปชุดนี้อยู่ใน repo ต้นฉบับแล้ว เปิดโฟลเดอร์นี้บน GitHub:</p>
+
+        <p><a href="https://github.com/manjarb/varis-lab-project-06-react-ecommerce-app/tree/main/public/images">github.com/manjarb/varis-lab-project-06-react-ecommerce-app/tree/main/public/images</a></p>
+
+        <p>ในนั้นมีโฟลเดอร์ย่อย <code>banners</code> (ไฟล์ <code>01.png</code>, <code>02.png</code>, <code>03.png</code>) และ <code>deals</code> (ไฟล์ <code>01.png</code> ถึง <code>04.png</code>) คลิกเข้าไปทีละไฟล์แล้วกดปุ่ม download (ไอคอนลูกศรชี้ลงมุมขวาบนของหน้าแสดงไฟล์) จากนั้นวางลงในโปรเจกต์ของคุณให้ได้โครงสร้างแบบนี้เป๊ะ ๆ:</p>
+
+        <pre><code class="language-bash">public/
+└── images/
+    ├── banners/
+    │   ├── 01.png
+    │   ├── 02.png
+    │   └── 03.png
+    └── deals/
+        ├── 01.png
+        ├── 02.png
+        ├── 03.png
+        └── 04.png
+</code></pre>
+
+        <p>ทวนความจำเรื่องโฟลเดอร์ <code>public</code> ของ Vite นิดหนึ่ง: ทุกไฟล์ในนั้นถูกเสิร์ฟจาก root ของเว็บตรง ๆ โดยไม่ผ่าน bundler ดังนั้น <code>public/images/banners/01.png</code> จะเรียกใช้ในโค้ดด้วย path <code>/images/banners/01.png</code> (ไม่มีคำว่า <code>public</code> นำหน้า) เหมาะกับรูปแบบนี้ที่เราอ้างถึงด้วย URL ตรง ๆ และไม่ต้องการให้ Vite แปลงชื่อไฟล์</p>
+
+        <h2>ติดตั้ง Swiper</h2>
+
+        <p>แบนเนอร์ด้านบนสุดของหน้าเป็น carousel — รูปหลายรูปสลับกันเลื่อนอัตโนมัติ พร้อมปุ่มลูกศรและจุดบอกตำแหน่ง การเขียน carousel เองให้ครบทั้ง touch swipe, loop, autoplay และ accessibility เป็นงานใหญ่เกินตัวมาก นี่คือจังหวะที่ควรใช้ library ที่พิสูจน์แล้ว เราใช้ <a href="https://swiperjs.com">Swiper</a> ซึ่งเป็น carousel library ที่นิยมที่สุดตัวหนึ่งและมี React components ให้ในตัว:</p>
+
+        <pre><code class="language-bash">npm i swiper
+</code></pre>
+
+        <h2>Banner: carousel ตัวแรกของเรา</h2>
+
+        <p>Banner เป็นของหน้า Home โดยเฉพาะ ไม่มีหน้าอื่นใช้ เราจึงไม่วางมันใน <code>shared</code> แต่วางเป็นคอมโพเนนต์ลูกของหน้า Home เอง — สังเกต pattern โฟลเดอร์ <code>components</code> ซ้อนอยู่ใต้หน้าเพจ ซึ่งเราจะใช้อีกกับหน้า Category และ Product สร้างไฟล์ <code>src/pages/Home/components/Banner/Banner.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+
+import "swiper/swiper-bundle.css";
+
+const Banner: React.FC = () =&gt; {
+  const banners = [
+    {
+      id: 1,
+      image: "/images/banners/01.png",
+      alt: "Banner 1",
+    },
+    {
+      id: 2,
+      image: "/images/banners/02.png",
+      alt: "Banner 2",
+    },
+  ];
+
+  return (
+    &lt;div className="banner-container"&gt;
+      &lt;Swiper
+        modules={[Navigation, Pagination, Autoplay]}
+        spaceBetween={30}
+        slidesPerView={1}
+        navigation
+        pagination={{ clickable: true }}
+        autoplay={{ delay: 3000, disableOnInteraction: false }}
+        loop
+      &gt;
+        {banners.map((banner) =&gt; (
+          &lt;SwiperSlide key={banner.id}&gt;
+            &lt;img src={banner.image} alt={banner.alt} /&gt;
+          &lt;/SwiperSlide&gt;
+        ))}
+      &lt;/Swiper&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default Banner;
+</code></pre>
+
+        <p>วิธีใช้ Swiper ฝั่ง React มีสามส่วน:</p>
+
+        <ul>
+          <li><strong>Components</strong> — <code>&lt;Swiper&gt;</code> คือกรอบ carousel และ <code>&lt;SwiperSlide&gt;</code> คือสไลด์แต่ละใบ เรา map จาก array <code>banners</code> ที่ประกาศไว้ในไฟล์ (ใช้แค่รูป 01 กับ 02 — ส่วนรูป 03 เก็บไว้เป็นแบนเนอร์ยาวท้ายหน้า เดี๋ยวเจอใน Home.tsx)</li>
+          <li><strong>Modules</strong> — Swiper แยกความสามารถเป็นโมดูลเพื่อไม่ให้ bundle บวม อยากได้อะไรต้องส่งเข้า prop <code>modules</code> เอง: <code>Navigation</code> ให้ปุ่มลูกศรซ้ายขวา, <code>Pagination</code> ให้จุดบอกตำแหน่งด้านล่าง (<code>clickable: true</code> = กดจุดเพื่อกระโดดข้ามสไลด์ได้), <code>Autoplay</code> เลื่อนเองทุก 3 วินาที (<code>delay: 3000</code> มีหน่วยเป็น millisecond) โดย <code>disableOnInteraction: false</code> แปลว่าถึงผู้ใช้จะปัดเอง autoplay ก็ยังทำงานต่อ ไม่หยุดถาวร ปิดท้ายด้วย <code>loop</code> ให้สไลด์สุดท้ายวนกลับไปสไลด์แรกแบบไร้รอยต่อ</li>
+          <li><strong>CSS</strong> — <code>swiper/swiper-bundle.css</code> คือ style ของปุ่ม จุด และ animation ทั้งหมด ไฟล์นี้ Banner import เองเพราะมีแค่คอมโพเนนต์นี้ที่ใช้ ต่างจาก skeleton.css ที่ import กลางใน main.tsx เพราะ skeleton โผล่ได้ทั่วแอป</li>
+          <li>ระวังชื่อชนกัน: <code>Pagination</code> ของ Swiper ในไฟล์นี้เป็นคนละตัวกับคอมโพเนนต์ <code>Pagination</code> ของเราจากบทเรียน 10 — อยู่กันคนละไฟล์เลยไม่มีปัญหา แต่ถ้าวันหนึ่งต้อง import ทั้งคู่ในไฟล์เดียว ใช้ <code>import { Pagination as SwiperPagination }</code> แก้ได้</li>
+        </ul>
+
+        <h2>Home.tsx: เดินดูทีละส่วน</h2>
+
+        <p>ทีนี้ถึงไฟล์ใหญ่ของบท เราจะแทนที่ stub ใน <code>src/pages/Home/Home.tsx</code> ทั้งไฟล์ แต่เพราะมันยาว เราค่อย ๆ เดินดูทีละส่วนก่อน แล้วค่อยดูไฟล์ฉบับเต็มตอนท้าย</p>
+
+        <h3>ส่วนที่ 1: state และ queries</h3>
+
+        <pre><code class="language-typescript">const PRODUCTS_LIST_LIMIT = 12;
+
+const Home: React.FC = () =&gt; {
+  const [selectedCategory, setSelectedCategory] = useState&lt;CategoryType | null&gt;(
+    null,
+  );
+  const { goToProductDetails } = useProductRoute();
+
+  const {
+    data: bestProductsData,
+    isLoading: isBestProductsLoading,
+    isError: isBestProductsError,
+  } = useQuery(productQueries.list({ limit: 5 }));
+  const { data: categories } = useQuery(productQueries.categories());
+
+  const currentCategory = selectedCategory ?? categories?.[0] ?? null;
+
+  const {
+    data: categoryProducts,
+    isLoading: isCategoryProductsLoading,
+    isError: isCategoryProductsError,
+  } = useQuery({
+    ...productQueries.byCategory({
+      category: currentCategory?.slug ?? "",
+      limit: PRODUCTS_LIST_LIMIT,
+    }),
+    enabled: currentCategory !== null,
+  });
+</code></pre>
+
+        <p>หน้านี้ยิงสาม queries และทุกตัวใช้ factory จากบทเรียน 14 — ไม่มีการเขียน queryKey ด้วยมือแม้แต่ตัวเดียว:</p>
+
+        <ul>
+          <li><strong><code>productQueries.list({ limit: 5 })</code></strong> — สินค้าขายดี 5 ตัวแรกสำหรับแถว "DEALS OF THE DAY" สังเกตการ rename ตอน destructure: <code>data: bestProductsData</code>, <code>isLoading: isBestProductsLoading</code> — จำเป็นเพราะหน้านี้มีหลาย query ชื่อ <code>data</code> เฉย ๆ จะชนกัน</li>
+          <li><strong><code>productQueries.categories()</code></strong> — รายชื่อหมวดหมู่สำหรับ CategoryMenu จำได้ไหมว่า factory ตัวนี้ตั้ง <code>staleTime</code> 5 นาทีไว้ เพราะรายชื่อหมวดแทบไม่เปลี่ยน — หน้า Category ในบทถัดไปที่เรียก query เดียวกันจะได้ข้อมูลจาก cache ทันทีโดยไม่ยิง API ซ้ำ</li>
+          <li><strong><code>productQueries.byCategory(…)</code></strong> — สินค้า 12 ตัวของหมวดที่กำลังเลือก ตัวนี้มีเงื่อนไขพิเศษ: <code>enabled: currentCategory !== null</code> แปลว่า "อย่าเพิ่งยิงจนกว่าจะรู้ว่าหมวดไหน" เพราะตอน mount แรกสุด รายชื่อหมวดยังโหลดไม่เสร็จ <code>currentCategory</code> ยังเป็น <code>null</code> — ถ้าไม่มี <code>enabled</code> เราจะยิง API ด้วย <code>category=""</code> ซึ่งไร้ความหมาย นี่คือ pattern "dependent query" ที่เจอใน Week 4: query หนึ่งรอผลของอีก query หนึ่ง</li>
+        </ul>
+
+        <p>บรรทัดที่สำคัญที่สุดของหน้านี้คือบรรทัดสั้น ๆ นี้:</p>
+
+        <pre><code class="language-typescript">const currentCategory = selectedCategory ?? categories?.[0] ?? null;
+</code></pre>
+
+        <p>โจทย์คือ: ตอนเปิดหน้ามาให้เลือกหมวดแรกโดยอัตโนมัติ แต่พอผู้ใช้คลิกหมวดอื่นก็ให้เปลี่ยนตาม มือใหม่จำนวนมากจะแก้โจทย์นี้ด้วย <code>useEffect</code> ที่คอยเฝ้า <code>categories</code> แล้ว <code>setSelectedCategory(categories[0])</code> เมื่อโหลดเสร็จ — ซึ่งเป็น anti-pattern ที่บทเรียน Effects ของ Week 4 เตือนไว้ตรง ๆ ว่า "อย่าใช้ effect เพื่อ sync state จาก props/data" เพราะได้ render เพิ่มฟรีหนึ่งรอบ แถมสร้างโอกาสที่ state สอง copy จะขัดแย้งกันเอง วิธีที่ถูกคือ<strong>คำนวณสด (derive) ระหว่าง render</strong>: <code>selectedCategory</code> เก็บเฉพาะ "สิ่งที่ผู้ใช้เลือกเอง" (เริ่มจาก <code>null</code> = ยังไม่เคยเลือก) แล้วค่าที่ใช้จริงคือ "ที่ผู้ใช้เลือก ถ้าไม่มีก็หมวดแรก ถ้ายังโหลดไม่เสร็จก็ <code>null</code>" — nullish coalescing ต่อกันสองชั้นอ่านเป็นภาษาคนได้เลย และไม่มีทาง desync เพราะมันไม่ได้ถูกเก็บไว้ที่ไหนเลย</p>
+
+        <h3>ส่วนที่ 2: targetDate สำหรับตัวนับถอยหลัง</h3>
+
+        <pre><code class="language-typescript">  const targetDate = useMemo(() =&gt; {
+    const date = new Date();
+    date.setDate(date.getDate() + 1); // Add 1 days
+
+    return date.toISOString();
+  }, []);
+</code></pre>
+
+        <p>แถวดีลประจำวันมี CountdownTimer จากบทเรียน 11 ซึ่งรับ prop <code>targetDate</code> เป็นเวลาเป้าหมาย เราตั้งไว้ที่ "พรุ่งนี้เวลานี้" ทำไมต้อง <code>useMemo</code> ด้วย dependency ว่าง? เพราะถ้าเขียน <code>new Date()</code> เปล่า ๆ ในตัวคอมโพเนนต์ ทุกครั้งที่ Home re-render (ซึ่งเกิดตลอด — ทุกการคลิกหมวด ทุกครั้งที่ query กลับมา) เป้าหมายจะถูกสร้างใหม่เลื่อนไปเรื่อย ๆ ตัวนับจะค้างที่ 24 ชั่วโมงตลอดกาล <code>useMemo(…, [])</code> ล็อกให้คำนวณครั้งเดียวตอน mount แล้วใช้ค่าเดิมไปตลอดชีวิตของหน้า</p>
+
+        <h3>ส่วนที่ 3: pattern แสดงผล error → loading → data</h3>
+
+        <p>ทั้งแถวดีลและรายการสินค้าตามหมวดใช้ pattern เดียวกันในการแสดงผล ดูตัวอย่างจากแถวดีล:</p>
+
+        <pre><code class="language-typescript">{isBestProductsError ? (
+  &lt;ErrorMessage /&gt;
+) : isBestProductsLoading ? (
+  &lt;div className="text-center"&gt;
+    &lt;ClipLoader
+      size={40}
+      aria-label="Loading Spinner"
+      data-testid="loader"
+    /&gt;
+  &lt;/div&gt;
+) : (
+  &lt;ProductsList
+    products={bestProductsData?.products}
+    onProductClick={onProductClick}
+  /&gt;
+)}
+</code></pre>
+
+        <p>ternary ซ้อนสองชั้นอ่านจากบนลงล่าง: พังไหม → แสดง <code>ErrorMessage</code>, ยังโหลดอยู่ไหม → แสดง <code>ClipLoader</code>, ปกติ → แสดงรายการสินค้า ลำดับนี้สำคัญ: <strong>เช็ค error ก่อน loading เสมอ</strong> เพราะถ้าเช็ค loading ก่อนแล้ว query fail ไปแล้ว (<code>isLoading</code> เป็น <code>false</code>, <code>isError</code> เป็น <code>true</code>) โค้ดที่เช็คสลับลำดับบางแบบจะหลุดไปพยายาม render ข้อมูลที่ไม่มี และที่สำคัญกว่านั้น — การมี error state ในทุกจุดที่ยิง API คือสิ่งที่แยกแอปมืออาชีพจากแอปฝึกหัด: เน็ตล่มแล้วผู้ใช้ต้องเห็นข้อความบอก ไม่ใช่ spinner หมุนค้างตลอดกาลโดยไม่มีวันมีอะไรมา</p>
+
+        <p>สังเกตด้วยว่า error ของแต่ละ section เป็น <em>inline</em> — ถ้าแถวดีลโหลดพลาด ผู้ใช้เห็นข้อความ error เฉพาะแถวนั้น แต่แบนเนอร์ รูปโปรโมชัน และรายการหมวดหมู่ยังทำงานปกติ หน้าไม่ล้มทั้งหน้าเพราะ API ตัวเดียวสะดุด</p>
+
+        <h3>ส่วนที่ 4: โครง JSX ของหน้า</h3>
+
+        <p>ที่เหลือของ JSX คือการวางคอมโพเนนต์ที่มีอยู่แล้วเรียงจากบนลงล่าง: <code>&lt;Banner /&gt;</code>, แถว <code>FeatureCard</code> สี่ใบ (Free Shipping / 24×7 / Festival offer / Online payment — ไอคอนจาก Font Awesome ที่ติดตั้งไว้บทเรียน 07), แถวดีลพร้อม <code>CountdownTimer</code>, ตาราง <code>ImageZoom</code> สามคอลัมน์จากรูป deals ที่เพิ่งดาวน์โหลด, section หมวดหมู่ที่ประกบ <code>CategoryMenu</code> กับ <code>ProductsList</code> และปิดท้ายด้วยแบนเนอร์ยาว (รูป <code>banners/03.png</code>) ใน <code>ImageZoom</code></p>
+
+        <p>จุดเชื่อมต่อที่ควรสังเกตมีสองจุด จุดแรกคือ CategoryMenu:</p>
+
+        <pre><code class="language-typescript">&lt;CategoryMenu
+  activeCategory={currentCategory?.slug}
+  categories={categories || []}
+  onCategoryClick={setSelectedCategory}
+/&gt;
+</code></pre>
+
+        <p>เพราะ contract ของ CategoryMenu ส่งทั้ง <code>Category</code> object กลับมา และ state ของเราก็เก็บ <code>CategoryType | null</code> พอดี เราจึงส่ง <code>setSelectedCategory</code> เป็น callback ได้ตรง ๆ ไม่ต้องห่อ arrow function เลย — คลิกปุ๊บ state เปลี่ยน, <code>currentCategory</code> ถูกคำนวณใหม่, query <code>byCategory</code> เห็น queryKey ใหม่แล้วยิงขอข้อมูลหมวดใหม่เอง ทั้ง chain นี้ไหลจากการ <code>setState</code> ครั้งเดียว</p>
+
+        <p>จุดที่สองคือการคลิกการ์ดสินค้า:</p>
+
+        <pre><code class="language-typescript">const onProductClick = (productId: number) =&gt; {
+  goToProductDetails(productId);
+};
+</code></pre>
+
+        <p><code>useProductRoute</code> จากบทเรียน 07 คือ hook รวมทางเดินของแอป — <code>goToProductDetails(id)</code> พาไป <code>/products/:id</code> ตอนนี้หน้านั้นยังเป็น stub อยู่ แต่บทเรียน 18 จะทำให้มันกลายเป็นหน้ารายละเอียดสินค้าเต็มตัว</p>
+
+        <h3>ไฟล์ฉบับสมบูรณ์</h3>
+
+        <p>แทนที่เนื้อหา <code>src/pages/Home/Home.tsx</code> ทั้งไฟล์ด้วยโค้ดนี้:</p>
+
+        <pre><code class="language-typescript">import React, { useMemo, useState } from "react";
+import {
+  faTruck,
+  faVolumeHigh,
+  faBolt,
+} from "@fortawesome/free-solid-svg-icons";
+import { faClock, faCreditCard } from "@fortawesome/free-regular-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import ClipLoader from "react-spinners/ClipLoader";
+import { useQuery } from "@tanstack/react-query";
+import styles from "./Home.module.scss";
+import Banner from "./components/Banner/Banner";
+import CountdownTimer from "@/shared/components/CountdownTimer/CountdownTimer";
+import ImageZoom from "@/shared/components/ImageZoom/ImageZoom";
+import CategoryMenu from "@/features/products/components/CategoryMenu/CategoryMenu";
+import ProductsList from "@/features/products/components/ProductsList/ProductsList";
+import FeatureCard from "@/shared/components/FeatureCard/FeatureCard";
+import useProductRoute from "@/shared/hooks/useProductRoute";
+import { productQueries } from "@/features/products/queries";
+import { Category as CategoryType } from "@/features/products/types";
+import ErrorMessage from "@/shared/components/ErrorMessage/ErrorMessage";
+
+const PRODUCTS_LIST_LIMIT = 12;
+
+const Home: React.FC = () =&gt; {
+  const [selectedCategory, setSelectedCategory] = useState&lt;CategoryType | null&gt;(
+    null,
+  );
+  const { goToProductDetails } = useProductRoute();
+
+  const {
+    data: bestProductsData,
+    isLoading: isBestProductsLoading,
+    isError: isBestProductsError,
+  } = useQuery(productQueries.list({ limit: 5 }));
+  const { data: categories } = useQuery(productQueries.categories());
+
+  const currentCategory = selectedCategory ?? categories?.[0] ?? null;
+
+  const {
+    data: categoryProducts,
+    isLoading: isCategoryProductsLoading,
+    isError: isCategoryProductsError,
+  } = useQuery({
+    ...productQueries.byCategory({
+      category: currentCategory?.slug ?? "",
+      limit: PRODUCTS_LIST_LIMIT,
+    }),
+    enabled: currentCategory !== null,
+  });
+
+  const targetDate = useMemo(() =&gt; {
+    const date = new Date();
+    date.setDate(date.getDate() + 1); // Add 1 days
+
+    return date.toISOString();
+  }, []);
+
+  const onProductClick = (productId: number) =&gt; {
+    goToProductDetails(productId);
+  };
+
+  return (
+    &lt;&gt;
+      &lt;div className="container"&gt;
+        &lt;Banner /&gt;
+        &lt;section className={`${styles.featureCardBox} pt-35 flex`}&gt;
+          &lt;FeatureCard
+            icon={faTruck}
+            title="Free Shipping"
+            description="Free Shipping World Wide"
+          /&gt;
+          &lt;FeatureCard
+            icon={faClock}
+            title="24 X 7 service"
+            description="Online service for 24 X 7"
+          /&gt;
+          &lt;FeatureCard
+            icon={faVolumeHigh}
+            title="Festival offer"
+            description="New online special festival offer"
+          /&gt;
+          &lt;FeatureCard
+            icon={faCreditCard}
+            title="Online payment"
+            description="New online special festival offer"
+          /&gt;
+        &lt;/section&gt;
+
+        &lt;section className="pt-55"&gt;
+          &lt;div className="flex align-item-center mb-20"&gt;
+            &lt;h2 className="fs-24 m-0 mr-15"&gt;
+              &lt;FontAwesomeIcon icon={faBolt} className="mr-5" /&gt; DEALS OF THE
+              DAY
+            &lt;/h2&gt;
+            &lt;CountdownTimer targetDate={targetDate} /&gt;
+          &lt;/div&gt;
+          &lt;div className="flex gap-25"&gt;
+            {isBestProductsError ? (
+              &lt;ErrorMessage /&gt;
+            ) : isBestProductsLoading ? (
+              &lt;div className="text-center"&gt;
+                &lt;ClipLoader
+                  size={40}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                /&gt;
+              &lt;/div&gt;
+            ) : (
+              &lt;ProductsList
+                products={bestProductsData?.products}
+                onProductClick={onProductClick}
+              /&gt;
+            )}
+          &lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;section className="pt-65"&gt;
+          &lt;div className="flex gap-25"&gt;
+            &lt;div className={styles.mainDealBox}&gt;
+              &lt;ImageZoom src="/images/deals/01.png" alt="deal 1" /&gt;
+            &lt;/div&gt;
+            &lt;div className={styles.secondDealBox}&gt;
+              &lt;ImageZoom
+                src="/images/deals/02.png"
+                alt="deal 2"
+                className="mb-20"
+              /&gt;
+              &lt;ImageZoom src="/images/deals/03.png" alt="deal 3" /&gt;
+            &lt;/div&gt;
+            &lt;div className={styles.thirdDealBox}&gt;
+              &lt;ImageZoom src="/images/deals/04.png" alt="deal 4" /&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;section className="pt-65"&gt;
+          &lt;div className="flex gap-25"&gt;
+            &lt;CategoryMenu
+              activeCategory={currentCategory?.slug}
+              categories={categories || []}
+              onCategoryClick={setSelectedCategory}
+            /&gt;
+            &lt;div className="category-list-container category-list-box"&gt;
+              {isCategoryProductsError ? (
+                &lt;ErrorMessage /&gt;
+              ) : isCategoryProductsLoading ? (
+                &lt;div className="text-center"&gt;
+                  &lt;ClipLoader
+                    size={40}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  /&gt;
+                &lt;/div&gt;
+              ) : (
+                &lt;ProductsList
+                  products={categoryProducts?.products}
+                  onProductClick={onProductClick}
+                /&gt;
+              )}
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;section className="pt-60 pb-30"&gt;
+          &lt;ImageZoom
+            src="/images/banners/03.png"
+            alt="banner long"
+            className="mb-20 "
+          /&gt;
+        &lt;/section&gt;
+      &lt;/div&gt;
+    &lt;/&gt;
+  );
+};
+
+export default Home;
+</code></pre>
+
+        <p>และสร้างไฟล์คู่ของมัน <code>src/pages/Home/Home.module.scss</code> สำหรับสัดส่วนความกว้างของ layout:</p>
+
+        <pre><code class="language-scss">.featureCardBox {
+  gap: 24px;
+  &gt; div {
+    width: 25%;
+  }
+}
+
+.mainDealBox {
+  width: 42%;
+}
+
+.secondDealBox {
+  width: 33%;
+}
+
+.thirdDealBox {
+  width: 25%;
+}
+
+.categoryMenu {
+  width: 16%;
+}
+</code></pre>
+
+        <p>SCSS module นี้ทำหน้าที่เดียว: กำหนดสัดส่วนคอลัมน์ — FeatureCard สี่ใบใบละ 25% (selector <code>&gt; div</code> คือ direct child ของกล่อง), รูปดีลสามคอลัมน์ 42/33/25 ส่วน spacing และ typography ทั้งหมดยังเป็นหน้าที่ของ utility classes เหมือนเดิม</p>
+
+        <h2>Checkpoint</h2>
+
+        <blockquote>💡 รัน <code>npm run dev</code> แล้วเปิด <code>http://localhost:5173/</code> — คุณควรเห็นหน้า Home เต็มรูปแบบ: แบนเนอร์เลื่อนเองทุก 3 วินาทีพร้อมปุ่มลูกศรและจุดที่กดได้, แถวไอคอนบริการ 4 ช่อง, "DEALS OF THE DAY" พร้อมตัวเลขนับถอยหลังที่เดินทุกวินาทีและการ์ดสินค้า 5 ใบจาก dummyjson (รูปแต่ละใบขึ้นเป็น skeleton สีเทาแวบหนึ่งก่อนรูปจริงโหลดเสร็จ), ตารางรูปโปรโมชัน, เมนูหมวดหมู่ที่หมวดแรกถูกไฮไลต์อัตโนมัติและคลิกสลับหมวดได้ทันที และแบนเนอร์ยาวปิดท้าย เปิด TanStack Query Devtools ดูจะเห็นสาม queries: <code>["products","list",…]</code>, <code>["products","categories"]</code> และ <code>["products","list","category",…]</code></blockquote>
+
+        <blockquote>🚨 ถ้ารูปแบนเนอร์หรือรูปดีลไม่ขึ้น (กล่องรูปแตก) ให้เช็ค path ของไฟล์ใน <code>public/images</code> ว่าตรงกับโครงสร้างข้างบนเป๊ะ รวมถึงชื่อไฟล์ต้องเป็นเลขศูนย์นำหน้า (<code>01.png</code> ไม่ใช่ <code>1.png</code>) ส่วนถ้าอยากลองดู error state ให้เปิด DevTools แท็บ Network แล้วตั้งเป็น Offline ก่อนกดสลับหมวดหมู่ — section นั้นควรแสดงข้อความจาก ErrorMessage ไม่ใช่ spinner ค้าง</blockquote>
+
+        <p>หน้าแรกเสร็จแล้ว! แต่รายการสินค้าในหน้านี้จำกัดที่ 12 ตัวและไม่มีการแบ่งหน้า บทถัดไปเราจะสร้างหน้า Category สำหรับการไล่ดูสินค้าจริงจัง — ครบทั้ง pagination และเทคนิค <code>keepPreviousData</code> ที่ทำให้เปลี่ยนหน้าได้ลื่นไม่กะพริบ</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="15_product_list_components.html" rel="prev">ก่อนหน้า: คอมโพเนนต์รายการสินค้า</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="17_category_page.html" rel="next">ถัดไป: หน้า Category</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

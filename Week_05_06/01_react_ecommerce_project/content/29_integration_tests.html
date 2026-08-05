@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เขียน integration test ระดับทั้งหน้าให้ Home, Category, Cart และ Checkout ด้วย renderRoute, MSW และ user-event ปิดท้ายด้วยพีระมิดการทดสอบครบทุกชั้น" />
+    <title>Integration Tests | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 29 · การทดสอบ (Testing)</p>
+          <h1>Integration Tests: ทดสอบทั้งหน้าเหมือนผู้ใช้จริง</h1>
+          <p class="lesson-original-title" lang="en">Integration Tests</p>
+        </header>
+
+        <p>ถึงยอดพีระมิดแล้ว: <strong>integration test</strong> ระดับทั้งหน้า คราวนี้เราไม่เรียกฟังก์ชันหรือ hook ตรง ๆ อีกต่อไป — เราจะเปิดแอป<em>ทั้งแอป</em>ขึ้นมาด้วย <code>renderRoute</code> ที่สร้างไว้ในบทที่ 26 (router จริง provider จริง component จริง มีแค่ network ที่เป็น MSW) แล้วทำแบบที่ผู้ใช้ทำ: อ่านข้อความบนจอ คลิกปุ่ม พิมพ์ฟอร์ม จากนั้น assert สิ่งที่ผู้ใช้ควรเห็น เทสต์ชั้นนี้แต่ละตัวจึงพิสูจน์การ<em>ประกอบร่าง</em>ของทุกอย่างที่เราสร้างมา 25 บท — routing, queries, context, ฟอร์ม, component — ว่าต่อติดกันจริง</p>
+
+        <p>ก่อนลงมือ มีเครื่องมือสองเรื่องที่ต้องเข้าใจให้เคลียร์ เพราะเทสต์ทุกตัวในบทนี้ใช้:</p>
+
+        <h2>findBy กับ getBy — ต่างกันที่การรอ</h2>
+
+        <p>query ของ Testing Library มีสามตระกูล เลือกใช้ตามสถานการณ์:</p>
+
+        <ul>
+          <li><strong><code>getBy...</code></strong> — หา<em>เดี๋ยวนี้</em> ไม่เจอโยน error ทันที เหมาะกับ element ที่ต้องอยู่บนจอแล้วแน่ ๆ</li>
+          <li><strong><code>await findBy...</code></strong> — หาแบบ<em>รอได้</em> (retry จนเจอหรือครบ timeout ~1 วินาที) เหมาะกับ element ที่จะโผล่หลังงาน async — ซึ่งในแอปเราคือ "แทบทุกอย่าง" เพราะเปิดหน้ามาจะเจอ spinner ก่อนเสมอ ระหว่างที่ TanStack Query ยิง request ไป MSW ข้อมูลถึงจะมา</li>
+          <li><strong><code>queryBy...</code></strong> — หาแล้วคืน <code>null</code> ถ้าไม่เจอ (ไม่โยน error) มีไว้สำหรับ assert ว่าอะไร<em>ไม่</em>อยู่บนจอ</li>
+        </ul>
+
+        <p>กฎหัวแม่มือของบทนี้: หลัง render หรือหลัง action ที่ทำให้เกิดการยิง API — ใช้ <code>findBy</code> ตัวแรกเป็น "ประตูรอ" ให้หน้าโหลดเสร็จ หลังจากนั้นของที่อยู่บนจอแล้วใช้ <code>getBy</code> ได้เลย</p>
+
+        <h2>user-event ไม่ใช่ fireEvent</h2>
+
+        <p>Testing Library มี <code>fireEvent</code> ที่ยิง DOM event ดิบ ๆ ทีละลูก แต่เราจะใช้ <strong>user-event</strong> ทั้งบท เพราะมันจำลอง<em>พฤติกรรมผู้ใช้ทั้งลำดับ</em>: การคลิกหนึ่งครั้งของ user-event คือ pointer move → pointer down → focus → pointer up → click และการพิมพ์คือ keydown/keypress/keyup ทีละตัวอักษร ผลคือมันเจอ bug ที่ fireEvent มองข้าม เช่น ปุ่มที่ถูก <code>disabled</code> หรือ input ที่อ่านค่าจาก keyboard event — user-event จะคลิกปุ่ม disabled ไม่ได้เหมือนผู้ใช้จริงนั่นแหละ ท่าใช้มาตรฐานคือ <code>const user = userEvent.setup()</code> ต้นเทสต์ แล้ว <code>await</code> ทุกการกระทำ (ทุก method ของมันเป็น async)</p>
+
+        <h2>หน้า Home — เทสต์ควันไฟ</h2>
+
+        <p>เริ่มจากเทสต์ที่เรียบที่สุดแต่คุ้มที่สุด สร้าง <code>src/pages/Home/Home.test.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import { screen } from "@testing-library/react";
+import { renderRoute } from "@/test/renderRoute";
+
+describe("Home page", () =&gt; {
+  it("renders deal products and category products from the API", async () =&gt; {
+    renderRoute("/");
+
+    expect(await screen.findByText("Product 1")).toBeInTheDocument();
+    expect(await screen.findByText("beauty product 1")).toBeInTheDocument();
+  });
+});
+</code></pre>
+
+        <p>สามบรรทัดในตัวเทสต์ แต่ดูสิ่งที่มันพิสูจน์: <code>renderRoute("/")</code> เปิดแอปที่หน้าแรก — route table จริงต้อง match, <code>MainLayout</code> กับ Header/Footer ต้อง render, หน้า Home ยิง<em>สาม</em> query (best products, categories, สินค้าตาม category) ผ่าน axios + interceptor ไปเจอ MSW แล้วสองบรรทัด <code>findByText</code> รอจนข้อมูลจากคนละ endpoint ขึ้นจอ: <code>Product 1</code> มาจากแถว DEALS OF THE DAY ที่ใช้ <code>productQueries.list({ limit: 5 })</code> (fixture ตั้งชื่อว่า <code>Product N</code>) ส่วน <code>beauty product 1</code> มาจาก section ล่างที่ query ตาม category แรกคือ beauty — ถ้าจุดไหนในสายนั้นหลุดสักจุดเดียว เทสต์นี้แดง มันคือ "smoke test" ที่บอกใน 1 เทสต์ว่าแกนกลางของแอปยังหายใจอยู่</p>
+
+        <h2>หน้า Category — คลิกเปลี่ยนหมวด คลิกเปลี่ยนหน้า</h2>
+
+        <p>คราวนี้เพิ่ม interaction เข้ามา สร้าง <code>src/pages/Category/Category.test.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { renderRoute } from "@/test/renderRoute";
+
+describe("Category page", () =&gt; {
+  it("switches category and pages through results", async () =&gt; {
+    const user = userEvent.setup();
+    renderRoute("/categories");
+
+    expect(await screen.findByText("beauty product 1")).toBeInTheDocument();
+
+    // The Footer also lists "Fragrances" as a static (non-interactive) &lt;li&gt;;
+    // scope to the clickable CategoryMenu &lt;span&gt; to avoid ambiguity.
+    await user.click(screen.getByText("Fragrances", { selector: "span" }));
+    expect(await screen.findByText("fragrances product 1")).toBeInTheDocument();
+
+    await user.click(screen.getByText("2"));
+    expect(
+      await screen.findByText("fragrances product 21"),
+    ).toBeInTheDocument();
+  });
+});
+</code></pre>
+
+        <p>เทสต์เดียวเดินสามจังหวะ และแต่ละจังหวะมีบทเรียน:</p>
+
+        <ul>
+          <li><strong>จังหวะแรก</strong> — เปิด <code>/categories</code> รอ <code>beauty product 1</code> (หมวดแรกจาก fixture คือค่าเริ่มต้น)</li>
+          <li><strong>จังหวะสอง: ปัญหา element ซ้ำ</strong> — จะคลิกคำว่า "Fragrances" ใน CategoryMenu แต่เพราะเรา render ทั้งแอปผ่าน <code>MainLayout</code> — <em>Footer ก็มีคำว่า Fragrances อยู่ด้วย</em> (เป็น <code>&lt;li&gt;</code> ประดับเฉย ๆ) ถ้าใช้ <code>getByText("Fragrances")</code> ตรง ๆ Testing Library จะโยน error "found multiple elements" ทางแก้ในไฟล์นี้คือ option <code>selector: "span"</code> — จำกัดผลลัพธ์เฉพาะ <code>&lt;span&gt;</code> ซึ่งคือตัวที่คลิกได้ใน CategoryMenu นี่คือตัวอย่างจริงของราคาที่จ่ายให้ integration test: จอมีของเยอะ ต้องระบุเป้าให้แม่น</li>
+          <li><strong>จังหวะสาม: pagination</strong> — คลิกปุ่ม "2" ของ react-paginate แล้วรอ <code>fragrances product 21</code> — เลข 21 ไม่ใช่เลขสุ่ม: หน้า 2 × หน้าละ 20 → skip 20 → handler ตั้งชื่อสินค้าตัวแรกเป็นลำดับ 21 เท่ากับพิสูจน์ทั้ง derived pagination state ของหน้า Category, การส่ง <code>skip</code> ใน request และ UX ของ <code>keepPreviousData</code> (รายการเก่ายังคาอยู่ระหว่างโหลด — เหตุผลที่ต้องใช้ <code>findBy</code> รอรายการใหม่)</li>
+        </ul>
+
+        <h2>หน้า Cart — ปรับจำนวน ลบสินค้า</h2>
+
+        <p>หน้า Cart ไม่ยิง API เลย — state ทั้งหมดมาจาก CartProvider + localStorage สร้าง <code>src/pages/Cart/Cart.test.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { CART_STORAGE_KEY } from "@/features/cart/store/cartStorage";
+import { renderRoute } from "@/test/renderRoute";
+
+function seedCart() {
+  localStorage.setItem(
+    CART_STORAGE_KEY,
+    JSON.stringify({
+      items: [
+        { id: 1, title: "Widget", price: 10, quantity: 1, image: "/w.png" },
+      ],
+    }),
+  );
+}
+
+describe("Cart page", () =&gt; {
+  it("shows the empty state when there are no items", async () =&gt; {
+    renderRoute("/cart");
+    expect(await screen.findByText("Your Cart is Empty")).toBeInTheDocument();
+  });
+
+  it("updates quantity and total", async () =&gt; {
+    const user = userEvent.setup();
+    seedCart();
+    renderRoute("/cart");
+
+    expect(await screen.findByText("Widget")).toBeInTheDocument();
+    expect(screen.getByText("Total Price: $10.00")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "&gt;" }));
+    expect(screen.getByText("Total Price: $20.00")).toBeInTheDocument();
+  });
+
+  it("removes an item", async () =&gt; {
+    const user = userEvent.setup();
+    seedCart();
+    renderRoute("/cart");
+
+    await user.click(await screen.findByRole("button", { name: "×" }));
+    expect(await screen.findByText("Your Cart is Empty")).toBeInTheDocument();
+  });
+});
+</code></pre>
+
+        <p>เทคนิคเด่นของไฟล์นี้:</p>
+
+        <ul>
+          <li><strong><code>seedCart()</code></strong> — ท่าเดิมจากบทที่แล้ว: เขียน localStorage ก่อน render ให้ CartProvider lazy init ไปเจอของ ประกาศเป็นฟังก์ชันเพราะใช้สองเทสต์ (เทสต์ empty state ไม่ seed — และมั่นใจได้ว่าตะกร้าว่างจริงเพราะ <code>afterEach</code> ล้าง storage ให้ทุกเทสต์)</li>
+          <li><strong>หา element ด้วย role</strong> — <code>getByRole("button", { name: "&gt;" })</code> คือปุ่มเพิ่มจำนวนใน CartTable (<code>name</code> ของปุ่มคือข้อความในปุ่ม) การหาแบบ role ตรงกับที่ screen reader มองเห็น จึงเป็น query ที่ Testing Library แนะนำสุด — ได้เทสต์ accessibility แถมโดยไม่ต้องพยายาม</li>
+          <li><strong>สังเกตจุดที่ใช้ <code>getBy</code> ได้</strong> — หลังผ่านประตู <code>findByText("Widget")</code> แล้ว การคลิกเพิ่มจำนวนเป็น state update ล้วน (ไม่มี network) React ประมวลผลเสร็จก่อน <code>await user.click</code> คืนค่า — ยอดเงิน <code>Total Price: $20.00</code> จึง assert ด้วย <code>getByText</code> ได้ทันที ตัวเลขนี้ยังพิสูจน์ <code>useMemo</code> ที่คำนวณยอดรวมและ <code>toFixed(2)</code> ในหน้า Cart ด้วย</li>
+          <li><strong>เทสต์ลบ</strong> — คลิกปุ่ม <code>×</code> แล้วหน้าต้องเด้งกลับไป empty state ครบวงจร: มีของ → ลบ → ว่าง</li>
+        </ul>
+
+        <h2>หน้า Checkout — happy path จากฟอร์มถึง Order Success</h2>
+
+        <p>เทสต์สุดท้ายคือเทสต์ที่ "จริง" ที่สุดในชุด: เดิน flow สั่งซื้อทั้งเส้นเหมือนลูกค้าคนหนึ่ง สร้าง <code>src/pages/Checkout/Checkout.test.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { CART_STORAGE_KEY } from "@/features/cart/store/cartStorage";
+import { renderRoute } from "@/test/renderRoute";
+
+describe("Checkout page", () =&gt; {
+  it("places an order and navigates to the success page", async () =&gt; {
+    const user = userEvent.setup();
+    localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify({
+        items: [
+          { id: 1, title: "Widget", price: 10, quantity: 2, image: "/w.png" },
+        ],
+      }),
+    );
+
+    const { router } = renderRoute("/checkout");
+
+    await user.type(screen.getByPlaceholderText("Enter Address"), "1 Main St");
+    await user.type(
+      screen.getByPlaceholderText("Enter Email"),
+      "jane@example.com",
+    );
+    await user.type(
+      screen.getByPlaceholderText("Enter Phone Number"),
+      "0812345678",
+    );
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    await user.click(screen.getByRole("button", { name: /place order/i }));
+
+    await waitFor(() =&gt;
+      expect(router.state.location.pathname).toBe("/order/success"),
+    );
+    expect(screen.getByText("Order Placed Successfully!")).toBeInTheDocument();
+  });
+});
+</code></pre>
+
+        <p>ไล่ตาม flow แล้วนับดูว่าเทสต์เดียวนี้แตะกี่ระบบ:</p>
+
+        <ul>
+          <li><strong>พิมพ์สามช่องด้วย <code>user.type</code></strong> — หา input จาก placeholder (ข้อความเดียวกับที่ผู้ใช้ใช้หาช่องกรอกนั่นแหละ) แล้วกด Submit — จังหวะนี้ react-hook-form + zodResolver ทำงานจริง: ถ้าข้อมูลไม่ผ่าน schema ฟอร์มจะไม่ submit และ <code>storeCheckoutAddress</code> ไม่ถูกเรียก (อยากเห็นกับตา ลองแก้อีเมลเป็น <code>"nope"</code> แล้วดูเทสต์พังตรง Place Order)</li>
+          <li><strong>ปุ่ม Place Order หาแบบ regex</strong> — <code>{ name: /place order/i }</code> คือ case-insensitive match กันเหนียวเรื่องตัวพิมพ์/การจัดรูปข้อความในปุ่ม</li>
+          <li><strong>assert การ navigate ด้วย router ที่ <code>renderRoute</code> คืนมา</strong> — นี่คือเหตุผลที่บทที่ 26 ให้ helper คืน <code>router</code> ออกมาด้วย: หลัง mutation สำเร็จ (MSW ตอบ 201 ที่ <code>POST /carts/add</code>) → <code>onSuccess</code> ล้างตะกร้าแล้ว <code>goToOrderSuccess()</code> — เราใช้ <code>waitFor</code> รอจน <code>router.state.location.pathname</code> เป็น <code>/order/success</code> แล้วปิดท้ายด้วยการเช็คว่าหน้า Order Success render ข้อความจริงบนจอ ไม่ใช่แค่ URL เปลี่ยน</li>
+        </ul>
+
+        <p>เทสต์ตัวเดียวนี้ครอบคลุม: routing, seed ตะกร้าจาก localStorage, ฟอร์ม + validation, cart context, mutation, axios + interceptor, MSW และการ navigate — ถ้ามันเขียว แปลว่า flow ที่สำคัญที่สุดของธุรกิจ (การจ่ายเงิน!) ต่อกันครบทั้งเส้น</p>
+
+        <h2>มองย้อนพีระมิดทั้งลูก</h2>
+
+        <p>สามบทที่ผ่านมาเราสร้างเทสต์สามชั้น แต่ละชั้นจับ bug คนละแบบ — และนั่นคือเหตุผลที่ต้องมีครบทุกชั้น ไม่ใช่เลือกชั้นเดียว:</p>
+
+        <ul>
+          <li><strong>Unit (22 tests)</strong> — จับ bug ใน logic: สูตรคำนวณผิด, edge case ที่ลืมคิด, reducer ที่ merge จำนวนพลาด รันเร็วระดับมิลลิวินาที และพังทีไรชี้บรรทัดได้เลย</li>
+          <li><strong>Hook (6 tests)</strong> — จับ bug ใน<em>การเชื่อม</em>ชั้นข้อมูล: query key ที่ประกอบผิด, parameter ที่หล่นหายระหว่างทาง, mutation ที่ลืมล้างตะกร้า — สิ่งที่ unit test มองไม่เห็นเพราะมันอยู่<em>ระหว่าง</em>หน่วย</li>
+          <li><strong>Integration (6 tests)</strong> — จับ bug ในการประกอบร่างที่ผู้ใช้เจอจริง: route ที่หลุด, provider ที่ลืมห่อ, ปุ่มที่กดแล้วเงียบ แลกกับความช้ากว่าและเวลาพังต้องไล่หาต้นเหตุไกลกว่า</li>
+        </ul>
+
+        <p>รูปทรง "ฐานกว้าง ยอดแหลม" จึงไม่ใช่ความบังเอิญ: เทสต์ถูกและเร็วมีเยอะ ๆ ได้ เทสต์แพงมีพอประมาณให้ครอบ flow สำคัญ และเวลา integration test แดงขึ้นมา — ชั้น unit ข้างล่างนี่แหละที่จะบอกว่าต้นเหตุอยู่ฟังก์ชันไหน</p>
+
+        <blockquote>💡 <strong>Checkpoint สุดท้ายของช่วง Testing:</strong> รัน <code>npm run test</code> — ทั้งชุดต้องเขียว: <strong>12 test files, 34 tests ผ่านทั้งหมด</strong> (unit 22 + hook 6 + integration 6 โดยชั้น integration แบ่งเป็น Home 1, Category 1, Cart 3, Checkout 1) นี่คือตาข่ายนิรภัยของแอปทั้งแอป — ต่อจากนี้จะ refactor อะไรก็ตาม กติกามีข้อเดียว: แก้เสร็จ รันเทสต์ เขียวแล้วค่อยไปต่อ</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="28_hook_tests.html" rel="prev">ก่อนหน้า: การทดสอบ Hooks</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="30_wrap_up.html" rel="next">ถัดไป: Build และส่งท้าย</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างโปรเจกต์ React + TypeScript ด้วย Vite ตั้งค่า Node 22 ผ่าน nvm เก็บกวาด boilerplate และสร้างไฟล์ .env สำหรับ dummyjson API" />
+    <title>สร้างโปรเจกต์ด้วย Vite | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 02 · ติดตั้งโปรเจกต์ (Project Setup)</p>
+          <h1>สร้างโปรเจกต์ด้วย Vite</h1>
+          <p class="lesson-original-title" lang="en">Project Scaffold</p>
+        </header>
+
+        <p>ถึงเวลาลงมือแล้ว ในบทนี้เราจะเริ่มจากโฟลเดอร์ว่าง ๆ ไปจนถึง dev server ที่รันได้จริง: เตรียม Node ให้ถูกเวอร์ชัน สร้างโปรเจกต์ด้วย Vite เดินสำรวจว่า Vite สร้างอะไรให้บ้าง แล้วเก็บกวาด boilerplate ที่เราไม่ใช้ออก เพื่อให้บทถัด ๆ ไปเริ่มจากพื้นที่สะอาด</p>
+
+        <h2>เตรียม Node.js ด้วย nvm</h2>
+
+        <p>อย่างที่บอกไว้ในบทนำ react-router 8 กำหนด Node ขั้นต่ำไว้ที่ <strong>22.22</strong> วิธีจัดการเวอร์ชัน Node ที่สะดวกที่สุดคือ <strong>nvm</strong> (Node Version Manager) เพราะมันติดตั้ง Node ได้หลายเวอร์ชันพร้อมกันและสลับไปมาได้ตามโปรเจกต์ เปิด Terminal แล้วรัน:</p>
+
+        <pre><code class="language-bash">nvm install 22
+node -v</code></pre>
+
+        <p><code>nvm install 22</code> จะติดตั้ง Node สาย 22 เวอร์ชันล่าสุดแล้วสลับมาใช้ให้ทันที ส่วน <code>node -v</code> คือการตรวจงาน — ผลลัพธ์ต้องขึ้นต้นด้วย <code>v22</code> และตัวเลขต้องไม่ต่ำกว่า <code>v22.22.0</code></p>
+
+        <blockquote>💡 ถ้าเครื่องคุณยังไม่มี nvm ให้ติดตั้งก่อนตามคู่มือที่ <a href="https://github.com/nvm-sh/nvm">github.com/nvm-sh/nvm</a> (ผู้ใช้ Windows ให้ใช้ <a href="https://github.com/coreybutler/nvm-windows">nvm-windows</a> ซึ่งคำสั่งแทบเหมือนกัน) ติดตั้งเสร็จแล้วปิด-เปิด Terminal ใหม่หนึ่งรอบก่อนรันคำสั่งข้างบน</blockquote>
+
+        <h2>สร้างโปรเจกต์</h2>
+
+        <p><code>cd</code> ไปยังโฟลเดอร์ที่คุณเก็บโปรเจกต์ทั้งหลายไว้ แล้วรัน:</p>
+
+        <pre><code class="language-bash">npm create vite@latest react-ecommerce-app -- --template react-ts</code></pre>
+
+        <p>แกะคำสั่งนี้ทีละท่อน: <code>npm create vite@latest</code> คือการเรียกตัว scaffold ของ Vite เวอร์ชันล่าสุด, <code>react-ecommerce-app</code> คือชื่อโฟลเดอร์โปรเจกต์, เครื่องหมาย <code>--</code> ตรงกลางบอก npm ว่า "ของที่เหลือหลังจากนี้ส่งต่อให้ create-vite นะ ไม่ใช่ของ npm เอง" และ <code>--template react-ts</code> เลือก template แบบ React + TypeScript ให้เลย ไม่ต้องตอบคำถามทีละข้อ</p>
+
+        <p>เสร็จแล้วเข้าไปในโปรเจกต์:</p>
+
+        <pre><code class="language-bash">cd react-ecommerce-app</code></pre>
+
+        <h2>บันทึกเวอร์ชัน Node ไว้กับโปรเจกต์</h2>
+
+        <p>ตอนนี้เครื่อง<em>คุณ</em>ใช้ Node 22 อยู่ แต่เพื่อนร่วมทีม (หรือตัวคุณเองในอีกสามเดือน) จะรู้ได้อย่างไรว่าโปรเจกต์นี้ต้องใช้เวอร์ชันไหน? ธรรมเนียมของ nvm คือเก็บคำตอบไว้ในไฟล์ชื่อ <code>.nvmrc</code> ที่ root ของโปรเจกต์ สร้างไฟล์ <code>.nvmrc</code> โดยมีเนื้อหาแค่บรรทัดเดียว:</p>
+
+        <pre><code class="language-bash">22</code></pre>
+
+        <p>ต่อจากนี้ใครก็ตามที่ <code>cd</code> เข้ามาในโปรเจกต์แล้วรัน <code>nvm use</code> จะถูกสลับไปใช้ Node 22 ให้อัตโนมัติโดยไม่ต้องเดา — ไฟล์เล็ก ๆ ที่ประหยัดเวลา debug ปัญหา "ทำไมเครื่องฉันรันไม่ได้" ไปได้มหาศาล</p>
+
+        <h2>สำรวจโครงที่ Vite สร้างให้</h2>
+
+        <p>ก่อนจะแตะอะไร มาเดินดูก่อนว่า template <code>react-ts</code> ให้อะไรมาบ้าง:</p>
+
+        <pre><code class="language-bash">react-ecommerce-app/
+├── public/              # ไฟล์ static ที่เสิร์ฟตรง ๆ ไม่ผ่าน bundler (มี vite.svg)
+├── src/
+│   ├── assets/          # ไฟล์ static ที่ import ผ่านโค้ด (มี react.svg)
+│   ├── App.css          # style ของหน้าตัวอย่าง — เดี๋ยวลบ
+│   ├── App.tsx          # component ตัวอย่าง — เดี๋ยวเขียนใหม่
+│   ├── index.css        # style ระดับหน้า — เดี๋ยวลบ
+│   ├── main.tsx         # จุดเริ่มต้นของแอป (entry point)
+│   └── vite-env.d.ts    # type ของ Vite เช่น import.meta.env
+├── .gitignore
+├── eslint.config.js     # ESLint จาก template — บทหน้าเราจะเขียนของเราเอง
+├── index.html           # หน้า HTML เดียวของแอป
+├── package.json
+├── README.md
+├── tsconfig.json        # ไฟล์แม่ที่ชี้ไปยัง tsconfig อีกสองไฟล์
+├── tsconfig.app.json    # การตั้งค่า TypeScript ของโค้ดใน src/
+├── tsconfig.node.json   # การตั้งค่า TypeScript ของไฟล์ config (เช่น vite.config.ts)
+└── vite.config.ts       # การตั้งค่า Vite</code></pre>
+
+        <p>จุดที่ควรเข้าใจให้ชัด:</p>
+
+        <ul>
+          <li><strong><code>index.html</code> คือประตูหน้าแอป</strong> — เบราว์เซอร์โหลดไฟล์นี้ก่อน แล้วเจอ <code>&lt;script type=&quot;module&quot; src=&quot;/src/main.tsx&quot;&gt;</code> ซึ่งลากโค้ดทั้งแอปเข้ามา นี่คือเหตุผลที่แอปแบบนี้เรียกว่า SPA (Single-Page Application) — HTML มีหน้าเดียว ที่เหลือ React จัดการ</li>
+          <li><strong><code>src/main.tsx</code></strong> — จับ React ยึดกับ <code>&lt;div id=&quot;root&quot;&gt;</code> ใน index.html แล้ว render <code>&lt;App /&gt;</code> ครอบด้วย <code>StrictMode</code> แบบเดียวกับที่เจอใน Week 4</li>
+          <li><strong>tsconfig สามไฟล์</strong> — โค้ดในเบราว์เซอร์ (<code>src/</code>) กับโค้ดที่รันบน Node (ไฟล์ config) อยู่คนละสภาพแวดล้อม จึงแยกการตั้งค่ากันคนละไฟล์ โดยมี <code>tsconfig.json</code> เป็นแม่ที่อ้างถึงทั้งคู่ ไฟล์ที่เราจะแก้บ่อยคือ <code>tsconfig.app.json</code></li>
+        </ul>
+
+        <h2>ติดตั้ง dependencies แล้วรัน</h2>
+
+        <pre><code class="language-bash">npm install
+npm run dev</code></pre>
+
+        <p>เปิดเบราว์เซอร์ไปที่ <code>http://localhost:5173/</code> คุณควรเห็นหน้าตัวอย่างของ Vite — โลโก้หมุน ๆ กับปุ่ม counter ที่กดแล้วเลขเพิ่ม ถ้าเห็นแบบนี้แปลว่าทุกอย่างพร้อมแล้ว</p>
+
+        <h2>เก็บกวาด boilerplate</h2>
+
+        <p>หน้าโลโก้หมุนสวยดี แต่มันไม่ใช่แอปของเรา เราจะรื้อออกให้เหลือแต่โครงที่สะอาดที่สุด เริ่มจากลบไฟล์ CSS ตัวอย่างทั้งสองไฟล์:</p>
+
+        <pre><code class="language-bash">rm src/App.css src/index.css</code></pre>
+
+        <p>เหตุผลที่ลบทิ้งเลยไม่เก็บไว้แก้: ในบทที่ 04 เราจะสร้างระบบ SCSS ของเราเองทั้งชุด ตั้งแต่ design tokens ไปจนถึง utility classes การเริ่มจากศูนย์ง่ายกว่าการไล่ลบของเก่า ส่วนรูป <code>public/vite.svg</code> กับ <code>src/assets/react.svg</code> ปล่อยไว้ได้ ไม่เกะกะอะไร</p>
+
+        <p>ต่อมาเขียน <code>src/App.tsx</code> ใหม่ทั้งไฟล์ให้เหลือ placeholder เรียบ ๆ:</p>
+
+        <pre><code class="language-typescript">function App() {
+  return &lt;h1&gt;React E-commerce App&lt;/h1&gt;;
+}
+
+export default App;</code></pre>
+
+        <p>แล้วแก้ <code>src/main.tsx</code> ให้เลิกอ้างถึง <code>index.css</code> ที่เราเพิ่งลบ ไฟล์ทั้งไฟล์จะเหลือแค่นี้:</p>
+
+        <pre><code class="language-typescript">import { StrictMode } from &quot;react&quot;;
+import { createRoot } from &quot;react-dom/client&quot;;
+import App from &quot;./App&quot;;
+
+createRoot(document.getElementById(&quot;root&quot;)!).render(
+  &lt;StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/StrictMode&gt;,
+);</code></pre>
+
+        <p>สังเกตว่าตอนนี้ <code>main.tsx</code> ไม่มีการ import ไฟล์ CSS เลยสักบรรทัด — เป็นสภาพชั่วคราวเท่านั้น ในบทที่ 04 บรรทัด <code>import &quot;./styles/main.scss&quot;;</code> จะเข้ามาแทนที่ <code>index.css</code> เดิม ระหว่างนี้หน้าเว็บของเราจะโล่ง ๆ ด้วย style ดั้งเดิมของเบราว์เซอร์ไปก่อน ซึ่งตั้งใจให้เป็นแบบนั้น</p>
+
+        <p>อีกอย่างที่<em>ไม่</em>ต้องทำ: title ใน <code>index.html</code> — โปรเจกต์ต้นฉบับคงค่า default <code>Vite + React + TS</code> ไว้ตามเดิม เราจะทำเหมือนกันเพื่อให้โค้ดตรงกับต้นฉบับทุกไฟล์ (ในโปรเจกต์จริงของคุณเอง เปลี่ยนได้ตามใจชอบแน่นอน)</p>
+
+        <blockquote>💡 ตอนนี้ <code>App.tsx</code> อยู่ที่ <code>src/App.tsx</code> ตรง ๆ ซึ่งยังไม่ใช่ตำแหน่งสุดท้ายของมัน — ในบทที่ 06 เมื่อเราเริ่มวางโครงสถาปัตยกรรมจริง ไฟล์นี้จะย้ายเข้าไปอยู่ใน <code>src/app/</code> ระหว่างนี้ปล่อยมันไว้ตรงนี้ก่อน</blockquote>
+
+        <h2>สร้างไฟล์ .env</h2>
+
+        <p>แอปของเราดึงข้อมูลจาก dummyjson API และ URL ของ API แบบนี้ไม่ควรฝังตายอยู่ในโค้ด — มันคือ <em>configuration</em> ที่อาจต่างกันไปตามสภาพแวดล้อม (เครื่อง dev ชี้ไป mock server, production ชี้ไปของจริง เป็นต้น) ที่ทางมาตรฐานของมันคือไฟล์ <code>.env</code> สร้างไฟล์ <code>.env</code> ที่ root ของโปรเจกต์:</p>
+
+        <pre><code class="language-bash"># Base URL for the API
+VITE_API_BASE_URL=https://dummyjson.com</code></pre>
+
+        <p>สองเรื่องต้องรู้เกี่ยวกับไฟล์นี้:</p>
+
+        <ul>
+          <li><strong>ทำไมต้องขึ้นต้นด้วย <code>VITE_</code></strong> — Vite จะส่งตัวแปรจาก <code>.env</code> เข้าไปในโค้ดฝั่งเบราว์เซอร์ (อ่านผ่าน <code>import.meta.env.VITE_API_BASE_URL</code> — เราจะใช้จริงในบทที่ 12) <em>เฉพาะตัวที่ขึ้นต้นด้วย</em> <code>VITE_</code> เท่านั้น นี่คือกลไกความปลอดภัย: ตัวแปรอะไรก็ตามที่เข้าเบราว์เซอร์ได้แปลว่าผู้ใช้ทุกคนเปิดดูได้ การบังคับ prefix ทำให้คุณต้อง<em>ตั้งใจ</em>เลือกว่าจะเปิดเผยอะไร ไม่ใช่หลุดไปทั้งไฟล์</li>
+          <li><strong>ทำไม commit ไฟล์นี้ลง git ได้</strong> — ปกติคุณอาจเคยได้ยินว่า "ห้าม commit .env!" ซึ่งจริงเมื่อในนั้นมี secret เช่น API key หรือรหัสผ่าน แต่ไฟล์ของเรามีแค่ URL สาธารณะที่ใครก็รู้ การ commit จึงปลอดภัยและช่วยให้เพื่อนร่วมทีม clone แล้วรันได้ทันที ถ้าวันหนึ่งมีค่าลับจริง ๆ ให้แยกไปไว้ใน <code>.env.local</code> ซึ่ง <code>.gitignore</code> ของ template กันไว้ให้แล้วผ่าน pattern <code>*.local</code></li>
+        </ul>
+
+        <h2>ล็อกเวอร์ชัน Node ใน package.json</h2>
+
+        <p><code>.nvmrc</code> ช่วยคนที่ใช้ nvm แต่คนที่ไม่ได้ใช้ล่ะ? เราเพิ่มการประกาศ <code>engines</code> ลงใน <code>package.json</code> เป็นด่านที่สอง เปิดไฟล์แล้วเพิ่ม field นี้ (ตำแหน่งตามต้นฉบับคือถัดจาก <code>&quot;type&quot;</code>):</p>
+
+        <pre><code class="language-json">{
+  &quot;name&quot;: &quot;react-ecommerce-app&quot;,
+  &quot;private&quot;: true,
+  &quot;version&quot;: &quot;0.0.0&quot;,
+  &quot;type&quot;: &quot;module&quot;,
+  &quot;engines&quot;: {
+    &quot;node&quot;: &quot;&gt;=22.22.0&quot;
+  },
+  ...
+}</code></pre>
+
+        <p>(ส่วน <code>scripts</code> และ dependencies ที่เหลือคงไว้ตามเดิม) ต่อจากนี้ถ้าใครรัน <code>npm install</code> ด้วย Node ที่เก่ากว่า 22.22.0 npm จะเตือนทันทีว่าเวอร์ชันไม่ตรงตามที่โปรเจกต์ประกาศไว้ — ดีกว่าปล่อยให้ไปเจอ error ประหลาดตอนรันแล้วงมหาสาเหตุกันเป็นชั่วโมง</p>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run dev</code> แล้วเปิด <code>http://localhost:5173/</code> — คุณควรเห็นหัวข้อ <code>React E-commerce App</code> โดด ๆ บนพื้นขาว ฟอนต์เป็น default ของเบราว์เซอร์ ไม่มีอะไรสวยงามทั้งสิ้น และ console ต้องไม่มี error สีแดง ถ้าหน้ายังเป็นโลโก้หมุนอยู่แสดงว่า browser cache ค้าง ให้ refresh แรง ๆ หนึ่งที (Cmd+Shift+R หรือ Ctrl+Shift+R) หน้าโล่ง ๆ นี้คือผืนผ้าใบของเรา — บทหน้าเราจะติดอาวุธคุณภาพโค้ดให้มันก่อนเริ่มลงสี</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="01_intro.html" rel="prev">ก่อนหน้า: บทนำ</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="03_tooling.html" rel="next">ถัดไป: ESLint, Prettier และ Path Alias</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

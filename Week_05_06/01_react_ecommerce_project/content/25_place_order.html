@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ปิดจ๊อบฟีเจอร์ Checkout: สร้าง api.ts และ useCheckout ด้วย useMutation ประกอบหน้า Checkout ทั้งหน้า และทำหน้า Order Success ให้เสร็จสมบูรณ์" />
+    <title>สั่งซื้อและ Order Success | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 25 · ชำระเงิน (Checkout)</p>
+          <h1>สั่งซื้อและ Order Success</h1>
+          <p class="lesson-original-title" lang="en">Place Order</p>
+        </header>
+
+        <p>ถึงบทประกอบร่างแล้ว! สามบทที่ผ่านมาเราเตรียมชิ้นส่วนไว้ครบมือ: schema กับข้อมูลตัวเลือก (บทที่ 22), กล่องที่อยู่ (บทที่ 23), กล่องจัดส่ง/ชำระเงิน/ใบสรุป/ยอดเงิน (บทที่ 24) — แต่ยังไม่มีใคร render และยังไม่มี "สมอง" ที่ถือ state กับ logic การสั่งซื้อ บทนี้เราจะเติมสองอย่างสุดท้าย: ชั้น API + hook <code>useCheckout</code> แล้วแทนที่ stub ของหน้า Checkout และ OrderSuccess ที่ค้างมาตั้งแต่บทที่ 06 ให้กลายเป็นหน้าจริง จบบทนี้ผู้ใช้จะช้อปครบ loop ตั้งแต่หยิบของใส่ตะกร้าจนเห็นหน้ายืนยันคำสั่งซื้อ</p>
+
+        <h2>สร้าง api.ts — ยิงคำสั่งซื้อขึ้นเซิร์ฟเวอร์</h2>
+
+        <p>เริ่มจากชั้นล่างสุดเช่นเคย สร้าง <code>src/features/checkout/api.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { apiClient } from "@/shared/api/client";
+import { CheckoutAddressFormData } from "@/features/checkout/schema";
+
+export interface PlaceOrderPayload {
+  userId: number;
+  products: { id: number; quantity: number }[];
+  address: CheckoutAddressFormData;
+}
+
+export interface PlaceOrderResponse {
+  id: number;
+}
+
+export async function placeOrder(
+  payload: PlaceOrderPayload,
+): Promise&lt;PlaceOrderResponse&gt; {
+  const { data } = await apiClient.post&lt;PlaceOrderResponse&gt;(
+    "/carts/add",
+    payload,
+  );
+  return data;
+}
+</code></pre>
+
+        <p>โครงเหมือน <code>features/products/api.ts</code> จากบทที่ 13 เป๊ะ — ฟังก์ชัน async บาง ๆ ที่เรียก <code>apiClient</code> (axios instance จากบทที่ 12) แล้วคืน <code>data</code> ที่ type แล้ว จุดที่ต่างคือคราวนี้เป็น <code>.post()</code> ครั้งแรกของคอร์ส: เรา<em>ส่งข้อมูลขึ้นไป</em> ไม่ใช่ดึงลงมา</p>
+
+        <p>เรื่องที่ต้องพูดตรง ๆ กันก่อน: <code>POST /carts/add</code> ของ dummyjson เป็น <strong>mock endpoint</strong> — มันรับ payload, ตอบกลับมาเป็น cart จำลองพร้อม <code>id</code> ที่ปั้นขึ้นมา แต่<em>ไม่ได้บันทึกอะไรลงฐานข้อมูลจริง</em> (echo back) dummyjson ไม่มีระบบ order จริง ๆ ให้เราใช้ ซึ่งสำหรับการเรียนแบบนี้คือข้อดี: เรากดสั่งซื้อกี่รอบก็ได้โดยไม่ทิ้งขยะไว้ที่ไหน สังเกตด้วยว่า field <code>address</code> ใน payload เป็นของที่ dummyjson ไม่รู้จักด้วยซ้ำ (มันรับแล้วเมิน) แต่เราใส่ไว้เพราะ<em>โค้ดฝั่งเราควรเขียนเหมือน API จริง</em> — วันที่ย้ายไป backend จริง สิ่งที่เปลี่ยนคือ URL ไม่ใช่โครงโค้ด</p>
+
+        <ul>
+          <li><strong><code>PlaceOrderPayload</code></strong> — รวมสามส่วน: <code>userId</code> (hardcode เป็น 1 เพราะเราไม่มีระบบ login), รายการสินค้าแบบย่อ (เอาแค่ <code>id</code> + <code>quantity</code> พอ เซิร์ฟเวอร์รู้ราคาเองอยู่แล้ว — อย่าเชื่อราคาที่ client ส่งมา!) และ <code>address</code> ที่ reuse type <code>CheckoutAddressFormData</code> จาก schema ตรง ๆ — schema เดียว ไหลตั้งแต่ฟอร์มยัน payload</li>
+          <li><strong><code>PlaceOrderResponse</code></strong> — dummyjson ตอบกลับ cart ก้อนใหญ่ แต่เราประกาศ type เฉพาะ field ที่ใช้จริงคือ <code>id</code> การ type ให้แคบที่สุดเท่าที่ใช้เป็นนิสัยที่ดี: response เปลี่ยนโครงเมื่อไร โค้ดเราพังเฉพาะจุดที่พึ่งมันจริง ๆ</li>
+          <li><strong>error ไม่ต้องจัดการที่นี่</strong> — interceptor ใน <code>client.ts</code> แปลงทุกความล้มเหลวเป็น <code>ApiError</code> ให้แล้วตั้งแต่บทที่ 12 ชั้นนี้แค่ปล่อยให้ reject ไหลขึ้นไป</li>
+        </ul>
+
+        <h2>สร้าง useCheckout — สมองของทั้งหน้า</h2>
+
+        <p>ต่อไปคือไฟล์ที่สำคัญที่สุดของ chapter สร้าง <code>src/features/checkout/useCheckout.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { CheckoutAddressFormData } from "@/features/checkout/schema";
+import { deliveryOptions, paymentOptions } from "@/features/checkout/consts";
+import { useCart } from "@/features/cart/useCart";
+import useProductRoute from "@/shared/hooks/useProductRoute";
+import { placeOrder } from "@/features/checkout/api";
+
+const useCheckout = () =&gt; {
+  const [checkoutAddress, setCheckoutAddress] =
+    useState&lt;CheckoutAddressFormData | null&gt;(null);
+  const [selectedDeliveryOptionId, setSelectedDeliveryOptionId] =
+    useState&lt;number&gt;(deliveryOptions[0].id);
+  const [selectedPaymentOptionId, setSelectedPaymentOptionId] =
+    useState&lt;number&gt;(paymentOptions[0].id);
+  const { goToOrderSuccess } = useProductRoute();
+  const { cart, clearCart } = useCart();
+
+  // Helper to get selected delivery option
+  const selectedDeliveryOption = useMemo(
+    () =&gt;
+      deliveryOptions.find((option) =&gt; option.id === selectedDeliveryOptionId),
+    [selectedDeliveryOptionId],
+  );
+
+  // Compute billing summary data
+  const billingSummary = useMemo(() =&gt; {
+    const subtotal = cart.items.reduce(
+      (sum, item) =&gt; sum + item.price * item.quantity,
+      0,
+    );
+
+    const shipping = selectedDeliveryOption?.price || 0; // Get price of the selected delivery option
+    const total = subtotal + shipping;
+
+    return { subtotal, shipping, total };
+  }, [cart, selectedDeliveryOption]);
+
+  const storeCheckoutAddress = (addressData: CheckoutAddressFormData) =&gt; {
+    setCheckoutAddress(addressData);
+  };
+
+  const onSelectDeliveryOption = (optionId: number) =&gt; {
+    setSelectedDeliveryOptionId(optionId);
+  };
+
+  const onSelectPaymentOption = (optionId: number) =&gt; {
+    setSelectedPaymentOptionId(optionId);
+  };
+
+  const { mutate: placeOrderMutate, isPending: isPlaceOrderLoading } =
+    useMutation({
+      mutationFn: () =&gt; {
+        if (!checkoutAddress) {
+          throw new Error("Delivery Address is Missing");
+        }
+
+        return placeOrder({
+          userId: 1,
+          products: cart.items.map((item) =&gt; ({
+            id: item.id,
+            quantity: item.quantity,
+          })),
+          address: checkoutAddress,
+        });
+      },
+      onSuccess: () =&gt; {
+        clearCart();
+        goToOrderSuccess();
+      },
+    });
+
+  const onPlaceOrder = () =&gt; {
+    placeOrderMutate();
+  };
+
+  return {
+    checkoutAddress,
+    deliveryOptions,
+    paymentOptions,
+    selectedDeliveryOptionId,
+    selectedPaymentOptionId,
+    billingSummary,
+    isPlaceOrderLoading,
+    storeCheckoutAddress,
+    onSelectDeliveryOption,
+    onSelectPaymentOption,
+    onPlaceOrder,
+  };
+};
+
+export default useCheckout;
+</code></pre>
+
+        <p>ไฟล์ยาวหน่อยแต่แบ่งเป็นห้าท่อนชัด ๆ ค่อย ๆ ไล่กัน:</p>
+
+        <h3>ท่อนที่ 1: state สามก้อนของหน้า Checkout</h3>
+
+        <p>นี่คือ state ที่สามบทก่อนหน้า "ลอยขึ้นมารอ" — ในที่สุดก็ได้บ้านอยู่:</p>
+
+        <ul>
+          <li><code>checkoutAddress</code> — เริ่มเป็น <code>null</code> (ยังไม่ได้กรอก) พอฟอร์มบทที่ 23 submit ผ่าน validation ค่าจะมาลงที่นี่ผ่าน <code>storeCheckoutAddress</code></li>
+          <li><code>selectedDeliveryOptionId</code> — ค่าเริ่มต้นคือ <code>deliveryOptions[0].id</code> แปลว่าหน้าเปิดมาพร้อม Standard Delivery ติ๊กอยู่แล้ว ไม่มีจังหวะไหนที่ radio ทั้งกลุ่มว่างเปล่า — UX ที่ดีของ radio คือ "มีตัวเลือกเสมอ" และการอ้าง <code>[0].id</code> จาก consts แปลว่าถ้าวันหน้าเราสลับลำดับ array ค่า default ก็ขยับตามเองโดยไม่ต้องแก้โค้ดตรงนี้</li>
+          <li><code>selectedPaymentOptionId</code> — ตรรกะเดียวกัน default เป็น Cash on Delivery</li>
+        </ul>
+
+        <p>ถัดมา hook หยิบเครื่องมือเก่าสองชิ้น: <code>goToOrderSuccess</code> จาก <code>useProductRoute</code> (บทที่ 07) ไว้พาไปหน้าสำเร็จ และ <code>cart</code> + <code>clearCart</code> จาก <code>useCart</code> (บทที่ 19) — checkout อ่านตะกร้าเพื่อสร้าง order และล้างตะกร้าเมื่อสำเร็จ</p>
+
+        <h3>ท่อนที่ 2–3: ค่าที่คำนวณจาก state ด้วย useMemo</h3>
+
+        <p><code>selectedDeliveryOption</code> แปลง id ที่เลือกกลับเป็น object เต็ม ๆ (เพราะเราต้องใช้ <code>price</code> ของมัน) ส่วน <code>billingSummary</code> คือเลขสามตัวที่ <code>BillingSummary</code> บทที่แล้วนั่งรออยู่:</p>
+
+        <ul>
+          <li><code>subtotal</code> — <code>reduce</code> รวม <code>price × quantity</code> ของทุกชิ้นในตะกร้า สูตรเดียวกับหน้า Cart บทที่ 21</li>
+          <li><code>shipping</code> — ราคาของ delivery ที่เลือก (<code>?.price || 0</code> กันกรณี <code>find</code> ไม่เจอ ซึ่งตามโครงข้อมูลจริงไม่ควรเกิด แต่ TypeScript บังคับให้เราคิดถึงมัน — ดีแล้ว)</li>
+          <li><code>total</code> — บวกกันตรง ๆ</li>
+        </ul>
+
+        <p>ทั้งสองก้อนเป็น <em>derived state</em>: คำนวณได้จาก state อื่นเสมอ จึง<strong>ห้ามเก็บเป็น <code>useState</code> แยก</strong> (เดี๋ยวลืม sync) ใช้ <code>useMemo</code> ให้คำนวณใหม่เฉพาะเมื่อ dependencies เปลี่ยน — เลือก Express ปุ๊บ <code>selectedDeliveryOption</code> เปลี่ยน → <code>billingSummary</code> คำนวณใหม่ → ค่าส่งกับยอดรวมบนจอเด้งตามทันทีโดยไม่มีใครสั่ง</p>
+
+        <h3>ท่อนที่ 4: useMutation — ทำไมไม่ใช่ query?</h3>
+
+        <p>ตั้งแต่บทที่ 14 เราใช้ <code>useQuery</code> (ผ่าน query factories) มาตลอด แต่ query คือเครื่องมือของ "การ<em>อ่าน</em>": TanStack Query จะ cache ผลลัพธ์, ยิงซ้ำให้ตอน mount, refetch ตอนกลับมาโฟกัสหน้าต่าง — พฤติกรรมพวกนี้เหมาะกับ GET ทั้งนั้น แต่ลองนึกภาพมันเกิดกับ "การสั่งซื้อ" สิ: เปิดหน้าแล้วสั่งซื้อเองอัตโนมัติ? สลับแท็บกลับมาแล้วสั่งซ้ำอีกรอบ? หายนะชัด ๆ</p>
+
+        <p>การ<em>เขียน</em> (สร้าง/แก้/ลบข้อมูลฝั่งเซิร์ฟเวอร์) ต้องใช้ <strong><code>useMutation</code></strong> ซึ่งนิสัยตรงข้ามทุกข้อ: ไม่ cache, ไม่ยิงเอง, ทำงาน<em>เฉพาะเมื่อเราสั่ง</em>ผ่าน <code>mutate()</code> เท่านั้น สิ่งที่มันให้เราคือ state รอบการยิงนั้น — ที่เราใช้คือ <code>isPending</code> (rename เป็น <code>isPlaceOrderLoading</code>) ซึ่งจะไหลไปเป็น prop <code>isLoading</code> ของปุ่ม Place Order ให้กลายเป็น spinner ระหว่างรอเซิร์ฟเวอร์ตอบ</p>
+
+        <p>ใน <code>mutationFn</code> มีด่านกันพลาดอยู่บรรทัดแรก: ถ้า <code>checkoutAddress</code> ยังเป็น <code>null</code> ให้ throw ทันที ตามจริงปุ่มถูก disable ไว้อยู่แล้วถ้ายังไม่กรอกที่อยู่ (เดี๋ยวเห็นในหน้าเพจ) แต่การเช็คซ้ำในชั้น logic เป็น defensive programming ที่ถูกต้อง — UI เปลี่ยนได้เสมอ และการเช็คนี้ยังทำให้ TypeScript รู้ว่าหลังบรรทัดนั้น <code>checkoutAddress</code> ไม่ใช่ <code>null</code> แน่ ๆ (type narrowing) เราจึงส่งมันเข้า payload ได้โดยไม่ต้อง <code>!</code> จากนั้นก็ map ของในตะกร้าให้เหลือ <code>{ id, quantity }</code> ตามรูปแบบที่ <code>PlaceOrderPayload</code> กำหนด</p>
+
+        <p>แล้วก็ถึง callback ที่เป็นหัวใจของ flow ทั้งบท:</p>
+
+        <pre><code class="language-typescript">onSuccess: () =&gt; {
+  clearCart();
+  goToOrderSuccess();
+},
+</code></pre>
+
+        <p><code>onSuccess</code> ทำงาน<em>เฉพาะเมื่อเซิร์ฟเวอร์ตอบสำเร็จ</em>: ล้างตะกร้า (dispatch <code>CLEAR_CART</code> → reducer คืน <code>items: []</code> → write-through ของ <code>CartProvider</code> เขียนทับ localStorage ให้ด้วย — กลไกจากบทที่ 19 ทำงานให้ฟรี ๆ) แล้วพาผู้ใช้ไป <code>/order/success</code> ลำดับนี้สำคัญนะ: ถ้าเราล้างตะกร้า<em>ก่อน</em>ยิง API แล้ว API พัง ของในตะกร้าผู้ใช้หายเกลี้ยงทั้งที่ยังไม่ได้ซื้อ — side effect ต้องเกิด<em>หลัง</em>ความสำเร็จได้รับการยืนยันเท่านั้น</p>
+
+        <p>ข้อสังเกตเรื่อง error: ถ้า API ล้มเหลว <code>onSuccess</code> ไม่ทำงาน ตะกร้ายังอยู่ครบ ปุ่มหยุดหมุนแล้วกลับมากดใหม่ได้ — ปลอดภัย แต่เวอร์ชันนี้ยัง<em>ไม่ได้แสดงข้อความ error ให้ผู้ใช้เห็น</em> (<code>useMutation</code> มี <code>error</code> ให้หยิบอยู่แล้ว แค่ hook เรายังไม่ return ออกไป) ถือเป็นแบบฝึกหัดต่อยอดที่ดีมาก: ลอง return <code>error</code> ออกไปแล้วแสดง <code>ErrorMessage</code> เหนือปุ่มดูเมื่อจบคอร์ส</p>
+
+        <h3>ท่อนที่ 5: return — สัญญาของ hook</h3>
+
+        <p>ก้อน return คือ "API ของหน้า Checkout" ทั้งหมดในที่เดียว: ข้อมูล (ที่อยู่, รายการตัวเลือก, id ที่เลือก, ยอดเงิน, สถานะ loading) กับ handlers (เก็บที่อยู่, เลือกจัดส่ง/จ่ายเงิน, สั่งซื้อ) สังเกตว่า hook ส่งต่อ <code>deliveryOptions</code> / <code>paymentOptions</code> จาก consts ออกไปด้วย — หน้าเพจเลยไม่ต้อง import consts เอง ทุกอย่างเกี่ยวกับ checkout ไหลผ่านประตูบานเดียว ซึ่งจะทำให้ mock ง่ายมากตอนเขียนเทสต์บทที่ 28</p>
+
+        <h2>ประกอบหน้า Checkout จริง</h2>
+
+        <p>ได้เวลาฆ่า stub ที่อยู่มาตั้งแต่บทที่ 06 เปิด <code>src/pages/Checkout/Checkout.tsx</code> แล้วแทนที่ทั้งไฟล์:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./Checkout.module.scss";
+import useCheckout from "@/features/checkout/useCheckout";
+import CategoryBanner from "@/pages/Category/components/CategoryBanner/CategoryBanner";
+import CheckoutAddressBox from "@/features/checkout/components/CheckoutAddressBox/CheckoutAddressBox";
+import CheckoutDeliveryBox from "@/features/checkout/components/CheckoutDeliveryBox/CheckoutDeliveryBox";
+import CheckoutPaymentBox from "@/features/checkout/components/CheckoutPaymentBox/CheckoutPaymentBox";
+import SummaryOrder from "@/features/checkout/components/SummaryOrder/SummaryOrder";
+import BillingSummary from "@/features/checkout/components/BillingSummary/BillingSummary";
+
+const Checkout: React.FC = () =&gt; {
+  const {
+    storeCheckoutAddress,
+    checkoutAddress,
+    deliveryOptions,
+    paymentOptions,
+    selectedPaymentOptionId,
+    onSelectDeliveryOption,
+    onSelectPaymentOption,
+    onPlaceOrder,
+    selectedDeliveryOptionId,
+    billingSummary: { subtotal, shipping, total },
+    isPlaceOrderLoading,
+  } = useCheckout();
+
+  return (
+    &lt;&gt;
+      &lt;CategoryBanner name="Checkout" /&gt;
+      &lt;div className="container pt-50 mb-30"&gt;
+        &lt;div className="flex gap-20"&gt;
+          &lt;div className={styles.addressBox}&gt;
+            &lt;div className="mb-20"&gt;
+              &lt;CheckoutAddressBox
+                title="Shipping Address"
+                checkoutAddress={checkoutAddress}
+                onUpdateAddress={storeCheckoutAddress}
+              /&gt;
+            &lt;/div&gt;
+            &lt;div className="mb-20"&gt;
+              &lt;CheckoutDeliveryBox
+                title="Delivery Options"
+                deliveryOptions={deliveryOptions}
+                onSelectOption={onSelectDeliveryOption}
+                selectedDeliveryId={selectedDeliveryOptionId}
+              /&gt;
+            &lt;/div&gt;
+            &lt;CheckoutPaymentBox
+              title="Payment Options"
+              paymentOptions={paymentOptions}
+              onSelectOption={onSelectPaymentOption}
+              selectedPaymentId={selectedPaymentOptionId}
+            /&gt;
+          &lt;/div&gt;
+          &lt;div className={styles.summaryBox}&gt;
+            &lt;div className="mb-20"&gt;
+              &lt;SummaryOrder /&gt;
+            &lt;/div&gt;
+
+            &lt;BillingSummary
+              subTotal={subtotal}
+              shipping={shipping}
+              total={total}
+              isLoading={isPlaceOrderLoading}
+              isDisabled={!checkoutAddress}
+              onPlaceOrder={onPlaceOrder}
+            /&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/&gt;
+  );
+};
+
+export default Checkout;
+</code></pre>
+
+        <p>และสร้าง <code>src/pages/Checkout/Checkout.module.scss</code> คู่กัน:</p>
+
+        <pre><code class="language-scss">.addressBox {
+  width: 60%;
+}
+
+.summaryBox {
+  width: 40%;
+}
+</code></pre>
+
+        <p>หน้านี้แทบไม่มี logic เลย — และนั่นแหละคือความสำเร็จ มันคือ "wiring diagram" ล้วน ๆ:</p>
+
+        <ul>
+          <li><strong><code>CategoryBanner name="Checkout"</code></strong> — reuse แบนเนอร์หัวหน้าเพจจากบทที่ 17 เปลี่ยนแค่ข้อความ ได้หน้าตาสอดคล้องกับหน้า Category ฟรี ๆ</li>
+          <li><strong>layout สองคอลัมน์</strong> — <code>flex gap-20</code> แบ่งซ้าย 60% (<code>addressBox</code>: กล่องที่อยู่ → จัดส่ง → ชำระเงิน เรียงลงมา) ขวา 40% (<code>summaryBox</code>: ใบสรุป + ยอดเงิน) ตาม SCSS module สองบรรทัดข้างบน</li>
+          <li><strong>ทุก prop มาจาก <code>useCheckout</code> ก้อนเดียว</strong> — destructure ทีเดียวแล้วแจกจ่าย รวมถึงท่า destructure ซ้อน <code>billingSummary: { subtotal, shipping, total }</code> ที่แกะเลขสามตัวออกมาในบรรทัดเดียว</li>
+          <li><strong><code>isDisabled={!checkoutAddress}</code></strong> — ด่านกันพลาดฝั่ง UI ที่สัญญาไว้: ตราบใดที่ยังไม่ submit ที่อยู่ ปุ่ม Place Order จะกดไม่ได้ พอที่อยู่มาปุ๊บปุ่มติดเอง เพราะ prop คำนวณใหม่ทุก render</li>
+          <li><strong><code>SummaryOrder</code> ไม่รับ prop อะไรเลย</strong> — ตามที่ออกแบบไว้บทที่แล้ว มันอ่านตะกร้าจาก context เอง</li>
+        </ul>
+
+        <p>สังเกตว่าหน้านี้<em>ไม่มี guard กรณีตะกร้าว่าง</em> — เข้าตรง ๆ ที่ <code>/checkout</code> ทั้งที่ตะกร้าโล่งก็จะเห็นใบสรุปว่าง ๆ กับยอด $5.99 (ค่าส่งอย่างเดียว) ซึ่งใช้งานได้แต่ไม่สวยนัก โปรเจกต์ต้นฉบับเลือกเก็บหน้าให้เรียบง่ายไว้ก่อน ถ้าอยากฝึกเพิ่ม ลอง redirect ไปหน้า Cart เมื่อ <code>cart.items.length === 0</code> เป็นการบ้านหลังจบคอร์สได้</p>
+
+        <h2>หน้า Order Success ฉบับสมบูรณ์</h2>
+
+        <p>ชิ้นสุดท้าย! route <code>/order/success</code> มีอยู่แล้วตั้งแต่บทที่ 06 เหลือแค่ทำหน้าให้สมศักดิ์ศรี เปิด <code>src/pages/Order/OrderSuccess.tsx</code> แล้วแทนที่ stub ทั้งไฟล์:</p>
+
+        <pre><code class="language-typescript">import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
+
+const OrderSuccess: React.FC = () =&gt; {
+  return (
+    &lt;div&gt;
+      &lt;div className="bg-grey01 pt-45 pb-45 text-center"&gt;
+        &lt;FontAwesomeIcon
+          icon={faCircleCheck}
+          className="fs-72 text-primary mb-20"
+        /&gt;
+        &lt;h2 className="fs-28 mb-15 text-uppercase fw-bold"&gt;
+          Order Placed Successfully!
+        &lt;/h2&gt;
+        &lt;p className="fs-18 text-muted"&gt;
+          Your order has been successfully placed and is on its way.
+        &lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default OrderSuccess;
+</code></pre>
+
+        <p>หน้าเรียบ ๆ ตั้งใจ: ไอคอน <code>faCircleCheck</code> ตัวโต (Font Awesome ติดตั้งไว้ตั้งแต่บทที่ 07) + หัวข้อ + ข้อความยืนยัน บนพื้นเทาอ่อน จัดทุกอย่างด้วย utility classes ล้วน ๆ ไม่ต้องมี SCSS module สังเกตว่าหน้านี้<em>ไม่ต้องล้างตะกร้าเอง</em> — งานนั้น <code>onSuccess</code> ของ mutation ทำจบไปแล้วก่อนจะ navigate มาถึง แบ่งหน้าที่ชัด: hook จัดการผลลัพธ์ หน้าเพจแค่แสดงความยินดี</p>
+
+        <h2>ทดสอบ happy path ทั้งเส้น</h2>
+
+        <p>นี่คือช่วงเวลาที่รอมาตั้งแต่บทที่ 01 — flow ช้อปปิ้งครบ loop ครั้งแรกของแอป รัน <code>npm run dev</code> แล้วไล่ตามนี้ทีละข้อ:</p>
+
+        <ol>
+          <li>เปิดหน้า Product ของสินค้าสักชิ้น กด Add to Cart (จะเพิ่มหลายชิ้นก็ยิ่งดี)</li>
+          <li>เข้าหน้า Cart ตรวจของ แล้วกดไปหน้า Checkout</li>
+          <li>เห็นหน้าใหม่เอี่ยม: แบนเนอร์ Checkout, กล่องซ้ายสามใบ, ใบสรุปขวาที่มีสินค้าของเราครบ และปุ่ม Place Order ที่<strong>ยังกดไม่ได้</strong></li>
+          <li>ลองกด Submit ฟอร์มทั้งที่ว่าง → ข้อความแดง "Address is required" ฯลฯ โผล่ครบสามช่อง — zod ทำงานแล้ว ลองพิมพ์ email มั่ว ๆ ดูด้วยว่าได้ "Enter a valid email address"</li>
+          <li>กรอกให้ครบแล้ว Submit → ที่อยู่ขึ้นไปแสดงในกล่อง และปุ่ม Place Order ติดสว่างพร้อมกด</li>
+          <li>สลับ delivery เป็น Express → Shipping ฝั่งขวาเด้งเป็น $15.99 และ Total ขยับตามทันที เลือก payment ตามใจ</li>
+          <li>กด Place Order → ปุ่มกลายเป็น spinner แวบหนึ่ง → เด้งไปหน้า Order Success ไอคอนติ๊กถูกเขียว</li>
+          <li>ดู Header: ตัวเลขบนไอคอนตะกร้าเป็น 0 แล้ว — <code>CLEAR_CART</code> ทำงาน</li>
+        </ol>
+
+        <blockquote>💡 Checkpoint สุดท้าย: เปิด DevTools → แท็บ Application → Local Storage → key <code>ecommerce-cart:v1</code> ต้องกลายเป็น <code>{"items":[]}</code> — หลักฐานว่า write-through จากบทที่ 19 เขียนทับตะกร้าที่ล้างแล้วลง localStorage เรียบร้อย ลอง refresh หน้าไหนก็ได้ ตะกร้าต้องยังว่างอยู่ และเปิดแท็บ Network ระหว่างกด Place Order จะเห็น <code>POST https://dummyjson.com/carts/add</code> พร้อม response จำลองที่มี <code>id</code> กลับมา ถ้าทุกข้อผ่าน — ยินดีด้วย แอป E-commerce ของคุณ<strong>ขายของได้แล้ว</strong>ครบ loop ตั้งแต่เลือกของยันยืนยันคำสั่งซื้อ chapter ถัดไปเราจะทำให้มัน<em>พิสูจน์ได้</em>ว่าทำงานถูกต้อง ด้วยชุดเทสต์เต็มรูปแบบ</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="24_delivery_payment_summary.html" rel="prev">ก่อนหน้า: จัดส่ง ชำระเงิน และสรุปรายการ</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="26_test_setup.html" rel="next">ถัดไป: ติดตั้งชุดทดสอบ</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

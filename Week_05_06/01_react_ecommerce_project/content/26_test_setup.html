@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ติดตั้ง Vitest, React Testing Library และ MSW พร้อมวางโครงสร้างพื้นฐานการทดสอบทั้งหมดของโปรเจกต์ E-commerce" />
+    <title>ติดตั้งชุดทดสอบ | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 26 · การทดสอบ (Testing)</p>
+          <h1>ติดตั้งชุดทดสอบ: Vitest, React Testing Library และ MSW</h1>
+          <p class="lesson-original-title" lang="en">Test Setup</p>
+        </header>
+
+        <p>แอปของเราครบทุกฟีเจอร์แล้ว — ดูสินค้าได้ เพิ่มลงตะกร้าได้ สั่งซื้อได้ แต่ตอนนี้ถ้าถามว่า "กล้าแก้ <code>cartReducer</code> ไหม? กล้าอัปเกรด TanStack Query ไหม?" คำตอบที่ซื่อสัตย์คือ "ไม่ค่อยกล้า เพราะต้องไล่คลิกทุกหน้าเองเพื่อเช็คว่าไม่มีอะไรพัง" ชุดเทสต์ (test suite) คือสิ่งที่เปลี่ยนคำตอบนั้นเป็น "กล้า เพราะกด <code>npm run test</code> แล้วรู้ผลใน 10 วินาที" — และนี่คือสิ่งที่เราจะสร้างกันใน 4 บทสุดท้ายของช่วงนี้</p>
+
+        <p>ใน Week 4 คุณเขียนเทสต์ด้วย <strong>Vitest</strong> และ <strong>React Testing Library</strong> มาแล้ว บทนี้เราจะติดตั้งเครื่องมือชุดเดิมนั้นเข้าโปรเจกต์นี้ พร้อมเพื่อนใหม่หนึ่งตัวคือ <strong>MSW (Mock Service Worker)</strong> แล้ววางโครงสร้างพื้นฐานทั้งหมดที่บทถัด ๆ ไปจะใช้: ข้อมูลปลอม, API ปลอม และ helper สำหรับ render ทั้งแอปในเทสต์ บทนี้ยังไม่มีเทสต์จริงสักตัว — แต่พอวางฐานเสร็จ สามบทถัดไปจะไหลลื่นมาก</p>
+
+        <h2>ทำไมต้อง MSW — mock ที่ชั้น network ไม่ใช่ชั้นโค้ด</h2>
+
+        <p>ปัญหาคลาสสิกของการเทสต์แอปที่คุยกับ API: เราไม่อยากให้เทสต์ยิง request ไปที่ dummyjson.com จริง ๆ เพราะมันช้า, พังเมื่อเน็ตล่ม และข้อมูลบนเซิร์ฟเวอร์เปลี่ยนได้ตลอดเวลา (เทสต์ที่ assert ว่าสินค้าชื่ออะไรจะพังทันทีที่ dummyjson แก้ข้อมูล) เราจึงต้อง "ปลอม" API — คำถามคือปลอมที่ชั้นไหน</p>
+
+        <p>วิธีที่หลายคนนึกถึงก่อนคือ mock ตัว axios ไปเลยด้วย <code>vi.mock</code> — แต่คิดดูว่าเราเสียอะไรไป: <code>apiClient</code> ของเรามี interceptor ที่แปลง error ทุกแบบให้เป็น <code>ApiError</code> (บทที่ 12) ถ้าเรา mock axios ทิ้ง โค้ดส่วนนั้น<em>ไม่ได้รันเลย</em>ในเทสต์ — interceptor จะพังยับแค่ไหนเทสต์ก็เขียวอยู่ดี เท่ากับเราเทสต์ "ของปลอมที่เราสร้างขึ้นเอง" ไม่ใช่โค้ดจริง</p>
+
+        <p><strong>MSW เลือกปลอมที่ชั้นต่ำที่สุดเท่าที่จะทำได้: ชั้น network</strong> มันดักจับ HTTP request ตอนที่กำลังจะออกจากโปรเซส แล้วตอบกลับด้วยข้อมูลที่เรากำหนด ผลคือโค้ดฝั่งเราวิ่ง<em>ครบทั้งสาย</em>ของจริง — <code>queryOptions</code> → ฟังก์ชันใน <code>api.ts</code> → axios → interceptor — มีแค่ "เซิร์ฟเวอร์ปลายทาง" เท่านั้นที่เป็นของปลอม เทสต์ที่ผ่านจึงบอกได้เต็มปากว่าชั้นข้อมูลทั้งชั้นทำงานถูกจริง</p>
+
+        <h2>ติดตั้ง dependencies</h2>
+
+        <p>ทั้งหมดเป็น <code>devDependencies</code> เพราะใช้ตอนพัฒนาเท่านั้น ไม่ถูก bundle ไปกับแอป:</p>
+
+        <pre><code class="language-bash">npm install -D vitest jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event msw @types/node
+</code></pre>
+
+        <ul>
+          <li><strong>vitest</strong> — test runner ตัวเดิมจาก Week 4 ข้อดีใหญ่คือมันใช้ config และ transform pipeline ของ Vite ทำให้ path alias <code>@/</code> และ SCSS Modules ในโค้ดเราทำงานในเทสต์ได้เลยโดยไม่ต้องตั้งค่าเพิ่ม</li>
+          <li><strong>jsdom</strong> — DOM จำลองที่รันใน Node ทำให้ component ของเรา render ได้โดยไม่ต้องเปิดเบราว์เซอร์จริง</li>
+          <li><strong>@testing-library/react</strong> — <code>render</code>, <code>screen</code>, <code>renderHook</code>, <code>waitFor</code> สำหรับเทสต์ component และ hook แบบเน้นพฤติกรรมที่ผู้ใช้เห็น</li>
+          <li><strong>@testing-library/jest-dom</strong> — matcher เพิ่มเติมอย่าง <code>toBeInTheDocument()</code> ที่ทำให้ assertion อ่านเป็นภาษาคนมากขึ้น</li>
+          <li><strong>@testing-library/user-event</strong> — จำลองการพิมพ์และการคลิกแบบเหมือนผู้ใช้จริง (จะได้ใช้หนัก ๆ ในบทที่ 29)</li>
+          <li><strong>msw</strong> — พระเอกใหม่ของเรา: เซิร์ฟเวอร์ปลอมที่ชั้น network</li>
+          <li><strong>@types/node</strong> — type ของ Node API (เราใช้ <code>node:url</code> ใน <code>vite.config.ts</code> อยู่แล้ว และไฟล์ config ฝั่งเทสต์จะถูกเช็ค type เข้มขึ้น)</li>
+        </ul>
+
+        <p>เช็คใน <code>package.json</code> — ควรเห็นเจ็ดรายการใหม่แทรกเข้าไปใน <code>devDependencies</code> (เวอร์ชันของคุณอาจใหม่กว่านี้เล็กน้อย):</p>
+
+        <pre><code class="language-json">"@testing-library/jest-dom": "^7.0.0",
+"@testing-library/react": "^16.3.2",
+"@testing-library/user-event": "^14.6.1",
+"@types/node": "^22.20.1",
+"jsdom": "^30.0.1",
+"msw": "^2.15.0",
+"vitest": "^4.1.10"
+</code></pre>
+
+        <h2>เพิ่ม test block ใน vite.config.ts</h2>
+
+        <p>Vitest อ่าน config จากไฟล์เดียวกับ Vite นี่คือครั้งสุดท้ายที่เราแก้ <code>vite.config.ts</code> — เพิ่มบรรทัด <code>/// &lt;reference types="vitest/config" /&gt;</code> ที่บรรทัดแรกสุด และ block <code>test</code> ต่อท้าย <code>legacy</code> จนได้ไฟล์ฉบับสมบูรณ์ดังนี้:</p>
+
+        <pre><code class="language-typescript">/// &lt;reference types="vitest/config" /&gt;
+import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+  // Vite 8 (Rolldown) tightened CJS default-import interop: since this project's
+  // package.json has "type": "module", default imports of CJS deps that use the
+  // TS/Babel esModuleInterop convention (module.exports.default, e.g.
+  // react-spinners, react-paginate) now resolve to the whole module object
+  // instead of unwrapping `.default`, breaking those components at runtime
+  // ("Element type is invalid"). This restores the pre-Vite-8 unwrapping
+  // behavior. See https://vite.dev/guide/migration (CJS interop changes).
+  legacy: {
+    inconsistentCjsInterop: true,
+  },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./src/test/setup.ts",
+    // MSW handlers hardcode the host, so tests must not depend on .env
+    env: { VITE_API_BASE_URL: "https://dummyjson.com" },
+  },
+});
+</code></pre>
+
+        <p>ไล่ดูทีละส่วน:</p>
+
+        <ul>
+          <li><strong><code>/// &lt;reference types="vitest/config" /&gt;</code></strong> — โดยปกติ type ของ <code>defineConfig</code> ไม่รู้จัก key ชื่อ <code>test</code> (มันเป็นของ Vitest ไม่ใช่ Vite) triple-slash directive บรรทัดนี้ดึง type เสริมของ Vitest เข้ามา ทำให้ทุก field ใน block <code>test</code> มี autocomplete และถูกเช็ค type</li>
+          <li><strong><code>environment: "jsdom"</code></strong> — ให้ทุกเทสต์รันใน DOM จำลอง เราจะได้ <code>document</code>, <code>window</code> และ <code>localStorage</code> ใช้เหมือนอยู่ในเบราว์เซอร์</li>
+          <li><strong><code>globals: true</code></strong> — ทำให้ <code>describe</code>, <code>it</code>, <code>expect</code> เป็น global ไม่ต้อง import ในทุกไฟล์เทสต์ (แบบเดียวกับที่คุ้นเคยใน Week 4)</li>
+          <li><strong><code>setupFiles</code></strong> — ไฟล์ที่ Vitest รัน<em>ก่อน</em>ไฟล์เทสต์ทุกไฟล์ เดี๋ยวเราจะสร้างมันเพื่อเปิด/ปิด MSW server</li>
+          <li><strong><code>env: { VITE_API_BASE_URL: "https://dummyjson.com" }</code></strong> — บังคับค่า env ตอนรันเทสต์ให้ตายตัว สังเกต comment ในไฟล์: <em>MSW handlers hardcode the host, so tests must not depend on .env</em> — handler ของ MSW จะ match request ด้วย URL เต็ม <code>https://dummyjson.com/...</code> ถ้าเราปล่อยให้ <code>apiClient</code> อ่าน <code>baseURL</code> จากไฟล์ <code>.env</code> ของแต่ละเครื่อง วันไหนใครแก้ <code>.env</code> ไปชี้ host อื่น request จะไม่ match handler แล้วเทสต์พังทั้งชุดแบบงง ๆ การ hardcode ตรงนี้ทำให้เทสต์ deterministic: รันที่เครื่องไหนก็ได้ผลเหมือนกัน</li>
+        </ul>
+
+        <h2>เพิ่ม scripts</h2>
+
+        <p>เพิ่มสอง script สุดท้ายเข้าไปใน <code>package.json</code> จน block <code>scripts</code> เป็นแบบนี้:</p>
+
+        <pre><code class="language-json">"scripts": {
+  "dev": "vite",
+  "build": "tsc -b &amp;&amp; vite build",
+  "lint": "eslint .",
+  "format": "prettier --write .",
+  "format:check": "prettier --check .",
+  "typecheck": "tsc -b",
+  "preview": "vite preview",
+  "test": "vitest run",
+  "test:watch": "vitest"
+},
+</code></pre>
+
+        <p><code>vitest run</code> รันครบหนึ่งรอบแล้วจบ (เหมาะกับการเช็คก่อน commit และรันบน CI) ส่วน <code>vitest</code> เฉย ๆ คือ watch mode — มันจะรันเฉพาะเทสต์ที่เกี่ยวกับไฟล์ที่เพิ่งแก้ใหม่ทุกครั้งที่กด save เหมาะมากตอนเขียนเทสต์ในสามบทถัดไป</p>
+
+        <h2>โครงสร้างโฟลเดอร์ src/test</h2>
+
+        <p>โครงสร้างพื้นฐานของเทสต์ทั้งหมดอยู่ในโฟลเดอร์เดียว สร้างตามนี้ (ไฟล์เทสต์จริง ๆ จะอยู่ข้างไฟล์ต้นทางของมัน ไม่ได้อยู่ในนี้):</p>
+
+        <pre><code class="language-bash">src/test/
+├── msw/
+│   ├── fixtures.ts      # ข้อมูลปลอมที่ใช้ร่วมกัน
+│   ├── handlers.ts      # endpoint ปลอมรูปร่างเดียวกับ dummyjson
+│   └── server.ts        # MSW server สำหรับรันใน Node
+├── renderRoute.tsx      # render ทั้งแอปสำหรับ integration test
+├── setup.ts             # รันก่อนทุกไฟล์เทสต์
+└── utils.tsx            # QueryClient + wrapper สำหรับเทสต์ hook
+</code></pre>
+
+        <h3>src/test/msw/fixtures.ts — โรงงานข้อมูลปลอม</h3>
+
+        <pre><code class="language-typescript">import {
+  Category,
+  FetchProductsResponse,
+  Product,
+} from "@/features/products/types";
+
+export function makeProduct(overrides: Partial&lt;Product&gt; = {}): Product {
+  return {
+    id: 1,
+    title: "Essence Mascara Lash Princess",
+    description: "A popular mascara.",
+    category: "beauty",
+    price: 9.99,
+    discountPercentage: 7.17,
+    rating: 4.94,
+    stock: 5,
+    tags: ["beauty", "mascara"],
+    brand: "Essence",
+    sku: "RCH45Q1A",
+    weight: 2,
+    dimensions: { width: 23.17, height: 14.43, depth: 28.01 },
+    warrantyInformation: "1 month warranty",
+    shippingInformation: "Ships in 1 month",
+    availabilityStatus: "Low Stock",
+    reviews: [
+      {
+        rating: 5,
+        comment: "Very happy with my purchase!",
+        date: "2024-05-23T08:56:21.618Z",
+        reviewerName: "John Doe",
+        reviewerEmail: "john@x.dummyjson.com",
+      },
+    ],
+    returnPolicy: "30 days return policy",
+    minimumOrderQuantity: 24,
+    meta: {
+      createdAt: "2024-05-23T08:56:21.618Z",
+      updatedAt: "2024-05-23T08:56:21.618Z",
+      barcode: "9164035109868",
+      qrCode: "https://assets.dummyjson.com/public/qr-code.png",
+    },
+    images: ["https://cdn.dummyjson.com/products/images/beauty/1.png"],
+    thumbnail: "https://cdn.dummyjson.com/products/images/beauty/1-thumb.png",
+    ...overrides,
+  };
+}
+
+export function makeProductsResponse(
+  count: number,
+  overrides: Partial&lt;FetchProductsResponse&gt; = {},
+): FetchProductsResponse {
+  return {
+    products: Array.from({ length: count }, (_, i) =&gt;
+      makeProduct({ id: i + 1, title: `Product ${i + 1}` }),
+    ),
+    total: 100,
+    skip: 0,
+    limit: count,
+    ...overrides,
+  };
+}
+
+export const categories: Category[] = [
+  {
+    slug: "beauty",
+    name: "Beauty",
+    url: "https://dummyjson.com/products/category/beauty",
+  },
+  {
+    slug: "fragrances",
+    name: "Fragrances",
+    url: "https://dummyjson.com/products/category/fragrances",
+  },
+  {
+    slug: "furniture",
+    name: "Furniture",
+    url: "https://dummyjson.com/products/category/furniture",
+  },
+];
+</code></pre>
+
+        <p>รูปแบบสำคัญตรงนี้คือ <strong>factory function</strong>: <code>makeProduct()</code> คืน <code>Product</code> ที่ครบทุก field ตามรูปร่างจริงของ dummyjson (สังเกตว่า type คือ <code>Product</code> จาก <code>features/products/types</code> ของเราเอง — ถ้าวันหนึ่ง type เปลี่ยน fixture นี้จะ compile ไม่ผ่านทันที ซึ่งดี) ส่วน parameter <code>overrides: Partial&lt;Product&gt;</code> ให้แต่ละเทสต์แก้เฉพาะ field ที่ตัวเองสนใจ เช่น <code>makeProduct({ id: 7 })</code> — เทสต์จึงสั้น อ่านง่าย และไม่พังเวลา field อื่น ๆ เปลี่ยน <code>makeProductsResponse(count)</code> ต่อยอดสร้างทั้งหน้า list โดยตั้งชื่อสินค้าแบบคาดเดาได้ (<code>Product 1</code>, <code>Product 2</code>, …) ซึ่งจะสำคัญมากตอน integration test</p>
+
+        <h3>src/test/msw/handlers.ts — endpoint ปลอมรูปร่างเดียวกับ dummyjson</h3>
+
+        <pre><code class="language-typescript">import { http, HttpResponse } from "msw";
+import { categories, makeProduct, makeProductsResponse } from "./fixtures";
+
+const BASE = "https://dummyjson.com";
+
+export const handlers = [
+  http.get(`${BASE}/products/categories`, () =&gt; HttpResponse.json(categories)),
+
+  http.get(`${BASE}/products/category/:slug`, ({ request, params }) =&gt; {
+    const url = new URL(request.url);
+    const limit = Number(url.searchParams.get("limit") ?? 20);
+    const skip = Number(url.searchParams.get("skip") ?? 0);
+    return HttpResponse.json(
+      makeProductsResponse(limit, {
+        skip,
+        limit,
+        products: Array.from({ length: limit }, (_, i) =&gt;
+          makeProduct({
+            id: skip + i + 1,
+            title: `${String(params.slug)} product ${skip + i + 1}`,
+            category: String(params.slug),
+          }),
+        ),
+      }),
+    );
+  }),
+
+  http.get(`${BASE}/products/:id`, ({ params }) =&gt;
+    HttpResponse.json(makeProduct({ id: Number(params.id) })),
+  ),
+
+  http.get(`${BASE}/products`, ({ request }) =&gt; {
+    const url = new URL(request.url);
+    const limit = Number(url.searchParams.get("limit") ?? 20);
+    const skip = Number(url.searchParams.get("skip") ?? 0);
+    return HttpResponse.json(makeProductsResponse(limit, { skip, limit }));
+  }),
+
+  http.post(`${BASE}/carts/add`, async ({ request }) =&gt; {
+    const body = (await request.json()) as Record&lt;string, unknown&gt;;
+    return HttpResponse.json({ id: 1, ...body }, { status: 201 });
+  }),
+];
+</code></pre>
+
+        <p>แต่ละ handler คือ endpoint ปลอมหนึ่งตัว หน้าตาเหมือน route ของเซิร์ฟเวอร์เลย: <code>http.get(url, resolver)</code> โดย resolver คืน <code>HttpResponse.json(...)</code> จุดที่ควรสังเกต:</p>
+
+        <ul>
+          <li><strong>handler ไม่ได้แค่คืนของตายตัว — มันอ่าน request จริง ๆ</strong> ตัว <code>/products/category/:slug</code> อ่านทั้ง <code>params.slug</code> จาก path และ <code>limit</code>/<code>skip</code> จาก query string แล้วประกอบเป็นชื่อสินค้าอย่าง <code>beauty product 21</code> (id เริ่มจาก <code>skip + 1</code>) — เท่ากับว่าถ้าเทสต์เห็นข้อความนี้ แปลว่า pagination ของเราคำนวณ <code>skip</code> แล้วส่งไปกับ request <em>ถูกต้องจริง</em> ตลอดทั้งสาย</li>
+          <li><strong>ลำดับใน array มีความหมาย</strong> — MSW ลอง match จากบนลงล่าง <code>/products/categories</code> ต้องอยู่ก่อน <code>/products/:id</code> ไม่งั้นคำว่า <code>categories</code> จะถูกจับเป็นค่า <code>:id</code> ไปเสียก่อน</li>
+          <li><strong><code>POST /carts/add</code></strong> — endpoint ที่ <code>placeOrder</code> ของ checkout ใช้ ตอบ 201 พร้อม echo body กลับมา เหมือนพฤติกรรมของ dummyjson จริง</li>
+        </ul>
+
+        <h3>src/test/msw/server.ts</h3>
+
+        <pre><code class="language-typescript">import { setupServer } from "msw/node";
+import { handlers } from "./handlers";
+
+export const server = setupServer(...handlers);
+</code></pre>
+
+        <p>ไฟล์นี้สั้นแต่มีจุดสำคัญ: เรา import จาก <code>msw/node</code> เพราะเทสต์รันใน Node ไม่ใช่เบราว์เซอร์ (ชื่อ "Service Worker" มาจากโหมดที่ MSW รันในเบราว์เซอร์จริง — ใน Node มันใช้วิธีดักจับ request คนละกลไกแต่ API หน้าตาเดียวกัน) <code>setupServer(...handlers)</code> สร้างเซิร์ฟเวอร์ปลอมพร้อม handler ตั้งต้นทั้งห้าตัว</p>
+
+        <h3>src/test/setup.ts — วงจรชีวิตของเซิร์ฟเวอร์ปลอม</h3>
+
+        <pre><code class="language-typescript">/// &lt;reference types="vitest/globals" /&gt;
+// Triple-slash directive here (not tsconfig types) because tsconfig.app.json's custom
+// typeRoots breaks "types": ["vitest/globals"] resolution (TS2688); ambient globals
+// propagate program-wide from this file.
+import "@testing-library/jest-dom/vitest";
+import { server } from "./msw/server";
+
+beforeAll(() =&gt; server.listen({ onUnhandledRequest: "error" }));
+afterEach(() =&gt; {
+  server.resetHandlers();
+  localStorage.clear();
+});
+afterAll(() =&gt; server.close());
+</code></pre>
+
+        <p>นี่คือไฟล์ที่ <code>setupFiles</code> ใน vite.config ชี้ถึง — Vitest รันมันก่อนไฟล์เทสต์ทุกไฟล์ แต่ละบรรทัดทำหน้าที่ชัดเจน:</p>
+
+        <ul>
+          <li><strong>triple-slash <code>vitest/globals</code></strong> — TypeScript ต้องรู้จัก <code>describe</code>/<code>it</code>/<code>expect</code> ที่เราเปิดเป็น global ไว้ ทางปกติคือใส่ <code>"types": ["vitest/globals"]</code> ใน tsconfig แต่ comment ในไฟล์อธิบายไว้ว่าโปรเจกต์เรากำหนด <code>typeRoots</code> เอง (เพื่อให้ <code>src/shared/types</code> เป็นที่อยู่ของ global type — บทที่ 4) ซึ่งทำให้วิธีนั้นพังด้วย error TS2688 เราจึงประกาศผ่าน directive ในไฟล์นี้แทน — ambient type ที่ประกาศในไฟล์หนึ่งจะมีผลทั้งโปรแกรม</li>
+          <li><strong><code>import "@testing-library/jest-dom/vitest"</code></strong> — ลงทะเบียน matcher อย่าง <code>toBeInTheDocument()</code> เข้ากับ <code>expect</code> ของ Vitest ครั้งเดียว ใช้ได้ทุกไฟล์</li>
+          <li><strong><code>beforeAll</code></strong> — เปิดเซิร์ฟเวอร์ปลอมก่อนเทสต์ทั้งหมด ตัวเลือก <code>onUnhandledRequest: "error"</code> สำคัญมาก: request ไหนที่ไม่ match handler สักตัว เทสต์จะ<em>พังทันทีพร้อมบอก URL</em> แทนที่จะเงียบ ๆ หลุดออกอินเทอร์เน็ตจริง — ทำให้ typo ใน URL หรือ endpoint ที่ลืมทำ handler โผล่มาให้เห็นเร็วที่สุด</li>
+          <li><strong><code>afterEach</code></strong> — ล้างสองอย่างหลังเทสต์<em>ทุกตัว</em>: <code>resetHandlers()</code> ถอด handler ชั่วคราวที่เทสต์นั้นยัดเพิ่มด้วย <code>server.use(...)</code> (จะเจอในบทหน้า) และ <code>localStorage.clear()</code> ล้างตะกร้าที่ค้างอยู่ — จำได้ไหมว่า cart ของเรา persist ลง localStorage ถ้าไม่ล้าง ตะกร้าจากเทสต์หนึ่งจะรั่วไปโผล่ในเทสต์ถัดไป</li>
+          <li><strong><code>afterAll</code></strong> — คืนระบบ network สู่สภาพปกติเมื่อเสร็จทั้งไฟล์</li>
+        </ul>
+
+        <h3>src/test/utils.tsx — QueryClient สำหรับเทสต์</h3>
+
+        <pre><code class="language-typescript">import { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+export function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+}
+
+export function createQueryWrapper() {
+  const queryClient = createTestQueryClient();
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      &lt;QueryClientProvider client={queryClient}&gt;{children}&lt;/QueryClientProvider&gt;
+    );
+  };
+}
+</code></pre>
+
+        <p>โค้ดที่ใช้ TanStack Query ต้องอยู่ใต้ <code>QueryClientProvider</code> เสมอ — ในเทสต์ก็เช่นกัน แต่เรา<em>ไม่</em>ใช้ <code>queryClient</code> ตัวจริงจาก <code>src/app/queryClient.ts</code> ด้วยสองเหตุผล: หนึ่ง ตัวจริงตั้ง <code>retry: 1</code> ซึ่งแปลว่าเทสต์กรณี error ต้องรอ query ลองซ้ำจนครบก่อนถึงจะ fail — ช้าและอาจเกิน timeout เราจึงตั้ง <code>retry: false</code> ให้พังทันทีที่ควรพัง สอง <code>createTestQueryClient()</code> สร้าง client <em>ใหม่ทุกครั้งที่ถูกเรียก</em> — เพื่อให้ cache ของแต่ละเทสต์แยกขาดจากกัน (เหตุผลเต็ม ๆ รออยู่บทที่ 28) ส่วน <code>createQueryWrapper()</code> ห่อมันเป็น component สำหรับส่งเข้า option <code>wrapper</code> ของ <code>renderHook</code></p>
+
+        <h3>src/test/renderRoute.tsx — render ทั้งแอปในเทสต์</h3>
+
+        <pre><code class="language-typescript">import { QueryClientProvider } from "@tanstack/react-query";
+import { render } from "@testing-library/react";
+import { createMemoryRouter } from "react-router";
+import { RouterProvider } from "react-router/dom";
+import { createTestQueryClient } from "./utils";
+import { routes } from "@/app/router";
+import { CartProvider } from "@/features/cart/store/CartProvider";
+
+export function renderRoute(initialPath: string) {
+  const router = createMemoryRouter(routes, {
+    initialEntries: [initialPath],
+  });
+
+  return {
+    router,
+    ...render(
+      &lt;QueryClientProvider client={createTestQueryClient()}&gt;
+        &lt;CartProvider&gt;
+          &lt;RouterProvider router={router} /&gt;
+        &lt;/CartProvider&gt;
+      &lt;/QueryClientProvider&gt;,
+    ),
+  };
+}
+</code></pre>
+
+        <p>helper ตัวสุดท้ายนี้คือหัวใจของ integration test ในบทที่ 29 — เรียก <code>renderRoute("/cart")</code> แล้วได้<em>แอปทั้งแอป</em>เปิดอยู่ที่หน้า Cart:</p>
+
+        <ul>
+          <li><strong><code>createMemoryRouter(routes, ...)</code></strong> — router ที่เก็บ history ไว้ในหน่วยความจำแทน address bar (ซึ่งไม่มีอยู่จริงใน jsdom) สังเกตว่ามันรับ <code>routes</code> — array เดียวกับที่ <code>createBrowserRouter</code> ตัวจริงใช้ นี่แหละเหตุผลที่บทที่ 6 เรา export <code>routes</code> แยกจาก <code>router</code>: route table จริงทุกเส้นทาง รวมทั้ง <code>MainLayout</code> และ <code>errorElement</code> ถูกเทสต์ด้วย ไม่ใช่ฉบับจำลอง ส่วน <code>initialEntries</code> คือ URL เริ่มต้น</li>
+          <li><strong>provider ครบชุดเหมือนแอปจริง</strong> — <code>QueryClientProvider</code> (ฉบับเทสต์) และ <code>CartProvider</code> ตัวจริง ซ้อนกันตามลำดับเดียวกับ <code>providers.tsx</code> — <code>CartProvider</code> จะ lazy init จาก localStorage เหมือนเดิม เปิดช่องให้เทสต์ "แอบใส่ของในตะกร้า" ได้ด้วยการเขียน localStorage ก่อน render</li>
+          <li><strong>คืน <code>router</code> ออกมาด้วย</strong> — เทสต์จะได้ assert เรื่อง navigation ได้ เช่น เช็คว่าหลังสั่งซื้อสำเร็จ <code>router.state.location.pathname</code> กลายเป็น <code>/order/success</code> จริง (บทที่ 29 ใช้แน่นอน)</li>
+        </ul>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run test</code> — Vitest จะสตาร์ทแล้วรายงานว่า <strong>No test files found</strong> และจบการทำงาน นี่คือผลที่ถูกต้องของบทนี้: โครงสร้างพื้นฐานพร้อมแล้วแต่ยังไม่มีไฟล์ <code>*.test.*</code> สักไฟล์ ถ้าเจอ error อื่น เช่น import ไม่เจอหรือ config พัง ให้กลับไปไล่เช็คไฟล์ในบทนี้ก่อน — บทหน้าเราจะเติมเทสต์ 22 ตัวแรกลงไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="25_place_order.html" rel="prev">ก่อนหน้า: สั่งซื้อ</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="27_unit_tests.html" rel="next">ถัดไป: Unit Tests</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ติดตั้ง TanStack Query ตั้งค่า QueryClient แบบ singleton และรวม providers ของแอปไว้ในไฟล์เดียวพร้อม Devtools เฉพาะโหมด dev" />
+    <title>Providers และ QueryClient | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 08 · โครงแอปและเราเตอร์ (App Shell &amp; Routing)</p>
+          <h1>Providers และ QueryClient</h1>
+          <p class="lesson-original-title" lang="en">Providers &amp; QueryClient</p>
+        </header>
+
+        <p>บทนี้เป็นชิ้นสุดท้ายของโครงแอป: วางระบบจัดการข้อมูลจาก server ให้พร้อมใช้ทั่วทั้งแอป ก่อนลงมือ ทวนแนวคิดสำคัญจาก Week 4 กันหนึ่งย่อหน้า — state ในแอปเรามีสองพันธุ์ที่ต้องจัดการคนละวิธี:</p>
+
+        <ul>
+          <li><strong>Server state</strong> — ข้อมูลที่เจ้าของตัวจริงอยู่บน server เช่น รายการสินค้า ราคา รีวิว เราเป็นแค่ผู้ยืมมาแสดง มันเลยมีปัญหาเฉพาะตัว: ต้องโหลด อาจโหลดพลาด อาจหมดอายุ ต้อง cache — ทั้งหมดนี้คือหน้าที่ของ <strong>TanStack Query</strong></li>
+          <li><strong>Client state</strong> — ข้อมูลที่เกิดและจบในเบราว์เซอร์ เช่น ของในตะกร้า modal เปิดอยู่ไหม — อันนี้เป็นหน้าที่ของ React เอง (ในโปรเจกต์นี้คือ Context + useReducer ซึ่งจะสร้างกันในบทที่ 19)</li>
+        </ul>
+
+        <p>บทเรียนราคาแพงที่สุดข้อหนึ่งของมือใหม่คือการเอา <code>useEffect</code> + <code>useState</code> ไปจัดการ server state เอง — ได้โค้ดที่ไม่มี cache, โหลดซ้ำซ้อน และ race condition เพียบ เราจะไม่ทำแบบนั้นแม้แต่บรรทัดเดียวในโปรเจกต์นี้</p>
+
+        <h2>ติดตั้ง TanStack Query</h2>
+
+        <p>ตัว library หลักเป็น dependency ปกติ ส่วน Devtools ติดตั้งเป็น <code>-D</code> (devDependency) เพราะเป็นเครื่องมือของนักพัฒนา ไม่ใช่ของที่ผู้ใช้จริงต้องได้รับ:</p>
+
+        <pre><code class="language-bash">npm i @tanstack/react-query
+npm i -D @tanstack/react-query-devtools</code></pre>
+
+        <h2>queryClient.ts: หัวใจของ cache</h2>
+
+        <p>ทุกอย่างใน TanStack Query หมุนรอบ object ตัวเดียวชื่อ <code>QueryClient</code> — มันคือทั้งตัว cache และศูนย์ตั้งค่าพฤติกรรมของทุก query ในแอป สร้าง <code>src/app/queryClient.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { QueryClient } from "@tanstack/react-query";
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      retry: 1,
+    },
+  },
+});
+</code></pre>
+
+        <p>ค่า default สองตัวที่เราตั้ง คือการตัดสินใจที่คิดมาแล้วสำหรับแอปแบบนี้โดยเฉพาะ:</p>
+
+        <ul>
+          <li><strong><code>staleTime: 60 * 1000</code></strong> — ข้อมูลที่โหลดมาแล้วถือว่า "ยังสด" อยู่ 60 วินาที ระหว่างนั้นถ้า component ไหนขอข้อมูลก้อนเดิม TanStack Query จะส่งของจาก cache ให้ทันทีโดย<em>ไม่ยิง API ซ้ำ</em> (ค่า default ของ library คือ <code>0</code> — สลับหน้าไปมาทีเดียวยิงใหม่ทุกครั้ง) ข้อมูลสินค้าของเราไม่ได้เปลี่ยนวินาทีต่อวินาที หนึ่งนาทีจึงเป็นจุดสมดุลที่ดีระหว่างความสดกับจำนวน request — เขียน <code>60 * 1000</code> แทน <code>60000</code> เพื่อให้อ่านออกทันทีว่าหน่วยคือ "60 วินาที คูณเป็น milliseconds"</li>
+          <li><strong><code>retry: 1</code></strong> — query ที่ล้มเหลวจะถูกลองใหม่อีก 1 ครั้งก่อนประกาศว่า error จริง (default คือ 3 ครั้งพร้อม delay ที่เพิ่มขึ้นเรื่อย ๆ ซึ่งแปลว่าผู้ใช้ต้องจ้องหน้า loading นานหลายวินาทีกว่าจะเห็นข้อความ error) ลองหนึ่งครั้งพอกันเหตุ network สะดุดชั่วขณะ แต่ถ้าพังจริงก็บอกผู้ใช้ให้เร็ว</li>
+        </ul>
+
+        <p>สังเกตว่าเราสร้าง client ไว้<strong>นอก component ที่ระดับ module</strong> — ไฟล์นี้ถูกประมวลผลครั้งเดียวตอนแอปเริ่ม เราจึงได้ <strong>singleton</strong>: cache หนึ่งก้อนต่อหนึ่งแอปตลอดอายุของมัน ถ้าเผลอไปเขียน <code>new QueryClient()</code> ข้างในตัว component จะเสี่ยงได้ client ตัวใหม่ (cache เปล่า ๆ) ทุกครั้งที่ component นั้นถูก render ใหม่ — เท่ากับ cache ที่ลืมทุกอย่างตลอดเวลา อีกเหตุผลที่แยกเป็นไฟล์ของตัวเอง: ตอนเขียนเทสต์ในบทที่ 26 เราจะสร้าง client คนละตัวสำหรับเทสต์โดยเฉพาะ การที่ "ตัว client" กับ "ตัว provider" แยกจากกันทำให้สลับได้ง่าย</p>
+
+        <h2>providers.tsx: รวมทุก provider ไว้ประตูเดียว</h2>
+
+        <p>แอปจริงมักมี provider หลายตัวซ้อนกันเป็นหัวหอม: query client, theme, auth, cart ฯลฯ ถ้าซ้อนกันสด ๆ ใน App.tsx ไฟล์นั้นจะรกขึ้นเรื่อย ๆ ทุกครั้งที่มีของใหม่ pattern ที่โปรเจกต์นี้ใช้คือสร้าง component <code>AppProviders</code> ที่เดียวจบ — ใครอยากรู้ว่าแอปนี้มี provider อะไรบ้าง ลำดับไหน เปิดไฟล์เดียวเห็นครบ สร้าง <code>src/app/providers.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import { ReactNode } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { queryClient } from "./queryClient";
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  return (
+    &lt;QueryClientProvider client={queryClient}&gt;
+      {children}
+      {import.meta.env.DEV &amp;&amp; &lt;ReactQueryDevtools initialIsOpen={false} /&gt;}
+    &lt;/QueryClientProvider&gt;
+  );
+}
+</code></pre>
+
+        <blockquote>💡 นี่คือ providers.tsx <strong>เวอร์ชันแรก</strong> — ในบทที่ 19 เมื่อเราสร้างระบบตะกร้าสินค้าเสร็จ จะมี <code>&lt;CartProvider&gt;</code> เข้ามาห่อ <code>{children}</code> เพิ่มอีกหนึ่งชั้นตรงนี้ และนั่นแหละคือจุดขายของ pattern นี้: วันนั้นเราจะแก้แค่ไฟล์นี้ไฟล์เดียว App.tsx ไม่ต้องรู้เรื่องเลย</blockquote>
+
+        <p>ไล่ดูของในไฟล์:</p>
+
+        <ul>
+          <li><strong><code>children: ReactNode</code></strong> — pattern เดียวกับที่เรียนใน Week 4: component ที่รับ "อะไรก็ได้ที่ render ได้" มาห่อ ทำให้ AppProviders ไม่ต้องรู้จักเนื้อในของแอปแม้แต่นิดเดียว</li>
+          <li><strong><code>QueryClientProvider</code></strong> — ส่ง <code>queryClient</code> ของเราลงไปผ่าน context ให้ทุก component ใต้ต้นไม้เรียกใช้ <code>useQuery</code> ได้ ตัว client อยู่ไฟล์หนึ่ง ตัว provider อยู่อีกไฟล์ — แยกหน้าที่ "สร้างของ" กับ "แจกของ" ออกจากกัน</li>
+          <li><strong><code>import.meta.env.DEV</code></strong> — ตัวแปรพิเศษที่ Vite แทนค่าให้<em>ตอน build</em>: ระหว่าง <code>npm run dev</code> มันคือ <code>true</code> แต่ใน production build มันคือ <code>false</code> ทั้งบรรทัดจึงกลายเป็น dead code ที่ถูกตัดทิ้งจาก bundle ไปเลย — Devtools จึงไม่มีทางหลุดไปถึงหน้าจอผู้ใช้จริงแม้แต่ byte เดียว สอดคล้องกับที่เราติดตั้งมันเป็น devDependency</li>
+          <li><strong><code>initialIsOpen={false}</code></strong> — ให้ Devtools เริ่มแบบหุบอยู่ เหลือแค่ปุ่มลอยเล็ก ๆ ไว้กดเปิดเมื่ออยากดู</li>
+        </ul>
+
+        <h2>อัปเกรด App.tsx เป็นเวอร์ชันสมบูรณ์</h2>
+
+        <p>เปิด <code>src/app/App.tsx</code> แล้วเอา <code>AppProviders</code> เข้าไปห่อ <code>RouterProvider</code> — และนี่คือหน้าตา<strong>ฉบับสมบูรณ์</strong>ของไฟล์นี้ มันจะไม่เปลี่ยนอีกแล้วตลอดทั้งคอร์ส:</p>
+
+        <pre><code class="language-typescript">import { RouterProvider } from "react-router/dom";
+import { AppProviders } from "./providers";
+import { router } from "./router";
+
+function App() {
+  return (
+    &lt;AppProviders&gt;
+      &lt;RouterProvider router={router} /&gt;
+    &lt;/AppProviders&gt;
+  );
+}
+
+export default App;
+</code></pre>
+
+        <p>อ่านจากนอกเข้าใน: providers ห่อ router, router เลือกหน้า, หน้าถูกวางใน layout — สามบรรทัดนี้เล่าโครงสร้างทั้งแอปจบ การที่ providers อยู่<em>นอก</em> RouterProvider สำคัญนะ: มันแปลว่าทุกหน้า ทุก layout รวมถึง RouteErrorFallback ล้วนอยู่ใต้ QueryClientProvider และใช้ query ได้หมด ไม่มีมุมอับ</p>
+
+        <h2>Checkpoint</h2>
+
+        <blockquote>💡 รัน <code>npm run dev</code> — แอปต้องขึ้นเหมือนเดิมทุกประการ (Header, Footer, หน้า stub ครบ) แต่มีของใหม่หนึ่งชิ้น: ปุ่มลอยของ TanStack Query Devtools ที่มุมล่างของจอ กดเปิดดูได้เลย — ตอนนี้แผง queries ยังว่างเปล่าเพราะเรายังไม่ได้เขียน query สักตัว (ตัวแรกจะมาในบทที่ 14) ปิดท้ายด้วย <code>npm run lint</code> และ <code>npm run build</code> ให้ผ่านทั้งคู่ — ถ้า build ผ่าน แปลว่าโครงแอปทั้งสามบทของช่วงนี้ประกอบกันสนิทดีแล้ว</blockquote>
+
+        <p>โครงแอปเสร็จสมบูรณ์: มี router, มี layout, มี providers ช่วงถัดไปเราจะลงมือสร้างกล่องเครื่องมือของตัวเอง — คอมโพเนนต์กลางอย่าง Button, Input และ RadioInput ที่ทุกหน้าจะหยิบไปใช้ซ้ำตลอดทั้งโปรเจกต์</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="07_header_footer.html" rel="prev">ก่อนหน้า: Header และ Footer</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="09_button_input_radio.html" rel="next">ถัดไป: Button, Input และ RadioInput</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

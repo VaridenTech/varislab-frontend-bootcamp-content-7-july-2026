@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างคอมโพเนนต์แสดงผลสี่ตัว: StarReview, FeatureCard, CountdownTimer และ ImageZoom พร้อมทวนเรื่อง effects และ cleanup จาก Week 4" />
+    <title>คอมโพเนนต์แสดงผล | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 11 · คอมโพเนนต์กลาง (Shared UI)</p>
+          <h1>คอมโพเนนต์แสดงผล: StarReview, FeatureCard, CountdownTimer และ ImageZoom</h1>
+          <p class="lesson-original-title" lang="en">Display Components</p>
+        </header>
+
+        <p>บทสุดท้ายของช่วงคอมโพเนนต์กลาง! คราวนี้เป็นชุด<strong>คอมโพเนนต์แสดงผล (presentational components)</strong> สี่ตัว — งานของพวกมันคือรับ props เข้ามาแล้ว render ให้สวย ไม่ยุ่งกับ API ไม่รู้จัก business logic ของแอปเลย (มีตัวเดียวที่มี state ภายใน คือ CountdownTimer ซึ่งจะได้ทวนเรื่อง effects กันเต็ม ๆ) แต่ละตัวมีที่ไปชัดเจน:</p>
+
+        <ul>
+          <li><strong><code>StarReview</code></strong> — ดาวคะแนนรีวิว จะโผล่ทั้งบน ProductCard (บทที่ 15) และหน้า Product detail ทั้งส่วนข้อมูลสินค้าและการ์ดรีวิว (บทที่ 18)</li>
+          <li><strong><code>FeatureCard</code></strong> — การ์ดจุดขายของร้าน (ส่งฟรี, คืนสินค้าได้, …) เรียงแถวอยู่บนหน้า Home (บทที่ 16)</li>
+          <li><strong><code>CountdownTimer</code></strong> — นาฬิกานับถอยหลังของโซนดีลพิเศษบนหน้า Home (บทที่ 16)</li>
+          <li><strong><code>ImageZoom</code></strong> — รูปที่ซูมนุ่ม ๆ ตอน hover ใช้กับรูปดีลและแบนเนอร์บนหน้า Home (บทที่ 16)</li>
+        </ul>
+
+        <p>ไม่มีไลบรารีใหม่ให้ติดตั้งบทนี้ — ทุกอย่างสร้างจากของที่มีอยู่แล้ว ลุยเลย</p>
+
+        <h2>StarReview</h2>
+
+        <p>ทุกเว็บขายของต้องมีดาว ⭐ โจทย์ของเราคือ: รับตัวเลขคะแนนมาหนึ่งตัว แล้ว render ดาว 5 ดวงโดยแบ่งเป็นดวงทึบ (ได้คะแนน) กับดวงโปร่ง (ไม่ได้) — Font Awesome ที่ติดตั้งไว้ตั้งแต่บทที่ 7 มีดาวให้ทั้งสองแบบ</p>
+
+        <pre><code class="language-bash">mkdir -p src/shared/components/StarReview
+</code></pre>
+
+        <p>สร้าง <code>src/shared/components/StarReview/StarReview.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../styles/variables";
+
+.star {
+  margin-right: 5px;
+  color: variables.$orange01;
+}
+</code></pre>
+
+        <p>แล้วสร้าง <code>src/shared/components/StarReview/StarReview.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faStar as solidStar } from "@fortawesome/free-solid-svg-icons";
+import { faStar as regularStar } from "@fortawesome/free-regular-svg-icons";
+import styles from "./StarReview.module.scss";
+
+interface StarReviewProps {
+  score: number; // Score between 0 and 10
+}
+
+const StarReview: React.FC&lt;StarReviewProps&gt; = ({ score }) =&gt; {
+  const stars = Math.round(score / 2);
+  const fiveStars = [...Array(5)];
+
+  return (
+    &lt;div className={`${styles.starReview} flex fs-16`}&gt;
+      {fiveStars.map((_, index) =&gt; (
+        &lt;FontAwesomeIcon
+          key={index}
+          icon={index &lt; stars ? solidStar : regularStar}
+          className={styles.star}
+        /&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+
+export default StarReview;
+</code></pre>
+
+        <p>เลขคณิตของดาวทำงานแบบนี้:</p>
+
+        <ul>
+          <li><strong><code>Math.round(score / 2)</code></strong> — contract ของคอมโพเนนต์ (ตาม comment ในโค้ด) คือรับ <code>score</code> สเกล 0–10 การหารสองแปลงเป็นสเกล 0–5 แล้วปัดเป็นจำนวนเต็ม ได้ "จำนวนดาวทึบ" เช่น score 9 → 4.5 → ปัดเป็น 5 ดวงทึบ</li>
+          <li><strong><code>[...Array(5)]</code></strong> — ท่าสร้าง array ยาว 5 ช่องเพื่อเอาไว้ <code>.map()</code> — ทำไมต้อง spread? เพราะ <code>Array(5)</code> เฉย ๆ ได้ array โปร่ง (sparse) ที่ <code>.map()</code> จะข้ามช่องว่างไปเลย spread ก่อนหนึ่งทีจะเติม <code>undefined</code> ให้ครบทุกช่อง map ได้ครบ 5 รอบ</li>
+          <li><strong><code>index &lt; stars ? solidStar : regularStar</code></strong> — ดาวดวงที่ index 0 ถึง <code>stars - 1</code> เป็นดวงทึบ ที่เหลือเป็นดวงโปร่ง สังเกตท่า import เท่ ๆ: icon ทั้งสองชื่อ <code>faStar</code> เหมือนกันแต่มาจากคนละแพ็กเกจ (<code>free-solid</code> กับ <code>free-regular</code>) เราเลยใช้ <code>as</code> ตั้งชื่อเล่นแยกกันตอน import</li>
+          <li><strong><code>key={index}</code></strong> — ปกติเราหลีกเลี่ยง index เป็น key แต่กรณีนี้ list ยาว 5 ตายตัว ไม่มีการสลับลำดับหรือเพิ่มลด ใช้ index ได้ปลอดภัย</li>
+        </ul>
+
+        <h2>FeatureCard</h2>
+
+        <p>การ์ดเล็ก ๆ ที่หน้า Home ใช้โชว์จุดขายของร้านสี่ข้อ: icon ใหญ่ด้านซ้าย หัวข้อกับคำอธิบายด้านขวา — presentational แท้ ๆ ไม่มีสักบรรทัดที่เป็น logic</p>
+
+        <pre><code class="language-bash">mkdir -p src/shared/components/FeatureCard
+</code></pre>
+
+        <p>สร้าง <code>src/shared/components/FeatureCard/FeatureCard.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../styles/variables";
+
+.featureCard {
+  align-items: center;
+  background-color: variables.$grey01;
+  gap: 12px;
+
+  .icon {
+    font-size: 32px;
+    color: variables.$primary-color;
+  }
+
+  p {
+    color: variables.$grey02;
+  }
+}
+</code></pre>
+
+        <p>แล้วสร้าง <code>src/shared/components/FeatureCard/FeatureCard.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import styles from "./FeatureCard.module.scss";
+
+interface FeatureCardProps {
+  icon: IconDefinition;
+  title: string;
+  description: string;
+}
+
+const FeatureCard: React.FC&lt;FeatureCardProps&gt; = ({
+  icon,
+  title,
+  description,
+}) =&gt; {
+  return (
+    &lt;div className={`${styles.featureCard} flex p-20`}&gt;
+      &lt;div className={styles.icon}&gt;
+        &lt;FontAwesomeIcon icon={icon} /&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;h4 className="mt-0 mb-10 fs-18"&gt;{title}&lt;/h4&gt;
+        &lt;p className="m-0 fs-14 fw-light"&gt;{description}&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default FeatureCard;
+</code></pre>
+
+        <p>สองจุดที่ควรเก็บ: หนึ่ง — คราวนี้ prop icon ใช้ type <code>IconDefinition</code> (ตัว object icon ตรง ๆ จากแพ็กเกจ solid) ต่างจาก <code>IconProp</code> ของ Button ที่กว้างกว่า ทั้งคู่ใช้ได้ นี่คือความจริงของ codebase ที่มีวิวัฒนาการ สอง — สังเกต SCSS ที่ style ลูกผ่านการ nest ใต้ <code>.featureCard</code>: ทั้ง <code>.icon</code> และ <code>p</code> จับเฉพาะข้างในการ์ดนี้ ไม่รั่วไปโดน <code>p</code> ของใคร</p>
+
+        <h2>CountdownTimer</h2>
+
+        <p>ตัวเดียวในบทนี้ที่<em>มีชีวิต</em> — นาฬิกาถอยหลังของโซน "ดีลจะหมดใน…" บนหน้า Home ตัวเลขต้องเดินทุกวินาที ซึ่งแปลว่าเราต้องได้ใช้สองเครื่องมือจาก Week 4 พร้อมกัน: <code>useState</code> เก็บเวลาที่เหลือ และ <code>useEffect</code> จัดการ side effect (ตั้ง interval) พร้อม cleanup</p>
+
+        <pre><code class="language-bash">mkdir -p src/shared/components/CountdownTimer
+</code></pre>
+
+        <p>สร้าง <code>src/shared/components/CountdownTimer/CountdownTimer.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../styles/variables";
+
+.countdownContainer {
+  background-color: variables.$light-blue;
+  border: 1px dashed variables.$primary-color;
+}
+</code></pre>
+
+        <p>แล้วสร้าง <code>src/shared/components/CountdownTimer/CountdownTimer.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React, { useState, useEffect } from "react";
+import styles from "./CountdownTimer.module.scss";
+
+interface CountdownTimerProps {
+  targetDate: string;
+}
+
+const CountdownTimer: React.FC&lt;CountdownTimerProps&gt; = ({ targetDate }) =&gt; {
+  const [timeLeft, setTimeLeft] = useState&lt;{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  }&gt;({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  useEffect(() =&gt; {
+    const calculateTimeLeft = () =&gt; {
+      const now = new Date().getTime();
+      const target = new Date(targetDate).getTime();
+      const difference = target - now;
+
+      if (difference &gt; 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / (1000 * 60)) % 60),
+          seconds: Math.floor((difference / 1000) % 60),
+        });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () =&gt; clearInterval(timer);
+  }, [targetDate]);
+
+  return (
+    &lt;div
+      className={`${styles.countdownContainer} flex flex-center pt-15 pb-15 pl-30 pr-30 fs-18 gap-20 fw-medium`}
+    &gt;
+      &lt;span&gt;{timeLeft.days}&lt;/span&gt;:&lt;span&gt;{timeLeft.hours}&lt;/span&gt;:
+      &lt;span&gt;{timeLeft.minutes}&lt;/span&gt;:&lt;span&gt;{timeLeft.seconds}&lt;/span&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default CountdownTimer;
+</code></pre>
+
+        <p>มาแกะการคำนวณเวลาที่เหลือกันช้า ๆ เพราะนี่คือโจทย์คลาสสิกที่เจอบ่อยในงานจริง:</p>
+
+        <ul>
+          <li><strong>หา "ระยะห่าง" เป็นมิลลิวินาที</strong> — <code>new Date(targetDate).getTime()</code> แปลงเวลาเป้าหมาย (string เช่น วันพรุ่งนี้เที่ยงคืน) เป็นตัวเลข timestamp แล้วลบด้วยเวลาปัจจุบัน ได้ <code>difference</code> = จำนวนมิลลิวินาทีที่เหลือ</li>
+          <li><strong>วัน</strong> — หนึ่งวันมี <code>1000 * 60 * 60 * 24</code> มิลลิวินาที (ms → วินาที → นาที → ชั่วโมง → วัน) หาร difference แล้ว <code>Math.floor</code> ปัดลง ได้จำนวนวันเต็ม</li>
+          <li><strong>ชั่วโมง</strong> — หารด้วยมิลลิวินาทีต่อชั่วโมง ได้จำนวนชั่วโมง<em>ทั้งหมด</em> (เช่น 50 ชั่วโมง) แล้ว <code>% 24</code> ตัดส่วนที่ถูกนับเป็นวันไปแล้วออก เหลือ 2 ชั่วโมง — modulo คือพระเอกของสูตรนี้</li>
+          <li><strong>นาที / วินาที</strong> — ตรรกะเดียวกัน: หารให้เป็นหน่วยนั้น แล้ว <code>% 60</code> เอาเฉพาะเศษที่ไม่ถูกหน่วยใหญ่กว่านับไปแล้ว</li>
+          <li><strong>กันเวลาติดลบ</strong> — ถ้าเลยเวลาเป้าหมายไปแล้ว (<code>difference &lt;= 0</code>) ตั้งทุกช่องเป็นศูนย์ ไม่ปล่อยให้โชว์ตัวเลขติดลบประหลาด ๆ</li>
+        </ul>
+
+        <p>ส่วนโครง effect คือแพตเทิร์น interval + cleanup ตรงตำราจาก Week 4: <code>setInterval(calculateTimeLeft, 1000)</code> สั่งให้คำนวณใหม่ทุกวินาที (แต่ละรอบเรียก <code>setTimeLeft</code> → re-render → ตัวเลขบนจอเดิน) และ<strong>บรรทัดที่สำคัญที่สุดคือ <code>return () =&gt; clearInterval(timer)</code></strong> — ถ้าไม่มี cleanup ตอนคอมโพเนนต์ unmount (ผู้ใช้กดไปหน้าอื่น) interval จะยังวิ่งอยู่เบื้องหลังและเรียก setState ใส่คอมโพเนนต์ที่ตายไปแล้ว กลายเป็น memory leak สะสม dependency array <code>[targetDate]</code> ก็ทำงานร่วมกับ cleanup อย่างถูกต้อง: ถ้าเป้าหมายเปลี่ยน React จะ cleanup interval เก่าก่อนแล้วตั้งตัวใหม่ให้เอง</p>
+
+        <blockquote>💡 สังเกตอะไรไหม? <code>calculateTimeLeft</code> ถูกเรียกครั้งแรกเมื่อ interval ครบวินาทีแรก แปลว่าหลัง mount นาฬิกาจะโชว์ <code>0:0:0:0</code> ประมาณหนึ่งวินาทีก่อนกระโดดเป็นค่าจริง — ถ้าอยากให้ขึ้นทันทีก็แค่เรียก <code>calculateTimeLeft()</code> หนึ่งครั้งก่อน <code>setInterval</code> โปรเจกต์นี้เลือกแบบเรียบง่ายตามต้นฉบับ แต่การ<em>มองเห็น</em>รายละเอียดแบบนี้ในโค้ดคือทักษะ code review ที่ดี</blockquote>
+
+        <h2>ImageZoom</h2>
+
+        <p>ตัวปิดท้ายเบา ๆ — เอฟเฟกต์ยอดฮิตของเว็บขายของ: เอาเมาส์ชี้รูปแล้วรูปขยับซูมเข้านิด ๆ ความลับคือมันเป็น CSS ล้วน ตัว TSX แค่จัดโครงให้</p>
+
+        <pre><code class="language-bash">mkdir -p src/shared/components/ImageZoom
+</code></pre>
+
+        <p>สร้าง <code>src/shared/components/ImageZoom/ImageZoom.module.scss</code>:</p>
+
+        <pre><code class="language-scss">.imageContainer {
+  overflow: hidden; // Ensure the image doesn't go outside the container
+}
+
+.image {
+  transition: transform 0.5s ease-in-out; // Smooth transition for the zoom effect
+
+  &amp;:hover {
+    transform: scale(1.05); // Zoom in slightly
+  }
+}
+</code></pre>
+
+        <p>แล้วสร้าง <code>src/shared/components/ImageZoom/ImageZoom.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./ImageZoom.module.scss";
+
+interface ImageZoomProps {
+  src: string;
+  alt: string;
+  className?: string;
+}
+
+const ImageZoom: React.FC&lt;ImageZoomProps&gt; = ({ src, alt, className }) =&gt; {
+  return (
+    &lt;div className={`${styles.imageContainer} ${className || ""}`}&gt;
+      &lt;img src={src} alt={alt} className={styles.image} /&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default ImageZoom;
+</code></pre>
+
+        <p>กลไกอยู่ที่การจับคู่สอง class: <code>.image</code> ขยายตัวเป็น 105% ตอน hover (พร้อม <code>transition</code> ครึ่งวินาทีให้เคลื่อนนุ่ม ไม่กระตุก) ส่วน container ครอบด้วย <code>overflow: hidden</code> — ส่วนที่ขยายเกินขอบถูกตัดทิ้ง ผลลัพธ์เลยดูเหมือน "ซูมอยู่ในกรอบ" ไม่ใช่รูปบวมดันเพื่อนบ้าน ส่วน <code>className</code> ที่รับมาช่วยให้หน้า Home กำหนดขนาด/สัดส่วนของแต่ละรูปจากข้างนอกได้ (<code>|| ""</code> กัน <code>undefined</code> ไปโผล่เป็นข้อความใน class)</p>
+
+        <h2>ครบชุดแล้ว</h2>
+
+        <p>ช่วงคอมโพเนนต์กลางของเราจบที่เก้าตัว: Button, Input, RadioInput, Modal, Pagination, StarReview, FeatureCard, CountdownTimer และ ImageZoom — กล่องเครื่องมือพร้อมแล้ว สามบทถัดไปเราจะสร้าง<strong>ชั้นข้อมูล</strong> (axios client, types และ query factories) แล้วหลังจากนั้นทุกหน้าเพจจะประกอบขึ้นจากของที่เราเตรียมไว้แบบเร็วจนน่าตกใจ</p>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> <code>src/shared/components/</code> ตอนนี้ควรมี 9 โฟลเดอร์ และ <code>npm run typecheck</code> กับ <code>npm run lint</code> ต้องผ่านทั้งคู่ อยากเห็นนาฬิกาเดินจริง ๆ ลองแปะชั่วคราวในหน้า stub: <code>&lt;CountdownTimer targetDate="2026-12-31" /&gt;</code> แล้วดูตัวเลขขยับทุกวินาที (และสังเกต <code>0:0:0:0</code> วินาทีแรกที่เราคุยกันด้วย) — เสร็จแล้วลบออกให้สะอาดก่อนไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="10_modal_pagination.html" rel="prev">ก่อนหน้า: Modal และ Pagination</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="12_api_client.html" rel="next">ถัดไป: API Client</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

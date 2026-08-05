@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ภาพรวมโปรเจกต์ E-commerce ที่เราจะสร้างด้วย React 19, TypeScript และ TanStack Query ตลอดสองสัปดาห์นี้" />
+    <title>บทนำ | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 01 · เริ่มต้น (Welcome)</p>
+          <h1>บทนำ: โปรเจกต์ E-commerce ที่เราจะสร้างกัน</h1>
+          <p class="lesson-original-title" lang="en">Intro</p>
+        </header>
+
+        <p>ยินดีต้อนรับสู่โปรเจกต์ใหญ่ของสองสัปดาห์นี้! ใน Week 4 คุณได้เรียนพื้นฐาน React ครบทุกเรื่องแล้ว ไม่ว่าจะเป็น components, hooks, effects, context, การเรียก API, การทำ routing, TanStack Query ไปจนถึงการเขียนเทสต์ — แต่การเรียนแนวคิดทีละเรื่องกับการ<em>ประกอบทุกอย่างเข้าด้วยกันเป็นแอปจริง</em>คือคนละทักษะกัน และทักษะอย่างหลังนี่แหละที่บริษัทจ้างคุณไปทำ</p>
+
+        <p>ตลอด 30 บทเรียนต่อจากนี้ เราจะสร้าง<strong>เว็บ E-commerce ที่ทำงานได้จริงทั้งเว็บ ตั้งแต่คำสั่ง <code>npm create vite</code> บรรทัดแรก ไปจนถึงแอปที่มีเทสต์ครอบคลุมและพร้อม deploy</strong> โดยไม่ใช่แค่ "ทำให้มันทำงานได้" แต่ทำให้<em>ถูกวิธี</em>แบบเดียวกับโปรเจกต์มืออาชีพ: โครงสร้างโฟลเดอร์แบบ feature-based, ชั้นข้อมูลที่เป็นระบบ, การจัดการ error ที่ครบถ้วน และชุดเทสต์ที่ทำให้เรากล้าแก้โค้ดโดยไม่กลัวของพัง</p>
+
+        <h2>เว็บที่เราจะสร้าง</h2>
+
+        <p>แอปของเราคือหน้าร้านออนไลน์ (storefront) ที่ดึงข้อมูลสินค้าจริงจาก <a href="https://dummyjson.com">dummyjson.com</a> ซึ่งเป็น API ฟรีสำหรับฝึกซ้อมที่มีข้อมูลสินค้า รูปภาพ รีวิว และหมวดหมู่ให้ครบ ผู้ใช้ของเราจะทำสิ่งเหล่านี้ได้:</p>
+
+        <ul>
+          <li><strong>หน้า Home</strong> — แบนเนอร์แบบ carousel, สินค้าขายดี, ดีลพิเศษพร้อมตัวนับเวลาถอยหลัง และแถบหมวดหมู่สินค้า</li>
+          <li><strong>หน้า Category</strong> — เลือกดูสินค้าตามหมวดหมู่ พร้อมระบบแบ่งหน้า (pagination) ที่เปลี่ยนหน้าได้ลื่นไหลไม่กะพริบ</li>
+          <li><strong>หน้า Product</strong> — แกลเลอรีรูปสินค้า ข้อมูลราคาและส่วนลด คะแนนรีวิวแบบละเอียด และปุ่ม Add to Cart</li>
+          <li><strong>ตะกร้าสินค้า</strong> — เพิ่ม ลบ ปรับจำนวนสินค้า โดยตะกร้า<em>จำของไว้ได้</em>แม้ปิดเบราว์เซอร์ไปแล้ว (localStorage)</li>
+          <li><strong>หน้า Checkout</strong> — ฟอร์มที่อยู่จัดส่งที่ validate ด้วย zod, ตัวเลือกวิธีจัดส่งและการชำระเงิน และสรุปยอดคำสั่งซื้อ</li>
+          <li><strong>หน้า Order Success</strong> — ยืนยันคำสั่งซื้อสำเร็จ พร้อมล้างตะกร้าให้อัตโนมัติ</li>
+        </ul>
+
+        <p>โค้ดฉบับสมบูรณ์ของโปรเจกต์นี้อยู่ที่ <a href="https://github.com/manjarb/varis-lab-project-06-react-ecommerce-app">github.com/manjarb/varis-lab-project-06-react-ecommerce-app</a> — เปิดเก็บไว้ใน tab หนึ่งได้เลย เราจะอ้างอิงมันเป็นระยะ (เช่น ตอนคัดลอกรูปแบนเนอร์) และเวลาติดขัดคุณเทียบโค้ดของคุณกับต้นฉบับได้เสมอ แต่<strong>อย่า copy ทั้งไฟล์มาวาง</strong> — พิมพ์เองทีละบรรทัดแล้วอ่านให้เข้าใจว่าแต่ละบรรทัดอยู่ตรงนั้นทำไม นั่นคือวิธีเดียวที่โค้ดจะกลายเป็นความรู้ของคุณ</p>
+
+        <h2>เครื่องมือที่เราจะใช้</h2>
+
+        <p>ทุกตัวคือของที่คุณเจอมาแล้วใน Week 4 หรือเป็นญาติใกล้ชิดของมัน:</p>
+
+        <ul>
+          <li><strong>React 19 + TypeScript</strong> บน <strong>Vite 8</strong> — ฐานเดิมที่คุณคุ้นเคย</li>
+          <li><strong>react-router 8 (data mode)</strong> — ใน Week 4 เราใช้ TanStack Router คราวนี้เราจะใช้ react-router ซึ่งเป็น router ที่เจอบ่อยที่สุดในโปรเจกต์จริง แนวคิดเดิมทั้งหมด (routes, layout, <code>Outlet</code>, dynamic params) แค่หน้าตา API ต่างกันนิดหน่อย — การใช้เครื่องมือคล้ายกันสองตัวได้ คือสัญญาณว่าคุณเข้าใจ<em>แนวคิด</em> ไม่ใช่แค่จำ API</li>
+          <li><strong>TanStack Query 5</strong> — จัดการ server state ทั้งหมด คราวนี้เราจะใช้ท่าขั้นกว่า: query key factory และ <code>queryOptions</code></li>
+          <li><strong>axios</strong> — HTTP client ที่มาแทน <code>fetch</code> ตรง ๆ พร้อม interceptor ที่แปลง error ให้อยู่ในรูปแบบเดียวกันทั้งแอป</li>
+          <li><strong>Context + useReducer</strong> — จัดการ state ของตะกร้าสินค้า (client state) แยกจาก server state อย่างชัดเจน</li>
+          <li><strong>react-hook-form + zod</strong> — ฟอร์ม checkout ที่ validate จริงจัง ต่อยอดจากบท Uncontrolled Forms ของ Week 4</li>
+          <li><strong>SCSS Modules</strong> — เขียน style แบบ scoped ต่อ component ไม่มี class ชนกันข้ามไฟล์</li>
+          <li><strong>Vitest + React Testing Library + MSW</strong> — ชุดเทสต์เดิมจาก Week 4 เพิ่ม MSW (Mock Service Worker) สำหรับจำลอง API ในเทสต์</li>
+        </ul>
+
+        <h2>"ถูกวิธี" หมายความว่าอย่างไร</h2>
+
+        <p>แอปเดียวกันนี้เขียนแบบลวก ๆ ให้เสร็จใน 3 วันก็ได้ แต่เราจะใช้เวลาสองสัปดาห์เพื่อฝึกนิสัยที่ทีมพัฒนาจริงคาดหวัง:</p>
+
+        <ul>
+          <li><strong>โครงสร้างแบบ feature-based</strong> — โค้ดแบ่งตามฟีเจอร์ (<code>products</code>, <code>cart</code>, <code>checkout</code>) ไม่ใช่ตามชนิดไฟล์ ใครเปิดโปรเจกต์มาก็หาของเจอใน 10 วินาที</li>
+          <li><strong>ติดตั้งเครื่องมือคุณภาพตั้งแต่วันแรก</strong> — ESLint, Prettier และ TypeScript แบบ strict ทำงานให้เราตั้งแต่ commit แรก ไม่ใช่มาไล่แก้ทีหลัง</li>
+          <li><strong>ข้อมูลแบบ declarative</strong> — ไม่มีการยิง API ใน <code>useEffect</code> แล้วเก็บใส่ <code>useState</code> เอง ทุก query ประกาศผ่าน TanStack Query ให้ cache ทำงานเต็มที่</li>
+          <li><strong>จัดการ error ทุกจุด</strong> — โหลดไม่สำเร็จต้องมีข้อความบอก ไม่ใช่หน้าเปล่าค้างตลอดกาล</li>
+          <li><strong>เทสต์ที่พิสูจน์พฤติกรรมจริง</strong> — ตั้งแต่ unit test ของ reducer ไปจนถึง integration test ของหน้า Checkout ทั้งหน้า</li>
+        </ul>
+
+        <h2>สิ่งที่ต้องมีก่อนเริ่ม</h2>
+
+        <ul>
+          <li>เนื้อหา Week 4 ทั้งหมด — ถ้าเรื่องไหนลืมไปแล้ว (โดยเฉพาะ hooks, context และ TanStack Query) เปิดกลับไปทวนได้ตลอด เราจะอ้างถึงบ่อย</li>
+          <li><strong>Node.js เวอร์ชัน 22.22 ขึ้นไป</strong> — react-router 8 กำหนดขั้นต่ำไว้เท่านี้ เดี๋ยวบทถัดไปเราจะตั้งค่ากันด้วย nvm</li>
+          <li>เครื่องมือเดิม: VS Code (หรือ editor ที่ถนัด), Terminal และ Git</li>
+        </ul>
+
+        <h2>แผนการเดินทาง 10 ช่วง</h2>
+
+        <ol>
+          <li><strong>เริ่มต้น</strong> — บทนี้</li>
+          <li><strong>ติดตั้งโปรเจกต์</strong> — scaffold ด้วย Vite, ตั้งค่า ESLint/Prettier, วางโครง SCSS และทำความเข้าใจสถาปัตยกรรม feature-based</li>
+          <li><strong>โครงแอปและเราเตอร์</strong> — react-router 8, layout หลัก, Header/Footer และ providers</li>
+          <li><strong>คอมโพเนนต์กลาง</strong> — Button, Input, Modal, Pagination และเพื่อน ๆ ที่ทุกหน้าจะหยิบไปใช้</li>
+          <li><strong>ชั้นข้อมูลสินค้า</strong> — axios client, types และ query factories</li>
+          <li><strong>สร้างหน้าเพจ</strong> — Home, Category และ Product detail</li>
+          <li><strong>ตะกร้าสินค้า</strong> — reducer, localStorage และ flow การเพิ่มสินค้า</li>
+          <li><strong>ชำระเงิน</strong> — ฟอร์ม, validation และการสั่งซื้อ</li>
+          <li><strong>การทดสอบ</strong> — ติดตั้งชุดเทสต์และเขียนเทสต์ครบทุกชั้น</li>
+          <li><strong>ส่งท้าย</strong> — build, deploy และก้าวต่อไป</li>
+        </ol>
+
+        <blockquote>💡 ทุกบทจะจบด้วยจุดตรวจสอบ (checkpoint) ว่าแอปควรอยู่ในสภาพไหน ถ้ารันแล้วไม่เหมือนที่บอก อย่าเพิ่งข้ามไปบทถัดไป — bug ที่ถูกทิ้งไว้จะโตขึ้นเรื่อย ๆ และตามแก้ยากขึ้นทุกบทที่ผ่านไป</blockquote>
+
+        <p>พร้อมแล้ว เปิด Terminal แล้วไปสร้างโปรเจกต์กันเลย</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <span></span>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="02_project_scaffold.html" rel="next">ถัดไป: สร้างโปรเจกต์ด้วย Vite</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

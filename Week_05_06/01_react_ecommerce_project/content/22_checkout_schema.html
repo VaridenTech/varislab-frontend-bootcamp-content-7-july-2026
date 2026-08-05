@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เริ่มฟีเจอร์ Checkout ด้วยแนวคิด schema-first: สร้าง zod schema, types และ consts ที่เป็นรากฐานของทั้งบท" />
+    <title>Zod Schema และโครงข้อมูล Checkout | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 22 · ชำระเงิน (Checkout)</p>
+          <h1>Zod Schema และโครงข้อมูล Checkout</h1>
+          <p class="lesson-original-title" lang="en">Checkout Schema</p>
+        </header>
+
+        <p>ตะกร้าสินค้าของเราสมบูรณ์แล้วจากบทที่ 21 — เพิ่มของได้ ลบได้ ปรับจำนวนได้ และจำของไว้ใน localStorage ได้ ตอนนี้เหลือด่านสุดท้ายของขาช้อป: <strong>Checkout</strong> ซึ่งเราจะใช้เวลา 4 บท (บทนี้ถึงบทที่ 25) สร้างตั้งแต่ฐานข้อมูลของฟีเจอร์ ฟอร์มที่อยู่ ตัวเลือกจัดส่ง/ชำระเงิน สรุปยอด ไปจนถึงการยิงคำสั่งซื้อจริงและหน้า Order Success</p>
+
+        <p>แผนของทั้ง chapter เป็นแบบนี้:</p>
+
+        <ol>
+          <li><strong>บทนี้</strong> — วางรากฐานข้อมูล: zod schema สำหรับ validate ที่อยู่, types และรายการตัวเลือกจัดส่ง/ชำระเงิน</li>
+          <li><strong>บทที่ 23</strong> — ฟอร์มที่อยู่ด้วย react-hook-form</li>
+          <li><strong>บทที่ 24</strong> — คอมโพเนนต์ตัวเลือกจัดส่ง ชำระเงิน และสรุปคำสั่งซื้อ</li>
+          <li><strong>บทที่ 25</strong> — hook <code>useCheckout</code>, ประกอบหน้า Checkout ทั้งหน้า และสั่งซื้อจริง</li>
+        </ol>
+
+        <h2>คิดจาก "ข้อมูล" ก่อน "หน้าตา"</h2>
+
+        <p>สังเกตว่าเราไม่ได้เริ่ม chapter นี้ด้วยการเขียน JSX ของฟอร์ม แต่เริ่มด้วยคำถามว่า<em>ข้อมูลของการ checkout หน้าตาเป็นอย่างไร</em> — ที่อยู่จัดส่งต้องมี field อะไรบ้าง แต่ละ field มีเงื่อนไขอะไร ตัวเลือกจัดส่งมีกี่แบบ ราคาเท่าไร วิธีนี้เรียกกันว่า <strong>schema-first</strong>: นิยามรูปร่างและกติกาของข้อมูลให้ชัดก่อน แล้วค่อยให้ UI มาเกาะกับมันทีหลัง</p>
+
+        <p>เครื่องมือหลักของเราคือ <a href="https://zod.dev">zod</a> — library สำหรับประกาศ schema ของข้อมูลใน TypeScript จุดที่ทำให้ zod เป็นที่นิยมมากคือ schema เดียวให้ของสองอย่างพร้อมกัน:</p>
+
+        <ul>
+          <li><strong>Runtime validation</strong> — ตอนผู้ใช้กด submit เราเอาข้อมูลจริงมาตรวจกับ schema ได้ พร้อมข้อความ error ของแต่ละ field</li>
+          <li><strong>TypeScript type</strong> — ใช้ <code>z.infer</code> สกัด type ออกมาจาก schema ได้เลย ไม่ต้องประกาศ interface ซ้ำอีกรอบ</li>
+        </ul>
+
+        <p>ลองนึกภาพทางเลือกอีกทาง: เขียน interface <code>CheckoutAddressFormData</code> ด้วยมือหนึ่งชุด แล้วเขียนฟังก์ชัน validate ด้วยมืออีกชุด — วันหนึ่งมีคนเพิ่ม field ใหม่ใน interface แต่ลืมแก้ตัว validate (หรือกลับกัน) สองที่นี้ก็จะ<em>เหลื่อมกัน (drift)</em> โดยไม่มีใครเตือน กับ zod ปัญหานี้หายไปทั้งก้อน เพราะทั้ง type และ validation งอกจากแหล่งเดียวกัน แก้ schema ที่เดียว ทุกอย่างขยับตามอัตโนมัติ</p>
+
+        <h2>ติดตั้งแพ็กเกจ</h2>
+
+        <p>ติดตั้งสามตัวนี้ในคราวเดียว:</p>
+
+        <pre><code class="language-bash">npm i zod react-hook-form @hookform/resolvers</code></pre>
+
+        <ul>
+          <li><strong>zod</strong> — ตัวประกาศ schema และ validate ที่เพิ่งเล่าไป (เราใช้ zod 4)</li>
+          <li><strong>react-hook-form</strong> — library จัดการฟอร์มที่เราจะใช้เต็ม ๆ ในบทหน้า</li>
+          <li><strong>@hookform/resolvers</strong> — สะพานเชื่อมระหว่างสองตัวแรก ทำให้ react-hook-form เรียก zod schema มา validate ให้อัตโนมัติ</li>
+        </ul>
+
+        <p>ทั้งสามตัวถูกออกแบบมาทำงานด้วยกันจนแทบเป็นชุดมาตรฐานของฟอร์มในโปรเจกต์ React ปัจจุบัน — เจอ combo นี้ที่ไหนให้รู้ว่าคือ "ฟอร์มที่ validate จริงจัง"</p>
+
+        <h2>สร้าง schema.ts</h2>
+
+        <p>ได้เวลาเปิดโฟลเดอร์ feature ใหม่ สร้างไฟล์ <code>src/features/checkout/schema.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { z } from "zod";
+
+export const checkoutAddressSchema = z.object({
+  address: z.string().min(1, "Address is required"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .pipe(z.email("Enter a valid email address")),
+  phone: z.string().min(1, "Phone number is required"),
+});
+
+export type CheckoutAddressFormData = z.infer&lt;typeof checkoutAddressSchema&gt;;
+</code></pre>
+
+        <p>ไล่ดูทีละ field:</p>
+
+        <ul>
+          <li><strong><code>address</code></strong> — <code>z.string().min(1, "Address is required")</code> คือ "ต้องเป็น string และยาวอย่างน้อย 1 ตัวอักษร" พูดง่าย ๆ คือห้ามเว้นว่าง argument ตัวที่สองคือข้อความ error ที่จะโผล่ใต้ input ถ้าไม่ผ่าน</li>
+          <li><strong><code>email</code></strong> — ตัวนี้มีสองด่านต่อกัน เดี๋ยวขยายความด้านล่าง</li>
+          <li><strong><code>phone</code></strong> — เช็คแค่ห้ามว่างเหมือน address เราตั้งใจไม่เช็ครูปแบบเบอร์โทร เพราะรูปแบบเบอร์แต่ละประเทศต่างกันมาก และนี่คือ checkout จำลอง — กติกาแค่ไหนถึงพอดี เป็นการตัดสินใจของ product ไม่ใช่ของ library</li>
+        </ul>
+
+        <h3>สองด่านของ email: <code>.min(1)</code> แล้ว <code>.pipe(z.email())</code></h3>
+
+        <p><code>.pipe()</code> คือการต่อท่อ schema สองตัวเข้าด้วยกัน: ข้อมูลต้องผ่านด่านแรกก่อน แล้วผลลัพธ์ถึงจะไหลเข้าด่านถัดไป เหตุผลที่เราไม่เขียน <code>z.email()</code> เดี่ยว ๆ คือ<em>คุณภาพของข้อความ error</em> — ถ้าผู้ใช้ปล่อย email ว่างไว้ การบอกว่า "Enter a valid email address" มันแปลก ๆ (เขายังไม่ได้กรอกอะไรเลย!) เราอยากได้ "Email is required" ต่างหาก การต่อท่อทำให้แต่ละกรณีได้ข้อความที่ตรง:</p>
+
+        <ul>
+          <li>ปล่อยว่าง → ตกด่าน <code>.min(1)</code> → <strong>"Email is required"</strong></li>
+          <li>กรอกแต่ไม่ใช่รูปแบบ email เช่น <code>hi</code> → ผ่านด่านแรก ตกด่าน <code>z.email()</code> → <strong>"Enter a valid email address"</strong></li>
+        </ul>
+
+        <blockquote>⚠️ สังเกตว่าเราเขียน <code>z.email()</code> เป็นฟังก์ชันระดับบนสุด — นี่คือ API ของ <strong>zod 4</strong> ถ้าคุณไปเจอบทความหรือโค้ดเก่าที่เขียน <code>z.string().email()</code> นั่นคือท่าของ zod 3 ซึ่งใน zod 4 ถูก deprecated แล้ว อ่านเอกสารหรือตัวอย่างจากที่ไหนก็ตาม เช็คเวอร์ชันก่อนเสมอ</blockquote>
+
+        <h3><code>z.infer</code> — type ที่งอกจาก schema</h3>
+
+        <p>บรรทัดสุดท้ายคือหัวใจของ schema-first:</p>
+
+        <pre><code class="language-typescript">export type CheckoutAddressFormData = z.infer&lt;typeof checkoutAddressSchema&gt;;
+</code></pre>
+
+        <p><code>z.infer</code> อ่าน schema แล้วสกัด TypeScript type ออกมาให้ ผลลัพธ์ของบรรทัดนี้เทียบเท่ากับการเขียน <code>{ address: string; email: string; phone: string }</code> ด้วยมือ แต่ต่างกันตรงที่มัน<em>คำนวณมาจาก schema</em> — พรุ่งนี้ถ้าเราเพิ่ม field <code>postcode</code> เข้าไปใน <code>z.object({...})</code> type นี้จะมี <code>postcode</code> ทันที และ TypeScript จะไล่ฟ้องทุกไฟล์ที่ใช้ type นี้แล้วยังไม่รองรับ field ใหม่ให้เราเอง type นี้จะถูกใช้ทั่วทั้ง chapter: เป็น type ของฟอร์มในบทหน้า, เป็น state ใน <code>useCheckout</code>, และเป็นส่วนหนึ่งของ payload ตอนสั่งซื้อในบทที่ 25</p>
+
+        <p>อยากเห็น validation ทำงานตอนนี้เลย ลองนึกภาพ (หรือทดลองใน scratch file ก็ได้ ไม่ต้องเก็บไว้ในโปรเจกต์):</p>
+
+        <pre><code class="language-typescript">// ตัวอย่างประกอบ — ไม่ต้องสร้างเป็นไฟล์ในโปรเจกต์
+const result = checkoutAddressSchema.safeParse({
+  address: "",
+  email: "hi",
+  phone: "",
+});
+// result.success === false และใน result.error จะพบว่า
+// address → "Address is required"
+// email   → "Enter a valid email address"
+// phone   → "Phone number is required"
+</code></pre>
+
+        <p><code>safeParse</code> คืนผลเป็น object ที่มี <code>success</code> บอกผ่าน/ไม่ผ่าน โดยไม่ throw — ในบทหน้าเราไม่ต้องเรียกมันเองด้วยซ้ำ เพราะ <code>zodResolver</code> จะจัดการรอบ validate ทั้งหมดให้ แล้วส่งข้อความ error ไปโผล่ใต้ input ที่ถูกต้องเอง</p>
+
+        <h2>สร้าง types.ts</h2>
+
+        <p>ต่อไปคือรูปร่างของตัวเลือกจัดส่งและการชำระเงิน สร้าง <code>src/features/checkout/types.ts</code>:</p>
+
+        <pre><code class="language-typescript">export interface DeliveryOption {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  estimatedTime: string;
+}
+
+export interface PaymentOption {
+  id: number;
+  name: string;
+  description: string;
+}
+</code></pre>
+
+        <p>คำถามที่ควรถาม: ทำไมสองตัวนี้เป็น interface ธรรมดา ไม่เป็น zod schema เหมือนที่อยู่? เพราะ zod มีไว้ validate ข้อมูลที่<em>ไหลเข้ามาจากภายนอก</em>ซึ่งเราการันตีอะไรไม่ได้ — ข้อมูลที่ผู้ใช้พิมพ์, ข้อมูลจาก API แต่รายการตัวเลือกจัดส่ง/ชำระเงินคือค่าคงที่ที่<em>เราเขียนเองกับมือ</em>ในไฟล์ถัดไป TypeScript ตรวจมันตอน compile ได้ครบถ้วนอยู่แล้ว การเอา zod มาตรวจค่าที่เราพิมพ์เองอีกรอบตอน runtime ไม่ได้เพิ่มความปลอดภัยอะไร ใช้เครื่องมือให้ตรงงาน: <strong>zod สำหรับข้อมูลเชื่อถือไม่ได้ interface สำหรับข้อมูลที่เราควบคุมเอง</strong></p>
+
+        <h2>สร้าง consts.ts</h2>
+
+        <p>แล้วก็ตัวรายการจริง สร้าง <code>src/features/checkout/consts.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { DeliveryOption, PaymentOption } from "./types";
+
+export const deliveryOptions: DeliveryOption[] = [
+  {
+    id: 1,
+    name: "Standard Delivery",
+    description: "Approx 5 to 7 Days",
+    estimatedTime: "5-7 Days",
+    price: 5.99,
+  },
+  {
+    id: 2,
+    name: "Express Delivery",
+    description: "Approx 1 - 2 Days",
+    estimatedTime: "1-2 Days",
+    price: 15.99,
+  },
+];
+
+export const paymentOptions: PaymentOption[] = [
+  {
+    id: 3,
+    name: "Cash on Delivery",
+    description: "Pay cash when your order is delivered.",
+  },
+  {
+    id: 4,
+    name: "Bank Transfer",
+    description: "Pay directly from your bank account.",
+  },
+];
+</code></pre>
+
+        <p>ราคาเป็น USD เช่นเดียวกับราคาสินค้าจาก dummyjson — ค่าส่ง Standard $5.99 และ Express $15.99 จะถูกบวกเข้ายอดรวมใน Billing Summary บทที่ 24–25</p>
+
+        <h3>ทำไมตัวเลือกอยู่ใน consts ไม่ฝังในคอมโพเนนต์</h3>
+
+        <p>มือใหม่จำนวนมากจะเขียนรายการพวกนี้ hardcode ไว้ใน JSX ของคอมโพเนนต์ที่แสดงมันเลย ซึ่งดูเร็วดี แต่ใน chapter นี้ข้อมูลชุดเดียวกันถูกใช้จาก<em>หลายที่มาก</em>:</p>
+
+        <ul>
+          <li><code>CheckoutDeliveryBox</code> และ <code>CheckoutPaymentBox</code> (บทที่ 24) — วนลูปแสดงเป็น radio ให้เลือก</li>
+          <li><code>useCheckout</code> (บทที่ 25) — ใช้ <code>deliveryOptions[0].id</code> เป็นค่าที่เลือกเริ่มต้น และค้นหา <code>price</code> ของตัวที่เลือกมาคำนวณค่าส่งใน billing summary</li>
+          <li>เทสต์ (บทที่ 28–29) — import รายการเดียวกันมา assert ว่า UI แสดงครบทุกตัวเลือก</li>
+        </ul>
+
+        <p>ถ้าข้อมูลฝังอยู่ใน JSX ของคอมโพเนนต์ใดคอมโพเนนต์หนึ่ง ที่อื่นจะเข้าถึงไม่ได้เลย (หรือต้อง copy ไปแปะ ซึ่งคือการเปิดประตูให้ข้อมูล drift อีกแล้ว) การแยก <em>data</em> ออกจาก <em>presentation</em> แบบนี้ทำให้วันที่ธุรกิจอยากเพิ่ม "Same Day Delivery" เราแก้ array เดียวใน <code>consts.ts</code> แล้วทั้ง UI ตัวเลือก ทั้งการคำนวณราคา ทั้งเทสต์ ขยับตามพร้อมกันหมด และในอนาคตถ้าตัวเลือกพวกนี้ย้ายไปอยู่บน API จริง จุดที่ต้องแก้ก็มีจุดเดียวเช่นกัน</p>
+
+        <blockquote>💡 Checkpoint: บทนี้ยังไม่มีอะไรให้ดูบนหน้าจอ — เราสร้างเฉพาะชั้นข้อมูลของฟีเจอร์ checkout สามไฟล์: <code>schema.ts</code>, <code>types.ts</code>, <code>consts.ts</code> จุดตรวจสอบคือ editor ต้องไม่มีเส้นแดงเลยสักไฟล์ และ <code>npm run lint</code> ต้องผ่าน ถ้า TypeScript ฟ้องที่ <code>z.email</code> ให้เช็คว่า zod ที่ติดตั้งเป็นเวอร์ชัน 4 (ดูใน <code>package.json</code>) บทหน้าเราจะเอา schema นี้ไปต่อกับ react-hook-form ให้กลายเป็นฟอร์มจริง</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="21_cart_page.html" rel="prev">ก่อนหน้า: หน้า Cart</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="23_address_form.html" rel="next">ถัดไป: ฟอร์มที่อยู่</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
