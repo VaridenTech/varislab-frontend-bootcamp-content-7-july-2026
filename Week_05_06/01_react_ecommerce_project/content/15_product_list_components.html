@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างคอมโพเนนต์รายการสินค้า: price.utils, skeleton screen ด้วย react-loading-skeleton, ProductCard, ProductsList และ CategoryMenu" />
+    <title>คอมโพเนนต์รายการสินค้า | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 15 · สร้างหน้าเพจ (Pages)</p>
+          <h1>คอมโพเนนต์รายการสินค้า</h1>
+          <p class="lesson-original-title" lang="en">Product List Components</p>
+        </header>
+
+        <p>ยินดีด้วย — คุณมาถึงช่วงที่สนุกที่สุดของคอร์สแล้ว ตอนนี้เรามีครบทุกอย่างที่หน้าเพจต้องใช้: โครงแอปกับ router, คอมโพเนนต์กลางอย่าง Button และ Pagination และชั้นข้อมูลสินค้าที่จบด้วย query factory ในบทที่แล้ว จากบทนี้ไปอีกสี่บท เราจะเอาทั้งหมดนั้นมาประกอบเป็นหน้าเพจจริง: Home, Category และ Product detail</p>
+
+        <p>แต่ก่อนจะสร้างหน้า Home ในบทถัดไป สังเกตว่าทั้งหน้า Home และหน้า Category ต่างต้องแสดง<em>รายการสินค้าเป็นการ์ด</em>และ<em>เมนูหมวดหมู่</em>เหมือนกันเป๊ะ ถ้าเราเขียน markup ชุดนั้นซ้ำในทั้งสองหน้า วันที่ต้องแก้ดีไซน์การ์ดเราจะต้องแก้สองที่ (แล้วก็จะลืมแก้สักที่หนึ่งแน่นอน) บทนี้เราเลยจะสร้างชิ้นส่วนที่ใช้ร่วมกันเหล่านี้ก่อนหนึ่งบทเต็ม: utility คำนวณราคา, ProductCard, ProductsList และ CategoryMenu</p>
+
+        <blockquote>💡 บทนี้จะยังไม่มีอะไรใหม่ปรากฏบนหน้าจอ เพราะคอมโพเนนต์ที่สร้างยังไม่ถูกเรียกใช้จากหน้าไหนเลย — เราจะได้เห็นมันพร้อมกันทั้งหมดตอนประกอบหน้า Home ในบทถัดไป ระหว่างทางใช้ <code>npm run dev</code> กับ <code>npm run typecheck</code> เป็นตัวยืนยันว่าไม่มีอะไรพังก็พอ</blockquote>
+
+        <h2>price.utils: คำนวณราคาก่อนลด</h2>
+
+        <p>เปิดข้อมูลสินค้าจาก dummyjson ดูอีกครั้ง (เช่น <code>https://dummyjson.com/products/1</code>) จะเห็นว่า API ให้ราคามาสองส่วน: <code>price</code> ซึ่งเป็น<strong>ราคาหลังหักส่วนลดแล้ว</strong> และ <code>discountPercentage</code> เป็นเปอร์เซ็นต์ส่วนลด แต่หน้าร้านออนไลน์ทั่วไปชอบแสดง "ราคาเต็มขีดฆ่า" คู่กับราคาจริงเพื่อให้เห็นว่าลดไปเท่าไร ปัญหาคือ API ไม่ได้ให้ราคาเต็มมา — เราต้องคำนวณย้อนกลับเอง</p>
+
+        <p>คณิตศาสตร์ไม่ยาก: ถ้าราคาเต็มคือ <code>X</code> แล้วลด <code>d</code> เปอร์เซ็นต์ ราคาหลังลดคือ <code>X × (1 - d/100)</code> ดังนั้นย้อนกลับ ราคาเต็มคือ <code>price ÷ (1 - d/100)</code> ลองแทนตัวเลขดู: สินค้าราคา 90 บาทหลังลด 10% → <code>90 ÷ 0.9 = 100</code> บาท ตรงตามคาด</p>
+
+        <p>การคำนวณแบบนี้เป็น pure function ที่ไม่เกี่ยวกับ React เลย เราจึงเก็บไว้ใน <code>shared/utils</code> ข้าง ๆ <code>pagination.utils.ts</code> จากบทเรียน 13 สร้างไฟล์ <code>src/shared/utils/price.utils.ts</code>:</p>
+
+        <pre><code class="language-typescript">/**
+ * Calculate the original price before the discount.
+ * @param {number} price - The discounted price of the product.
+ * @param {number | undefined} discountPercentage - The discount percentage (optional).
+ * @returns {string} - The original price as a formatted string.
+ */
+export const calculateOriginalPrice = (
+  price: number,
+  discountPercentage?: number,
+): number =&gt; {
+  if (
+    !discountPercentage ||
+    discountPercentage &lt;= 0 ||
+    discountPercentage &gt;= 100
+  ) {
+    return price; // If no discount or invalid discount, return the current price
+  }
+  return price / (1 - discountPercentage / 100);
+};
+</code></pre>
+
+        <p>สังเกต guard clause ก่อนคำนวณ: ถ้าไม่มีส่วนลด (<code>undefined</code> หรือ <code>0</code>), ส่วนลดติดลบ หรือส่วนลดตั้งแต่ 100% ขึ้นไป (ซึ่งจะทำให้ตัวหารเป็นศูนย์หรือติดลบ — ได้ราคา <code>Infinity</code> หรือราคาติดลบ!) เราคืน <code>price</code> เดิมไปเลย การเช็คขอบเขตข้อมูลก่อนคำนวณแบบนี้เป็นนิสัยที่ดีมากเวลาทำงานกับข้อมูลจาก API ภายนอกที่เราควบคุมไม่ได้ และเพราะมันเป็น pure function เดี่ยว ๆ ในบทเรียน 27 เราจะเขียน unit test ให้มันได้ง่ายมาก</p>
+
+        <h2>Skeleton screen ด้วย react-loading-skeleton</h2>
+
+        <p>ตอนนี้เรามี spinner (<code>ClipLoader</code> จาก react-spinners ที่ติดตั้งไปในบทเรียน 09) ไว้ใช้ตอนรอ<em>ข้อมูล</em>จาก API แล้ว แต่รูปภาพสินค้าเป็นการรอคนละแบบ: ข้อมูล query มาถึงแล้ว การ์ดวาดเสร็จแล้ว แต่ไฟล์รูปยังโหลดไม่เสร็จ ถ้าไม่ทำอะไรเลย การ์ดจะโผล่มาแบบไม่มีรูป แล้วรูปค่อยเด้งตามมาทีหลัง — layout กระตุกไปมาไม่น่าดู</p>
+
+        <p>วิธีที่เว็บสมัยใหม่นิยมคือ <strong>skeleton screen</strong>: วาดกล่องสีเทาวิบวับขนาดเท่าของจริงค้างไว้ก่อน พอของจริงพร้อมค่อยสลับเข้ามาแทนที่ ต่างจาก spinner ตรงที่ skeleton <em>จองพื้นที่</em>ไว้ให้เลย layout จึงไม่ขยับ และผู้ใช้เดาได้ทันทีว่ากำลังรออะไรอยู่ตรงไหน — spinner เหมาะกับ "รอทั้งก้อนใหญ่" ส่วน skeleton เหมาะกับ "รอชิ้นส่วนย่อยที่รู้ขนาดล่วงหน้า" เราจะได้ใช้ทั้งคู่ในโปรเจกต์นี้</p>
+
+        <p>ติดตั้ง library:</p>
+
+        <pre><code class="language-bash">npm i react-loading-skeleton
+</code></pre>
+
+        <p>react-loading-skeleton ต้องการ CSS ของตัวเองหนึ่งไฟล์ (สีพื้น สีวิบวับ และ animation) ซึ่งควร import ครั้งเดียวที่จุดเริ่มต้นของแอป เปิด <code>src/main.tsx</code> แล้วเพิ่มบรรทัด import ต่อจาก <code>main.scss</code> ไฟล์ฉบับสมบูรณ์กลายเป็น:</p>
+
+        <pre><code class="language-typescript">import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./styles/main.scss";
+import "react-loading-skeleton/dist/skeleton.css";
+import App from "./app/App";
+
+createRoot(document.getElementById("root")!).render(
+  &lt;StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/StrictMode&gt;,
+);
+</code></pre>
+
+        <blockquote>💡 นี่คือการแก้ <code>main.tsx</code> ครั้งสุดท้ายของคอร์สแล้ว — ไฟล์นี้อยู่ในรูปแบบสุดท้ายตรงกับ repo ต้นฉบับเป๊ะ</blockquote>
+
+        <h2>ProductCard: การ์ดสินค้าหนึ่งใบ</h2>
+
+        <p>ถึงคิวการ์ดสินค้า — คอมโพเนนต์ที่จะถูกวาดซ้ำมากที่สุดในแอปนี้ มันเป็นของ feature products โดยตรง (ไม่ใช่ของ shared เพราะมันรู้จักแนวคิด "สินค้า") เราจึงวางไว้ที่ <code>src/features/products/components/</code> ตามสถาปัตยกรรม feature-based จากบทเรียน 05 สร้างไฟล์ <code>src/features/products/components/ProductCard/ProductCard.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React, { useState } from "react";
+import Skeleton from "react-loading-skeleton";
+import StarReview from "@/shared/components/StarReview/StarReview";
+
+interface ProductCardProps {
+  productId: number;
+  image: string;
+  title: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  discount?: number;
+  rating: number; // Rating out of 10
+  reviewsCount: number;
+  skeletonHeight?: number;
+  onProductClick: (id: number) =&gt; void;
+}
+
+const ProductCard: React.FC&lt;ProductCardProps&gt; = ({
+  image,
+  title,
+  description,
+  price,
+  originalPrice,
+  discount,
+  rating,
+  reviewsCount,
+  skeletonHeight = 240,
+  productId,
+  onProductClick,
+}) =&gt; {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+  return (
+    &lt;div
+      className={`flex flex-column`}
+      onClick={() =&gt; onProductClick(productId)}
+    &gt;
+      &lt;div className="image-container"&gt;
+        {!isImageLoaded &amp;&amp; &lt;Skeleton height={skeletonHeight} /&gt;}
+        &lt;img
+          src={image}
+          alt={title}
+          style={{
+            display: isImageLoaded ? "block" : "none",
+          }}
+          onLoad={() =&gt; {
+            setIsImageLoaded(true);
+          }}
+        /&gt;
+      &lt;/div&gt;
+
+      &lt;div className={`pt-15 pb-15`}&gt;
+        &lt;h4 className="fs-18 mb-5 mt-0"&gt;{title}&lt;/h4&gt;
+        &lt;p className="fs-14 text-muted mb-10 mt-0"&gt;{description}&lt;/p&gt;
+        &lt;div className="flex align-item-center mb-15"&gt;
+          &lt;StarReview score={rating} /&gt;
+          &lt;span className="fs-12 text-muted ml-5"&gt;({reviewsCount})&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;p className="fs-20 mb-5"&gt;${price.toFixed(2)}&lt;/p&gt;
+        &lt;div className="flex align-item-center"&gt;
+          {originalPrice &amp;&amp; (
+            &lt;span className="fs-14 text-muted text-line-through"&gt;
+              ${originalPrice.toFixed(2)}
+            &lt;/span&gt;
+          )}
+          {discount &amp;&amp; (
+            &lt;span className="fs-14 fw-medium ml-10 text-primary"&gt;
+              {discount}% Off
+            &lt;/span&gt;
+          )}
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default ProductCard;
+</code></pre>
+
+        <p>มีของให้แกะหลายชิ้นในไฟล์นี้:</p>
+
+        <ul>
+          <li><strong>ไม่มี <code>.module.scss</code> ของตัวเอง</strong> — การ์ดใบนี้แต่งตัวด้วย utility classes จาก <code>_utilities.scss</code> ที่เราวางไว้ตั้งแต่บทเรียน 04 ล้วน ๆ (<code>flex</code>, <code>fs-18</code>, <code>text-muted</code>, <code>text-line-through</code>, …) เมื่อ style ที่ต้องใช้มีครบใน utility อยู่แล้ว การไม่สร้างไฟล์ SCSS เปล่า ๆ เพิ่มก็เป็นการตัดสินใจที่ถูก — SCSS module มีไว้สำหรับ style ที่เฉพาะตัวจริง ๆ อย่างที่ CategoryMenu ด้านล่างจะได้ใช้</li>
+          <li><strong>ลูกเล่น skeleton ของรูป</strong> — ตราบใดที่ <code>isImageLoaded</code> ยังเป็น <code>false</code> เราวาด <code>&lt;Skeleton height={skeletonHeight} /&gt;</code> ค้างไว้ และซ่อน <code>&lt;img&gt;</code> ด้วย <code>display: "none"</code> จุดสำคัญคือเรา<em>ซ่อน</em>รูป ไม่ใช่<em>ไม่วาด</em>รูป — ถ้าเขียน <code>{isImageLoaded &amp;&amp; &lt;img … /&gt;}</code> รูปจะไม่ถูกใส่เข้า DOM เบราว์เซอร์เลยไม่เริ่มโหลด แล้ว <code>onLoad</code> ก็จะไม่มีวันยิง — กลายเป็น skeleton ค้างตลอดกาล พอรูปโหลดเสร็จ เบราว์เซอร์ยิง event <code>onLoad</code> เราตั้ง state เป็น <code>true</code> React วาดใหม่ skeleton หายไป รูปโผล่ขึ้นมาแทนในพื้นที่เดิมพอดี</li>
+          <li><strong><code>skeletonHeight = 240</code></strong> — default parameter ให้การ์ดทั่วไปสูง 240px แต่หน้าไหนอยากได้การ์ดเตี้ยหรือสูงกว่านี้ก็ override ผ่าน prop ได้</li>
+          <li><strong>reuse <code>StarReview</code></strong> — ดาวรีวิวที่สร้างไว้ในบทเรียน 11 กลับมาทำงานแล้ว จำ convention ของมันได้ไหม: <code>score</code> เป็นคะแนนเต็ม 10 แล้วภายในหารสองเป็นดาว 5 ดวง คอมเมนต์ <code>// Rating out of 10</code> ใน props ก็ย้ำเรื่องเดียวกัน</li>
+          <li><strong><code>onProductClick</code> callback prop</strong> — ตอนการ์ดถูกคลิก เราเรียก callback พร้อมส่ง <code>productId</code> กลับไปให้คนที่ใช้การ์ด สังเกตว่า ProductCard <em>ไม่รู้จัก router เลย</em> — มันไม่ import <code>useNavigate</code> ไม่รู้ว่าคลิกแล้วต้องไปหน้าไหน หน้าที่ของมันมีแค่ "แสดงผลและรายงานว่าถูกคลิก" ให้หน้าเพจที่เป็นเจ้าของ ตัดสินใจเรื่อง navigation เอง แบบเดียวกับที่ <code>&lt;button onClick={…}&gt;</code> ไม่รู้ว่า onClick ทำอะไร — คอมโพเนนต์ยิ่งรู้น้อย ยิ่งเอาไปใช้ซ้ำได้กว้าง</li>
+        </ul>
+
+        <h2>ProductsList: จากข้อมูล API สู่แถวของการ์ด</h2>
+
+        <p>ProductCard รับ props เป็นชิ้น ๆ (<code>image</code>, <code>title</code>, <code>price</code>, …) แต่ข้อมูลจาก query มาเป็น <code>Product[]</code> เต็ม ๆ ตัว เราต้องมีตัวกลางที่ map จากรูปแบบหนึ่งไปอีกรูปแบบหนึ่ง สร้างไฟล์ <code>src/features/products/components/ProductsList/ProductsList.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { Product } from "@/features/products/types";
+import ProductCard from "@/features/products/components/ProductCard/ProductCard";
+import { calculateOriginalPrice } from "@/shared/utils/price.utils";
+
+interface ProductsListProps {
+  products: Product[] | undefined;
+  onProductClick: (id: number) =&gt; void;
+}
+
+const ProductsList: React.FC&lt;ProductsListProps&gt; = ({
+  products,
+  onProductClick,
+}) =&gt; {
+  return (
+    &lt;&gt;
+      {products?.map(
+        ({
+          thumbnail,
+          id,
+          title,
+          brand,
+          price,
+          discountPercentage,
+          rating,
+          reviews,
+        }) =&gt; (
+          &lt;div key={id} className="mb-15 pointer"&gt;
+            &lt;ProductCard
+              productId={id}
+              image={thumbnail}
+              title={title}
+              description={brand}
+              price={price}
+              originalPrice={calculateOriginalPrice(price, discountPercentage)}
+              discount={discountPercentage}
+              rating={rating}
+              reviewsCount={reviews.length}
+              onProductClick={onProductClick}
+            /&gt;
+          &lt;/div&gt;
+        ),
+      )}
+    &lt;/&gt;
+  );
+};
+
+export default ProductsList;
+</code></pre>
+
+        <p>ประเด็นที่น่าสนใจ:</p>
+
+        <ul>
+          <li><strong><code>products: Product[] | undefined</code></strong> — จงใจยอมรับ <code>undefined</code> เพราะคนที่จะส่ง prop นี้คือหน้าเพจที่ส่ง <code>data?.products</code> จาก useQuery มาตรง ๆ ซึ่งเป็น <code>undefined</code> ได้เสมอระหว่างรอโหลด optional chaining ใน <code>products?.map(…)</code> จัดการกรณีนั้นให้เงียบ ๆ (ไม่ render อะไรเลย) โดยหน้าเพจไม่ต้องเช็คก่อนส่ง</li>
+          <li><strong>destructuring กลาง parameter ของ map</strong> — แทนที่จะรับ <code>(product) =&gt;</code> แล้วเขียน <code>product.title</code>, <code>product.price</code> ยาว ๆ เราแตกเฉพาะ field ที่ใช้ออกมาตั้งแต่หน้าประตู อ่านปุ๊บรู้เลยว่าคอมโพเนนต์นี้ใช้ข้อมูลอะไรจาก Product บ้าง</li>
+          <li><strong>แปลงข้อมูลตรงนี้ที่เดียว</strong> — <code>calculateOriginalPrice</code> จาก utility เมื่อครู่ถูกเรียกตรงนี้ และ <code>reviews.length</code> ก็ถูกนับตรงนี้ ProductCard เลยได้รับค่าที่พร้อมแสดงผลทันที ไม่ต้องรู้จักโครงสร้าง Product ของ dummyjson เลยแม้แต่นิดเดียว</li>
+          <li><strong><code>key={id}</code></strong> — ใช้ id จริงของสินค้าเป็น key ตามกฎเหล็กของ list rendering จาก Week 4 ไม่ใช้ index เพราะรายการนี้เปลี่ยนชุดได้ทั้งชุดเวลาสลับหมวดหมู่หรือเปลี่ยนหน้า</li>
+        </ul>
+
+        <blockquote>💡 สังเกตว่าเมื่อสินค้าไม่มีส่วนลด <code>calculateOriginalPrice</code> คืนราคาเดิมกลับมา การ์ดจึงยังแสดงราคาขีดฆ่าที่เท่ากับราคาจริง — ฟังดูแปลก แต่ในทางปฏิบัติสินค้าของ dummyjson มี <code>discountPercentage</code> ติดมาแทบทุกตัว เคสนี้จึงแทบไม่ปรากฏบนจอ (ส่วนป้าย "% Off" ถูกซ่อนอยู่แล้วด้วย <code>{discount &amp;&amp; …}</code> ใน ProductCard)</blockquote>
+
+        <h2>CategoryMenu: เมนูหมวดหมู่พร้อมไฮไลต์</h2>
+
+        <p>ชิ้นสุดท้ายของบท: เมนูรายชื่อหมวดหมู่ที่จะยืนอยู่ข้างรายการสินค้าทั้งในหน้า Home และหน้า Category คราวนี้มี style เฉพาะตัวเล็กน้อย (ความกว้างคอลัมน์) เลยได้ SCSS module มาคู่กัน สร้างไฟล์ <code>src/features/products/components/CategoryMenu/CategoryMenu.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./CategoryMenu.module.scss";
+import { Category } from "@/features/products/types";
+
+interface CategoryMenuProps {
+  categories: Category[];
+  activeCategory: string | undefined;
+  onCategoryClick: (category: Category) =&gt; void;
+}
+
+const CategoryMenu: React.FC&lt;CategoryMenuProps&gt; = ({
+  categories,
+  activeCategory,
+  onCategoryClick,
+}) =&gt; {
+  return (
+    &lt;div className={`${styles.categoryMenu} text-right`}&gt;
+      {categories.map((cat) =&gt; (
+        &lt;span
+          key={cat.slug}
+          className={`nav-link block mb-20 pointer ${
+            activeCategory === cat.slug ? "fw-bold text-primary" : ""
+          }`}
+          onClick={() =&gt; onCategoryClick(cat)}
+        &gt;
+          {cat.name}
+        &lt;/span&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+
+export default CategoryMenu;
+</code></pre>
+
+        <p>และไฟล์ <code>src/features/products/components/CategoryMenu/CategoryMenu.module.scss</code>:</p>
+
+        <pre><code class="language-scss">.categoryMenu {
+  width: 16%;
+}
+</code></pre>
+
+        <p>สัญญา (contract) ของคอมโพเนนต์นี้ออกแบบมาอย่างจงใจ ลองอ่าน props ทีละตัว:</p>
+
+        <ul>
+          <li><strong><code>categories: Category[]</code></strong> — รายชื่อหมวดหมู่ทั้งหมด มาจาก query <code>productQueries.categories()</code> ที่เราสร้างไว้ในบทที่แล้ว จำ type <code>Category</code> ได้ไหม: <code>{ slug, name, url }</code> — <code>slug</code> คือรหัสสำหรับเรียก API ส่วน <code>name</code> คือชื่อสวย ๆ สำหรับแสดงผล</li>
+          <li><strong><code>activeCategory: string | undefined</code></strong> — รับเป็น <em>slug</em> ของหมวดที่กำลังเลือกอยู่ ไม่ใช่ทั้ง object เพราะสิ่งเดียวที่เมนูต้องรู้คือ "ตัวไหนต้องไฮไลต์" การเทียบ <code>activeCategory === cat.slug</code> แล้วเติมคลาส <code>fw-bold text-primary</code> คือทั้งหมดของลอจิกไฮไลต์ และการยอมรับ <code>undefined</code> ทำให้หน้าเพจส่งค่าจาก state ที่ยังโหลดไม่เสร็จมาได้เลยโดยไม่ต้อง fallback</li>
+          <li><strong><code>onCategoryClick: (category: Category) =&gt; void</code></strong> — ขาออกกลับส่ง<em>ทั้ง object</em> คืนให้ ทำไมไม่ส่งแค่ slug? เพราะหน้าเพจที่รับ event ไปต้องใช้มากกว่านั้น — ต้องใช้ <code>slug</code> ยิง query และใช้ <code>name</code> แสดงหัวหน้า การส่ง object เต็มทำให้ผู้ใช้เมนูไม่ต้องไปไล่หา object จาก slug อีกรอบ</li>
+        </ul>
+
+        <p>แบบแผนเดิมกลับมาอีกครั้ง: CategoryMenu ไม่มี state ของตัวเองเลยสักตัว มันไม่จำว่าหมวดไหนถูกเลือก — หน้าเพจเป็นคนจำ แล้วส่งกลับลงมาผ่าน <code>activeCategory</code> คอมโพเนนต์แบบนี้เรียกกันว่า controlled component (แนวคิดเดียวกับ controlled input จาก Week 4 แค่ขยับมาอยู่ระดับคอมโพเนนต์) ข้อดีคือหน้า Home กับหน้า Category ใช้เมนูตัวเดียวกันได้ทั้งที่พฤติกรรมหลังคลิกไม่เหมือนกันเลย — เดี๋ยวคุณจะได้เห็นในสองบทถัดไป</p>
+
+        <h2>Checkpoint</h2>
+
+        <blockquote>💡 ตอนนี้โปรเจกต์ควรมีไฟล์ใหม่ 4 ไฟล์ (<code>price.utils.ts</code>, <code>ProductCard.tsx</code>, <code>ProductsList.tsx</code>, <code>CategoryMenu.tsx</code> + SCSS ของมัน) และ <code>main.tsx</code> ที่เพิ่ม import CSS ของ skeleton แล้ว รัน <code>npm run typecheck</code> และ <code>npm run lint</code> ต้องผ่านทั้งคู่ และ <code>npm run dev</code> ต้องยังแสดงแอปได้เหมือนเดิมทุกหน้า ถ้ามี error เรื่อง import path ตรวจ alias <code>@/</code> และชื่อโฟลเดอร์ให้ตรงตัวพิมพ์ใหญ่-เล็กเป๊ะ ๆ</blockquote>
+
+        <p>ชิ้นส่วนพร้อมแล้ว บทถัดไปเราจะเปิดกล่องของเล่นทั้งหมดที่สะสมมาตั้งแต่ต้นคอร์ส — Banner แบบ carousel, CountdownTimer, FeatureCard, ImageZoom และสามตัวที่เพิ่งสร้างสด ๆ — มาประกอบเป็นหน้า Home เต็ม ๆ หน้าแรกของแอป</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="14_query_factories.html" rel="prev">ก่อนหน้า: Query Factories</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="16_home_page.html" rel="next">ถัดไป: หน้า Home</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

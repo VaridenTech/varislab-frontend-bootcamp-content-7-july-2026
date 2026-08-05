@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างหน้า Category: เลือกดูสินค้าตามหมวดหมู่ พร้อม Pagination, derived state และประสบการณ์เปลี่ยนหน้าลื่นไหลด้วย keepPreviousData" />
+    <title>หน้า Category | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 17 · สร้างหน้าเพจ (Pages)</p>
+          <h1>หน้า Category: เลือกดูสินค้าพร้อมระบบแบ่งหน้า</h1>
+          <p class="lesson-original-title" lang="en">Category Page</p>
+        </header>
+
+        <p>หน้า Home โชว์สินค้าได้แค่หมวดละ 12 ตัว ถ้าผู้ใช้อยากไล่ดูสินค้าทั้งหมวดจริง ๆ ต้องมีหน้าที่ทำเรื่องนี้เต็มตัว — นั่นคือหน้า Category ที่เราจะสร้างในบทนี้: เมนูหมวดหมู่ด้านซ้าย รายการสินค้าด้านขวา และแถบ Pagination ด้านล่างสำหรับกดเปลี่ยนหน้า</p>
+
+        <p>ข่าวดีคือของหนัก ๆ ถูกสร้างไว้หมดแล้ว: CategoryMenu กับ ProductsList มาจากบทเรียน 15, Pagination มาจากบทเรียน 10, <code>calculateTotalPages</code> มาจากบทเรียน 13 และ query <code>byCategory</code> พร้อม <code>keepPreviousData</code> ตั้งรอไว้ตั้งแต่บทเรียน 14 บทนี้จึงเป็นบทประกอบร่างที่ค่อนข้างสั้น แต่มีแนวคิดสำคัญสองเรื่องซ่อนอยู่: <strong>derived state</strong> (อีกครั้ง — คราวนี้กับ pagination) และ<strong>ประสบการณ์เปลี่ยนหน้าที่ไม่กะพริบ</strong></p>
+
+        <h2>CategoryBanner: แถบหัวเรื่องของหน้า</h2>
+
+        <p>เริ่มจากชิ้นเล็กก่อน: แถบสีเทาด้านบนสุดที่แสดงชื่อหมวดหมู่ตัวใหญ่กลางจอ สร้างไฟล์ <code>src/pages/Category/components/CategoryBanner/CategoryBanner.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+
+interface CategoryBannerProps {
+  name?: string | null;
+}
+
+const CategoryBanner: React.FC&lt;CategoryBannerProps&gt; = ({ name }) =&gt; {
+  return (
+    &lt;div className="bg-grey01 pt-30 pb-30"&gt;
+      &lt;h2 className="fs-32 text-center"&gt;{name ? name : "Category"}&lt;/h2&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default CategoryBanner;
+</code></pre>
+
+        <p>เรียบง่ายมาก: รับ <code>name</code> ที่เป็น optional และเป็น <code>null</code> ได้ (รองรับจังหวะที่หมวดหมู่ยังโหลดไม่เสร็จ) ถ้าไม่มีชื่อก็ fallback เป็นคำว่า "Category" ไปก่อน จะได้ไม่มีแถบว่างเปล่าโผล่มา</p>
+
+        <blockquote>💡 ถึงไฟล์นี้จะอยู่ใต้โฟลเดอร์ของหน้า Category แต่มันจะถูก reuse อีกสามครั้ง: หน้า Product detail ในบทถัดไปใช้มันแสดงชื่อสินค้า และหน้า Cart กับ Checkout ในบทหลัง ๆ ก็ใช้มันเป็นแถบหัวเรื่องเหมือนกัน — พอเป็นแค่ "แถบเทา ๆ กับตัวหนังสือหนึ่งบรรทัด" มันเลยกลางพอที่ใครจะหยิบไปใช้ก็ได้</blockquote>
+
+        <h2>Category.tsx: แทนที่ stub</h2>
+
+        <p>ทีนี้ไฟล์หลักของบท แทนที่เนื้อหา <code>src/pages/Category/Category.tsx</code> ทั้งไฟล์ด้วยโค้ดนี้ แล้วเราค่อยแกะทีละส่วน:</p>
+
+        <pre><code class="language-typescript">import React, { useState } from "react";
+import ClipLoader from "react-spinners/ClipLoader";
+import { useQuery } from "@tanstack/react-query";
+import CategoryBanner from "./components/CategoryBanner/CategoryBanner";
+import CategoryMenu from "@/features/products/components/CategoryMenu/CategoryMenu";
+import ProductsList from "@/features/products/components/ProductsList/ProductsList";
+import Pagination from "@/shared/components/Pagination/Pagination";
+import { calculateTotalPages } from "@/shared/utils/pagination.utils";
+import useProductRoute from "@/shared/hooks/useProductRoute";
+import { productQueries } from "@/features/products/queries";
+import { Category as CategoryType } from "@/features/products/types";
+import ErrorMessage from "@/shared/components/ErrorMessage/ErrorMessage";
+
+const PAGE_LIMIT = 20;
+
+const Category: React.FC = () =&gt; {
+  const [selectedCategory, setSelectedCategory] = useState&lt;CategoryType | null&gt;(
+    null,
+  );
+  const [page, setPage] = useState(1);
+  const { goToProductDetails } = useProductRoute();
+
+  const { data: categories } = useQuery(productQueries.categories());
+  const currentCategory = selectedCategory ?? categories?.[0] ?? null;
+
+  const { data, isLoading, isError } = useQuery({
+    ...productQueries.byCategory({
+      category: currentCategory?.slug ?? "",
+      page,
+      limit: PAGE_LIMIT,
+    }),
+    enabled: currentCategory !== null,
+  });
+
+  const totalPages = data ? calculateTotalPages(data.total, PAGE_LIMIT) : 0;
+
+  const onCategoryClick = (category: CategoryType) =&gt; {
+    setSelectedCategory(category);
+    setPage(1);
+  };
+
+  const onProductClick = (productId: number) =&gt; {
+    goToProductDetails(productId);
+  };
+
+  return (
+    &lt;&gt;
+      &lt;CategoryBanner name={currentCategory?.name} /&gt;
+      &lt;div className="container pt-60 pb-60"&gt;
+        &lt;section&gt;
+          &lt;div className="flex gap-25"&gt;
+            &lt;CategoryMenu
+              activeCategory={currentCategory?.slug}
+              categories={categories || []}
+              onCategoryClick={onCategoryClick}
+            /&gt;
+            &lt;div className="category-list-container"&gt;
+              {isError ? (
+                &lt;ErrorMessage /&gt;
+              ) : isLoading ? (
+                &lt;div className="text-center"&gt;
+                  &lt;ClipLoader
+                    size={40}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  /&gt;
+                &lt;/div&gt;
+              ) : (
+                &lt;&gt;
+                  &lt;div className="category-list-box mb-30"&gt;
+                    &lt;ProductsList
+                      products={data?.products}
+                      onProductClick={onProductClick}
+                    /&gt;
+                  &lt;/div&gt;
+                  {totalPages &gt; 0 &amp;&amp; (
+                    &lt;Pagination
+                      currentPage={page}
+                      totalPages={totalPages}
+                      onPageChange={setPage}
+                    /&gt;
+                  )}
+                &lt;/&gt;
+              )}
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/section&gt;
+      &lt;/div&gt;
+    &lt;/&gt;
+  );
+};
+
+export default Category;
+</code></pre>
+
+        <h3>หมวดปัจจุบัน: derived ไม่ใช่ synced</h3>
+
+        <p>สองบรรทัดนี้หน้าตาเหมือนที่เพิ่งเขียนในหน้า Home เป๊ะ:</p>
+
+        <pre><code class="language-typescript">const { data: categories } = useQuery(productQueries.categories());
+const currentCategory = selectedCategory ?? categories?.[0] ?? null;
+</code></pre>
+
+        <p>และนั่นไม่ใช่เรื่องบังเอิญ — มันคือคำตอบมาตรฐานของโจทย์ "ค่าเริ่มต้นมาจากข้อมูลที่โหลดทีหลัง": เก็บใน state เฉพาะสิ่งที่ผู้ใช้เลือกเอง แล้ว<em>คำนวณ</em>ค่าที่ใช้จริงระหว่าง render ทวนอีกครั้งจากบทเรียน Effects ของ Week 4 ว่าทำไมเราไม่เขียน <code>useEffect</code> ให้ <code>setSelectedCategory(categories[0])</code> ตอนข้อมูลมาถึง: (1) ได้ render ที่เสียเปล่าเพิ่มหนึ่งรอบ (2) มี state สอง copy ที่ต้องเฝ้าให้ตรงกัน — ถ้ารายชื่อหมวดใน cache ถูก refresh แล้วหมวดแรกเปลี่ยน state เก่าที่ sync ค้างไว้ก็จะผิดทันที (3) โค้ด effect + เงื่อนไขกันการ set ซ้ำอ่านยากกว่า <code>??</code> บรรทัดเดียวหลายเท่า และข้อดีแถม: query <code>categories()</code> ตัวนี้ยิงจาก cache — ถ้าคุณเพิ่งมาจากหน้า Home ข้อมูลหมวดถูกโหลดไว้แล้วด้วย <code>staleTime</code> 5 นาที เมนูจึงโผล่ทันทีไม่ต้องรอ</p>
+
+        <h3>Query แบบมีเลขหน้า และ totalPages ที่คำนวณสด</h3>
+
+        <p>ความต่างจากหน้า Home อยู่ที่ query สินค้า: คราวนี้เราส่ง <code>page</code> เข้าไปด้วย และ limit ขยับเป็น 20 ตัวต่อหน้า:</p>
+
+        <pre><code class="language-typescript">const [page, setPage] = useState(1);
+
+const { data, isLoading, isError } = useQuery({
+  ...productQueries.byCategory({
+    category: currentCategory?.slug ?? "",
+    page,
+    limit: PAGE_LIMIT,
+  }),
+  enabled: currentCategory !== null,
+});
+
+const totalPages = data ? calculateTotalPages(data.total, PAGE_LIMIT) : 0;
+</code></pre>
+
+        <p>จำกลไกจากบทเรียน 13–14 ได้ไหม: <code>page</code> กับ <code>limit</code> เป็นส่วนหนึ่งของ params ที่ฝังอยู่ใน queryKey ดังนั้นการ <code>setPage(2)</code> ทำให้ queryKey เปลี่ยน TanStack Query มองเป็นคนละ query แล้วไปดึงข้อมูลหน้า 2 มาให้เอง (ฝั่ง API ตัว <code>getProductsByCategory</code> แปลง page เป็น <code>skip</code> ด้วย <code>calculateOffset</code> ให้แล้ว) — ไม่มี effect ไม่มีการเรียก refetch ด้วยมือ state เปลี่ยนแล้วข้อมูลไหลตาม</p>
+
+        <p>ส่วน <code>totalPages</code> เป็น derived state อีกตัวของหน้านี้: dummyjson ตอบจำนวนสินค้าทั้งหมดมาใน <code>data.total</code> เราหารด้วย <code>PAGE_LIMIT</code> ปัดขึ้นด้วย <code>calculateTotalPages</code> เสร็จในหนึ่ง expression สังเกตว่าเรา<strong>ไม่เอาค่านี้ไปเก็บใน useState</strong> — มันคำนวณจาก <code>data</code> ได้เสมอ การ mirror ค่าที่คำนวณได้ลง state คือการสร้างสำเนาที่รอวัน desync แบบเดียวกับเคส <code>currentCategory</code> ข้างบน กฎง่าย ๆ ที่ใช้ได้ตลอด: <em>ถ้าเขียนเป็น const จาก state/data ที่มีอยู่ได้ ก็อย่าเอาไปใส่ useState</em></p>
+
+        <h3>เปลี่ยนหมวดแล้วต้องกลับหน้า 1</h3>
+
+        <pre><code class="language-typescript">const onCategoryClick = (category: CategoryType) =&gt; {
+  setSelectedCategory(category);
+  setPage(1);
+};
+</code></pre>
+
+        <p>ตรงนี้คือเหตุผลที่หน้า Category ไม่ส่ง <code>setSelectedCategory</code> ให้เมนูตรง ๆ แบบหน้า Home: การเปลี่ยนหมวดต้องทำสองอย่าง คิดภาพผู้ใช้ที่ไล่ดู beauty อยู่หน้า 3 แล้วสลับไป furniture — ถ้าไม่รีเซ็ต ผู้ใช้จะไปโผล่ "หน้า 3 ของ furniture" ซึ่งอาจไม่มีอยู่จริง (ได้หน้าว่างเปล่า) หรือมีแต่ก็ไม่ใช่สิ่งที่ตั้งใจจะดู นี่คือ bug คลาสสิกของหน้า list ที่มีทั้ง filter และ pagination — เจอได้ในเว็บจริงบ่อยกว่าที่คิด</p>
+
+        <h3>ต่อ Pagination</h3>
+
+        <pre><code class="language-typescript">{totalPages &gt; 0 &amp;&amp; (
+  &lt;Pagination
+    currentPage={page}
+    totalPages={totalPages}
+    onPageChange={setPage}
+  /&gt;
+)}
+</code></pre>
+
+        <p>คอมโพเนนต์ Pagination จากบทเรียน 10 รับ contract แบบ 1-indexed (<code>currentPage={1}</code> คือหน้าแรก) และเก็บงานแปลงไปกลับกับ react-paginate ที่เป็น 0-indexed ไว้ข้างในตัวมันเองหมดแล้ว หน้าเพจเลยส่ง <code>setPage</code> เป็น callback ได้ตรง ๆ ส่วนเงื่อนไข <code>totalPages &gt; 0</code> กันแถบเลขหน้าโผล่ตอนที่ยังไม่มีข้อมูล</p>
+
+        <h3>keepPreviousData: ทำไมเปลี่ยนหน้าแล้วไม่กะพริบ</h3>
+
+        <p>ลองสังเกตพฤติกรรมตอนกดปุ่ม Next: รายการสินค้า<em>หน้าเดิมยังแสดงค้างอยู่</em>ครู่หนึ่ง แล้วสินค้าหน้าใหม่ค่อยสลับเข้ามาแทน — ไม่มี spinner คั่นกลาง ไม่มีจอขาววูบ ทำไม? ทั้งที่โค้ดเราก็มี <code>isLoading ? &lt;ClipLoader /&gt; : …</code> อยู่ตรงนั้น</p>
+
+        <p>คำตอบอยู่ในบรรทัดเดียวที่เราเขียนทิ้งไว้ใน <code>queries.ts</code> ตั้งแต่บทเรียน 14:</p>
+
+        <pre><code class="language-typescript">byCategory: (params: CategoryProductsParams) =&gt;
+  queryOptions({
+    queryKey: productKeys.byCategory(params),
+    queryFn: () =&gt; getProductsByCategory(params),
+    placeholderData: keepPreviousData,
+  }),
+</code></pre>
+
+        <p><code>keepPreviousData</code> บอก TanStack Query ว่า: เวลา queryKey เปลี่ยน (เปลี่ยนหน้า หรือเปลี่ยนหมวด) ระหว่างรอข้อมูลชุดใหม่ ให้เอา<em>ข้อมูลของ key เก่า</em>มาใส่ใน <code>data</code> เป็น placeholder ไปพลาง ๆ ผลที่ตามมาสำคัญมาก: <code>isLoading</code> จะเป็น <code>true</code> เฉพาะ<em>ครั้งแรกสุดที่ยังไม่มีข้อมูลอะไรเลย</em> — การเปลี่ยนหน้าครั้งถัด ๆ ไปมี placeholder ให้แสดง จึงไม่นับเป็น loading สาขา <code>ClipLoader</code> ของเราเลยทำงานแค่ตอนเปิดหน้าครั้งแรกครั้งเดียว หลังจากนั้นผู้ใช้เห็นเนื้อหาเดิมจนกว่าเนื้อหาใหม่จะพร้อม</p>
+
+        <p>เทียบสอง timeline ให้เห็นภาพ — แบบไม่มี <code>keepPreviousData</code>: เนื้อหาหน้า 1 → <em>จอกลายเป็น spinner ทั้งคอลัมน์ layout ยุบ</em> → เนื้อหาหน้า 2 กับแบบที่เราได้: เนื้อหาหน้า 1 → เนื้อหาหน้า 1 (ค้างไว้) → เนื้อหาหน้า 2 อย่างหลังให้ความรู้สึก "เร็ว" กว่าอย่างชัดเจนทั้งที่ network ใช้เวลาเท่ากันเป๊ะ เพราะสิ่งที่ทำร้ายความรู้สึกผู้ใช้ไม่ใช่การรอ แต่คือ<em>การเห็นของที่มีอยู่แล้วหายไป</em> และโบนัสอีกชั้น: ถ้ากดกลับมาหน้าที่เคยดูแล้ว ข้อมูลหน้านั้นอยู่ใน cache อยู่แล้ว — โผล่ทันทีไม่ต้องรออะไรเลย</p>
+
+        <h2>Checkpoint</h2>
+
+        <blockquote>💡 รัน <code>npm run dev</code> แล้วกดเมนู Category ที่ Header (path <code>/category</code>) — แถบ CategoryBanner ต้องแสดงชื่อหมวดแรกโดยอัตโนมัติ มีสินค้า 20 ตัวเรียงอยู่พร้อมแถบเลขหน้าด้านล่าง ลองทดสอบสามอย่าง: (1) กดเลขหน้า / Next — สินค้าหน้าเดิมต้องค้างอยู่แล้วสลับเป็นหน้าใหม่แบบไม่มี spinner ไม่มีจอว่างคั่น (2) ไปหน้า 2 แล้วสลับหมวด — ต้องเด้งกลับมาหน้า 1 ของหมวดใหม่เสมอ และชื่อบนแบนเนอร์ต้องเปลี่ยนตาม (3) คลิกการ์ดสินค้า — ต้องพาไป <code>/products/&lt;id&gt;</code> ซึ่งยังเป็น stub อยู่ (บทถัดไปจัดการ) ถ้าเห็น spinner ทุกครั้งที่เปลี่ยนหน้า แปลว่า <code>placeholderData: keepPreviousData</code> ใน <code>queries.ts</code> หายไป — กลับไปเช็คบทเรียน 14</blockquote>
+
+        <p>สองหน้าหลักของฝั่ง "เลือกซื้อ" เสร็จแล้ว เหลือหน้าสุดท้ายของ chapter นี้: หน้า Product detail ที่จะเป็นหน้าที่มีคอมโพเนนต์ประกอบเยอะที่สุดในแอป — แกลเลอรีรูป, ข้อมูลราคา, กราฟรีวิว และปุ่ม Add to Cart ที่จะกลายเป็นสะพานเชื่อมไปสู่ chapter ตะกร้าสินค้า</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="16_home_page.html" rel="prev">ก่อนหน้า: หน้า Home</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="18_product_page.html" rel="next">ถัดไป: หน้า Product</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

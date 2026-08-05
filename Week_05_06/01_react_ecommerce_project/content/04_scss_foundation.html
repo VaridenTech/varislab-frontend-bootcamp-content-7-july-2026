@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="วางรากฐาน SCSS ของโปรเจกต์: design tokens, utility classes, normalize.css และการสอน TypeScript ให้รู้จักไฟล์ .scss" />
+    <title>โครงสร้าง SCSS | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 04 · ติดตั้งโปรเจกต์ (Project Setup)</p>
+          <h1>โครงสร้าง SCSS</h1>
+          <p class="lesson-original-title" lang="en">SCSS Foundation</p>
+        </header>
+
+        <p>บทที่แล้วเราลบ CSS ทิ้งหมดจนหน้าเว็บโล่ง วันนี้ได้เวลาสร้างระบบ style ของเราเองขึ้นมาแทน แอปนี้ใช้ style สองชั้น: ชั้น <strong>global</strong> ที่สร้างในบทนี้ (design tokens, กฎพื้นฐาน และ utility classes ที่ทุกหน้าหยิบใช้ได้) กับชั้น <strong>SCSS Modules</strong> รายคอมโพเนนต์ที่จะเริ่มใช้ตั้งแต่ช่วงบทคอมโพเนนต์เป็นต้นไป หัวใจของชั้น global คือแนวคิด <strong>design token</strong> — ค่าการออกแบบทั้งหมด (สี ฟอนต์ ระยะห่าง) ประกาศเป็นตัวแปรไว้ที่เดียว ทั้งแอปอ้างจากตัวแปรนั้น จะเปลี่ยนโทนสีทั้งเว็บก็แก้บรรทัดเดียว</p>
+
+        <h2>ติดตั้ง sass และ normalize.css</h2>
+
+        <pre><code class="language-bash">npm i normalize.css
+npm i -D sass</code></pre>
+
+        <p>สังเกตว่าสองตัวนี้ติดตั้งคนละแบบ: <code>sass</code> เป็น devDependency เพราะมันคือ<em>ตัวแปลง</em>ไฟล์ .scss เป็น CSS ตอน build — โค้ดของมันไม่ได้ติดไปกับแอป ส่วน <code>normalize.css</code> เป็น dependency ปกติเพราะเนื้อ CSS ของมันถูก bundle เข้าแอปจริง หน้าที่ของ normalize คือลบความต่างของ style ตั้งต้นระหว่างเบราว์เซอร์ (margin ของ heading, ขนาดฟอนต์ใน form ฯลฯ) ให้เราเริ่มจากพื้นเรียบเสมอกันทุกเบราว์เซอร์</p>
+
+        <p>แค่ติดตั้ง <code>sass</code> ไว้ Vite ก็รู้จักไฟล์ <code>.scss</code> ทันทีโดยไม่ต้องตั้งค่าอะไรเพิ่ม</p>
+
+        <h2>สร้างโฟลเดอร์ src/styles</h2>
+
+        <p>ไฟล์ style ทั้งเจ็ดของบทนี้อยู่ใน <code>src/styles/</code> สังเกตว่าหกไฟล์แรกขึ้นต้นด้วย underscore (<code>_variables.scss</code>) — ธรรมเนียมของ Sass เรียกไฟล์แบบนี้ว่า <strong>partial</strong> หมายถึงไฟล์ชิ้นส่วนที่มีไว้ให้ไฟล์อื่นดึงไปใช้ ไม่ได้ตั้งใจให้ถูกแปลงเป็น CSS เดี่ยว ๆ ของตัวเอง มีเพียง <code>main.scss</code> ตัวเดียวที่เป็นทางเข้า</p>
+
+        <p>สร้างไฟล์ <code>src/styles/_variables.scss</code> — คลังโทเคนของทั้งแอป:</p>
+
+        <pre><code class="language-scss">// Font
+$font-stack:
+  -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;,
+  Arial, sans-serif;
+
+// Colors
+$primary-color: #0d6efd;
+$nav-link-color: #212529;
+$grey01: #f5f5f5;
+$grey02: #777;
+$grey03: #eaecef;
+$grey04: #eee;
+$grey05: #f8f8f8;
+$light-blue: #f5f8ff;
+$orange01: #ffa200;
+$black02: #212121;
+$white: #fff;
+$blue02: #338dff;
+$red01: #ff4136;</code></pre>
+
+        <p><code>$font-stack</code> คือ "system font stack" — ไล่ใช้ฟอนต์ประจำระบบปฏิบัติการของผู้ใช้เอง (San Francisco บน Mac, Segoe UI บน Windows) ได้หน้าตาเนทีฟและไม่ต้องเสียเวลาโหลดฟอนต์ ส่วนชุดสีตั้งชื่อแบบมีเบอร์ (<code>$grey01</code> ถึง <code>$grey05</code>) ให้เลือกใช้เฉดที่ต้องการได้โดยไม่ต้องจำ hex code สักตัว</p>
+
+        <p>สร้างไฟล์ <code>src/styles/_typography.scss</code> — utility classes เกี่ยวกับตัวอักษร:</p>
+
+        <pre><code class="language-scss">@use &quot;./variables&quot;;
+
+// Font Sizes
+.fs-12 {
+  font-size: 12px;
+}
+.fs-14 {
+  font-size: 14px;
+}
+.fs-16 {
+  font-size: 16px;
+}
+.fs-18 {
+  font-size: 18px;
+}
+.fs-20 {
+  font-size: 20px;
+}
+.fs-24 {
+  font-size: 24px;
+}
+.fs-28 {
+  font-size: 28px;
+}
+.fs-32 {
+  font-size: 32px;
+}
+.fs-40 {
+  font-size: 40px;
+}
+.fs-48 {
+  font-size: 48px;
+}
+.fs-64 {
+  font-size: 64px;
+}
+
+.fs-72 {
+  font-size: 72px;
+}
+
+// Font Weights
+.fw-light {
+  font-weight: 300;
+}
+.fw-normal {
+  font-weight: 400;
+}
+.fw-medium {
+  font-weight: 500;
+}
+.fw-bold {
+  font-weight: 700;
+}
+.fw-bolder {
+  font-weight: 900;
+}
+
+// Text Colors
+.text-primary {
+  color: variables.$primary-color !important;
+}
+// .text-secondary {
+//   color: $secondary-color;
+// }
+.text-muted {
+  color: variables.$grey02;
+}
+// .text-danger {
+//   color: #dc3545;
+// } // Example danger color
+
+// Text Alignment
+.text-left {
+  text-align: left;
+}
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+
+// Text Transform
+.text-uppercase {
+  text-transform: uppercase;
+}
+.text-lowercase {
+  text-transform: lowercase;
+}
+.text-capitalize {
+  text-transform: capitalize;
+}
+
+.text-line-through {
+  text-decoration: line-through;
+}
+
+.lh-1 {
+  line-height: 1;
+}
+
+.lh-1-25 {
+  line-height: 1.25;
+}
+
+.lh-1-5 {
+  line-height: 1.5;
+}
+
+.lh-1-75 {
+  line-height: 1.75;
+}
+
+.lh-2 {
+  line-height: 2;
+}
+
+.lh-normal {
+  line-height: normal;
+}</code></pre>
+
+        <p>บรรทัดแรกคือหัวใจของ Sass สมัยใหม่: <code>@use &quot;./variables&quot;;</code> ดึง partial อีกไฟล์เข้ามาใช้แบบมี <strong>namespace</strong> — เวลาอ้างตัวแปรต้องเขียน <code>variables.$primary-color</code> ระบุที่มาชัดเจน (ระบบเก่า <code>@import</code> เทตัวแปรทุกตัวลงมากองรวมกัน ชนกันเมื่อไหร่ก็หาต้นตอไม่เจอ และถูกประกาศเลิกใช้แล้ว) ส่วน <code>!important</code> บน <code>.text-primary</code> ก็ตั้งใจ: utility class มีไว้เขียนทับ — เมื่อเราแปะมันลงไปแปลว่า "ต้องได้สีนี้" ไม่ว่า style ของ component จะว่าอย่างไร</p>
+
+        <p>สร้างไฟล์ <code>src/styles/_spacing.scss</code> — ไฟล์นี้สนุกที่สุด เพราะเราไม่ได้เขียน class เอง แต่เขียน<em>โค้ดที่สร้าง class</em>:</p>
+
+        <pre><code class="language-scss">// Margin Utilities
+@mixin generate-margin($property, $size) {
+  @if $property == &quot;t&quot; {
+    margin-top: #{$size}px;
+  } @else if $property == &quot;r&quot; {
+    margin-right: #{$size}px;
+  } @else if $property == &quot;b&quot; {
+    margin-bottom: #{$size}px;
+  } @else if $property == &quot;l&quot; {
+    margin-left: #{$size}px;
+  } @else if $property == &quot;x&quot; {
+    margin-left: #{$size}px;
+    margin-right: #{$size}px;
+  } @else if $property == &quot;y&quot; {
+    margin-top: #{$size}px;
+    margin-bottom: #{$size}px;
+  } @else {
+    margin: #{$size}px;
+  }
+}
+
+@mixin generate-padding($property, $size) {
+  @if $property == &quot;t&quot; {
+    padding-top: #{$size}px;
+  } @else if $property == &quot;r&quot; {
+    padding-right: #{$size}px;
+  } @else if $property == &quot;b&quot; {
+    padding-bottom: #{$size}px;
+  } @else if $property == &quot;l&quot; {
+    padding-left: #{$size}px;
+  } @else if $property == &quot;x&quot; {
+    padding-left: #{$size}px;
+    padding-right: #{$size}px;
+  } @else if $property == &quot;y&quot; {
+    padding-top: #{$size}px;
+    padding-bottom: #{$size}px;
+  } @else {
+    padding: #{$size}px;
+  }
+}
+
+// Generate classes for common pixel values
+@each $size in 0, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 80,
+  90, 100
+{
+  // Margin classes
+  .mt-#{$size} {
+    @include generate-margin(t, $size);
+  }
+  .mr-#{$size} {
+    @include generate-margin(r, $size);
+  }
+  .mb-#{$size} {
+    @include generate-margin(b, $size);
+  }
+  .ml-#{$size} {
+    @include generate-margin(l, $size);
+  }
+  .mx-#{$size} {
+    @include generate-margin(x, $size);
+  }
+  .my-#{$size} {
+    @include generate-margin(y, $size);
+  }
+  .m-#{$size} {
+    @include generate-margin(&quot;&quot;, $size);
+  }
+
+  // Padding classes
+  .pt-#{$size} {
+    @include generate-padding(t, $size);
+  }
+  .pr-#{$size} {
+    @include generate-padding(r, $size);
+  }
+  .pb-#{$size} {
+    @include generate-padding(b, $size);
+  }
+  .pl-#{$size} {
+    @include generate-padding(l, $size);
+  }
+  .px-#{$size} {
+    @include generate-padding(x, $size);
+  }
+  .py-#{$size} {
+    @include generate-padding(y, $size);
+  }
+  .p-#{$size} {
+    @include generate-padding(&quot;&quot;, $size);
+  }
+
+  .gap-#{$size} {
+    gap: #{$size}px;
+  }
+}</code></pre>
+
+        <p>อ่านจากล่างขึ้นบน: ลูป <code>@each</code> วนขนาด 19 ค่า (0 ถึง 100) แต่ละรอบสร้าง class 15 ตัว (<code>.mt-20</code>, <code>.px-10</code>, <code>.gap-15</code> ฯลฯ) โดยเรียก <code>@mixin</code> ด้านบนซึ่งเลือกว่าตัวอักษรย่อไหนแปลว่า margin/padding ด้านไหน (<code>t</code>op, <code>r</code>ight, <code>x</code> = ซ้ายขวา, <code>y</code> = บนล่าง) ส่วน <code>#{$size}</code> คือ <strong>interpolation</strong> — การฝังค่าตัวแปรลงในชื่อ class หรือค่า CSS โค้ดไม่ถึงร้อยบรรทัดนี้ generate class ให้เราเกือบ 300 ตัว และถ้าอยากได้ขนาดใหม่ก็เติมเลขในลูปตัวเดียวจบ ถ้าคุณเคยใช้ Tailwind มาก่อน จะรู้สึกคุ้น ๆ — นี่คือแนวคิดเดียวกันในเวอร์ชันทำมือขนาดจิ๋ว</p>
+
+        <p>สร้างไฟล์ <code>src/styles/_global.scss</code> — กฎพื้นฐานที่มีผลทั้งหน้า:</p>
+
+        <pre><code class="language-scss">@use &quot;normalize.css&quot;;
+@use &quot;./variables&quot;;
+
+* {
+  box-sizing: border-box;
+}
+
+.container {
+  max-width: 1200px; /* Adjust as needed */
+  margin: 0 auto;
+  padding: 0 16px; /* Adds some padding on small screens */
+  width: 100%;
+}
+
+body {
+  font-family: variables.$font-stack;
+}
+
+img {
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}</code></pre>
+
+        <p>บรรทัดแรกน่าสนใจ: <code>@use &quot;normalize.css&quot;;</code> ไม่มี <code>./</code> นำหน้า — ชื่อแบบไม่มี path แบบนี้ Vite จะไปหาแพ็กเกจใน <code>node_modules</code> ให้ ดึง normalize ทั้งไฟล์เข้ามาเป็นฐานชั้นแรกสุด ที่เหลือคือกติกาบ้านของเรา: <code>box-sizing: border-box</code> ให้ width รวม padding/border (เลิกปวดหัวเรื่องคำนวณขนาด), <code>.container</code> คือกล่องกลางหน้าจอกว้างสุด 1200px ที่แทบทุกหน้าจะใช้, ตั้งฟอนต์ทั้งเว็บจากโทเคน <code>$font-stack</code>, กัน <code>img</code> ล้นกรอบ และล้าง margin ตั้งต้นของ heading กับ paragraph ทิ้งทั้งหมด — แล้วให้ระยะห่างเป็นหน้าที่ของ spacing utilities ที่เราเพิ่งสร้าง ซึ่งควบคุมได้แม่นยำกว่า</p>
+
+        <p>สร้างไฟล์ <code>src/styles/_components.scss</code> — style ของ "ชิ้นส่วนซ้ำใช้" ที่ใหญ่กว่า utility แต่ยังใช้ข้ามหลายหน้า:</p>
+
+        <pre><code class="language-scss">@use &quot;./variables&quot;;
+
+.category-list-container {
+  width: 84%;
+}
+
+.category-list-box {
+  display: flex;
+  flex-wrap: wrap;
+
+  &gt; div {
+    width: 25%;
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid variables.$grey04;
+  }
+
+  th {
+    font-weight: bold;
+    background-color: variables.$grey05;
+  }
+
+  // td {
+  //   vertical-align: middle;
+  // }
+
+  // // Optional responsive table
+  // &amp;.responsive {
+  //   overflow-x: auto;
+  //   display: block;
+  //   white-space: nowrap;
+  // }
+}
+
+// Additional Utility Classes
+.table-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.table-discount {
+  color: variables.$primary-color;
+}
+
+.table-original-price {
+  text-decoration: line-through;
+  color: variables.$grey02;
+}
+
+.table-actions {
+  button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+  }
+}
+
+.table-quantity {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  button {
+    background-color: variables.$grey03;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+
+    &amp;:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+
+  span {
+    font-size: 16px;
+    font-weight: bold;
+    width: 30px;
+    text-align: center;
+  }
+}
+
+.table-total {
+  text-align: right;
+
+  h3 {
+    font-size: 20px;
+    font-weight: bold;
+  }
+}</code></pre>
+
+        <p>ตอนนี้ยังไม่มีหน้าไหนใช้ class พวกนี้ — <code>.category-list-*</code> จะได้ออกโรงที่หน้า Home (บทที่ 16) และตระกูล <code>.table-*</code> คือหน้าตาของตารางตะกร้าสินค้า (บทที่ 21) ระหว่างทางสังเกต syntax ของ Sass สองตัว: การซ้อน selector (<code>th, td</code> อยู่ใน <code>.table</code> แปลว่า <code>.table th</code>) และ <code>&amp;</code> ที่แทน selector แม่ เช่น <code>&amp;:disabled</code> ใน <code>button</code> ก็คือ <code>button:disabled</code></p>
+
+        <p>สร้างไฟล์ <code>src/styles/_utilities.scss</code> — ตัวช่วยจัด layout ที่จะโผล่แทบทุกไฟล์ตั้งแต่บทหน้าเป็นต้นไป:</p>
+
+        <pre><code class="language-scss">@use &quot;./variables&quot;;
+
+.inline-block {
+  display: inline-block;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.space-between {
+  justify-content: space-between;
+}
+
+.align-item-center {
+  align-items: center;
+}
+
+.align-item-start {
+  align-items: flex-start;
+}
+
+.flex-start {
+  justify-content: flex-start;
+}
+
+.flex-end {
+  justify-content: flex-end;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.list-none {
+  list-style: none;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: variables.$nav-link-color;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.block {
+  display: block;
+}
+
+.bg-grey01 {
+  background-color: variables.$grey01;
+}
+
+.bg-grey05 {
+  background-color: variables.$grey05;
+}
+
+.width-50 {
+  width: 50%;
+}
+
+.width-full {
+  width: 100%;
+}
+
+.relative {
+  position: relative;
+}</code></pre>
+
+        <p>ชุดนี้ตรงไปตรงมา: ชื่อ class บอกตรง ๆ ว่าทำอะไร ต่อไปเวลาเห็น <code>className=&quot;flex align-item-center gap-10&quot;</code> ใน JSX คุณจะอ่านออกทันทีว่า layout หน้าตาเป็นอย่างไรโดยไม่ต้องสลับไปเปิดไฟล์ style เลย</p>
+
+        <p>ปิดท้ายด้วยไฟล์ทางเข้า — สร้างไฟล์ <code>src/styles/main.scss</code>:</p>
+
+        <pre><code class="language-scss">@use &quot;./global&quot;;
+@use &quot;./typography&quot;;
+@use &quot;./utilities&quot;;
+@use &quot;./spacing&quot;;
+@use &quot;./components&quot;;</code></pre>
+
+        <p>ไฟล์นี้ทำหน้าที่เดียว: รวม partial ทุกตัวเป็น CSS ก้อนเดียว สังเกตว่าไม่ต้อง <code>@use &quot;./variables&quot;</code> ตรงนี้ — เพราะตัวแปรไม่ใช่ CSS ที่ต้อง output แต่เป็นของที่ partial แต่ละไฟล์ดึงไปใช้เองตามต้องการอยู่แล้ว</p>
+
+        <h2>ต่อสายเข้าแอป</h2>
+
+        <p>แก้ <code>src/main.tsx</code> เพิ่มการ import <code>main.scss</code> — บรรทัดที่เว้นที่ไว้ตั้งแต่บทที่ 02:</p>
+
+        <pre><code class="language-typescript">import { StrictMode } from &quot;react&quot;;
+import { createRoot } from &quot;react-dom/client&quot;;
+import &quot;./styles/main.scss&quot;;
+import App from &quot;./App&quot;;
+
+createRoot(document.getElementById(&quot;root&quot;)!).render(
+  &lt;StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/StrictMode&gt;,
+);</code></pre>
+
+        <p>นี่คือการ import แบบ <strong>side effect</strong> — ไม่มีการรับค่าอะไรมาใส่ตัวแปร แค่บอก Vite ว่า "เอา style ชุดนี้เข้า bundle ด้วย" แต่พอ save ปุ๊บ มีเรื่อง: TypeScript ขีดเส้นแดงใต้บรรทัดนั้นพร้อมข้อความทำนอง <code>Cannot find module './styles/main.scss'</code></p>
+
+        <h2>สอน TypeScript ให้รู้จัก .scss</h2>
+
+        <p>ที่ฟ้องแบบนั้นเพราะ TypeScript รู้จักแต่ไฟล์ .ts/.tsx — มันไม่มีทางรู้เองว่า import ไฟล์ .scss แล้วจะได้อะไรกลับมา และ template ของ Vite เปิดตัวเลือก <code>noUncheckedSideEffectImports</code> ไว้ ซึ่งสั่งให้ตรวจแม้แต่ import แบบ side effect ว่าชี้ไปยัง module ที่มีอยู่จริง ทางแก้คือเขียนไฟล์ <strong>declaration</strong> (.d.ts) ประกาศให้ระบบ type รู้ สร้างไฟล์ <code>src/shared/types/global.d.ts</code> (สร้างโฟลเดอร์ซ้อนตามนี้ด้วย — <code>mkdir -p src/shared/types</code> — ตำแหน่งนี้คือบ้านของ type กลางทั้งแอป จะเห็นภาพรวมในบทหน้า):</p>
+
+        <pre><code class="language-typescript">declare module &quot;*.css&quot; {
+  const content: { [className: string]: string };
+  export default content;
+}
+
+declare module &quot;*.scss&quot; {
+  const content: { [className: string]: string };
+  export default content;
+}</code></pre>
+
+        <p>อ่านว่า: "ไฟล์อะไรก็ตามที่ลงท้ายด้วย .css หรือ .scss ให้ถือว่าเป็น module ที่มี default export เป็น object จับคู่ชื่อ class ไปยัง string" นิยามนี้ทำงานสองหน้าที่พร้อมกัน หน้าที่แรกคือปลดล็อกบรรทัด <code>import &quot;./styles/main.scss&quot;</code> ของเราตอนนี้ หน้าที่ที่สองสำคัญกว่า: อีกไม่กี่บทเราจะเขียน <code>import styles from &quot;./Button.module.scss&quot;</code> แล้วใช้ <code>styles.button</code> ใน JSX — object ที่ CSS Modules คืนมามีรูปร่างตรงตามนิยามนี้เป๊ะ (ชื่อ class ต้นฉบับ → ชื่อ class ที่ถูกแปลงให้ unique) ถ้าไม่มี declaration นี้ ทุก import แบบนั้นจะเป็น type error หมด</p>
+
+        <p>เหลือขั้นสุดท้าย: บอก TypeScript ว่าไฟล์ declaration ของเราอยู่ที่ไหน เปิด <code>tsconfig.app.json</code> แล้วเพิ่ม <code>typeRoots</code> ต่อท้าย <code>compilerOptions</code>:</p>
+
+        <pre><code class="language-json">{
+  &quot;compilerOptions&quot;: {
+    // ...ค่าเดิมทั้งหมด รวมถึง &quot;paths&quot; จากบทที่แล้ว คงไว้...
+
+    &quot;typeRoots&quot;: [&quot;./node_modules/@types&quot;, &quot;./src/shared/types&quot;]
+  },
+  &quot;include&quot;: [&quot;src&quot;]
+}</code></pre>
+
+        <p><code>typeRoots</code> คือรายชื่อโฟลเดอร์ที่ TypeScript โหลด type declaration เข้ามาให้เองโดยไม่ต้อง import — เราเพิ่ม <code>./src/shared/types</code> ของเราเข้าไป แต่มีกับดักหนึ่งที่ต้องรู้: การประกาศ <code>typeRoots</code> คือการ<em>แทนที่</em>ค่า default ไม่ใช่ต่อท้าย ถ้าเราใส่แค่โฟลเดอร์ของเรา TypeScript จะเลิกมองหา type จากแพ็กเกจ <code>@types/*</code> ทั้งหมด (เช่น <code>@types/react</code>) แล้วโปรเจกต์จะแดงทั้งกระดาน — จึงต้องใส่ <code>./node_modules/@types</code> กลับเข้าไปด้วยเสมอ</p>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run typecheck</code> ต้องผ่านไม่มี error (เส้นแดงใต้ import scss ต้องหายไปด้วย — ถ้ายังค้างใน editor ลองสั่ง Restart TS Server) จากนั้น <code>npm run dev</code> — หน้า <code>React E-commerce App</code> จะหน้าตาต่างจากเดิมแบบสังเกตได้: หัวข้อชิดขอบซ้ายบนเป๊ะ (margin ถูกล้างหมด) และฟอนต์เปลี่ยนจาก serif ของเบราว์เซอร์เป็น system font สะอาดตา อยากพิสูจน์ว่า utility ทำงานจริง ลองแก้ h1 ใน <code>App.tsx</code> เป็น <code>&lt;h1 className=&quot;text-primary mt-20&quot;&gt;</code> ชั่วคราว — ตัวหนังสือต้องกลายเป็นสีน้ำเงินและขยับลงมา 20px แล้วอย่าลืม<em>เอาออกให้เหมือนเดิม</em>ก่อนไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="03_tooling.html" rel="prev">ก่อนหน้า: ESLint, Prettier และ Path Alias</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="05_architecture.html" rel="next">ถัดไป: สถาปัตยกรรม Feature-based</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

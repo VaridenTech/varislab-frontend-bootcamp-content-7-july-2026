@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างหน้า Product Detail: แกลเลอรีรูปสินค้า ข้อมูลราคาและส่วนลด กราฟสรุปคะแนนรีวิว การ์ดรีวิวด้วย dayjs และการประกอบหน้าเวอร์ชันแรกก่อนต่อระบบตะกร้า" />
+    <title>หน้า Product Detail | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 18 · สร้างหน้าเพจ (Pages)</p>
+          <h1>หน้า Product Detail: รายละเอียดสินค้าครบทุกมุม</h1>
+          <p class="lesson-original-title" lang="en">Product Detail Page</p>
+        </header>
+
+        <p>หน้าสุดท้ายของ chapter นี้คือหน้าที่ผู้ใช้ตัดสินใจซื้อ: หน้า Product detail ที่เปิดจากการคลิกการ์ดสินค้าใน Home หรือ Category (path <code>/products/:id</code>) หน้านี้มีของให้ดูเยอะที่สุดในแอป — แกลเลอรีรูปพร้อม thumbnail ที่คลิกสลับได้, ข้อมูลราคา/ส่วนลด/สต็อก, ปุ่ม Add to Cart, กราฟแท่งสรุปคะแนนรีวิว และรายการรีวิวจากผู้ซื้อ เราจะสร้างมันจากคอมโพเนนต์ย่อย 5 ตัวแล้วประกอบร่างในไฟล์หน้าเพจตอนท้าย</p>
+
+        <p>ข้อสังเกตหนึ่งก่อนเริ่ม: ปุ่ม Add to Cart ในบทนี้จะ<strong>ยังกดแล้วไม่เกิดอะไรขึ้น</strong> — ตะกร้าสินค้ายังไม่มีอยู่ในแอปเลย (นั่นคือ chapter ถัดไปทั้ง chapter) เราจะสร้างหน้านี้เป็นเวอร์ชันแรกที่จบในตัว แล้วกลับมาต่อสายปุ่มนี้เข้ากับตะกร้าจริงในบทเรียน 20 เดี๋ยวถึงตรงนั้นจะบอกชัด ๆ อีกทีว่าต้องแก้บรรทัดไหนบ้าง</p>
+
+        <h2>ติดตั้ง dayjs</h2>
+
+        <p>รีวิวจาก dummyjson มีวันที่ติดมาเป็น ISO string เช่น <code>2025-04-30T09:41:02.053Z</code> — เอาไปแสดงตรง ๆ ไม่ได้แน่ ๆ เราอยากได้รูปแบบอ่านง่ายอย่าง <code>30 April 2025</code> การ format วันที่ด้วย <code>Date</code> ดิบ ๆ ของ JavaScript ทำได้แต่เขียนยาวและพลาดง่าย เราจึงใช้ <a href="https://day.js.org">dayjs</a> — library จัดการวันที่ตัวจิ๋ว (~2KB) ที่ API เหมือน Moment.js แต่เบากว่ามาก และเป็นตัวที่เจอบ่อยที่สุดตัวหนึ่งในโปรเจกต์ React ปัจจุบัน:</p>
+
+        <pre><code class="language-bash">npm i dayjs
+</code></pre>
+
+        <p>เราจะได้ใช้มันครั้งแรกใน ReviewCard ด้านล่าง — เรียก <code>dayjs(isoString).format("DD MMMM YYYY")</code> จบในบรรทัดเดียว</p>
+
+        <h2>ProductImageGallery: แกลเลอรีรูปพร้อม thumbnail</h2>
+
+        <p>สินค้าแต่ละตัวมีรูปหลายรูป (field <code>images: string[]</code> ใน type <code>Product</code>) แกลเลอรีของเราแสดงรูปใหญ่หนึ่งรูป และแถว thumbnail ด้านล่างให้คลิกสลับ สร้างไฟล์ <code>src/features/products/components/ProductImageGallery/ProductImageGallery.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React, { useState } from "react";
+import Skeleton from "react-loading-skeleton";
+import styles from "./ProductImageGallery.module.scss";
+
+interface ProductImageGalleryProps {
+  images: string[];
+  defaultImage?: string;
+}
+
+const ProductImageGallery: React.FC&lt;ProductImageGalleryProps&gt; = ({
+  images,
+  defaultImage,
+}) =&gt; {
+  const [selectedImage, setSelectedImage] = useState&lt;string&gt;(
+    defaultImage || images[0],
+  );
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+  const handleImageClick = (image: string) =&gt; {
+    setIsImageLoaded(false);
+    setSelectedImage(image);
+  };
+
+  return (
+    &lt;div className={styles.productImageGallery}&gt;
+      {/* Large Displayed Image */}
+      &lt;div className="width-full text-center"&gt;
+        {!isImageLoaded &amp;&amp; (
+          &lt;div className="mb-30"&gt;
+            &lt;Skeleton height={400} /&gt;
+          &lt;/div&gt;
+        )}
+        &lt;img
+          src={selectedImage}
+          alt="Selected image"
+          style={{
+            display: isImageLoaded ? "inline-block" : "none",
+          }}
+          onLoad={() =&gt; setIsImageLoaded(true)}
+        /&gt;
+      &lt;/div&gt;
+
+      {/* Image Thumbnails */}
+      &lt;div className={styles.thumbnailList}&gt;
+        {images.map((image, index) =&gt; (
+          &lt;div
+            key={index}
+            className={`${styles.thumbnail} ${
+              selectedImage === image ? styles.active : ""
+            }`}
+            onClick={() =&gt; handleImageClick(image)}
+          &gt;
+            &lt;img src={image} alt={`Thumbnail ${index + 1}`} /&gt;
+          &lt;/div&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default ProductImageGallery;
+</code></pre>
+
+        <p>และไฟล์ <code>src/features/products/components/ProductImageGallery/ProductImageGallery.module.scss</code>:</p>
+
+        <pre><code class="language-scss">.productImageGallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .thumbnailList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .thumbnail {
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.3s ease;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      &amp;.active {
+        border-color: #000; // Highlight for the selected thumbnail
+      }
+
+      &amp;:hover {
+        border-color: #ccc;
+      }
+    }
+  }
+}
+</code></pre>
+
+        <p>แนวคิดหลักของคอมโพเนนต์นี้:</p>
+
+        <ul>
+          <li><strong>state สองตัวทำงานคู่กัน</strong> — <code>selectedImage</code> จำว่ารูปไหนถูกเลือก (เริ่มจาก <code>defaultImage</code> หรือรูปแรก) และ <code>isImageLoaded</code> คุม skeleton แบบเดียวกับ ProductCard ในบทเรียน 15 จุดที่ต้องอ่านช้า ๆ คือ <code>handleImageClick</code>: มัน <code>setIsImageLoaded(false)</code> <em>ก่อน</em>เปลี่ยนรูปเสมอ เพราะรูปใหม่ยังไม่เคยโหลด ถ้าลืมบรรทัดนี้ ผู้ใช้จะเห็นรูปเก่าค้างอยู่ (state ยัง <code>true</code>) ทั้งที่ <code>src</code> เปลี่ยนไปแล้ว จนกว่ารูปใหม่จะโหลดเสร็จ — แทนที่จะเห็น skeleton ที่สื่อว่ากำลังโหลดอยู่ พอรูปใหม่มาถึง <code>onLoad</code> ยิงและทุกอย่างกลับเข้าที่</li>
+          <li><strong>ไฮไลต์ thumbnail ที่เลือก</strong> — เทียบ <code>selectedImage === image</code> แล้วเติมคลาส <code>styles.active</code> ซึ่งใน SCSS เขียนเป็น <code>&amp;.active</code> (ตัวเดียวกับที่มีทั้ง <code>.thumbnail</code> และ <code>.active</code>) ให้กรอบดำ ส่วน <code>&amp;:hover</code> ให้กรอบเทาตอนชี้</li>
+          <li><strong><code>key={index}</code> ยอมรับได้ที่นี่</strong> — ต่างจากรายการสินค้าที่สลับชุดได้ตลอด รายการรูปของสินค้าหนึ่งตัวนิ่งตลอดอายุของหน้า ไม่มีการเพิ่ม ลบ หรือสลับลำดับ index จึงเสถียรพอ (และรูปก็ไม่มี id ให้ใช้อยู่แล้ว)</li>
+        </ul>
+
+        <h2>ProductDetailInfo: ข้อมูลฝั่งขวาและปุ่ม Add to Cart</h2>
+
+        <p>ฝั่งขวาของหน้าคือบล็อกข้อมูล: ชื่อ แบรนด์ ดาว ราคา ส่วนลด คำอธิบาย ปุ่ม และรายละเอียดสต็อก/การจัดส่ง ทั้งหมดเป็นการแสดงผลล้วน ๆ สร้างไฟล์ <code>src/features/products/components/ProductDetailInfo/ProductDetailInfo.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { faCartPlus } from "@fortawesome/free-solid-svg-icons";
+import StarReview from "@/shared/components/StarReview/StarReview";
+import Button from "@/shared/components/Button/Button";
+
+interface ProductDetailInfoProps {
+  title: string;
+  brand: string;
+  rating: number;
+  reviewsCount: number;
+  price: number;
+  originalPrice: number;
+  discountPercentage: number | undefined;
+  description: string;
+  sku: string | undefined;
+  stock: number;
+  availabilityStatus: string;
+  shippingInfo: string;
+  warrantyInfo: string;
+  onButtonClick: () =&gt; void;
+}
+
+const ProductDetailInfo: React.FC&lt;ProductDetailInfoProps&gt; = ({
+  title,
+  brand,
+  rating,
+  reviewsCount,
+  price,
+  originalPrice,
+  discountPercentage,
+  description,
+  sku,
+  stock,
+  availabilityStatus,
+  shippingInfo,
+  warrantyInfo,
+  onButtonClick,
+}) =&gt; {
+  return (
+    &lt;div&gt;
+      &lt;h2 className="fs-32 mb-10"&gt;{title}&lt;/h2&gt;
+      &lt;p className="fs-18 text-muted mb-20 mt-0"&gt;{brand}&lt;/p&gt;
+      &lt;div className="flex align-item-center mb-20"&gt;
+        &lt;StarReview score={rating} /&gt;
+        &lt;span className="text-muted ml-5"&gt;{reviewsCount} Reviews&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div className="flex align-item-center mb-20"&gt;
+        &lt;p className="fs-32 fw-medium mr-10"&gt;$ {price.toFixed(2)}&lt;/p&gt;
+        {originalPrice &amp;&amp; (
+          &lt;span className="fs-14 text-muted text-line-through"&gt;
+            ${originalPrice.toFixed(2)}
+          &lt;/span&gt;
+        )}
+        {discountPercentage &amp;&amp; (
+          &lt;span className="fs-18 fw-medium ml-10 text-primary"&gt;
+            {discountPercentage}% Off
+          &lt;/span&gt;
+        )}
+      &lt;/div&gt;
+      &lt;p className="text-muted"&gt;{description}&lt;/p&gt;
+      &lt;div className="pt-25 pb-25"&gt;
+        &lt;Button icon={faCartPlus} onClick={onButtonClick}&gt;
+          Add To Cart
+        &lt;/Button&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;h4&gt;Product Info:&lt;/h4&gt;
+        &lt;ul className="pl-15 lh-1-75 mt-10"&gt;
+          {sku &amp;&amp; &lt;li className="text-muted"&gt;SKU: {sku}&lt;/li&gt;}
+          &lt;li className="text-muted"&gt;Quantity: {stock} left&lt;/li&gt;
+          {availabilityStatus &amp;&amp; (
+            &lt;li className="text-muted"&gt;Stock Status: {availabilityStatus}&lt;/li&gt;
+          )}
+        &lt;/ul&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;h4&gt;Delivery Details:&lt;/h4&gt;
+        &lt;ul className="pl-15 lh-1-75 mt-10"&gt;
+          &lt;li className="text-muted"&gt;{shippingInfo}&lt;/li&gt;
+          &lt;li className="text-muted"&gt;{warrantyInfo}&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default ProductDetailInfo;
+</code></pre>
+
+        <p>props เยอะแต่ไม่มีตัวไหนซับซ้อน — ทุกตัวเป็นค่าพร้อมแสดงที่หน้าเพจเตรียมมาให้ (รวมถึง <code>originalPrice</code> ที่ผ่าน <code>calculateOriginalPrice</code> มาแล้ว) จุดเดียวที่เป็น "พฤติกรรม" คือ <code>onButtonClick: () =&gt; void</code> — callback prop แบบเดียวกับ <code>onProductClick</code> ของ ProductCard: คอมโพเนนต์นี้<em>ไม่รู้และไม่ควรรู้</em>ว่ากดปุ่มแล้วเกิดอะไร มันแค่รายงานว่า "ปุ่มถูกกดแล้วนะ" การออกแบบแบบนี้กำลังจะพิสูจน์คุณค่าในอีกสองบท: ตอนตะกร้ามาถึง เราจะเปลี่ยนพฤติกรรมปุ่มได้โดย<strong>ไม่ต้องแตะไฟล์นี้เลยแม้แต่บรรทัดเดียว</strong> ส่วนตัวปุ่มเองคือ Button จากบทเรียน 09 พร้อมไอคอน <code>faCartPlus</code></p>
+
+        <h2>RatingBreakdown: กราฟแท่งสรุปคะแนน</h2>
+
+        <p>ต่อไปคือกราฟแบบที่เห็นในเว็บรีวิวทุกเจ้า: แถบ 5★ ถึง 1★ พร้อมแท่งบอกสัดส่วนว่าคะแนนไหนมีกี่รีวิว สร้างไฟล์ <code>src/features/products/components/RatingBreakdown/RatingBreakdown.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faStar } from "@fortawesome/free-solid-svg-icons";
+import styles from "./RatingBreakdown.module.scss";
+
+interface RatingBreakdownProps {
+  reviews: { rating: number }[]; // Only need the `rating` property
+}
+
+const RatingBreakdown: React.FC&lt;RatingBreakdownProps&gt; = ({ reviews }) =&gt; {
+  const totalReviews = reviews.length;
+
+  // Compute counts for each rating (1-5 stars)
+  const ratingCounts = Array(5)
+    .fill(0)
+    .map((_, index) =&gt; {
+      const stars = 5 - index; // Descending from 5 to 1
+      const count = reviews.filter(
+        (review) =&gt; Math.round(review.rating / 2) === stars,
+      ).length;
+
+      const percentage = totalReviews ? (count / totalReviews) * 100 : 0;
+      return { stars, count, percentage };
+    });
+
+  // Helper function to determine bar style class based on stars
+  const getBarStyleClass = (stars: number) =&gt; {
+    switch (stars) {
+      case 5:
+      case 4:
+        return styles.greenBar; // Class for green
+      case 3:
+        return styles.orangeBar; // Class for orange
+      case 2:
+      case 1:
+        return styles.redBar; // Class for red
+      default:
+        return styles.defaultBar; // Default class
+    }
+  };
+
+  return (
+    &lt;div&gt;
+      {ratingCounts.map(({ stars, count, percentage }) =&gt; (
+        &lt;div key={stars} className="flex align-item-center gap-15 mb-10"&gt;
+          &lt;div className="fw-bold flex align-item-center gap-5"&gt;
+            &lt;span&gt;{stars}&lt;/span&gt;
+            &lt;FontAwesomeIcon icon={faStar} className={styles.starIcon} /&gt;
+          &lt;/div&gt;
+          &lt;div className={styles.bar}&gt;
+            &lt;div
+              className={`${styles.fill} ${getBarStyleClass(stars)}`}
+              style={{ width: `${percentage}%` }}
+            /&gt;
+          &lt;/div&gt;
+          &lt;div className="text-muted"&gt;{count}&lt;/div&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+
+export default RatingBreakdown;
+</code></pre>
+
+        <p>และไฟล์ <code>src/features/products/components/RatingBreakdown/RatingBreakdown.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.starIcon {
+  color: variables.$orange01;
+}
+
+.bar {
+  position: relative;
+  flex-grow: 1;
+  height: 9px;
+  background-color: variables.$grey03;
+  border-radius: 4px;
+  overflow: hidden;
+
+  .fill {
+    height: 100%;
+    border-radius: 4px;
+  }
+}
+
+.greenBar {
+  background-color: #28a745; // Green for 4 and 5 stars
+}
+
+.orangeBar {
+  background-color: #ffc107; // Orange for 3 stars
+}
+
+.redBar {
+  background-color: #dc3545; // Red for 1 and 2 stars
+}
+
+.defaultBar {
+  background-color: #ced4da; // Default gray
+}
+</code></pre>
+
+        <p>มาแกะคณิตศาสตร์ของแท่งกัน เพราะนี่คือหัวใจของคอมโพเนนต์:</p>
+
+        <ul>
+          <li><strong><code>Array(5).fill(0).map(…)</code></strong> — ท่าสร้าง array 5 ช่องเพื่อวนลูป 5 รอบ (ต้อง <code>.fill(0)</code> ก่อนเพราะ <code>Array(5)</code> เปล่า ๆ ให้ array โหว่ที่ <code>.map</code> ข้ามไม่ยอมวน) ในแต่ละรอบ <code>stars = 5 - index</code> ทำให้ไล่จาก 5★ ลงไป 1★ ตามลำดับที่เว็บรีวิวนิยมแสดง</li>
+          <li><strong><code>Math.round(review.rating / 2) === stars</code></strong> — convention เดิมของแอปเรา: คะแนนดิบเป็นสเกลเต็ม 10 การหารสองแล้วปัดเศษแปลงเป็นสเกลดาว 1–5 แบบเดียวกับที่ StarReview ทำเป๊ะ (บทเรียน 11) — สองคอมโพเนนต์นี้ต้องใช้สูตรเดียวกัน ไม่งั้นดาวที่การ์ดกับกราฟจะเล่าคนละเรื่อง จากนั้น <code>filter(…).length</code> นับจำนวนรีวิวที่ตกอยู่ในดาวระดับนั้น</li>
+          <li><strong><code>percentage</code></strong> — สัดส่วนของระดับนั้นเทียบรีวิวทั้งหมด ถูกส่งเข้า inline style <code>width: `${percentage}%`</code> ของ <code>.fill</code> — แท่งนอก (<code>.bar</code>) กว้างเต็มพื้นที่ด้วย <code>flex-grow: 1</code> ส่วนแท่งใน (<code>.fill</code>) กว้างตามเปอร์เซ็นต์ นี่คือกราฟแท่งที่สร้างจาก div สองชั้นล้วน ๆ ไม่ต้องพึ่ง chart library เลย สังเกต guard <code>totalReviews ? … : 0</code> กันหารด้วยศูนย์เมื่อไม่มีรีวิว</li>
+          <li><strong>สีตามอารมณ์คะแนน</strong> — <code>getBarStyleClass</code> จับคู่ 4–5★ เป็นเขียว, 3★ ส้ม, 1–2★ แดง เป็น mapping ฝั่งการแสดงผลเฉย ๆ แยกอยู่ใน helper function ให้อ่านง่าย</li>
+          <li><strong><code>reviews: { rating: number }[]</code></strong> — type ของ prop ขอแค่ field <code>rating</code> เท่านั้น ไม่ใช่ <code>ProductReview[]</code> เต็ม ๆ เพราะ structural typing ของ TypeScript ยอมให้ส่ง <code>ProductReview[]</code> เข้ามาได้อยู่แล้ว (มี field ครบเกินขอ) — การประกาศขอเท่าที่ใช้ทำให้คอมโพเนนต์ผูกกับ type ของ feature น้อยลง</li>
+        </ul>
+
+        <h2>ReviewCard: รีวิวหนึ่งใบ (dayjs ออกโรง)</h2>
+
+        <p>สร้างไฟล์ <code>src/features/products/components/ReviewCard/ReviewCard.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import dayjs from "dayjs";
+
+import styles from "./ReviewCard.module.scss";
+import StarReview from "@/shared/components/StarReview/StarReview";
+
+interface ReviewCardProps {
+  name: string;
+  date: string;
+  review: string;
+  rating: number;
+}
+
+const ReviewCard: React.FC&lt;ReviewCardProps&gt; = ({
+  name,
+  date,
+  review,
+  rating,
+}) =&gt; {
+  return (
+    &lt;div className={`${styles.reviewCard} p-20 bg-grey05`}&gt;
+      &lt;div className="flex align-item-center gap-15"&gt;
+        {/* User Initial Avatar */}
+        &lt;div className={`${styles.avatar} flex-center font-bold flex fs-40`}&gt;
+          {name[0]}
+        &lt;/div&gt;
+
+        &lt;div&gt;
+          {/* User Information */}
+          &lt;div className="flex align-item-center mb-5"&gt;
+            &lt;span className="fw-bold fs-18 mr-5"&gt;{name}&lt;/span&gt;
+            &lt;span className="text-muted fs-14"&gt;
+              {dayjs(date).format("DD MMMM YYYY")}
+            &lt;/span&gt;
+          &lt;/div&gt;
+
+          {/* Rating */}
+          &lt;StarReview score={rating} /&gt;
+
+          {/* Review Text */}
+          &lt;p className="fs-14 text-muted lh-1-5 mt-10"&gt;{review}&lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default ReviewCard;
+</code></pre>
+
+        <p>และไฟล์ <code>src/features/products/components/ReviewCard/ReviewCard.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.reviewCard {
+  border: 1px solid variables.$grey04;
+}
+
+.avatar {
+  width: 70px;
+  height: 70px;
+  background-color: variables.$white;
+}
+</code></pre>
+
+        <p>ไฮไลต์ของการ์ดใบนี้คือบรรทัด <code>dayjs(date).format("DD MMMM YYYY")</code> — รับ ISO string มาแปลงเป็น <code>30 April 2025</code> โดย pattern ในเครื่องหมายคำพูดอ่านตรงตัว: <code>DD</code> วันที่สองหลัก, <code>MMMM</code> ชื่อเดือนเต็ม, <code>YYYY</code> ปีสี่หลัก ส่วน avatar ใช้ทริคยอดนิยม: ไม่มีรูปโปรไฟล์ก็แสดงอักษรตัวแรกของชื่อ (<code>name[0]</code>) ในกล่องสี่เหลี่ยมแทน</p>
+
+        <h2>ReviewSection: ประกอบฝั่งรีวิวทั้งแถบ</h2>
+
+        <p>คอมโพเนนต์สุดท้ายก่อนถึงหน้าเพจ: section รีวิวที่แบ่งครึ่ง — ซ้ายเป็นสรุปคะแนนรวม + RatingBreakdown, ขวาเป็นรายการ ReviewCard ตัวนี้เป็นของหน้า Product โดยเฉพาะจึงอยู่ใต้โฟลเดอร์ของหน้า สร้างไฟล์ <code>src/pages/Product/components/ReviewSection.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { ProductReview } from "@/features/products/types";
+import StarReview from "@/shared/components/StarReview/StarReview";
+import RatingBreakdown from "@/features/products/components/RatingBreakdown/RatingBreakdown";
+import ReviewCard from "@/features/products/components/ReviewCard/ReviewCard";
+
+interface ReviewSectionProps {
+  rating: number;
+  reviews: ProductReview[];
+}
+
+const ReviewSection: React.FC&lt;ReviewSectionProps&gt; = ({ rating, reviews }) =&gt; {
+  return (
+    &lt;div className="flex"&gt;
+      &lt;div className="width-50"&gt;
+        &lt;div className="pr-40"&gt;
+          &lt;div className="flex pt-15"&gt;
+            &lt;span className="fs-40 fw-bold"&gt;{rating}&lt;/span&gt;
+            &lt;div className="ml-15"&gt;
+              &lt;div className="mb-10"&gt;
+                &lt;StarReview score={rating} /&gt;
+              &lt;/div&gt;
+              &lt;p className="text-muted"&gt;Based on {reviews.length} Reviews&lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+          &lt;hr className="my-20" /&gt;
+          &lt;RatingBreakdown reviews={reviews} /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div className="width-50"&gt;
+        {reviews.map(({ reviewerName, date, comment, rating }, index) =&gt; (
+          &lt;div key={index} className="mb-15"&gt;
+            &lt;ReviewCard
+              name={reviewerName}
+              date={date}
+              review={comment}
+              rating={rating}
+            /&gt;
+          &lt;/div&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default ReviewSection;
+</code></pre>
+
+        <p>ไม่มีลอจิกใหม่ — เป็นคอมโพเนนต์ประกอบร่างล้วน ๆ ที่ map field ของ <code>ProductReview</code> (<code>reviewerName</code>, <code>comment</code>, …) เข้า props ของ ReviewCard (<code>name</code>, <code>review</code>, …) เหมือนที่ ProductsList ทำให้ ProductCard ในบทเรียน 15 และ <code>key={index}</code> ก็ยอมรับได้ด้วยเหตุผลเดียวกับ thumbnail: รายการรีวิวของสินค้าหนึ่งตัวนิ่ง ไม่มีเพิ่ม/ลบ/สลับ (และ dummyjson ไม่ได้ให้ id ของรีวิวมา)</p>
+
+        <h2>Product.tsx: ประกอบหน้า (เวอร์ชันแรก)</h2>
+
+        <p>ถึงเวลาแทนที่ stub ตัวสุดท้ายของ chapter นี้ แทนที่เนื้อหา <code>src/pages/Product/Product.tsx</code> ทั้งไฟล์ด้วยโค้ดนี้:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import ClipLoader from "react-spinners/ClipLoader";
+import { useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+import ReviewSection from "./components/ReviewSection";
+import CategoryBanner from "@/pages/Category/components/CategoryBanner/CategoryBanner";
+import ProductImageGallery from "@/features/products/components/ProductImageGallery/ProductImageGallery";
+import { calculateOriginalPrice } from "@/shared/utils/price.utils";
+import ProductDetailInfo from "@/features/products/components/ProductDetailInfo/ProductDetailInfo";
+import { productQueries } from "@/features/products/queries";
+import ErrorMessage from "@/shared/components/ErrorMessage/ErrorMessage";
+
+const Product: React.FC = () =&gt; {
+  const { id } = useParams&lt;{ id: string }&gt;();
+  const {
+    data: productDetail,
+    isLoading,
+    isError,
+  } = useQuery({
+    ...productQueries.detail(id ?? ""),
+    enabled: !!id,
+  });
+
+  const onAddToCart = () =&gt; {
+    // TODO: the cart doesn't exist yet — we wire this up in lesson 20
+  };
+
+  if (isLoading) {
+    return (
+      &lt;div className="text-center mb-30"&gt;
+        &lt;ClipLoader
+          size={40}
+          aria-label="Loading Spinner"
+          data-testid="loader"
+        /&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  if (isError || !productDetail) {
+    return (
+      &lt;div className="container"&gt;
+        &lt;ErrorMessage message="We couldn't load this product. Please try again." /&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  const {
+    title,
+    images,
+    description,
+    brand,
+    reviews,
+    rating,
+    price,
+    discountPercentage,
+    sku,
+    stock,
+    availabilityStatus,
+    shippingInformation,
+    warrantyInformation,
+  } = productDetail;
+  const originalPrice = calculateOriginalPrice(price, discountPercentage);
+
+  return (
+    &lt;div&gt;
+      &lt;CategoryBanner name={title} /&gt;
+      &lt;section className="pt-60"&gt;
+        &lt;div className="container"&gt;
+          &lt;div className="flex mb-35"&gt;
+            &lt;div className="width-50"&gt;
+              &lt;div className="pr-10"&gt;
+                &lt;ProductImageGallery images={images} /&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div className="width-50"&gt;
+              &lt;div className="pl-10"&gt;
+                &lt;ProductDetailInfo
+                  title={title}
+                  brand={brand}
+                  rating={rating}
+                  reviewsCount={reviews.length}
+                  price={price}
+                  originalPrice={originalPrice}
+                  discountPercentage={discountPercentage}
+                  description={description}
+                  sku={sku}
+                  stock={stock}
+                  availabilityStatus={availabilityStatus}
+                  shippingInfo={shippingInformation}
+                  warrantyInfo={warrantyInformation}
+                  onButtonClick={onAddToCart}
+                /&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div className="pb-30"&gt;
+            &lt;h3 className="fs-24"&gt;Reviews&lt;/h3&gt;
+            &lt;ReviewSection rating={rating} reviews={reviews} /&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default Product;
+</code></pre>
+
+        <p>เดินดูทีละท่อน:</p>
+
+        <ul>
+          <li><strong><code>useParams&lt;{ id: string }&gt;()</code></strong> — ดึงค่า <code>:id</code> จาก URL ที่ router จับคู่ route <code>/products/:id</code> ไว้ตั้งแต่บทเรียน 06 generic บอก TypeScript ว่า params มี key อะไรบ้าง แต่ค่าที่ได้ยังเป็น <code>string | undefined</code> เสมอ (ผู้ใช้อาจพิมพ์ URL แปลก ๆ มาเองได้) เราเลยกันสองชั้น: <code>id ?? ""</code> ให้ queryKey ไม่พัง และ <code>enabled: !!id</code> ไม่ยิง API เลยถ้าไม่มี id</li>
+          <li><strong><code>productQueries.detail(id ?? "")</code></strong> — query ตัวสุดท้ายของ factory จากบทเรียน 14 ได้ออกใช้งานจริงแล้ว เปิดสินค้าตัวที่เคยเปิดซ้ำภายในหนึ่งนาที (staleTime ของเรา) จะได้ข้อมูลจาก cache ทันที</li>
+          <li><strong>early return แบบทั้งหน้า</strong> — หน้า Home/Category ใช้ error/loading แบบ inline รายส่วน เพราะหน้าเหล่านั้นมีหลาย section ที่เป็นอิสระต่อกัน แต่หน้านี้ทุกอย่างมาจาก query ก้อนเดียว จึง return ทั้งหน้าเป็น spinner หรือ ErrorMessage ไปเลยได้ สังเกตเงื่อนไข <code>isError || !productDetail</code> — เช็ค <code>!productDetail</code> ควบไปด้วยเพื่อให้ TypeScript รู้ว่าโค้ดหลังจากบรรทัดนี้ <code>productDetail</code> เป็น <code>Product</code> แน่นอน จึง destructure ได้โดยไม่ต้องใส่ <code>?</code> อีก</li>
+          <li><strong>ประกอบร่าง</strong> — CategoryBanner จากบทที่แล้วรับ <code>name={title}</code> กลายเป็นแถบชื่อสินค้า, ครึ่งซ้ายเป็น ProductImageGallery, ครึ่งขวาเป็น ProductDetailInfo ที่รับค่าพร้อมแสดงทั้งชุด (รวม <code>originalPrice</code> ที่คำนวณด้วย <code>calculateOriginalPrice</code> ระดับหน้าเพจ) ปิดท้ายด้วย ReviewSection — ตัวไฟล์หน้าเพจแทบไม่มี markup ของตัวเอง มีแต่การส่งข้อมูลเข้าคอมโพเนนต์ที่เราสร้างมาทั้งบท</li>
+        </ul>
+
+        <blockquote>🚨 <strong>ไฟล์นี้ยังไม่ใช่เวอร์ชันสุดท้าย</strong> — และนี่คือความตั้งใจ ถ้าคุณเปิดเทียบกับ repo ต้นฉบับตอนนี้จะเห็นส่วนต่างอยู่สามจุด ซึ่งทั้งหมดเกี่ยวกับตะกร้าสินค้าที่ยังไม่มีในแอปเรา: (1) ต้นฉบับ import <code>AddToCartModalContent</code> กับ <code>useCart</code> จาก feature cart — ของเรายังไม่มี feature นั้น (2) ต้นฉบับมี modal state (<code>isModalOpen</code> + ฟังก์ชันเปิด/ปิด) และ JSX <code>&lt;AddToCartModalContent /&gt;</code> ท้ายไฟล์ (3) ต้นฉบับ <code>onAddToCart</code> เรียก <code>addToCart(…)</code> ใส่ของลงตะกร้าจริงแล้วเปิด modal — ของเราเป็น TODO เปล่า ๆ ไปก่อน ที่เหลือทุกบรรทัดตรงกับต้นฉบับเป๊ะแล้ว เราจะสร้าง cart store ในบทเรียน 19 แล้วกลับมาเติมสามจุดนี้ในบทเรียน 20 — ตอนนั้นปุ่ม Add To Cart จะมีชีวิตขึ้นมาจริง ๆ</blockquote>
+
+        <h2>Checkpoint</h2>
+
+        <blockquote>💡 รัน <code>npm run dev</code> แล้วคลิกการ์ดสินค้าจากหน้า Home หรือ Category (หรือเปิด <code>http://localhost:5173/products/3</code> ตรง ๆ) — ระหว่างโหลดเห็น ClipLoader แวบหนึ่ง แล้วหน้าเต็มต้องปรากฏ: แถบชื่อสินค้าด้านบน, แกลเลอรีรูปฝั่งซ้ายที่คลิก thumbnail แล้วรูปใหญ่สลับตาม (มี skeleton คั่นระหว่างรอ และ thumbnail ที่เลือกมีกรอบดำ), ข้อมูลราคา/ส่วนลด/สต็อกฝั่งขวา และ section Reviews ด้านล่างที่กราฟแท่งมีสีเขียว/ส้ม/แดงตามระดับดาว พร้อมการ์ดรีวิวที่วันที่อ่านง่ายแบบ <code>30 April 2025</code> ลองเปิด <code>/products/999999</code> ด้วย — ต้องเห็นข้อความ error ไม่ใช่จอขาวหรือ spinner ค้าง ส่วนปุ่ม Add To Cart กดแล้ว<em>ไม่มีอะไรเกิดขึ้น</em> — ถูกต้องแล้ว รอบทเรียน 20</blockquote>
+
+        <p>Chapter สร้างหน้าเพจจบบริบูรณ์ — ผู้ใช้ไล่ดูสินค้าได้ตั้งแต่หน้าแรกยันหน้ารายละเอียดครบทุกเส้นทางแล้ว เหลืออย่างเดียวที่ยังซื้ออะไรไม่ได้: ตะกร้าสินค้า บทถัดไปเราจะเริ่ม chapter ใหม่ด้วยการสร้าง cart store ด้วย Context + useReducer + localStorage — client state ตัวจริงตัวแรกของแอป</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="17_category_page.html" rel="prev">ก่อนหน้า: หน้า Category</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="19_cart_store.html" rel="next">ถัดไป: Cart Store</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

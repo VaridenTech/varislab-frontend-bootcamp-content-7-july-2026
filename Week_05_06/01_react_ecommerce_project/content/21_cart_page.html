@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างหน้า Cart เต็มรูปแบบ — ตารางสินค้า ปรับจำนวน ลบสินค้า ยอดรวม empty state และปุ่มไปหน้า Checkout" />
+    <title>สร้างหน้า Cart | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 21 · ตะกร้าสินค้า (Cart)</p>
+          <h1>สร้างหน้า Cart</h1>
+          <p class="lesson-original-title" lang="en">Cart Page</p>
+        </header>
+
+        <p>ตอนนี้ผู้ใช้เพิ่มของเข้าตะกร้าได้ badge นับเลขได้ แต่พอคลิกไอคอนตะกร้าเข้ามาก็เจอหน้า stub ว่างเปล่าที่เราวางไว้ตั้งแต่บทที่ 06 บทนี้เราจะเปลี่ยนมันเป็นหน้า Cart จริง: ตารางรายการสินค้า ปรับจำนวนได้ ลบได้ เห็นยอดรวม มี empty state เวลาตะกร้าว่าง และปุ่ม Checkout พาไปหน้าถัดไปของ flow งานมีสองชิ้น: component <code>CartTable</code> และตัวหน้า <code>Cart.tsx</code></p>
+
+        <h2>CartTable — ตารางรายการสินค้าในตะกร้า</h2>
+
+        <p>สร้าง <code>src/features/cart/components/CartTable/CartTable.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { useCart } from "@/features/cart/useCart";
+
+interface CartTableProps {
+  onRemoveItem: (id: number) =&gt; void;
+  onUpdateQuantity: (id: number, quantity: number) =&gt; void;
+}
+
+const CartTable: React.FC&lt;CartTableProps&gt; = ({
+  onRemoveItem,
+  onUpdateQuantity,
+}) =&gt; {
+  const { cart } = useCart();
+
+  return (
+    &lt;div&gt;
+      &lt;table className="table"&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;Action&lt;/th&gt;
+            &lt;th&gt;Image&lt;/th&gt;
+            &lt;th&gt;Product Name&lt;/th&gt;
+            &lt;th&gt;Price&lt;/th&gt;
+            &lt;th&gt;Quantity&lt;/th&gt;
+            &lt;th&gt;Total&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          {cart.items.map((item) =&gt; (
+            &lt;tr key={item.id}&gt;
+              &lt;td&gt;
+                &lt;button
+                  className="table-actions pointer"
+                  onClick={() =&gt; onRemoveItem(item.id)}
+                &gt;
+                  ×
+                &lt;/button&gt;
+              &lt;/td&gt;
+              &lt;td&gt;
+                &lt;img
+                  src={item.image || "/placeholder.png"}
+                  alt={item.title}
+                  className="table-image"
+                /&gt;
+              &lt;/td&gt;
+              &lt;td&gt;{item.title}&lt;/td&gt;
+              &lt;td&gt;
+                &lt;span className="fw-bold mr-5 fs-18"&gt;
+                  ${item.price.toFixed(2)}
+                &lt;/span&gt;
+                {item.originalPrice &amp;&amp; (
+                  &lt;&gt;
+                    &lt;span className="table-original-price"&gt;
+                      ${item.originalPrice.toFixed(2)}
+                    &lt;/span&gt;
+                    &lt;br /&gt;
+                    &lt;span className="table-discount mt-5 inline-block fw-bold"&gt;
+                      You Save: ${(item.originalPrice - item.price).toFixed(2)}
+                    &lt;/span&gt;
+                  &lt;/&gt;
+                )}
+              &lt;/td&gt;
+              &lt;td&gt;
+                &lt;div className="table-quantity"&gt;
+                  &lt;button
+                    onClick={() =&gt; onUpdateQuantity(item.id, item.quantity - 1)}
+                    disabled={item.quantity &lt;= 1}
+                  &gt;
+                    &amp;lt;
+                  &lt;/button&gt;
+                  &lt;span&gt;{item.quantity}&lt;/span&gt;
+                  &lt;button
+                    onClick={() =&gt; onUpdateQuantity(item.id, item.quantity + 1)}
+                  &gt;
+                    &amp;gt;
+                  &lt;/button&gt;
+                &lt;/div&gt;
+              &lt;/td&gt;
+              &lt;td&gt;${(item.price * item.quantity).toFixed(2)}&lt;/td&gt;
+            &lt;/tr&gt;
+          ))}
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default CartTable;
+</code></pre>
+
+        <p>ไล่ดูการตัดสินใจสำคัญในไฟล์นี้:</p>
+
+        <ul>
+          <li><strong>อ่านเอง แต่ให้พ่อเป็นคนแก้</strong> — CartTable เรียก <code>useCart()</code> เพื่อ<em>อ่าน</em> <code>cart.items</code> มาวาดตารางเองตรง ๆ แต่การ<em>แก้ไข</em> (ลบ, ปรับจำนวน) กลับไม่เรียก store เอง — มันรับ <code>onRemoveItem</code> กับ <code>onUpdateQuantity</code> เป็น props แล้วโยนขึ้นไปให้หน้า Cart ตัดสินใจ การแยกแบบนี้ทำให้ตารางเป็นฝ่ายแสดงผลล้วน ๆ ส่วนคำสั่งแก้ข้อมูลรวมศูนย์อยู่ที่ตัวเพจ ซึ่งอ่านโค้ดตามหา "ใครแก้ตะกร้า" ได้ที่เดียวจบ</li>
+          <li><strong>ปุ่มลบต่อแถว</strong> — เครื่องหมาย × เรียก <code>onRemoveItem(item.id)</code> ส่งแค่ id เพราะ reducer ฝั่งโน้นต้องการแค่นั้นในการ filter แถวทิ้ง</li>
+          <li><strong>ช่อง Price โชว์ส่วนลดเมื่อมีข้อมูล</strong> — จำ <code>originalPrice</code> ที่เราตั้งใจเก็บติดลง CartItem ตั้งแต่บทที่ 19 และคำนวณใส่ตอน Add to Cart ในบทที่ 20 ได้ไหม? มาเก็บดอกตรงนี้: ถ้ามีค่า เราโชว์ราคาเต็ม (ขีดฆ่า) กับยอด "You Save" ได้ทันทีโดยไม่ต้องถาม API สักคำ — ข้อมูลทุกอย่างอยู่ในตะกร้าครบแล้ว</li>
+          <li><strong>ปุ่มปรับจำนวนกับกติกาขั้นต่ำ</strong> — ปุ่มลดจำนวนถูก <code>disabled</code> เมื่อ <code>quantity &lt;= 1</code>: reducer ของเราไม่มีกติกากันจำนวนติดลบ เราเลือกกันที่ UI แทน — จะเอาของออกจากตะกร้าต้องตั้งใจกดปุ่มลบ ไม่ใช่กดลดจนหายไปเองแบบงง ๆ สังเกตด้วยว่าใน JSX เราเขียนปุ่มด้วย <code>&amp;lt;</code> / <code>&amp;gt;</code> (HTML entity) ไม่ใช่พิมพ์ <code>&lt;</code> <code>&gt;</code> ตรง ๆ — เพราะเครื่องหมายน้อยกว่าใน JSX คือการเปิด tag เดี๋ยว parser งงตาย</li>
+          <li><strong>ช่อง Total ต่อแถวเป็นค่าคำนวณ</strong> — <code>price * quantity</code> คิดสดตอน render ไม่เก็บลง state ตามหลักที่ย้ำกันมาตั้งแต่ Week 4: อะไร derive ได้จาก state อย่าเก็บซ้ำ เดี๋ยวมันคลาดเคลื่อนกันเอง</li>
+          <li><strong>รูปมี fallback</strong> — <code>item.image || "/placeholder.png"</code> กันตารางเลย์เอาต์พังถ้าข้อมูลรูปหลุดมาว่าง ๆ</li>
+        </ul>
+
+        <p>แล้ว style ล่ะ? สังเกตว่า component นี้<strong>ไม่มี <code>.module.scss</code> ของตัวเอง</strong> — class ทั้งหมดที่ใช้ (<code>table</code>, <code>table-actions</code>, <code>table-image</code>, <code>table-original-price</code>, <code>table-discount</code>, <code>table-quantity</code>) เป็น global component class ที่เราเขียนรอไว้แล้วใน <code>src/styles/_components.scss</code> ตั้งแต่บทที่ 04 ตารางเลยหน้าตาเรียบร้อยทันทีโดยไม่ต้องเขียน SCSS เพิ่มสักบรรทัด นี่คือเส้นแบ่งการใช้งานของทั้งสองระบบในโปรเจกต์นี้: style ที่เป็น "ภาษากลาง" ของแอปอยู่ใน global stylesheet ส่วน style เฉพาะตัวของ component (แบบ badge ของ CartSummary บทที่แล้ว) ค่อยแยกเป็น module</p>
+
+        <h2>Cart.tsx — เปลี่ยน stub เป็นหน้าจริง</h2>
+
+        <p>เปิด <code>src/pages/Cart/Cart.tsx</code> แล้วแทนที่ stub เดิมทั้งไฟล์ด้วยเวอร์ชันเต็ม:</p>
+
+        <pre><code class="language-typescript">import React, { useMemo } from "react";
+import { useCart } from "@/features/cart/useCart";
+import CategoryBanner from "@/pages/Category/components/CategoryBanner/CategoryBanner";
+import CartTable from "@/features/cart/components/CartTable/CartTable";
+import Button from "@/shared/components/Button/Button";
+import useProductRoute from "@/shared/hooks/useProductRoute";
+
+const Cart: React.FC = () =&gt; {
+  const { cart, removeFromCart, updateQuantity } = useCart();
+  const { goToCheckout } = useProductRoute();
+
+  const calculateTotalPrice = useMemo(() =&gt; {
+    return cart.items
+      .reduce((total, item) =&gt; total + item.price * item.quantity, 0)
+      .toFixed(2);
+  }, [cart.items]);
+
+  const onCheckout = () =&gt; {
+    goToCheckout();
+  };
+
+  if (cart.items.length === 0) {
+    return (
+      &lt;&gt;
+        &lt;CategoryBanner name="Cart" /&gt;
+        &lt;div className="container text-center mt-50 pb-60"&gt;
+          &lt;h2 className="fs-32 fw-bold mb-40"&gt;Your Cart is Empty&lt;/h2&gt;
+          &lt;p className="text-muted fs-24"&gt;
+            You haven't added any items to your cart yet.
+          &lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/&gt;
+    );
+  }
+
+  return (
+    &lt;&gt;
+      &lt;CategoryBanner name="Cart" /&gt;
+      &lt;div className="container pt-30 pb-30"&gt;
+        &lt;CartTable
+          onRemoveItem={removeFromCart}
+          onUpdateQuantity={updateQuantity}
+        /&gt;
+        &lt;div className="table-total pr-20 pt-20 text-right"&gt;
+          &lt;h3&gt;Total Price: ${calculateTotalPrice}&lt;/h3&gt;
+          &lt;div className="inline-block mt-15"&gt;
+            &lt;Button onClick={onCheckout}&gt;Checkout&lt;/Button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/&gt;
+  );
+};
+
+export default Cart;
+</code></pre>
+
+        <p>หน้านี้สั้นอย่างน่าพอใจ — เพราะงานหนักถูกทำไว้หมดแล้วในบทก่อน ๆ เหลือแค่การประกอบ:</p>
+
+        <ul>
+          <li><strong>ดึงของจาก store สามชิ้น</strong> — <code>cart</code> ไว้อ่าน, <code>removeFromCart</code> กับ <code>updateQuantity</code> ไว้แก้ แล้วดูบรรทัดที่ส่งเข้า CartTable: <code>onRemoveItem={removeFromCart}</code> — action จาก store เสียบเข้า prop ได้ตรง ๆ เพราะ signature ตรงกันเป๊ะ (<code>(id: number) =&gt; void</code>) ไม่ต้องมี wrapper function ให้เสียเปล่า นี่ไม่ใช่ความบังเอิญ: เราออกแบบ <code>CartContextProps</code> ในบทที่ 19 โดยคิดถึงคนใช้แบบนี้อยู่แล้ว</li>
+          <li><strong>ยอดรวมเป็นค่า derive</strong> — <code>calculateTotalPrice</code> ใช้ <code>useMemo</code> reduce ราคาคูณจำนวนของทุกแถว แล้ว <code>.toFixed(2)</code> ให้เป็น string ทศนิยมสองตำแหน่งพร้อมแสดง คำนวณใหม่เฉพาะเมื่อ <code>cart.items</code> เปลี่ยน — สูตรเดียวกับ badge ใน CartSummary แค่เปลี่ยนจากนับจำนวนเป็นรวมราคา</li>
+          <li><strong>Empty state มาก่อน</strong> — เช็ค <code>cart.items.length === 0</code> แล้ว return โครงหน้าตะกร้าว่างไปเลยก่อนถึง JSX หลัก แพตเทิร์น early return แบบเดียวกับที่หน้า Product ใช้กับ loading/error: อ่านจากบนลงล่างเจอเงื่อนไขพิเศษก่อน แล้วเนื้อหลักด้านล่างไม่ต้องห่อ if ซ้อนกันให้รก ที่สำคัญคือเรา<em>ออกแบบ</em>หน้าว่างไว้จริง ๆ (หัวข้อใหญ่ + คำอธิบาย) ไม่ใช่ปล่อยตารางหัวโด่ไม่มีสักแถวให้ผู้ใช้งงว่าเว็บพังหรือเปล่า</li>
+          <li><strong><code>CategoryBanner</code> ถูก reuse ข้าม feature</strong> — component เดิมจากบทที่ 17 รับ <code>name="Cart"</code> กลายเป็นแถบหัวเพจได้เลย ทั้งสองกิ่งของ return ใส่ banner เหมือนกัน หน้าเลยดูเป็นหน้าเดียวกันไม่ว่าตะกร้าจะมีของหรือไม่</li>
+          <li><strong>ปุ่ม Checkout ต่อ router ผ่าน hook เดิม</strong> — <code>goToCheckout</code> จาก <code>useProductRoute</code> (บทที่ 07) พาไป <code>/checkout</code> ซึ่งตอนนี้ยังเป็น stub — มันคือพระเอกของ chapter หน้าทั้ง chapter ส่วนแถบยอดรวมใช้ class <code>table-total</code> จาก <code>_components.scss</code> จัดชิดขวาให้เข้าชุดกับตาราง</li>
+        </ul>
+
+        <blockquote>🚨 ถ้าเปิดหน้า <code>/cart</code> แล้วเจอ error "useCart must be used within a CartProvider" แปลว่า <code>providers.tsx</code> ของคุณยังไม่ได้เพิ่ม <code>CartProvider</code> จากบทที่ 19 — กลับไปเช็คก่อน อย่าแก้ด้วยการลบ throw ทิ้ง ยามคนนี้เพิ่งทำหน้าที่ของมันพอดี</blockquote>
+
+        <blockquote>💡 <strong>Checkpoint</strong> — ตะกร้าต้องจัดการได้ครบวงจรแล้ว: เพิ่มสินค้า 2–3 ตัวจากหน้า Product แล้วคลิกไอคอนตะกร้า → เห็นตารางครบทุกแถว พร้อมรูป ราคา และ "You Save" สำหรับตัวที่มีส่วนลด → กดปุ่ม &gt; เพิ่มจำนวน แล้วดู Total ท้ายแถว, Total Price ล่างขวา และ badge บน Header ขยับ<em>พร้อมกันทั้งสามจุด</em> (ทุกคนอ่านจาก store เดียวกัน) → กด &lt; ลดจนเหลือ 1 แล้วปุ่มต้อง disabled → กด × ลบทีละแถวจนหมด → เจอ "Your Cart is Empty" และ badge หายไป → เพิ่มของใหม่แล้ว refresh → ทุกอย่างยังอยู่ครบจาก localStorage → กด Checkout → ไปโผล่หน้า stub <code>/checkout</code> ซึ่งเราจะเริ่มสร้างกันบทหน้า เริ่มจาก schema ของฟอร์มด้วย zod</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="20_add_to_cart.html" rel="prev">ก่อนหน้า: Add to Cart</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="22_checkout_schema.html" rel="next">ถัดไป: Zod Schema</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

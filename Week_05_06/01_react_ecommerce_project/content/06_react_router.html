@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ติดตั้ง react-router 8 แบบ data mode สร้าง layout route, errorElement และหน้า stub ทั้งหกหน้าของเว็บ E-commerce" />
+    <title>ตั้งค่า routing ด้วย react-router 8 | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 06 · โครงแอปและเราเตอร์ (App Shell &amp; Routing)</p>
+          <h1>ตั้งค่า routing ด้วย react-router 8 (data mode)</h1>
+          <p class="lesson-original-title" lang="en">react-router 8</p>
+        </header>
+
+        <p>ตอนนี้โปรเจกต์ของเรามีโครงสร้างโฟลเดอร์ครบแล้ว แต่ยังแสดงได้แค่หน้าเดียว เว็บ E-commerce ของเรามีถึง 6 หน้า — Home, Category, Product detail, Cart, Checkout และ Order Success — ผู้ใช้ต้องเดินไปมาระหว่างหน้าเหล่านี้ได้ด้วย URL ที่กด back/forward และ bookmark ได้จริง นั่นคือหน้าที่ของ <strong>router</strong> และในบทนี้เราจะวางมันให้เสร็จทั้งระบบ</p>
+
+        <h2>ทำไมต้อง react-router</h2>
+
+        <p>ใน Week 4 คุณใช้ TanStack Router มาแล้ว ดังนั้นแนวคิดทั้งหมดของบทนี้คุณรู้จักอยู่แล้ว: แอปมี route หลายเส้น แต่ละเส้นจับคู่ URL กับ component, มี layout ที่ครอบทุกหน้า และมี <code>&lt;Outlet /&gt;</code> เป็นช่องว่างที่หน้าปัจจุบันจะถูกเสียบเข้าไป คราวนี้เราจะใช้ <strong>react-router</strong> ซึ่งเป็น router ที่แพร่หลายที่สุดในโลก React — โอกาสสูงมากที่โปรเจกต์แรกในงานจริงของคุณจะใช้ตัวนี้ การได้ลองทั้งสองตัวจะทำให้คุณเห็นชัดว่าสิ่งที่คุณเข้าใจคือ<em>แนวคิดของ routing</em> ไม่ใช่แค่ API ของ library ใดตัวหนึ่ง</p>
+
+        <p>เทียบของที่คุณรู้จักจาก TanStack Router กับของที่กำลังจะเจอ:</p>
+
+        <ul>
+          <li><code>createRouter</code> + route tree → ที่นี่คือ <code>createBrowserRouter</code> + array ของ <code>RouteObject</code></li>
+          <li>root route ที่ครอบทุกหน้า → ที่นี่คือ <strong>layout route</strong> (route ที่มี <code>element</code> แต่ไม่มี <code>path</code> และมี <code>children</code>)</li>
+          <li><code>&lt;Outlet /&gt;</code> → ชื่อเดียวกัน หน้าที่เดียวกันเป๊ะ</li>
+          <li><code>&lt;RouterProvider router={router} /&gt;</code> → ชื่อเดียวกันอีกเช่นกัน</li>
+          <li>dynamic segment <code>$postId</code> → ที่นี่เขียนเป็น <code>:id</code></li>
+        </ul>
+
+        <p>react-router รุ่นปัจจุบันมีโหมดการใช้งานหลายแบบ เราจะใช้ <strong>data mode</strong> คือสร้าง router ด้วย <code>createBrowserRouter</code> จาก object ที่บรรยาย route ทั้งหมด แทนการเขียน <code>&lt;Routes&gt;&lt;Route&gt;</code> ซ้อนกันใน JSX แบบรุ่นเก่า ข้อดีคือ route กลายเป็น<em>ข้อมูล</em>ที่อยู่ในไฟล์เดียว อ่านผังทั้งเว็บได้ในสิบวินาที และปลดล็อกความสามารถระดับ router เช่น <code>errorElement</code> ที่เราจะใช้ในบทนี้</p>
+
+        <h2>ติดตั้ง react-router</h2>
+
+        <pre><code class="language-bash">npm i react-router</code></pre>
+
+        <blockquote>🚨 สังเกตชื่อ package ให้ดี: <strong><code>react-router</code> เฉย ๆ ไม่ใช่ <code>react-router-dom</code></strong> — ตั้งแต่เวอร์ชัน 7 เป็นต้นมาทุกอย่างถูกรวมเข้า package เดียวแล้ว บทความและคำตอบเก่า ๆ ใน Stack Overflow จำนวนมากยังสอนให้ลง <code>react-router-dom</code> อยู่ ถ้าเผลอทำตามคุณจะได้ package ซ้ำซ้อนมาโดยไม่จำเป็น และอีกเรื่อง: react-router 8 กำหนด Node ขั้นต่ำไว้ที่ <strong>22.22</strong> ถ้าคำสั่งติดตั้งฟ้อง engine error ให้กลับไปเช็ค <code>node -v</code> แล้ว <code>nvm use</code> ตามที่ตั้งค่าไว้ในบทที่ 02</blockquote>
+
+        <h2>ย้าย App.tsx เข้าบ้านใหม่</h2>
+
+        <p>ตามสถาปัตยกรรมที่วางไว้ในบทที่แล้ว ของที่เป็น "ระดับแอป" ทั้งหมด — ตัวแอป, router, layout, providers — ต้องอยู่ใน <code>src/app/</code> แต่ตอนนี้ <code>App.tsx</code> ของเรายังนอนอยู่ที่ <code>src/App.tsx</code> จากตอน scaffold ย้ายมันเข้าที่กันก่อน:</p>
+
+        <pre><code class="language-bash">mv src/App.tsx src/app/App.tsx</code></pre>
+
+        <p>พอย้ายแล้ว import ใน <code>main.tsx</code> ก็พังทันที (TypeScript ฟ้องให้เห็นเลยว่าการย้ายไฟล์ไม่ใช่เรื่องเงียบ ๆ) — แก้ path ให้ชี้ตำแหน่งใหม่ ไฟล์ <code>src/main.tsx</code> ณ จุดนี้ทั้งไฟล์เป็นแบบนี้:</p>
+
+        <pre><code class="language-typescript">import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./styles/main.scss";
+import App from "./app/App";
+
+createRoot(document.getElementById("root")!).render(
+  &lt;StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/StrictMode&gt;,
+);
+</code></pre>
+
+        <p>ไฟล์นี้จะนิ่งอยู่แบบนี้ไปอีกนาน — จะมีของมาเพิ่มอีกครั้งเดียวคือบรรทัด import CSS ของ react-loading-skeleton ในบทที่ 15</p>
+
+        <h2>สร้างหน้า stub ทั้งหกหน้า</h2>
+
+        <p>Router ต้องรู้ว่าแต่ละ URL จะแสดง component ตัวไหน แต่หน้าจริง ๆ ของเรายังไม่มีสักหน้า เราจะใช้เทคนิคที่ทีมพัฒนาจริงใช้กันตลอด: สร้าง <strong>stub</strong> — component เปล่า ๆ ที่มีแค่ชื่อหน้า — เพื่อให้โครงของระบบ routing ทำงานครบวงจรได้ก่อน แล้วค่อยกลับมาเติมเนื้อแต่ละหน้าในบทของมันเอง วิธีนี้ทำให้เราทดสอบ router ได้ทันทีโดยไม่ต้องรอหน้าไหนเสร็จ</p>
+
+        <p>สร้างโฟลเดอร์ของแต่ละหน้าใน <code>src/pages/</code> (ถ้าบางโฟลเดอร์มีอยู่แล้วจากบทที่ 05 คำสั่ง <code>-p</code> จะข้ามให้เอง):</p>
+
+        <pre><code class="language-bash">mkdir -p src/pages/Home src/pages/Category src/pages/Product src/pages/Cart src/pages/Checkout src/pages/Order</code></pre>
+
+        <p>แล้วสร้างไฟล์ทั้งหกตามนี้ — <code>src/pages/Home/Home.tsx</code> (หน้านี้จะกลายเป็นหน้าจริงในบทที่ 16):</p>
+
+        <pre><code class="language-typescript">export default function Home() {
+  return &lt;h1&gt;Home&lt;/h1&gt;;
+}
+</code></pre>
+
+        <p><code>src/pages/Category/Category.tsx</code> (เป็นหน้าจริงบทที่ 17):</p>
+
+        <pre><code class="language-typescript">export default function Category() {
+  return &lt;h1&gt;Category&lt;/h1&gt;;
+}
+</code></pre>
+
+        <p><code>src/pages/Product/Product.tsx</code> (เป็นหน้าจริงบทที่ 18):</p>
+
+        <pre><code class="language-typescript">export default function Product() {
+  return &lt;h1&gt;Product&lt;/h1&gt;;
+}
+</code></pre>
+
+        <p><code>src/pages/Cart/Cart.tsx</code> (เป็นหน้าจริงบทที่ 21):</p>
+
+        <pre><code class="language-typescript">export default function Cart() {
+  return &lt;h1&gt;Cart&lt;/h1&gt;;
+}
+</code></pre>
+
+        <p><code>src/pages/Checkout/Checkout.tsx</code> (เป็นหน้าจริงบทที่ 25):</p>
+
+        <pre><code class="language-typescript">export default function Checkout() {
+  return &lt;h1&gt;Checkout&lt;/h1&gt;;
+}
+</code></pre>
+
+        <p>และ <code>src/pages/Order/OrderSuccess.tsx</code> (เป็นหน้าจริงบทที่ 25 เช่นกัน):</p>
+
+        <pre><code class="language-typescript">export default function OrderSuccess() {
+  return &lt;h1&gt;Order Success&lt;/h1&gt;;
+}
+</code></pre>
+
+        <p>สังเกตว่าแต่ละหน้าได้โฟลเดอร์ของตัวเอง (<code>src/pages/Home/Home.tsx</code> ไม่ใช่ <code>src/pages/Home.tsx</code>) — เพราะอีกไม่นานแต่ละหน้าจะมีไฟล์ <code>.module.scss</code>, เทสต์ และ components ย่อยของตัวเองมาอยู่ข้าง ๆ ตามหลัก colocation ที่คุยกันในบทที่แล้ว</p>
+
+        <h2>ErrorMessage: คอมโพเนนต์แสดงข้อผิดพลาด</h2>
+
+        <p>ก่อนสร้าง router เราต้องเตรียมของอีกสองชิ้น ชิ้นแรกคือ component กลางสำหรับแสดงข้อความ error ซึ่งไม่ใช่ของเฉพาะระบบ routing — หน้า Home, Category และ Product ก็จะใช้มันเวลาโหลดข้อมูลไม่สำเร็จ มันจึงควรอยู่ใน <code>src/shared/components/</code> สร้างไฟล์ <code>src/shared/components/ErrorMessage/ErrorMessage.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+
+interface ErrorMessageProps {
+  message?: string;
+}
+
+const ErrorMessage: React.FC&lt;ErrorMessageProps&gt; = ({
+  message = "Something went wrong. Please try again.",
+}) =&gt; {
+  return (
+    &lt;div role="alert" className="text-center pt-30 pb-30"&gt;
+      &lt;p className="fs-18 text-muted"&gt;{message}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default ErrorMessage;
+</code></pre>
+
+        <p>สามจุดที่น่าสนใจในไฟล์สั้น ๆ นี้:</p>
+
+        <ul>
+          <li><code>message?</code> เป็น optional prop พร้อม default value — ที่ไหนอยากใช้ข้อความมาตรฐานก็เขียนแค่ <code>&lt;ErrorMessage /&gt;</code> ได้เลย ที่ไหนมีข้อความเฉพาะก็ส่งมา</li>
+          <li><code>role="alert"</code> บอก screen reader ว่านี่คือข้อความสำคัญที่ควรอ่านให้ผู้ใช้ฟังทันทีที่ปรากฏ — accessibility ไม่ใช่ของแถม แต่เป็นส่วนหนึ่งของการ "ทำให้ถูกวิธี"</li>
+          <li>class ทั้งหมด (<code>text-center</code>, <code>pt-30</code>, <code>fs-18</code>, <code>text-muted</code>) คือ utility classes ที่เราเขียนไว้เองในบทที่ 04 — component เล็กแบบนี้ไม่จำเป็นต้องมี <code>.module.scss</code> ของตัวเอง</li>
+        </ul>
+
+        <h2>RouteErrorFallback และ errorElement</h2>
+
+        <p>ชิ้นที่สองคือหน้าที่จะแสดงเมื่อ<em>ระบบ routing เองมีปัญหา</em> เช่น ผู้ใช้พิมพ์ URL ที่ไม่มีอยู่จริง หรือ component ของหน้าไหนสักหน้า throw error ระหว่าง render ถ้าไม่มีตัวรับ ผู้ใช้จะเจอหน้าขาวเปล่าหรือหน้า error ดิบ ๆ ของ react-router ซึ่งทั้งสองแบบไม่ใช่สิ่งที่เว็บจริงควรปล่อยให้เกิด สร้าง <code>src/app/RouteErrorFallback.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import { isRouteErrorResponse, useRouteError } from "react-router";
+import ErrorMessage from "@/shared/components/ErrorMessage/ErrorMessage";
+
+export default function RouteErrorFallback() {
+  const error = useRouteError();
+  const message = isRouteErrorResponse(error)
+    ? `${error.status} ${error.statusText}`
+    : "Something went wrong. Please reload the page.";
+
+  return (
+    &lt;div className="container pt-60 pb-60"&gt;
+      &lt;ErrorMessage message={message} /&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <p>หลักการทำงาน: เดี๋ยวเราจะผูก component นี้เข้ากับ router ผ่าน property ชื่อ <code>errorElement</code> เมื่อเกิด error ที่ route ไหนก็ตาม react-router จะ render component นี้แทนหน้าปกติ แล้วภายใน component เราเรียก hook <code>useRouteError()</code> เพื่อดึงตัว error ออกมาดู</p>
+
+        <p>แต่ error มีสองพันธุ์: ถ้าเป็น error ที่ router สร้างเอง (เช่น 404 จาก URL ที่ไม่ match route ไหนเลย) มันจะมีรูปร่างมาตรฐานที่มี <code>status</code> และ <code>statusText</code> — ฟังก์ชัน <code>isRouteErrorResponse()</code> เป็น <strong>type guard</strong> สำหรับเช็คกรณีนี้ พอเช็คผ่าน TypeScript ก็ยอมให้เราอ่าน <code>error.status</code> ได้อย่างปลอดภัย ส่วน error พันธุ์อื่น (โค้ดเรา throw เอง) เราไม่รู้รูปร่างของมัน จึงแสดงข้อความกลาง ๆ แทน — สังเกตว่าเราไม่เอา error ดิบไปแปะหน้าจอ เพราะข้อความ error ภายในอาจมีรายละเอียดที่ผู้ใช้ไม่ควรเห็น</p>
+
+        <h2>MainLayout: โครงที่ทุกหน้าใช้ร่วมกัน</h2>
+
+        <p>ทั้ง 6 หน้าของเราจะมีโครงเดียวกัน: Header อยู่บนสุด เนื้อหาของหน้าอยู่ตรงกลาง Footer อยู่ล่างสุด เราไม่เขียนโครงนี้ซ้ำในทุกหน้า แต่เขียนครั้งเดียวเป็น <strong>layout component</strong> แล้วให้ router เสียบหน้าปัจจุบันเข้ามาตรงกลางผ่าน <code>&lt;Outlet /&gt;</code> — แบบเดียวกับ root route ของ TanStack Router ที่คุณใช้ใน Week 4 ไม่มีผิด</p>
+
+        <p>สร้าง <code>src/app/layouts/MainLayout/MainLayout.module.scss</code>:</p>
+
+        <pre><code class="language-scss">.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex-grow: 1;
+}
+</code></pre>
+
+        <p>สองกฎนี้คือสูตรคลาสสิกชื่อ "sticky footer": ตัว container เป็น flex column ที่สูงอย่างน้อยเต็มจอ (<code>min-height: 100vh</code>) และส่วนเนื้อหากลางถูกสั่งให้ <code>flex-grow: 1</code> คือยืดกินพื้นที่ที่เหลือทั้งหมด ผลคือหน้าที่เนื้อหาสั้น ๆ Footer ก็ยังถูกดันไปอยู่ขอบล่างของจอเสมอ ไม่ลอยขึ้นมากลางหน้า</p>
+
+        <p>แล้วสร้าง <code>src/app/layouts/MainLayout/MainLayout.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { Outlet } from "react-router";
+import styles from "./MainLayout.module.scss";
+
+const MainLayout: React.FC = () =&gt; {
+  return (
+    &lt;div className={styles.container}&gt;
+      &lt;main className={styles.main}&gt;
+        &lt;Outlet /&gt;
+      &lt;/main&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default MainLayout;
+</code></pre>
+
+        <blockquote>💡 นี่คือ MainLayout <strong>เวอร์ชันแรก</strong> — ยังไม่มี Header กับ Footer เพราะเรายังไม่ได้สร้างมัน บทหน้า (บทที่ 07) เราจะสร้างทั้งสองตัวแล้วกลับมาเติมใน layout นี้ ตอนนี้ขอแค่โครง <code>&lt;Outlet /&gt;</code> ทำงานได้ก่อน</blockquote>
+
+        <p>นี่เป็นไฟล์แรกของโปรเจกต์ที่ใช้ <strong>SCSS Module</strong> จริง ๆ สังเกต pattern ให้ดีเพราะเราจะใช้ซ้ำตลอดทั้งคอร์ส: ตั้งชื่อไฟล์ลงท้าย <code>.module.scss</code>, import เข้ามาเป็น object ชื่อ <code>styles</code>, แล้วอ้าง class ผ่าน <code>styles.container</code> — ตอน build ชื่อ class จะถูกแปลงเป็นชื่อไม่ซ้ำใคร (เช่น <code>_container_x7f2k</code>) ดังนั้นต่อให้ไฟล์อื่นมี class ชื่อ <code>.container</code> เหมือนกันก็ไม่มีทางชนกัน</p>
+
+        <h2>ประกอบทุกอย่างใน router.tsx</h2>
+
+        <p>ของครบแล้ว — ได้เวลาประกอบร่าง สร้าง <code>src/app/router.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import { createBrowserRouter, RouteObject } from "react-router";
+import RouteErrorFallback from "./RouteErrorFallback";
+import MainLayout from "@/app/layouts/MainLayout/MainLayout";
+import Home from "@/pages/Home/Home";
+import Category from "@/pages/Category/Category";
+import Product from "@/pages/Product/Product";
+import Cart from "@/pages/Cart/Cart";
+import Checkout from "@/pages/Checkout/Checkout";
+import OrderSuccess from "@/pages/Order/OrderSuccess";
+
+export const routes: RouteObject[] = [
+  {
+    element: &lt;MainLayout /&gt;,
+    errorElement: &lt;RouteErrorFallback /&gt;,
+    children: [
+      { path: "/", element: &lt;Home /&gt; },
+      { path: "/categories", element: &lt;Category /&gt; },
+      { path: "/products/:id", element: &lt;Product /&gt; },
+      { path: "/cart", element: &lt;Cart /&gt; },
+      { path: "/checkout", element: &lt;Checkout /&gt; },
+      { path: "/order/success", element: &lt;OrderSuccess /&gt; },
+    ],
+  },
+];
+
+export const router = createBrowserRouter(routes);
+</code></pre>
+
+        <p>ไฟล์นี้คือแผนที่ทั้งเว็บของเรา ไล่ดูทีละส่วน:</p>
+
+        <ul>
+          <li><strong><code>RouteObject[]</code></strong> — เราประกาศ type ให้ array ชัด ๆ เพื่อให้ TypeScript ตรวจทุก route ให้: สะกด property ผิด ใส่ element เป็นอย่างอื่นที่ไม่ใช่ JSX หรือลืม path ก็โดนเส้นแดงทันที</li>
+          <li><strong>Layout route</strong> — route ตัวนอกสุดมี <code>element</code> เป็น <code>&lt;MainLayout /&gt;</code> แต่<em>ไม่มี <code>path</code></em> แปลว่ามันไม่จับคู่กับ URL ไหนเป็นพิเศษ แต่ครอบทุก route ที่อยู่ใน <code>children</code> — ทุกหน้าจะถูก render แทนที่ <code>&lt;Outlet /&gt;</code> ข้างใน MainLayout เสมอ</li>
+          <li><strong><code>errorElement</code></strong> — วางไว้ที่ route นอกสุด error จากทุกหน้าจึงลอยขึ้นมาถึงตัวนี้ รวมถึงกรณี URL ไม่ match route ไหนเลย (ได้ 404) ด้วย</li>
+          <li><strong><code>/products/:id</code></strong> — <code>:id</code> คือ dynamic segment: <code>/products/1</code>, <code>/products/42</code> หรือ <code>/products/อะไรก็ตาม</code> จะเข้า route นี้ทั้งหมด โดยค่าที่อยู่ตรงตำแหน่งนั้นจะถูกเก็บเป็น param ชื่อ <code>id</code> ซึ่งหน้า Product จะอ่านผ่าน hook <code>useParams()</code> ในบทที่ 18 (ฝั่ง TanStack Router คุณเคยเขียนสิ่งเดียวกันนี้ว่า <code>$id</code>)</li>
+          <li><strong>ทำไม export <code>routes</code> แยกจาก <code>router</code></strong> — ตัวแอปจริงใช้ <code>router</code> ที่สร้างจาก <code>createBrowserRouter</code> (ผูกกับ History API ของเบราว์เซอร์) แต่ตอนเขียนเทสต์ในบทที่ 26 เราจะเอา array <code>routes</code> ตัวเดียวกันนี้ไปสร้าง router แบบ in-memory ด้วย <code>createMemoryRouter</code> แทน — ประกาศผังเว็บครั้งเดียว ใช้ได้ทั้งแอปจริงและเทสต์</li>
+        </ul>
+
+        <h2>App.tsx เวอร์ชันแรก</h2>
+
+        <p>สุดท้าย เปิด <code>src/app/App.tsx</code> แล้วแทนที่ของเดิมทั้งไฟล์ด้วยหน้าที่เดียวของมันตอนนี้: ส่ง router เข้าไปให้ React render</p>
+
+        <pre><code class="language-typescript">import { RouterProvider } from "react-router/dom";
+import { router } from "./router";
+
+function App() {
+  return &lt;RouterProvider router={router} /&gt;;
+}
+
+export default App;
+</code></pre>
+
+        <p>จุดที่มักสะดุด: <code>RouterProvider</code> ถูก import จาก <strong><code>react-router/dom</code></strong> ไม่ใช่ <code>react-router</code> ตรง ๆ — subpath <code>/dom</code> คือ entry สำหรับแอปที่รันบนเบราว์เซอร์ (ตัวมันใช้ความสามารถของ react-dom ในการอัปเดตหน้าจอให้ทันจังหวะ) ส่วน package หลัก <code>react-router</code> เก็บของที่ใช้ได้ทุกสภาพแวดล้อมอย่าง <code>createBrowserRouter</code>, <code>Outlet</code> และ hooks ต่าง ๆ</p>
+
+        <p>และเหมือน MainLayout — นี่คือ App.tsx <strong>เวอร์ชันแรก</strong>: ในบทที่ 08 เราจะสร้าง <code>AppProviders</code> มาครอบ <code>RouterProvider</code> อีกชั้นเพื่อเปิดใช้ TanStack Query ทั่วทั้งแอป</p>
+
+        <h2>Checkpoint</h2>
+
+        <p>รัน <code>npm run dev</code> แล้วไล่ทดสอบให้ครบ:</p>
+
+        <blockquote>💡 เปิดเบราว์เซอร์แล้วลองเข้าทีละ URL: <code>/</code> ต้องเห็นคำว่า Home, <code>/categories</code> เห็น Category, <code>/products/1</code> เห็น Product, <code>/cart</code> เห็น Cart, <code>/checkout</code> เห็น Checkout และ <code>/order/success</code> เห็น Order Success — ครบทั้งหกแปลว่า router ต่อติดทุกเส้น จากนั้นลองพิมพ์ URL มั่ว ๆ เช่น <code>/banana</code> ต้องเห็นข้อความ <code>404 Not Found</code> จาก RouteErrorFallback ไม่ใช่หน้าขาวเปล่า ถ้าจุดไหนไม่ตรงตามนี้ อย่าเพิ่งไปต่อ — เช็คว่า path ใน <code>router.tsx</code> สะกดตรงกับที่พิมพ์ และทุกหน้า stub ถูก <code>export default</code> ครบ</blockquote>
+
+        <p>โครงกระดูกของเว็บยืนได้แล้ว แต่ทุกหน้ายังโล่ง ๆ ไม่มีหัวไม่มีท้าย บทหน้าเราจะเติม Header และ Footer ให้มันดูเป็นเว็บจริงเสียที</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="05_architecture.html" rel="prev">ก่อนหน้า: สถาปัตยกรรม Feature-based</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="07_header_footer.html" rel="next">ถัดไป: Header และ Footer</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

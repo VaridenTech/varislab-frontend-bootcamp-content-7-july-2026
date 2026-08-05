@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ตั้งค่า ESLint แบบ flat config, Prettier และ path alias @/ ให้โปรเจกต์ E-commerce พร้อม npm scripts สำหรับ lint, format และ typecheck" />
+    <title>ESLint, Prettier และ Path Alias | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 03 · ติดตั้งโปรเจกต์ (Project Setup)</p>
+          <h1>ESLint, Prettier และ Path Alias</h1>
+          <p class="lesson-original-title" lang="en">Tooling</p>
+        </header>
+
+        <p>ก่อนเขียนโค้ดจริงสักบรรทัด เราจะติดอาวุธคุณภาพโค้ดให้ครบมือก่อน: <strong>ESLint</strong> จับบั๊กเชิงตรรกะและบังคับกติกาของ React, <strong>Prettier</strong> จัดรูปแบบโค้ดให้เหมือนกันทั้งโปรเจกต์โดยไม่ต้องเถียงกันเรื่อง style และ <strong>path alias</strong> ที่ทำให้ import อ่านง่ายไม่ว่าไฟล์จะอยู่ลึกแค่ไหน ทั้งหมดนี้ทำ<em>ตอนนี้</em>เพราะเครื่องมือพวกนี้มีค่าที่สุดเมื่อทำงานตั้งแต่ commit แรก — ติดตั้งทีหลังเมื่อโค้ดมีเป็นพันบรรทัดแล้ว คุณจะเจอ warning ท่วมจอจนอยากปิดมันทิ้ง</p>
+
+        <h2>ติดตั้งแพ็กเกจ</h2>
+
+        <p>รันคำสั่งเดียวยาว ๆ นี้ (template ของ Vite ให้บางตัวมาแล้ว การรันซ้ำไม่เสียหาย — npm จะเช็กและติดตั้งเฉพาะที่ขาด):</p>
+
+        <pre><code class="language-bash">npm i -D @eslint/js globals typescript-eslint eslint eslint-plugin-react-hooks eslint-plugin-react-refresh eslint-plugin-import-x eslint-config-prettier prettier</code></pre>
+
+        <p>ทุกตัวติดตั้งด้วย <code>-D</code> (devDependencies) เพราะเป็นเครื่องมือตอนพัฒนา ไม่ได้ถูก bundle ไปกับแอป ไล่ดูทีละตัว:</p>
+
+        <ul>
+          <li><code>eslint</code>, <code>@eslint/js</code> — ตัว linter หลัก และชุดกฎมาตรฐานของ JavaScript</li>
+          <li><code>typescript-eslint</code> — สอน ESLint ให้อ่าน TypeScript ออก พร้อมชุดกฎเฉพาะ TS</li>
+          <li><code>globals</code> — รายชื่อตัวแปร global ของแต่ละสภาพแวดล้อม (เช่น <code>window</code>, <code>document</code> ของเบราว์เซอร์) เพื่อไม่ให้ ESLint ฟ้องว่าเป็นตัวแปรที่ไม่รู้จัก</li>
+          <li><code>eslint-plugin-react-hooks</code> — บังคับ Rules of Hooks ที่เราท่องกันมาตั้งแต่ Week 4</li>
+          <li><code>eslint-plugin-react-refresh</code> — คุ้มครองให้ hot reload (HMR) ทำงานได้เต็มประสิทธิภาพ</li>
+          <li><code>eslint-plugin-import-x</code> — จัดระเบียบลำดับการ import</li>
+          <li><code>prettier</code>, <code>eslint-config-prettier</code> — ตัวจัดรูปแบบโค้ด และตัวเชื่อมที่ทำให้ ESLint กับ Prettier ไม่ตีกัน</li>
+        </ul>
+
+        <h2>เขียน eslint.config.js ของเราเอง</h2>
+
+        <p>ESLint ยุคใหม่ใช้ระบบตั้งค่าที่เรียกว่า <strong>flat config</strong>: ไฟล์ JavaScript ไฟล์เดียวชื่อ <code>eslint.config.js</code> ที่ export array ของ config object — อ่านจากบนลงล่าง ตัวหลังทับตัวหน้า จบในไฟล์เดียว (ต่างจากระบบเก่าที่มี <code>.eslintrc</code> หลายรูปแบบซ้อนกันหลายชั้นจนตามหาที่มาของกฎแทบไม่เจอ) template ของ Vite มีไฟล์นี้อยู่แล้ว แต่เราจะ<strong>เขียนทับทั้งไฟล์</strong>ด้วยเวอร์ชันของเราเอง:</p>
+
+        <pre><code class="language-typescript">import js from &quot;@eslint/js&quot;;
+import globals from &quot;globals&quot;;
+import reactHooks from &quot;eslint-plugin-react-hooks&quot;;
+import reactRefresh from &quot;eslint-plugin-react-refresh&quot;;
+import tseslint from &quot;typescript-eslint&quot;;
+import importX from &quot;eslint-plugin-import-x&quot;;
+import prettierConfig from &quot;eslint-config-prettier&quot;;
+
+export default tseslint.config(
+  { ignores: [&quot;dist&quot;, &quot;coverage&quot;] },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: [&quot;**/*.{ts,tsx}&quot;],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.browser,
+    },
+    plugins: {
+      &quot;react-hooks&quot;: reactHooks,
+      &quot;react-refresh&quot;: reactRefresh,
+      &quot;import-x&quot;: importX,
+    },
+    rules: {
+      &quot;react-hooks/rules-of-hooks&quot;: &quot;error&quot;,
+      &quot;react-hooks/exhaustive-deps&quot;: &quot;warn&quot;,
+      &quot;react-refresh/only-export-components&quot;: [
+        &quot;warn&quot;,
+        { allowConstantExport: true },
+      ],
+      &quot;import-x/order&quot;: &quot;error&quot;,
+    },
+  },
+  prettierConfig,
+);</code></pre>
+
+        <p>ไล่ดูการตัดสินใจสำคัญทีละจุด:</p>
+
+        <ul>
+          <li><strong><code>ignores: [&quot;dist&quot;, &quot;coverage&quot;]</code></strong> — ไม่ lint โฟลเดอร์ผลลัพธ์: <code>dist</code> คือไฟล์ build ส่วน <code>coverage</code> คือรายงานความครอบคลุมของเทสต์ (จะโผล่มาในช่วงบทการทดสอบ) ทั้งคู่เป็นโค้ดที่เครื่องสร้าง ไม่ใช่ของที่เราต้องตรวจ</li>
+          <li><strong><code>extends</code></strong> — เริ่มจากชุดกฎ recommended ของ JavaScript และ TypeScript เป็นฐาน แล้วค่อยเติมกฎเฉพาะทางทับลงไป</li>
+          <li><strong><code>files: [&quot;**/*.{ts,tsx}&quot;]</code></strong> — กฎชุดนี้ใช้กับไฟล์ TypeScript ทั้งหมดในโปรเจกต์</li>
+          <li><strong><code>react-hooks/rules-of-hooks: &quot;error&quot;</code></strong> — เรียก hook ใน if หรือ loop เมื่อไหร่ ตกม้าตายทันที นี่คือกฎที่จับบั๊กประเภท "useState คืน state ผิดชิ้น" ก่อนที่คุณจะเสียเวลาครึ่งวันไล่หา ส่วน <code>exhaustive-deps</code> เป็นแค่ warn เพราะบางกรณี (ที่เข้าใจดีแล้วจริง ๆ) เราตั้งใจไม่ใส่ dependency ครบ</li>
+          <li><strong><code>react-refresh/only-export-components</code></strong> — HMR ของ Vite จะ swap component แบบไม่รีเฟรชทั้งหน้าได้ ก็ต่อเมื่อไฟล์นั้น export แต่ component กฎนี้เตือนเมื่อเราแอบ export อย่างอื่นปนไปด้วย (<code>allowConstantExport</code> ผ่อนผันให้ค่าคงที่)</li>
+          <li><strong><code>import-x/order: &quot;error&quot;</code></strong> — บังคับให้เรียง import เป็นกลุ่มตามชนิด: ของ Node ก่อน ตามด้วย external packages แล้วจึงไฟล์ในโปรเจกต์ ทุกไฟล์ทั้งโปรเจกต์จะอ่านหัวไฟล์ได้เป็นจังหวะเดียวกันหมด และกฎนี้แก้ให้อัตโนมัติได้ด้วย <code>eslint --fix</code></li>
+          <li><strong><code>prettierConfig</code> อยู่ท้ายสุด</strong> — ตำแหน่งนี้สำคัญ: มันคือชุด "ปิดสวิตช์" กฎเชิงรูปแบบทั้งหมดของ ESLint (เว้นวรรค, comma, quote ฯลฯ) เพราะงานจัดรูปแบบเป็นหน้าที่ของ Prettier และใน flat config ตัวที่มาทีหลังชนะ — ถ้าเอาไปวางก่อน กฎ format ของชุด recommended จะกลับมามีผลและสองเครื่องมือจะแย่งกันแก้โค้ดคนละทาง</li>
+        </ul>
+
+        <blockquote>💡 ไฟล์นี้ยังไม่ใช่เวอร์ชันสุดท้าย — ในบทที่ 14 เมื่อเราเริ่มใช้ TanStack Query เราจะกลับมาเพิ่ม <code>@tanstack/eslint-plugin-query</code> อีกสองบรรทัด เพื่อให้ ESLint ช่วยจับการใช้ query ผิดท่าด้วย</blockquote>
+
+        <h2>ตั้งค่า Prettier</h2>
+
+        <p>สร้างไฟล์ <code>.prettierrc.json</code> ที่ root ของโปรเจกต์:</p>
+
+        <pre><code class="language-json">{}</code></pre>
+
+        <p>ใช่ครับ object ว่าง — และนั่นคือความตั้งใจ ค่า default ของ Prettier (double quote, semicolon, trailing comma ฯลฯ) คือ style ที่คนส่วนใหญ่ในวงการใช้ตรงกันอยู่แล้ว การไม่ปรับแต่งอะไรเลยคือการประกาศว่า "เราใช้มาตรฐานกลาง จบ ไม่เถียงกันเรื่องนี้อีก" ส่วนตัวไฟล์ต้องมีอยู่แม้จะว่าง เพราะมันคือสัญญาณให้ editor และเครื่องมือต่าง ๆ รู้ว่าโปรเจกต์นี้ใช้ Prettier</p>
+
+        <p>ตามด้วย <code>.prettierignore</code> บอกว่าไฟล์ไหนไม่ต้องจัดรูปแบบ:</p>
+
+        <pre><code class="language-bash">dist
+coverage
+package-lock.json
+.superpowers</code></pre>
+
+        <p><code>dist</code> กับ <code>coverage</code> คือผลลัพธ์ที่เครื่องสร้างเช่นเดิม <code>package-lock.json</code> เป็นไฟล์ที่ npm เขียนเองและยาวหลักหมื่นบรรทัด — อย่าไปยุ่งกับมัน ส่วน <code>.superpowers</code> เป็นโฟลเดอร์เครื่องมือภายในของ repo ต้นฉบับ ใส่ตามไว้ให้ตรงกัน ไม่มีผลข้างเคียงอะไร</p>
+
+        <h2>เพิ่ม npm scripts</h2>
+
+        <p>เครื่องมือจะถูกใช้จริงก็ต่อเมื่อเรียกได้ง่าย แก้ส่วน <code>scripts</code> ใน <code>package.json</code> ให้เป็นแบบนี้:</p>
+
+        <pre><code class="language-json">&quot;scripts&quot;: {
+  &quot;dev&quot;: &quot;vite&quot;,
+  &quot;build&quot;: &quot;tsc -b &amp;&amp; vite build&quot;,
+  &quot;lint&quot;: &quot;eslint .&quot;,
+  &quot;format&quot;: &quot;prettier --write .&quot;,
+  &quot;format:check&quot;: &quot;prettier --check .&quot;,
+  &quot;typecheck&quot;: &quot;tsc -b&quot;,
+  &quot;preview&quot;: &quot;vite preview&quot;
+},</code></pre>
+
+        <p>ของใหม่สามตัวคือ <code>format</code> (ให้ Prettier จัดรูปแบบทุกไฟล์แล้วเขียนทับ), <code>format:check</code> (แค่ตรวจว่ามีไฟล์ไหนยังไม่ถูกจัด — เหมาะกับใช้ใน CI ที่ไม่ควรแก้ไฟล์เอง) และ <code>typecheck</code> (รัน TypeScript compiler ตรวจ type ทั้งโปรเจกต์โดยไม่ build อะไรออกมา) ส่วน scripts ของการเทสต์จะตามมาในบทที่ 26</p>
+
+        <p>ได้ scripts แล้วก็ใช้เลย — จัดรูปแบบไฟล์ทั้งโปรเจกต์หนึ่งรอบ แล้วตรวจว่า lint ผ่าน:</p>
+
+        <pre><code class="language-bash">npm run format
+npm run lint</code></pre>
+
+        <blockquote>⚠️ อยากให้เครื่องมือทำงานแบบไม่ต้องนึกถึงมันเลย ให้ตั้ง editor ช่วย: ใน VS Code ติดตั้ง extension <strong>ESLint</strong> กับ <strong>Prettier - Code formatter</strong> แล้วเปิด "Format On Save" เท่านี้ทุกครั้งที่กด save โค้ดจะเรียงสวยเองและเส้นแดง/เหลืองของ ESLint จะโผล่ตั้งแต่ตอนพิมพ์</blockquote>
+
+        <h2>Path alias: จบปัญหา ../../../</h2>
+
+        <p>อีกไม่กี่บทข้างหน้า โปรเจกต์เราจะมีโฟลเดอร์ซ้อนกันหลายชั้น และ component ที่อยู่ลึก ๆ จะต้อง import ของกลางด้วยเส้นทางสยอง ๆ อย่าง <code>import { Pagination } from &quot;../../../shared/types/generic.type&quot;;</code> — นับจุดผิดทีเดียวก็พังแล้ว และย้ายไฟล์ทีหนึ่งก็ต้องไล่แก้กันระนาว เราจะตั้ง alias ให้ <code>@/</code> แปลว่า "จาก <code>src/</code> เสมอ" เพื่อให้เขียนแบบนี้แทนได้:</p>
+
+        <pre><code class="language-typescript">import { Pagination } from &quot;@/shared/types/generic.type&quot;;</code></pre>
+
+        <p>ต้องตั้งค่า<strong>สองที่</strong> เพราะมีเครื่องมือสองตัวที่ต้อง resolve เส้นทางไฟล์: <strong>Vite</strong> ตอน bundle จริง และ <strong>TypeScript</strong> ตอนตรวจ type กับตอน editor ช่วย autocomplete ตั้งที่เดียวอีกตัวจะมองไม่เห็น</p>
+
+        <p>ที่แรก — เขียน <code>vite.config.ts</code> ให้เป็นแบบนี้:</p>
+
+        <pre><code class="language-typescript">import { fileURLToPath, URL } from &quot;node:url&quot;;
+import { defineConfig } from &quot;vite&quot;;
+import react from &quot;@vitejs/plugin-react&quot;;
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      &quot;@&quot;: fileURLToPath(new URL(&quot;./src&quot;, import.meta.url)),
+    },
+  },
+});</code></pre>
+
+        <p>ท่อนที่หน้าตาแปลกคือ <code>fileURLToPath(new URL(&quot;./src&quot;, import.meta.url))</code> — มันคือวิธีสร้าง absolute path ไปยังโฟลเดอร์ <code>src</code> ในแบบที่ ES Modules รองรับ: <code>import.meta.url</code> คือตำแหน่งของไฟล์ config นี้เอง, <code>new URL(&quot;./src&quot;, ...)</code> ต่อเส้นทางแบบ relative จากตรงนั้น แล้ว <code>fileURLToPath</code> แปลงกลับเป็น path ปกติของระบบไฟล์ (สมัยก่อนใช้ <code>__dirname</code> ทำแบบนี้ แต่ตัวแปรนั้นไม่มีในไฟล์แบบ ES Module อย่างของเรา)</p>
+
+        <blockquote>💡 <code>vite.config.ts</code> จะถูกเติมอีกสองรอบในคอร์สนี้: บทที่ 09 เพิ่มบล็อก <code>legacy</code> เพื่อแก้เรื่อง CJS interop ของ Vite 8 และบทที่ 26 เพิ่มบล็อก <code>test</code> สำหรับ Vitest — ตอนนี้ไฟล์มีแค่นี้ ถูกต้องแล้ว</blockquote>
+
+        <p>ที่ที่สอง — เปิด <code>tsconfig.app.json</code> แล้วเพิ่ม <code>paths</code> เข้าไปใน <code>compilerOptions</code> (ค่าอื่นที่ template ให้มา คงไว้ทั้งหมด):</p>
+
+        <pre><code class="language-json">{
+  &quot;compilerOptions&quot;: {
+    // ...ค่าเดิมจาก template คงไว้ทั้งหมด...
+
+    &quot;paths&quot;: {
+      &quot;@/*&quot;: [&quot;./src/*&quot;]
+    }
+  },
+  &quot;include&quot;: [&quot;src&quot;]
+}</code></pre>
+
+        <p>อ่านว่า: import ใดที่ขึ้นต้นด้วย <code>@/</code> ให้ TypeScript ตามไปหาไฟล์ใน <code>./src/</code> — ตรงกันเป๊ะกับที่บอก Vite ไว้ เราจะได้เริ่มใช้ <code>@/</code> จริงจังตั้งแต่บทที่ 06 เมื่อโครงโฟลเดอร์เต็มรูปแบบมาถึง</p>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รันสามคำสั่งนี้แล้วทุกตัวต้องจบแบบไม่มี error: <code>npm run lint</code>, <code>npm run format:check</code> และ <code>npm run typecheck</code> จากนั้น <code>npm run dev</code> — หน้า <code>React E-commerce App</code> ต้องยังขึ้นเหมือนเดิม ถ้า lint ฟ้องเรื่องลำดับ import ในไฟล์ไหน ลอง <code>npx eslint . --fix</code> ให้มันจัดเรียงให้อัตโนมัติ</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="02_project_scaffold.html" rel="prev">ก่อนหน้า: สร้างโปรเจกต์ด้วย Vite</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="04_scss_foundation.html" rel="next">ถัดไป: โครงสร้าง SCSS</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

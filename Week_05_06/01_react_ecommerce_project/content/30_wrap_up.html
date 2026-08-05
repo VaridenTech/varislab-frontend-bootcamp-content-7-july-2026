@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Build โปรเจกต์สำหรับ production, แนวทางการ deploy แบบ SPA, สรุปสิ่งที่ได้เรียน และก้าวต่อไป" />
+    <title>Build และส่งท้าย | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 30 · ส่งท้าย (Wrap Up)</p>
+          <h1>Build, Deploy และยินดีด้วย!</h1>
+          <p class="lesson-original-title" lang="en">Wrap Up</p>
+        </header>
+
+        <p>มาถึงบทสุดท้ายแล้ว! ตอนนี้คุณมีเว็บ E-commerce ที่ทำงานครบทุก flow พร้อมชุดเทสต์ที่พิสูจน์ว่ามันทำงานจริง เหลือขั้นตอนเดียว: ทำให้มันขึ้นไปอยู่บนอินเทอร์เน็ตให้คนอื่นใช้ได้</p>
+
+        <h2>ตรวจสุขภาพโปรเจกต์รอบสุดท้าย</h2>
+
+        <p>ก่อน build ทุกครั้ง รันเช็กลิสต์คุณภาพให้ครบ นี่คือชุดคำสั่งเดียวกับที่ CI ของทีมจริงจะรันให้อัตโนมัติทุกครั้งที่มีคน push โค้ด:</p>
+
+        <pre><code class="language-bash">npm run typecheck   # TypeScript ตรวจ type ทั้งโปรเจกต์
+npm run lint        # ESLint ตรวจคุณภาพโค้ด
+npm run format:check # Prettier ตรวจรูปแบบโค้ด
+npm run test        # เทสต์ทั้งหมดต้องเขียว
+</code></pre>
+
+        <p>ถ้าทั้งสี่คำสั่งผ่านหมด ก็พร้อม build:</p>
+
+        <pre><code class="language-bash">npm run build
+</code></pre>
+
+        <p>สังเกตว่าใน <code>package.json</code> ของเรา script นี้คือ <code>tsc -b &amp;&amp; vite build</code> — TypeScript ตรวจ type ก่อน แล้ว Vite ค่อยแปลงและบีบอัดโค้ดทั้งหมดลงโฟลเดอร์ <code>dist/</code>: JavaScript ถูก minify, SCSS กลายเป็น CSS ไฟล์เดียว, ชื่อไฟล์มี hash ต่อท้ายเพื่อให้ browser cache ได้อย่างปลอดภัย ลองเปิดโฟลเดอร์ <code>dist/</code> ดูว่าข้างในมีอะไรบ้าง</p>
+
+        <p>ทดลองรันเวอร์ชัน production บนเครื่องเราก่อน deploy จริงได้ด้วย:</p>
+
+        <pre><code class="language-bash">npm run preview
+</code></pre>
+
+        <blockquote>💡 <code>npm run dev</code> กับ <code>npm run preview</code> ต่างกันสำคัญ: dev รันจาก source โดยตรงพร้อม hot reload ส่วน preview เสิร์ฟไฟล์ที่ build แล้วจาก <code>dist/</code> จริง ๆ — ปัญหาบางอย่าง (เช่น path รูปภาพผิด หรือ environment variable หาย) โผล่เฉพาะตอน build แล้วเท่านั้น เจอใน preview ดีกว่าเจอบน production</blockquote>
+
+        <h2>Deploy แบบ SPA</h2>
+
+        <p>แอปของเราเป็น Single Page Application: มีไฟล์ HTML จริงแค่ไฟล์เดียว แล้ว react-router จัดการ URL ทั้งหมดในฝั่ง browser นั่นแปลว่าตอน deploy มีกับดักหนึ่งที่เจอกันทุกคน: ถ้าผู้ใช้เปิด <code>https://your-app.com/categories</code> ตรง ๆ (หรือกด refresh) server จะมองหาไฟล์ <code>/categories</code> ซึ่งไม่มีอยู่จริง แล้วตอบ 404</p>
+
+        <p>ทางแก้คือบอก server ว่า "ทุก URL ที่หาไฟล์ไม่เจอ ให้ส่ง <code>index.html</code> กลับไป" แล้วปล่อยให้ react-router ตัดสินใจว่าจะแสดงหน้าไหน ผู้ให้บริการ hosting ยุคนี้ทำให้เรื่องนี้ง่ายมาก:</p>
+
+        <ul>
+          <li><strong>Vercel</strong> — ตรวจพบ Vite อัตโนมัติ แค่ <code>npx vercel</code> หรือเชื่อม GitHub repo ก็จบ SPA fallback ถูกตั้งให้เอง</li>
+          <li><strong>Netlify</strong> — ลาก <code>dist/</code> ไปวางบนหน้าเว็บก็ได้ หรือเชื่อม repo แล้วเพิ่มไฟล์ <code>public/_redirects</code> ที่มีบรรทัดเดียว: <code>/*&nbsp;&nbsp;/index.html&nbsp;&nbsp;200</code></li>
+          <li><strong>GitHub Pages</strong> — ใช้ได้แต่ต้องตั้ง base path และทำ 404 fallback เอง เหมาะกับคนอยากเข้าใจกลไกมากกว่าอยากเสร็จเร็ว</li>
+        </ul>
+
+        <p>อย่าลืมเรื่อง environment variable: ค่า <code>VITE_API_BASE_URL</code> ถูกฝังลงในโค้ดตอน <em>build</em> ไม่ใช่ตอนรัน ดังนั้นถ้า deploy ผ่าน CI ของ Vercel/Netlify ให้ไปตั้งค่านี้ในหน้า Environment Variables ของโปรเจกต์ด้วย (ค่าเดียวกับใน <code>.env</code> ของเรา: <code>https://dummyjson.com</code>)</p>
+
+        <h2>สิ่งที่คุณสร้างมาตลอด 30 บท</h2>
+
+        <p>ถอยออกมามองภาพรวมกันหน่อยว่าสองสัปดาห์นี้คุณผ่านอะไรมาบ้าง:</p>
+
+        <ul>
+          <li><strong>วางรากฐานโปรเจกต์แบบมืออาชีพ</strong> — Vite + TypeScript strict, ESLint 10 flat config, Prettier, path alias และโครงสร้างโฟลเดอร์แบบ feature-based ที่โค้ดทุกไฟล์รู้ที่อยู่ของตัวเอง</li>
+          <li><strong>ชั้นข้อมูลที่เป็นระบบ</strong> — axios client ตัวเดียวที่ normalize error ให้ทั้งแอป, typed API functions และ query key factory + <code>queryOptions</code> ที่ทำให้ TanStack Query แสดงพลังเต็มที่ทั้ง cache, <code>keepPreviousData</code> และ declarative data ไม่มี <code>useEffect</code> + <code>refetch()</code> ให้เห็นเลยสักที่</li>
+          <li><strong>UI ที่ประกอบจากชิ้นส่วน</strong> — shared components ที่ถูกใช้ซ้ำทุกหน้า, SCSS Modules ที่ไม่มีทาง class ชนกัน และหน้า Home/Category/Product ที่จัดการทั้ง loading, error และ empty state ครบ</li>
+          <li><strong>Client state ที่ถูกออกแบบ</strong> — ตะกร้าสินค้าด้วย Context + <code>useReducer</code> + localStorage: reducer ที่เทสต์ได้ล้วน ๆ, lazy initializer และ write-through persistence</li>
+          <li><strong>ฟอร์มระดับ production</strong> — react-hook-form + zod ที่ schema เดียวให้ทั้ง validation และ TypeScript type, mutation flow ที่สั่งซื้อ เคลียร์ตะกร้า และนำทางต่ออย่างถูกลำดับ</li>
+          <li><strong>ชุดเทสต์ครบทุกชั้น</strong> — unit tests ของ pure functions, hook tests ผ่าน MSW ที่จำลอง network จริง และ integration tests ที่เล่นบทผู้ใช้ตั้งแต่เปิดหน้าจนจ่ายเงินสำเร็จ</li>
+        </ul>
+
+        <p>ที่สำคัญกว่าตัวแอปคือ<em>นิสัย</em>ที่คุณได้ฝึก: แยก server state ออกจาก client state, ทำ error ให้เป็นเรื่องปกติที่ต้องออกแบบ ไม่ใช่เรื่องเซอร์ไพรส์, เขียน type ให้ตรงกับความจริง และพิสูจน์พฤติกรรมด้วยเทสต์ก่อนจะเชื่อว่ามันเสร็จ — สี่อย่างนี้คือสิ่งที่แยกมือใหม่ออกจากคนที่ทีมอยากได้ตัว</p>
+
+        <h2>ก้าวต่อไป</h2>
+
+        <ul>
+          <li><strong>ต่อยอดแอปนี้</strong> — เพิ่มช่องค้นหาสินค้า (dummyjson มี endpoint <code>/products/search</code> ให้แล้ว), ทำ URL ให้จำ category และหน้าที่เลือกไว้ (query params), เพิ่มระบบ favorite หรือเปลี่ยน react-modal เป็น <code>&lt;dialog&gt;</code> ของ HTML แท้ ๆ</li>
+          <li><strong>ยกระดับ state</strong> — ถ้าตะกร้าเริ่มซับซ้อนกว่านี้ ลอง Zustand หรือ Redux Toolkit แล้วเปรียบเทียบกับ Context + useReducer ที่เราเขียนเอง จะเข้าใจทันทีว่าเครื่องมือพวกนี้แก้ปัญหาอะไร</li>
+          <li><strong>ไปฝั่ง server</strong> — Next.js หรือ React Router framework mode จะพา React ไป render บน server ซึ่งเป็นโลกที่ต่อจากคอร์สนี้พอดี</li>
+          <li><strong>สร้างโปรเจกต์ของตัวเอง</strong> — เลือกไอเดียที่คุณอยากใช้เองจริง ๆ แล้วเริ่มจาก <code>npm create vite</code> เหมือนบทที่ 2 ทุกขั้นตอนที่เราเดินมาด้วยกัน คุณเดินเองได้แล้วทั้งหมด</li>
+        </ul>
+
+        <p>ขอบคุณที่อดทนพิมพ์โค้ดเองทุกบรรทัดตลอด 30 บท ยินดีด้วยจริง ๆ — คุณไม่ได้แค่ "เรียน React จบ" แต่คุณ<strong>สร้างเว็บจริงเสร็จทั้งเว็บด้วยมือตัวเอง</strong>แล้ว 🎉</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="29_integration_tests.html" rel="prev">ก่อนหน้า: Integration Tests</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

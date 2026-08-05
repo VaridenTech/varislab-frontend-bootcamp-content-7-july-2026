@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เขียน unit test ให้ logic ล้วน ๆ ของแอป: utils คำนวณราคาและ pagination, cart reducer, cart storage, zod schema และ API client" />
+    <title>Unit Tests | สร้างเว็บ E-commerce ด้วย React</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 27 · การทดสอบ (Testing)</p>
+          <h1>Unit Tests: พิสูจน์ logic ทีละฟังก์ชัน</h1>
+          <p class="lesson-original-title" lang="en">Unit Tests</p>
+        </header>
+
+        <p>เราจะเริ่มจากฐานของพีระมิดการทดสอบ: <strong>unit test</strong> ของฟังก์ชันล้วน ๆ (pure function) — ฟังก์ชันที่รับ input เดิมแล้วคืน output เดิมเสมอ ไม่แตะ DOM ไม่ยิง network เทสต์กลุ่มนี้เขียนง่ายที่สุด รันเร็วที่สุด (หลักมิลลิวินาที) และเวลาพังมันชี้จุดแม่นที่สุด — บอกได้เลยว่าฟังก์ชันไหน กรณีไหน ค่าที่ได้กับค่าที่คาดต่างกันอย่างไร</p>
+
+        <p>ธรรมเนียมของโปรเจกต์นี้: ไฟล์เทสต์อยู่<em>ข้าง</em>ไฟล์ต้นทางเสมอ (co-located) โดยเติม <code>.test</code> เข้าไปในชื่อ เช่น <code>price.utils.ts</code> คู่กับ <code>price.utils.test.ts</code> — เปิดโฟลเดอร์ไหนก็เห็นทันทีว่าไฟล์ไหนมีเทสต์คุ้มกันอยู่ ระหว่างทำบทนี้แนะนำให้เปิด <code>npm run test:watch</code> ทิ้งไว้ จะได้เห็นเทสต์เขียวขึ้นทีละไฟล์</p>
+
+        <h2>อุ่นเครื่อง: price.utils</h2>
+
+        <p>เริ่มที่ฟังก์ชันเล็กที่สุดของแอป — <code>calculateOriginalPrice</code> จากบทที่ 15 ที่คำนวณราคาก่อนลดจากราคาปัจจุบันกับเปอร์เซ็นต์ส่วนลด สร้าง <code>src/shared/utils/price.utils.test.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { calculateOriginalPrice } from "./price.utils";
+
+describe("calculateOriginalPrice", () =&gt; {
+  it("computes the pre-discount price", () =&gt; {
+    expect(calculateOriginalPrice(90, 10)).toBeCloseTo(100);
+  });
+
+  it("returns the price unchanged when there is no discount", () =&gt; {
+    expect(calculateOriginalPrice(50, undefined)).toBe(50);
+    expect(calculateOriginalPrice(50, 0)).toBe(50);
+    expect(calculateOriginalPrice(50, 100)).toBe(50);
+  });
+});
+</code></pre>
+
+        <p>ทวนโครงสร้างที่เจอมาแล้วใน Week 4: <code>describe</code> จัดกลุ่มเทสต์ของสิ่งเดียวกัน (ชื่อกลุ่มคือชื่อฟังก์ชัน — เวลาพังจะอ่านรายงานรู้เรื่องทันที), <code>it</code> คือหนึ่งพฤติกรรมที่อยากพิสูจน์ โดยตั้งชื่อให้อ่านต่อกันเป็นประโยค: "calculateOriginalPrice computes the pre-discount price" และ <code>expect</code> คือ assertion — สังเกตว่าทั้งสามอย่างใช้ได้เลยไม่ต้อง import เพราะเราเปิด <code>globals: true</code> ไว้เมื่อบทที่แล้ว</p>
+
+        <p>จุดที่น่าสนใจสองจุด:</p>
+
+        <ul>
+          <li><strong><code>toBeCloseTo(100)</code> ไม่ใช่ <code>toBe(100)</code></strong> — เพราะเลขทศนิยม: <code>90 / (1 - 10/100)</code> ใน JavaScript ได้ <code>100.00000000000001</code> ไม่ใช่ <code>100</code> เป๊ะ ๆ ถ้าใช้ <code>toBe</code> เทสต์จะพังทั้งที่ logic ถูก — กฎง่าย ๆ: assertion กับผลหารหรือผลคูณของทศนิยม ให้ใช้ <code>toBeCloseTo</code></li>
+          <li><strong>เทสต์ที่สองคือเทสต์ขอบเขต (edge case)</strong> — ตัวฟังก์ชันเขียน guard ไว้ว่า discount ที่ไม่มีค่า, ≤ 0 หรือ ≥ 100 ให้คืนราคาเดิม เทสต์นี้ยิงทั้งสามกรณีในตาเดียว การเทสต์ edge case พวกนี้แหละคือค่าตัวจริงของ unit test — ทางเดินปกติมักไม่ค่อยพัง ที่พังคือขอบ</li>
+        </ul>
+
+        <h2>pagination.utils</h2>
+
+        <p>ต่อกันที่คู่ฟังก์ชัน pagination จากบทที่ 13 สร้าง <code>src/shared/utils/pagination.utils.test.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { calculateOffset, calculateTotalPages } from "./pagination.utils";
+
+describe("calculateOffset", () =&gt; {
+  it("returns 0 for the first page", () =&gt; {
+    expect(calculateOffset(1, 20)).toBe(0);
+  });
+
+  it("returns limit * (page - 1) for later pages", () =&gt; {
+    expect(calculateOffset(3, 20)).toBe(40);
+  });
+});
+
+describe("calculateTotalPages", () =&gt; {
+  it("rounds up partial pages", () =&gt; {
+    expect(calculateTotalPages(101, 20)).toBe(6);
+  });
+
+  it("handles exact division", () =&gt; {
+    expect(calculateTotalPages(100, 20)).toBe(5);
+  });
+});
+</code></pre>
+
+        <p>สองฟังก์ชัน สอง <code>describe</code> ในไฟล์เดียว เคสที่เลือกมาไม่ใช่เคสสุ่ม: <code>calculateOffset</code> เทสต์หน้าแรก (ต้องได้ 0 — off-by-one error ชอบเกิดตรงนี้) กับหน้ากลาง ๆ ส่วน <code>calculateTotalPages</code> เทสต์ทั้งกรณีหารไม่ลงตัว (101 ชิ้น หน้าละ 20 ต้องได้ 6 หน้า — สินค้าชิ้นที่ 101 ต้องมีที่อยู่!) และหารลงตัวพอดี (ต้องได้ 5 ไม่ใช่เผลอปัดขึ้นเป็น 6) ถ้าใครเผลอแก้ <code>Math.ceil</code> เป็น <code>Math.round</code> หรือ <code>Math.floor</code> เทสต์คู่นี้จับได้ทันที</p>
+
+        <h2>cartReducer — เทสต์ครบทุก action</h2>
+
+        <p>ถึงตัวสำคัญ: <code>cartReducer</code> คือสมองของตะกร้าสินค้า และมันเป็น pure function เต็มตัว — รับ state กับ action คืน state ใหม่ ไม่มี side effect เลย นั่นทำให้มันเทสต์ง่ายอย่างเหลือเชื่อทั้งที่เป็น logic ที่สำคัญที่สุดชิ้นหนึ่งของแอป สร้าง <code>src/features/cart/store/cartReducer.test.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { CartActionTypes, CartItem, CartState } from "./CartContext";
+import { cartReducer } from "./cartReducer";
+
+const item = (overrides: Partial&lt;CartItem&gt; = {}): CartItem =&gt; ({
+  id: 1,
+  title: "Widget",
+  price: 10,
+  quantity: 1,
+  image: "/widget.png",
+  ...overrides,
+});
+
+const stateWith = (...items: CartItem[]): CartState =&gt; ({ items });
+
+describe("cartReducer", () =&gt; {
+  it("adds a new item", () =&gt; {
+    const next = cartReducer(stateWith(), {
+      type: CartActionTypes.ADD_TO_CART,
+      payload: item(),
+    });
+    expect(next.items).toEqual([item()]);
+  });
+
+  it("merges quantity when the item already exists", () =&gt; {
+    const next = cartReducer(stateWith(item({ quantity: 2 })), {
+      type: CartActionTypes.ADD_TO_CART,
+      payload: item({ quantity: 3 }),
+    });
+    expect(next.items).toEqual([item({ quantity: 5 })]);
+  });
+
+  it("removes an item", () =&gt; {
+    const next = cartReducer(stateWith(item(), item({ id: 2 })), {
+      type: CartActionTypes.REMOVE_FROM_CART,
+      payload: { id: 1 },
+    });
+    expect(next.items).toEqual([item({ id: 2 })]);
+  });
+
+  it("updates quantity", () =&gt; {
+    const next = cartReducer(stateWith(item()), {
+      type: CartActionTypes.UPDATE_QUANTITY,
+      payload: { id: 1, quantity: 7 },
+    });
+    expect(next.items[0]?.quantity).toBe(7);
+  });
+
+  it("clears the cart", () =&gt; {
+    const next = cartReducer(stateWith(item(), item({ id: 2 })), {
+      type: CartActionTypes.CLEAR_CART,
+    });
+    expect(next.items).toEqual([]);
+  });
+});
+</code></pre>
+
+        <p>สังเกตว่าเราใช้เทคนิค factory เดียวกับ <code>makeProduct</code> ในบทที่แล้ว แต่ย่อส่วน: <code>item()</code> สร้าง <code>CartItem</code> มาตรฐานที่ override ได้ และ <code>stateWith(...)</code> ประกอบ state จากรายการสินค้ากี่ชิ้นก็ได้ (รวมถึงศูนย์ชิ้น — <code>stateWith()</code> คือตะกร้าว่าง) helper สองตัวนี้ทำให้ห้าเทสต์ที่เหลืออ่านเหมือนตาราง: state ตั้งต้นอะไร ยิง action อะไร คาดหวัง state ไหน</p>
+
+        <p>ห้าเทสต์นี้ครอบคลุม action ทั้งสี่ประเภทของ reducer โดย <code>ADD_TO_CART</code> ได้สองเทสต์เพราะมันมีสอง branch: เพิ่มของ<em>ใหม่</em> กับเพิ่มของ<em>ที่มีอยู่แล้ว</em> — อย่างหลังต้อง<em>รวมจำนวน</em> (2 + 3 = 5) ไม่ใช่แทรกแถวซ้ำ ซึ่งเป็น bug ที่เจอบ่อยมากในตะกร้าสินค้าจริง ๆ อีกสองรายละเอียดเล็ก ๆ ที่อยากชี้:</p>
+
+        <ul>
+          <li><strong><code>toEqual</code> ไม่ใช่ <code>toBe</code></strong> — <code>toBe</code> เทียบว่าเป็น object <em>ตัวเดียวกัน</em>ในหน่วยความจำ ส่วน <code>toEqual</code> เทียบ<em>เนื้อหา</em>ทีละ field ซึ่งคือสิ่งที่เราต้องการ เพราะ reducer ที่ดีต้องคืน object ใหม่เสมอ (immutability)</li>
+          <li><strong><code>next.items[0]?.quantity</code></strong> — ใส่ optional chaining กันไว้ เผื่อ reducer มี bug จน <code>items</code> ว่าง เทสต์จะ fail แบบสุภาพ (<code>undefined</code> ไม่เท่ากับ <code>7</code>) แทนที่จะ crash กลางทาง</li>
+        </ul>
+
+        <h2>cartStorage — เทสต์กับ localStorage จริง (ของ jsdom)</h2>
+
+        <p>ชั้น persistence จากบทที่ 19 มีของให้เทสต์เยอะกว่าที่คิด เพราะมันต้องทนต่อข้อมูลพัง ๆ ใน localStorage ได้ สร้าง <code>src/features/cart/store/cartStorage.test.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { CartState } from "./CartContext";
+import { CART_STORAGE_KEY, loadCartState, saveCartState } from "./cartStorage";
+
+const sample: CartState = {
+  items: [{ id: 1, title: "Widget", price: 10, quantity: 2, image: "/w.png" }],
+};
+
+describe("cartStorage", () =&gt; {
+  it("round-trips cart state", () =&gt; {
+    saveCartState(sample);
+    expect(loadCartState()).toEqual(sample);
+  });
+
+  it("returns an empty cart when nothing is stored", () =&gt; {
+    expect(loadCartState()).toEqual({ items: [] });
+  });
+
+  it("returns an empty cart when stored JSON is corrupt", () =&gt; {
+    localStorage.setItem(CART_STORAGE_KEY, "{not json");
+    expect(loadCartState()).toEqual({ items: [] });
+  });
+
+  it("returns an empty cart when the stored shape is wrong", () =&gt; {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items: "nope" }));
+    expect(loadCartState()).toEqual({ items: [] });
+  });
+});
+</code></pre>
+
+        <p>คำถามแรกที่ควรถาม: แล้ว <code>localStorage</code> มาจากไหน? คำตอบคือ jsdom ให้มาฟรี — เพราะเราตั้ง <code>environment: "jsdom"</code> เทสต์จึงมี localStorage <em>จริง ๆ ที่ใช้งานได้</em> (แค่อยู่ในหน่วยความจำ) เราเลยไม่ต้อง mock อะไรเลย: <code>saveCartState</code> เขียนลง storage จริง <code>loadCartState</code> อ่านกลับมาจริง โค้ด production ทุกบรรทัดได้รันในเทสต์</p>
+
+        <p>แต่ storage ที่แชร์กันก็มีความเสี่ยง: ถ้าเทสต์แรก save ค้างไว้ เทสต์ที่สอง ("nothing is stored") จะเจอของเก่าแล้วพัง — นี่คือหน้าที่ของบรรทัด <code>localStorage.clear()</code> ใน <code>afterEach</code> ของ <code>setup.ts</code> ที่เราเขียนไว้บทที่แล้ว ทุกเทสต์จึงเริ่มจาก storage ว่างเสมอ และเป็นเหตุผลที่เทสต์เหล่านี้เซ็ตข้อมูลเองในตัวโดยไม่ต้องเก็บกวาดทีหลัง</p>
+
+        <p>สองเทสต์สุดท้ายคือการเทสต์ "โลกจริงที่โหดร้าย": ผู้ใช้อาจมีข้อมูลเก่าจากเวอร์ชันก่อน หรือ extension บางตัวเขียนทับ key ของเรา — เทสต์ที่สามป้อน JSON พัง ๆ (<code>"{not json"</code>) เพื่อพิสูจน์ว่า <code>try/catch</code> ทำงาน ส่วนเทสต์ที่สี่ป้อน JSON ที่ parse ได้แต่<em>รูปร่างผิด</em> (<code>items</code> เป็น string) เพื่อพิสูจน์ guard <code>Array.isArray</code> — ทั้งสองกรณีต้อง fallback เป็นตะกร้าว่างเงียบ ๆ ไม่ใช่ทำแอปพังทั้งหน้า</p>
+
+        <h2>checkout schema — เทสต์ validation ทุกกติกา</h2>
+
+        <p>zod schema จากบทที่ 22 คือกติกาการ validate ฟอร์มที่อยู่ เทสต์มันตรง ๆ ได้โดยไม่ต้อง render ฟอร์มเลย สร้าง <code>src/features/checkout/schema.test.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { checkoutAddressSchema } from "./schema";
+
+describe("checkoutAddressSchema", () =&gt; {
+  const valid = {
+    address: "1 Main St",
+    email: "jane@example.com",
+    phone: "0812345678",
+  };
+
+  it("accepts valid data", () =&gt; {
+    expect(checkoutAddressSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("requires address", () =&gt; {
+    const result = checkoutAddressSchema.safeParse({ ...valid, address: "" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe("Address is required");
+  });
+
+  it("rejects an invalid email", () =&gt; {
+    const result = checkoutAddressSchema.safeParse({ ...valid, email: "nope" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe(
+      "Enter a valid email address",
+    );
+  });
+
+  it("requires phone", () =&gt; {
+    const result = checkoutAddressSchema.safeParse({ ...valid, phone: "" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe("Phone number is required");
+  });
+});
+</code></pre>
+
+        <p>รูปแบบที่ใช้ตรงนี้เป็นสูตรมาตรฐานของการเทสต์ schema และควรจำไปใช้ตลอดชีวิต:</p>
+
+        <ul>
+          <li><strong>เริ่มจาก object ที่ valid หนึ่งตัว</strong> แล้วแต่ละเทสต์ invalid ใช้ spread พังมัน<em>ทีละ field</em>: <code>{ ...valid, address: "" }</code> — ถ้าพังหลาย field พร้อมกันเราจะไม่รู้ว่า error มาจากกติกาข้อไหน</li>
+          <li><strong><code>safeParse</code> ไม่ใช่ <code>parse</code></strong> — <code>parse</code> โยน exception เมื่อไม่ผ่าน แต่ <code>safeParse</code> คืน result object ที่มี <code>success</code> กับ <code>error</code> ให้ assert ได้ตรง ๆ ไม่ต้องเล่นท่า try/catch ในเทสต์</li>
+          <li><strong>assert ตัวข้อความ error ด้วย</strong> — ไม่ใช่แค่ <code>success === false</code> เพราะข้อความพวกนี้คือสิ่งที่ผู้ใช้เห็นใต้ช่องฟอร์มจริง ๆ (ผ่าน react-hook-form + zodResolver ในบทที่ 23) ถ้าใครแก้ข้อความใน schema โดยไม่ตั้งใจ เทสต์จะเตือน</li>
+        </ul>
+
+        <h2>API client — unit test ตัวแรกที่ใช้ MSW</h2>
+
+        <p>ปิดท้ายด้วยไฟล์ที่พิเศษหน่อย: <code>apiClient</code> ไม่ใช่ pure function — มันยิง HTTP — แต่เพราะ MSW ดักที่ชั้น network ให้ เราเทสต์มันได้เหมือน unit test ปกติ และนี่คือเทสต์ที่พิสูจน์ interceptor จากบทที่ 12 ว่าแปลง error ได้ถูกจริง สร้าง <code>src/shared/api/client.test.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { http, HttpResponse } from "msw";
+
+import { ApiError, apiClient } from "./client";
+import { server } from "@/test/msw/server";
+
+describe("apiClient", () =&gt; {
+  it("returns response data on success", async () =&gt; {
+    const { data } = await apiClient.get("/products/1");
+    expect(data.id).toBe(1);
+  });
+
+  it("normalizes server errors into ApiError with the server message", async () =&gt; {
+    server.use(
+      http.get("https://dummyjson.com/products/1", () =&gt;
+        HttpResponse.json({ message: "Product not found" }, { status: 404 }),
+      ),
+    );
+
+    const error = await apiClient.get("/products/1").catch((e) =&gt; e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.message).toBe("Product not found");
+    expect(error.status).toBe(404);
+  });
+
+  it("falls back to a generic message when the server sends none", async () =&gt; {
+    server.use(
+      http.get("https://dummyjson.com/products/1", () =&gt;
+        HttpResponse.json({}, { status: 500 }),
+      ),
+    );
+
+    const error = await apiClient.get("/products/1").catch((e) =&gt; e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.message).toBe("Something went wrong. Please try again.");
+  });
+});
+</code></pre>
+
+        <p>ของใหม่ในไฟล์นี้มีสามอย่าง:</p>
+
+        <ul>
+          <li><strong>เทสต์แรกไม่ต้องเตรียมอะไรเลย</strong> — <code>GET /products/1</code> match handler ตั้งต้นใน <code>handlers.ts</code> อยู่แล้ว ซึ่งคืน <code>makeProduct({ id: 1 })</code> เทสต์นี้จึงพิสูจน์ happy path ของทั้ง <code>baseURL</code> (มาจาก env ที่เรา hardcode ไว้ใน vite.config) และการส่งข้อมูลผ่าน axios</li>
+          <li><strong><code>server.use(...)</code> คือการ override handler ชั่วคราว</strong> — วิธีจำลอง "เซิร์ฟเวอร์ตอบ error" สำหรับเทสต์นั้น ๆ โดยเฉพาะ: handler ที่ยัดเข้าไปด้วย <code>server.use</code> จะถูกลองก่อน handler ตั้งต้น และถูกถอดทิ้งโดย <code>server.resetHandlers()</code> ใน <code>afterEach</code> ของ setup — เทสต์ถัดไปกลับมาเจอเซิร์ฟเวอร์ปกติเสมอ ไม่มี error รั่วข้ามเทสต์</li>
+          <li><strong>ท่า <code>.catch((e) =&gt; e)</code></strong> — ปกติ promise ที่ reject จะโยน exception แต่ท่านี้"จับ" error แล้วคืนมันออกมาเป็น<em>ค่า</em>ธรรมดา ทำให้เรา assert กับตัว error ได้หลายบรรทัดสบาย ๆ: เป็น instance ของ <code>ApiError</code> ไหม (พิสูจน์ว่า interceptor ห่อ error ให้จริง ไม่ใช่ AxiosError ดิบหลุดมา), <code>message</code> ตรงกับที่เซิร์ฟเวอร์ส่งไหม และ <code>status</code> ติดมาไหม เทสต์ที่สามกลับด้าน: เซิร์ฟเวอร์ตอบ 500 แบบ<em>ไม่มี</em> message — interceptor ต้อง fallback เป็นข้อความกลาง ๆ ที่เราเตรียมไว้</li>
+        </ul>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run test</code> — ต้องได้ <strong>6 test files ผ่านทั้งหมด รวม 22 tests</strong> แบ่งเป็น price.utils 2, pagination.utils 4, cartReducer 5, cartStorage 4, schema 4 และ client 3 ถ้าไฟล์ไหนแดง อ่านรายงานของ Vitest ดี ๆ — มันบอกทั้งชื่อเทสต์ ค่า expected/received และบรรทัดที่พัง ซึ่งสำหรับ unit test มักพาไปเจอต้นเหตุใน 1 นาที</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="26_test_setup.html" rel="prev">ก่อนหน้า: ติดตั้งชุดทดสอบ</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="28_hook_tests.html" rel="next">ถัดไป: การทดสอบ Hooks</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
