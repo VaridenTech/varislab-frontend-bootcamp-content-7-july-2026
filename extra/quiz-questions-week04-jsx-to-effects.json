@@ -1,0 +1,109 @@
+{
+  "questions": [
+    {
+      "prompt": "React.createElement(\"h1\", { id: \"main-title\" }, \"My Website\") จะถูก render ออกมาเป็น HTML อะไร",
+      "choices": [
+        "<h1 id=\"main-title\">My Website</h1>",
+        "<div id=\"main-title\">My Website</div>",
+        "<h1>My Website</h1><span id=\"main-title\"></span>"
+      ],
+      "correctChoice": 1,
+      "explanation": "JSX เป็นเพียงวิธีเขียนที่อ่านง่ายขึ้นแทน React.createElement เท่านั้น ไม่ได้ทำอะไรเพิ่มเติมเบื้องหลัง"
+    },
+    {
+      "prompt": "เหตุใดใน JSX เราต้องใช้ className แทน class เวลาใส่ CSS class ให้ element",
+      "choices": [
+        "เพราะ class เป็น reserved word ใน JavaScript และ JSX ก็ยังเป็น JavaScript อยู่",
+        "เพราะ React ไม่รองรับ CSS classes",
+        "เพราะ className ทำงานเร็วกว่า class"
+      ],
+      "correctChoice": 1,
+      "explanation": "className คือชื่อของ JS API สำหรับโต้ตอบกับ class names เช่นเดียวกับ htmlFor ที่ใช้แทน for"
+    },
+    {
+      "prompt": "useState คืนค่าอะไรออกมา",
+      "body": "<pre><code>const [pizzaType, setPizzaType] = useState(\"pepperoni\");</code></pre>",
+      "choices": [
+        "array ที่มี current value ของ state และ function สำหรับอัปเดต state",
+        "object ที่มี property ชื่อ value และ onChange",
+        "แค่ current value ของ state เท่านั้น"
+      ],
+      "correctChoice": 1,
+      "explanation": "useState คืน array สองช่อง เราใช้ destructuring ดึง current value กับ updater function ออกมา"
+    },
+    {
+      "prompt": "ทำไมเราไม่ควรวาง hook อย่าง useState ไว้ใน if statement หรือ loop",
+      "choices": [
+        "เพราะ hooks พึ่งพาลำดับการเรียกที่เคร่งครัด การเรียกในเงื่อนไขอาจทำให้ hook คืน state ผิดชิ้น",
+        "เพราะ JavaScript ไม่อนุญาตให้เรียกฟังก์ชันใน if statement",
+        "เพราะจะทำให้แอปช้าลงเท่านั้น"
+      ],
+      "correctChoice": 1,
+      "explanation": "React ใช้ลำดับการเรียก hooks เพื่อชี้ไปยัง state ชิ้นเดิมเสมอ ทุก hook จึงต้องถูกเรียกในลำดับเดียวกันทุกครั้งที่ render"
+    },
+    {
+      "prompt": "โค้ดนี้จะพิมพ์อะไรออกมาตามลำดับ",
+      "body": "<pre><code class=\"language-javascript\">console.log(\"เริ่ม\");\nsetTimeout(() =&gt; {\n  console.log(\"ผ่านไป 3 วินาที\");\n}, 3000);\nconsole.log(\"จบ\");</code></pre>",
+      "choices": [
+        "เริ่ม, จบ, (รอ 3 วินาที) ผ่านไป 3 วินาที",
+        "เริ่ม, (รอ 3 วินาที) ผ่านไป 3 วินาที, จบ",
+        "(รอ 3 วินาที) เริ่ม, จบ, ผ่านไป 3 วินาที"
+      ],
+      "correctChoice": 1,
+      "explanation": "setTimeout ไม่บล็อก thread มันฝากงานไว้กับเบราว์เซอร์แล้วคืน thread ทันที โค้ดบรรทัดถัดไปจึงรันต่อได้เลยโดยไม่ต้องรอ"
+    },
+    {
+      "prompt": "console.log(giveNumber()) จะแสดงผลอะไร (โดยไม่มี await)",
+      "body": "<pre><code class=\"language-javascript\">async function giveNumber() {\n  return 42;\n}\n\nconsole.log(giveNumber());</code></pre>",
+      "choices": [
+        "Promise { 42 }",
+        "42",
+        "undefined"
+      ],
+      "correctChoice": 1,
+      "explanation": "ฟังก์ชันที่ติด async จะคืน Promise เสมอ ไม่ว่าข้างในจะ return อะไรก็ตาม ต้อง await ถึงจะได้ค่าจริง"
+    },
+    {
+      "prompt": "เมื่อ fetch ไปยัง URL ที่ไม่มีอยู่จริงและเซิร์ฟเวอร์ตอบกลับมาด้วย status 404 จะเกิดอะไรขึ้นกับ await fetch(...)",
+      "body": "<pre><code class=\"language-javascript\">const res = await fetch(\"/api/nope\");\nconsole.log(res.ok); // false\nconsole.log(res.status); // 404</code></pre>",
+      "choices": [
+        "ไม่มี error ถูก throw ออกมาเลย โค้ดทำงานต่อไปตามปกติ ต้องเช็ค res.ok เอง",
+        "await จะ throw error ทันทีเพราะ 404 คือ error",
+        "fetch จะ retry คำขอใหม่โดยอัตโนมัติ"
+      ],
+      "correctChoice": 1,
+      "explanation": "fetch จะ reject ก็ต่อเมื่อคำขอไปไม่ถึงหรือกลับมาไม่ได้เท่านั้น ส่วน 404 หรือ 500 ถือเป็นการเดินทางไป-กลับที่สำเร็จ เพียงแต่พกข่าวร้ายมาด้วย"
+    },
+    {
+      "prompt": "ทำไมเราต้องเขียน await ถึงสองครั้งเวลาใช้ fetch คือ await fetch(url) แล้วตามด้วย await res.json()",
+      "choices": [
+        "เพราะทั้งสองครั้งรอคนละเหตุการณ์กัน ครั้งแรกรอ header/status code มาถึง ครั้งที่สองรอ body โหลดครบและถูกแปลงเป็น object",
+        "เพราะ fetch ต้องเรียกสองครั้งเสมอเพื่อความปลอดภัย",
+        "เพราะ .json() เป็นฟังก์ชัน synchronous ที่บังเอิญต้องใช้ await เฉย ๆ"
+      ],
+      "correctChoice": 1,
+      "explanation": "await fetch() เสร็จเมื่อ header มาถึง ส่วน await res.json() เสร็จเมื่อ body โหลดครบและถูกแปลงจากข้อความ JSON เป็น object แล้ว"
+    },
+    {
+      "prompt": "การใส่ array ว่าง [] เป็น dependency ตัวที่สองของ useEffect มีผลอย่างไร",
+      "body": "<pre><code class=\"language-javascript\">useEffect(() =&gt; {\n  fetchPizzaTypes();\n}, []);</code></pre>",
+      "choices": [
+        "ทำให้ effect รันเพียงครั้งเดียวตอน component ถูกสร้างขึ้นเท่านั้น",
+        "ทำให้ effect รันทุกครั้งที่ component re-render",
+        "ทำให้ effect ไม่รันเลยแม้แต่ครั้งเดียว"
+      ],
+      "correctChoice": 1,
+      "explanation": "array ว่างบอก React ว่าไม่มี dependency ให้เฝ้าดู effect จึงรันแค่ครั้งเดียวตอน mount แล้วไม่รันอีก"
+    },
+    {
+      "prompt": "ทำไมเราส่งฟังก์ชัน async ให้ useEffect โดยตรงไม่ได้",
+      "choices": [
+        "เพราะ useEffect คาดหวัง callback ที่คืนค่าว่างหรือ cleanup function เท่านั้น แต่ฟังก์ชัน async จะคืน Promise เสมอ",
+        "เพราะ useEffect ไม่รองรับ async/await syntax เลยแม้แต่ข้างในฟังก์ชันที่เรียกแยก",
+        "เพราะจะทำให้เกิด infinite loop ทันทีทุกกรณี"
+      ],
+      "correctChoice": 1,
+      "explanation": "ทางแก้คือประกาศฟังก์ชัน async แยกต่างหาก แล้วเรียกมันจากข้างใน callback ธรรมดาที่ส่งให้ useEffect"
+    }
+  ]
+}
