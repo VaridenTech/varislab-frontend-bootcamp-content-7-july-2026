@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างหน้า Tables และหน้า Sign Up ด้วยลูปเดิมที่วิ่งเร็วขึ้น พร้อมจัด route แยก layout" />
+    <title>หน้า Tables และ Sign Up | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 11 · สร้าง UI ด้วย Cursor Agent (Building with the Agent)</p>
+          <h1>หน้า Tables และ Sign Up</h1>
+          <p class="lesson-original-title" lang="en">Tables &amp; Sign Up Pages</p>
+        </header>
+
+        <p>ลูปเดิม วิ่งเร็วขึ้น — บทนี้ทำสองหน้าจบในบทเดียว เพราะเครื่องมือครบแล้ว: อ่าน UI เป็น (06), เขียน prompt เป็น (07), รู้จังหวะของ Agent (09–10) สังเกตว่ายิ่งทำ ลูปยิ่งสั้นลง — นี่แหละสัญญาณว่าทักษะเข้าเส้น</p>
+
+        <h2>Part 1 — หน้า Tables</h2>
+
+        <h3>🎯 เป้าหมาย</h3>
+
+        <img src="images/tables.png" alt="หน้า Tables — ตาราง Authors 6 แถว และตาราง Projects พร้อม progress bar" />
+
+        <ul>
+          <li>Route <code>/tables</code> render ใน DashboardLayout เดิม (shell ใช้ร่วม — ไม่ต้องสร้างใหม่)</li>
+          <li>การ์ดตาราง Authors: avatar + ชื่อ + อีเมล, ตำแหน่งสองบรรทัด, badge Online/Offline, วันที่, ลิงก์ Edit — 6 แถว</li>
+          <li>การ์ดตาราง Projects: ไอคอน + ชื่อ, งบ, สถานะ, % + progress bar — 5 แถว</li>
+          <li>เมนู Tables ใน sidebar พาไปหน้านี้ได้จริง</li>
+        </ul>
+
+        <h3>📝 เขียน Prompt</h3>
+
+        <p>คุณ decompose หน้านี้ไว้แล้วเป็นแบบฝึกของบทเรียน 06 — <strong>ลองเขียน prompt เองก่อน</strong> แล้วค่อยเทียบกับเฉลยนี้</p>
+
+        <pre><code class="language-text">สร้างหน้า Tables ใน src/pages/TablesPage.tsx ตาม screenshot ที่แนบมา
+
+บริบท: shell และ router มีแล้ว หน้านี้เป็น child route ของ DashboardLayout ที่ path "/tables"
+ใช้ design tokens เดิม (primary, ink, muted, success, ...)
+
+โครงสร้าง (2 การ์ดเรียงลงมา ห่าง gap-6):
+- การ์ด "Authors Table": คอลัมน์ AUTHOR / FUNCTION / STATUS / EMPLOYED / (ช่องว่างสำหรับ Edit)
+  6 แถว: Esthera Jackson esthera@simmmple.com (Manager, Organization, Online, 14/06/21) /
+  Alexa Liras alexa@simmmple.com (Programmer, Developer, Offline, 14/06/21) /
+  Laurent Michael laurent@simmmple.com (Executive, Projects, Online, 14/06/21) /
+  Freduardo Hill freduardo@simmmple.com (Manager, Organization, Online, 14/06/21) /
+  Daniel Thomas daniel@simmmple.com (Programmer, Developer, Offline, 14/06/21) /
+  Mark Wilson mark@simmmple.com (Designer, UI/UX Design, Offline, 14/06/21)
+  — AUTHOR คือรูป avatar สี่เหลี่ยมมุมโค้ง + ชื่อตัวหนา + อีเมลสีเทา;
+  STATUS คือ badge: Online พื้นเขียว (success) ตัวขาว, Offline พื้นเทาอ่อนตัวเทา;
+  ท้ายแถวมีลิงก์ Edit สีเทา
+- การ์ด "Projects" หัวข้อรอง "30 done this month": คอลัมน์ COMPANIES / BUDGET / STATUS /
+  COMPLETION / (kebab menu) 5 แถว: Chakra Soft UI Version $14,000 Working 60% /
+  Add Progress Track $3,000 Canceled 10% / Fix Platform Errors Not set Done 100% /
+  Launch our Mobile App $32,000 Done 100% / Add the New Pricing Page $400 Working 25%
+  — COMPLETION คือตัวเลข % สีเขียวมิ้นต์ + progress bar
+
+ข้อกำหนดทางเทคนิค:
+- Tailwind เท่านั้น; ตารางเป็น &lt;table&gt; จริง; การ์ด rounded-2xl bg-white shadow-sm
+- mock data: src/data/authors.ts — avatar ใช้ https://i.pravatar.cc/150?img=&lt;เลข&gt;
+- เพิ่ม route "/tables" ใน router.tsx และทำให้เมนู Tables ใน sidebar ชี้มาหน้านี้
+
+ขอบเขต: ไม่แก้หน้า Dashboard ไม่ทำ sorting/filtering จริง (UI นิ่ง ๆ)
+</code></pre>
+
+        <h3>🤖 สิ่งที่ Agent สร้าง</h3>
+
+        <p>ตัวอย่างหนึ่งแถวของ Authors — จุดที่น่าดูคือ badge</p>
+
+        <pre><code class="language-tsx">// src/pages/TablesPage.tsx (ส่วนหนึ่ง)
+&lt;tr className="border-b border-gray-100"&gt;
+  &lt;td className="py-4"&gt;
+    &lt;div className="flex items-center gap-3"&gt;
+      &lt;img src={author.avatar} alt={author.name} className="size-10 rounded-xl" /&gt;
+      &lt;div&gt;
+        &lt;p className="text-sm font-bold text-ink"&gt;{author.name}&lt;/p&gt;
+        &lt;p className="text-sm text-muted"&gt;{author.email}&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/td&gt;
+  &lt;td&gt;
+    &lt;p className="text-sm font-bold text-ink"&gt;{author.role}&lt;/p&gt;
+    &lt;p className="text-sm text-muted"&gt;{author.dept}&lt;/p&gt;
+  &lt;/td&gt;
+  &lt;td&gt;
+    &lt;span
+      className={
+        author.online
+          ? "rounded-lg bg-success px-3 py-1 text-xs font-bold text-white"
+          : "rounded-lg bg-gray-100 px-3 py-1 text-xs font-bold text-muted"
+      }
+    &gt;
+      {author.online ? "Online" : "Offline"}
+    &lt;/span&gt;
+  &lt;/td&gt;
+  &lt;td className="text-sm font-bold text-ink"&gt;{author.employed}&lt;/td&gt;
+  &lt;td&gt;
+    &lt;a href="#" className="text-sm font-bold text-muted"&gt;Edit&lt;/a&gt;
+  &lt;/td&gt;
+&lt;/tr&gt;
+</code></pre>
+
+        <p>Badge ทำงานถูก แต่ดูวิธีเขียน: ternary ทั้งก้อนใน className และ class ที่ซ้ำกันครึ่งหนึ่ง (<code>rounded-lg px-3 py-1 text-xs font-bold</code>) เขียนสองรอบ — ยังไม่ผิด แต่ pattern แบบนี้พอโผล่หลายที่จะกลายเป็นภาระ จดไว้: <strong>นี่คือตัวอย่างขึ้นห้องเรียนของบทเรียน 14 และจะกลายเป็น component <code>StatusBadge</code> ในบทเรียน 15</strong> (progress bar ในตาราง Projects ก็เหมือนของบทเรียน 10 เป๊ะ — ซ้ำข้ามหน้าแล้วด้วย)</p>
+
+        <h2>Part 2 — หน้า Sign Up</h2>
+
+        <h3>🎯 เป้าหมาย</h3>
+
+        <img src="images/signup.png" alt="หน้า Sign Up — hero เขียวมิ้นต์ navbar ลอยตรงกลาง และการ์ดฟอร์มสมัครสมาชิก" />
+
+        <ul>
+          <li>Route <code>/signup</code> — <strong>อยู่นอก DashboardLayout</strong>: หน้านี้ไม่มี sidebar ไม่มี navbar ของ dashboard แต่มี navbar ใสของตัวเองลอยบน hero</li>
+          <li>Hero ไล่เฉดเขียวมิ้นต์ + หัวข้อ "Welcome!" + ข้อความรอง</li>
+          <li>การ์ดฟอร์มลอยเหลื่อมออกมาจาก hero: หัวข้อ "Register with", ปุ่ม social 3 ปุ่ม (Facebook, Apple, Google), ตัวคั่น "or", ช่อง Name / Email / Password, สวิตช์ "Remember me", ปุ่ม SIGN UP, ลิงก์ "Already have an account? Sign in"</li>
+        </ul>
+
+        <h3>📝 เขียน Prompt</h3>
+
+        <p>นี่คือเฉลยของแบบฝึกท้ายบทเรียน 08 — เทียบกับของที่คุณเขียนไว้ จุดชี้ขาดคือใครตอบเรื่อง "ไม่มี sidebar" ได้ครบทั้งฝั่งโครงสร้าง (navbar ของตัวเอง) และฝั่ง router (route แยกนอก layout)</p>
+
+        <pre><code class="language-text">สร้างหน้า Sign Up ใน src/pages/SignUpPage.tsx ตาม screenshot ที่แนบมา
+
+บริบท: โปรเจกต์เดิม (tokens: primary, primary-dark, ink, muted) — แต่หน้านี้ไม่ใช่ส่วนของ
+dashboard: ไม่มี sidebar ไม่ใช้ DashboardLayout
+
+โครงสร้าง:
+- Hero ส่วนบนของหน้า สูงราว 40vh พื้นไล่เฉดเขียวมิ้นต์ (from-primary to-primary-dark)
+  มุมล่างโค้ง ภายใน:
+  - Navbar ลอยตรงกลางความกว้าง: โลโก้ "PURITY UI DASHBOARD" ซ้าย, ลิงก์ DASHBOARD /
+    PROFILE / SIGN UP / SIGN IN ตรงกลาง (ตัวพิมพ์ใหญ่ ตัวเล็ก ๆ สีขาว), ปุ่มขาวมุมโค้งเต็ม
+    "Free Download" ขวา
+  - กลาง hero: หัวข้อ "Welcome!" ตัวหนาใหญ่สีขาว และข้อความรองสองบรรทัด
+    "Use these awesome forms to login or create new account in your project for free."
+- การ์ดฟอร์มสีขาว กว้างราว 28rem จัดกลาง ลอยเหลื่อมขึ้นไปทับขอบล่างของ hero:
+  - หัวข้อ "Register with" จัดกลาง
+  - ปุ่ม social 3 ปุ่ม: สี่เหลี่ยมมุมโค้ง ขอบเทา ไอคอน Facebook / Apple / Google
+  - ตัวคั่น "or" สีเทาจัดกลาง
+  - ฟอร์ม: label + input ของ Name ("Your full name"), Email ("Your email address"),
+    Password ("Your password") — input มุมโค้ง ขอบเทาอ่อน
+  - สวิตช์เปิดปิด "Remember me" (ค่าเริ่มต้นเปิด)
+  - ปุ่ม SIGN UP เต็มความกว้าง พื้นเขียวมิ้นต์ตัวขาว
+  - ท้ายการ์ด: "Already have an account?" + ลิงก์ "Sign in" สีเขียวมิ้นต์
+
+ข้อกำหนดทางเทคนิค:
+- Tailwind เท่านั้น; ไอคอน social เป็น SVG inline; ทุก input มี label จริง (htmlFor/id)
+- เพิ่ม route "/signup" ใน router.tsx แบบ**อยู่นอก** DashboardLayout (route พี่น้องกัน)
+- อัปเดตเมนู Sign Up ใน sidebar ให้ลิงก์มาหน้านี้
+
+ขอบเขต: UI เท่านั้น — ยังไม่ต้อง validate, ไม่ต้องต่อ auth, ปุ่มยังไม่ต้องทำงานจริง
+</code></pre>
+
+        <p>Router หลังอัปเดตหน้าตาแบบนี้ (diff เล็ก ๆ แต่แนวคิดสำคัญ: layout เป็นของ route ไม่ใช่ของแอป)</p>
+
+        <pre><code class="language-tsx">// src/app/router.tsx
+export const router = createBrowserRouter([
+  {
+    element: &lt;DashboardLayout /&gt;,
+    children: [
+      { path: "/", element: &lt;DashboardPage /&gt; },
+      { path: "/tables", element: &lt;TablesPage /&gt; },
+    ],
+  },
+  { path: "/signup", element: &lt;SignUpPage /&gt; },
+]);
+</code></pre>
+
+        <h3>🤖 สิ่งที่ Agent สร้าง</h3>
+
+        <p>สองจุดที่ควรหยุดดู จุดแรก — ช่อง input ที่ Agent เขียน</p>
+
+        <pre><code class="language-tsx">&lt;div&gt;
+  &lt;label htmlFor="email" className="text-sm font-bold text-ink"&gt;
+    Email
+  &lt;/label&gt;
+  &lt;input
+    id="email"
+    type="email"
+    placeholder="Your email address"
+    className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-primary focus:outline-none"
+  /&gt;
+&lt;/div&gt;
+</code></pre>
+
+        <p>สังเกตว่าใช้ <code>focus:</code> ไม่ใช่ <code>focus-visible:</code> กับ input — ซึ่ง<strong>ถูกแล้ว</strong> (บทเรียน 04: การพิมพ์คือการโฟกัสโดยตั้งใจเสมอ) เห็นไหมว่าพอเรารู้หลัก ก็แยกได้ว่าอะไรคือความถูกต้องของ Agent อะไรคือความผิด — คนที่ไม่รู้หลักจะ "แก้" จุดที่ถูกให้ผิดได้ง่าย ๆ</p>
+
+        <p>จุดที่สอง — สวิตช์ Remember me ที่ Agent ทำด้วย <code>&lt;div&gt;</code> + <code>useState</code> + <code>onClick</code>: หน้าตาเหมือนดีไซน์เป๊ะ เลื่อนได้ด้วยเมาส์ แต่กดด้วยคีย์บอร์ดไม่ได้และ screen reader ไม่รู้ว่ามันคือ checkbox → TODO (บทเรียน 13 มีเฉลยท่า toggle ที่ถูกต้อง)</p>
+
+        <h3>🔍 ตรวจทาน (รอบเร็ว)</h3>
+
+        <ul>
+          <li>จอเล็ก: การ์ด Sign Up ไม่ตกขอบเพราะ container มี <code>px-4</code> ✓ ตาราง Authors ล้นเหมือนเพื่อน → เข้าคิว TODO ข้อ 5 เดิม</li>
+          <li>Tab ผ่านฟอร์ม Sign Up ได้ครบ ✓ แต่<strong>ปุ่ม social ไอคอนล้วนไม่มี <code>aria-label</code></strong> — screen reader อ่านว่า "button" สามปุ่มติดกัน ไม่รู้อันไหนคืออะไร → TODO</li>
+          <li>สวิตช์ Remember me เป็น div → TODO</li>
+        </ul>
+
+        <pre><code class="language-text">TODO (ต่อจากบทเรียน 10)
+8. ตาราง Authors ล้นจอมือถือ (พวกเดียวกับข้อ 5)
+9. สวิตช์ Remember me เป็น div — คีย์บอร์ด/screen reader ใช้ไม่ได้
+10. ปุ่ม social ไอคอนล้วน ไม่มี aria-label
+</code></pre>
+
+        <h3>🔧 Refactor</h3>
+
+        <p>commit ปิดเฟสก่อสร้าง</p>
+
+        <pre><code class="language-bash">git add .
+git commit -m "feat: tables page + sign up page generated by agent - review pending"
+</code></pre>
+
+        <h2>สรุปสถานะก่อนเข้าเฟส Review</h2>
+
+        <ul>
+          <li>เสร็จแล้ว 3 หน้า: Dashboard, Tables, Sign Up + app shell — ใช้เวลาน้อยจนน่าตกใจ นี่คือพลังของ generate</li>
+          <li>TODO สะสม 10 ข้อ — นี่คือ<em>ราคา</em>ของ generate ที่ยังไม่ได้จ่าย</li>
+          <li>หน้า Profile ยังไม่แตะ — เก็บเป็นโจทย์ใหญ่ท้าย workshop (บทเรียน 16)</li>
+        </ul>
+
+        <p>เฟสถัดไปคือการจ่ายหนี้อย่างเป็นระบบ: review สามเลนส์ — responsive, accessibility, maintainability — เริ่มจากเลนส์ที่มองเห็นง่ายที่สุดก่อน</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="10_dashboard_page.html" rel="prev">ก่อนหน้า: หน้า Dashboard</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="12_review_responsive.html" rel="next">ถัดไป: ตรวจ Responsive ของโค้ดจาก AI</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

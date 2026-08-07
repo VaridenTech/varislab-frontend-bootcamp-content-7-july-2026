@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ใช้ Cursor Agent สร้าง app shell (sidebar + navbar) จาก prompt ที่เตรียมไว้ — ลูปเต็มรอบแรก" />
+    <title>App Shell: Sidebar และ Navbar | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 09 · สร้าง UI ด้วย Cursor Agent (Building with the Agent)</p>
+          <h1>App Shell: Sidebar และ Navbar</h1>
+          <p class="lesson-original-title" lang="en">The App Shell</p>
+        </header>
+
+        <p>ถึงเวลาลูปเต็มรอบแรก: <strong>prompt → generate → review → refactor</strong> — บทนี้เดินช้า ๆ ให้เห็นทุกจังหวะ บทต่อ ๆ ไปจะเร็วขึ้นเรื่อย ๆ</p>
+
+        <h2>🎯 เป้าหมาย</h2>
+
+        <img src="images/dashboard.png" alt="หน้า Dashboard — เป้าหมายของบทนี้คือ sidebar ด้านซ้ายและ navbar ด้านบนเท่านั้น" />
+
+        <p>"เสร็จ" ของบทนี้หมายถึง</p>
+
+        <ul>
+          <li>Sidebar ครบ: โลโก้, เมนูหลัก 4 รายการ, หมวด ACCOUNT PAGES, การ์ด Need help?</li>
+          <li>Navbar ครบ: breadcrumb, ช่องค้นหา, ลิงก์ Sign In, ไอคอน</li>
+          <li>Route <code>/</code> แสดงหน้า Dashboard เปล่า ๆ ในพื้นที่เนื้อหา ผ่าน <code>&lt;Outlet /&gt;</code></li>
+          <li>บนจอ desktop หน้าตาตรง screenshot</li>
+        </ul>
+
+        <h2>📝 เขียน Prompt</h2>
+
+        <p>เราเขียน prompt นี้เสร็จแล้วในบทเรียน 07 — คัดลอกมาใช้ได้เลย เปิด Agent panel (Cmd+I) <strong>ลากไฟล์ภาพ dashboard ลงช่องแชท</strong> แล้ววาง prompt ทั้งก้อน</p>
+
+        <pre><code class="language-text">สร้าง app shell ของเว็บ admin dashboard "Purity Dashboard" ตาม screenshot ที่แนบมา
+(สนใจเฉพาะ sidebar ด้านซ้ายกับแถบบนของพื้นที่เนื้อหา)
+
+บริบท: โปรเจกต์ React + TypeScript + Vite ติดตั้ง Tailwind CSS v4 และ react-router แล้ว
+มี design tokens: primary (เขียวมิ้นต์), primary-dark, ink, muted, surface, success, danger
+
+โครงสร้าง:
+- Sidebar ซ้าย กว้างราว 260px พื้นหลังสีเดียวกับพื้นหลังหน้า (surface):
+  - โลโก้ข้อความ "PURITY UI DASHBOARD" ด้านบน คั่นด้วยเส้นบาง ๆ
+  - เมนูหลัก: Dashboard, Tables, Billing, RTL — แต่ละรายการมีไอคอนในกล่องสี่เหลี่ยมมุมโค้ง
+  - หัวข้อตัวพิมพ์เล็ก "ACCOUNT PAGES" ตามด้วย Profile, Sign In, Sign Up
+  - รายการที่ active: การ์ดพื้นขาว เงาอ่อน ไอคอนพื้นเขียวมิ้นต์ตัวอักษรขาว
+  - รายการปกติ: ตัวอักษร muted ไอคอนพื้นขาวตัวอักษรเขียวมิ้นต์
+  - ล่างสุด: การ์ดพื้นเขียวมิ้นต์ "Need help? Please check our docs" พร้อมปุ่มขาว DOCUMENTATION
+- Navbar บนของพื้นที่เนื้อหา: breadcrumb "Pages / Dashboard" กับชื่อหน้าตัวหนา ด้านซ้าย,
+  ช่องค้นหา placeholder "Type here...", ลิงก์ Sign In, ไอคอน settings และกระดิ่ง ด้านขวา
+- พื้นที่เนื้อหา: ว่างไว้ก่อน ใส่ <Outlet /> ของ react-router
+
+ข้อกำหนดทางเทคนิค:
+- ใช้ Tailwind utilities เท่านั้น ห้ามสร้างไฟล์ .css เพิ่ม
+- Mobile-first: จอเล็กซ่อน sidebar ไว้ก่อนได้ (จะทำ drawer ภายหลัง)
+- ใช้ semantic HTML: aside สำหรับ sidebar, nav, header, main; ไอคอนเป็น SVG inline
+- แยกไฟล์: src/app/layouts/DashboardLayout.tsx, src/components/Sidebar.tsx, src/components/Navbar.tsx
+- src/app/router.tsx: createBrowserRouter ให้ DashboardLayout เป็น layout route
+  และมีหน้า Dashboard ว่าง ๆ ที่ path "/" ; ครอบ RouterProvider ใน main.tsx
+
+ขอบเขต: ยังไม่ต้องสร้างเนื้อหาหน้า Dashboard จริง ยังไม่ต้องมี state ใด ๆ
+และยังไม่ต้องทำหน้าอื่น
+</code></pre>
+
+        <p>กดส่งแล้วดู Agent ทำงาน: มันจะวางแผน (บอกว่าจะสร้างไฟล์อะไรบ้าง) → สร้างไฟล์ทีละไฟล์ → เสนอ diff ให้เรา <strong>อ่าน diff ทีละไฟล์ก่อนกด Accept</strong> — ตอนอ่านยังไม่ต้องจับผิดละเอียด แค่เช็คว่าไฟล์ตรงที่ขอ โครงตรงที่สั่ง ไม่มีการแถม</p>
+
+        <h2>🤖 สิ่งที่ Agent สร้าง</h2>
+
+        <p>โค้ดที่ได้จะต่างกันเล็กน้อยในแต่ละรอบ generate — นี่คือตัวอย่างจริงที่เป็นตัวแทนของสิ่งที่มักได้มา เริ่มจาก layout ซึ่ง Agent มักทำได้ถูก</p>
+
+        <pre><code class="language-tsx">// src/app/layouts/DashboardLayout.tsx
+import { Outlet } from "react-router";
+import Sidebar from "../../components/Sidebar";
+import Navbar from "../../components/Navbar";
+
+export default function DashboardLayout() {
+  return (
+    &lt;div className="min-h-screen bg-surface"&gt;
+      &lt;Sidebar /&gt;
+      &lt;div className="lg:pl-[280px]"&gt;
+        &lt;div className="w-[1440px] mx-auto"&gt;
+          &lt;Navbar /&gt;
+          &lt;main className="px-6 pb-10"&gt;
+            &lt;Outlet /&gt;
+          &lt;/main&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <p>และ Sidebar ฉบับย่อ (ตัดไอคอน SVG กับหมวด ACCOUNT PAGES ออกให้อ่านง่าย — โครงเหมือนกัน)</p>
+
+        <pre><code class="language-tsx">// src/components/Sidebar.tsx (ส่วนหนึ่ง)
+const menu = [
+  { label: "Dashboard", icon: HomeIcon },
+  { label: "Tables", icon: TableIcon },
+  { label: "Billing", icon: CardIcon },
+  { label: "RTL", icon: RtlIcon },
+];
+
+export default function Sidebar() {
+  return (
+    &lt;aside className="fixed inset-y-0 left-0 hidden w-[260px] flex-col px-6 py-8 lg:flex"&gt;
+      &lt;p className="border-b border-gray-200 pb-6 text-sm font-bold tracking-wide text-ink"&gt;
+        PURITY UI DASHBOARD
+      &lt;/p&gt;
+      &lt;nav className="mt-6 space-y-2"&gt;
+        {menu.map((item) =&gt; (
+          &lt;div
+            key={item.label}
+            onClick={() =&gt; console.log(item.label)}
+            className="flex cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-muted hover:bg-white"
+          &gt;
+            &lt;span className="flex size-8 items-center justify-center rounded-xl bg-white text-primary"&gt;
+              &lt;item.icon /&gt;
+            &lt;/span&gt;
+            {item.label}
+          &lt;/div&gt;
+        ))}
+      &lt;/nav&gt;
+    &lt;/aside&gt;
+  );
+}
+</code></pre>
+
+        <p>รัน <code>npm run dev</code> ดู — บนจอใหญ่<strong>หน้าตาตรง screenshot เป๊ะ ใช้งานได้</strong> ถ้าดูผ่าน ๆ นี่คืองานเสร็จ… แต่โค้ดนี้มีของซ่อนอยู่อย่างน้อย 4 จุด บทที่ 5 จะพาไล่จับทีละตัว <strong>อย่าเพิ่งแก้ตอนนี้</strong> — เราจะใช้มันเป็นวัสดุการเรียนของสามบทถัดไป</p>
+
+        <h2>🔍 ตรวจทาน (รอบเร็ว)</h2>
+
+        <p>ยังไม่ใช่การ review เต็มรูป — แค่ "เดินตรวจงานรอบไซต์ก่อสร้าง" 2 นาที แล้วจดสิ่งที่เห็น</p>
+
+        <ul>
+          <li>จอใหญ่: ครบ ตรงดีไซน์ ✓</li>
+          <li>ลากหน้าต่างให้แคบลง: มี <strong>scrollbar แนวนอน</strong>โผล่มา — ต้นตอน่าจะเป็น <code>w-[1440px]</code> ใน layout (ความกว้าง<em>ตายตัว</em> ไม่ใช่ <code>max-w</code>)</li>
+          <li>จอมือถือ: sidebar หายไปเฉย ๆ (<code>hidden lg:flex</code>) — ตอนนี้<strong>ไม่มีทางเปิดเมนูเลย</strong>บนมือถือ</li>
+          <li>กด Tab ไล่ดู: โฟกัสกระโดดข้ามเมนู sidebar ไปเลย (เมนูเป็น <code>&lt;div onClick&gt;</code> ไม่ใช่ลิงก์จริง) และมองไม่เห็นเลยว่าโฟกัสอยู่ตรงไหน (ไม่มี focus style สักตัว)</li>
+        </ul>
+
+        <p>จดเป็น TODO ไว้ในไฟล์โน้ตของโปรเจกต์</p>
+
+        <pre><code class="language-text">TODO จากการตรวจรอบเร็ว (บทเรียน 09)
+1. w-[1440px] ใน DashboardLayout → horizontal scroll บนจอเล็ก
+2. sidebar ซ่อนบนมือถือ ไม่มีทางเข้าถึง → ต้องมี drawer
+3. เมนู sidebar เป็น div onClick → คีย์บอร์ด/screen reader ใช้ไม่ได้
+4. ไม่มี focus-visible style ทั้งแอป
+</code></pre>
+
+        <p>สังเกตข้อ 3–4: <strong>ละเมิด rules ที่เราเขียนไว้ในบทเรียน 02 ตรง ๆ</strong> ("ปุ่ม/ลิงก์เป็น &lt;button&gt;/&lt;a&gt; จริง และมี focus-visible state") — rules ช่วยลดปัญหาแต่ไม่ได้กำจัดมัน นี่คือหลักฐานชิ้นแรกว่าทำไมต้องมีขั้น review เสมอ</p>
+
+        <h2>🔧 Refactor</h2>
+
+        <p>ยังไม่ทำ — บทที่ 5–6 จะทำเรื่องนี้เต็ม ๆ แบบมีระบบ ตอนนี้แค่ commit เก็บสถานะไว้</p>
+
+        <pre><code class="language-bash">git add .
+git commit -m "feat: app shell (sidebar + navbar) generated by agent - review pending"
+</code></pre>
+
+        <p>ปิดท้ายด้วย router ที่ Agent สร้างให้ ซึ่งจะโตขึ้นเรื่อย ๆ ในสองบทถัดไป</p>
+
+        <pre><code class="language-tsx">// src/app/router.tsx
+import { createBrowserRouter } from "react-router";
+import DashboardLayout from "./layouts/DashboardLayout";
+import DashboardPage from "../pages/DashboardPage";
+
+export const router = createBrowserRouter([
+  {
+    element: &lt;DashboardLayout /&gt;,
+    children: [{ path: "/", element: &lt;DashboardPage /&gt; }],
+  },
+]);
+</code></pre>
+
+        <p>โครงบ้านขึ้นแล้ว บทถัดไปเติมของเข้าห้องใหญ่ที่สุด: หน้า Dashboard ทั้งหน้า</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="08_figma_handoff.html" rel="prev">ก่อนหน้า: ใช้ Figma ประกอบ Prompt</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="10_dashboard_page.html" rel="next">ถัดไป: หน้า Dashboard</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
