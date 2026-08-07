@@ -1,0 +1,210 @@
+{
+  "questions": [
+    {
+      "prompt": "ใน type Pizza ด้านล่าง sizes: Record<PizzaSize, number> หมายความว่าอย่างไร",
+      "body": "<pre><code class=\"language-typescript\">export type PizzaSize = \"S\" | \"M\" | \"L\";\n\nexport type Pizza = {\n  id: string;\n  name: string;\n  category: string;\n  description: string;\n  image: string;\n  sizes: Record&lt;PizzaSize, number&gt;;\n};</code></pre>",
+      "choices": [
+        "object ที่มี key เป็นค่าใน PizzaSize ทุกตัว และ value เป็น number ซึ่งก็คือ { S: number; M: number; L: number }",
+        "array ของตัวเลขที่มีความยาวเท่ากับจำนวนขนาดพิซซ่าที่มี",
+        "object ที่มี key เป็น number และ value เป็น PizzaSize"
+      ],
+      "correctChoice": 1,
+      "explanation": "เขียนแบบยาวเป็น { S: number; M: number; L: number } ก็ได้ แต่การผูกกับ PizzaSize ทำให้ถ้าวันหนึ่งเพิ่มขนาด XL เข้าไปใน union มันจะบังคับให้แก้ทุกที่ที่เกี่ยวข้องให้ครบเอง และทำให้ selectedPizza.sizes[pizzaSize] ใช้ได้โดยไม่ต้อง cast."
+    },
+    {
+      "prompt": "ถ้าลบ [] ท้าย useEffect ออกไป (ไม่ใส่ dependency array เลย) จะเกิดอะไรขึ้นกับโค้ดชุดนี้",
+      "body": "<pre><code class=\"language-typescript\">useEffect(() =&gt; {\n  fetchPizzaTypes();\n}); // ไม่มี dependency array\n\nasync function fetchPizzaTypes() {\n  const pizzasRes = await fetch(\"/api/pizzas\");\n  const pizzasJson: PizzaType[] = await pizzasRes.json();\n  setPizzaTypes(pizzasJson);\n  setLoading(false);\n}</code></pre>",
+      "choices": [
+        "effect จะไม่รันเลย เพราะ React ไม่รู้ว่าต้องเฝ้าดูอะไร",
+        "effect จะรันใหม่หลังทุก render และเพราะ fetchPizzaTypes เรียก setPizzaTypes ซึ่งทำให้ render ใหม่อีก จึงเกิดลูปไม่สิ้นสุด",
+        "effect จะรันครั้งเดียวตอนสร้าง component เหมือนใส่ [] ทุกประการ"
+      ],
+      "correctChoice": 2,
+      "explanation": "เมื่อไม่ให้ data dependencies React จะสมมติว่าทุกครั้งที่ hook ใด ๆ เปลี่ยนต้องรัน effect อีก การใส่ array ว่างคือการบอกว่าไม่ต้องเฝ้าดูอะไรเลย จึงรันแค่ครั้งเดียวตอนสร้าง component."
+    },
+    {
+      "prompt": "ทำไม TypeScript ถึงฟ้องว่า 'selectedPizza' is possibly 'undefined' ในโค้ดแบบเวอร์ชัน JavaScript ชุดนี้",
+      "body": "<pre><code class=\"language-javascript\">let price, selectedPizza;\nif (!loading) {\n  selectedPizza = pizzaTypes.find((pizza) =&gt; pizzaType === pizza.id);\n  price = intl.format(selectedPizza.sizes[pizzaSize]);\n}</code></pre>",
+      "choices": [
+        "เพราะประกาศด้วย let ทำให้ TypeScript ไม่ยอมให้เข้าถึง property ใด ๆ ของตัวแปรนั้นเลย",
+        "เพราะ pizzaTypes เริ่มต้นเป็น array ว่าง TypeScript จึงมองว่าทุก element ข้างในเป็น undefined",
+        "เพราะ Array.find() คืน undefined ได้เมื่อหาไม่เจอ type ของ selectedPizza จึงเป็น PizzaType | undefined และการที่ loading เป็น false ก็ไม่ได้แปลว่าหาพิซซ่าเจอ"
+      ],
+      "correctChoice": 3,
+      "explanation": "ถ้า API ไม่มีพิซซ่า id ที่ตั้งไว้เป็นค่าเริ่มต้น find จะคืน undefined แล้วแอปจะพังด้วย Cannot read properties of undefined ทันที TypeScript แค่ชี้ให้เห็นว่าเรากำลังสับสนระหว่าง \"โหลดเสร็จแล้ว\" กับ \"หาเจอแล้ว\"."
+    },
+    {
+      "prompt": "ทำไมเงื่อนไขใน JSX จึงต้องเขียนเป็น loading || !selectedPizza แทนที่จะเขียนแค่ loading เฉย ๆ",
+      "body": "<pre><code class=\"language-tsx\">{\n  loading || !selectedPizza ? (\n    &lt;h3&gt;Loading...&lt;/h3&gt;\n  ) : (\n    &lt;div className=\"order-pizza\"&gt;\n      &lt;Pizza\n        name={selectedPizza.name}\n        description={selectedPizza.description}\n        image={selectedPizza.image}\n      /&gt;\n      &lt;p&gt;{price}&lt;/p&gt;\n    &lt;/div&gt;\n  )\n}</code></pre>",
+      "choices": [
+        "เพราะ loading เป็น boolean จึงนำมาใช้เป็นเงื่อนไขของ ternary ตรง ๆ ไม่ได้",
+        "เพราะเครื่องหมาย || ทำให้ React ข้ามการ render รอบนั้นไปทั้งหมด",
+        "เพราะการเช็ค !selectedPizza ทำให้ type narrowing ทำงาน ในกิ่ง else TypeScript จึงมั่นใจว่า selectedPizza ไม่ใช่ undefined และเราเขียน .name, .description, .image ต่อได้"
+      ],
+      "correctChoice": 3,
+      "explanation": "TypeScript มองไม่ออกว่า loading === false เกี่ยวอะไรกับการที่ find() จะหาเจอ ผลพลอยได้คือแอปแข็งแรงขึ้นจริง: ถ้า API ส่งรายการที่ไม่มีพิซซ่า id นั้นกลับมา ผู้ใช้จะเห็นข้อความ Loading ค้างไว้ แทนที่จะเห็นหน้าขาวเพราะแอปพัง."
+    },
+    {
+      "prompt": "ทำไมบทเรียนจึงเตือนว่า \"อย่าใช้ index ของ array เป็น key\" เวลา render list",
+      "body": "<pre><code class=\"language-tsx\">{pizzaTypes.map((pizza) =&gt; (\n  &lt;option key={pizza.id} value={pizza.id}&gt;\n    {pizza.name}\n  &lt;/option&gt;\n))}</code></pre>",
+      "choices": [
+        "เพราะ key ต้องเป็นข้อความเท่านั้น ใช้ตัวเลขอย่าง index ไม่ได้",
+        "เพราะ key มีไว้บอก React ว่า component ไหนคือชิ้นเดิม ถ้าใช้ index แล้ว list ถูกจัดลำดับใหม่ React จะเข้าใจผิดว่าเป็นคนละชิ้นและรื้อ re-render ใหม่ทั้งหมด ปกติจึงควรใช้ id จาก database",
+        "เพราะ index ทำให้ React ไม่ re-render เลยแม้ข้อมูลจะเปลี่ยนไปแล้ว"
+      ],
+      "correctChoice": 2,
+      "explanation": "key คือ identifier ที่ผูกกับสิ่งที่เป็นเอกลักษณ์ของ component นั้น เมื่อ React เห็นว่า key เดิมเพียงย้ายลำดับ มันจะเก็บ component tree ไว้ ยกเว้นกรณีที่ array ไม่มีวันเปลี่ยนลำดับจริง ๆ (เช่น cart ในบทที่ 16) จึงพอผ่านได้."
+    },
+    {
+      "prompt": "ทำไมไฟล์ usePizzaOfTheDay จึงใช้นามสกุล .ts ไม่ใช่ .tsx",
+      "choices": [
+        "เพราะไฟล์นี้ไม่มี JSX อยู่เลย มีแต่ logic ล้วน ๆ และในไฟล์ .tsx ไวยากรณ์ generic แบบ <T> จะไปชนกับ JSX tag ทำให้ต้องเขียนอ้อมโดยไม่จำเป็น",
+        "เพราะ custom hook ทุกตัวต้องเป็น .ts เสมอ ไม่ว่าจะมี JSX อยู่ข้างในหรือไม่",
+        "เพราะไฟล์ .tsx import hook อย่าง useState หรือ useEffect จาก react ไม่ได้"
+      ],
+      "correctChoice": 1,
+      "explanation": "กฎที่คอร์สนี้ใช้ตลอดคือ มี JSX ใช้ .tsx ไม่มี JSX ใช้ .ts ต่างจากโปรเจกต์ JavaScript หลายที่ที่ตั้ง .jsx ให้ทุกไฟล์ที่เกี่ยวกับ React ไปเลย."
+    },
+    {
+      "prompt": "ทำไมบรรทัดนี้ถึงจำเป็นต้องใส่ generic <Pizza | null> ให้ useState",
+      "body": "<pre><code class=\"language-typescript\">const [pizzaOfTheDay, setPizzaOfTheDay] = useState&lt;Pizza | null&gt;(null);</code></pre>",
+      "choices": [
+        "ไม่จำเป็นเลย ใส่ไว้เพื่อให้อ่านง่ายขึ้นเท่านั้น",
+        "ถ้าไม่ใส่ TypeScript จะเดา type จากค่าเริ่มต้น null ว่าเป็น null เท่านั้น แล้ว setPizzaOfTheDay(data) จะถูกฟ้องทันที",
+        "ถ้าไม่ใส่ React จะไม่ยอม re-render เมื่อ state เปลี่ยนจาก null ไปเป็น object"
+      ],
+      "correctChoice": 2,
+      "explanation": "รูปแบบ useState<T | null>(null) พบบ่อยมากกับ state ที่ \"ยังไม่มีข้อมูล แล้วค่อยมาทีหลัง\" ส่วน return type ของ hook เองไม่ต้องประกาศ TypeScript สรุปให้เป็น Pizza | null ตาม state ที่ return ออกไป."
+    },
+    {
+      "prompt": "useDebugValue ในโค้ดนี้มีไว้ทำอะไร",
+      "body": "<pre><code class=\"language-typescript\">import { useState, useEffect, useDebugValue } from \"react\";\n\nuseDebugValue(pizzaOfTheDay ? `${pizzaOfTheDay.name}` : \"Loading...\");</code></pre>",
+      "choices": [
+        "พิมพ์ค่าออกทาง console ทุกครั้งที่ hook ทำงาน",
+        "หยุดการทำงานของแอปเหมือน breakpoint เมื่อค่าที่ระบุเปลี่ยน",
+        "แสดงค่าที่เราเลือกไว้ใน React Dev Tools เพื่อให้ดูออกเร็ว ๆ ว่า custom hook แต่ละตัวมีข้อมูลอะไรอยู่ข้างใน"
+      ],
+      "correctChoice": 3,
+      "explanation": "มันมีประโยชน์มากเมื่อมี custom hooks จำนวนมาก โดยเฉพาะ hook ตัวเดียวที่ถูกใช้ซ้ำหลายที่ด้วยค่าต่างกัน."
+    },
+    {
+      "prompt": "ถ้าเขียน const [cart, setCart] = useState([]) โดยไม่ใส่ generic จะเกิดปัญหาอะไรใน TypeScript",
+      "body": "<pre><code class=\"language-typescript\">// สิ่งที่บทเรียนให้เขียน\nconst [cart, setCart] = useState&lt;CartItem[]&gt;([]);</code></pre>",
+      "choices": [
+        "TypeScript จะเดา type ได้เป็น never[] แล้วเราจะใส่อะไรลงไปใน array นั้นไม่ได้เลย",
+        "TypeScript จะเดา type ได้เป็น any[] ซึ่งใช้งานได้ตามปกติ ไม่มีปัญหาอะไร",
+        "โค้ดจะ compile ไม่ผ่านทันทีตั้งแต่บรรทัดที่ประกาศ useState"
+      ],
+      "correctChoice": 1,
+      "explanation": "array ว่างเป็นกรณีที่ TypeScript เดา type ไม่ออก เป็นคู่หูของ useState<T | null>(null) ที่เจอในบทเรื่อง custom hooks."
+    },
+    {
+      "prompt": "checkout?: () => void ใน CartProps อ่านว่าอะไร และทำไมต้องมีเครื่องหมาย ?",
+      "body": "<pre><code class=\"language-typescript\">type CartProps = {\n  cart: CartItem[];\n  checkout?: () =&gt; void;\n};</code></pre>",
+      "choices": [
+        "อ่านว่า \"ฟังก์ชันที่ต้องคืนค่าเป็น void เสมอ\" ส่วน ? แปลว่ามันเป็น async function",
+        "อ่านว่า \"ค่าที่อาจเป็น null ก็ได้\" ส่วน ? ทำให้ React ข้าม prop นี้ตอน render",
+        "อ่านว่า \"ฟังก์ชันที่ไม่รับ argument และไม่คืนค่า\" ส่วน ? ทำให้เป็น prop ที่จะส่งหรือไม่ส่งก็ได้ ซึ่งจำเป็น เพราะก่อนหน้านี้เรา render <Cart cart={cart} /> โดยยังไม่ส่ง checkout"
+      ],
+      "correctChoice": 3,
+      "explanation": "ถ้าไม่ใส่ ? TypeScript จะฟ้องทันทีที่บรรทัด <Cart cart={cart} /> ส่วน () => void คือวิธีให้ type กับ prop ที่เป็นฟังก์ชัน ซึ่งจะได้ใช้บ่อยมากตั้งแต่นี้ไป."
+    },
+    {
+      "prompt": "ทำไมใน onSubmit จึงต้องมีบรรทัด if (!selectedPizza) return; ก่อนเรียก setCart",
+      "body": "<pre><code class=\"language-typescript\">&lt;form\n  onSubmit={(e: React.FormEvent&lt;HTMLFormElement&gt;) =&gt; {\n    e.preventDefault();\n    if (!selectedPizza) return;\n    setCart([...cart, { pizza: selectedPizza, size: pizzaSize, price }]);\n  }}\n&gt;</code></pre>",
+      "choices": [
+        "เพื่อป้องกันไม่ให้ form ถูก submit ซ้ำสองครั้ง",
+        "เพราะ selectedPizza ยังมี type เป็น Pizza | undefined อยู่ ขณะที่ CartItem.pizza รับเฉพาะ Pizza เท่านั้น TypeScript จึงบังคับให้เช็คก่อน",
+        "เพราะ e.preventDefault() จะทำงานได้ก็ต่อเมื่อมีคำสั่ง return ตามหลัง"
+      ],
+      "correctChoice": 2,
+      "explanation": "ผลพลอยได้คือเราจะไม่มีวันเผลอใส่ของว่างเปล่าลงตะกร้าตอนที่ยังโหลดข้อมูลไม่เสร็จ เป็นตัวอย่างที่ดีว่าการทำให้ type ผ่านมักบังคับให้เราเขียนโค้ดที่ครอบคลุมกรณีจริงมากขึ้น."
+    },
+    {
+      "prompt": "บทเรียนแนะนำว่าควรใช้ Context เมื่อใด",
+      "choices": [
+        "ใช้แทน useState ทุกครั้ง เพื่อให้ state ทั้งหมดของแอปอยู่ที่เดียวกัน",
+        "ใช้เมื่อไม่อยากให้ component ลูกอ่านค่าที่ component แม่ถืออยู่",
+        "ใช้กับ app-level state ที่ต้องคงอยู่ข้ามหน้า หรือเมื่อการส่ง props ตามปกติต้องไล่ผ่าน component จำนวนมาก (prop drilling) จนไม่สะดวกจริง ๆ และควรใช้อย่างประหยัด"
+      ],
+      "correctChoice": 3,
+      "explanation": "data flow ที่ชัดเจนของ React เป็น feature ไม่ใช่ bug มันทำให้อ่านออกง่ายว่า data มาจากไหนและไปไหน context คือ escape hatch สำหรับกรณีที่ prop drilling ทำให้โค้ดยาวโดยไม่เกิดประโยชน์."
+    },
+    {
+      "prompt": "ค่า [[], () => {}] ที่ส่งให้ createContext คืออะไร",
+      "body": "<pre><code class=\"language-typescript\">export type CartHook = [CartItem[], Dispatch&lt;SetStateAction&lt;CartItem[]&gt;&gt;];\n\nexport const CartContext = createContext&lt;CartHook&gt;([[], () =&gt; {}]);</code></pre>",
+      "choices": [
+        "ค่าเริ่มต้นของ cart ที่ทุก component จะได้รับตอนแอปเปิด แม้จะมี Provider ครอบอยู่แล้วก็ตาม",
+        "default value ที่จะถูกใช้ก็ต่อเมื่อไม่มี context provider ครอบอยู่ (ซึ่งไม่ควรเกิดขึ้น) หน้าตาแปลกเพราะมันเลียนแบบสิ่งที่ React hook คืนมา คือ array ที่ช่องแรกเป็นค่า และช่องที่สองเป็นฟังก์ชัน set",
+        "type ของ context ที่ TypeScript จะนำไปใช้แทน generic <CartHook>"
+      ],
+      "correctChoice": 2,
+      "explanation": "generic <CartHook> ต่างหากที่เป็นตัวกำหนด type ถ้าลบออก TypeScript จะเดา type จากค่า [[], () => {}] ได้เป็น (never[] | (() => void))[] ซึ่งเละมาก แล้วทุกที่ที่ useContext(CartContext) ก็จะใช้ไม่ได้."
+    },
+    {
+      "prompt": "Dispatch<SetStateAction<CartItem[]>> คือ type ของอะไร",
+      "body": "<pre><code class=\"language-typescript\">setCart([...cart, newItem]);              // ส่งค่าใหม่ตรง ๆ\nsetCart((prev) =&gt; [...prev, newItem]);     // ส่งฟังก์ชันที่รับค่าเดิมมาคำนวณ</code></pre>",
+      "choices": [
+        "type ของ action object ที่ใช้กับ useReducer เท่านั้น",
+        "type ของตะกร้าสินค้าที่ถูกส่งผ่าน context",
+        "type ของฟังก์ชัน setCart ที่ useState คืนมา ที่ซับซ้อนเพราะ setCart รับได้ทั้งค่าใหม่ตรง ๆ และฟังก์ชันที่รับค่าเดิมมาคำนวณ"
+      ],
+      "correctChoice": 3,
+      "explanation": "SetStateAction<CartItem[]> คือ \"CartItem[] หรือฟังก์ชันที่รับ CartItem[] แล้วคืน CartItem[]\" ส่วน Dispatch<T> คือ \"ฟังก์ชันที่รับ T แล้วไม่คืนอะไร\" ไม่ต้องท่อง เอาเมาส์ไปชี้ที่ setCart ใน VS Code แล้วก๊อป type ที่มันแสดงมาใช้ได้เลย."
+    },
+    {
+      "prompt": "ทำไมใน App.tsx เราจึงเขียน const cartHook = useState<CartItem[]>([]) โดยไม่ destructure แล้วส่งเข้า value ของ Provider เลย",
+      "body": "<pre><code class=\"language-typescript\">const App = () =&gt; {\n  const cartHook = useState&lt;CartItem[]&gt;([]);\n  return (\n    &lt;StrictMode&gt;\n      &lt;CartContext.Provider value={cartHook}&gt;\n        &lt;div&gt;\n          &lt;Header /&gt;\n          &lt;Order /&gt;\n          &lt;PizzaOfTheDay /&gt;\n        &lt;/div&gt;\n      &lt;/CartContext.Provider&gt;\n    &lt;/StrictMode&gt;\n  );\n};</code></pre>",
+      "choices": [
+        "เพราะ Provider รับได้เฉพาะค่าที่ยังไม่ผ่านการ destructure เท่านั้น",
+        "เพราะ React จะ re-render ทั้งแอปถ้าเรา destructure ก่อนส่ง",
+        "เพราะเราอยากส่งทั้งคู่ [cart, setCart] เข้า context ในครั้งเดียว ซึ่ง type ตรงกับ CartHook พอดี component ที่เรียก useContext จึงเลือกดึงมาใช้เองได้ตามต้องการ"
+      ],
+      "correctChoice": 3,
+      "explanation": "Order เขียน const [cart, setCart] = useContext(CartContext) ส่วน Header ที่ไม่ต้องใช้ setter ก็เขียนแค่ const [cart] = useContext(CartContext) และถ้าเผลอเขียน useState([]) เฉย ๆ TypeScript จะฟ้องตรง value={cartHook} ว่า type ไม่ตรงกัน."
+    },
+    {
+      "prompt": "<Outlet /> ใน __root.tsx ทำหน้าที่อะไร",
+      "body": "<pre><code class=\"language-typescript\">export const Route = createRootRoute({\n  component: () =&gt; {\n    const cartHook = useState&lt;CartItem[]&gt;([]);\n    return (\n      &lt;&gt;\n        &lt;CartContext.Provider value={cartHook}&gt;\n          &lt;div&gt;\n            &lt;Header /&gt;\n            &lt;Outlet /&gt;\n            &lt;PizzaOfTheDay /&gt;\n          &lt;/div&gt;\n        &lt;/CartContext.Provider&gt;\n        &lt;TanStackRouterDevtools /&gt;\n      &lt;/&gt;\n    );\n  },\n});</code></pre>",
+      "choices": [
+        "เป็นจุดที่ TanStack Router จะสลับ component ของ route ปัจจุบันเข้ามา render ส่วน Header และ PizzaOfTheDay ที่อยู่รอบ ๆ จะแสดงอยู่ทุกหน้า",
+        "เป็น component ที่แสดงข้อความ error เมื่อหา route ไม่เจอ",
+        "เป็นที่สำหรับประกาศรายชื่อ route ทั้งหมดของแอป"
+      ],
+      "correctChoice": 1,
+      "explanation": "__root.tsx คือ template พื้นฐานของทุก route ส่วน <> กับ </> คือ fragment ที่ใช้ render sibling สองตัว (context กับ dev tools) โดยไม่ต้องเพิ่ม div สุ่ม ๆ เข้ามา."
+    },
+    {
+      "prompt": "ก้อน declare module ใน App.tsx มีไว้ทำอะไร",
+      "body": "<pre><code class=\"language-typescript\">const router = createRouter({ routeTree });\n\ndeclare module \"@tanstack/react-router\" {\n  interface Register {\n    router: typeof router;\n  }\n}</code></pre>",
+      "choices": [
+        "ติดตั้ง TanStack Router เพิ่มเติมเฉพาะในไฟล์นี้ ถ้าไม่มีก้อนนี้จะ import ไม่ได้",
+        "สร้าง route ใหม่ชื่อ Register ให้กับแอป",
+        "เป็น module augmentation ที่บอก library ว่า router ของแอปเราคือตัวไหน ทำให้ <Link to=\"/order\"> มี auto-complete ของ route ที่มีจริง และเป็น error ทันทีเมื่อพิมพ์ path ผิด"
+      ],
+      "correctChoice": 3,
+      "explanation": "module augmentation คือการ \"เติม\" ข้อมูล type เข้าไปใน library ที่เรา import มา เราเขียนมันครั้งเดียวตอนตั้งโปรเจกต์ แต่รู้ไว้ว่ามันคืออะไรจะช่วยได้มากเวลา type safety ของ router อยู่ ๆ ก็หายไป."
+    },
+    {
+      "prompt": "ทำไมของใน cart ถึงยังอยู่ครบ เมื่อเรา navigate จากหน้า /order กลับไปหน้า home แล้วกลับมาอีกครั้ง",
+      "choices": [
+        "เพราะ TanStack Router เก็บ state ของทุก route ไว้ให้อัตโนมัติ",
+        "เพราะ cart state ถูกเก็บไว้ที่ __root.tsx ซึ่งไม่เคยถูก un-render ระหว่างเปลี่ยนหน้า ถ้าย้ายไปไว้ใน Cart.tsx หรือ order.lazy.tsx มันจะหายทุกครั้งที่ navigate ออกไป",
+        "เพราะ Context บันทึกค่าลง localStorage ให้โดยอัตโนมัติ"
+      ],
+      "correctChoice": 2,
+      "explanation": "เมื่อ component ถูก un-render มันจะสูญเสีย state ทั้งหมด นี่คือเหตุผลหนึ่งที่ Context ทรงพลังมาก และเป็นเหตุผลว่าทำไมจึงยก cart ขึ้นไปไว้ที่ root route."
+    },
+    {
+      "prompt": "createLazyFileRoute ต่างจาก route ธรรมดาอย่างไร และบทเรียนเตือนอะไรไว้",
+      "body": "<pre><code class=\"language-typescript\">import { createLazyFileRoute } from \"@tanstack/react-router\";\n\nexport const Route = createLazyFileRoute(\"/order\")({\n  component: Order,\n});</code></pre>",
+      "choices": [
+        "มันทำให้ route ถูก code split และ lazy-load ซึ่งช่วยมากในแอปใหญ่ แต่ในแอปเล็กอาจช้าลงจริง ๆ เพราะเพิ่มการเดินทางไป-กลับอีกหนึ่งครั้ง จึงควรวัดผลว่ามันช่วยจริงไหม",
+        "มันทำให้ route ไปโหลดข้อมูลจาก API ให้อัตโนมัติก่อน render component",
+        "มันทำให้ route ถูกซ่อนจาก route tree จนกว่าผู้ใช้จะล็อกอิน"
+      ],
+      "correctChoice": 1,
+      "explanation": "การเพิ่มขนาด bundle อีก 1KB ไม่ได้ทำให้ช้า แต่การเดินทางไป-กลับเพิ่มอีกหนึ่งครั้งทำให้ช้า อาการ flash เล็ก ๆ ก่อนหน้าโหลดที่เห็นในบทนี้ก็มาจาก lazy loading นี่เอง."
+    }
+  ]
+}
