@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้าง design tokens ของ Purity UI ด้วย @theme ของ Tailwind v4 และการจัดระเบียบ class" />
+    <title>Design Tokens ด้วย @theme | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 05 · Tailwind CSS พื้นฐาน (Tailwind Essentials)</p>
+          <h1>Design Tokens ด้วย @theme</h1>
+          <p class="lesson-original-title" lang="en">Design Tokens</p>
+        </header>
+
+        <h2>ทำไมต้องมี token</h2>
+
+        <p>สีเขียวมิ้นต์ของ Purity โผล่อยู่ทุกหน้า: กล่องไอคอน, ปุ่ม, progress bar, hero ของหน้า Sign Up ถ้าเราพิมพ์ <code>bg-teal-400</code> กระจายไปทั่ว แล้ววันหนึ่ง brand เปลี่ยนสี (เรื่องปกติมากในชีวิตจริง) ต้องไล่แก้ทุกไฟล์ และถ้า Agent เกิดใช้ <code>teal-300</code> บ้าง <code>teal-400</code> บ้างในแต่ละรอบ generate สีจะเพี้ยนกันเองโดยไม่มีใครสังเกต</p>
+
+        <p>ทางแก้คือ <strong>design token</strong>: ตั้งชื่อค่าที่เป็น "ระบบ" ของดีไซน์ไว้ที่เดียว แล้วอ้างชื่อแทนค่า</p>
+
+        <h2>อ่านค่าจาก Figma</h2>
+
+        <p>เปิดไฟล์ Figma ของ Purity แล้วลองคลิกเลือกของทีละชิ้น: กล่องไอคอนของ stat card → ดู Fill ในแผง Design ด้านขวา, ตัวหนังสือหัวการ์ด → ดูสีข้อความ, ป้ายรองสีเทา → ดูอีกค่า เมื่อไล่ดูหลาย ๆ ชิ้นจะพบว่าดีไซน์ทั้งดีไซน์ใช้สีหลักอยู่ไม่กี่ตัว นี่คือชุดที่เราจะใช้ตลอด workshop (ค่าอ่านจากไฟล์ Figma โดยประมาณ — ปัดให้จำง่ายเล็กน้อย ไม่ผิดบาป)</p>
+
+        <p>เขียนลง <code>src/index.css</code> ด้วย <code>@theme</code> — ฟีเจอร์ของ Tailwind v4 ที่ทำให้ config เป็น CSS</p>
+
+        <pre><code class="language-css">/* src/index.css */
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #4fd1c5;
+  --color-primary-dark: #38b2ac;
+  --color-ink: #2d3748;
+  --color-muted: #a0aec0;
+  --color-surface: #f8f9fa;
+  --color-success: #48bb78;
+  --color-danger: #e53e3e;
+}
+</code></pre>
+
+        <ul>
+          <li><code>primary</code> / <code>primary-dark</code> — เขียวมิ้นต์ประจำแบรนด์ กับเวอร์ชันเข้มไว้ทำ hover</li>
+          <li><code>ink</code> — น้ำเงินเทาเข้ม สีตัวหนังสือหลักของดีไซน์นี้ (ไม่ใช่ดำสนิท)</li>
+          <li><code>muted</code> — เทาอ่อนของป้ายรองและเมนูที่ไม่ active</li>
+          <li><code>surface</code> — เทาจาง ๆ ของพื้นหลังทั้งหน้า</li>
+          <li><code>success</code> / <code>danger</code> — เขียวของ +55% และแดงของ -14%</li>
+        </ul>
+
+        <p>แค่นี้ Tailwind จะ<strong>สร้าง utility ให้อัตโนมัติทุกตัว</strong>: <code>bg-primary</code>, <code>text-ink</code>, <code>border-muted</code>, <code>ring-primary/50</code> — ใช้ได้เหมือนสีในตัวทุกประการ รวมถึง opacity modifier</p>
+
+        <pre><code class="language-html">&lt;button class="rounded-xl bg-primary px-4 py-2 font-bold text-white hover:bg-primary-dark"&gt;
+  SIGN UP
+&lt;/button&gt;
+</code></pre>
+
+        <p>ลองกลับไปแปลง stat card จากบทเรียน 03 ให้ใช้ token — เปลี่ยนแค่ 4 class</p>
+
+        <pre><code class="language-text">- &lt;p class="text-sm font-medium text-gray-400"&gt;          + text-muted
+- &lt;p class="text-xl font-bold text-gray-700"&gt;            + text-ink
+- &lt;span class="text-sm font-bold text-green-500"&gt;        + text-success
+- &lt;div class="... rounded-xl bg-teal-400"&gt;               + bg-primary
+</code></pre>
+
+        <p>หน้าตาเหมือนเดิมทุกประการ แต่ตอนนี้การ์ดพูดภาษาดีไซน์ ("นี่คือสี primary") ไม่ใช่ภาษาค่าดิบ ("นี่คือ teal-400") — และที่สำคัญสำหรับ workflow ของเรา: <strong>token ที่ตั้งไว้จะไปอยู่ใน prompt และ rules ให้ Agent ใช้ตาม</strong> ทำให้ทุกรอบ generate ได้สีชุดเดียวกัน</p>
+
+        <h2>จัดระเบียบ class ยาว ๆ</h2>
+
+        <p>Class ที่เรียงมั่ว ๆ อ่านยากและ review ยาก แนะนำลำดับนี้ (ไม่ต้องเป๊ะ แต่ให้มีระบบ): <strong>layout → sizing → spacing → typography → สี → border/เงา → states</strong> เช่น <code>flex items-center gap-3 w-full px-4 py-2 text-sm font-bold text-ink bg-white rounded-xl shadow-sm hover:bg-surface</code></p>
+
+        <p>ข่าวดีคือไม่ต้องจัดเอง — ติดตั้ง plugin ของ Prettier แล้วให้มันเรียงให้ทุกครั้งที่ save</p>
+
+        <pre><code class="language-bash">npm install -D prettier prettier-plugin-tailwindcss
+</code></pre>
+
+        <pre><code class="language-text">// .prettierrc
+{
+  "plugins": ["prettier-plugin-tailwindcss"]
+}
+</code></pre>
+
+        <p>ประโยชน์แฝงที่จะเห็นชัดในบทที่ 5: เมื่อ class เรียงเป็นมาตรฐานเดียวกันหมด การเทียบว่าสองที่ "ใช้ class ชุดเดียวกันไหม" (สัญญาณของโค้ดซ้ำ) ทำได้ด้วยตาเปล่า</p>
+
+        <h2>ทำไมไม่ใช้ @apply ทุกที่</h2>
+
+        <p>Tailwind มี <code>@apply</code> ให้ยุบ class ชุดยาวเป็น class ใหม่ใน CSS ได้ เช่น <code>.btn { @apply rounded-xl bg-primary px-4 py-2; }</code> — เห็นครั้งแรกเหมือนทางออกของ class ยาว แต่ถ้าใช้ทั่วไปหมด เราจะกลับไปสู่โลกเดิมเป๊ะ: ตั้งชื่อ class, สลับไฟล์ไปดูความหมาย, CSS ผีที่ไม่มีใครกล้าลบ — สิ่งที่หนีมาตั้งแต่บทเรียน 03</p>
+
+        <p>คำตอบเรื่อง reuse ของโลก React + Tailwind คือ <strong>React component</strong> — ปุ่มที่ใช้ซ้ำไม่ใช่ <code>.btn</code> แต่คือ <code>&lt;Button&gt;</code> ที่ห่อ class ไว้ข้างในหนึ่งเดียว บทเรียน 15 จะทำเรื่องนี้เต็ม ๆ</p>
+
+        <h2>แบบฝึกท้ายบท</h2>
+
+        <p>การ์ด "Active Users" ในหน้า Dashboard มีพื้นหลังน้ำเงินเข้มไล่เฉด ซึ่งเข้มกว่า <code>ink</code> อีกขั้น — ลองเพิ่ม token <code>--color-ink-dark: #1a202c</code> เข้าไปใน <code>@theme</code> เตรียมไว้ แล้วคิดดูว่า gradient จาก <code>ink</code> ไป <code>ink-dark</code> เขียนด้วย utility ว่าอะไร (ใบ้: ขึ้นต้นด้วย <code>bg-gradient-to-b</code>) — เฉลยอยู่ในบทเรียน 10 ตอนที่ Agent สร้างการ์ดใบนี้จริง</p>
+
+        <p>พื้นฐาน Tailwind ครบแล้ว: utilities, responsive, states, tokens — พอสำหรับ<strong>อ่านและตรวจ</strong>โค้ดที่ AI เขียนได้อย่างมั่นใจ ต่อไปคือทักษะที่สอง: แปลงดีไซน์เป็นคำสั่งที่ชัดเจน</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="04_responsive_states.html" rel="prev">ก่อนหน้า: Responsive และ States</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="06_reading_ui.html" rel="next">ถัดไป: อ่านโครงสร้าง UI จาก Screenshot</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

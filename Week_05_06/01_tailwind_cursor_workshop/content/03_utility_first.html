@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="แนวคิด utility-first ของ Tailwind และ utilities หลัก สอนผ่านการสร้าง stat card จริงจากดีไซน์" />
+    <title>Utility-First และ Utilities หลัก | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 03 · Tailwind CSS พื้นฐาน (Tailwind Essentials)</p>
+          <h1>Utility-First และ Utilities หลัก</h1>
+          <p class="lesson-original-title" lang="en">Utility-First &amp; Core Utilities</p>
+        </header>
+
+        <h2>จาก SCSS สู่ Utility</h2>
+
+        <p>ในคอร์สที่ผ่านมา เราจัดสไตล์แบบ "ไฟล์ CSS ต่อ component": ปุ่มหนึ่งปุ่มคือ class ชื่อดี ๆ หนึ่งตัวในไฟล์ <code>.module.scss</code> แล้วเขียน CSS ในไฟล์นั้น</p>
+
+        <pre><code class="language-css">/* Button.module.scss */
+.button {
+  border-radius: 12px;
+  background-color: #4fd1c5;
+  padding: 8px 16px;
+  font-weight: 700;
+  color: white;
+
+  &amp;:hover {
+    background-color: #38b2ac;
+  }
+}
+</code></pre>
+
+        <p>ปุ่มเดียวกันในโลก Tailwind ไม่มีไฟล์ CSS เลย — สไตล์ทั้งหมดคือ class เล็ก ๆ เรียงกันใน markup</p>
+
+        <pre><code class="language-html">&lt;button class="rounded-xl bg-teal-400 px-4 py-2 font-bold text-white hover:bg-teal-500"&gt;
+  SIGN UP
+&lt;/button&gt;
+</code></pre>
+
+        <p>นี่คือแนวคิด <strong>utility-first</strong>: หนึ่ง class = หนึ่งการประกาศ CSS (<code>rounded-xl</code> คือ <code>border-radius: 0.75rem</code>, <code>px-4</code> คือ padding ซ้ายขวา 1rem) เราประกอบดีไซน์ขึ้นใน markup โดยตรง ไม่ต้องสลับไฟล์ ไม่ต้องตั้งชื่อ class</p>
+
+        <h2>"แต่ HTML มันรกไม่ใช่เหรอ?"</h2>
+
+        <p>ใช่ — class ยาวขึ้นจริง และนี่คือข้อแลกเปลี่ยนที่ควรมองอย่างตรงไปตรงมา สิ่งที่ได้กลับมาคือ</p>
+
+        <ul>
+          <li><strong>Locality</strong> — สไตล์อยู่ที่เดียวกับ markup อ่าน component จบในไฟล์เดียว ไม่ต้องกระโดดไปไฟล์ SCSS เพื่อรู้ว่า <code>.card-header</code> หน้าตาเป็นยังไง</li>
+          <li><strong>ไม่มี naming fatigue</strong> — ไม่ต้องคิดชื่อ <code>.card-header-inner-wrapper</code> อีกต่อไป</li>
+          <li><strong>ไม่มี dead CSS</strong> — ลบ component ทิ้ง สไตล์หายไปด้วย ไม่มี class ผีค้างในไฟล์ CSS ที่ไม่มีใครกล้าลบ</li>
+          <li><strong>Constraint ในตัว</strong> — spacing และสีมาจาก scale ที่กำหนดไว้ (<code>p-4</code>, <code>teal-400</code>) ทำให้ UI สม่ำเสมอโดยไม่ต้องพยายาม</li>
+        </ul>
+
+        <p>ส่วนต้นทุน class ยาว ๆ นั้นมีคำตอบอยู่ — แต่ไม่ใช่การกลับไปเขียนไฟล์ CSS คำตอบคือ<strong>แยกเป็น React component</strong> ซึ่งเป็นเรื่องของบทเรียน 15 ทั้งบท ตอนนี้ขอให้ทนความยาวไปก่อน</p>
+
+        <p>ข้อเข้าใจผิดที่พบบ่อย: "แบบนี้ก็ inline style สิ" — ไม่ใช่ เพราะสามอย่างนี้ทำใน <code>style=""</code> ไม่ได้เลย: responsive prefix (<code>md:grid-cols-2</code>), state (<code>hover:bg-teal-500</code>) และ design token จาก theme — สองอย่างแรกเจอบทถัดไป อย่างสุดท้ายบทเรียน 05</p>
+
+        <p>เหตุผลสุดท้ายที่ utility-first เข้ากับ workshop นี้เป็นพิเศษ: โค้ดที่ Cursor Agent สร้างมาจะ<strong>อ่านจบใน diff เดียว</strong> — สไตล์ทั้งหมดอยู่ตรงหน้า ไม่ต้องเปิดไฟล์ CSS ประกอบ ทำให้การ review (ครึ่งหลังของ workshop) เร็วขึ้นมาก</p>
+
+        <h2>Utilities หลัก — สร้าง stat card หนึ่งใบ</h2>
+
+        <p>วิธีเรียน utility ที่ดีที่สุดคือใช้มันสร้างของจริง เป้าหมายคือการ์ด "Today's Money" ใบแรกจากหน้า Dashboard (มุมซ้ายบนของภาพ)</p>
+
+        <img src="images/dashboard.png" alt="หน้า Dashboard ของ Purity UI — โฟกัสการ์ดสถิติ Today's Money มุมซ้ายบน" />
+
+        <p>สร้างทีละชั้นใน <code>App.tsx</code> ของโปรเจกต์ที่ตั้งไว้บทที่แล้ว เริ่มจากกล่องการ์ดเปล่า</p>
+
+        <pre><code class="language-html">&lt;div class="rounded-2xl bg-white p-4 shadow-sm"&gt;...&lt;/div&gt;
+</code></pre>
+
+        <ul>
+          <li><code>p-4</code> — <code>padding: 1rem</code> — ตัวเลขของ Tailwind คือหน่วยละ 0.25rem (4 = 1rem, 6 = 1.5rem, 8 = 2rem) จำ scale นี้ได้ที่เหลือเดาได้หมด</li>
+          <li><code>rounded-2xl</code> — มุมโค้ง 1rem — การ์ดของ Purity โค้งกว่าค่า default (<code>rounded-lg</code>) พอสมควร</li>
+          <li><code>bg-white</code> + <code>shadow-sm</code> — พื้นขาว เงาบาง ๆ — สูตรการ์ดของดีไซน์นี้ทั้งดีไซน์</li>
+        </ul>
+
+        <p>ใส่ข้อความสองบรรทัดด้านซ้าย: ป้ายกำกับ กับตัวเลข</p>
+
+        <pre><code class="language-html">&lt;p class="text-sm font-medium text-gray-400"&gt;Today's Money&lt;/p&gt;
+&lt;p class="text-xl font-bold text-gray-700"&gt;
+  $53,000
+  &lt;span class="text-sm font-bold text-green-500"&gt;+55%&lt;/span&gt;
+&lt;/p&gt;
+</code></pre>
+
+        <ul>
+          <li>ขนาดตัวอักษร: <code>text-sm</code> (0.875rem) → <code>text-base</code> → <code>text-lg</code> → <code>text-xl</code> → ใหญ่ขึ้นเรื่อย ๆ</li>
+          <li>น้ำหนัก: <code>font-medium</code> (500) / <code>font-semibold</code> (600) / <code>font-bold</code> (700)</li>
+          <li>สีตัวอักษร: <code>text-gray-400</code> เทาอ่อนสำหรับป้ายรอง, <code>text-gray-700</code> เข้มสำหรับตัวเลขหลัก, <code>text-green-500</code> สำหรับเปอร์เซ็นต์ที่โต — เลขยิ่งมากสียิ่งเข้ม (50 อ่อนสุด, 950 เข้มสุด)</li>
+          <li>เกร็ดที่จะได้ใช้บ่อย: modifier ความโปร่งใส เช่น <code>bg-black/50</code> คือดำโปร่ง 50%</li>
+        </ul>
+
+        <p>กล่องไอคอนสีเขียวมิ้นต์ด้านขวา — สี่เหลี่ยมมุมโค้งที่มีไอคอนขาวอยู่กลาง</p>
+
+        <pre><code class="language-html">&lt;div class="flex size-12 items-center justify-center rounded-xl bg-teal-400"&gt;
+  &lt;svg class="size-6 text-white" ...&gt;&lt;/svg&gt;
+&lt;/div&gt;
+</code></pre>
+
+        <ul>
+          <li><code>size-12</code> — กว้างและสูง 3rem ในตัวเดียว (แทน <code>w-12 h-12</code>)</li>
+          <li><code>flex items-center justify-center</code> — สูตรจัดของให้อยู่กลางกล่องทั้งแนวตั้งแนวนอน ท่องได้เลย ใช้บ่อยที่สุดในสามโลก</li>
+        </ul>
+
+        <p>ประกอบร่างทั้งใบ: ใช้ flex ดันข้อความไปซ้าย ไอคอนไปขวา</p>
+
+        <pre><code class="language-html">&lt;div class="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"&gt;
+  &lt;div&gt;
+    &lt;p class="text-sm font-medium text-gray-400"&gt;Today's Money&lt;/p&gt;
+    &lt;p class="text-xl font-bold text-gray-700"&gt;
+      $53,000
+      &lt;span class="text-sm font-bold text-green-500"&gt;+55%&lt;/span&gt;
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class="flex size-12 items-center justify-center rounded-xl bg-teal-400"&gt;
+    &lt;svg class="size-6 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"&gt;
+      &lt;path d="M21 7.5V6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-1.5h-6a3 3 0 0 1 0-6h6ZM15 12a1.5 1.5 0 0 0 0 3h6v-3h-6Z" /&gt;
+    &lt;/svg&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+
+        <p><code>justify-between</code> ดันลูกสองก้อนไปคนละฝั่ง — เทียบกับภาพดีไซน์: เหมือนแล้ว การ์ดใบแรกของเราเสร็จด้วย utility ล้วน ๆ ไม่มีไฟล์ CSS เพิ่มแม้แต่บรรทัดเดียว</p>
+
+        <p>อีกสอง utility ที่จะเจอถี่มากใน workshop นี้ ขอแนะนำล่วงหน้า</p>
+
+        <ul>
+          <li><code>grid grid-cols-4 gap-6</code> — ตาราง 4 คอลัมน์ ช่องไฟ 1.5rem — แถว stat cards ทั้งแถวคือสิ่งนี้ (บทถัดไปจะทำให้มัน responsive)</li>
+          <li><code>w-full</code> / <code>max-w-*</code> / <code>mx-auto</code> — กว้างเต็มพ่อแม่ / จำกัดความกว้าง / จัดกลาง — สามตัวนี้คือเครื่องมือคุม layout ระดับหน้า</li>
+        </ul>
+
+        <h2>คู่มือที่ควรเปิดคู่กันเสมอ</h2>
+
+        <p>ไม่มีใครจำ utility ทั้งหมดได้ และไม่จำเป็น — เปิด <a href="https://tailwindcss.com/docs" target="_blank" rel="noreferrer">tailwindcss.com/docs</a> ค้างไว้ ช่องค้นหาของมันดีมาก (พิมพ์ "shadow" เจอทุกอย่างเรื่องเงา) และติดตั้ง extension <strong>Tailwind CSS IntelliSense</strong> ใน Cursor (ใช้ได้เพราะ Cursor คือ VS Code) — จะได้ autocomplete ทุก class และ hover เห็น CSS จริงที่ class นั้นสร้าง เครื่องมือสองตัวนี้สำคัญกว่าการท่องจำเยอะ</p>
+
+        <p>ตอนนี้เราสร้างของสวย ๆ บนจอเดียวได้แล้ว บทถัดไปทำให้มันรอดทุกขนาดจอ และตอบสนองต่อ hover กับ keyboard</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="02_setup.html" rel="prev">ก่อนหน้า: ติดตั้งโปรเจกต์และ Cursor</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="04_responsive_states.html" rel="next">ถัดไป: Responsive และ States</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Responsive แบบ mobile-first ด้วย breakpoint prefix และ state variants ของ Tailwind" />
+    <title>Responsive และ States | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 04 · Tailwind CSS พื้นฐาน (Tailwind Essentials)</p>
+          <h1>Responsive และ States</h1>
+          <p class="lesson-original-title" lang="en">Responsive &amp; States</p>
+        </header>
+
+        <h2>Mobile-first</h2>
+
+        <p>หลักการ responsive ของ Tailwind มีประโยคเดียว: <strong>class ที่ไม่มี prefix ใช้กับทุกขนาดจอ ส่วน class ที่มี prefix ใช้ตั้งแต่ breakpoint นั้น "ขึ้นไป"</strong></p>
+
+        <pre><code class="language-html">&lt;div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4"&gt;
+  &lt;!-- stat cards ทั้ง 4 ใบ --&gt;
+&lt;/div&gt;
+</code></pre>
+
+        <p>อ่านว่า: เริ่มจาก 1 คอลัมน์ (มือถือ) พอจอกว้างถึง md ขยายเป็น 2 พอถึง xl ขยายเป็น 4 — เขียนจากจอเล็กขึ้นไปหาจอใหญ่เสมอ นี่คือความหมายของคำว่า mobile-first</p>
+
+        <p>กับดักที่คนพลาดกันมากที่สุด: <strong><code>sm:</code> ไม่ได้แปลว่า "บนจอเล็ก"</strong> แต่แปลว่า "ตั้งแต่ 640px ขึ้นไป" ถ้าอยากให้มือถือเป็นแบบหนึ่ง ให้เขียนแบบนั้นโดย<em>ไม่ใส่ prefix</em> แล้วใช้ prefix เขียนทับสำหรับจอที่ใหญ่ขึ้น</p>
+
+        <table>
+          <thead>
+            <tr><th>Prefix</th><th>มีผลตั้งแต่</th><th>นึกถึง</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>sm:</code></td><td>640px</td><td>มือถือแนวนอน</td></tr>
+            <tr><td><code>md:</code></td><td>768px</td><td>แท็บเล็ต</td></tr>
+            <tr><td><code>lg:</code></td><td>1024px</td><td>โน้ตบุ๊ก</td></tr>
+            <tr><td><code>xl:</code></td><td>1280px</td><td>จอเดสก์ท็อป</td></tr>
+            <tr><td><code>2xl:</code></td><td>1536px</td><td>จอใหญ่</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Patterns จากหน้า Dashboard</h2>
+
+        <p>ดีไซน์ Purity ให้ภาพมาแค่ desktop — <strong>การตัดสินใจว่าจอเล็กยุบยังไงเป็นของเรา</strong> (และต้องเขียนลง prompt ในบทที่ 3) นี่คือ 4 pattern ที่เราจะใช้กับ dashboard นี้จริง</p>
+
+        <img src="images/dashboard.png" alt="หน้า Dashboard บนจอ desktop — ใช้เป็นโจทย์คิดว่าแต่ละแถวควรยุบอย่างไรบนมือถือ" />
+
+        <ul>
+          <li><strong>แถว stat cards</strong> — <code>grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4</code> มือถือเรียงลง แท็บเล็ตจับคู่ เดสก์ท็อปเรียง 4</li>
+          <li><strong>แถวกราฟสองใบ</strong> — <code>grid gap-6 lg:grid-cols-2</code> มือถือซ้อนกัน โน้ตบุ๊กขึ้นไปแบ่งครึ่ง</li>
+          <li><strong>Sidebar</strong> — <code>hidden lg:flex</code> จอเล็กซ่อนไว้ก่อน จอใหญ่แสดง — จำ pattern นี้ให้แม่น: <em>ของที่ซ่อนบนมือถือต้องมีทางเข้าถึงอื่นเสมอ</em> ตอนนี้เรายังไม่มี (เดี๋ยวบทเรียน 12 จะทำ drawer + ปุ่ม hamburger ให้ครบ)</li>
+          <li><strong>กรอบเนื้อหา</strong> — <code>mx-auto w-full max-w-[1440px] px-4 md:px-6</code> จำกัดกว้างสุด จัดกลาง และมี padding ขอบจอ — สังเกต <code>max-w-[1440px]</code>: วงเล็บเหลี่ยมคือ "arbitrary value" ใช้ค่านอก scale ได้เมื่อจงใจ</li>
+        </ul>
+
+        <h2>States — hover, focus และเพื่อนร่วมแก๊ง</h2>
+
+        <p>Prefix แบบเดียวกันนี้ใช้กับ "สถานะ" ของ element ได้ด้วย</p>
+
+        <ul>
+          <li><code>hover:bg-teal-500</code> — เมื่อเมาส์ชี้</li>
+          <li><code>focus-visible:ring-2 focus-visible:ring-teal-400/50</code> — วงแหวนรอบปุ่มเมื่อโฟกัสด้วยคีย์บอร์ด — ทำไมไม่ใช้ <code>focus:</code> เฉย ๆ? เพราะ <code>focus:</code> ติดตอนคลิกเมาส์ด้วย (เกิดวงแหวนวูบวาบน่ารำคาญ) ส่วน <code>focus-visible:</code> ฉลาดพอจะโชว์เฉพาะตอนผู้ใช้นำทางด้วยคีย์บอร์ด — ข้อยกเว้นเดียวคือช่อง input ที่ใช้ <code>focus:</code> ได้ เพราะการพิมพ์คือการโฟกัสโดยตั้งใจเสมอ</li>
+          <li><code>active:scale-95</code> — ตอนกดค้าง</li>
+          <li><code>disabled:opacity-50</code> — ตอนปุ่มถูกปิดใช้งาน</li>
+        </ul>
+
+        <p>ท่าพิเศษที่ดีไซน์นี้ต้องใช้: <strong><code>group</code></strong> — เมื่ออยากให้ "ลูก" เปลี่ยนตอน hover "แม่" เช่นการ์ดโปรโมท "Work with the Rockets" ที่อยากให้รูปข้างในซูมเมื่อชี้ทั้งการ์ด</p>
+
+        <pre><code class="language-html">&lt;a href="#" class="group block overflow-hidden rounded-2xl"&gt;
+  &lt;img
+    src="/images/rockets.png"
+    alt="ทีมงานกำลังทำงานร่วมกัน"
+    class="transition-transform duration-300 group-hover:scale-105"
+  /&gt;
+&lt;/a&gt;
+</code></pre>
+
+        <p>ติด <code>group</code> ที่แม่ แล้วลูกใช้ <code>group-hover:</code> อ้างถึงสถานะของแม่ได้ (แถม <code>transition-transform</code> ให้ซูมแบบนุ่ม ๆ ไม่กระตุก)</p>
+
+        <h2>วิธีทดสอบ</h2>
+
+        <ul>
+          <li>เปิด DevTools แล้วกดไอคอน device toolbar (Cmd+Shift+M) — เลือกขนาดมือถือมาตรฐาน เช่น 390×844</li>
+          <li>หรือ<strong>ลากขอบหน้าต่างช้า ๆ</strong> จากแคบสุดไปกว้างสุด แล้วดูว่า layout เปลี่ยนที่จุดไหนบ้าง — ทุกจุดที่เปลี่ยนคือ breakpoint ที่เราเขียนไว้ ถ้ามีช่วงไหนพัง (ของล้น, ช่องว่างประหลาด) นั่นคือช่วงที่ลืมคิด</li>
+        </ul>
+
+        <p>กฎนิ้วโป้ง: <strong>ออกแบบมือถือก่อน แล้วค่อยเติม prefix ขยายขึ้น</strong> — เขียน <code>grid-cols-1</code> ก่อน แล้วถามตัวเองว่า "จอกว้างขึ้นควรได้อะไรเพิ่ม" ง่ายกว่าเขียน desktop แล้วพยายามยัดลงจอเล็กเสมอ AI มักทำกลับด้าน (เพราะเราแนบภาพ desktop ให้มัน) — และนั่นจะเป็นประเด็นใหญ่ของบทเรียน 12</p>
+
+        <p>เหลือชิ้นสุดท้ายของพื้นฐาน Tailwind: ทำยังไงให้ "สีแบรนด์" ของ Purity เป็นระบบ ไม่ใช่ตัวเลขสีกระจายทั่วโค้ด — ไปบทถัดไป</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="03_utility_first.html" rel="prev">ก่อนหน้า: Utility-First และ Utilities หลัก</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="05_theme_tokens.html" rel="next">ถัดไป: Design Tokens ด้วย @theme</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
