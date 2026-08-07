@@ -1,0 +1,1 @@
+https://www.figma.com/design/TvhgVvFBvybHh6BUyEvZRl/Purity-UI-Dashboard---Chakra-UI-Dashboard--Community-?m=auto&t=m8fTN5gy77i21j0s-1

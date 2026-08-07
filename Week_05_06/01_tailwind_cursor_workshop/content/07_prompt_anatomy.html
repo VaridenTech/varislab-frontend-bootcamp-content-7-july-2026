@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="กายวิภาคของ UI prompt ที่ดี: บริบท โครงสร้าง ข้อกำหนดทางเทคนิค และขอบเขต พร้อมตัวอย่างจริง" />
+    <title>เขียน UI Prompt ที่ชัดเจน | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 07 · จาก Screenshot สู่ Prompt (Screenshot to Prompt)</p>
+          <h1>เขียน UI Prompt ที่ชัดเจน</h1>
+          <p class="lesson-original-title" lang="en">Prompt Anatomy</p>
+        </header>
+
+        <h2>Prompt คลุมเครือได้ UI มั่ว</h2>
+
+        <p>ลองดู prompt แบบที่คนส่วนใหญ่พิมพ์ครั้งแรก</p>
+
+        <pre><code class="language-text">ทำหน้า admin dashboard สวย ๆ ให้หน่อย
+</code></pre>
+
+        <p>นับดูว่า Agent ต้อง<em>เดา</em>อะไรบ้าง: สีอะไร? layout แบบไหน? sidebar มีไหม? การ์ดกี่ใบ ข้อมูลอะไร? กราฟแบบไหน? ใช้ tech อะไร — Tailwind หรือ CSS หรือ styled-components? ไฟล์แตกยังไง? ผลลัพธ์คือ dashboard สุ่มหนึ่งอันที่ "สวยดี แต่ไม่ใช่ของเรา" แล้วเราก็ต้องนั่งไล่แก้ทีละจุด ซึ่งช้ากว่าเขียน prompt ดี ๆ ตั้งแต่แรกเสมอ</p>
+
+        <p>ความจริงที่ควรจำ: <strong>AI ไม่เก่งเรื่องอ่านใจ แต่เก่งมากเรื่องทำตามสเปก</strong> — งานของเราคือเปลี่ยนภาพในหัว (และใน screenshot) ให้เป็นสเปก</p>
+
+        <h2>กายวิภาคสี่ส่วน</h2>
+
+        <p>Prompt สำหรับ UI ที่ดีมีสี่ส่วน แต่ละส่วนตัดการเดาของ Agent คนละแบบ</p>
+
+        <ul>
+          <li><strong>1. บริบท</strong> — แอปอะไร stack อะไร มีอะไรอยู่แล้ว (token, component, โครงโฟลเดอร์) — ตัดการเดาเรื่อง "สนามที่กำลังเล่น"</li>
+          <li><strong>2. โครงสร้าง</strong> — region ของหน้าจอไล่บนลงล่าง พร้อม<em>เนื้อหาจริง</em>จาก screenshot — ตัดการเดาเรื่อง "ต้องสร้างอะไร" (นี่คือผลงานของบทเรียน 06 ตรง ๆ)</li>
+          <li><strong>3. ข้อกำหนดทางเทคนิค</strong> — Tailwind เท่านั้น, mobile-first ยุบยังไง, semantic HTML, แยกไฟล์อะไรบ้าง — ตัดการเดาเรื่อง "สร้างด้วยวิธีไหน"</li>
+          <li><strong>4. ขอบเขต</strong> — สิ่งที่<em>ยังไม่ต้องทำ</em> — ตัดนิสัยชอบแถมของ AI (ทำหน้าอื่นให้ด้วย, ติดตั้ง lib เพิ่ม, ใส่ animation ที่ไม่มีใครขอ)</li>
+        </ul>
+
+        <p>และ<strong>แนบ screenshot ไปด้วยเสมอ</strong> — รูปกับข้อความทำงานคนละหน้าที่: รูปสื่อ pixel (สัดส่วน สี บรรยากาศ) ข้อความสื่อโครงสร้างและกติกา ใช้คู่กันได้ผลดีกว่าอย่างใดอย่างหนึ่งเดี่ยว ๆ มาก</p>
+
+        <h2>Worked example — prompt ของ app shell</h2>
+
+        <p>มาเขียนของจริง: prompt สำหรับ "โครง" ของแอป (sidebar + navbar) ซึ่งเราจะใช้สั่ง Agent จริงในบทเรียน 09 อ่านภาพประกอบก่อน แล้วดูว่าแต่ละบรรทัดของ prompt มาจากส่วนไหนของภาพ</p>
+
+        <img src="images/dashboard.png" alt="หน้า Dashboard — sidebar ด้านซ้ายและ navbar ด้านบนคือเป้าหมายของ prompt นี้" />
+
+        <pre><code class="language-text">สร้าง app shell ของเว็บ admin dashboard "Purity Dashboard" ตาม screenshot ที่แนบมา
+(สนใจเฉพาะ sidebar ด้านซ้ายกับแถบบนของพื้นที่เนื้อหา)
+
+บริบท: โปรเจกต์ React + TypeScript + Vite ติดตั้ง Tailwind CSS v4 และ react-router แล้ว
+มี design tokens: primary (เขียวมิ้นต์), primary-dark, ink, muted, surface, success, danger
+
+โครงสร้าง:
+- Sidebar ซ้าย กว้างราว 260px พื้นหลังสีเดียวกับพื้นหลังหน้า (surface):
+  - โลโก้ข้อความ "PURITY UI DASHBOARD" ด้านบน คั่นด้วยเส้นบาง ๆ
+  - เมนูหลัก: Dashboard, Tables, Billing, RTL — แต่ละรายการมีไอคอนในกล่องสี่เหลี่ยมมุมโค้ง
+  - หัวข้อตัวพิมพ์เล็ก "ACCOUNT PAGES" ตามด้วย Profile, Sign In, Sign Up
+  - รายการที่ active: การ์ดพื้นขาว เงาอ่อน ไอคอนพื้นเขียวมิ้นต์ตัวอักษรขาว
+  - รายการปกติ: ตัวอักษร muted ไอคอนพื้นขาวตัวอักษรเขียวมิ้นต์
+  - ล่างสุด: การ์ดพื้นเขียวมิ้นต์ "Need help? Please check our docs" พร้อมปุ่มขาว DOCUMENTATION
+- Navbar บนของพื้นที่เนื้อหา: breadcrumb "Pages / Dashboard" กับชื่อหน้าตัวหนา ด้านซ้าย,
+  ช่องค้นหา placeholder "Type here...", ลิงก์ Sign In, ไอคอน settings และกระดิ่ง ด้านขวา
+- พื้นที่เนื้อหา: ว่างไว้ก่อน ใส่ <Outlet /> ของ react-router
+
+ข้อกำหนดทางเทคนิค:
+- ใช้ Tailwind utilities เท่านั้น ห้ามสร้างไฟล์ .css เพิ่ม
+- Mobile-first: จอเล็กซ่อน sidebar ไว้ก่อนได้ (จะทำ drawer ภายหลัง)
+- ใช้ semantic HTML: aside สำหรับ sidebar, nav, header, main; ไอคอนเป็น SVG inline
+- แยกไฟล์: src/app/layouts/DashboardLayout.tsx, src/components/Sidebar.tsx, src/components/Navbar.tsx
+- src/app/router.tsx: createBrowserRouter ให้ DashboardLayout เป็น layout route
+  และมีหน้า Dashboard ว่าง ๆ ที่ path "/" ; ครอบ RouterProvider ใน main.tsx
+
+ขอบเขต: ยังไม่ต้องสร้างเนื้อหาหน้า Dashboard จริง ยังไม่ต้องมี state ใด ๆ
+และยังไม่ต้องทำหน้าอื่น
+</code></pre>
+
+        <p>ไล่ดูที่มาของแต่ละส่วน</p>
+
+        <ul>
+          <li>บรรทัดแรกวางกรอบ + บอกว่าให้ดูภาพเฉพาะส่วนไหน (ภาพเดียวมีทั้งหน้า — ต้องชี้)</li>
+          <li>"บริบท" มาจากบทเรียน 02 (stack) และ 05 (token) — บอกชื่อ token ให้ Agent ใช้ <code>bg-primary</code> ไม่ใช่ <code>bg-teal-400</code></li>
+          <li>"โครงสร้าง" คือ bullet list จากการ decompose ในบทเรียน 06 แทบจะคำต่อคำ — สังเกตว่ามี<em>เนื้อหาจริง</em> ("PURITY UI DASHBOARD", "Type here...") ไม่ใช่ "ใส่โลโก้กับเมนู"</li>
+          <li>"ข้อกำหนดทางเทคนิค" ล็อกวิธีทำ รวมถึง<strong>ชื่อไฟล์</strong> — เรากำหนดโครงโปรเจกต์เอง จำได้ไหม</li>
+          <li>"ขอบเขต" กันการแถม — ไม่มีบรรทัดนี้ Agent มีโอกาสสร้างหน้า Dashboard ทั้งหน้าแถมมาให้ตรวจกันตาแตก</li>
+        </ul>
+
+        <h2>Wireframe และ requirement ข้อความล้วน</h2>
+
+        <p>กายวิภาคเดียวกันใช้ได้กับ input ทุกแบบ ไม่ใช่แค่ screenshot สวย ๆ</p>
+
+        <ul>
+          <li><strong>Wireframe หยาบ ๆ</strong> — สเก็ตช์บนกระดาษ/ไวท์บอร์ด ถ่ายรูปแนบได้เลย โครงสร้างชัดอยู่แล้วในเส้น เราแค่เติมส่วนบริบท (สี token, spacing) ที่ wireframe ไม่ได้บอก</li>
+          <li><strong>Requirement ข้อความล้วน</strong> — เช่น "อยากได้หน้า list ผู้ใช้ กรองตามสถานะได้" — กรณีนี้ไม่มีรูปให้แนบ ส่วน "โครงสร้าง" เราต้อง<em>เขียนเอง</em>จากการคุยกับทีมหรือจินตนาการที่ตกลงกันแล้ว — ซึ่งบังคับให้เราคิดให้จบก่อนสั่ง เป็นข้อดีแฝง</li>
+        </ul>
+
+        <h2>Checklist ก่อนกดส่ง</h2>
+
+        <ul>
+          <li>มีครบสี่ส่วนไหม (บริบท / โครงสร้าง / ข้อกำหนด / ขอบเขต)</li>
+          <li>โครงสร้างไล่บนลงล่าง พร้อมเนื้อหาจริง ไม่ใช่คำว่า "ฯลฯ" ไหม</li>
+          <li>บอกชื่อไฟล์ที่อยากได้ไหม</li>
+          <li>บอกสิ่งที่<em>ยังไม่ต้องทำ</em>ไหม</li>
+          <li>แนบรูปแล้วหรือยัง</li>
+        </ul>
+
+        <p>Prompt พร้อมแล้ว — แต่ก่อนกดส่งจริงในบทเรียน 09 มีเครื่องมืออีกชิ้นที่ช่วยให้ค่าใน prompt แม่นขึ้น: ไฟล์ Figma ที่ดีไซเนอร์ให้มา ไปดูวิธีใช้มันในบทถัดไป</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="06_reading_ui.html" rel="prev">ก่อนหน้า: อ่านโครงสร้าง UI จาก Screenshot</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="08_figma_handoff.html" rel="next">ถัดไป: ใช้ Figma ประกอบ Prompt</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

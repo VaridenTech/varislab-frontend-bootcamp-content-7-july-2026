@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ตรวจ maintainability ของโค้ดที่ AI สร้าง: class ซ้ำ ค่า arbitrary ternary ซ้อน และ checklist ประจำเลนส์" />
+    <title>ตรวจ Maintainability | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 14 · ตรวจโค้ดที่ AI สร้าง (Reviewing AI Code)</p>
+          <h1>ตรวจ Maintainability</h1>
+          <p class="lesson-original-title" lang="en">Maintainability Review</p>
+        </header>
+
+        <h2>กลิ่นของโค้ด AI</h2>
+
+        <p>สองเลนส์แรกตรวจว่าโค้ด "ทำงานถูกไหม" — เลนส์นี้ตรวจว่า "อยู่กับมันไหวไหมในอีกหกเดือน" ต้นตอของกลิ่นทั้งหมดคือเรื่องเดียว: <strong>Agent ทำงานเป็นครั้ง ๆ ไม่จำของเดิม</strong> — แต่ละ prompt คือช่างคนใหม่ที่เดินเข้าไซต์งาน สร้างของตัวเองเสร็จแล้วกลับบ้าน ไม่มีใครมองภาพรวม ผลคือ pattern คลาสสิกชุดนี้</p>
+
+        <p><strong>กลิ่นที่ 1 — copy-paste ยาวเหยียด:</strong> ย้อนดูแถว stat cards จากบทเรียน 10</p>
+
+        <pre><code class="language-tsx">&lt;div className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"&gt;
+  &lt;div&gt;
+    &lt;p className="text-sm font-medium text-muted"&gt;Today's Money&lt;/p&gt;
+    &lt;p className="text-xl font-bold text-ink"&gt;
+      $53,000 &lt;span className="text-sm font-bold text-success"&gt;+55%&lt;/span&gt;
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div className="flex size-12 items-center justify-center rounded-xl bg-primary"&gt;
+    &lt;WalletIcon className="size-6 text-white" /&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"&gt;
+  &lt;div&gt;
+    &lt;p className="text-sm font-medium text-muted"&gt;Today's Users&lt;/p&gt;
+    {/* ...โครงเดิมเป๊ะ อีก 3 รอบ... */}
+</code></pre>
+
+        <p>วันที่ดีไซเนอร์ขอเปลี่ยน padding การ์ด เราต้องแก้ 4 ที่ให้เหมือนกันเป๊ะ — พลาดหนึ่งที่คือ UI เพี้ยนแบบตาเปล่าจับยาก</p>
+
+        <p><strong>กลิ่นที่ 2 — ternary ซ้อนใน className:</strong> badge จากบทเรียน 11 — เงื่อนไขเดียวยังพออ่านได้ แต่รอวันที่มีสถานะที่สาม (ตาราง Projects มี Working / Canceled / Done แล้วนะ) ternary จะเริ่มซ้อนจนอ่านไม่ออก</p>
+
+        <p><strong>กลิ่นที่ 3 — เลข arbitrary ปริศนา:</strong> <code>w-[260px]</code> (sidebar — ตั้งใจ มาจากดีไซน์ ✓) vs <code>mt-[13px]</code> (มาจากไหน? ใครจะกล้าแก้?) — ค่าที่ไม่มีที่มาคือกับระเบิดของคนถัดไป</p>
+
+        <p><strong>กลิ่นที่ 4 — ชื่อ generic:</strong> <code>Card2</code>, <code>NewSection</code>, <code>Wrapper</code> — Agent ชอบตั้งชื่อตามรูปร่าง ไม่ใช่ตามความหมาย</p>
+
+        <h2>กติกาหลักของเลนส์นี้</h2>
+
+        <p><strong>เห็น class string ชุดเดียวกัน ≥ 2 ที่ = แยกเป็น component</strong> — ไม่ใช่แยกเป็นไฟล์ CSS และไม่ใช่ <code>@apply</code> (บทเรียน 05 อธิบายไว้แล้วว่าทำไม) โลก React + Tailwind ทำ DRY ที่<em>ระดับ JSX</em>: ปุ่มที่ใช้ซ้ำคือ <code>&lt;Button&gt;</code>, การ์ดสถิติที่ใช้ซ้ำคือ <code>&lt;StatCard&gt;</code> — component ห่อทั้ง markup, class และพฤติกรรม (focus, disabled, aria) ไว้ในที่เดียว ซึ่ง class ห่อไม่ได้</p>
+
+        <p>ประโยชน์ทบต้นที่มักมองข้าม: ทุกอย่างที่เราเพิ่งแก้ในบทเรียน 12–13 (focus ring, aria, overflow) ถ้าอยู่ใน component เดียว มันจะ<strong>ถูกทุกที่โดยอัตโนมัติตลอดไป</strong> — การ refactor คือการทำให้ความถูกต้องแพร่พันธุ์</p>
+
+        <h2>Checklist ตรวจ Maintainability</h2>
+
+        <p>เลนส์ที่สาม — "checklist บทเรียน 14"</p>
+
+        <ul>
+          <li>Class string ซ้ำ ≥ 2 ที่ → แยก component (prettier-plugin-tailwindcss ที่เรียง class ให้เป็นมาตรฐานเดียวกัน ทำให้ "ซ้ำ" มองเห็นด้วยตา)</li>
+          <li>เลข arbitrary <code>[...]</code> ที่ไม่ได้ตั้งใจ → เปลี่ยนเป็น token หรือ scale ปกติ; ที่ตั้งใจ (ความกว้าง sidebar) → คงไว้พร้อมรู้ที่มา</li>
+          <li>Ternary ซ้อนใน className → เปลี่ยนเป็น variant map (เดี๋ยวเห็นในบทเรียน 15)</li>
+          <li>Component เกิน ~150 บรรทัด → แตกไฟล์ (DashboardPage ตอนนี้เกินไปมาก)</li>
+          <li>ชื่อ generic → ตั้งชื่อตาม domain: <code>StatCard</code> ไม่ใช่ <code>Card2</code></li>
+          <li>Mock data ฝังใน component → แยกไป <code>src/data/</code> (Agent ทำถูกแล้วเพราะ prompt สั่ง — เช็คว่าไม่มีหลงเหลือ)</li>
+          <li>ไอคอน SVG ก้อนเดียวกัน copy หลายที่ → แยกเป็นไฟล์ icon component</li>
+        </ul>
+
+        <h2>ไล่ checklist กับโค้ดของเรา</h2>
+
+        <p>ผลการไล่ทั้งสามหน้า — นี่คือ "ใบสั่งงาน" ที่จะส่งเข้าบทเรียน 15</p>
+
+        <ul>
+          <li><strong>Stat card</strong> — ซ้ำ 4 ที่ในหน้า Dashboard → แยกเป็น <code>StatCard</code></li>
+          <li><strong>ปุ่ม</strong> — DOCUMENTATION (sidebar), SIGN UP (ฟอร์ม), VIEW ALL (จะเจอในหน้า Profile) — สามหน้าตา แต่จริง ๆ คือปุ่มเดียวกัน 3 variant → แยกเป็น <code>Button</code></li>
+          <li><strong>Badge สถานะ</strong> — ternary ในหน้า Tables + สถานะ Working/Done/Canceled ที่เป็นข้อความเฉย ๆ → แยกเป็น <code>StatusBadge</code></li>
+          <li><strong>Progress bar</strong> — ซ้ำข้ามสองหน้า (ตาราง Projects ใน Dashboard และใน Tables) → แยกเป็น <code>ProgressBar</code></li>
+          <li><strong>เมนู sidebar</strong> — markup ของ NavLink ก้อนใหญ่วนใน map สองรอบ (เมนูหลัก + ACCOUNT PAGES) → แยกเป็น <code>NavItem</code></li>
+          <li><strong>Toggle</strong> — ตอนนี้มีที่เดียว (Remember me) แต่หน้า Profile ที่กำลังจะมามี Platform Settings ที่ใช้อีก 6 ตัว → แยกเป็น component ตั้งแต่ตอนนี้คุ้มแน่นอน</li>
+        </ul>
+
+        <p>สังเกตว่ารายชื่อนี้ตรงกับ pattern ที่เรา<em>อ่านออกตั้งแต่บทเรียน 06</em> ตอนยังไม่มีโค้ดสักบรรทัด — การอ่าน UI ที่ดีทำนายโครงสร้าง component ได้ล่วงหน้า วนกลับมาบรรจบพอดี</p>
+
+        <p>บทถัดไปลงมือเคลียร์ใบสั่งงานนี้ทั้งใบ — เลนส์ครบสามแล้ว ต่อไปทุกครั้งที่รับงานจาก Agent ให้ไล่สามเลนส์นี้เป็นกิจวัตร: <strong>responsive (12) → accessibility (13) → maintainability (14)</strong> ตามลำดับ จากมองเห็นง่ายไปมองเห็นยาก</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="13_review_accessibility.html" rel="prev">ก่อนหน้า: ตรวจ Accessibility</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="15_refactor_components.html" rel="next">ถัดไป: แยกเป็น Reusable Components</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

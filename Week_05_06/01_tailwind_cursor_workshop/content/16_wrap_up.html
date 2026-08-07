@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สรุป workshop, โจทย์ใหญ่หน้า Profile และแนวทางต่อยอด" />
+    <title>สรุปและก้าวต่อไป | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 16 · Refactor เป็น Component (Refactor to Components)</p>
+          <h1>สรุปและก้าวต่อไป</h1>
+          <p class="lesson-original-title" lang="en">Wrap Up</p>
+        </header>
+
+        <h2>ยินดีด้วย 🎉</h2>
+
+        <p>สิ่งที่อยู่ในมือคุณตอนนี้: Purity Dashboard เวอร์ชัน Tailwind ที่สร้างโดย Cursor Agent ภายใต้การกำกับของคุณ — ผ่านการตรวจสามเลนส์และ refactor จนสะอาด</p>
+
+        <table>
+          <thead>
+            <tr><th>Route</th><th>หน้า</th><th>สถานะ</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>/</code></td><td>Dashboard</td><td>เสร็จ — stat cards, promo, กราฟ placeholder, ตาราง, timeline</td></tr>
+            <tr><td><code>/tables</code></td><td>Tables</td><td>เสร็จ — Authors + Projects พร้อม badge และ progress bar</td></tr>
+            <tr><td><code>/signup</code></td><td>Sign Up</td><td>เสร็จ — layout แยกนอก shell, ฟอร์มพร้อม toggle จริง</td></tr>
+            <tr><td><code>/profile</code></td><td>Profile</td><td><strong>โจทย์ของคุณ — ด้านล่าง</strong></td></tr>
+          </tbody>
+        </table>
+
+        <p>บวกชุด component ที่ใช้ซ้ำได้: <code>Button</code>, <code>StatCard</code>, <code>NavItem</code>, <code>StatusBadge</code>, <code>ProgressBar</code> — และที่มีค่ากว่าโค้ดคือ<em>กระบวนการ</em>ที่ได้ฝึกจนครบลูป</p>
+
+        <h2>ทักษะทั้งสี่ ↔ บทเรียน</h2>
+
+        <ul>
+          <li><strong>ถอด screenshot/wireframe/requirement เป็น prompt ที่ชัดเจน</strong> → บทเรียน 06 (อ่าน UI), 07 (กายวิภาคสี่ส่วน), 08 (Figma)</li>
+          <li><strong>ใช้ Cursor Agent สร้าง UI ฉบับแรก</strong> → บทเรียน 09–11 (shell, Dashboard, Tables + Sign Up)</li>
+          <li><strong>ตรวจโค้ด Tailwind ที่ AI สร้าง</strong> → บทเรียน 12 (responsive), 13 (accessibility), 14 (maintainability)</li>
+          <li><strong>Refactor เป็น component ที่ใช้ซ้ำได้</strong> → บทเรียน 15</li>
+        </ul>
+
+        <p>ย้ำอีกครั้งเพราะสำคัญ: ลูป <strong>prompt → generate → review → refactor</strong> ไม่ใช่ของเฉพาะ workshop นี้ — มันคือวิธีทำงานกับ AI ที่ใช้กับ UI ทุกงาน ทุก framework ทุกดีไซน์ หลังจากนี้</p>
+
+        <h2>โจทย์ใหญ่: หน้า Profile</h2>
+
+        <img src="images/profile.png" alt="หน้า Profile — โจทย์ปิดท้าย: ทำครบลูปด้วยตัวเองทั้งหน้า" />
+
+        <p>ถึงตาคุณวิ่งลูปเองทั้งรอบ โดยไม่มีบทเรียนจูงมือ</p>
+
+        <ol>
+          <li><strong>Decompose</strong> (วิชาบทเรียน 06) — แบ่ง region: hero, การ์ดโปรไฟล์ที่ลอยทับ, สามคอลัมน์ (Platform Settings / Profile Information / Conversations), grid การ์ดโปรเจกต์</li>
+          <li><strong>เขียน prompt สี่ส่วน</strong> (07) — อ่านค่าประกอบจาก Figma (08); อย่าลืมระบุว่า route <code>/profile</code> อยู่<em>ใน</em> DashboardLayout และให้ใช้ component ที่มีอยู่ (<code>Button</code>, toggle pattern จากบทเรียน 13)</li>
+          <li><strong>Generate</strong> (09) — แนบภาพ อ่าน diff ก่อน Accept</li>
+          <li><strong>Review สามเลนส์</strong> (12–14) — จด TODO แล้วเคลียร์</li>
+          <li><strong>Refactor</strong> (15) — อย่างน้อยหนึ่ง component ใหม่ควรเกิดจากหน้านี้</li>
+        </ol>
+
+        <p>จุดยากที่เฉลยล่วงหน้าให้นิดเดียว</p>
+
+        <ul>
+          <li><strong>การ์ดลอยทับ hero</strong> — margin ติดลบ (<code>-mt-16</code>) + <code>relative</code>/<code>z-10</code></li>
+          <li><strong>Platform Settings</strong> — toggle 6 ตัว: ถึงเวลาแยก toggle จากบทเรียน 13 เป็น component <code>Toggle</code> ที่รับ <code>label</code> กับ <code>defaultChecked</code></li>
+          <li><strong>แท็บ OVERVIEW / TEAMS / PROJECTS</strong> — โอกาสสร้าง component ใหม่ (ตั้งชื่อเองตาม domain — ไม่ใช่ <code>Card2</code> นะ)</li>
+          <li><strong>สามคอลัมน์</strong> — คิดเรื่องการยุบบนมือถือเองตั้งแต่ตอนเขียน prompt ไม่ใช่ตอนตรวจ</li>
+        </ul>
+
+        <h2>ไอเดียต่อยอด</h2>
+
+        <ul>
+          <li><strong>หน้า Billing และ RTL</strong> — มีในไฟล์ Figma ครบ วิ่งลูปเพิ่มอีกสองรอบ</li>
+          <li><strong>Dark mode</strong> — Tailwind มี <code>dark:</code> variant ให้ทุก utility ลองเริ่มจาก token</li>
+          <li><strong>กราฟจริง</strong> — แทน placeholder ด้วย chart library แล้วฝึกสั่ง Agent ให้ต่อ data ให้</li>
+          <li><strong>ข้อมูลจริง</strong> — เอาวิชา TanStack Query จากคอร์ส e-commerce มาต่อ API เข้าตารางกับ stat cards</li>
+          <li><strong>Deploy</strong> — วิธีเดียวกับที่เรียนในคอร์ส React (บทเรียน 35 ของคอร์สนั้น) ใช้ได้เลย</li>
+        </ul>
+
+        <h2>ส่งท้าย</h2>
+
+        <p>AI generate โค้ดได้เร็วขึ้นทุกเดือน และจะเร็วขึ้นไปอีก — สิ่งที่<em>แพงขึ้น</em>สวนทางกันคือทักษะสามอย่างที่คุณเพิ่งฝึกมาทั้ง workshop: <strong>อ่านดีไซน์ให้แตก เขียนความต้องการให้ชัด และ review ให้เป็น</strong> คนที่มีสามอย่างนี้ใช้ AI เป็นทีมงานได้ทั้งทีม คนที่ไม่มีได้แค่กดปุ่มแล้วภาวนา</p>
+
+        <p>อย่ากลัวที่จะให้ AI ทำงานเยอะ ๆ — แต่<strong>อย่า ship สิ่งที่ตัวเองอ่านไม่เข้าใจ</strong> นั่นแหละเส้นแบ่งที่ทำให้คุณเป็น engineer ไม่ใช่ผู้ชม</p>
+
+        <p>เจอกันในโปรเจกต์ถัดไป 🚀</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="15_refactor_components.html" rel="prev">ก่อนหน้า: แยกเป็น Reusable Components</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

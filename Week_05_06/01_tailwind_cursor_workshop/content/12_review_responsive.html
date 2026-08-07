@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ตรวจ responsive ของโค้ดที่ AI สร้าง: ล่าความกว้างตายตัว สร้าง mobile drawer และ checklist ประจำเลนส์" />
+    <title>ตรวจ Responsive ของโค้ดจาก AI | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 12 · ตรวจโค้ดที่ AI สร้าง (Reviewing AI Code)</p>
+          <h1>ตรวจ Responsive ของโค้ดจาก AI</h1>
+          <p class="lesson-original-title" lang="en">Responsive Review</p>
+        </header>
+
+        <h2>ทำไม Agent ส่งงาน desktop-only</h2>
+
+        <p>ไม่ใช่เพราะมันโง่ — เพราะมัน<strong>ตอบตรงคำถามเกินไป</strong>: เราแนบ screenshot จอ desktop มันจึง optimize ให้ตรงภาพนั้น ส่วนจอเล็กที่ไม่มีในภาพคือช่องว่างให้เดา ความรับผิดชอบเรื่องจอเล็กจึงเป็นของเราสองจังหวะ: ตอน<em>เขียน prompt</em> (สั่งการยุบให้ชัด — เราทำแล้ว จึงรอดมาหลายจุด) และตอน<em>review</em> (จับสิ่งที่หลุด — คือบทนี้)</p>
+
+        <h2>ล่า TODO ข้อ 1 — ความกว้างตายตัว</h2>
+
+        <p>เปิด DevTools device toolbar เลือก 390px — scrollbar แนวนอนโผล่ทันที ไล่หาต้นตอ: <code>DashboardLayout.tsx</code> มี <code>w-[1440px] mx-auto</code> — Agent อยากได้ "เนื้อหากว้างสุด 1440 จัดกลาง" แต่เขียนเป็นความกว้าง<em>ตายตัว</em>: จอแคบกว่า 1440 ก็ยังยืนยันจะกว้าง 1440 จนล้น</p>
+
+        <pre><code class="language-text">- &lt;div className="w-[1440px] mx-auto"&gt;
++ &lt;div className="mx-auto w-full max-w-[1440px] px-4 md:px-6"&gt;
+</code></pre>
+
+        <p><code>max-w-[1440px]</code> = ไม่เกิน 1440 แต่<em>ยอมหด</em>ตามจอ, <code>w-full</code> = ใช้พื้นที่ที่มี, <code>px-4 md:px-6</code> = กันเนื้อหาชนขอบจอ — สามตัวนี้รวมกันคือ pattern "กรอบเนื้อหา" จากบทเรียน 04</p>
+
+        <p>แก้เองก็ได้ หรือสั่ง Agent แก้ก็ได้ — prompt สั่งแก้ที่ดี<strong>ชี้ไฟล์ ชี้ปัญหา ชี้วิธีแก้</strong> สั้น ๆ</p>
+
+        <pre><code class="language-text">ใน src/app/layouts/DashboardLayout.tsx เปลี่ยน "w-[1440px] mx-auto" เป็น
+"mx-auto w-full max-w-[1440px] px-4 md:px-6" — ตอนนี้จอเล็กเกิด horizontal scroll
+เพราะความกว้างตายตัว
+</code></pre>
+
+        <p>แล้ว<strong>อ่าน diff</strong> ว่ามันแก้แค่จุดที่สั่ง ไม่แถมจัดรูปแบบไฟล์ทั้งไฟล์จนเทียบไม่ออก (ถ้าแถม — reject แล้วสั่งใหม่ให้แคบลง)</p>
+
+        <h2>Checklist ตรวจ Responsive</h2>
+
+        <p>นี่คือเลนส์แรกจากสามเลนส์ ใช้ไล่ทุกหน้า ทุกครั้งที่รับงานจาก Agent — ต่อไปบทอื่นจะเรียกว่า "checklist บทเรียน 12"</p>
+
+        <ul>
+          <li>ทดสอบที่ <strong>390 / 768 / 1024 / 1440</strong> ทุกครั้ง — สี่จุดนี้จับปัญหาได้เกือบหมด</li>
+          <li>ค้นทั้งโปรเจกต์หา <code>w-[</code> และ <code>h-[</code> ที่เป็นเลขตายตัว — ถามทีละตัวว่า "จอแคบกว่านี้จะเกิดอะไร" ถ้าคำตอบคือ "ล้น" ให้เปลี่ยนเป็น <code>max-w-*</code> + <code>w-full</code> (ค่าตายตัวที่<em>ตั้งใจ</em>เช่นความกว้าง sidebar เก็บไว้ได้)</li>
+          <li>ทุก <code>grid</code> ต้องมีลำดับคอลัมน์จากมือถือขึ้นไป (<code>grid-cols-1 md:… xl:…</code>)</li>
+          <li>ตารางข้อมูลต้องอยู่ใน <code>overflow-x-auto</code></li>
+          <li>รูปมี <code>object-cover</code> + สัดส่วน (<code>aspect-*</code>) — กันรูปบี้เมื่อกล่องเปลี่ยนขนาด</li>
+          <li>ข้อความยาวที่คุมไม่ได้ (ชื่อจาก data) มี <code>truncate</code> หรือ <code>line-clamp-*</code></li>
+          <li>ไม่มี horizontal scroll ที่ความกว้างใดเลย (ลากขอบจอช้า ๆ ทั้งช่วง)</li>
+          <li>ของที่ <code>hidden</code> บนมือถือ ต้องมีทางเข้าถึงอื่นเสมอ</li>
+        </ul>
+
+        <p>ข้อสุดท้ายพาเรามาที่หนี้ก้อนใหญ่ที่สุดของหน้านี้พอดี</p>
+
+        <h2>ล่า TODO ข้อ 2 — sidebar ต้องมี drawer บนมือถือ</h2>
+
+        <p>ตอนนี้ sidebar เป็น <code>hidden lg:flex</code> — บนมือถือเมนู<em>ทั้งแอป</em>หายไป วิธีมาตรฐานคือ <strong>drawer</strong>: ปุ่ม hamburger บน navbar เปิด sidebar ที่เลื่อนเข้ามาจากซ้าย พร้อมฉากหลังทึบ นี่คืองานที่มี state ข้ามสอง component เราจึงยก state ขึ้นไปไว้ที่ layout</p>
+
+        <pre><code class="language-tsx">// src/app/layouts/DashboardLayout.tsx
+import { useState } from "react";
+import { Outlet } from "react-router";
+import Sidebar from "../../components/Sidebar";
+import Navbar from "../../components/Navbar";
+
+export default function DashboardLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  return (
+    &lt;div className="min-h-screen bg-surface"&gt;
+      &lt;Sidebar open={sidebarOpen} onClose={() =&gt; setSidebarOpen(false)} /&gt;
+      &lt;div className="lg:pl-[280px]"&gt;
+        &lt;div className="mx-auto w-full max-w-[1440px] px-4 md:px-6"&gt;
+          &lt;Navbar onMenuClick={() =&gt; setSidebarOpen(true)} /&gt;
+          &lt;main className="pb-10"&gt;
+            &lt;Outlet /&gt;
+          &lt;/main&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <p>ฝั่ง Sidebar: เลิกใช้ <code>hidden</code> แล้วใช้การ<em>เลื่อนออกนอกจอ</em>แทน — จอเล็กซ่อนด้วย <code>-translate-x-full</code> เปิดเมื่อ <code>open</code>, จอใหญ่ตรึงไว้เสมอด้วย <code>lg:translate-x-0</code></p>
+
+        <pre><code class="language-tsx">// src/components/Sidebar.tsx (โครงใหม่)
+interface SidebarProps {
+  open: boolean;
+  onClose: () =&gt; void;
+}
+
+export default function Sidebar({ open, onClose }: SidebarProps) {
+  return (
+    &lt;&gt;
+      {open &amp;&amp; (
+        &lt;button
+          aria-label="ปิดเมนู"
+          onClick={onClose}
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+        /&gt;
+      )}
+      &lt;aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col bg-surface px-6 py-8
+          transition-transform lg:translate-x-0
+          ${open ? "translate-x-0" : "-translate-x-full"}`}
+      &gt;
+        {/* เนื้อหา sidebar เดิมทั้งหมด */}
+      &lt;/aside&gt;
+    &lt;/&gt;
+  );
+}
+</code></pre>
+
+        <p>และปุ่ม hamburger ใน Navbar — แสดงเฉพาะจอเล็ก (<code>lg:hidden</code>)</p>
+
+        <pre><code class="language-tsx">// src/components/Navbar.tsx (เพิ่ม)
+&lt;button
+  onClick={onMenuClick}
+  aria-label="เปิดเมนู"
+  className="rounded-lg p-2 text-muted lg:hidden"
+&gt;
+  &lt;svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"&gt;
+    &lt;path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" /&gt;
+  &lt;/svg&gt;
+&lt;/button&gt;
+</code></pre>
+
+        <p>รายละเอียดที่อย่าลืม: กดลิงก์ในเมนูแล้วเรียก <code>onClose</code> ด้วย (ไม่งั้น drawer ค้างบังหน้าใหม่) และปุ่มทั้งสองมี <code>aria-label</code> เพราะเป็นปุ่มไอคอนล้วน — เดี๋ยวเจอหลักการเต็ม ๆ ในบทถัดไป</p>
+
+        <h2>ล่า TODO ข้อ 5/8 — ตารางล้นจอ</h2>
+
+        <p>ตาราง Projects (หน้า Dashboard) และตารางทั้งสองของหน้า Tables ล้นจอมือถือ — ท่ามาตรฐานของตารางข้อมูลคือ<strong>ยอมให้ scroll แนวนอนภายในการ์ดของมันเอง</strong></p>
+
+        <pre><code class="language-tsx">&lt;div className="overflow-x-auto"&gt;
+  &lt;table className="w-full min-w-[640px] text-left"&gt;
+    {/* ... */}
+  &lt;/table&gt;
+&lt;/div&gt;
+</code></pre>
+
+        <p>ครอบทีเดียวจบทั้งสามตาราง (<code>min-w</code> กันตารางบี้จนอ่านไม่ออก) — ผู้ใช้มือถือปัดดูคอลัมน์ขวาได้ ทั้งหน้าไม่ขยับ นี่ไม่ใช่การขี้โกง: ตารางข้อมูลจริง ๆ บนมือถือทำแบบนี้กันทั้งวงการ เพราะการยุบตารางเป็นการ์ดมีต้นทุนสูงและไม่จำเป็นกับตารางอ่านอย่างเดียว</p>
+
+        <h2>ปิดเลนส์แรก</h2>
+
+        <p>ไล่ checklist ทั้งแปดข้อกับทั้งสามหน้าอีกรอบ แล้วอัปเดตบัญชี TODO: ข้อ 1, 2, 5, 8 เคลียร์แล้ว ✓ — เหลือฝั่ง accessibility (3, 4, 7, 9, 10) กับ maintainability (6) commit แล้วไปเลนส์ที่มองด้วยตาเปล่าไม่เห็น</p>
+
+        <pre><code class="language-bash">git add .
+git commit -m "fix: responsive review - fluid container, mobile drawer, table overflow"
+</code></pre>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="11_tables_signup.html" rel="prev">ก่อนหน้า: หน้า Tables และ Sign Up</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="13_review_accessibility.html" rel="next">ถัดไป: ตรวจ Accessibility</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ตั้งโปรเจกต์ Vite + React + Tailwind v4 และทำความรู้จัก Cursor Agent กับ project rules" />
+    <title>ติดตั้งโปรเจกต์และ Cursor | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 02 · เริ่มต้น (Getting Started)</p>
+          <h1>ติดตั้งโปรเจกต์และ Cursor</h1>
+          <p class="lesson-original-title" lang="en">Project &amp; Cursor Setup</p>
+        </header>
+
+        <h2>สร้างโปรเจกต์</h2>
+
+        <p>โครงโปรเจกต์เราตั้งเอง ไม่ปล่อยให้ AI เดา — นี่เป็นหลักการที่จะเจอซ้ำตลอด workshop: <strong>การตัดสินใจเชิงโครงสร้างเป็นของเรา</strong> ให้ AI ทำงานภายในกรอบที่เราวางไว้ รันคำสั่งเหล่านี้ใน terminal</p>
+
+        <pre><code class="language-bash">npm create vite@latest purity-dashboard -- --template react-ts
+cd purity-dashboard
+npm install
+npm install tailwindcss @tailwindcss/vite react-router
+</code></pre>
+
+        <p>ได้โปรเจกต์ React + TypeScript บน Vite แบบเดียวกับคอร์ส React พร้อมสองแพ็กเกจใหม่: <code>tailwindcss</code> กับปลั๊กอิน Vite ของมัน และ <code>react-router</code> ที่เราจะใช้สลับหน้า (แค่นั้นจริง ๆ — workshop นี้ไม่มี data loading ซับซ้อน)</p>
+
+        <h2>ต่อ Tailwind v4 เข้า Vite</h2>
+
+        <p>เปิดโปรเจกต์แล้วแก้ 2 ไฟล์ ไฟล์แรกคือ <code>vite.config.ts</code> — เพิ่มปลั๊กอิน Tailwind</p>
+
+        <pre><code class="language-typescript">// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+});
+</code></pre>
+
+        <p>ไฟล์ที่สองคือ <code>src/index.css</code> — ลบเนื้อหาเดิมของ Vite ทิ้งทั้งหมด เหลือบรรทัดเดียว</p>
+
+        <pre><code class="language-css">/* src/index.css */
+@import "tailwindcss";
+</code></pre>
+
+        <blockquote>Tailwind v4 ตั้งค่าเป็น CSS ล้วน (เดี๋ยวเจอ <code>@theme</code> ในบทเรียน 05) — <strong>ไม่มี</strong> <code>tailwind.config.js</code> และ<strong>ไม่ต้อง</strong>รัน <code>npx tailwindcss init</code> ถ้าคุณเจอบทความหรือวิดีโอสอนแบบนั้น แปลว่าเป็น v3 ของเก่า วิธีสังเกตอีกอย่าง: v3 ใช้ <code>@tailwind base;</code> สามบรรทัดแทน <code>@import "tailwindcss";</code> บรรทัดเดียว</blockquote>
+
+        <p>พิสูจน์ว่าใช้งานได้: แก้ <code>src/App.tsx</code> ให้เหลือแค่นี้ แล้วรัน <code>npm run dev</code></p>
+
+        <pre><code class="language-tsx">export default function App() {
+  return (
+    &lt;h1 className="p-8 text-3xl font-bold text-teal-500"&gt;Purity Dashboard&lt;/h1&gt;
+  );
+}
+</code></pre>
+
+        <p>ถ้าเห็นข้อความตัวหนาสีเขียวมิ้นต์ใหญ่ ๆ แปลว่า Tailwind ทำงานแล้ว (ยังไม่ต้องเข้าใจ class พวกนี้ — บทที่ 2 ทั้งบทมีไว้เพื่อการนี้)</p>
+
+        <h2>โครงโฟลเดอร์</h2>
+
+        <p>สร้างโฟลเดอร์ว่าง 4 ตัวใน <code>src/</code> ตามนี้ (ลบ <code>assets/</code> ของ Vite ทิ้งได้)</p>
+
+        <pre><code class="language-text">src/
+  app/         # router, layouts — โครงของแอป
+  pages/       # component หนึ่งไฟล์ต่อหนึ่ง route
+  components/  # UI ที่ใช้ซ้ำได้ (Sidebar, Navbar และที่จะเกิดจากการ refactor)
+  data/        # mock data แยกไว้ ไม่ปนกับ component
+</code></pre>
+
+        <p>โครงนี้เล็กกว่าคอร์ส e-commerce (ที่มี features/) เพราะ workshop นี้เป็นงาน UI ล้วน — หลักการเดิม: โครงเรียบที่สุดที่พองาน อย่าสร้างชั้นที่ยังไม่ได้ใช้</p>
+
+        <h2>รู้จัก Cursor</h2>
+
+        <p>Cursor คือ VS Code ที่ fork ไปฝัง AI ในทุกจุดของ editor เปิดครั้งแรกมันจะชวน import settings, keybindings และ extensions จาก VS Code มาให้ — กดยอมรับได้เลย ความรู้ VS Code ทั้งหมดใช้ต่อได้ทันที</p>
+
+        <p>วิธีใช้ AI ใน Cursor มี 3 ระดับ ใช้ให้ถูกงาน</p>
+
+        <ul>
+          <li><strong>Tab</strong> — autocomplete อัจฉริยะระหว่างพิมพ์ เดาบรรทัดถัดไปให้ กด Tab เพื่อรับ เหมาะกับตอนเราเป็นคนเขียนเอง</li>
+          <li><strong>Inline Edit (Cmd+K)</strong> — เลือกโค้ดจุดเดียวแล้วสั่งแก้ตรงนั้น เช่น "เปลี่ยนปุ่มนี้เป็นสีแดง" เหมาะกับการแก้เฉพาะจุด</li>
+          <li><strong>Agent panel (Cmd+I)</strong> — พระเอกของ workshop นี้: คุยเป็นแชท สั่งงานข้ามหลายไฟล์ สร้างไฟล์ใหม่ รันคำสั่ง และอ่านโปรเจกต์ของเราได้ เหมาะกับงานชิ้นใหญ่อย่าง "สร้างหน้านี้ตาม screenshot"</li>
+        </ul>
+
+        <p>ในแชทของ Agent มีตัวเลือกโหมด <strong>Agent</strong> กับ <strong>Ask</strong> — ต่างกันสำคัญ: Ask ตอบและอธิบายอย่างเดียว ไม่แตะไฟล์ ส่วน Agent ลงมือแก้จริง เวลาอยากปรึกษา ("โครงสร้างนี้โอเคไหม") ใช้ Ask เวลาสั่งงานใช้ Agent</p>
+
+        <p>การให้บริบท (context) คือทักษะสำคัญ: พิมพ์ <code>@</code> ในแชทเพื่อแนบ <strong>@Files</strong> หรือ <strong>@Folders</strong> ให้ AI อ่านไฟล์ที่เกี่ยวข้อง และที่สำคัญที่สุดสำหรับเรา — <strong>แนบรูปได้</strong> ลาก screenshot ลงช่องแชทได้เลย นี่คือหัวใจของบทที่ 3: ดีไซน์เดินทางจากตาเราไปถึง AI ผ่านรูปกับข้อความที่เราเขียนกำกับ</p>
+
+        <h2>Project rules — สอน Agent ครั้งเดียว ใช้ได้ทุก prompt</h2>
+
+        <p>ถ้าต้องพิมพ์ "ใช้ TypeScript นะ ใช้ Tailwind นะ ห้ามสร้างไฟล์ CSS นะ" ทุกครั้งที่สั่งงาน คงเหนื่อยตาย Cursor ให้เราเขียน<strong>กติกาประจำโปรเจกต์</strong>ไว้ในโฟลเดอร์ <code>.cursor/rules/</code> — Agent จะอ่านทุกครั้งที่ทำงานในโปรเจกต์นี้โดยอัตโนมัติ</p>
+
+        <p>สร้างไฟล์ <code>.cursor/rules/project.mdc</code> (นามสกุล <code>.mdc</code> คือ markdown ที่มี frontmatter บอกว่ากติกานี้ใช้เมื่อไหร่ — <code>alwaysApply: true</code> คือใช้เสมอ)</p>
+
+        <pre><code class="language-text">---
+description: Purity Dashboard — React + Tailwind conventions
+alwaysApply: true
+---
+
+- React 19 + TypeScript + Vite; styling ด้วย Tailwind CSS v4 utilities เท่านั้น ห้ามสร้างไฟล์ .css/.scss เพิ่ม
+- โครงสร้าง: src/app (router, layouts), src/pages (component ต่อ route), src/components (UI ที่ใช้ซ้ำ), src/data (mock data)
+- Component เป็น function component + TypeScript, ไฟล์ละหนึ่ง component, ตั้งชื่อ PascalCase.tsx
+- Mobile-first: class ไม่มี prefix คือมือถือ แล้วขยายด้วย md:/lg:/xl:
+- ใช้ semantic HTML (aside, nav, header, main, table) และ SVG inline สำหรับไอคอน
+- รูปทุกรูปมี alt; ปุ่ม/ลิงก์เป็น &lt;button&gt;/&lt;a&gt; จริง และมี focus-visible state
+</code></pre>
+
+        <p>สังเกตกติกาสองข้อสุดท้ายไว้ให้ดี — ในบทที่ 4 คุณจะเห็นว่าแม้เขียน rules ไว้แล้ว Agent ก็ยัง<em>ละเมิดมันให้เราเห็นจริง</em>ได้ rules ช่วยลดความผิดพลาดแต่ไม่ได้กำจัดมัน ซึ่งเป็นเหตุผลว่าทำไมบทที่ 5 (การ review) ถึงมีอยู่</p>
+
+        <h2>วินัยการใช้ Agent</h2>
+
+        <ul>
+          <li><strong>อ่าน diff ทุกไฟล์ก่อนกด Accept</strong> — Agent เสนอการแก้เป็น diff ให้ดูเสมอ อย่ากดรับโดยไม่อ่าน นิสัยนี้คือเส้นแบ่งระหว่างคนคุมงานกับคนกดปุ่ม</li>
+          <li><strong>ใช้ checkpoint</strong> — Cursor เก็บ checkpoint ให้ทุกครั้งที่ Agent แก้โค้ด ถ้าพาไปผิดทาง กด restore ย้อนกลับได้ ไม่ต้องเสียดาย โค้ดที่ generate ใหม่ได้ในหนึ่งนาทีไม่มีต้นทุนทางใจ</li>
+          <li><strong>งานเล็ก ๆ ทีละงาน</strong> — สั่ง "สร้าง sidebar" แล้วตรวจ ดีกว่าสั่ง "สร้างทั้งเว็บ" แล้วได้ diff 30 ไฟล์ที่ตรวจไม่ไหว</li>
+        </ul>
+
+        <blockquote>หน้าตา UI ของ Cursor เปลี่ยนเร็วมาก — ชื่อปุ่น แถบ หรือ shortcut ในบทเรียนอาจต่างจากเวอร์ชันที่คุณใช้ แต่แนวคิดทั้งหมด (agent, context, rules, การ review diff) คงเดิม หาปุ่มไม่เจอให้เดาจากแนวคิด ไม่ใช่จากตำแหน่งปุ่ม</blockquote>
+
+        <h2>Commit เก็บไว้</h2>
+
+        <p>นิสัยจากคอร์ส React: commit เล็ก ๆ บ่อย ๆ ตั้งแต่ตอนนี้</p>
+
+        <pre><code class="language-bash">git init
+git add .
+git commit -m "scaffold: vite + react + ts + tailwind v4 + cursor rules"
+</code></pre>
+
+        <p>เครื่องมือพร้อมแล้ว แต่ก่อนจะปล่อย Agent สร้าง UI เราต้องอ่านโค้ด Tailwind ให้ออกก่อน — ไม่งั้นจะตรวจงานมันได้ยังไง ไปเรียน Tailwind กันในบทถัดไป</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="01_intro.html" rel="prev">ก่อนหน้า: บทนำ: Workshop นี้เราจะสร้างอะไร</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="03_utility_first.html" rel="next">ถัดไป: Utility-First และ Utilities หลัก</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

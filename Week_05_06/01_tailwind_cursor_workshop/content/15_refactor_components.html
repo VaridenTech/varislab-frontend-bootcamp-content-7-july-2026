@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Refactor UI ที่ AI สร้างเป็น component ที่ใช้ซ้ำได้: Button แบบ variant map, StatCard, StatusBadge, ProgressBar, NavItem" />
+    <title>แยกเป็น Reusable Components | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 15 · Refactor เป็น Component (Refactor to Components)</p>
+          <h1>แยกเป็น Reusable Components</h1>
+          <p class="lesson-original-title" lang="en">Extracting Components</p>
+        </header>
+
+        <h2>หลักการออกแบบ props</h2>
+
+        <p>ก่อนแยก component ใดก็ตาม ถามสามคำถาม</p>
+
+        <ol>
+          <li><strong>ใช้ที่ไหนบ้าง</strong> — ถ้าคำตอบมีที่เดียวและไม่มีทีท่าจะเพิ่ม อย่าเพิ่งแยก (YAGNI)</li>
+          <li><strong>อะไร<em>ต่างกัน</em>ในแต่ละที่</strong> — นั่นคือ props</li>
+          <li><strong>อะไร<em>คงที่</em>ทุกที่</strong> — นั่นคือโค้ดข้างใน component</li>
+        </ol>
+
+        <p>หลักที่ช่วยให้ props สะอาด: <strong>component ที่ดีรับ "ข้อมูล" ไม่ใช่ "คลาส"</strong> — <code>&lt;StatCard label="Today's Money" value="$53,000" /&gt;</code> อ่านออกทันทีว่าคืออะไร ส่วน <code>&lt;Card className="flex items-center..."&gt;</code> คือการย้ายปัญหาเดิมไปอีกที่</p>
+
+        <h2>Button — variant map pattern</h2>
+
+        <p>เริ่มจากตัวที่คุ้มที่สุด ปุ่มสามหน้าตาของดีไซน์นี้ (SIGN UP เขียวทึบ, DOCUMENTATION ขาว, VIEW ALL ขอบเส้น) คือปุ่มเดียวกัน 3 variant</p>
+
+        <pre><code class="language-tsx">// src/components/Button.tsx
+import { ButtonHTMLAttributes } from "react";
+
+type Variant = "primary" | "outline" | "ghost";
+
+const variantClasses: Record&lt;Variant, string&gt; = {
+  primary: "bg-primary text-white hover:bg-primary-dark",
+  outline: "border border-ink text-ink hover:bg-ink hover:text-white",
+  ghost: "text-muted hover:bg-gray-100",
+};
+
+interface ButtonProps extends ButtonHTMLAttributes&lt;HTMLButtonElement&gt; {
+  variant?: Variant;
+}
+
+export default function Button({
+  variant = "primary",
+  className = "",
+  ...rest
+}: ButtonProps) {
+  return (
+    &lt;button
+      className={`inline-flex items-center justify-center rounded-xl px-4 py-2 text-xs font-bold tracking-wide uppercase transition-colors focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${variantClasses[variant]} ${className}`}
+      {...rest}
+    /&gt;
+  );
+}
+</code></pre>
+
+        <p>สี่เทคนิคในไฟล์เดียว แกะทีละตัว</p>
+
+        <ul>
+          <li><strong>Variant map</strong> — object <code>Record&lt;Variant, string&gt;</code> แทน ternary ซ้อน: เพิ่ม variant ใหม่ = เพิ่มหนึ่งบรรทัดใน map แล้ว TypeScript บังคับให้ครบทุกตัวเอง (ลบตัวหนึ่งออกจาก map ดู — error ทันที)</li>
+          <li><strong><code>extends ButtonHTMLAttributes</code> + spread <code>...rest</code></strong> — <code>onClick</code>, <code>type</code>, <code>disabled</code>, <code>aria-*</code> ทุกตัวของปุ่ม HTML ผ่านเข้ามาได้ฟรี ไม่ต้องประกาศ prop เอง</li>
+          <li><strong><code>className</code> escape hatch</strong> — ที่ไหนต้องการเสริม (เช่น <code>className="w-full"</code> ให้ปุ่ม SIGN UP เต็มกว้าง) ทำได้โดยไม่ต้องเพิ่ม prop ใหม่ ปุ่ม DOCUMENTATION สีขาวบนการ์ดเขียวก็ใช้ทางนี้: <code>variant="ghost" className="bg-white text-ink"</code></li>
+          <li><strong>ความถูกต้อง baked in</strong> — <code>focus-visible</code> ring และ <code>disabled</code> style เขียน<em>ครั้งเดียว</em> จากนี้ทุกปุ่มในแอปถูกต้องโดยไม่ต้องนึกถึง — นี่คือดอกผลของบทเรียน 13</li>
+        </ul>
+
+        <h2>StatCard</h2>
+
+        <p>เก็บหนี้ก้อนใหญ่ของหน้า Dashboard — สิ่งที่ต่างกันในการ์ดทั้ง 4: ป้าย, ตัวเลข, delta, ทิศของ delta, ไอคอน — นั่นคือ props ทั้งหมด</p>
+
+        <pre><code class="language-tsx">// src/components/StatCard.tsx
+import { ReactNode } from "react";
+
+interface StatCardProps {
+  label: string;
+  value: string;
+  delta?: string;
+  deltaTone?: "up" | "down";
+  icon: ReactNode;
+}
+
+export default function StatCard({
+  label,
+  value,
+  delta,
+  deltaTone = "up",
+  icon,
+}: StatCardProps) {
+  return (
+    &lt;div className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"&gt;
+      &lt;div&gt;
+        &lt;p className="text-sm font-medium text-muted"&gt;{label}&lt;/p&gt;
+        &lt;p className="text-xl font-bold text-ink"&gt;
+          {value}{" "}
+          {delta &amp;&amp; (
+            &lt;span
+              className={`text-sm font-bold ${
+                deltaTone === "up" ? "text-success" : "text-danger"
+              }`}
+            &gt;
+              {delta}
+            &lt;/span&gt;
+          )}
+        &lt;/p&gt;
+      &lt;/div&gt;
+      &lt;div className="flex size-12 items-center justify-center rounded-xl bg-primary text-white"&gt;
+        {icon}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <p>ข้อสังเกต: <code>icon</code> เป็น <code>ReactNode</code> — ยัด SVG อะไรมาก็ได้, <code>delta</code> เป็น optional เผื่อการ์ดที่ไม่มีเปอร์เซ็นต์, และ ternary ที่<em>เหลืออยู่</em> (deltaTone) เป็นเงื่อนไขเดียวชั้นเดียว — แบบนี้โอเค กติกาต้าน "ternary ซ้อน" ไม่ใช่ "ternary ทุกตัว" ฝั่งการใช้งานในหน้า Dashboard ยุบเหลือ</p>
+
+        <pre><code class="language-tsx">import { stats } from "../data/stats";
+
+&lt;div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4"&gt;
+  {stats.map((s) =&gt; (
+    &lt;StatCard key={s.label} {...s} /&gt;
+  ))}
+&lt;/div&gt;
+</code></pre>
+
+        <p>จาก ~120 บรรทัดเหลือ 5 — และข้อมูลอยู่ใน <code>data/stats.ts</code> ที่มันควรอยู่มาตลอด</p>
+
+        <h2>StatusBadge และ ProgressBar</h2>
+
+        <p>สองตัวเล็กที่ฆ่า ternary ของบทเรียน 11 และ duplication ข้ามหน้า</p>
+
+        <pre><code class="language-tsx">// src/components/StatusBadge.tsx
+import { ReactNode } from "react";
+
+type Tone = "success" | "muted";
+
+const toneClasses: Record&lt;Tone, string&gt; = {
+  success: "bg-success text-white",
+  muted: "bg-gray-100 text-muted",
+};
+
+export default function StatusBadge({
+  tone,
+  children,
+}: {
+  tone: Tone;
+  children: ReactNode;
+}) {
+  return (
+    &lt;span className={`rounded-lg px-3 py-1 text-xs font-bold ${toneClasses[tone]}`}&gt;
+      {children}
+    &lt;/span&gt;
+  );
+}
+</code></pre>
+
+        <p>ใช้: <code>&lt;StatusBadge tone={author.online ? "success" : "muted"}&gt;{author.online ? "Online" : "Offline"}&lt;/StatusBadge&gt;</code> — ternary เหลือแค่ตรง<em>ข้อมูล</em> ไม่แตะ<em>สไตล์</em> อีกแล้ว และสังเกตว่า tone ตั้งชื่อตามความหมาย (success/muted) ไม่ใช่ตามหน้า (online/offline) — หน้า Tables ใช้กับ Working/Done/Canceled ต่อได้เลย</p>
+
+        <pre><code class="language-tsx">// src/components/ProgressBar.tsx
+export default function ProgressBar({ value }: { value: number }) {
+  return (
+    &lt;div&gt;
+      &lt;p className="text-sm font-bold text-primary"&gt;{value}%&lt;/p&gt;
+      &lt;div
+        role="progressbar"
+        aria-valuenow={value}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        className="mt-1 h-1 w-full rounded-full bg-gray-200"
+      &gt;
+        &lt;div
+          className="h-1 rounded-full bg-primary"
+          style={{ width: `${value}%` }}
+        /&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+        <p>ดูของแถมให้ดี: <code>role="progressbar"</code> + <code>aria-value*</code> — ตอนเป็น div เปล่าในตาราง screen reader ไม่รู้เลยว่า 60% คืออะไร ตอนนี้ความถูกต้องนี้<strong>ติดไปทุกที่ที่ใช้ ProgressBar ตลอดกาล</strong> — ประโยชน์ที่แท้จริงของการ refactor ไม่ใช่โค้ดสั้นลง แต่คือความถูกต้องแพร่พันธุ์เอง</p>
+
+        <h2>NavItem</h2>
+
+        <p>ก้อน NavLink จากบทเรียน 13 วนใช้สองที่ (เมนูหลัก + ACCOUNT PAGES) — แยกปิดท้าย</p>
+
+        <pre><code class="language-tsx">// src/components/NavItem.tsx
+import { ReactNode } from "react";
+import { NavLink } from "react-router";
+
+interface NavItemProps {
+  to: string;
+  icon: ReactNode;
+  label: string;
+  onNavigate?: () =&gt; void;
+}
+
+export default function NavItem({ to, icon, label, onNavigate }: NavItemProps) {
+  return (
+    &lt;NavLink
+      to={to}
+      onClick={onNavigate}
+      className={({ isActive }) =&gt;
+        `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-colors
+         focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none ` +
+        (isActive ? "bg-white text-ink shadow-sm" : "text-muted hover:bg-white")
+      }
+    &gt;
+      &lt;span className="flex size-8 items-center justify-center rounded-xl bg-white text-primary"&gt;
+        {icon}
+      &lt;/span&gt;
+      {label}
+    &lt;/NavLink&gt;
+  );
+}
+</code></pre>
+
+        <p>Sidebar ทั้งสองหมวดเหลือ <code>menu.map((m) =&gt; &lt;NavItem key={m.to} {...m} onNavigate={onClose} /&gt;)</code></p>
+
+        <h2>สั่ง refactor ผ่าน Agent อย่างมีกำกับ</h2>
+
+        <p>งาน refactor แบบนี้ให้ Agent ทำแทนได้ — แต่<strong>เราออกแบบ interface มันลงแรง</strong> ไม่ใช่ปล่อยให้มันเดา props เอง</p>
+
+        <pre><code class="language-text">แยก stat card ที่ซ้ำ 4 ที่ใน src/pages/DashboardPage.tsx ออกเป็น
+src/components/StatCard.tsx ตาม interface นี้เป๊ะ ๆ:
+
+interface StatCardProps {
+  label: string;
+  value: string;
+  delta?: string;
+  deltaTone?: "up" | "down";
+  icon: ReactNode;
+}
+
+ย้ายข้อมูลการ์ดทั้ง 4 ไปไว้ src/data/stats.ts แล้วให้หน้า map จาก data
+ห้ามเปลี่ยนหน้าตา UI แม้แต่ pixel เดียว
+</code></pre>
+
+        <p>แล้วปิดงานด้วยสามขั้นเสมอ: (1) <strong>อ่าน diff</strong> — interface ตรงที่สั่งไหม ไม่ใช่ที่ Agent คิดว่าดีกว่า, (2) <strong>รัน dev เทียบตาต่อตา</strong> — เปิดจอเดิมข้าง screenshot ดูว่า UI ไม่ขยับ (visual regression ด้วยตา — เครื่องมือจริงจังไว้วันหน้า), (3) <strong>ทำทีละ component</strong> — ห้า component คือห้า prompt ห้า diff เล็ก ๆ ไม่ใช่หนึ่ง diff ยักษ์</p>
+
+        <p>เคลียร์ครบทั้งใบสั่งงาน (Button, StatCard, StatusBadge, ProgressBar, NavItem — ส่วน Toggle ยกไปทำตอนหน้า Profile) แล้วไล่ checklist บทเรียน 14 อีกรอบ: ทุกข้อควรเขียว commit ใหญ่ได้เลย</p>
+
+        <pre><code class="language-bash">git add .
+git commit -m "refactor: extract Button, StatCard, StatusBadge, ProgressBar, NavItem"
+</code></pre>
+
+        <p>ลูปครบทั้งสี่จังหวะเป็นครั้งแรก: prompt → generate → review → refactor — เหลือแค่สรุปและโจทย์ปิดท้าย</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="14_review_maintainability.html" rel="prev">ก่อนหน้า: ตรวจ Maintainability</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="16_wrap_up.html" rel="next">ถัดไป: สรุปและก้าวต่อไป</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
