@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ฝึกอ่าน screenshot ให้เห็นเป็นโครงสร้าง region, pattern ที่ซ้ำ และระบบ spacing/สี ก่อนเขียน prompt" />
+    <title>อ่านโครงสร้าง UI จาก Screenshot | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 06 · จาก Screenshot สู่ Prompt (Screenshot to Prompt)</p>
+          <h1>อ่านโครงสร้าง UI จาก Screenshot</h1>
+          <p class="lesson-original-title" lang="en">Reading a UI</p>
+        </header>
+
+        <h2>ก่อน prompt ต้องอ่านให้ออก</h2>
+
+        <p>หลักสูตรของ workshop นี้เขียนว่า "ใช้ Cursor Agent สร้าง UI ฉบับแรก <em>หลังเข้าใจโครงสร้างแล้ว</em>" — ครึ่งหลังของประโยคคือหัวใจ เราสั่งงานสิ่งที่ตัวเองยังไม่เข้าใจไม่ได้ ผลลัพธ์ที่ได้จะเป็นการ<em>เดา</em>ของ AI ไม่ใช่<em>ดีไซน์</em>ของเรา</p>
+
+        <p>เป้าหมายของบทนี้: ฝึกมองภาพ UI แล้วเห็นเป็น <strong>"โครงสร้าง + pattern"</strong> ไม่ใช่ pixel — ทักษะเดียวกับที่นักพัฒนาใช้ตอนรับงานจากดีไซเนอร์มาแตกเป็นงานย่อย</p>
+
+        <h2>ขั้นที่ 1 — แบ่งเป็น region</h2>
+
+        <img src="images/dashboard.png" alt="หน้า Dashboard เต็มหน้า ใช้เป็นโจทย์ฝึกแบ่ง region" />
+
+        <p>มองหา "ก้อนใหญ่" ก่อน แล้วค่อยเจาะลง — หน้า Dashboard แตกเป็นชั้น ๆ ได้แบบนี้</p>
+
+        <ul>
+          <li><strong>ราก:</strong> สองคอลัมน์ — sidebar ซ้าย (คงที่) + คอลัมน์ขวา (เนื้อหา)
+            <ul>
+              <li><strong>Sidebar:</strong> โลโก้ → เมนูหลัก 4 รายการ → หัวข้อ "ACCOUNT PAGES" → เมนูบัญชี 3 รายการ → การ์ด "Need help?" ล่างสุด</li>
+              <li><strong>คอลัมน์ขวา:</strong> navbar (breadcrumb + ค้นหา + ไอคอน) → เนื้อหา 4 แถว
+                <ul>
+                  <li>แถว 1: การ์ดสถิติ ×4</li>
+                  <li>แถว 2: การ์ดโปรโมท ×2 (ข้อความ+โลโก้ / รูปภาพ)</li>
+                  <li>แถว 3: กราฟ ×2 (Active Users แท่ง / Sales overview เส้น)</li>
+                  <li>แถว 4: ตาราง Projects (กว้าง ~2/3) + timeline Orders (แคบ ~1/3)</li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+
+        <p>แต่ละแถวให้ถามต่อว่า "กี่คอลัมน์ และ<strong>บนมือถือยุบเหลือเท่าไหร่</strong>" — อย่าลืมว่าดีไซน์ให้มาแค่ desktop การตัดสินใจ responsive เป็นของเรา และต้องเขียนลง prompt เสมอ (แถว 1: 4→2→1, แถว 3: 2→1, แถว 4: 3 ส่วนที่กลายเป็นซ้อนกัน — คาดเดาอย่างมีหลักการจากบทเรียน 04)</p>
+
+        <h2>ขั้นที่ 2 — หา pattern ที่ซ้ำ</h2>
+
+        <p>มองอีกรอบด้วยคำถาม "อะไรหน้าตาเหมือนกันบ้าง"</p>
+
+        <ul>
+          <li><strong>การ์ดขาว</strong> (<code>rounded-2xl bg-white shadow-sm</code>) คือหน่วยพื้นฐานของทั้งดีไซน์ — ทุกอย่างอยู่ในการ์ดแบบนี้หมด</li>
+          <li><strong>Stat card ×4</strong> — ต่างกันแค่ข้อมูล (ป้าย, ตัวเลข, %, ไอคอน) โครงเหมือนกันเป๊ะ</li>
+          <li><strong>ตาราง</strong> — Projects ในหน้านี้กับ 2 ตารางในหน้า Tables ใช้สูตรเดียวกัน: หัวคอลัมน์เทาตัวเล็ก แถวคั่นเส้นบาง</li>
+          <li><strong>Progress bar</strong> — โผล่ทั้งตาราง Projects หน้านี้และหน้า Tables</li>
+          <li><strong>Badge สถานะ</strong> — Online/Offline ในหน้า Tables</li>
+        </ul>
+
+        <p>สังเกตไว้ตั้งแต่ตอนอ่าน — ชื่อ pattern พวกนี้ (<em>StatCard, ProgressBar, StatusBadge</em>) จะกลายเป็นชื่อ component ตอน refactor ในบทเรียน 15 การอ่าน UI ที่ดีคือการเริ่ม refactor ตั้งแต่ยังไม่มีโค้ด</p>
+
+        <h2>ขั้นที่ 3 — อ่านระบบ spacing / typography / สี</h2>
+
+        <ul>
+          <li><strong>ช่องไฟ</strong> — ระยะห่างระหว่างการ์ดคงที่ตลอดทั้งหน้า ราว 24px → <code>gap-6</code> เดียวใช้ทั้งหน้า</li>
+          <li><strong>Typography</strong> — หัวการ์ดตัวหนาสี ink, ป้ายรอง <code>text-sm text-muted</code>, ตัวเลขใหญ่ตัวหนา — มีอยู่ 3-4 ระดับเท่านั้น ไม่ใช่ 20 แบบ</li>
+          <li><strong>สี</strong> — เขียวมิ้นต์ = token <code>primary</code> ของเรา, เขียว/แดงของเปอร์เซ็นต์ = <code>success</code>/<code>danger</code>, พื้นหลัง = <code>surface</code> — ดีไซน์ทั้งหน้าใช้สีที่เราตั้ง token ไว้แล้วครบ</li>
+        </ul>
+
+        <p>ผลของการอ่านสามขั้น: เราได้ bullet list ที่พร้อมกลายเป็นส่วน "โครงสร้าง" ของ prompt ในบทถัดไปแทบจะคำต่อคำ</p>
+
+        <h2>แบบฝึก — decompose หน้า Tables</h2>
+
+        <img src="images/tables.png" alt="หน้า Tables ใช้เป็นแบบฝึกหัด decompose ด้วยตัวเอง" />
+
+        <p>ก่อนดูเฉลย ลองทำสามขั้นกับหน้า Tables ด้วยตัวเอง เขียนเป็น bullet list ในไฟล์โน้ต — <strong>เก็บไว้ด้วย</strong> เพราะบทเรียน 11 จะให้ใช้มันเขียน prompt จริง</p>
+
+        <p><strong>เฉลยย่อ</strong> (อ่านหลังลองเองแล้ว): โครงหน้า = shell เดิม (sidebar + navbar ใช้ร่วมทุกหน้า — ไม่ต้องคิดใหม่) + เนื้อหา 2 แถว: การ์ด "Authors Table" (คอลัมน์ AUTHOR รูป+ชื่อ+อีเมล / FUNCTION สองบรรทัด / STATUS badge เขียวหรือเทา / EMPLOYED วันที่ / ลิงก์ Edit — 6 แถว) และการ์ด "Projects" (COMPANIES ไอคอน+ชื่อ / BUDGET / STATUS ข้อความ / COMPLETION ตัวเลข % + progress bar / ปุ่ม kebab) pattern ที่ซ้ำ: การ์ดขาว, สูตรตาราง, badge, progress bar — ตรงกับที่เจอในหน้า Dashboard เกือบทั้งหมด</p>
+
+        <p>อ่านออกแล้ว ขั้นต่อไปคือเปลี่ยนสิ่งที่อ่านได้เป็นคำสั่งที่ AI ตีความผิดไม่ได้ — กายวิภาคของ prompt ที่ดี ในบทถัดไป</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="05_theme_tokens.html" rel="prev">ก่อนหน้า: Design Tokens ด้วย @theme</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="07_prompt_anatomy.html" rel="next">ถัดไป: เขียน UI Prompt ที่ชัดเจน</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
