@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ภาพรวม workshop: สร้าง Purity UI Dashboard ด้วย Tailwind CSS และ Cursor Agent" />
+    <title>บทนำ | Tailwind CSS และ Cursor Workflow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 01 · เริ่มต้น (Getting Started)</p>
+          <h1>บทนำ: Workshop นี้เราจะสร้างอะไร</h1>
+          <p class="lesson-original-title" lang="en">Intro</p>
+        </header>
+
+        <h2>เราจะสร้างอะไร</h2>
+
+        <p>ตลอด workshop นี้ เราจะรับบท frontend developer ที่ได้รับ "design handoff" มาจากทีมออกแบบ: ไฟล์ Figma ของ <strong>Purity UI Dashboard</strong> — admin dashboard สวย ๆ จาก Figma Community ผลงานของ Creative Tim และ Simmmple ต้นฉบับสร้างด้วย Chakra UI แต่เราจะสร้างเวอร์ชันของเราเองด้วย <strong>Tailwind CSS</strong> โดยมี <strong>Cursor Agent</strong> เป็นลูกมือเขียนโค้ดให้ และเราเป็นคนคุมงาน</p>
+
+        <p>ดีไซน์ที่ต้องสร้างมี 4 หน้าจอ มาดูทีละหน้ากันก่อน</p>
+
+        <h3>หน้า Dashboard</h3>
+
+        <img src="images/dashboard.png" alt="หน้า Dashboard ของ Purity UI: sidebar ซ้าย, การ์ดสถิติ 4 ใบ, การ์ดโปรโมท 2 ใบ, กราฟ 2 ใบ, ตาราง Projects และ timeline คำสั่งซื้อ" />
+
+        <p>หน้าหลักของแอป อัดแน่นที่สุด: ด้านซ้ายคือ sidebar ที่มีโลโก้ "PURITY UI DASHBOARD" เมนูหลัก (Dashboard, Tables, Billing, RTL) หมวด "ACCOUNT PAGES" (Profile, Sign In, Sign Up) และการ์ดเขียวมิ้นต์ "Need help?" ด้านบนมี navbar ที่มี breadcrumb กับช่องค้นหา ส่วนเนื้อหาไล่จากบนลงล่าง: การ์ดสถิติ 4 ใบ (Today's Money $53,000 +55%, Today's Users 2,300 +5%, New Clients +3,052 -14%, Total Sales $173,000 +8%) การ์ดโปรโมท 2 ใบ กราฟแท่ง "Active Users" บนพื้นน้ำเงินเข้ม กราฟเส้น "Sales overview" ตาราง "Projects" (มีงบประมาณและ % ความคืบหน้า) และ timeline "Orders overview"</p>
+
+        <h3>หน้า Tables</h3>
+
+        <img src="images/tables.png" alt="หน้า Tables: ตาราง Authors ที่มีรูปโปรไฟล์และ status badge กับตาราง Projects ที่มี progress bar" />
+
+        <p>หน้ารวมตารางข้อมูล 2 ตาราง: "Authors Table" แสดงรายชื่อคนพร้อมรูป avatar อีเมล ตำแหน่ง badge สถานะ Online (เขียว) / Offline (เทา) และวันที่เริ่มงาน กับตาราง "Projects" ที่มีงบประมาณ สถานะ (Working / Canceled / Done) และ progress bar สีเขียวมิ้นต์ — ตารางคือขนมปังกับเนยของงาน admin dashboard เราจะได้ทำกันจริงจัง</p>
+
+        <h3>หน้า Profile</h3>
+
+        <img src="images/profile.png" alt="หน้า Profile: hero สีเขียวมิ้นต์ การ์ดโปรไฟล์ Esthera Jackson, Platform Settings, Profile Information, Conversations และการ์ดโปรเจกต์" />
+
+        <p>หน้าโปรไฟล์ผู้ใช้: hero ลายคลื่นสีเขียวมิ้นต์ การ์ดโปรไฟล์ลอยทับ hero (รูป, ชื่อ Esthera Jackson, แท็บ Overview / Teams / Projects) แล้วตามด้วย 3 คอลัมน์ — Platform Settings (รายการ toggle), Profile Information และ Conversations — ปิดท้ายด้วยการ์ดโปรเจกต์แบบมีรูปภาพ หน้านี้เราจะ<strong>ไม่สร้างในบทเรียน</strong> แต่เก็บไว้เป็นโจทย์ใหญ่ท้าย workshop ให้คุณทำครบลูปด้วยตัวเอง</p>
+
+        <h3>หน้า Sign Up</h3>
+
+        <img src="images/signup.png" alt="หน้า Sign Up: hero สีเขียวมิ้นต์ หัวข้อ Welcome! และการ์ดฟอร์มสมัครสมาชิกที่มีปุ่ม social login" />
+
+        <p>หน้าสมัครสมาชิก: navbar แบบลอยกลาง hero สีเขียวมิ้นต์ หัวข้อ "Welcome!" และการ์ดฟอร์มสีขาว — ปุ่ม social (Facebook, Apple, Google) ช่อง Name / Email / Password สวิตช์ "Remember me" และปุ่ม SIGN UP หน้านี้พิเศษตรงที่<em>ไม่มี sidebar</em> — layout คนละแบบกับหน้าอื่น ซึ่งจะสอนเราเรื่องการจัด route</p>
+
+        <h2>ทักษะทั้งสี่ของ workshop</h2>
+
+        <p>เป้าหมายของ workshop นี้ไม่ใช่แค่ "ได้เว็บสวย" แต่คือทักษะ 4 ข้อที่ใช้ได้กับงาน UI ทุกงานหลังจากนี้</p>
+
+        <ul>
+          <li><strong>ถอด screenshot, wireframe หรือ requirement ออกมาเป็น prompt สำหรับ UI ที่ชัดเจน</strong> — มองภาพให้ออกว่าโครงสร้างคืออะไร แล้วเขียนสื่อสารให้ AI เข้าใจตรงกับเรา</li>
+          <li><strong>ใช้ Cursor Agent สร้าง UI ฉบับแรก หลังเข้าใจโครงสร้างแล้ว</strong> — ให้ AI ทำงานหนักส่วน generate โดยมีเรากำหนดกรอบ</li>
+          <li><strong>ตรวจโค้ด Tailwind ที่ AI สร้าง</strong> — ทั้งการรองรับทุกขนาดหน้าจอ (responsive), accessibility และการดูแลรักษา (maintainability)</li>
+          <li><strong>Refactor UI ที่ AI สร้างให้เป็น React component ที่นำกลับมาใช้ซ้ำได้</strong> — เปลี่ยนโค้ดฉบับร่างให้เป็นโค้ดที่ทีมอยู่ด้วยได้ระยะยาว</li>
+        </ul>
+
+        <h2>ลูปการทำงาน: prompt → generate → review → refactor</h2>
+
+        <p>หัวใจของ workshop คือลูป 4 จังหวะที่เราจะวนซ้ำจนเป็นนิสัย</p>
+
+        <ol>
+          <li><strong>Prompt</strong> — อ่านดีไซน์ให้แตก แล้วเขียนคำสั่งที่ชัดเจน</li>
+          <li><strong>Generate</strong> — ให้ Cursor Agent สร้างโค้ดฉบับแรก</li>
+          <li><strong>Review</strong> — ตรวจสามเลนส์: responsive / accessibility / maintainability</li>
+          <li><strong>Refactor</strong> — แยกของที่ซ้ำเป็น component ที่ใช้ซ้ำได้</li>
+        </ol>
+
+        <p>พูดให้ตรงที่สุด: <strong>โค้ดจาก AI คือฉบับร่าง</strong> มันมักหน้าตาตรงดีไซน์และรันได้ แต่คนที่รับผิดชอบโค้ดที่ ship คือเรา — ใน workshop นี้คุณจะเห็นกับตาว่าโค้ดที่ "ดูดี" จาก Agent ซ่อนปัญหาอะไรไว้บ้าง ทักษะ review จึงสำคัญพอ ๆ กับทักษะ prompt และนั่นคือเหตุผลที่บทเรียนครึ่งหลังของ workshop ทุ่มให้การตรวจและ refactor ล้วน ๆ</p>
+
+        <h2>ต่างจากคอร์ส E-commerce อย่างไร</h2>
+
+        <p>ในช่วงสัปดาห์เดียวกันนี้ยังมีคอร์สสร้างเว็บ e-commerce ซึ่งเป็นการ<em>เขียนแอปทั้งแอปด้วยมือ</em> ทั้ง logic, API และ state — ส่วน workshop นี้โฟกัสอีกด้าน: การ<em>กำกับ AI ให้สร้าง UI</em> จากดีไซน์จริง และ genre ของ UI ก็คนละแบบ — admin dashboard เต็มไปด้วยตาราง การ์ดสถิติ และฟอร์ม ซึ่งเป็นงานที่เจอบ่อยมากในชีวิตจริง ทั้งสองคอร์สเสริมกัน ไม่ซ้ำกัน</p>
+
+        <h2>เตรียมเครื่องมือ</h2>
+
+        <ul>
+          <li><strong>Cursor</strong> — ดาวน์โหลดจาก <a href="https://cursor.com" target="_blank" rel="noreferrer">cursor.com</a> แผน free เพียงพอสำหรับ workshop นี้ (มีโควตาการใช้ Agent จำกัดต่อเดือน ใช้อย่างประหยัดตามที่บทเรียนแนะนำ)</li>
+          <li><strong>Node.js เวอร์ชัน 22 ขึ้นไป</strong> — ตัวเดียวกับที่ใช้มาตั้งแต่คอร์ส React</li>
+          <li><strong>ไฟล์ Figma ต้นแบบ</strong> — เปิดดูได้ฟรี ไม่ต้องมี license: <a href="https://www.figma.com/design/TvhgVvFBvybHh6BUyEvZRl/Purity-UI-Dashboard---Chakra-UI-Dashboard--Community-?m=auto&amp;t=m8fTN5gy77i21j0s-1" target="_blank" rel="noreferrer">Purity UI Dashboard (Figma Community)</a></li>
+        </ul>
+
+        <h2>แผนที่คอร์ส</h2>
+
+        <ol>
+          <li><strong>เริ่มต้น</strong> — ตั้งโปรเจกต์ React + Tailwind v4 และทำความรู้จัก Cursor (บทเรียน 01–02)</li>
+          <li><strong>Tailwind CSS พื้นฐาน</strong> — utility-first, responsive, states และ design tokens ให้พอตรวจงาน AI ได้อย่างมั่นใจ (บทเรียน 03–05)</li>
+          <li><strong>จาก Screenshot สู่ Prompt</strong> — อ่านดีไซน์ให้แตก แล้วเขียน prompt ที่ชัดเจน (บทเรียน 06–08)</li>
+          <li><strong>สร้าง UI ด้วย Cursor Agent</strong> — ลงมือสร้าง app shell, หน้า Dashboard, หน้า Tables และ Sign Up (บทเรียน 09–11)</li>
+          <li><strong>ตรวจโค้ดที่ AI สร้าง</strong> — สามเลนส์: responsive, accessibility, maintainability (บทเรียน 12–14)</li>
+          <li><strong>Refactor เป็น Component</strong> — แยกเป็น component ที่ใช้ซ้ำได้ และปิดจ็อบ (บทเรียน 15–16)</li>
+        </ol>
+
+        <p>พร้อมแล้ว ไปตั้งเครื่องมือกันในบทถัดไป</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="02_setup.html" rel="next">ถัดไป: ติดตั้งโปรเจกต์และ Cursor</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
