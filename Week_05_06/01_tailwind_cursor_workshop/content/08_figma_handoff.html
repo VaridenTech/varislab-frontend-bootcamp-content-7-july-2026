@@ -18,11 +18,11 @@
 
         <h2>Screenshot บอกไม่หมด</h2>
 
-        <p>Screenshot สื่อโครงสร้างกับบรรยากาศได้ดี แต่ตัวเลขเป๊ะ ๆ — สี hex, ระยะห่างเป็น px, รัศมีมุม, ชื่อฟอนต์ — เดาจากภาพได้แค่ประมาณ เมื่องานจริงมีไฟล์ Figma ให้ (ซึ่งเป็นมาตรฐานของ design handoff ปัจจุบัน) ให้เปิดควบคู่ไปกับ screenshot เสมอ</p>
+        <p>Screenshot ช่วยให้เห็นโครงสร้างและภาพรวมของดีไซน์ แต่รายละเอียดอย่างสี hex ระยะห่างเป็น px รัศมีมุม และชื่อฟอนต์ ดูจากภาพได้เพียงคร่าว ๆ ถ้ามีไฟล์ Figma ให้เปิดควบคู่กันเพื่ออ่านค่าเหล่านี้</p>
 
         <h2>เปิดไฟล์ Purity UI</h2>
 
-        <p>เปิดลิงก์ไฟล์ต้นแบบ: <a href="https://www.figma.com/design/TvhgVvFBvybHh6BUyEvZRl/Purity-UI-Dashboard---Chakra-UI-Dashboard--Community-?m=auto&amp;t=m8fTN5gy77i21j0s-1" target="_blank" rel="noreferrer">Purity UI Dashboard บน Figma Community</a> — ไฟล์ community เปิดดูได้ฟรี และกด <strong>Open in Figma</strong> เพื่อ duplicate ไปยัง drafts ของเราเอง จะได้คลิกเล่นได้เต็มที่ไม่กลัวพัง</p>
+        <p>เปิดลิงก์ไฟล์ต้นแบบ: <a href="https://www.figma.com/design/TvhgVvFBvybHh6BUyEvZRl/Purity-UI-Dashboard---Chakra-UI-Dashboard--Community-?m=auto&amp;t=m8fTN5gy77i21j0s-1" target="_blank" rel="noreferrer">Purity UI Dashboard บน Figma Community</a> ไฟล์ community เปิดดูได้ฟรี กด <strong>Open in Figma</strong> เพื่อ duplicate ไปยัง drafts ของเราเอง แล้วลองเลือก layer และดูค่าต่าง ๆ ได้โดยไม่กระทบไฟล์ต้นฉบับ</p>
 
         <ul>
           <li><strong>เลือก layer</strong> — คลิกที่ของที่สนใจ (ดับเบิลคลิกเพื่อเจาะลึกเข้าไปในกลุ่ม) แล้วดูแผง <strong>Design</strong> ด้านขวา: Fill คือสี, Corner radius คือมุมโค้ง, ขนาดและตำแหน่งอยู่ด้านบน</li>
@@ -33,10 +33,10 @@
 
         <h2>อะไรควรลอกจาก Figma ลง prompt / token</h2>
 
-        <p>อย่าลอกทุกตัวเลข — ลอกเฉพาะค่าที่เป็น "ระบบ" ของดีไซน์</p>
+        <p>ไม่จำเป็นต้องคัดลอกทุกตัวเลข ให้เลือกค่าที่ใช้ซ้ำและเป็นส่วนหนึ่งของระบบดีไซน์</p>
 
         <ul>
-          <li><strong>สีแบรนด์</strong> — คลิกกล่องไอคอนเขียวมิ้นต์ดู Fill: นี่คือที่มาของ token ในบทเรียน 05 (<code>#4fd1c5</code> และเพื่อน ๆ) ค่าที่เราตั้งไว้อ่านมาจากไฟล์นี้แหละ</li>
+          <li><strong>สีแบรนด์</strong> — คลิกกล่องไอคอนเขียวมิ้นต์แล้วดูค่า Fill ค่านี้เป็นที่มาของ token ในบทเรียน 05 เช่น <code>#4fd1c5</code></li>
           <li><strong>ฟอนต์</strong> — Purity ใช้ Helvetica ซึ่งเป็นฟอนต์ระบบของ Mac — เราใช้ <code>font-sans</code> ค่า default ของ Tailwind แทนได้เลย (ระบุใน prompt ว่า "ใช้ font-sans") ไม่ต้องโหลดฟอนต์เพิ่ม</li>
           <li><strong>รัศมีมุมการ์ด</strong> — วัดได้ราว 16px → <code>rounded-2xl</code> — ล็อกเป็นมาตรฐานใน prompt ได้ว่า "การ์ดทุกใบ rounded-2xl"</li>
           <li><strong>ช่องไฟระหว่างการ์ด</strong> — ราว 24px → <code>gap-6</code></li>
@@ -59,7 +59,7 @@
           <li><strong>เปิด Figma</strong> — ตอนตั้ง design tokens (ครั้งเดียวต่อโปรเจกต์), ตอนต้องการค่าที่เป๊ะ (ดีไซเนอร์เพ่งเล็งระยะตรงไหนเป็นพิเศษ), และตอน export assets</li>
         </ul>
 
-        <p>คำเตือนสำคัญ: <strong>อย่าเสียเวลา inspect ทุก pixel</strong> — Agent เก่งเรื่องถอดภาพเป็น layout อยู่แล้ว หน้าที่ของเราคือคุมค่าที่เป็น "ระบบ" (token, spacing scale, รัศมีมุม) ให้ตรง แล้วปล่อยรายละเอียดปลีกย่อยให้รูปสื่อสาร ถ้าผลออกมาเพี้ยนค่อยแก้เป็นจุด ๆ ถูกกว่า inspect ล่วงหน้าทั้งหน้า</p>
+        <p><strong>ไม่ต้อง inspect ทุก pixel</strong> ให้เน้นค่าที่เป็นระบบ เช่น token, spacing scale และรัศมีมุม ส่วนรายละเอียดปลีกย่อยใช้ screenshot เป็นข้อมูลประกอบได้ หลัง Agent สร้าง UI แล้วค่อยเทียบกับต้นฉบับและแก้เฉพาะจุดที่ยังไม่ตรง</p>
 
         <h2>แบบฝึก — prompt หน้า Sign Up</h2>
 
@@ -67,7 +67,7 @@
 
         <p>เขียน prompt สี่ส่วนสำหรับหน้า Sign Up ด้วยตัวเอง: decompose ภาพ (บทเรียน 06) → เขียนสี่ส่วน (บทเรียน 07) → เปิด Figma อ่านค่าประกอบ เช่นสี hero กับรัศมีการ์ด (บทนี้) จุดที่ต้องคิดเป็นพิเศษ: หน้านี้<em>ไม่มี sidebar</em> — ต้องบอก Agent เรื่องนี้ยังไงในส่วนไหนของ prompt? เก็บ prompt ที่เขียนไว้ — บทเรียน 11 มีเฉลยให้เทียบ</p>
 
-        <p>ทักษะ "ถอดดีไซน์เป็น prompt" ครบเครื่องแล้ว ถึงเวลาปล่อยของจริง: บทถัดไปเราจะส่ง prompt แรกให้ Cursor Agent สร้าง app shell</p>
+        <p>ตอนนี้เรามีขั้นตอนสำหรับถอดดีไซน์เป็น prompt ครบแล้ว บทถัดไปจะนำ prompt แรกไปใช้กับ Cursor Agent เพื่อสร้าง app shell</p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="07_prompt_anatomy.html" rel="prev">ก่อนหน้า: เขียน UI Prompt ที่ชัดเจน</a>

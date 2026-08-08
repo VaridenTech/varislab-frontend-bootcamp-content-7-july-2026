@@ -16,11 +16,11 @@
           <p class="lesson-original-title" lang="en">Accessibility Review</p>
         </header>
 
-        <h2>จุดที่ AI พังแบบเงียบที่สุด</h2>
+        <h2>ปัญหาที่มองไม่เห็นจากหน้าจอ</h2>
 
-        <p>ปัญหา responsive มองเห็นด้วยตา — ย่อจอปุ๊บของล้นปั๊บ แต่ปัญหา accessibility <strong>มองไม่เห็นและไม่มี error</strong>: หน้าตาถูกทุก pixel, console สะอาด, demo ให้ลูกค้าดูผ่านฉลุย — แต่คนที่ใช้คีย์บอร์ดล้วน ๆ เข้าเมนูไม่ได้ และ screen reader อ่านหน้าจอแล้วได้ยินแต่ "button, button, button" AI สร้างปัญหาแบบนี้เก่งเป็นพิเศษเพราะมัน optimize จาก<em>ภาพ</em> ส่วน semantics อยู่ใต้ภาพ ต้อง<strong>ทดสอบเป็น</strong>ถึงจะเจอ — บทนี้สอนทั้งวิธีทดสอบและวิธีแก้</p>
+        <p>ปัญหา responsive มักเห็นได้ทันทีเมื่อย่อหน้าจอ แต่ปัญหา accessibility อาจ<strong>ไม่แสดงบนหน้าจอและไม่มี error</strong> UI อาจดูถูกต้องและ console ไม่มีปัญหา ขณะที่ผู้ใช้คีย์บอร์ดเข้าเมนูไม่ได้ หรือ screen reader อ่านปุ่มหลายอันโดยไม่มีชื่อ เนื่องจาก screenshot ไม่ได้บอก semantics เราจึงต้องทดสอบ accessibility โดยตรง บทนี้จะพาดูทั้งวิธีตรวจและวิธีแก้</p>
 
-        <h2>ล่า TODO ข้อ 3 — เมนู sidebar เป็น div</h2>
+        <h2>แก้ TODO ข้อ 3 — เมนู sidebar เป็น div</h2>
 
         <p>ทดสอบ: กดปุ่ม Tab ไล่จากบนสุดของหน้า — โฟกัสกระโดดจากโลโก้ข้ามเมนูทั้งแผงไปลง search box เพราะเมนูเป็น <code>&lt;div onClick&gt;</code> ซึ่งไม่อยู่ใน tab order ของเบราว์เซอร์ (แถมคลิกแล้วก็แค่ <code>console.log</code> — ยังไม่ได้นำทางจริงด้วยซ้ำ)</p>
 
@@ -55,16 +55,16 @@ const menu = [
 ))}
 </code></pre>
 
-        <p>ของแถมสามต่อ: คีย์บอร์ดใช้ได้จริง, การนำทางทำงานจริง (แทน console.log), และสถานะ active ที่เคย hardcode ไว้ที่ Dashboard ตอนนี้คำนวณจาก route จริงผ่าน <code>isActive</code> — แก้ปัญหา a11y แล้วโค้ดกลับ<em>ถูกขึ้น</em>ทั้งระบบ ไม่ใช่เรื่องบังเอิญ: semantics ที่ถูกมักลากโครงสร้างที่ถูกมาด้วย</p>
+        <p>หลังเปลี่ยนเป็น <code>NavLink</code> เมนูจะใช้คีย์บอร์ดได้ นำทางจริงแทน <code>console.log</code> และคำนวณสถานะ active จาก route ผ่าน <code>isActive</code> แทนการ hardcode ที่ Dashboard การใช้ semantic element ที่ถูกต้องจึงช่วยทั้ง accessibility และโครงสร้างการทำงานของเมนู</p>
 
-        <h2>ล่า TODO ข้อ 4 — มองไม่เห็นโฟกัส</h2>
+        <h2>แก้ TODO ข้อ 4 — มองไม่เห็นโฟกัส</h2>
 
         <p>Tab เข้าเมนูได้แล้ว แต่<em>มองไม่เห็น</em>ว่าอยู่ช่องไหน — เพิ่ม focus ring ให้ทุก interactive element ตามท่าบทเรียน 04</p>
 
         <pre><code class="language-text">focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none
 </code></pre>
 
-        <p>ติดที่ NavLink, ปุ่มทุกปุ่ม, ลิงก์ทุกลิงก์ (ช่อง input ใช้ <code>focus:border-primary</code> อย่างที่ Agent ทำไว้ — ถูกแล้ว ไม่ต้องแตะ) ถ้าขี้เกียจไล่ติดทีละตัว ใจเย็น ๆ: บทเรียน 15 จะแยกปุ่มเป็น component เดียวแล้ว focus style จะติดมา<em>ฟรีทุกที่</em> — ตอนนี้แก้เฉพาะ NavLink กับปุ่มใน shell ก่อนก็พอ</p>
+        <p>เพิ่ม style นี้ให้ NavLink ปุ่ม และลิงก์ทุกจุด ส่วน input ใช้ <code>focus:border-primary</code> ตามที่ Agent สร้างไว้ได้ ในบทเรียน 15 เราจะรวมปุ่มเป็น component เดียว ทำให้ทุกจุดใช้ focus style ชุดเดียวกัน ตอนนี้ให้เริ่มแก้ NavLink และปุ่มใน shell ก่อน</p>
 
         <h2>Checklist ตรวจ Accessibility</h2>
 
@@ -74,7 +74,7 @@ const menu = [
           <li><strong>Heading ไล่ระดับ</strong> — h1 เดียวต่อหน้า ไม่กระโดดจาก h1 ไป h4</li>
           <li><strong>Landmark ครบ</strong> — <code>aside</code> / <code>nav</code> / <code>header</code> / <code>main</code> (Agent ทำถูกแล้วเพราะ rules สั่ง — เช็คซ้ำเฉย ๆ)</li>
           <li><strong><code>alt</code> ทุกรูป</strong> — avatar ใช้ชื่อคน (<code>alt={author.name}</code> ✓) รูปตกแต่งล้วนใช้ <code>alt=""</code> ให้ screen reader ข้าม — คำตอบของ TODO ข้อ 7 (กอง avatar ในตาราง Projects): รูปใช้ <code>alt=""</code> ได้ แต่ควรมีข้อความจริงบอกจำนวน เช่น title บนกอง หรือยอมรับว่าข้อมูลนี้เป็น decorative เสริม — <em>ตัดสินใจแล้วจดเหตุผล</em> ดีกว่าปล่อยผ่านโดยไม่รู้ตัว</li>
-          <li><strong>ปุ่มไอคอนล้วนมี <code>aria-label</code></strong> — เก็บหนี้ TODO ข้อ 10: ปุ่ม social หน้า Sign Up (<code>aria-label="สมัครด้วย Facebook"</code> ฯลฯ), ไอคอน settings/กระดิ่งใน Navbar, ปุ่ม kebab ในตาราง Projects</li>
+          <li><strong>ปุ่มไอคอนล้วนมี <code>aria-label</code></strong> — แก้ TODO ข้อ 10: ปุ่ม social หน้า Sign Up (<code>aria-label="สมัครด้วย Facebook"</code> ฯลฯ), ไอคอน settings/กระดิ่งใน Navbar, ปุ่ม kebab ในตาราง Projects</li>
           <li><strong>ตาราง</strong> — หัวคอลัมน์เป็น <code>&lt;th scope="col"&gt;</code> ไม่ใช่ <code>&lt;td&gt;</code> ตัวหนา และเพิ่ม <code>&lt;caption className="sr-only"&gt;รายชื่อผู้เขียน&lt;/caption&gt;</code> ให้ screen reader รู้ว่าตารางนี้คืออะไร (<code>sr-only</code> = มีอยู่จริงแต่ไม่แสดงผล)</li>
           <li><strong>ฟอร์ม</strong> — ทุก input มี <code>&lt;label htmlFor&gt;</code> จริง (Agent ทำถูกแล้วในหน้า Sign Up เพราะ prompt สั่ง)</li>
           <li><strong>Interactive = <code>&lt;button&gt;</code>/<code>&lt;a&gt;</code> เท่านั้น</strong> — หลักการใหญ่ของบทนี้</li>
@@ -82,9 +82,9 @@ const menu = [
           <li><strong>Tab ให้ครบทุกหน้า</strong> — การทดสอบที่ถูกที่สุดและจับปัญหาได้มากที่สุด ทำให้เป็นนิสัย</li>
         </ul>
 
-        <h2>ล่า TODO ข้อ 9 — toggle ที่เป็น div</h2>
+        <h2>แก้ TODO ข้อ 9 — toggle ที่เป็น div</h2>
 
-        <p>สวิตช์ Remember me ของ Agent สวยแต่กลวง: div กดด้วยคีย์บอร์ดไม่ได้ และ screen reader ไม่รู้ว่าเปิดหรือปิดอยู่ ท่าที่ถูกคือ <strong>checkbox จริงที่ซ่อนสายตาแต่ไม่ซ่อนจากเครื่องมือ</strong> แล้ววาดสวิตช์ด้วย CSS ทับ — ใช้ <code>peer</code> ของ Tailwind (พี่น้องของ <code>group</code>: อ้างสถานะของ<em>พี่น้อง</em>แทนแม่)</p>
+        <p>สวิตช์ Remember me ที่เป็น div ใช้คีย์บอร์ดไม่ได้ และ screen reader ไม่ทราบสถานะ วิธีแก้คือใช้ <strong>checkbox จริงที่ซ่อนจากหน้าจอแต่ยังเข้าถึงได้ด้วยเครื่องมือช่วยเหลือ</strong> แล้วใช้ CSS วาดหน้าตาของสวิตช์ โดยใช้ <code>peer</code> ของ Tailwind เพื่อให้ element หนึ่งตอบสนองต่อสถานะของ element ที่อยู่ระดับเดียวกัน</p>
 
         <pre><code class="language-tsx">&lt;label className="flex cursor-pointer items-center gap-3"&gt;
   &lt;input type="checkbox" defaultChecked className="peer sr-only" /&gt;
@@ -100,7 +100,7 @@ const menu = [
 
         <p>แกะทีละชิ้น: <code>sr-only</code> ซ่อน checkbox จริงไว้ (แต่ยังโฟกัส/กด/อ่านได้), แทร็กเปลี่ยนสีด้วย <code>peer-checked:bg-primary</code>, ปุ่มกลมคือ <code>after:</code> ที่เลื่อนด้วย <code>peer-checked:after:translate-x-5</code>, และทั้งหมดอยู่ใน <code>&lt;label&gt;</code> เดียว — คลิกที่ไหนของแถวก็ toggle ได้ กด Space ได้ Tab เข้าได้ ครบ</p>
 
-        <h2>Contrast — กับดักของดีไซน์นี้เอง</h2>
+        <h2>Contrast — ตรวจดีไซน์ต้นฉบับด้วย</h2>
 
         <p>เช็คสีด้วย <a href="https://webaim.org/resources/contrastchecker/" target="_blank" rel="noreferrer">WebAIM Contrast Checker</a>: ตัวหนังสือ<strong>ขาวบนเขียวมิ้นต์ <code>#4fd1c5</code></strong> ได้ contrast ประมาณ 2:1 — เกณฑ์ WCAG AA ต้องการ 4.5:1 สำหรับข้อความปกติ แปลว่า<em>ไม่ผ่าน</em> และดีไซน์ต้นฉบับก็เป็นแบบนี้จริง ๆ — ดีไซน์สวย ๆ จากมืออาชีพก็พลาดเรื่องนี้ได้</p>
 
@@ -114,7 +114,7 @@ const menu = [
           <li><strong>ให้ Agent ตรวจตัวเอง</strong> — เพิ่มกติกา a11y ลง <code>.cursor/rules</code> (ทุก interactive เป็น button/a, ทุกปุ่มไอคอนมี aria-label, ทุก input มี label) แล้วสั่ง: <code>ตรวจ src/pages/TablesPage.tsx ตาม checklist accessibility ใน rules รายงานสิ่งที่ผิดพร้อมวิธีแก้ อย่าเพิ่งแก้</code> — คำสั่ง "อย่าเพิ่งแก้" สำคัญ: ให้มันรายงานก่อน เรา<em>ตัดสิน</em> แล้วค่อยสั่งแก้เป็นข้อ ๆ</li>
         </ul>
 
-        <p>เครื่องมือและ AI ช่วย<strong>หา</strong>ได้เก่งมาก แต่มันตอบไม่ได้ว่ากอง avatar "ควร" มีคำอธิบายไหม หรือ contrast จุดไหน "ยอมได้" — นั่นคืองานตัดสินของเรา commit แล้วไปเลนส์สุดท้าย</p>
+        <p>เครื่องมือและ AI ช่วย<strong>ค้นหาปัญหา</strong>ได้ แต่การตัดสินว่ากอง avatar ควรมีคำอธิบายหรือยอมรับ contrast จุดใดได้ ยังขึ้นอยู่กับบริบทของงาน ให้บันทึกเหตุผลของการตัดสินใจไว้ แล้ว commit ก่อนตรวจด้าน maintainability ต่อ</p>
 
         <pre><code class="language-bash">git add .
 git commit -m "fix: a11y review - navlinks, focus rings, real toggle, aria-labels, table semantics"

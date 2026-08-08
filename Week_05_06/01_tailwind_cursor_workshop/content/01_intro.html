@@ -18,7 +18,7 @@
 
         <h2>เราจะสร้างอะไร</h2>
 
-        <p>ตลอด workshop นี้ เราจะรับบท frontend developer ที่ได้รับ "design handoff" มาจากทีมออกแบบ: ไฟล์ Figma ของ <strong>Purity UI Dashboard</strong> — admin dashboard สวย ๆ จาก Figma Community ผลงานของ Creative Tim และ Simmmple ต้นฉบับสร้างด้วย Chakra UI แต่เราจะสร้างเวอร์ชันของเราเองด้วย <strong>Tailwind CSS</strong> โดยมี <strong>Cursor Agent</strong> เป็นลูกมือเขียนโค้ดให้ และเราเป็นคนคุมงาน</p>
+        <p>ใน workshop นี้ เราจะทำงานเหมือน frontend developer ที่ได้รับ design handoff จากทีมออกแบบ โดยใช้ไฟล์ Figma ของ <strong>Purity UI Dashboard</strong> จาก Figma Community ผลงานของ Creative Tim และ Simmmple ต้นฉบับสร้างด้วย Chakra UI ส่วนเวอร์ชันของเราจะใช้ <strong>Tailwind CSS</strong> และให้ <strong>Cursor Agent</strong> ช่วยเขียนโค้ดตามกรอบที่เรากำหนด</p>
 
         <p>ดีไซน์ที่ต้องสร้างมี 4 หน้าจอ มาดูทีละหน้ากันก่อน</p>
 
@@ -32,7 +32,7 @@
 
         <img src="images/tables.png" alt="หน้า Tables: ตาราง Authors ที่มีรูปโปรไฟล์และ status badge กับตาราง Projects ที่มี progress bar" />
 
-        <p>หน้ารวมตารางข้อมูล 2 ตาราง: "Authors Table" แสดงรายชื่อคนพร้อมรูป avatar อีเมล ตำแหน่ง badge สถานะ Online (เขียว) / Offline (เทา) และวันที่เริ่มงาน กับตาราง "Projects" ที่มีงบประมาณ สถานะ (Working / Canceled / Done) และ progress bar สีเขียวมิ้นต์ — ตารางคือขนมปังกับเนยของงาน admin dashboard เราจะได้ทำกันจริงจัง</p>
+        <p>หน้านี้มีตารางข้อมูล 2 ชุด: "Authors Table" แสดงรายชื่อพร้อมรูป avatar อีเมล ตำแหน่ง badge สถานะ Online (เขียว) / Offline (เทา) และวันที่เริ่มงาน ส่วนตาราง "Projects" มีงบประมาณ สถานะ (Working / Canceled / Done) และ progress bar สีเขียวมิ้นต์ ตารางเป็นส่วนที่พบบ่อยใน admin dashboard เราจึงจะลงรายละเอียดกันพอสมควร</p>
 
         <h3>หน้า Profile</h3>
 
@@ -48,7 +48,7 @@
 
         <h2>ทักษะทั้งสี่ของ workshop</h2>
 
-        <p>เป้าหมายของ workshop นี้ไม่ใช่แค่ "ได้เว็บสวย" แต่คือทักษะ 4 ข้อที่ใช้ได้กับงาน UI ทุกงานหลังจากนี้</p>
+        <p>นอกจากจะได้เว็บที่ตรงกับดีไซน์แล้ว คุณจะได้ฝึกทักษะ 4 ข้อที่นำไปใช้กับงาน UI อื่นได้ด้วย</p>
 
         <ul>
           <li><strong>ถอด screenshot, wireframe หรือ requirement ออกมาเป็น prompt สำหรับ UI ที่ชัดเจน</strong> — มองภาพให้ออกว่าโครงสร้างคืออะไร แล้วเขียนสื่อสารให้ AI เข้าใจตรงกับเรา</li>
@@ -59,7 +59,7 @@
 
         <h2>ลูปการทำงาน: prompt → generate → review → refactor</h2>
 
-        <p>หัวใจของ workshop คือลูป 4 จังหวะที่เราจะวนซ้ำจนเป็นนิสัย</p>
+        <p>ตลอด workshop เราจะทำงานวนอยู่ใน 4 ขั้นตอนนี้</p>
 
         <ol>
           <li><strong>Prompt</strong> — อ่านดีไซน์ให้แตก แล้วเขียนคำสั่งที่ชัดเจน</li>
@@ -68,11 +68,11 @@
           <li><strong>Refactor</strong> — แยกของที่ซ้ำเป็น component ที่ใช้ซ้ำได้</li>
         </ol>
 
-        <p>พูดให้ตรงที่สุด: <strong>โค้ดจาก AI คือฉบับร่าง</strong> มันมักหน้าตาตรงดีไซน์และรันได้ แต่คนที่รับผิดชอบโค้ดที่ ship คือเรา — ใน workshop นี้คุณจะเห็นกับตาว่าโค้ดที่ "ดูดี" จาก Agent ซ่อนปัญหาอะไรไว้บ้าง ทักษะ review จึงสำคัญพอ ๆ กับทักษะ prompt และนั่นคือเหตุผลที่บทเรียนครึ่งหลังของ workshop ทุ่มให้การตรวจและ refactor ล้วน ๆ</p>
+        <p>ให้มอง<strong>โค้ดจาก AI เป็นฉบับร่าง</strong> แม้หน้าตาจะตรงดีไซน์และรันได้ เราก็ยังต้องรับผิดชอบโค้ดก่อนนำไปใช้จริง ในครึ่งหลังของ workshop เราจึงใช้เวลากับการ review และ refactor เพื่อดูว่าปัญหาที่มองไม่เห็นจากหน้าจอมีอะไรบ้าง</p>
 
         <h2>ต่างจากคอร์ส E-commerce อย่างไร</h2>
 
-        <p>ในช่วงสัปดาห์เดียวกันนี้ยังมีคอร์สสร้างเว็บ e-commerce ซึ่งเป็นการ<em>เขียนแอปทั้งแอปด้วยมือ</em> ทั้ง logic, API และ state — ส่วน workshop นี้โฟกัสอีกด้าน: การ<em>กำกับ AI ให้สร้าง UI</em> จากดีไซน์จริง และ genre ของ UI ก็คนละแบบ — admin dashboard เต็มไปด้วยตาราง การ์ดสถิติ และฟอร์ม ซึ่งเป็นงานที่เจอบ่อยมากในชีวิตจริง ทั้งสองคอร์สเสริมกัน ไม่ซ้ำกัน</p>
+        <p>ในสัปดาห์เดียวกันยังมีคอร์สสร้างเว็บ e-commerce ซึ่งเน้นการ<em>เขียนแอปทั้งแอปด้วยมือ</em> ทั้ง logic, API และ state ส่วน workshop นี้เน้นการ<em>กำกับ AI ให้สร้าง UI</em> จากดีไซน์จริง ตัวอย่างก็เป็นคนละประเภทกัน: admin dashboard มีทั้งตาราง การ์ดสถิติ และฟอร์ม ซึ่งพบได้บ่อยในงานจริง เนื้อหาของทั้งสองคอร์สจึงเสริมกัน</p>
 
         <h2>เตรียมเครื่องมือ</h2>
 
@@ -90,7 +90,7 @@
           <li><strong>จาก Screenshot สู่ Prompt</strong> — อ่านดีไซน์ให้แตก แล้วเขียน prompt ที่ชัดเจน (บทเรียน 06–08)</li>
           <li><strong>สร้าง UI ด้วย Cursor Agent</strong> — ลงมือสร้าง app shell, หน้า Dashboard, หน้า Tables และ Sign Up (บทเรียน 09–11)</li>
           <li><strong>ตรวจโค้ดที่ AI สร้าง</strong> — สามเลนส์: responsive, accessibility, maintainability (บทเรียน 12–14)</li>
-          <li><strong>Refactor เป็น Component</strong> — แยกเป็น component ที่ใช้ซ้ำได้ และปิดจ็อบ (บทเรียน 15–16)</li>
+          <li><strong>Refactor เป็น Component</strong> — แยกเป็น component ที่ใช้ซ้ำได้ และสรุปงาน (บทเรียน 15–16)</li>
         </ol>
 
         <p>พร้อมแล้ว ไปตั้งเครื่องมือกันในบทถัดไป</p>

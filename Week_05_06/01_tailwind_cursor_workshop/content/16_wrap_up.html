@@ -18,7 +18,7 @@
 
         <h2>ยินดีด้วย 🎉</h2>
 
-        <p>สิ่งที่อยู่ในมือคุณตอนนี้: Purity Dashboard เวอร์ชัน Tailwind ที่สร้างโดย Cursor Agent ภายใต้การกำกับของคุณ — ผ่านการตรวจสามเลนส์และ refactor จนสะอาด</p>
+        <p>ตอนนี้คุณมี Purity Dashboard เวอร์ชัน Tailwind ที่สร้างร่วมกับ Cursor Agent และผ่านการตรวจ responsive, accessibility, maintainability รวมถึงการ refactor แล้ว</p>
 
         <table>
           <thead>
@@ -32,7 +32,7 @@
           </tbody>
         </table>
 
-        <p>บวกชุด component ที่ใช้ซ้ำได้: <code>Button</code>, <code>StatCard</code>, <code>NavItem</code>, <code>StatusBadge</code>, <code>ProgressBar</code> — และที่มีค่ากว่าโค้ดคือ<em>กระบวนการ</em>ที่ได้ฝึกจนครบลูป</p>
+        <p>โปรเจกต์ยังมี component ที่ใช้ซ้ำได้ ได้แก่ <code>Button</code>, <code>StatCard</code>, <code>NavItem</code>, <code>StatusBadge</code> และ <code>ProgressBar</code> พร้อมกับขั้นตอนการทำงานที่เราได้ฝึกจนครบลูป</p>
 
         <h2>ทักษะทั้งสี่ ↔ บทเรียน</h2>
 
@@ -43,23 +43,23 @@
           <li><strong>Refactor เป็น component ที่ใช้ซ้ำได้</strong> → บทเรียน 15</li>
         </ul>
 
-        <p>ย้ำอีกครั้งเพราะสำคัญ: ลูป <strong>prompt → generate → review → refactor</strong> ไม่ใช่ของเฉพาะ workshop นี้ — มันคือวิธีทำงานกับ AI ที่ใช้กับ UI ทุกงาน ทุก framework ทุกดีไซน์ หลังจากนี้</p>
+        <p>ลูป <strong>prompt → generate → review → refactor</strong> ไม่ได้จำกัดอยู่ที่ workshop นี้ คุณสามารถนำไปปรับใช้กับงาน UI, framework และดีไซน์แบบอื่นได้</p>
 
         <h2>โจทย์ใหญ่: หน้า Profile</h2>
 
         <img src="images/profile.png" alt="หน้า Profile — โจทย์ปิดท้าย: ทำครบลูปด้วยตัวเองทั้งหน้า" />
 
-        <p>ถึงตาคุณวิ่งลูปเองทั้งรอบ โดยไม่มีบทเรียนจูงมือ</p>
+        <p>โจทย์นี้ให้คุณลองทำทุกขั้นตอนด้วยตัวเองตั้งแต่ต้นจนจบ</p>
 
         <ol>
           <li><strong>Decompose</strong> (วิชาบทเรียน 06) — แบ่ง region: hero, การ์ดโปรไฟล์ที่ลอยทับ, สามคอลัมน์ (Platform Settings / Profile Information / Conversations), grid การ์ดโปรเจกต์</li>
           <li><strong>เขียน prompt สี่ส่วน</strong> (07) — อ่านค่าประกอบจาก Figma (08); อย่าลืมระบุว่า route <code>/profile</code> อยู่<em>ใน</em> DashboardLayout และให้ใช้ component ที่มีอยู่ (<code>Button</code>, toggle pattern จากบทเรียน 13)</li>
           <li><strong>Generate</strong> (09) — แนบภาพ อ่าน diff ก่อน Accept</li>
-          <li><strong>Review สามเลนส์</strong> (12–14) — จด TODO แล้วเคลียร์</li>
+          <li><strong>Review สามด้าน</strong> (12–14) — จด TODO แล้วแก้ตามรายการ</li>
           <li><strong>Refactor</strong> (15) — อย่างน้อยหนึ่ง component ใหม่ควรเกิดจากหน้านี้</li>
         </ol>
 
-        <p>จุดยากที่เฉลยล่วงหน้าให้นิดเดียว</p>
+        <p>คำแนะนำสำหรับจุดที่ต้องวางแผนเพิ่มมีดังนี้</p>
 
         <ul>
           <li><strong>การ์ดลอยทับ hero</strong> — margin ติดลบ (<code>-mt-16</code>) + <code>relative</code>/<code>z-10</code></li>
@@ -71,7 +71,7 @@
         <h2>ไอเดียต่อยอด</h2>
 
         <ul>
-          <li><strong>หน้า Billing และ RTL</strong> — มีในไฟล์ Figma ครบ วิ่งลูปเพิ่มอีกสองรอบ</li>
+          <li><strong>หน้า Billing และ RTL</strong> — มีดีไซน์ครบในไฟล์ Figma สามารถใช้ฝึกขั้นตอนเดิมเพิ่มอีกสองรอบ</li>
           <li><strong>Dark mode</strong> — Tailwind มี <code>dark:</code> variant ให้ทุก utility ลองเริ่มจาก token</li>
           <li><strong>กราฟจริง</strong> — แทน placeholder ด้วย chart library แล้วฝึกสั่ง Agent ให้ต่อ data ให้</li>
           <li><strong>ข้อมูลจริง</strong> — เอาวิชา TanStack Query จากคอร์ส e-commerce มาต่อ API เข้าตารางกับ stat cards</li>
@@ -80,9 +80,9 @@
 
         <h2>ส่งท้าย</h2>
 
-        <p>AI generate โค้ดได้เร็วขึ้นทุกเดือน และจะเร็วขึ้นไปอีก — สิ่งที่<em>แพงขึ้น</em>สวนทางกันคือทักษะสามอย่างที่คุณเพิ่งฝึกมาทั้ง workshop: <strong>อ่านดีไซน์ให้แตก เขียนความต้องการให้ชัด และ review ให้เป็น</strong> คนที่มีสามอย่างนี้ใช้ AI เป็นทีมงานได้ทั้งทีม คนที่ไม่มีได้แค่กดปุ่มแล้วภาวนา</p>
+        <p>เครื่องมือ AI ช่วย generate โค้ดได้เร็วขึ้นเรื่อย ๆ แต่ผลลัพธ์ยังขึ้นอยู่กับทักษะที่เราฝึกใน workshop นี้: <strong>อ่านโครงสร้างดีไซน์ เขียนความต้องการให้ชัด และ review โค้ดอย่างเป็นระบบ</strong> ทักษะเหล่านี้ช่วยให้เราใช้ AI ได้ตรงกับงานและรับผิดชอบผลลัพธ์ได้</p>
 
-        <p>อย่ากลัวที่จะให้ AI ทำงานเยอะ ๆ — แต่<strong>อย่า ship สิ่งที่ตัวเองอ่านไม่เข้าใจ</strong> นั่นแหละเส้นแบ่งที่ทำให้คุณเป็น engineer ไม่ใช่ผู้ชม</p>
+        <p>ให้ AI ช่วยทำงานได้เต็มที่ แต่ก่อนนำโค้ดไปใช้จริง <strong>เราต้องอ่าน เข้าใจ และตรวจสอบโค้ดนั้นได้</strong></p>
 
         <p>เจอกันในโปรเจกต์ถัดไป 🚀</p>
 

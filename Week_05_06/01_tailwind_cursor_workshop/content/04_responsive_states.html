@@ -55,18 +55,18 @@
           <li><strong>กรอบเนื้อหา</strong> — <code>mx-auto w-full max-w-[1440px] px-4 md:px-6</code> จำกัดกว้างสุด จัดกลาง และมี padding ขอบจอ — สังเกต <code>max-w-[1440px]</code>: วงเล็บเหลี่ยมคือ "arbitrary value" ใช้ค่านอก scale ได้เมื่อจงใจ</li>
         </ul>
 
-        <h2>States — hover, focus และเพื่อนร่วมแก๊ง</h2>
+        <h2>States — hover, focus และสถานะอื่น ๆ</h2>
 
         <p>Prefix แบบเดียวกันนี้ใช้กับ "สถานะ" ของ element ได้ด้วย</p>
 
         <ul>
           <li><code>hover:bg-teal-500</code> — เมื่อเมาส์ชี้</li>
-          <li><code>focus-visible:ring-2 focus-visible:ring-teal-400/50</code> — วงแหวนรอบปุ่มเมื่อโฟกัสด้วยคีย์บอร์ด — ทำไมไม่ใช้ <code>focus:</code> เฉย ๆ? เพราะ <code>focus:</code> ติดตอนคลิกเมาส์ด้วย (เกิดวงแหวนวูบวาบน่ารำคาญ) ส่วน <code>focus-visible:</code> ฉลาดพอจะโชว์เฉพาะตอนผู้ใช้นำทางด้วยคีย์บอร์ด — ข้อยกเว้นเดียวคือช่อง input ที่ใช้ <code>focus:</code> ได้ เพราะการพิมพ์คือการโฟกัสโดยตั้งใจเสมอ</li>
+          <li><code>focus-visible:ring-2 focus-visible:ring-teal-400/50</code> — แสดงวงแหวนรอบปุ่มเมื่อโฟกัสด้วยคีย์บอร์ด เราใช้ <code>focus-visible:</code> แทน <code>focus:</code> เพราะ <code>focus:</code> ทำงานตอนคลิกเมาส์ด้วย ส่วน <code>focus-visible:</code> จะแสดงเมื่อผู้ใช้นำทางด้วยคีย์บอร์ดเป็นหลัก สำหรับช่อง input ใช้ <code>focus:</code> ได้ เพราะผู้ใช้ต้องเห็นว่ากำลังพิมพ์อยู่ในช่องไหน</li>
           <li><code>active:scale-95</code> — ตอนกดค้าง</li>
           <li><code>disabled:opacity-50</code> — ตอนปุ่มถูกปิดใช้งาน</li>
         </ul>
 
-        <p>ท่าพิเศษที่ดีไซน์นี้ต้องใช้: <strong><code>group</code></strong> — เมื่ออยากให้ "ลูก" เปลี่ยนตอน hover "แม่" เช่นการ์ดโปรโมท "Work with the Rockets" ที่อยากให้รูปข้างในซูมเมื่อชี้ทั้งการ์ด</p>
+        <p>ดีไซน์นี้ยังต้องใช้ <strong><code>group</code></strong> สำหรับกรณีที่ element ด้านในต้องเปลี่ยนตามสถานะ hover ของ element ด้านนอก เช่น การ์ดโปรโมท "Work with the Rockets" ที่ให้รูปด้านในซูมเมื่อชี้ส่วนใดก็ได้ของการ์ด</p>
 
         <pre><code class="language-html">&lt;a href="#" class="group block overflow-hidden rounded-2xl"&gt;
   &lt;img
@@ -77,7 +77,7 @@
 &lt;/a&gt;
 </code></pre>
 
-        <p>ติด <code>group</code> ที่แม่ แล้วลูกใช้ <code>group-hover:</code> อ้างถึงสถานะของแม่ได้ (แถม <code>transition-transform</code> ให้ซูมแบบนุ่ม ๆ ไม่กระตุก)</p>
+        <p>ใส่ <code>group</code> ที่ element ด้านนอก แล้วใช้ <code>group-hover:</code> ที่ element ด้านในเพื่ออ้างถึงสถานะเดียวกัน ส่วน <code>transition-transform</code> ช่วยให้การซูมต่อเนื่องขึ้น</p>
 
         <h2>วิธีทดสอบ</h2>
 
@@ -86,9 +86,9 @@
           <li>หรือ<strong>ลากขอบหน้าต่างช้า ๆ</strong> จากแคบสุดไปกว้างสุด แล้วดูว่า layout เปลี่ยนที่จุดไหนบ้าง — ทุกจุดที่เปลี่ยนคือ breakpoint ที่เราเขียนไว้ ถ้ามีช่วงไหนพัง (ของล้น, ช่องว่างประหลาด) นั่นคือช่วงที่ลืมคิด</li>
         </ul>
 
-        <p>กฎนิ้วโป้ง: <strong>ออกแบบมือถือก่อน แล้วค่อยเติม prefix ขยายขึ้น</strong> — เขียน <code>grid-cols-1</code> ก่อน แล้วถามตัวเองว่า "จอกว้างขึ้นควรได้อะไรเพิ่ม" ง่ายกว่าเขียน desktop แล้วพยายามยัดลงจอเล็กเสมอ AI มักทำกลับด้าน (เพราะเราแนบภาพ desktop ให้มัน) — และนั่นจะเป็นประเด็นใหญ่ของบทเรียน 12</p>
+        <p>แนวทางที่ใช้ได้ง่ายคือ <strong>ออกแบบมือถือก่อน แล้วค่อยเติม prefix สำหรับจอที่กว้างขึ้น</strong> เริ่มจาก <code>grid-cols-1</code> แล้วถามว่าเมื่อมีพื้นที่เพิ่มควรปรับอะไรบ้าง วิธีนี้จัดการง่ายกว่าการเริ่มจาก desktop แล้วค่อยบีบลงจอเล็ก เนื่องจากภาพที่เราแนบให้ AI มักเป็น desktop เราจะกลับมาตรวจเรื่องนี้โดยละเอียดในบทเรียน 12</p>
 
-        <p>เหลือชิ้นสุดท้ายของพื้นฐาน Tailwind: ทำยังไงให้ "สีแบรนด์" ของ Purity เป็นระบบ ไม่ใช่ตัวเลขสีกระจายทั่วโค้ด — ไปบทถัดไป</p>
+        <p>พื้นฐาน Tailwind ยังเหลืออีกเรื่องหนึ่ง: การจัดสีแบรนด์ของ Purity ให้เป็นระบบ แทนการใส่ค่าสีกระจายไว้ทั่วโค้ด เราจะทำเรื่องนี้ในบทถัดไป</p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="03_utility_first.html" rel="prev">ก่อนหน้า: Utility-First และ Utilities หลัก</a>

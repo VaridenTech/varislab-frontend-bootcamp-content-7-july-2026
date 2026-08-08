@@ -30,7 +30,7 @@
 
         <h2>Button — variant map pattern</h2>
 
-        <p>เริ่มจากตัวที่คุ้มที่สุด ปุ่มสามหน้าตาของดีไซน์นี้ (SIGN UP เขียวทึบ, DOCUMENTATION ขาว, VIEW ALL ขอบเส้น) คือปุ่มเดียวกัน 3 variant</p>
+        <p>เริ่มจาก component ที่ใช้ซ้ำหลายจุด ปุ่มในดีไซน์นี้มีสามแบบ ได้แก่ SIGN UP สีเขียวทึบ DOCUMENTATION สีขาว และ VIEW ALL แบบขอบเส้น เราจะรวมเป็นปุ่มเดียวที่มี 3 variant</p>
 
         <pre><code class="language-tsx">// src/components/Button.tsx
 import { ButtonHTMLAttributes } from "react";
@@ -67,12 +67,12 @@ export default function Button({
           <li><strong>Variant map</strong> — object <code>Record&lt;Variant, string&gt;</code> แทน ternary ซ้อน: เพิ่ม variant ใหม่ = เพิ่มหนึ่งบรรทัดใน map แล้ว TypeScript บังคับให้ครบทุกตัวเอง (ลบตัวหนึ่งออกจาก map ดู — error ทันที)</li>
           <li><strong><code>extends ButtonHTMLAttributes</code> + spread <code>...rest</code></strong> — <code>onClick</code>, <code>type</code>, <code>disabled</code>, <code>aria-*</code> ทุกตัวของปุ่ม HTML ผ่านเข้ามาได้ฟรี ไม่ต้องประกาศ prop เอง</li>
           <li><strong><code>className</code> escape hatch</strong> — ที่ไหนต้องการเสริม (เช่น <code>className="w-full"</code> ให้ปุ่ม SIGN UP เต็มกว้าง) ทำได้โดยไม่ต้องเพิ่ม prop ใหม่ ปุ่ม DOCUMENTATION สีขาวบนการ์ดเขียวก็ใช้ทางนี้: <code>variant="ghost" className="bg-white text-ink"</code></li>
-          <li><strong>ความถูกต้อง baked in</strong> — <code>focus-visible</code> ring และ <code>disabled</code> style เขียน<em>ครั้งเดียว</em> จากนี้ทุกปุ่มในแอปถูกต้องโดยไม่ต้องนึกถึง — นี่คือดอกผลของบทเรียน 13</li>
+          <li><strong>พฤติกรรมพื้นฐานอยู่ใน component</strong> — เขียน <code>focus-visible</code> ring และ <code>disabled</code> style เพียงครั้งเดียว แล้วทุกปุ่มในแอปจะใช้กติกาเดียวกันตามที่ตรวจไว้ในบทเรียน 13</li>
         </ul>
 
         <h2>StatCard</h2>
 
-        <p>เก็บหนี้ก้อนใหญ่ของหน้า Dashboard — สิ่งที่ต่างกันในการ์ดทั้ง 4: ป้าย, ตัวเลข, delta, ทิศของ delta, ไอคอน — นั่นคือ props ทั้งหมด</p>
+        <p>ต่อไปแก้โค้ดซ้ำชุดใหญ่ในหน้า Dashboard สิ่งที่ต่างกันระหว่างการ์ดทั้ง 4 ใบคือป้าย ตัวเลข delta ทิศทางของ delta และไอคอน ซึ่งทั้งหมดนี้จะเป็น props</p>
 
         <pre><code class="language-tsx">// src/components/StatCard.tsx
 import { ReactNode } from "react";
@@ -132,7 +132,7 @@ export default function StatCard({
 
         <h2>StatusBadge และ ProgressBar</h2>
 
-        <p>สองตัวเล็กที่ฆ่า ternary ของบทเรียน 11 และ duplication ข้ามหน้า</p>
+        <p>Component ขนาดเล็กสองตัวนี้ช่วยแยก style ออกจาก ternary ในบทเรียน 11 และลดโค้ดซ้ำข้ามหน้า</p>
 
         <pre><code class="language-tsx">// src/components/StatusBadge.tsx
 import { ReactNode } from "react";
@@ -183,7 +183,7 @@ export default function ProgressBar({ value }: { value: number }) {
 }
 </code></pre>
 
-        <p>ดูของแถมให้ดี: <code>role="progressbar"</code> + <code>aria-value*</code> — ตอนเป็น div เปล่าในตาราง screen reader ไม่รู้เลยว่า 60% คืออะไร ตอนนี้ความถูกต้องนี้<strong>ติดไปทุกที่ที่ใช้ ProgressBar ตลอดกาล</strong> — ประโยชน์ที่แท้จริงของการ refactor ไม่ใช่โค้ดสั้นลง แต่คือความถูกต้องแพร่พันธุ์เอง</p>
+        <p>สังเกต <code>role="progressbar"</code> และ <code>aria-value*</code> เดิมที screen reader ไม่ทราบว่า div ที่แสดง 60% หมายถึงอะไร เมื่อใส่ semantics ไว้ใน <code>ProgressBar</code> ทุกจุดที่เรียกใช้ก็จะได้ข้อมูล accessibility ชุดเดียวกัน ประโยชน์ของการ refactor จึงมีทั้งโค้ดที่สั้นลงและพฤติกรรมที่สม่ำเสมอ</p>
 
         <h2>NavItem</h2>
 
@@ -224,7 +224,7 @@ export default function NavItem({ to, icon, label, onNavigate }: NavItemProps) {
 
         <h2>สั่ง refactor ผ่าน Agent อย่างมีกำกับ</h2>
 
-        <p>งาน refactor แบบนี้ให้ Agent ทำแทนได้ — แต่<strong>เราออกแบบ interface มันลงแรง</strong> ไม่ใช่ปล่อยให้มันเดา props เอง</p>
+        <p>เราสามารถให้ Agent ช่วยลงมือ refactor ได้ แต่<strong>เราควรออกแบบ interface และ props ให้ชัดเจนก่อน</strong> แทนการให้ Agent ตัดสินใจจากโค้ดเพียงอย่างเดียว</p>
 
         <pre><code class="language-text">แยก stat card ที่ซ้ำ 4 ที่ใน src/pages/DashboardPage.tsx ออกเป็น
 src/components/StatCard.tsx ตาม interface นี้เป๊ะ ๆ:
@@ -241,9 +241,9 @@ interface StatCardProps {
 ห้ามเปลี่ยนหน้าตา UI แม้แต่ pixel เดียว
 </code></pre>
 
-        <p>แล้วปิดงานด้วยสามขั้นเสมอ: (1) <strong>อ่าน diff</strong> — interface ตรงที่สั่งไหม ไม่ใช่ที่ Agent คิดว่าดีกว่า, (2) <strong>รัน dev เทียบตาต่อตา</strong> — เปิดจอเดิมข้าง screenshot ดูว่า UI ไม่ขยับ (visual regression ด้วยตา — เครื่องมือจริงจังไว้วันหน้า), (3) <strong>ทำทีละ component</strong> — ห้า component คือห้า prompt ห้า diff เล็ก ๆ ไม่ใช่หนึ่ง diff ยักษ์</p>
+        <p>หลัง Agent แก้เสร็จ ให้ตรวจสามขั้น: (1) <strong>อ่าน diff</strong>ว่า interface ตรงตามที่กำหนด (2) <strong>รัน dev แล้วเทียบกับ screenshot</strong>เพื่อดูว่า UI ไม่เปลี่ยนโดยไม่ตั้งใจ และ (3) <strong>ทำทีละ component</strong>เพื่อให้แต่ละ prompt และ diff มีขนาดที่ตรวจได้สะดวก</p>
 
-        <p>เคลียร์ครบทั้งใบสั่งงาน (Button, StatCard, StatusBadge, ProgressBar, NavItem — ส่วน Toggle ยกไปทำตอนหน้า Profile) แล้วไล่ checklist บทเรียน 14 อีกรอบ: ทุกข้อควรเขียว commit ใหญ่ได้เลย</p>
+        <p>เมื่อแยก Button, StatCard, StatusBadge, ProgressBar และ NavItem ครบแล้ว ส่วน Toggle เก็บไว้ทำพร้อมหน้า Profile ให้ตรวจ checklist บทเรียน 14 อีกรอบ ถ้าทุกข้อผ่านจึง commit การ refactor ชุดนี้</p>
 
         <pre><code class="language-bash">git add .
 git commit -m "refactor: extract Button, StatCard, StatusBadge, ProgressBar, NavItem"

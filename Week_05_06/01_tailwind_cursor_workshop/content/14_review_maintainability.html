@@ -16,11 +16,11 @@
           <p class="lesson-original-title" lang="en">Maintainability Review</p>
         </header>
 
-        <h2>กลิ่นของโค้ด AI</h2>
+        <h2>รูปแบบที่ทำให้โค้ดดูแลยาก</h2>
 
-        <p>สองเลนส์แรกตรวจว่าโค้ด "ทำงานถูกไหม" — เลนส์นี้ตรวจว่า "อยู่กับมันไหวไหมในอีกหกเดือน" ต้นตอของกลิ่นทั้งหมดคือเรื่องเดียว: <strong>Agent ทำงานเป็นครั้ง ๆ ไม่จำของเดิม</strong> — แต่ละ prompt คือช่างคนใหม่ที่เดินเข้าไซต์งาน สร้างของตัวเองเสร็จแล้วกลับบ้าน ไม่มีใครมองภาพรวม ผลคือ pattern คลาสสิกชุดนี้</p>
+        <p>สองบทก่อนตรวจว่าโค้ดทำงานถูกต้องหรือไม่ บทนี้จะดูว่าอีกหกเดือนเรายังแก้และต่อยอดโค้ดได้สะดวกหรือไม่ สาเหตุที่พบบ่อยคือ <strong>Agent ทำงานตามบริบทของแต่ละ prompt และอาจไม่เชื่อมโยงกับของเดิมทั้งหมด</strong> ถ้าเราไม่ review ภาพรวมจึงมักพบรูปแบบต่อไปนี้</p>
 
-        <p><strong>กลิ่นที่ 1 — copy-paste ยาวเหยียด:</strong> ย้อนดูแถว stat cards จากบทเรียน 10</p>
+        <p><strong>ปัญหาที่ 1 — copy-paste หลายชุด:</strong> ย้อนดูแถว stat cards จากบทเรียน 10</p>
 
         <pre><code class="language-tsx">&lt;div className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"&gt;
   &lt;div&gt;
@@ -41,17 +41,17 @@
 
         <p>วันที่ดีไซเนอร์ขอเปลี่ยน padding การ์ด เราต้องแก้ 4 ที่ให้เหมือนกันเป๊ะ — พลาดหนึ่งที่คือ UI เพี้ยนแบบตาเปล่าจับยาก</p>
 
-        <p><strong>กลิ่นที่ 2 — ternary ซ้อนใน className:</strong> badge จากบทเรียน 11 — เงื่อนไขเดียวยังพออ่านได้ แต่รอวันที่มีสถานะที่สาม (ตาราง Projects มี Working / Canceled / Done แล้วนะ) ternary จะเริ่มซ้อนจนอ่านไม่ออก</p>
+        <p><strong>ปัญหาที่ 2 — ternary ซ้อนใน className:</strong> badge จากบทเรียน 11 ยังมีเงื่อนไขเดียวจึงพออ่านได้ แต่เมื่อเพิ่มสถานะที่สามอย่าง Working / Canceled / Done ในตาราง Projects เงื่อนไขจะเริ่มซ้อนและตามได้ยาก</p>
 
-        <p><strong>กลิ่นที่ 3 — เลข arbitrary ปริศนา:</strong> <code>w-[260px]</code> (sidebar — ตั้งใจ มาจากดีไซน์ ✓) vs <code>mt-[13px]</code> (มาจากไหน? ใครจะกล้าแก้?) — ค่าที่ไม่มีที่มาคือกับระเบิดของคนถัดไป</p>
+        <p><strong>ปัญหาที่ 3 — เลข arbitrary ที่ไม่มีที่มา:</strong> <code>w-[260px]</code> ของ sidebar มีเหตุผลจากดีไซน์ ส่วน <code>mt-[13px]</code> ไม่บอกว่ามาจากข้อกำหนดใด ค่าที่ไม่มีคำอธิบายทำให้คนที่มาแก้ต่อไม่แน่ใจว่าสามารถเปลี่ยนได้หรือไม่</p>
 
-        <p><strong>กลิ่นที่ 4 — ชื่อ generic:</strong> <code>Card2</code>, <code>NewSection</code>, <code>Wrapper</code> — Agent ชอบตั้งชื่อตามรูปร่าง ไม่ใช่ตามความหมาย</p>
+        <p><strong>ปัญหาที่ 4 — ชื่อ generic:</strong> ชื่ออย่าง <code>Card2</code>, <code>NewSection</code> และ <code>Wrapper</code> บอกรูปร่างหรือชนิดของ element แต่ไม่บอกหน้าที่ในระบบ</p>
 
         <h2>กติกาหลักของเลนส์นี้</h2>
 
         <p><strong>เห็น class string ชุดเดียวกัน ≥ 2 ที่ = แยกเป็น component</strong> — ไม่ใช่แยกเป็นไฟล์ CSS และไม่ใช่ <code>@apply</code> (บทเรียน 05 อธิบายไว้แล้วว่าทำไม) โลก React + Tailwind ทำ DRY ที่<em>ระดับ JSX</em>: ปุ่มที่ใช้ซ้ำคือ <code>&lt;Button&gt;</code>, การ์ดสถิติที่ใช้ซ้ำคือ <code>&lt;StatCard&gt;</code> — component ห่อทั้ง markup, class และพฤติกรรม (focus, disabled, aria) ไว้ในที่เดียว ซึ่ง class ห่อไม่ได้</p>
 
-        <p>ประโยชน์ทบต้นที่มักมองข้าม: ทุกอย่างที่เราเพิ่งแก้ในบทเรียน 12–13 (focus ring, aria, overflow) ถ้าอยู่ใน component เดียว มันจะ<strong>ถูกทุกที่โดยอัตโนมัติตลอดไป</strong> — การ refactor คือการทำให้ความถูกต้องแพร่พันธุ์</p>
+        <p>อีกข้อดีคือ สิ่งที่เราแก้ในบทเรียน 12–13 เช่น focus ring, aria และ overflow จะถูกใช้ร่วมกันทุกจุดเมื่อรวมไว้ใน component เดียว การแก้ component หนึ่งครั้งจึงช่วยให้ทุกตำแหน่งที่เรียกใช้ได้พฤติกรรมเดียวกัน</p>
 
         <h2>Checklist ตรวจ Maintainability</h2>
 
@@ -69,7 +69,7 @@
 
         <h2>ไล่ checklist กับโค้ดของเรา</h2>
 
-        <p>ผลการไล่ทั้งสามหน้า — นี่คือ "ใบสั่งงาน" ที่จะส่งเข้าบทเรียน 15</p>
+        <p>เมื่อตรวจครบทั้งสามหน้า เราจะได้รายการสำหรับ refactor ในบทเรียน 15</p>
 
         <ul>
           <li><strong>Stat card</strong> — ซ้ำ 4 ที่ในหน้า Dashboard → แยกเป็น <code>StatCard</code></li>
@@ -80,9 +80,9 @@
           <li><strong>Toggle</strong> — ตอนนี้มีที่เดียว (Remember me) แต่หน้า Profile ที่กำลังจะมามี Platform Settings ที่ใช้อีก 6 ตัว → แยกเป็น component ตั้งแต่ตอนนี้คุ้มแน่นอน</li>
         </ul>
 
-        <p>สังเกตว่ารายชื่อนี้ตรงกับ pattern ที่เรา<em>อ่านออกตั้งแต่บทเรียน 06</em> ตอนยังไม่มีโค้ดสักบรรทัด — การอ่าน UI ที่ดีทำนายโครงสร้าง component ได้ล่วงหน้า วนกลับมาบรรจบพอดี</p>
+        <p>รายการนี้ตรงกับ pattern ที่เรา<em>สังเกตไว้ตั้งแต่บทเรียน 06</em> ก่อนเริ่มเขียนโค้ด แสดงว่าการอ่านส่วนที่ซ้ำใน UI ช่วยให้เราคาดการณ์โครงสร้าง component ได้ล่วงหน้า</p>
 
-        <p>บทถัดไปลงมือเคลียร์ใบสั่งงานนี้ทั้งใบ — เลนส์ครบสามแล้ว ต่อไปทุกครั้งที่รับงานจาก Agent ให้ไล่สามเลนส์นี้เป็นกิจวัตร: <strong>responsive (12) → accessibility (13) → maintainability (14)</strong> ตามลำดับ จากมองเห็นง่ายไปมองเห็นยาก</p>
+        <p>บทถัดไปจะลงมือ refactor ตามรายการนี้ หลังจากนี้ทุกครั้งที่รับงานจาก Agent ให้ตรวจตามลำดับ <strong>responsive (12) → accessibility (13) → maintainability (14)</strong> เพื่อเริ่มจากปัญหาที่สังเกตเห็นได้ง่ายไปหาปัญหาที่ต้องอ่านโค้ดละเอียดขึ้น</p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="13_review_accessibility.html" rel="prev">ก่อนหน้า: ตรวจ Accessibility</a>

@@ -49,20 +49,20 @@
 
         <ul>
           <li><strong>Locality</strong> — สไตล์อยู่ที่เดียวกับ markup อ่าน component จบในไฟล์เดียว ไม่ต้องกระโดดไปไฟล์ SCSS เพื่อรู้ว่า <code>.card-header</code> หน้าตาเป็นยังไง</li>
-          <li><strong>ไม่มี naming fatigue</strong> — ไม่ต้องคิดชื่อ <code>.card-header-inner-wrapper</code> อีกต่อไป</li>
-          <li><strong>ไม่มี dead CSS</strong> — ลบ component ทิ้ง สไตล์หายไปด้วย ไม่มี class ผีค้างในไฟล์ CSS ที่ไม่มีใครกล้าลบ</li>
-          <li><strong>Constraint ในตัว</strong> — spacing และสีมาจาก scale ที่กำหนดไว้ (<code>p-4</code>, <code>teal-400</code>) ทำให้ UI สม่ำเสมอโดยไม่ต้องพยายาม</li>
+          <li><strong>ไม่ต้องตั้งชื่อ class ใหม่ทุกจุด</strong> — ไม่ต้องคิดชื่ออย่าง <code>.card-header-inner-wrapper</code></li>
+          <li><strong>ลด dead CSS</strong> — เมื่อลบ component สไตล์ที่อยู่กับ component นั้นก็หายไปด้วย ไม่เหลือ class ที่ไม่ได้ใช้งานค้างอยู่ในไฟล์ CSS</li>
+          <li><strong>มีข้อกำหนดในตัว</strong> — spacing และสีมาจาก scale ที่กำหนดไว้ (<code>p-4</code>, <code>teal-400</code>) จึงช่วยให้ UI สม่ำเสมอขึ้น</li>
         </ul>
 
-        <p>ส่วนต้นทุน class ยาว ๆ นั้นมีคำตอบอยู่ — แต่ไม่ใช่การกลับไปเขียนไฟล์ CSS คำตอบคือ<strong>แยกเป็น React component</strong> ซึ่งเป็นเรื่องของบทเรียน 15 ทั้งบท ตอนนี้ขอให้ทนความยาวไปก่อน</p>
+        <p>Class ที่ยาวขึ้นจัดการได้ด้วยการ<strong>แยกเป็น React component</strong> แทนการย้ายกลับไปไว้ในไฟล์ CSS เราจะลงรายละเอียดเรื่องนี้ในบทเรียน 15 ตอนนี้ให้ดูโครงสร้างของ utility แต่ละตัวไปก่อน</p>
 
         <p>ข้อเข้าใจผิดที่พบบ่อย: "แบบนี้ก็ inline style สิ" — ไม่ใช่ เพราะสามอย่างนี้ทำใน <code>style=""</code> ไม่ได้เลย: responsive prefix (<code>md:grid-cols-2</code>), state (<code>hover:bg-teal-500</code>) และ design token จาก theme — สองอย่างแรกเจอบทถัดไป อย่างสุดท้ายบทเรียน 05</p>
 
-        <p>เหตุผลสุดท้ายที่ utility-first เข้ากับ workshop นี้เป็นพิเศษ: โค้ดที่ Cursor Agent สร้างมาจะ<strong>อ่านจบใน diff เดียว</strong> — สไตล์ทั้งหมดอยู่ตรงหน้า ไม่ต้องเปิดไฟล์ CSS ประกอบ ทำให้การ review (ครึ่งหลังของ workshop) เร็วขึ้นมาก</p>
+        <p>Utility-first ยังเหมาะกับ workflow นี้เพราะโค้ดที่ Cursor Agent สร้างมามีสไตล์อยู่ใน markup เราจึงอ่านการเปลี่ยนแปลงได้จาก diff เดียวโดยไม่ต้องเปิดไฟล์ CSS เพิ่ม ช่วยให้การ review ในครึ่งหลังของ workshop ตรงไปตรงมาขึ้น</p>
 
         <h2>Utilities หลัก — สร้าง stat card หนึ่งใบ</h2>
 
-        <p>วิธีเรียน utility ที่ดีที่สุดคือใช้มันสร้างของจริง เป้าหมายคือการ์ด "Today's Money" ใบแรกจากหน้า Dashboard (มุมซ้ายบนของภาพ)</p>
+        <p>มาลองใช้ utility สร้างของจริงกัน เป้าหมายคือการ์ด "Today's Money" ใบแรกจากหน้า Dashboard (มุมซ้ายบนของภาพ)</p>
 
         <img src="images/dashboard.png" alt="หน้า Dashboard ของ Purity UI — โฟกัสการ์ดสถิติ Today's Money มุมซ้ายบน" />
 
@@ -102,10 +102,10 @@
 
         <ul>
           <li><code>size-12</code> — กว้างและสูง 3rem ในตัวเดียว (แทน <code>w-12 h-12</code>)</li>
-          <li><code>flex items-center justify-center</code> — สูตรจัดของให้อยู่กลางกล่องทั้งแนวตั้งแนวนอน ท่องได้เลย ใช้บ่อยที่สุดในสามโลก</li>
+          <li><code>flex items-center justify-center</code> — จัดของให้อยู่กลางกล่องทั้งแนวตั้งและแนวนอน เป็นชุด class ที่ใช้บ่อยมาก</li>
         </ul>
 
-        <p>ประกอบร่างทั้งใบ: ใช้ flex ดันข้อความไปซ้าย ไอคอนไปขวา</p>
+        <p>นำทั้งสองส่วนมาประกอบกัน โดยใช้ flex วางข้อความไว้ซ้ายและไอคอนไว้ขวา</p>
 
         <pre><code class="language-html">&lt;div class="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm"&gt;
   &lt;div&gt;
@@ -123,7 +123,7 @@
 &lt;/div&gt;
 </code></pre>
 
-        <p><code>justify-between</code> ดันลูกสองก้อนไปคนละฝั่ง — เทียบกับภาพดีไซน์: เหมือนแล้ว การ์ดใบแรกของเราเสร็จด้วย utility ล้วน ๆ ไม่มีไฟล์ CSS เพิ่มแม้แต่บรรทัดเดียว</p>
+        <p><code>justify-between</code> แยกสองส่วนไปอยู่คนละฝั่ง เมื่อเทียบกับภาพดีไซน์แล้ว การ์ดใบแรกของเรามีโครงสร้างและหน้าตาตรงตามเป้าหมาย โดยยังไม่ต้องเพิ่มไฟล์ CSS</p>
 
         <p>อีกสอง utility ที่จะเจอถี่มากใน workshop นี้ ขอแนะนำล่วงหน้า</p>
 
@@ -134,9 +134,9 @@
 
         <h2>คู่มือที่ควรเปิดคู่กันเสมอ</h2>
 
-        <p>ไม่มีใครจำ utility ทั้งหมดได้ และไม่จำเป็น — เปิด <a href="https://tailwindcss.com/docs" target="_blank" rel="noreferrer">tailwindcss.com/docs</a> ค้างไว้ ช่องค้นหาของมันดีมาก (พิมพ์ "shadow" เจอทุกอย่างเรื่องเงา) และติดตั้ง extension <strong>Tailwind CSS IntelliSense</strong> ใน Cursor (ใช้ได้เพราะ Cursor คือ VS Code) — จะได้ autocomplete ทุก class และ hover เห็น CSS จริงที่ class นั้นสร้าง เครื่องมือสองตัวนี้สำคัญกว่าการท่องจำเยอะ</p>
+        <p>เราไม่จำเป็นต้องจำ utility ทั้งหมด เปิด <a href="https://tailwindcss.com/docs" target="_blank" rel="noreferrer">tailwindcss.com/docs</a> ค้างไว้แล้วใช้ช่องค้นหาได้ เช่น พิมพ์ "shadow" เพื่อดูตัวเลือกเรื่องเงา และติดตั้ง extension <strong>Tailwind CSS IntelliSense</strong> ใน Cursor เพื่อใช้ autocomplete และ hover ดู CSS ที่แต่ละ class สร้าง การใช้เครื่องมือสองอย่างนี้มีประโยชน์กว่าการพยายามท่องทุก class</p>
 
-        <p>ตอนนี้เราสร้างของสวย ๆ บนจอเดียวได้แล้ว บทถัดไปทำให้มันรอดทุกขนาดจอ และตอบสนองต่อ hover กับ keyboard</p>
+        <p>ตอนนี้เราสร้าง UI สำหรับหน้าจอหนึ่งขนาดได้แล้ว บทถัดไปจะทำให้รองรับหน้าจอหลายขนาด รวมถึงสถานะ hover และการใช้งานด้วย keyboard</p>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="02_setup.html" rel="prev">ก่อนหน้า: ติดตั้งโปรเจกต์และ Cursor</a>
