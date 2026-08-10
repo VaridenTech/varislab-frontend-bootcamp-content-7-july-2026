@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สั่ง Cursor สร้างคอมโพเนนต์แสดงผลสี่ตัว StarReview, FeatureCard, CountdownTimer และ ImageZoom พร้อมตรวจ cleanup ของ setInterval ใน useEffect ให้ขาด" />
+    <title>คอมโพเนนต์แสดงผล | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 14 · คอมโพเนนต์กลาง (Shared UI)</p>
+          <h1>คอมโพเนนต์แสดงผล</h1>
+          <p class="lesson-original-title" lang="en">Display Components</p>
+        </header>
+
+        <p>บทสุดท้ายของช่วงคอมโพเนนต์กลาง คราวนี้เป็นชุด<strong>คอมโพเนนต์แสดงผล (presentational components)</strong> สี่ตัว — งานของพวกมันคือรับ props เข้ามาแล้ว render ให้สวย ไม่ยุ่งกับ API ไม่รู้จัก business logic ของแอปเลย (มีตัวเดียวที่มี state ภายใน คือ CountdownTimer ซึ่งจะได้ทวนเรื่อง effects กันเต็ม ๆ) แต่ละตัวมีที่ไปชัดเจน:</p>
+
+        <ul>
+          <li><strong><code>StarReview</code></strong> — ดาวคะแนนรีวิว จะโผล่ทั้งบน ProductCard (บทเรียน 18) และหน้า Product detail ทั้งส่วนข้อมูลสินค้าและการ์ดรีวิว (บทเรียน 21)</li>
+          <li><strong><code>FeatureCard</code></strong> — การ์ดจุดขายของร้าน (ส่งฟรี, คืนสินค้าได้, …) เรียงแถวอยู่บนหน้า Home (บทเรียน 19)</li>
+          <li><strong><code>CountdownTimer</code></strong> — นาฬิกานับถอยหลังของโซนดีลพิเศษบนหน้า Home (บทเรียน 19)</li>
+          <li><strong><code>ImageZoom</code></strong> — รูปที่ซูมนุ่ม ๆ ตอน hover ใช้กับรูปดีลและแบนเนอร์บนหน้า Home (บทเรียน 19)</li>
+        </ul>
+
+        <p>ไม่มีไลบรารีใหม่ให้ติดตั้งบทนี้ — ทุกอย่างสร้างจากของที่มีอยู่แล้ว และเป็นบทแรกที่เราจะได้ใช้ Font Awesome ชุด <code>free-regular</code> ที่ติดตั้งค้างไว้ตั้งแต่บทเรียน 10 โดยยังไม่เคยแตะ</p>
+
+        <h2>StarReview: เลขคณิตของดาว</h2>
+
+        <p>ทุกเว็บขายของต้องมีดาว โจทย์ของเราคือ: รับตัวเลขคะแนนมาหนึ่งตัว แล้ว render ดาว 5 ดวงโดยแบ่งเป็นดวงทึบ (ได้คะแนน) กับดวงโปร่ง (ไม่ได้) — Font Awesome มีดาวให้ทั้งสองแบบ ชื่อ <code>faStar</code> เหมือนกันเป๊ะแต่มาจากคนละแพ็กเกจ (<code>free-solid-svg-icons</code> กับ <code>free-regular-svg-icons</code>) เราจึงต้องใช้ <code>as</code> ตั้งชื่อเล่นแยกกันตอน import</p>
+
+        <p>สาม<em>ท่า</em>ที่อยู่ในไฟล์สั้น ๆ นี้ และเป็นสิ่งที่ต้องตรวจให้ออกทีหลัง:</p>
+
+        <ul>
+          <li><strong><code>Math.round(score / 2)</code></strong> — contract ของคอมโพเนนต์ (ตาม comment ในโค้ด) คือรับ <code>score</code> สเกล 0–10 การหารสองแปลงเป็นสเกล 0–5 แล้วปัดเป็นจำนวนเต็ม ได้ "จำนวนดาวทึบ" เช่น score 9 → 4.5 → ปัดเป็น 5 ดวงทึบ</li>
+          <li><strong><code>[...Array(5)]</code></strong> — ท่าสร้าง array ยาว 5 ช่องเพื่อเอาไว้ <code>.map()</code> — ทำไมต้อง spread? เพราะ <code>Array(5)</code> เฉย ๆ ได้ array โปร่ง (sparse) ที่ <code>.map()</code> จะข้ามช่องว่างไปเลย spread ก่อนหนึ่งทีจะเติม <code>undefined</code> ให้ครบทุกช่อง map ได้ครบ 5 รอบ</li>
+          <li><strong><code>key={index}</code></strong> — ปกติเราหลีกเลี่ยง index เป็น key แต่กรณีนี้ list ยาว 5 ตายตัว ไม่มีการสลับลำดับหรือเพิ่มลด ใช้ index ได้ปลอดภัย</li>
+        </ul>
+
+        <h2>CountdownTimer: ตัวเดียวในบทนี้ที่มีชีวิต</h2>
+
+        <p>นาฬิกาถอยหลังของโซน "ดีลจะหมดใน…" บนหน้า Home ตัวเลขต้องเดินทุกวินาที ซึ่งแปลว่าเราต้องได้ใช้สองเครื่องมือจาก Week 4 พร้อมกัน: <code>useState</code> เก็บเวลาที่เหลือ และ <code>useEffect</code> จัดการ side effect (ตั้ง interval) พร้อม cleanup</p>
+
+        <p>มาแกะการคำนวณเวลาที่เหลือกันช้า ๆ เพราะนี่คือโจทย์คลาสสิกที่เจอบ่อยในงานจริง:</p>
+
+        <ul>
+          <li><strong>หา "ระยะห่าง" เป็นมิลลิวินาที</strong> — <code>new Date(targetDate).getTime()</code> แปลงเวลาเป้าหมาย (string เช่น วันพรุ่งนี้เที่ยงคืน) เป็นตัวเลข timestamp แล้วลบด้วยเวลาปัจจุบัน ได้ <code>difference</code> = จำนวนมิลลิวินาทีที่เหลือ</li>
+          <li><strong>วัน</strong> — หนึ่งวันมี <code>1000 * 60 * 60 * 24</code> มิลลิวินาที (ms → วินาที → นาที → ชั่วโมง → วัน) หาร difference แล้ว <code>Math.floor</code> ปัดลง ได้จำนวนวันเต็ม</li>
+          <li><strong>ชั่วโมง</strong> — หารด้วยมิลลิวินาทีต่อชั่วโมง ได้จำนวนชั่วโมง<em>ทั้งหมด</em> (เช่น 50 ชั่วโมง) แล้ว <code>% 24</code> ตัดส่วนที่ถูกนับเป็นวันไปแล้วออก เหลือ 2 ชั่วโมง — modulo คือพระเอกของสูตรนี้</li>
+          <li><strong>นาที / วินาที</strong> — ตรรกะเดียวกัน: หารให้เป็นหน่วยนั้น แล้ว <code>% 60</code> เอาเฉพาะเศษที่ไม่ถูกหน่วยใหญ่กว่านับไปแล้ว</li>
+          <li><strong>กันเวลาติดลบ</strong> — ถ้าเลยเวลาเป้าหมายไปแล้ว (<code>difference &lt;= 0</code>) ตั้งทุกช่องเป็นศูนย์ ไม่ปล่อยให้โชว์ตัวเลขติดลบประหลาด ๆ</li>
+        </ul>
+
+        <p>ส่วนโครง effect คือแพตเทิร์น interval + cleanup ตรงตำราจาก Week 4: <code>setInterval(calculateTimeLeft, 1000)</code> สั่งให้คำนวณใหม่ทุกวินาที (แต่ละรอบเรียก <code>setTimeLeft</code> → re-render → ตัวเลขบนจอเดิน) และ<strong>บรรทัดที่สำคัญที่สุดคือ <code>return () =&gt; clearInterval(timer)</code></strong> — ถ้าไม่มี cleanup ตอนคอมโพเนนต์ unmount (ผู้ใช้กดไปหน้าอื่น) interval จะยังวิ่งอยู่เบื้องหลังและเรียก setState ใส่คอมโพเนนต์ที่ตายไปแล้ว กลายเป็น memory leak สะสม dependency array <code>[targetDate]</code> ก็ทำงานร่วมกับ cleanup อย่างถูกต้อง: ถ้าเป้าหมายเปลี่ยน React จะ cleanup interval เก่าก่อนแล้วตั้งตัวใหม่ให้เอง</p>
+
+        <p>จำย่อหน้านี้ไว้ให้ดี เพราะบรรทัด <code>return</code> บรรทัดเดียวนั้นคือข้อแรกของ checklist ในบทนี้ และเป็นบรรทัดที่หายไปแล้วไม่มีเครื่องมือตัวไหนในโปรเจกต์เราบอกให้</p>
+
+        <h2>ImageZoom: เอฟเฟกต์ที่ทั้งหมดอยู่ใน CSS</h2>
+
+        <p>ตัวปิดท้ายเบา ๆ — เอฟเฟกต์ที่เจอได้ทั่วไปในเว็บขายของ: เอาเมาส์ชี้รูปแล้วรูปขยับซูมเข้านิด ๆ ความลับคือมันเป็น CSS ล้วน ตัว TSX แค่จัดโครงให้ กลไกอยู่ที่การจับคู่สอง class: <code>.image</code> ขยายตัวเป็น 105% ตอน hover (พร้อม <code>transition</code> ครึ่งวินาทีให้เคลื่อนนุ่ม ไม่กระตุก) ส่วน container ครอบด้วย <code>overflow: hidden</code> — ส่วนที่ขยายเกินขอบถูกตัดทิ้ง ผลลัพธ์เลยดูเหมือน "ซูมอยู่ในกรอบ" ไม่ใช่รูปบวมดันเพื่อนบ้าน</p>
+
+        <p>ส่วน <code>FeatureCard</code> ไม่มีอะไรให้อธิบายเป็นพิเศษ — presentational แท้ ๆ ไม่มีสักบรรทัดที่เป็น logic: icon ใหญ่ด้านซ้าย หัวข้อกับคำอธิบายด้านขวา ที่ควรสังเกตมีจุดเดียวคือ type ของ prop <code>icon</code> ซึ่งเป็น <code>IconDefinition</code> (ตัว object icon ตรง ๆ จากแพ็กเกจ solid) ต่างจาก <code>IconProp</code> ที่ <code>Button</code> ใช้ในบทเรียน 12 ทั้งคู่ใช้ได้ นี่คือความจริงของ codebase ที่มีวิวัฒนาการ — และเป็นจุดที่ Agent มีสิทธิ์ "ช่วย" ทำให้เหมือนกันโดยที่เราไม่ได้สั่ง</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <pre><code class="language-bash">src/
+└── shared/
+    └── components/
+        ├── StarReview/
+        │   ├── StarReview.module.scss      # ใหม่
+        │   └── StarReview.tsx              # ใหม่
+        ├── FeatureCard/
+        │   ├── FeatureCard.module.scss     # ใหม่
+        │   └── FeatureCard.tsx             # ใหม่
+        ├── CountdownTimer/
+        │   ├── CountdownTimer.module.scss  # ใหม่
+        │   └── CountdownTimer.tsx          # ใหม่
+        └── ImageZoom/
+            ├── ImageZoom.module.scss       # ใหม่
+            └── ImageZoom.tsx               # ใหม่</code></pre>
+
+        <p>สัญญาของแต่ละไฟล์ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>StarReview</code></strong> — ต้องรับคะแนนสเกล 0–10 ตัวเดียวแล้ว render ดาวห้าดวงเสมอ ต้องไม่รับ prop จำนวนดาวสูงสุด ไม่รับสี และไม่รู้จักคำว่า product</li>
+          <li><strong><code>FeatureCard</code></strong> — ต้องเป็น presentational ล้วน: ไม่มี state ไม่มี event handler ไม่มี <code>onClick</code></li>
+          <li><strong><code>CountdownTimer</code></strong> — ต้องมี cleanup ที่ <code>clearInterval</code> ใน return ของ effect และ dependency array ต้องมี <code>targetDate</code> ต้องไม่มีการเรียก API และไม่มี <code>setTimeout</code> ซ้อนกันเป็นชั้น ๆ</li>
+          <li><strong><code>ImageZoom</code></strong> — ต้องบังคับให้ทุกคนที่ใช้ส่ง <code>alt</code> มา (prop ไม่เป็น optional) ต้องไม่มี JavaScript ที่จัดการ hover เอง เอฟเฟกต์ทั้งหมดอยู่ในไฟล์ SCSS</li>
+        </ul>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> — แชทใหม่ โหมด Agent งานรอบนี้มีสี่คอมโพเนนต์ในคำสั่งเดียว ซึ่งเป็นก้อนที่ใหญ่ที่สุดในสามบทนี้ แต่รับได้เพราะทั้งสี่ตัวเป็นอิสระต่อกันสนิท ไม่มีตัวไหน import ตัวไหน — ถ้าตัวใดตัวหนึ่งออกมาผิดรูป คุณลบเฉพาะโฟลเดอร์นั้นแล้วสั่งใหม่ได้โดยไม่กระทบสามตัวที่เหลือ:</p>
+          <pre><code class="language-text">สร้างคอมโพเนนต์แสดงผลสี่ตัว: StarReview, FeatureCard, CountdownTimer และ ImageZoom
+
+บริบท: @src/shared/components/Button/Button.tsx @src/shared/components @src/styles
+ใช้ Button เป็นแม่แบบของรูปทรงไฟล์เหมือนสองบทที่แล้ว
+Font Awesome ครบทั้งห้า package ติดตั้งไว้แล้ว บทนี้ใช้ทั้งชุด free-solid และ free-regular
+utility class ทุกตัวที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว: flex, flex-center,
+fs-14, fs-16, fs-18, fw-light, fw-medium, m-0, mt-0, mb-10, p-20,
+pt-15, pb-15, pl-30, pr-30, gap-20
+ตัวแปรอยู่ใน src/styles/_variables.scss: $orange01, $grey01, $grey02,
+$primary-color, $light-blue
+alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่วนไฟล์ .scss ต้องอ้าง path แบบ relative
+
+โครงสร้าง: สร้างไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
+- src/shared/components/StarReview/StarReview.module.scss
+- src/shared/components/StarReview/StarReview.tsx
+- src/shared/components/FeatureCard/FeatureCard.module.scss
+- src/shared/components/FeatureCard/FeatureCard.tsx
+- src/shared/components/CountdownTimer/CountdownTimer.module.scss
+- src/shared/components/CountdownTimer/CountdownTimer.tsx
+- src/shared/components/ImageZoom/ImageZoom.module.scss
+- src/shared/components/ImageZoom/ImageZoom.tsx
+
+ข้อกำหนดทางเทคนิค:
+- StarReview.module.scss: @use "../../../styles/variables";
+  .star -&gt; margin-right: 5px, color: variables.$orange01
+- StarReview.tsx: prop เดียวคือ score: number ที่เป็นคะแนนสเกล 0 ถึง 10
+  import ดาวสองแบบมาตั้งชื่อเล่นแยกกัน:
+    faStar as solidStar จาก "@fortawesome/free-solid-svg-icons"
+    faStar as regularStar จาก "@fortawesome/free-regular-svg-icons"
+  คำนวณ const stars = Math.round(score / 2)
+  สร้าง const fiveStars = [...Array(5)] แล้ว map เป็น FontAwesomeIcon ห้าตัว
+    key={index}, className={styles.star}
+    icon เป็น solidStar เมื่อ index &lt; stars ไม่งั้นเป็น regularStar
+  ครอบด้วย div className="flex fs-16"
+- FeatureCard.module.scss: @use "../../../styles/variables";
+  .featureCard -&gt; align-items: center, background-color: variables.$grey01, gap: 12px
+    nested .icon -&gt; font-size: 32px, color: variables.$primary-color
+    nested p -&gt; color: variables.$grey02
+- FeatureCard.tsx: props สามตัว icon: IconDefinition (import จาก
+    "@fortawesome/free-solid-svg-icons"), title: string, description: string
+  โครง: div className={`${styles.featureCard} flex p-20`}
+    &gt; div className={styles.icon} ที่มี FontAwesomeIcon icon={icon}
+    &gt; div ที่มี h4 className="mt-0 mb-10 fs-18" แสดง title
+      และ p className="m-0 fs-14 fw-light" แสดง description
+  ห้ามมี state และห้ามมี onClick
+- CountdownTimer.module.scss: @use "../../../styles/variables";
+  .countdownContainer -&gt; background-color: variables.$light-blue,
+    border: 1px dashed variables.$primary-color
+- CountdownTimer.tsx: prop เดียวคือ targetDate: string
+  useState เก็บ object ที่มีสี่ field เป็น number: days, hours, minutes, seconds
+    ค่าเริ่มต้นเป็นศูนย์ทั้งสี่
+  ใน useEffect ประกาศฟังก์ชัน calculateTimeLeft ที่:
+    หา difference = เวลาเป้าหมาย ลบ เวลาปัจจุบัน (ทั้งคู่ผ่าน getTime())
+    ถ้า difference &gt; 0 ให้ setTimeLeft ด้วยค่าที่คำนวณจาก difference:
+      days   = Math.floor(difference / (1000 * 60 * 60 * 24))
+      hours  = Math.floor((difference / (1000 * 60 * 60)) % 24)
+      minutes = Math.floor((difference / (1000 * 60)) % 60)
+      seconds = Math.floor((difference / 1000) % 60)
+    ถ้าไม่ ให้ setTimeLeft เป็นศูนย์ทั้งสี่ค่า
+  แล้วตั้ง const timer = setInterval(calculateTimeLeft, 1000)
+  effect ต้อง return () =&gt; clearInterval(timer) และมี dependency array เป็น [targetDate]
+  return div className={`${styles.countdownContainer} flex flex-center pt-15 pb-15
+    pl-30 pr-30 fs-18 gap-20 fw-medium`} ข้างในเป็น span ของทั้งสี่ค่าคั่นด้วย :
+  ห้ามเรียก calculateTimeLeft นอก interval และห้ามใช้ setTimeout
+- ImageZoom.module.scss: ไม่ต้อง @use variables เพราะไม่ได้ใช้ตัวแปรเลย
+  .imageContainer -&gt; overflow: hidden
+  .image -&gt; transition: transform 0.5s ease-in-out
+    nested &amp;:hover -&gt; transform: scale(1.05)
+- ImageZoom.tsx: props สามตัว src: string, alt: string (บังคับ),
+    className?: string
+  โครง: div className={`${styles.imageContainer} ${className || ""}`}
+    &gt; img src alt className={styles.image}
+  ห้ามใช้ onMouseEnter, onMouseLeave หรือ state ใด ๆ เอฟเฟกต์ซูมอยู่ใน SCSS ล้วน
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่ (ห้ามเสนอ dayjs, date-fns หรือไลบรารีนับถอยหลัง)
+- ห้ามแก้ type ของ prop icon ใน src/shared/components/Button/Button.tsx ให้เหมือน FeatureCard
+- ห้ามสร้าง index.ts หรือไฟล์ barrel
+- ยังไม่ต้องเอาสี่ตัวนี้ไปใช้ในหน้าไหน</code></pre>
+        </blockquote>
+
+        <p>บรรทัด <code>ขอบเขต:</code> ข้อสองมีที่มา: เมื่อคุณให้ Agent เห็นทั้งโฟลเดอร์ <code>shared/components</code> มันจะเห็นด้วยว่า <code>Button</code> ใช้ <code>IconProp</code> ส่วนงานใหม่ใช้ <code>IconDefinition</code> พฤติกรรมที่พบได้คือมันจัดให้เหมือนกันเสียเลยเพราะดู "สะอาดกว่า" — ซึ่งแปลว่า diff ของบทนี้ไปโผล่ในไฟล์ที่คุณพิมพ์เองเมื่อสองบทก่อน การเก็บกวาดโค้ดเป็นงานที่ดี แต่ต้องเป็นงานที่<em>สั่ง</em> ไม่ใช่ของแถมที่มาพร้อมงานอื่น</p>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <p>วงจรตรวจงานรอบนี้มีข้อสังเกตหนึ่งข้อ: ขั้นที่สาม (<code>npm run lint</code> และ <code>npm run typecheck</code>) จับข้อผิดพลาดหลักของบทนี้<em>ไม่ได้</em>เลย ทั้งสองคำสั่งผ่านฉลุยกับโค้ดที่ลืม cleanup ดังนั้นขั้นที่สอง — checklist ข้างล่าง — คือด่านเดียวที่ใช้ได้จริง</p>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <code>setInterval</code> ใน <code>CountdownTimer</code> ที่ไม่มี cleanup — คือ effect ที่จบด้วย <code>}, [targetDate]);</code> โดยไม่มีบรรทัด <code>return () =&gt; clearInterval(timer);</code> ก่อนหน้า เปิด <code>CountdownTimer.tsx</code> เลื่อนไปท้าย <code>useEffect</code> เป็นจุดแรก ถ้าไม่มี return ให้แก้เดี๋ยวนั้น อาการของบั๊กนี้คือสิ่งที่ทำให้มันอันตราย: บนจอนาฬิกาเดินสวยงามทุกอย่างถูกต้อง <code>npm run lint</code> ผ่าน (กฎ <code>react-hooks/exhaustive-deps</code> ตรวจ dependency array ไม่ได้ตรวจว่ามี cleanup ไหม) <code>npm run typecheck</code> ผ่าน แต่ทุกครั้งที่ผู้ใช้เข้าออกหน้า Home จะมี interval ค้างเพิ่มอีกหนึ่งตัววิ่งวนไปเรื่อย ๆ ยิงคำสั่ง setState ใส่คอมโพเนนต์ที่ถูก unmount ไปแล้ว — เข้าออกยี่สิบรอบก็ได้ยี่สิบ interval วิธีพิสูจน์ตอนรันจริงอยู่ใน checkpoint ท้ายบท</li>
+            <li>ไฟล์ใหม่ <strong>8 ไฟล์พอดี</strong> ไม่มีไฟล์เก่าไฟล์ไหนขึ้นสถานะ modified โดยเฉพาะใน <code>Button/</code></li>
+            <li>dependency array ของ effect เป็น <code>[targetDate]</code> ไม่ใช่ <code>[]</code> — ถ้าเป็น array ว่าง ค่า <code>targetDate</code> ที่เปลี่ยนทีหลังจะไม่มีผล และ <code>npm run lint</code> จะเตือน <code>react-hooks/exhaustive-deps</code> ให้เห็น</li>
+            <li><code>calculateTimeLeft</code> ถูกประกาศ<em>ข้างใน</em> effect ไม่ใช่ข้างนอกคอมโพเนนต์หรือระดับ component body — ถ้าย้ายออกไปข้างนอก มันจะกลายเป็น dependency ที่ต้องใส่ใน array เพิ่ม</li>
+            <li><code>StarReview</code> ใช้ <code>[...Array(5)]</code> (มี spread) ไม่ใช่ <code>Array(5)</code> เปล่า ๆ หรือ <code>Array.from({ length: 5 })</code> ที่แม้จะทำงานได้เหมือนกันแต่ไม่ตรงกับต้นฉบับ</li>
+            <li><code>StarReview</code> import ดาวสองตัวจากคนละแพ็กเกจพร้อม <code>as</code> — ถ้าเจอ <code>faStar</code> ตัวเดียวแล้วเปลี่ยนสีเอาเอง แปลว่ามันไม่ได้ใช้ชุด regular ตามที่สั่ง</li>
+            <li><code>FeatureCard</code> ใช้ type <code>IconDefinition</code> และ <code>Button.tsx</code> ยังใช้ <code>IconProp</code> เหมือนเดิม — สองไฟล์นี้ต้อง<em>ไม่</em>ถูกทำให้เหมือนกัน</li>
+            <li><code>ImageZoom</code> ไม่มี <code>useState</code>, ไม่มี <code>onMouseEnter</code> — ถ้าเจอ แปลว่ามันไปทำ hover ด้วย JavaScript ซึ่งได้ผลลัพธ์คล้ายกันบนจอแต่หนักกว่าและกระตุกกว่า</li>
+            <li>prop <code>alt</code> ของ <code>ImageZoom</code> เป็น <code>string</code> แบบบังคับ ไม่ใช่ <code>alt?: string</code></li>
+            <li>ทุกไฟล์ <code>.module.scss</code> ที่ใช้ตัวแปรขึ้นต้นด้วย <code>@use "../../../styles/variables";</code> และไม่มีค่า hex โผล่มาสักค่า — ยกเว้น <code>ImageZoom.module.scss</code> ที่ต้องไม่มีบรรทัด <code>@use</code> เลย เพราะไม่ได้ใช้ตัวแปร</li>
+            <li>ค้นชื่อ class ทุกตัวใน <code>className</code> ว่ามีจริงใน <code>src/styles/</code> (<code>grep -rn "ชื่อ-class" src/styles/</code>) โดยเฉพาะกลุ่ม <code>pl-30 pr-30</code> ที่ยาวผิดหูผิดตา</li>
+            <li>ไม่มี <code>useEffect</code> โผล่ในสามตัวที่เหลือ — StarReview, FeatureCard และ ImageZoom ต้องไม่มี state และไม่มี effect เลยแม้แต่ตัวเดียว</li>
+          </ul>
+        </blockquote>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/shared/components/StarReview/StarReview.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../styles/variables";
+
+.star {
+  margin-right: 5px;
+  color: variables.$orange01;
+}
+</code></pre>
+
+        <p><code>src/shared/components/StarReview/StarReview.tsx</code> — นี่คือไฟล์จริงจากโปรเจกต์ต้นฉบับ อ่านบรรทัด <code>className</code> ให้ดี เดี๋ยวจะคุยกันต่อ:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faStar as solidStar } from "@fortawesome/free-solid-svg-icons";
+import { faStar as regularStar } from "@fortawesome/free-regular-svg-icons";
+import styles from "./StarReview.module.scss";
+
+interface StarReviewProps {
+  score: number; // Score between 0 and 10
+}
+
+const StarReview: React.FC&lt;StarReviewProps&gt; = ({ score }) =&gt; {
+  const stars = Math.round(score / 2);
+  const fiveStars = [...Array(5)];
+
+  return (
+    &lt;div className={`${styles.starReview} flex fs-16`}&gt;
+      {fiveStars.map((_, index) =&gt; (
+        &lt;FontAwesomeIcon
+          key={index}
+          icon={index &lt; stars ? solidStar : regularStar}
+          className={styles.star}
+        /&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+
+export default StarReview;
+</code></pre>
+
+        <blockquote>💡 <strong>ของที่ Agent ของคุณจะไม่มี และนั่นถูกแล้ว:</strong> ต้นฉบับเขียน <code>${styles.starReview}</code> แต่ <code>StarReview.module.scss</code> มี class เดียวคือ <code>.star</code> — ไม่มี <code>.starReview</code> อยู่ที่ไหนเลย (ลอง <code>grep -n "starReview" src/shared/components/StarReview/StarReview.module.scss</code> ดู จะไม่เจออะไร) ผลตอนรันคือ <code>styles.starReview</code> เป็น <code>undefined</code> แล้ว template literal แปลงมันเป็นข้อความ — <code>&lt;div&gt;</code> นั้นจึงมี class ชื่อ <code>undefined</code> ติดอยู่จริง ๆ ใน DOM (เปิด DevTools ดูได้) TypeScript จับไม่ได้เพราะ <code>global.d.ts</code> ที่เราเขียนบทเรียน 04 ประกาศ type ของไฟล์ <code>.scss</code> ไว้เป็น <code>{ [className: string]: string }</code> — ชื่อ key อะไรก็ผ่านหมด นี่คือญาติสนิทของ <code>text-white</code> ใน Footer บทเรียน 10: <strong>ชื่อ class ที่ไม่มีนิยาม ไม่ทำอะไรเลยแบบเงียบสนิท</strong> prompt ของเราจึงสั่งแค่ <code>className="flex fs-16"</code> ของที่ Agent ส่งกลับมาจะสั้นกว่าต้นฉบับหนึ่งชิ้นตรงนี้ และเป็นฝั่งที่ถูก</blockquote>
+
+        <p><code>src/shared/components/FeatureCard/FeatureCard.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../styles/variables";
+
+.featureCard {
+  align-items: center;
+  background-color: variables.$grey01;
+  gap: 12px;
+
+  .icon {
+    font-size: 32px;
+    color: variables.$primary-color;
+  }
+
+  p {
+    color: variables.$grey02;
+  }
+}
+</code></pre>
+
+        <p><code>src/shared/components/FeatureCard/FeatureCard.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import styles from "./FeatureCard.module.scss";
+
+interface FeatureCardProps {
+  icon: IconDefinition;
+  title: string;
+  description: string;
+}
+
+const FeatureCard: React.FC&lt;FeatureCardProps&gt; = ({
+  icon,
+  title,
+  description,
+}) =&gt; {
+  return (
+    &lt;div className={`${styles.featureCard} flex p-20`}&gt;
+      &lt;div className={styles.icon}&gt;
+        &lt;FontAwesomeIcon icon={icon} /&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;h4 className="mt-0 mb-10 fs-18"&gt;{title}&lt;/h4&gt;
+        &lt;p className="m-0 fs-14 fw-light"&gt;{description}&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default FeatureCard;
+</code></pre>
+
+        <p>สังเกต SCSS ที่ style ลูกผ่านการ nest ใต้ <code>.featureCard</code>: ทั้ง <code>.icon</code> และ <code>p</code> จับเฉพาะข้างในการ์ดนี้ ไม่รั่วไปโดน <code>p</code> ของใคร — เทคนิคเดียวกับที่ <code>Pagination.module.scss</code> ใช้ในบทที่แล้ว ต่างกันแค่ที่นี่เราเป็นคน render markup เอง เลยเลือกได้ว่าจะ nest หรือจะตั้ง class ให้ทุกชั้น</p>
+
+        <p><code>src/shared/components/CountdownTimer/CountdownTimer.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../styles/variables";
+
+.countdownContainer {
+  background-color: variables.$light-blue;
+  border: 1px dashed variables.$primary-color;
+}
+</code></pre>
+
+        <p><code>src/shared/components/CountdownTimer/CountdownTimer.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React, { useState, useEffect } from "react";
+import styles from "./CountdownTimer.module.scss";
+
+interface CountdownTimerProps {
+  targetDate: string;
+}
+
+const CountdownTimer: React.FC&lt;CountdownTimerProps&gt; = ({ targetDate }) =&gt; {
+  const [timeLeft, setTimeLeft] = useState&lt;{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  }&gt;({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  useEffect(() =&gt; {
+    const calculateTimeLeft = () =&gt; {
+      const now = new Date().getTime();
+      const target = new Date(targetDate).getTime();
+      const difference = target - now;
+
+      if (difference &gt; 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / (1000 * 60)) % 60),
+          seconds: Math.floor((difference / 1000) % 60),
+        });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () =&gt; clearInterval(timer);
+  }, [targetDate]);
+
+  return (
+    &lt;div
+      className={`${styles.countdownContainer} flex flex-center pt-15 pb-15 pl-30 pr-30 fs-18 gap-20 fw-medium`}
+    &gt;
+      &lt;span&gt;{timeLeft.days}&lt;/span&gt;:&lt;span&gt;{timeLeft.hours}&lt;/span&gt;:
+      &lt;span&gt;{timeLeft.minutes}&lt;/span&gt;:&lt;span&gt;{timeLeft.seconds}&lt;/span&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default CountdownTimer;
+</code></pre>
+
+        <blockquote>💡 สังเกตอะไรไหม? <code>calculateTimeLeft</code> ถูกเรียกครั้งแรกเมื่อ interval ครบวินาทีแรก แปลว่าหลัง mount นาฬิกาจะโชว์ <code>0:0:0:0</code> ประมาณหนึ่งวินาทีก่อนกระโดดเป็นค่าจริง — ถ้าอยากให้ขึ้นทันทีก็แค่เรียก <code>calculateTimeLeft()</code> หนึ่งครั้งก่อน <code>setInterval</code> โปรเจกต์นี้เลือกแบบเรียบง่ายตามต้นฉบับ (และ prompt ของเราก็สั่งห้ามไว้ เพื่อให้ของที่ได้ตรงกับโค้ดอ้างอิง) แต่การ<em>มองเห็น</em>รายละเอียดแบบนี้ในโค้ดคือทักษะ code review ที่ดี</blockquote>
+
+        <p><code>src/shared/components/ImageZoom/ImageZoom.module.scss</code>:</p>
+
+        <pre><code class="language-scss">.imageContainer {
+  overflow: hidden; // Ensure the image doesn't go outside the container
+}
+
+.image {
+  transition: transform 0.5s ease-in-out; // Smooth transition for the zoom effect
+
+  &amp;:hover {
+    transform: scale(1.05); // Zoom in slightly
+  }
+}
+</code></pre>
+
+        <p><code>src/shared/components/ImageZoom/ImageZoom.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./ImageZoom.module.scss";
+
+interface ImageZoomProps {
+  src: string;
+  alt: string;
+  className?: string;
+}
+
+const ImageZoom: React.FC&lt;ImageZoomProps&gt; = ({ src, alt, className }) =&gt; {
+  return (
+    &lt;div className={`${styles.imageContainer} ${className || ""}`}&gt;
+      &lt;img src={src} alt={alt} className={styles.image} /&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default ImageZoom;
+</code></pre>
+
+        <p><code>className</code> ที่รับมาช่วยให้หน้า Home ในบทเรียน 19 กำหนดขนาด/สัดส่วนของแต่ละรูปจากข้างนอกได้ ส่วน <code>|| ""</code> กัน <code>undefined</code> ไปโผล่เป็นข้อความใน class — เทียบกับ <code>RadioInput</code> ในบทเรียน 12 ที่แก้ปัญหาเดียวกันด้วยการตั้ง default value ตอน destructure (<code>className = ""</code>) สองท่านี้ให้ผลเหมือนกัน และการที่โปรเจกต์เดียวมีทั้งสองท่าคือเรื่องปกติของโค้ดที่เขียนคนละวัน — สิ่งที่ไม่ปกติคือปล่อยให้ Agent เปลี่ยนท่าของไฟล์เก่าโดยไม่ได้สั่ง</p>
+
+        <h2>ครบชุดแล้ว</h2>
+
+        <p>ช่วงคอมโพเนนต์กลางของเราจบที่เก้าตัว: Button, Input, RadioInput, Modal, Pagination, StarReview, FeatureCard, CountdownTimer และ ImageZoom (บวก ErrorMessage, Header และ Footer ที่มาก่อนหน้าในช่วงโครงแอป รวมเป็น 12 โฟลเดอร์ใน <code>src/shared/components/</code>) — กล่องเครื่องมือพร้อมแล้ว สามบทถัดไปเราจะสร้าง<strong>ชั้นข้อมูล</strong> (axios client ในบทเรียน 15, types และฟังก์ชันเรียก API ในบทเรียน 16, query factories ในบทเรียน 17) แล้วหลังจากนั้นทุกหน้าเพจจะประกอบขึ้นจากของที่เราเตรียมไว้แบบเร็วจนน่าตกใจ</p>
+
+        <p>และมองย้อนสามบทที่ผ่านมาในมุมของการทำงานกับ AI: คุณพิมพ์เองไปหนึ่งไฟล์ครึ่ง (<code>Button.tsx</code> กับ <code>Button.module.scss</code>) แล้วได้อีกแปดคอมโพเนนต์ที่มีรูปทรงเดียวกันกลับมาจากสาม prompt ที่แต่ละอันชี้กลับไปที่ไฟล์เดียวกันนั้น — นั่นคือดอกเบี้ยของการลงทุนพิมพ์แม่แบบด้วยตัวเองหนึ่งครั้ง</p>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>ลบบรรทัด <code>return () =&gt; clearInterval(timer);</code> ออกจาก <code>CountdownTimer</code> แล้วรัน <code>npm run lint</code> กับ <code>npm run typecheck</code> — ทั้งคู่ยังผ่าน อธิบายว่าเกิดอะไรขึ้นตอนผู้ใช้กดออกจากหน้า Home และบอกวิธีพิสูจน์ด้วยตาว่ามันเกิดขึ้นจริง</li>
+          <li><code>StarReview</code> รับ <code>score</code> สเกล 0–10 แต่ในโค้ดไม่มีการเช็กช่วงค่าเลย — ลองคิดว่าถ้ามีคนส่ง <code>score={14}</code> หรือ <code>score={-2}</code> มา หน้าจอจะออกมาหน้าตาอย่างไร แล้วตอบว่าอะไรคือสิ่งเดียวที่กันไม่ให้เรื่องนี้เกิดในโปรเจกต์เรา</li>
+          <li>ทั้ง <code>ImageZoom</code> และ <code>RadioInput</code> รับ prop <code>className</code> มาผสมกับ class ของตัวเอง แต่จัดการค่า <code>undefined</code> คนละท่า — เปิดสองไฟล์เทียบแล้วบอกว่าถ้าลบวิธีป้องกันของแต่ละไฟล์ออก ผลลัพธ์บน DOM จะต่างกันอย่างไร</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> <code>src/shared/components/</code> ตอนนี้ควรมี 12 โฟลเดอร์ และ <code>npm run typecheck</code> กับ <code>npm run lint</code> ต้องผ่านทั้งคู่ อยากเห็นนาฬิกาเดินจริง ๆ ลองแปะชั่วคราวในหน้า stub: <code>&lt;CountdownTimer targetDate="2026-12-31" /&gt;</code> แล้วดูตัวเลขขยับทุกวินาที (และสังเกต <code>0:0:0:0</code> วินาทีแรกที่เราคุยกันด้วย) จากนั้นพิสูจน์ cleanup ด้วยวิธีที่เห็นผลจริง: ใส่ <code>console.log("tick")</code> ไว้บรรทัดแรกของ <code>calculateTimeLeft</code> ชั่วคราว เปิด Console แล้วสลับไปหน้าอื่นกลับมาสัก 5 รอบ — ถ้า cleanup ทำงาน จำนวน <code>tick</code> ต่อวินาทีต้องคงที่ ถ้าลอง<em>ลบ</em>บรรทัด <code>return () =&gt; clearInterval(timer);</code> ออกดู คุณจะเห็นจำนวน <code>tick</code> ต่อวินาทีเพิ่มขึ้นทุกครั้งที่กลับเข้าหน้าเดิม นั่นคือ interval ที่ค้างอยู่ — เสร็จแล้วเติมบรรทัด cleanup กลับ ลบ <code>console.log</code> และลบโค้ดทดสอบออกให้สะอาดแล้ว commit ก่อนไปบทถัดไป — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="13_modal_pagination.html" rel="prev">ก่อนหน้า: Modal และ Pagination</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="15_api_client.html" rel="next">ถัดไป: API Client</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
