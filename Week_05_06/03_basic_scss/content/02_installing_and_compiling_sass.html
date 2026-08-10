@@ -100,7 +100,8 @@ npx sass --watch scss/main.scss:css/main.css</code></pre>
           <li>
             <strong>path ปลายทางไม่พร้อมใช้งาน</strong> — Dart Sass
             มักสร้างโฟลเดอร์ปลายทางอย่าง <code>css/</code> ให้ได้เอง
-            แต่ถ้า path ผิด, parent directory ไม่มีจริง หรือสิทธิ์เขียนไม่พอ
+            แต่ถ้าสะกด path ผิด, สั่งจากโฟลเดอร์ผิด, มีส่วนหนึ่งของ path เป็นไฟล์แทนที่จะเป็นโฟลเดอร์
+            หรือสิทธิ์เขียนไม่พอ
             คำสั่งก็ยังล้มเหลวได้
           </li>
           <li>
@@ -112,6 +113,7 @@ npx sass --watch scss/main.scss:css/main.css</code></pre>
         <div class="callout">
           ถ้าเจอ error ประเภท <code>no such file or directory</code> ให้เช็กสองอย่างก่อน:
           ตอนนี้ terminal อยู่โฟลเดอร์ไหน และ path ต้นทาง/ปลายทางสะกดตรงกับโครงสร้างไฟล์จริงหรือไม่
+          โดยจำไว้ว่า Dart Sass รุ่นใหม่มักสร้างโฟลเดอร์ปลายทางที่ยังไม่มีให้ได้เอง
         </div>
 
         <h2>แบบฝึกหัด</h2>

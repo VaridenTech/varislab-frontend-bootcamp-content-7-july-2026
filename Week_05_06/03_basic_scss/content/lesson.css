@@ -444,6 +444,12 @@ blockquote,
     white-space: pre-wrap;
   }
 
+  th {
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #555555;
+  }
+
   .lesson-navigation {
     display: none;
   }

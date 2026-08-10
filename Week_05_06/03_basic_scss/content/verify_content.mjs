@@ -24,6 +24,8 @@ const localHrefPattern = /href="([^":#][^"#]*)"/g;
 const lessonIndexLinkPattern = /<a\b([^>]*)href="([^"]+\.html)"([^>]*)>([\s\S]*?)<\/a>/g;
 const semanticBlockPattern =
   /<(p|li|blockquote|summary|details|pre|td|th)[^>]*>[\s\S]*?<\/\1>/g;
+const solutionDetailsPattern =
+  /<details\b[^>]*>\s*<summary>ดูเฉลย<\/summary>([\s\S]*?)<\/details>/g;
 const negativeImportGuidancePhrases = [
   "legacy",
   "deprecated",
@@ -97,6 +99,32 @@ function collectSemanticBlocks(html) {
   }));
 }
 
+function collectSolutionDetails(html) {
+  return Array.from(html.matchAll(solutionDetailsPattern), (match) => match[1]);
+}
+
+function hasNonEmptyParagraph(html) {
+  const paragraphs = Array.from(html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/g));
+
+  return paragraphs.some((paragraph) => normalizeText(stripHtml(paragraph[1])).length > 0);
+}
+
+function assertSolutionDetailsHaveExplanation(sourceFile, html) {
+  const solutions = collectSolutionDetails(html);
+
+  assert.ok(
+    solutions.length > 0,
+    `${sourceFile}: expected at least one solution <details> with <summary>ดูเฉลย</summary>.`
+  );
+
+  for (const [index, solutionHtml] of solutions.entries()) {
+    assert.ok(
+      hasNonEmptyParagraph(solutionHtml),
+      `${sourceFile}: solution <details> #${index + 1} must include at least one non-empty <p> explanation after the summary.`
+    );
+  }
+}
+
 function assertImportUsagePolicy(html) {
   const blocks = collectSemanticBlocks(html);
   const importMentions = Array.from(html.matchAll(/@import\b/g));
@@ -136,7 +164,7 @@ async function assertLocalTargetsExist(sourceFile, html) {
   }
 }
 
-function assertCommonLessonContract(html) {
+function assertCommonLessonContract(sourceFile, html) {
   assert.match(html, /<html lang="th">/);
   assert.match(html, /<meta\s+name="description"/);
   assert.equal((html.match(/<h1>/g) ?? []).length, 1);
@@ -148,6 +176,7 @@ function assertCommonLessonContract(html) {
   assert.equal((html.match(/<title>/g) ?? []).length, 1);
   assert.match(html, /<\/html>\s*$/);
   assertImportUsagePolicy(html);
+  assertSolutionDetailsHaveExplanation(sourceFile, html);
 }
 
 function assertLessonTitle(html, lesson) {
@@ -209,7 +238,7 @@ async function main() {
   for (const [index, lesson] of LESSONS.entries()) {
     const html = await readLocalFile(lesson.file);
 
-    assertCommonLessonContract(html);
+    assertCommonLessonContract(lesson.file, html);
     assertLessonTitle(html, lesson);
     assertAdjacentNavigation(html, index);
     await assertLocalTargetsExist(lesson.file, html);

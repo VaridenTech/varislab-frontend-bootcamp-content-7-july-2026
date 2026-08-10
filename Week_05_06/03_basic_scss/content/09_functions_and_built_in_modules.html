@@ -185,6 +185,9 @@ $brand: #6f3cc3;
 
         <details>
           <summary>ดูเฉลย</summary>
+          <p>
+            ฟังก์ชัน <code>spacing()</code> แปลงเลข step ให้เป็นขนาดจริง จึงทำให้ padding และ gap ใช้สเกลเดียวกันอย่างสม่ำเสมอ
+          </p>
           <pre><code>@function spacing($step) {
   @return $step * 0.25rem;
 }

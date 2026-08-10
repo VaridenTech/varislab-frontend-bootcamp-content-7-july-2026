@@ -198,6 +198,9 @@ $alert-colors: (
 
         <details>
           <summary>ดูเฉลย</summary>
+          <p>
+            ลูป <code>@for</code> สร้าง selector สามตัวจากตัวเลข step และ interpolation <code>#{$step}</code> ใส่เลขนั้นลงในชื่อ class
+          </p>
           <pre><code>@for $step from 1 through 3 {
   .radius-#{$step} {
     border-radius: $step * 0.25rem;
