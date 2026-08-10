@@ -98,8 +98,10 @@ npx sass --watch scss/main.scss:css/main.css</code></pre>
             path อย่าง <code>scss/main.scss</code> อาจหาไม่เจอ
           </li>
           <li>
-            <strong>ลืมสร้างโฟลเดอร์ปลายทาง</strong> — บางกรณีถ้าโฟลเดอร์ <code>css/</code>
-            ยังไม่มี คำสั่งอาจเขียนไฟล์ไม่ได้
+            <strong>path ปลายทางไม่พร้อมใช้งาน</strong> — Dart Sass
+            มักสร้างโฟลเดอร์ปลายทางอย่าง <code>css/</code> ให้ได้เอง
+            แต่ถ้า path ผิด, parent directory ไม่มีจริง หรือสิทธิ์เขียนไม่พอ
+            คำสั่งก็ยังล้มเหลวได้
           </li>
           <li>
             <strong>แก้ไฟล์ผิดตัว</strong> — ผู้เริ่มต้นมักเผลอไปแก้ <code>css/main.css</code>

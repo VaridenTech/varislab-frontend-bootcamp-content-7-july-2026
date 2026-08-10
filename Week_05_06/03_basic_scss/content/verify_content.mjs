@@ -103,7 +103,7 @@ async function assertLocalTargetsExist(sourceFile, html) {
 
 function assertCommonLessonContract(html) {
   assert.match(html, /<html lang="th">/);
-  assert.match(html, /<meta name="description"/);
+  assert.match(html, /<meta\s+name="description"/);
   assert.equal((html.match(/<h1>/g) ?? []).length, 1);
   assert.match(html, /<h2>แบบฝึกหัด<\/h2>/);
   assert.match(html, /<details>/);

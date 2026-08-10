@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="สรุปการเลือกคำสั่ง Sass สำหรับงานพัฒนาและ production, ทำความเข้าใจ source maps และทบทวน best practices ของ SCSS ทั้งคอร์ส"
+    />
+    <title>CSS Output, Source Maps และ Best Practices</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>CSS Output, Source Maps และ Best Practices</h1>
+
+        <p>
+          ตอนนี้เราเรียนตั้งแต่ตัวแปรไปจนถึง control flow แล้ว บทสุดท้ายจึงพากลับมาดูภาพรวมว่า
+          “เวลาใช้งานจริง เราควรคอมไพล์ Sass แบบไหน และควรดูแลไฟล์ผลลัพธ์อย่างไร”
+          เพราะต่อให้เขียน SCSS ได้ดี ถ้า workflow ตอน build ไม่ชัด
+          ทีมก็ยังสับสนได้ว่าไฟล์ไหนควรแก้ ไฟล์ไหนควรถูก generate และไฟล์ไหนเหมาะกับ production
+        </p>
+
+        <h2>คำสั่งที่ใช้บ่อยที่สุดมีอยู่ 3 แบบ</h2>
+        <p>สำหรับคอร์สเริ่มต้น ชุดคำสั่งต่อไปนี้ครอบคลุมงานที่เจอบ่อยที่สุด:</p>
+
+        <pre><code>npx sass --watch scss/main.scss:css/main.css
+npx sass scss/main.scss css/main.css --style=expanded
+npx sass scss/main.scss css/main.min.css --style=compressed --no-source-map</code></pre>
+
+        <table>
+          <thead>
+            <tr>
+              <th>คำสั่ง</th>
+              <th>เหมาะเมื่อไร</th>
+              <th>ผลลัพธ์หลัก</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--watch</code></td>
+              <td>กำลังพัฒนาและบันทึกไฟล์บ่อย ๆ</td>
+              <td>คอมไพล์ใหม่อัตโนมัติทุกครั้งที่ SCSS เปลี่ยน</td>
+            </tr>
+            <tr>
+              <td><code>--style=expanded</code></td>
+              <td>อยากได้ CSS ที่อ่านง่ายสำหรับเปิดตรวจ</td>
+              <td>จัดบรรทัดและย่อหน้าให้อ่านสะดวก</td>
+            </tr>
+            <tr>
+              <td><code>--style=compressed --no-source-map</code></td>
+              <td>เตรียมไฟล์ขนาดเล็กสำหรับ deploy</td>
+              <td>ได้ CSS แบบบีบอัดและไม่สร้างไฟล์แผนที่ต้นฉบับ</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>งานพัฒนาต่อเนื่องใช้ watch mode</h2>
+        <pre><code>npx sass --watch scss/main.scss:css/main.css</code></pre>
+        <p>
+          คำสั่งนี้เหมาะที่สุดตอนกำลังทำหน้าเว็บอยู่จริง เพราะทุกครั้งที่คุณกดบันทึก
+          Sass จะคอมไพล์ <code>scss/main.scss</code> ไปเป็น
+          <code>css/main.css</code> ให้อัตโนมัติ
+          จึงลดการสลับไปพิมพ์คำสั่งเดิมซ้ำ ๆ ใน terminal
+        </p>
+
+        <p>
+          ถ้าเปิด DevTools ในเบราว์เซอร์ระหว่างพัฒนา watch mode จะยิ่งมีประโยชน์
+          เพราะคุณจะเห็นผลที่อัปเดตไว และถ้า source maps ยังเปิดอยู่
+          เครื่องมือ developer จะชี้กลับไปที่ไฟล์ SCSS ต้นทางได้ง่ายขึ้นด้วย
+        </p>
+
+        <h2>งานตรวจโค้ดหรือส่งต่อให้ทีมใช้ expanded CSS</h2>
+        <pre><code>npx sass scss/main.scss css/main.css --style=expanded</code></pre>
+        <p>
+          <code>--style=expanded</code> ทำให้ CSS ที่ได้ยังอ่านง่าย
+          มีการขึ้นบรรทัดและเว้นวรรคชัดเจน เหมาะเมื่อคุณอยากเปิดไฟล์ผลลัพธ์เพื่อตรวจว่า selector,
+          property หรือค่าที่คอมไพล์ออกมาตรงกับที่คิดไว้หรือไม่
+        </p>
+
+        <pre><code>.button {
+  padding: 1rem 1.25rem;
+  background-color: #6f3cc3;
+  color: #ffffff;
+}</code></pre>
+
+        <p>
+          รูปแบบนี้เหมาะสำหรับการ debug ในระดับไฟล์ผลลัพธ์
+          เช่นเช็กว่า mixin ถูก expand ครบไหม หรือ loop สร้างคลาสเกินจำเป็นหรือเปล่า
+        </p>
+
+        <h2>งาน production เน้นไฟล์เล็กและชัดว่าเป็น output</h2>
+        <pre><code>npx sass scss/main.scss css/main.min.css --style=compressed --no-source-map</code></pre>
+        <p>
+          คำสั่งนี้สร้างไฟล์ <code>css/main.min.css</code> แบบบีบอัด
+          ทำให้ขนาดไฟล์เล็กลง เหมาะกับการนำไป deploy
+          และ <code>--no-source-map</code> จะปิดการสร้าง source map
+          จึงได้ output ที่เหลือแค่ไฟล์ CSS ตามต้องการ
+        </p>
+
+        <pre><code>.button{padding:1rem 1.25rem;background-color:#6f3cc3;color:#fff}</code></pre>
+
+        <p>
+          การตั้งชื่อไฟล์เป็น <code>.min.css</code> ไม่ใช่ข้อบังคับของ Sass
+          แต่เป็น convention ที่ช่วยให้ทั้งทีมเห็นทันทีว่าไฟล์นี้คือเวอร์ชันสำหรับใช้งานจริง
+          ไม่ใช่ไฟล์ที่ตั้งใจเปิดมาแก้ด้วยมือ
+        </p>
+
+        <h2>Source maps คือสะพานจาก CSS กลับไปหา SCSS</h2>
+        <p>
+          source map คือไฟล์ metadata ที่บอกว่า CSS แต่ละบรรทัดมาจาก SCSS ต้นฉบับส่วนไหน
+          เวลา inspect element ในเบราว์เซอร์ เราจึงย้อนกลับไปหาไฟล์
+          <code>_buttons.scss</code> หรือ <code>main.scss</code> ได้เร็ว
+          แทนที่จะต้องไล่จาก CSS ที่คอมไพล์แล้วอย่างเดียว
+        </p>
+
+        <ul>
+          <li>ระหว่างพัฒนา source maps ช่วย debug ได้เร็วขึ้นมาก</li>
+          <li>ระหว่างเรียนช่วยให้เห็นความเชื่อมโยงระหว่าง SCSS กับ CSS ชัดขึ้น</li>
+          <li>
+            ตอน build production บางทีมปิด source maps เพื่อให้ artifact
+            ที่ deploy มีแต่ไฟล์ที่จำเป็นจริง
+          </li>
+        </ul>
+
+        <p>
+          ไม่มีคำตอบเดียวว่าควรเปิด source maps ใน production หรือไม่
+          เพราะขึ้นกับ pipeline, ความต้องการด้าน debug หลัง deploy
+          และนโยบายของทีม แต่สำหรับคำสั่ง production พื้นฐานในบทนี้
+          เราเลือกตัวอย่างที่ปิดไว้ก่อนเพื่อให้เห็นผลของ
+          <code>--no-source-map</code> แบบชัดเจน
+        </p>
+
+        <h2>อย่าแก้ CSS ที่ generate แล้วด้วยมือ</h2>
+        <p>
+          หลักจำที่สำคัญที่สุดของบทนี้คือ <strong>แก้ที่ SCSS ต้นฉบับเสมอ</strong>
+          ถ้าคุณไปแก้ <code>css/main.css</code> หรือ <code>css/main.min.css</code>
+          โดยตรง การคอมไพล์รอบถัดไปจะเขียนทับทันที
+          ทำให้ทีมงงว่าทำไม style ที่เพิ่งแก้หายไป
+        </p>
+
+        <blockquote>
+          ถ้าเห็นไฟล์ CSS เปลี่ยนไปหลังรัน Sass ให้คิดว่า “นี่คือผลลัพธ์”
+          ไม่ใช่ “นี่คือที่ที่ฉันควรเริ่มแก้ปัญหา”
+        </blockquote>
+
+        <h2>ควร commit ไฟล์ CSS ลง git หรือไม่</h2>
+        <p>
+          เรื่องนี้ขึ้นกับวิธี deploy ของโปรเจกต์ ถ้า server หรือ CI
+          คอมไพล์ Sass ให้ทุกครั้งอยู่แล้ว หลายทีมจะ commit เฉพาะ SCSS
+          แล้วให้ระบบสร้าง CSS ตอน build
+        </p>
+
+        <p>
+          แต่ถ้าโปรเจกต์เป็น static site ง่าย ๆ, ส่งไฟล์ให้คนอื่นเปิดตรง ๆ
+          หรือมีสภาพแวดล้อมที่ไม่ได้ติดตั้ง Sass ไว้
+          การ commit CSS ที่คอมไพล์แล้วก็อาจเหมาะกว่า
+          เพื่อให้ทุกคนเปิดใช้งานได้ทันทีโดยไม่ต้อง build เพิ่ม
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>สถานการณ์</th>
+              <th>แนวทางที่มักเหมาะกว่า</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>มี build pipeline ชัดเจนใน CI/CD</td>
+              <td>มัก commit เฉพาะ SCSS แล้ว build CSS ตอน deploy</td>
+            </tr>
+            <tr>
+              <td>ต้องส่งไฟล์เว็บสำเร็จรูปให้เปิดใช้งานได้ทันที</td>
+              <td>มัก commit CSS ที่คอมไพล์แล้วไปด้วย</td>
+            </tr>
+            <tr>
+              <td>ทีมยังใหม่กับ tooling และต้องการเห็น output ชัด ๆ</td>
+              <td>อาจเก็บทั้ง SCSS และ CSS ช่วงแรกเพื่อให้เรียนรู้ workflow</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          สิ่งสำคัญไม่ใช่ว่าต้องเลือกทางไหนเหมือนทุกทีม
+          แต่คือทีมต้องตกลงให้ตรงกันว่าไฟล์ CSS ปลายทางถูกสร้างที่ไหน
+          ใครเป็นคนสร้าง และ git ควรเก็บอะไรไว้เป็น source of truth
+        </p>
+
+        <h2>เลือกเครื่องมือ SCSS ให้เหมาะกับปัญหา</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>เครื่องมือ</th>
+              <th>ใช้เมื่อไร</th>
+              <th>อย่าใช้แทนอะไร</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Variables</td>
+              <td>ค่าถูกใช้ซ้ำและต้องเปลี่ยนพร้อมกัน เช่น สี ระยะ spacing</td>
+              <td>อย่าใช้แทนข้อมูลหลายชุดที่ควรจัดเป็น map</td>
+            </tr>
+            <tr>
+              <td>Nesting</td>
+              <td>ต้องการแสดงความสัมพันธ์ใกล้ชิดของ selector แบบไม่ลึกเกินไป</td>
+              <td>อย่าซ้อนหลายชั้นจน selector ยาวและ debug ยาก</td>
+            </tr>
+            <tr>
+              <td>Modules และ <code>@use</code></td>
+              <td>ต้องแยก token หรือ helper ออกเป็นไฟล์ที่เรียกใช้ซ้ำ</td>
+              <td>ไม่ควรใช้ <code>@import</code> กับโค้ดใหม่</td>
+            </tr>
+            <tr>
+              <td>Mixins</td>
+              <td>ต้อง reuse กลุ่ม declaration หรือ pattern ที่มีพารามิเตอร์</td>
+              <td>อย่าใช้แทน class จริงเมื่อ pattern นั้นควรเป็น component ปกติ</td>
+            </tr>
+            <tr>
+              <td>Loops และ control flow</td>
+              <td>ต้อง generate ชุดกฎที่มีรูปแบบแน่นอนและจำนวนจำกัด</td>
+              <td>อย่าใช้สร้าง CSS ปริมาณใหญ่เกินการใช้งานจริง</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Checklist สั้น ๆ ก่อนจบบทเรียน</h2>
+        <ul>
+          <li>พัฒนาต่อเนื่อง ใช้ <code>--watch</code></li>
+          <li>อยากอ่าน output ง่าย ใช้ <code>--style=expanded</code></li>
+          <li>อยากได้ไฟล์ production ที่เล็ก ใช้ <code>--style=compressed</code></li>
+          <li>ถ้าไม่ต้องการ source maps ให้เติม <code>--no-source-map</code></li>
+          <li>แก้ที่ SCSS ต้นฉบับ ไม่แก้ไฟล์ CSS ที่ generate แล้ว</li>
+          <li>ตกลงกับทีมให้ชัดว่าจะ commit CSS หรือ build ตอน deploy</li>
+        </ul>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          สมมติว่าคุณมีไฟล์ <code>scss/main.scss</code> อยู่แล้ว และวันนี้มีสองงาน:
+          งานแรกคือพัฒนา UI ต่อเนื่องระหว่างเปิดเบราว์เซอร์ไว้ดูผล
+          งานที่สองคือเตรียมไฟล์ CSS ขนาดเล็กสำหรับ production
+          ให้เลือกคำสั่งที่เหมาะกับแต่ละงานจากทั้งสามคำสั่งในบทนี้
+          แล้วอธิบายด้วยว่าแต่ละ flag สำคัญอย่างไร
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>งานพัฒนาต่อเนื่องควรใช้:</p>
+          <pre><code>npx sass --watch scss/main.scss:css/main.css</code></pre>
+          <ul>
+            <li><code>--watch</code> ทำให้ Sass เฝ้าดูไฟล์และคอมไพล์ใหม่อัตโนมัติ</li>
+            <li>
+              รูปแบบ <code>input:output</code> บอกว่าต้องอ่านจาก
+              <code>scss/main.scss</code> แล้วเขียนไปที่ <code>css/main.css</code>
+            </li>
+          </ul>
+
+          <p>งาน production ควรใช้:</p>
+          <pre><code>npx sass scss/main.scss css/main.min.css --style=compressed --no-source-map</code></pre>
+          <ul>
+            <li><code>--style=compressed</code> บีบ CSS ให้สั้นลงเพื่อลดขนาดไฟล์</li>
+            <li><code>--no-source-map</code> ปิดการสร้าง source map</li>
+            <li>
+              การเขียนออกเป็น <code>main.min.css</code> ช่วยสื่อว่านี่คือไฟล์ output
+              ที่เหมาะกับการนำไปใช้งานจริง
+            </li>
+          </ul>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="11_control_flow.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>
