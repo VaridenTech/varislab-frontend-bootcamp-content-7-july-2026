@@ -57,9 +57,10 @@ dist/assets/index-C8JANzf8.js   682.27 kB │ gzip: 212.33 kB
 
 ✓ built in 553ms
 
+[plugin builtin:vite-reporter]
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
-- Use build.rolldownOptions.output.codeSplitting to improve chunking
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.</code></pre>
 
         <p>hash ในชื่อไฟล์กับเวลาที่ใช้ build จะไม่ตรงกับของคุณ ส่วนที่เหลือควรใกล้เคียงกัน ลองเปิดโฟลเดอร์ <code>dist/</code> ดูว่าข้างในมีอะไรบ้าง — จะเจอ <code>index.html</code>, โฟลเดอร์ <code>assets/</code> ที่มีสองไฟล์ข้างบน และของทุกอย่างที่เคยอยู่ใน <code>public/</code> (โฟลเดอร์ <code>images/</code> กับ <code>vite.svg</code>) ถูกก๊อปมาวางตรง ๆ โดยไม่ผ่านการแปลงอะไรเลย นั่นคือความหมายของโฟลเดอร์ <code>public/</code>: ของที่ต้องมี URL ตายตัวและห้ามมี hash</p>
@@ -121,6 +122,7 @@ dist/assets/index-C8JANzf8.js   682.27 kB │ gzip: 212.33 kB
           <li><strong>ออกแบบ cache key</strong> — บทเรียน 17 คุณพิมพ์ <code>productKeys</code> ทั้งก้อนเอง รวมถึงบรรทัด <code>String(id)</code> ที่มีเหตุผลของมัน คุณตอบได้ว่าทำไม key ต้องเรียงจากกว้างไปแคบ ทำไม params ต้องอยู่ใน key และอะไรจะเกิดขึ้นถ้าสองหน้าใช้ key เดียวกันโดยไม่ตั้งใจ นี่เป็นการตัดสินใจที่บทเรียน 01 บอกไว้ตั้งแต่ต้นว่า AI ตอบแทนไม่ได้ เพราะคำตอบขึ้นกับว่าอีกสามเดือนแอปนี้จะโตไปทางไหน</li>
           <li><strong>เขียน reducer และ schema</strong> — <code>cartReducer.ts</code> ทั้งไฟล์ (บทเรียน 22) และ zod schema ของ checkout ทั้งไฟล์ (บทเรียน 25) ผ่านนิ้วคุณทีละตัวอักษร คุณรู้ว่า spread แต่ละจุดกำลังคัดลอกอะไรและทิ้งอะไร และรู้ว่าข้อความ error แต่ละบรรทัดใน schema จะไปโผล่ที่หน้าจอตอนไหน</li>
           <li><strong>เขียนเทสต์ที่ล้มเป็น</strong> — คำสำคัญของข้อนี้คือคำว่า "ล้มเป็น" ไม่ใช่ "เขียนเทสต์" เพราะเทสต์ที่เขียนให้ผ่านอย่างเดียวนั้นเขียนได้โดยไม่ต้องเข้าใจโค้ดเลยสักบรรทัด บทเรียน 31 คุณพิมพ์ <code>price.utils.test.ts</code> เองแล้วทำขั้นตอน "ทำให้มันแดง" หนึ่งรอบในกล่อง ✍️ แล้วอีกหกรอบในกล่อง ✅ บทเรียน 33 คุณพิมพ์ integration test ตัวแรกเองแล้วทำอีกสี่คู่ โดยคู่สุดท้ายเป็นคู่ที่ต้องยัง<em>เขียว</em> คุณจึงรู้จากประสบการณ์ตรง ไม่ใช่จากการอ่าน ว่า assertion ที่คำนวณค่าคาดหวังด้วยสูตรเดียวกับโค้ดที่กำลังทดสอบนั้นไม่มีค่าอะไรเลย</li>
+          <li><strong>ตัดสินว่าอะไรเป็นของกลาง</strong> — บทเรียน 05 คุณวางกติกาไว้แล้วว่า <code>src/shared/</code> ต้องไม่ผูกกับฟีเจอร์ใดฟีเจอร์หนึ่ง บทเรียน 34 เอากติกานั้นมาทดสอบจริง: พอไม่เขียนมันลงใน prompt คำถามเปิดช่องให้ AI ตอบว่ายกทุกอย่างไปรวมไว้ใน <code>shared/utils/</code> ทั้งก้อน รวมทั้งสูตรยอดรวมตะกร้าที่จริง ๆ ต้องอยู่ใน <code>src/features/cart/</code> เพราะมันอ่าน <code>cart.items</code> ซึ่งเป็นของฟีเจอร์ cart คุณเป็นคนตัดคำตอบนั้นออกเอง ด้วยเหตุผลว่าคนใช้อยู่สองฟีเจอร์ไม่ได้แปลว่ามันเป็นของกลาง — นี่คือการตัดสินใจข้อที่สองที่บทเรียน 01 บอกไว้ตั้งแต่ต้นว่า AI ตอบแทนไม่ได้</li>
         </ul>
 
         <p>ของที่จับต้องได้ที่สุดคือ<strong>สิบจุดที่คอร์สนี้ห้าม AI แตะ</strong> — โครงโฟลเดอร์ (05), array <code>routes</code> (09), <code>Button</code> (12), interceptor ของ axios (15), query key factory (17), <code>cartReducer</code> (22), zod schema (25), <code>useCheckout</code> (28), unit test ตัวแรก (31) และ integration test ตัวแรก (33) สิบไฟล์นี้เป็นของคุณเต็ม ๆ ไม่มีบรรทัดไหนที่ก๊อปมา และไม่มีบรรทัดไหนที่คุณอธิบายไม่ได้ นั่นคือมาตรฐานที่คุณจะใช้เทียบตอนตรวจงานของคนอื่นในโปรเจกต์หน้า</p>
