@@ -617,7 +617,7 @@ Sections:
 - วงจรตรวจงาน 5 ขั้น, as an `<ol>`:
   1. อ่าน diff ทั้งหมดก่อน — `git diff` ไม่ใช่แค่ดูว่าหน้าเว็บขึ้นไหม
   2. ไล่ checklist ของบทนั้น
-  3. `npm run lint` และ `npx tsc --noEmit`
+  3. `npm run lint` และ `npm run typecheck` (โปรเจกต์ใช้ tsconfig แบบ solution-style — root config เป็น `{"files": [], "references": [...]}` ดังนั้น `npx tsc --noEmit` ตรง ๆ จะไม่ตรวจไฟล์ไหนเลยและ exit 0 ต้องใช้สคริปต์ `typecheck` ซึ่งคือ `tsc -b`)
   4. รันจริงแล้วทำตาม checkpoint
   5. ถามตัวเองว่า "ถ้ามีคนถามว่าบรรทัดนี้ทำอะไร ตอบได้ไหม" — ตอบไม่ได้ ให้เปิด Ask mode ถามจนเข้าใจ ก่อนไปต่อ
 - แก้ต่อ หรือ ถอยแล้วสั่งใหม่ — refine when the shape is right and details are wrong; `git restore .` and rewrite the prompt when the shape itself is wrong. Chasing a wrong shape with follow-up prompts is how a 20-line file becomes 200.
