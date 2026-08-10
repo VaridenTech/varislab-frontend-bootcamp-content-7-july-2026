@@ -16,7 +16,7 @@
           <p class="lesson-original-title" lang="en">When the AI Gets It Wrong</p>
         </header>
 
-        <p>ยี่สิบบทที่ผ่านมา ทุกกล่อง <strong>ตรวจโค้ดที่ AI สร้าง</strong> จบด้วยบรรทัดเดียวกันเสมอ: <strong><code>AI มักพลาดตรงนี้:</code></strong> ตอนอ่านทีละบท มันเป็นแค่คำเตือนประจำบท — เปิดไฟล์นั้น ดูจุดนั้น ผ่านแล้วไปต่อ บทนี้เราเอาทั้งยี่สิบบรรทัดมากองรวมกันแล้วถามคำถามที่ตอบได้เฉพาะตอนมองพร้อมกันทั้งกอง: <em>มันซ้ำกันตรงไหน</em></p>
+        <p>ยี่สิบบทที่ผ่านมา ทุกกล่อง <strong>ตรวจโค้ดที่ AI สร้าง</strong> มีข้อหนึ่งที่ขึ้นต้นด้วยคำเดียวกันเสมอ: <strong><code>AI มักพลาดตรงนี้:</code></strong> ตอนอ่านทีละบท มันเป็นแค่คำเตือนประจำบท — เปิดไฟล์นั้น ดูจุดนั้น ผ่านแล้วไปต่อ บทนี้เราเอาทั้งยี่สิบบรรทัดมากองรวมกันแล้วถามคำถามที่ตอบได้เฉพาะตอนมองพร้อมกันทั้งกอง: <em>มันซ้ำกันตรงไหน</em></p>
 
         <p>คำตอบคือมันไม่ได้กระจัดกระจายอย่างที่เห็นตอนเจอทีละตัว จุดพลาดทั้งหมดในโปรเจกต์นี้ลงเอยที่<strong>หกตระกูล</strong> และแต่ละตระกูลมีวิธีจับกับวิธีรับมือของตัวเองที่ใช้ซ้ำได้กับทุกตัวในตระกูลนั้น ที่สำคัญกว่านั้นคือมันแบ่งได้อีกแกนหนึ่งซึ่งเป็นแกนที่ตัดสินว่าคุณจะเสียเวลากับมันมากแค่ไหน: <strong>บั๊กที่เครื่องมือจับได้</strong> กับ <strong>บั๊กที่มีแต่คนจับได้</strong></p>
 
@@ -38,11 +38,13 @@ byCategory: (params: CategoryProductsParams) =&gt;
     keepPreviousData: true,
   }),</code></pre>
 
-        <p>คุณไม่มีวันพลาดตัวนี้ เพราะ <code>npm run typecheck</code> จะพ่นข้อความนี้ใส่หน้าทันที:</p>
+        <p>คุณไม่มีวันพลาดตัวนี้ เพราะ <code>npm run typecheck</code> จะพ่นข้อความใส่หน้าทันที ของจริงยาวกว่านี้ — <code>useQuery</code> มีสาม overload และ tsc รายงานทั้งสามอันด้วยใจความเดียวกัน ตรงนี้เก็บอันสุดท้ายไว้อันเดียว:</p>
 
         <pre><code class="language-text">error TS2769: No overload matches this call.
-  Object literal may only specify known properties, and 'keepPreviousData'
-  does not exist in type 'UndefinedInitialDataOptions&lt;...&gt;'.</code></pre>
+  (ตัดรายงานของ overload 1 และ 2 ออก — ข้อความเหมือนกัน ต่างแค่ชื่อ type)
+  Overload 3 of 3, '(options: UndefinedInitialDataOptions&lt;...&gt;): ...', gave the following error.
+    Object literal may only specify known properties, and 'keepPreviousData'
+    does not exist in type 'UndefinedInitialDataOptions&lt;...&gt;'.</code></pre>
 
         <p>เหตุผลที่มันดังคือ <code>queryOptions</code> รับ object literal ตรง ๆ TypeScript จึงตรวจ excess property ให้ครบทุก overload ทีนี้ดูตัวที่<em>เงียบ</em> — จุดพลาดในเรื่องเดียวกันเป๊ะ ต่างกันแค่มันไม่ได้เขียนอะไรผิด มันแค่<strong>ไม่เขียน</strong>:</p>
 
@@ -70,7 +72,7 @@ byCategory: (params: CategoryProductsParams) =&gt;
 
         <h2>หกตระกูลของความผิด</h2>
 
-        <p>ทุกแถวในตารางต่อจากนี้มาจากบรรทัด <code>AI มักพลาดตรงนี้:</code> ของบทใดบทหนึ่งใน 09–28 ไม่มีข้อไหนที่คิดขึ้นมาใหม่ ตัวเลขในวงเล็บคือเลขบทที่เจอมันครั้งแรก เปิดกลับไปอ่านบรรทัดเต็มของบทนั้นได้เสมอ</p>
+        <p>ทุกแถวต่อจากนี้มาจากบทเรียน 08–28 — ส่วนใหญ่มาจากบรรทัด <code>AI มักพลาดตรงนี้:</code> ที่เหลือมาจากกล่อง 💡 <code>ของที่ควรถูกทักในรีวิว</code> และ checklist ของบทนั้น ไม่มีข้อไหนที่คิดขึ้นมาใหม่ ตัวเลขในวงเล็บคือเลขบทที่เจอมันครั้งแรก เปิดกลับไปอ่านของเต็ม ๆ ในบทนั้นได้เสมอ</p>
 
         <h3>ตระกูล 1 — เดาความจริงที่มันมองไม่เห็น</h3>
 
@@ -149,12 +151,20 @@ byCategory: (params: CategoryProductsParams) =&gt;
             </tr>
             <tr>
               <td>ผูก input เป็น controlled ด้วย <code>useState</code> แล้วเรียก <code>safeParse</code> เอง แทนที่จะใช้ <code>register</code> ของ react-hook-form (26)</td>
-              <td>ฟอร์มแบบ controlled คือท่ามาตรฐานของ React ที่มีโค้ดในโลกมากที่สุด</td>
+              <td>ฟอร์มแบบ controlled คือท่ามาตรฐานของ React ที่มีโค้ดในโลกมากกว่า</td>
               <td><strong>เงียบสนิท</strong> — กรอกได้ error ขึ้นครบ submit ได้ แยกไม่ออกจากภาพหน้าจอ ต้อง <code>grep -n "useState"</code> ในไฟล์ฟอร์ม ซึ่งต้องว่างเปล่า</td>
               <td><strong>ถอยแล้วสั่งใหม่</strong> — ระบุชื่อ API ที่ต้องใช้ (<code>register</code>, <code>handleSubmit</code>, <code>zodResolver</code>) ลงใน prompt</td>
             </tr>
+            <tr>
+              <td>ใช้ <code>register</code> ถูกทุกช่อง แต่ใส่ <code>value={...}</code> เพิ่มมาให้ด้วย "เพื่อความชัวร์" (26)</td>
+              <td>อาการครึ่งทางของข้อบน — มันรู้ว่าต้องใช้ <code>register</code> แต่นิสัย controlled ยังติดมือ</td>
+              <td><strong>จอบอกทันที</strong> — ช่องนั้นกลายเป็น controlled ที่ค่าไม่มีวันเปลี่ยน คือพิมพ์ไม่ได้เลย เจอตั้งแต่ครั้งแรกที่คลิกเข้าไปในช่อง</td>
+              <td><strong>แก้ต่อ</strong> — ลบ <code>value</code> ทิ้ง จบในบรรทัดเดียว</td>
+            </tr>
           </tbody>
         </table>
+
+        <p>แถวสุดท้ายเป็นข้อที่ควรสังเกตเป็นพิเศษ เพราะมันไม่ได้อยู่ทั้งฝั่งดังและฝั่งเงียบ — มันเป็นตำแหน่งที่สามที่ใจดีที่สุดในสามตำแหน่ง: <strong>บั๊กที่หน้าจอบอกคุณเองทันทีที่ลองใช้</strong> ไม่มีเครื่องมือตัวไหนพูดสักคำ แต่ก็ไม่ต้องมี เพราะแค่คลิกเข้าไปพิมพ์ก็รู้แล้ว ที่มันน่าสนใจคือมันนั่งอยู่ในไฟล์เดียวกับข้อเหนือมันพอดี ซึ่งเป็นข้อที่มองไม่เห็นด้วยตาเลยแม้แต่นิดเดียว — ฟอร์มเดียว สองอาการ คนละสุดขั้วของแกน นั่นคือเหตุผลที่ "ลองกดใช้จริง" กับ "อ่าน diff" แทนกันไม่ได้ ต้องทำทั้งคู่</p>
 
         <h3>ตระกูล 3 — วางของถูกไว้ผิดที่</h3>
 
@@ -173,7 +183,7 @@ byCategory: (params: CategoryProductsParams) =&gt;
             </tr>
             <tr>
               <td><code>useReducer(cartReducer, loadCartState())</code> แบบสองอาร์กิวเมนต์ (22)</td>
-              <td>รูปสองอาร์กิวเมนต์คือรูปที่คนเขียนบ่อยที่สุด ส่วน lazy init สามอาร์กิวเมนต์เจอน้อยกว่ามาก</td>
+              <td>รูปสองอาร์กิวเมนต์คือรูปที่พบทั่วไป ส่วน lazy init สามอาร์กิวเมนต์เจอน้อยกว่ามาก</td>
               <td><strong>เงียบสนิท</strong> — lint ผ่าน typecheck ผ่าน หน้าเว็บทำงานถูกต้องทุกประการ พิสูจน์ได้ทางเดียวคือวาง <code>console.log</code> ใน <code>loadCartState</code> แล้วนับจำนวนบรรทัด</td>
               <td><strong>แก้ต่อ</strong> — ชี้บรรทัด บอกว่าต้องเป็น <code>undefined, loadCartState</code></td>
             </tr>
@@ -257,7 +267,7 @@ byCategory: (params: CategoryProductsParams) =&gt;
             </tr>
             <tr>
               <td>interceptor ที่จบขาล้มเหลวด้วย <code>console.error</code> แล้ว <code>return null</code> หรือโยน <code>new Error("Request failed")</code> ก้อนเดียวทุกกรณี (15)</td>
-              <td>เป็นท่าจัดการ error ที่พบมากที่สุดในตัวอย่าง axios และมันทำให้โค้ด "ไม่พัง"</td>
+              <td>axios กับ interceptor เป็นคู่ที่มาด้วยกันในโค้ดตัวอย่างทั้งอินเทอร์เน็ต และท่าที่ติดมาด้วยคือท่าที่ทำให้โค้ด "ไม่พัง"</td>
               <td><strong>เงียบ</strong> — promise resolve สำเร็จพร้อมค่า <code>undefined</code> TanStack Query จะไม่มีวันรู้ว่า request พัง หน้าค้างที่ loading หรือขึ้นกริดเปล่า</td>
               <td><strong>แก้ต่อ</strong> — ลบทั้งบล็อก แล้วปล่อยให้ error เดินทางขึ้นไปถึง query ตามเดิม</td>
             </tr>
@@ -269,7 +279,7 @@ byCategory: (params: CategoryProductsParams) =&gt;
             </tr>
             <tr>
               <td><code>{...props}</code> หายจากแท็ก <code>&lt;input&gt;</code> หรือ <code>type={type}</code> หลุดจากแท็ก <code>&lt;button&gt;</code> (12)</td>
-              <td>มักมาคู่กับการประกาศ <code>placeholder</code>, <code>value</code>, <code>onChange</code> เองทีละตัวใน interface ซึ่งดูขยันแต่ผิดโจทย์</td>
+              <td>มักมาคู่กับการประกาศ <code>placeholder</code>, <code>type</code>, <code>value</code>, <code>onChange</code> เองทีละตัวใน interface ซึ่งดูขยันแต่ผิดโจทย์</td>
               <td><strong>เงียบต่อเครื่องมือ</strong> — lint และ typecheck ผ่านทั้งคู่ อาการไปโผล่ตอนบทเรียน 26 เป็นช่องที่พิมพ์แล้วไม่มีอะไรเกิดขึ้น ส่วนปุ่มจะกลับไปใช้ค่า default ของ HTML คือ <code>submit</code></td>
               <td><strong>แก้ต่อ</strong> — เปิดสองไฟล์นี้ดูจุดนั้นเป็นจุดแรกเสมอ</td>
             </tr>
@@ -324,9 +334,9 @@ byCategory: (params: CategoryProductsParams) =&gt;
           </tbody>
         </table>
 
-        <h2>ของจริงสี่ก้อน</h2>
+        <h2>ของจริงสามก้อน</h2>
 
-        <p>ตารางบอกได้ว่าต้องมองหาอะไร แต่ของที่ต้องจำหน้าให้ได้จริง ๆ คือโค้ด สี่ก้อนต่อจากนี้คือของที่เจอบ่อยที่สุดในโปรเจกต์นี้ วางคู่กับของที่ถูกจากโค้ดอ้างอิง อ่านให้ออกว่าตาคุณต้องหยุดตรงไหน</p>
+        <p>ตารางบอกได้ว่าต้องมองหาอะไร แต่ของที่ต้องจำหน้าให้ได้จริง ๆ คือโค้ด สามก้อนต่อจากนี้คือของที่บทก่อน ๆ ชี้ไว้ชัดที่สุด วางคู่กับของที่ถูกจากโค้ดอ้างอิง อ่านให้ออกว่าตาคุณต้องหยุดตรงไหน</p>
 
         <h3>1. QueryClient ที่อยู่ผิดชั้น — และเหตุผลที่มันเงียบอยู่หกบท</h3>
 
@@ -346,9 +356,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <p>เหตุผลที่มันดังคือ <code>eslint.config.js</code> ของเราเปิด <code>flat/recommended</code> ของ <code>@tanstack/eslint-plugin-query</code> ซึ่งมีกฎ <code>stable-query-client</code> อยู่ในชุด ผลที่ได้:</p>
 
         <pre><code class="language-text">src/app/providers.tsx
-  5:9  error  QueryClient is not stable. It should be either extracted from
-              the component or wrapped in React.useState.
-              @tanstack/query/stable-query-client</code></pre>
+  5:9  error  QueryClient is not stable. It should be either extracted from the component or wrapped in React.useState.
+See https://tkdodo.eu/blog/react-query-fa-qs#2-the-queryclient-is-not-stable  @tanstack/query/stable-query-client
+
+✖ 1 problem (1 error, 0 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.</code></pre>
 
         <p>แต่จุดที่ควรสังเกตคือ<em>วันที่</em>: ไฟล์นี้ถูกเขียนในบทเรียน 11 ส่วน <code>@tanstack/eslint-plugin-query</code> เพิ่งถูกติดตั้งและต่อเข้า config ในบทเรียน 17 แปลว่าถ้าอาการนี้เกิดตอนบทเรียน 11 มันจะ<strong>เงียบสนิท</strong> — lint ผ่าน typecheck ผ่าน และตอนนั้นยังไม่มี query สักตัวในแอปให้เห็นผลด้วยซ้ำ กว่ากฎจะมาถึงก็ผ่านไปหกบทแล้ว นี่คือของที่ควรจำไว้ให้ดี: <strong>ชุดกฎของโปรเจกต์โตขึ้นตามเวลา และโค้ดที่ผ่านมาก่อนกฎจะมา ไม่เคยถูกใครตรวจด้วยกฎนั้นเลย</strong> ถ้าคุณเพิ่ม plugin ใหม่เข้า config วันไหน ให้รัน lint ทั้งโปรเจกต์ในวันนั้นทันที ไม่ใช่รอให้มันไปโผล่ในไฟล์ถัดไปที่คุณบังเอิญแก้</p>
 
@@ -385,19 +397,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
         <p>บทเรียนของก้อนนี้ไม่ใช่ท่าเขียน QueryClient แต่คือ: <strong>การที่ lint เขียวหลังการแก้ ไม่ได้แปลว่าแก้ถูก</strong> มันแปลว่ากฎที่เขียนไว้ไม่มีอะไรจะพูดกับโค้ดชุดนี้แล้วเท่านั้น กติกาของโปรเจกต์มีมากกว่าที่กฎจะเขียนได้เสมอ</p>
 
-        <h3>2. useReducer สองอาร์กิวเมนต์ — ต่างกันแค่วงเล็บคู่เดียว</h3>
-
-        <pre><code class="language-tsx">// ผิด — เรียกฟังก์ชันแล้วส่ง "ผลลัพธ์" เข้าไป
-const [cart, dispatch] = useReducer(cartReducer, loadCartState());
-
-// ถูก — ส่ง "ตัวฟังก์ชัน" ให้ React เก็บไว้เรียกเองครั้งเดียวตอน mount
-const [cart, dispatch] = useReducer(cartReducer, undefined, loadCartState);</code></pre>
-
-        <p>ต่างกันแค่วงเล็บคู่เดียวกับคำว่า <code>undefined</code> แต่แบบบนแปลว่าทุกครั้งที่ <code>CartProvider</code> re-render — คือทุกครั้งที่มีของเข้าออกตะกร้า และทุกครั้งที่ parent re-render — JavaScript จะเปิด <code>localStorage</code>, ดึง string ออกมา, <code>JSON.parse</code> ใหม่ทั้งก้อน แล้วโยนผลลัพธ์ทิ้ง เพราะ React ใช้ค่านั้นเฉพาะตอน mount แรกเท่านั้น</p>
-
-        <p>วิธีจับคือมองว่าหลังชื่อ <code>loadCartState</code> มีวงเล็บ <code>()</code> ต่อท้ายไหม มีคือผิด ไม่มีเครื่องมือตัวไหนในโปรเจกต์นี้จับได้เลย: lint ผ่าน typecheck ผ่าน หน้าเว็บทำงานถูกต้องทุกประการ ตะกร้าจำของได้ ปิดเบราว์เซอร์แล้วเปิดใหม่ก็ยังอยู่ครบ พิสูจน์ได้ทางเดียวคือวาง <code>console.log</code> ไว้ใน <code>loadCartState</code> แล้วนับจำนวนบรรทัดใน console</p>
-
-        <h3>3. clearCart ที่อยู่ก่อนเวลา</h3>
+        <h3>2. clearCart ที่อยู่ก่อนเวลา</h3>
 
         <p>ก้อนนี้คือของที่คุณจะไม่มีวันเห็นอาการในเครื่องตัวเอง เพราะ dummyjson ตอบ 200 ทุกครั้ง:</p>
 
@@ -417,30 +417,31 @@ const { onPlaceOrder, /* ... */ } = useCheckout();
         <p><code>onPlaceOrder</code> เรียก <code>mutate()</code> ซึ่งเป็น fire-and-forget — มันคืนค่ากลับมาทันที ก่อน request ออกจากเครื่องด้วยซ้ำ ดังนั้น <code>clearCart()</code> บรรทัดถัดมาจะทำงานก่อนเซิร์ฟเวอร์ตอบเสมอ ผลคือกดปุ่มปุ๊บตะกร้าว่างปั๊บ ไม่ว่าคำสั่งซื้อจะสำเร็จหรือไม่ อาการจะไปโผล่กับลูกค้าที่เน็ตหลุดกลางคัน แล้วเสียของทั้งตะกร้าโดยไม่ได้ออร์เดอร์ ที่ถูกคือมันต้องอยู่ในที่ที่ React Query รับประกันว่าจะถูกเรียกก็ต่อเมื่อ request สำเร็จ:</p>
 
         <pre><code class="language-ts">// src/features/checkout/useCheckout.ts — ถูก
-const { mutate: placeOrderMutate, isPending: isPlaceOrderLoading } = useMutation({
-  mutationFn: () =&gt; {
-    if (!checkoutAddress) {
-      throw new Error("Delivery Address is Missing");
-    }
+const { mutate: placeOrderMutate, isPending: isPlaceOrderLoading } =
+  useMutation({
+    mutationFn: () =&gt; {
+      if (!checkoutAddress) {
+        throw new Error("Delivery Address is Missing");
+      }
 
-    return placeOrder({
-      userId: 1,
-      products: cart.items.map((item) =&gt; ({
-        id: item.id,
-        quantity: item.quantity,
-      })),
-      address: checkoutAddress,
-    });
-  },
-  onSuccess: () =&gt; {
-    clearCart();
-    goToOrderSuccess();
-  },
-});</code></pre>
+      return placeOrder({
+        userId: 1,
+        products: cart.items.map((item) =&gt; ({
+          id: item.id,
+          quantity: item.quantity,
+        })),
+        address: checkoutAddress,
+      });
+    },
+    onSuccess: () =&gt; {
+      clearCart();
+      goToOrderSuccess();
+    },
+  });</code></pre>
 
         <p>วิธีตรวจสองคำสั่ง: <code>grep -n "useCart\|clearCart" src/pages/Checkout/Checkout.tsx</code> ต้องว่างเปล่า และ <code>grep -n "clearCart" src/features/checkout/useCheckout.ts</code> ต้องเจอบรรทัดเดียว คือบรรทัดที่อยู่ใน <code>onSuccess</code> ญาติสนิทของอาการนี้คือ <code>navigate("/order/success")</code> ที่ถูกวางไว้จุดเดียวกันด้วยเหตุผลเดียวกัน ผลเหมือนกันเป๊ะ คือเด้งไปหน้าขอบคุณตั้งแต่ยังไม่รู้ผล</p>
 
-        <h3>4. สาขาที่หายไปสองสาขา</h3>
+        <h3>3. สาขาที่หายไปสองสาขา</h3>
 
         <p>ก้อนนี้คือตัวอย่างที่ตรงที่สุดของ "โค้ดที่สั้นกว่าและถูกในสายตา TypeScript ทุกประการ":</p>
 
@@ -460,7 +461,11 @@ const { mutate: placeOrderMutate, isPending: isPlaceOrderLoading } = useMutation
     &lt;ErrorMessage /&gt;
   ) : isBestProductsLoading ? (
     &lt;div className="text-center"&gt;
-      &lt;ClipLoader size={40} aria-label="Loading Spinner" data-testid="loader" /&gt;
+      &lt;ClipLoader
+        size={40}
+        aria-label="Loading Spinner"
+        data-testid="loader"
+      /&gt;
     &lt;/div&gt;
   ) : (
     &lt;ProductsList
@@ -472,7 +477,7 @@ const { mutate: placeOrderMutate, isPending: isPlaceOrderLoading } = useMutation
 
         <p>บนเครื่องคุณที่เน็ตดีและ API ตอบใน 200ms สองก้อนนี้ให้หน้าตาเดียวกันทุกพิกเซล วันที่ dummyjson ล่มหรือผู้ใช้อยู่บนมือถือสัญญาณอ่อน ก้อนแรกให้ช่องว่างเปล่าตรงที่ควรมีสินค้า ไม่มี spinner ไม่มีข้อความ ไม่มีอะไรบอกว่าเกิดอะไรขึ้น</p>
 
-        <p>สังเกตว่าทั้งสี่ก้อนมีอะไรเหมือนกัน: <strong>ไม่มีก้อนไหนเลยที่จับได้ด้วยการเปิดหน้าเว็บดู</strong> ทุกก้อนต้องจับด้วยการอ่านโค้ด หรือด้วยการจงใจสร้างสถานการณ์ที่ไม่มีใครอยากให้เกิด (ตั้ง throttling เป็น Offline, กดปุ่มลดจนถึงศูนย์, เข้าออกหน้าเดิมยี่สิบรอบ) นั่นคือรูปร่างของงานตรวจโค้ดที่ AI เขียน</p>
+        <p>สังเกตว่าทั้งสามก้อนมีอะไรเหมือนกัน: <strong>ไม่มีก้อนไหนเลยที่จับได้ด้วยการเปิดหน้าเว็บดู</strong> ทุกก้อนต้องจับด้วยการอ่านโค้ด หรือด้วยการจงใจสร้างสถานการณ์ที่ไม่มีใครอยากให้เกิด (ตั้ง throttling เป็น Offline, กดปุ่มลดจนถึงศูนย์, เข้าออกหน้าเดิมยี่สิบรอบ) นั่นคือรูปร่างของงานตรวจโค้ดที่ AI เขียน</p>
 
         <h2>ตัดสินใจสามทาง</h2>
 
@@ -500,7 +505,7 @@ setSelectedCategory ให้เพิ่ม setPage(1) ต่อท้ายใ
 
         <h3>ถอยแล้วสั่งใหม่ — เมื่อรูปทรงผิดตั้งแต่ต้น</h3>
 
-        <p>นี่คือทางที่คนใช้น้อยเกินไปที่สุดในสามทาง เพราะมันรู้สึกเหมือนทิ้งงานที่ทำมาแล้ว ทั้งที่งานที่ทิ้งคืองานที่ Agent ทำ ไม่ใช่งานที่คุณทำ ตัวอย่างที่ชัดที่สุดคือ router ในบทเรียน 09 ของที่ได้มาหน้าตาแบบนี้:</p>
+        <p>ทางนี้ถูกข้ามบ่อยเพราะมันรู้สึกเหมือนทิ้งงานที่ทำมาแล้ว ทั้งที่งานที่ทิ้งคืองานที่ Agent ทำ ไม่ใช่งานที่คุณทำ ตัวอย่างที่ชัดที่สุดคือ router ในบทเรียน 09 ของที่ได้มาหน้าตาแบบนี้:</p>
 
         <pre><code class="language-tsx">// src/app/router.tsx — รูปทรงผิดทั้งไฟล์
 export default function AppRouter() {
