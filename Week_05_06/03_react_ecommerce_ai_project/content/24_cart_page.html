@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สั่ง Cursor สร้างหน้า Cart เต็มรูปแบบ — ตารางสินค้า ปุ่มปรับจำนวน ลบสินค้า ยอดรวม empty state และปุ่มไป Checkout พร้อมตรวจกติกาจำนวนขั้นต่ำที่ UI เป็นคนกัน" />
+    <title>หน้า Cart | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 24 · ตะกร้าสินค้า (Cart)</p>
+          <h1>หน้า Cart: ตาราง ยอดรวม และ empty state</h1>
+          <p class="lesson-original-title" lang="en">Cart Page</p>
+        </header>
+
+        <p>ตอนนี้ผู้ใช้เพิ่มของเข้าตะกร้าได้ badge นับเลขได้ แต่พอคลิกไอคอนตะกร้าเข้ามาก็เจอหน้า stub ว่างเปล่าที่เราวางไว้ตั้งแต่บทเรียน 09 บทนี้เราจะเปลี่ยนมันเป็นหน้า Cart จริง: ตารางรายการสินค้า ปรับจำนวนได้ ลบได้ เห็นยอดรวม มี empty state เวลาตะกร้าว่าง และปุ่ม Checkout พาไปหน้าถัดไปของ flow งานมีสองชิ้น: component <code>CartTable</code> และตัวหน้า <code>Cart.tsx</code></p>
+
+        <p>บทนี้จะส่ง prompt<strong>รอบเดียว</strong> ต่างจากสามบทที่ผ่านมา — เกณฑ์จากบทเรียน 19 บอกว่าให้แบ่งเมื่อของที่ต้องตรวจเกินหนึ่งหน้าจอ หรือเมื่อของนั้นแยกเป็นก้อนที่ทดสอบแยกกันได้ งานวันนี้ไม่เข้าทั้งสองข้อ: สองไฟล์ที่ผูกกันแน่นจนถ้าได้มาไฟล์เดียวก็ยังเปิดดูอะไรไม่ได้ และ diff ทั้งหมดสั้นพอที่จะอ่านจบในครั้งเดียว</p>
+
+        <h2>CartTable — อ่านเอง แต่ให้พ่อเป็นคนแก้</h2>
+
+        <p>คอมโพเนนต์นี้มีท่าที่แปลกกว่าทุกตัวที่เราเคยสร้างมา และมันคือประเด็นออกแบบหลักของบท: <strong><code>CartTable</code> เรียก <code>useCart()</code> เพื่อ<em>อ่าน</em> <code>cart.items</code> มาวาดตารางเองตรง ๆ แต่การ<em>แก้ไข</em> (ลบ, ปรับจำนวน) กลับไม่เรียก store เอง</strong> — มันรับ <code>onRemoveItem</code> กับ <code>onUpdateQuantity</code> เป็น props แล้วโยนขึ้นไปให้หน้า Cart ตัดสินใจ</p>
+
+        <p>ทำไมต้องแยกครึ่ง ๆ แบบนี้ ทำไมไม่ให้มันเรียก <code>removeFromCart</code> เองไปเลยในเมื่อ <code>useCart</code> ก็คืนมาให้อยู่แล้ว? เพราะสองฝั่งนี้ตอบคำถามคนละข้อ ฝั่งอ่านตอบว่า "ตารางนี้แสดงอะไร" — คำตอบคือตะกร้า และไม่มีทางเป็นอย่างอื่นได้ การส่ง <code>items</code> ลงมาเป็น prop จึงเป็นแค่พิธีกรรม ส่วนฝั่งเขียนตอบว่า "ใครมีสิทธิ์แก้ตะกร้า" — คำตอบนี้ควรอ่านได้จากที่เดียว ถ้าวันหนึ่งคุณต้องหาว่าทำไมของหายจากตะกร้า คุณอยากเปิดไฟล์เดียว (<code>Cart.tsx</code>) แล้วเห็นทุกคำสั่งที่แก้ตะกร้าในหน้านี้ ไม่ใช่ต้องไล่เปิดคอมโพเนนต์ลูกทุกตัวเพื่อดูว่าใครแอบเรียกอะไร</p>
+
+        <p>ไล่ดูการตัดสินใจที่เหลือในไฟล์นี้:</p>
+
+        <ul>
+          <li><strong>ปุ่มลบต่อแถว</strong> — เครื่องหมาย × เรียก <code>onRemoveItem(item.id)</code> ส่งแค่ id เพราะ reducer ฝั่งโน้นต้องการแค่นั้นในการ filter แถวทิ้ง</li>
+          <li><strong>ช่อง Price โชว์ส่วนลดเมื่อมีข้อมูล</strong> — จำ <code>originalPrice</code> ที่เราตั้งใจเก็บติดลง <code>CartItem</code> ตั้งแต่บทเรียน 22 และคำนวณใส่ตอน Add to Cart ในบทเรียน 23 ได้ไหม? มาเก็บดอกตรงนี้: ถ้ามีค่า เราโชว์ราคาเต็ม (ขีดฆ่า) กับยอด "You Save" ได้ทันทีโดยไม่ต้องถาม API สักคำ — ข้อมูลทุกอย่างอยู่ในตะกร้าครบแล้ว นี่คือเหตุผลที่ตอนออกแบบ <code>CartItem</code> เราถึงยอมเก็บฟิลด์ที่ "ยังไม่ได้ใช้" ไว้ก่อน</li>
+          <li><strong>ปุ่มปรับจำนวนกับกติกาขั้นต่ำ</strong> — ปุ่มลดจำนวนถูก <code>disabled</code> เมื่อ <code>quantity &lt;= 1</code>: reducer ของเราไม่มีกติกากันจำนวนติดลบเลย (<code>UPDATE_QUANTITY</code> เขียนทับค่าที่ส่งมาตรง ๆ ไม่ว่าจะเป็นเลขอะไร) เราเลือกกันที่ UI แทน — จะเอาของออกจากตะกร้าต้องตั้งใจกดปุ่มลบ ไม่ใช่กดลดจนหายไปเองแบบงง ๆ สังเกตด้วยว่าใน JSX เราเขียนปุ่มด้วย <code>&amp;lt;</code> / <code>&amp;gt;</code> (HTML entity) ไม่ใช่พิมพ์ <code>&lt;</code> <code>&gt;</code> ตรง ๆ — เพราะเครื่องหมายน้อยกว่าใน JSX คือการเปิด tag เดี๋ยว parser งงตาย</li>
+          <li><strong>ช่อง Total ต่อแถวเป็นค่าคำนวณ</strong> — <code>price * quantity</code> คิดสดตอน render ไม่เก็บลง state ตามหลักที่ย้ำกันมาตั้งแต่ Week 4: อะไร derive ได้จาก state อย่าเก็บซ้ำ เดี๋ยวมันคลาดเคลื่อนกันเอง</li>
+          <li><strong>รูปมี fallback</strong> — <code>item.image || "/placeholder.png"</code> กันตารางเลย์เอาต์พังถ้าข้อมูลรูปหลุดมาว่าง ๆ (บรรทัดนี้มีเรื่องจะเล่า — อ่านกล่อง 💡 ใต้โค้ดอ้างอิง)</li>
+          <li><strong><code>key={item.id}</code> ไม่ใช่ <code>key={index}</code></strong> — ต่างจาก thumbnail กับรายการรีวิวในบทเรียน 21 ที่ index ยอมรับได้ ตารางตะกร้ามีการลบแถวกลาง ๆ ออกได้จริง ถ้าใช้ index React จะจับคู่แถวผิดหลังลบ แล้ว state ภายในของแถว (เช่น focus ที่ปุ่ม) จะกระโดดไปอยู่ผิดที่</li>
+        </ul>
+
+        <p>แล้ว style ล่ะ? สังเกตว่าคอมโพเนนต์นี้<strong>ไม่มี <code>.module.scss</code> ของตัวเอง</strong> — class ทั้งหมดที่ใช้ (<code>table</code>, <code>table-actions</code>, <code>table-image</code>, <code>table-original-price</code>, <code>table-discount</code>, <code>table-quantity</code>) เป็น global component class ที่เราเขียนรอไว้แล้วใน <code>src/styles/_components.scss</code> ตั้งแต่บทเรียน 04 ตารางเลยหน้าตาเรียบร้อยทันทีโดยไม่ต้องเขียน SCSS เพิ่มสักบรรทัด นี่คือเส้นแบ่งการใช้งานของทั้งสองระบบในโปรเจกต์นี้: style ที่เป็น "ภาษากลาง" ของแอปอยู่ใน global stylesheet ส่วน style เฉพาะตัวของคอมโพเนนต์ (แบบ badge ของ CartSummary บทที่แล้ว) ค่อยแยกเป็น module</p>
+
+        <p>และเพราะ class เหล่านั้นเป็น global ที่เขียนไว้ล่วงหน้าเมื่อยี่สิบบทก่อน มันจึงเป็นจุดที่<em>ผิดได้เงียบ ๆ ที่สุด</em>ของบทนี้: ชื่อ class ที่สะกดผิดหรือวางผิด element จะไม่ทำให้อะไรพัง หน้าเว็บยังขึ้น ตารางยังใช้ได้ แค่หน้าตาไม่เหมือนที่ควรเป็น — และไม่มีใครในทีมเครื่องมือของเราบอกคุณได้เลย (เก็บประโยคนี้ไว้ เดี๋ยวกล่อง 💡 ท้ายบทจะกลับมาคุยด้วย)</p>
+
+        <h2>Cart.tsx — empty state มาก่อน</h2>
+
+        <p>ตัวหน้าเพจสั้นอย่างน่าพอใจ เพราะงานหนักถูกทำไว้หมดแล้วในบทก่อน ๆ เหลือแค่การประกอบ:</p>
+
+        <ul>
+          <li><strong>ดึงของจาก store สามชิ้น</strong> — <code>cart</code> ไว้อ่าน, <code>removeFromCart</code> กับ <code>updateQuantity</code> ไว้แก้ แล้วดูบรรทัดที่ส่งเข้า CartTable: <code>onRemoveItem={removeFromCart}</code> — action จาก store เสียบเข้า prop ได้ตรง ๆ เพราะ signature ตรงกันเป๊ะ (<code>(id: number) =&gt; void</code>) ไม่ต้องมี wrapper function ให้เสียเปล่า นี่ไม่ใช่ความบังเอิญ: เราออกแบบ <code>CartContextProps</code> ในบทเรียน 22 โดยคิดถึงคนใช้แบบนี้อยู่แล้ว</li>
+          <li><strong>ยอดรวมเป็นค่า derive</strong> — <code>calculateTotalPrice</code> ใช้ <code>useMemo</code> reduce ราคาคูณจำนวนของทุกแถว แล้ว <code>.toFixed(2)</code> ให้เป็น string ทศนิยมสองตำแหน่งพร้อมแสดง คำนวณใหม่เฉพาะเมื่อ <code>cart.items</code> เปลี่ยน — สูตรเดียวกับ badge ใน CartSummary แค่เปลี่ยนจากนับจำนวนเป็นรวมราคา</li>
+          <li><strong>Empty state มาก่อน</strong> — เช็ค <code>cart.items.length === 0</code> แล้ว return โครงหน้าตะกร้าว่างไปเลยก่อนถึง JSX หลัก แพตเทิร์น early return แบบเดียวกับที่หน้า Product ใช้กับ loading/error: อ่านจากบนลงล่างเจอเงื่อนไขพิเศษก่อน แล้วเนื้อหลักด้านล่างไม่ต้องห่อ if ซ้อนกันให้รก ที่สำคัญคือเรา<em>ออกแบบ</em>หน้าว่างไว้จริง ๆ (หัวข้อใหญ่ + คำอธิบาย) ไม่ใช่ปล่อยตารางหัวโด่ไม่มีสักแถวให้ผู้ใช้งงว่าเว็บพังหรือเปล่า</li>
+          <li><strong><code>CategoryBanner</code> ถูก reuse ข้าม feature</strong> — คอมโพเนนต์เดิมจากบทเรียน 20 รับ <code>name="Cart"</code> กลายเป็นแถบหัวเพจได้เลย ทั้งสองกิ่งของ return ใส่ banner เหมือนกัน หน้าเลยดูเป็นหน้าเดียวกันไม่ว่าตะกร้าจะมีของหรือไม่ นี่คือการ reuse ครั้งที่สามในสามครั้งที่บทเรียน 20 ทำนายไว้ (ครั้งแรกคือหน้า Product ในบทเรียน 21)</li>
+          <li><strong>ปุ่ม Checkout ต่อ router ผ่าน hook เดิม</strong> — <code>goToCheckout</code> จาก <code>useProductRoute</code> (บทเรียน 10) พาไป <code>/checkout</code> ซึ่งตอนนี้ยังเป็น stub — มันคือพระเอกของ chapter หน้าทั้ง chapter ส่วนแถบยอดรวมใช้ class <code>table-total</code> จาก <code>_components.scss</code> จัดชิดขวาให้เข้าชุดกับตาราง</li>
+        </ul>
+
+        <p>สังเกตว่าไฟล์นี้เป็นไฟล์แรกของคอร์สที่ใช้ <code>useProductRoute</code> เป็นตัวที่<em>สอง</em> ต่อจาก <code>Header</code> เมื่อวาน — ตอนนี้ hook ตัวนั้นมีคนใช้สองที่แล้ว และค่า URL ทั้งสี่เส้นยังนั่งอยู่ในไฟล์เดียวเหมือนวันที่สร้างมัน นั่นคือสิ่งที่การรวมศูนย์ควรได้ผลลัพธ์</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <pre><code class="language-bash">src/
+├── features/
+│   └── cart/
+│       └── components/
+│           └── CartTable/
+│               └── CartTable.tsx    # 🤖 ไฟล์ใหม่ — ไม่มี .module.scss
+└── pages/
+    └── Cart/
+        └── Cart.tsx                 # 🤖 เขียนทับ stub ทั้งไฟล์</code></pre>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>CartTable</code></strong> — ต้องอ่าน <code>cart.items</code> จาก <code>useCart</code> เอง แต่ต้อง<em>ไม่</em>เรียกฟังก์ชันแก้ไขใด ๆ จาก store ทุกการแก้ต้องผ่าน props สองตัว และต้องกันไม่ให้จำนวนลงต่ำกว่า 1 ที่ตัวปุ่ม</li>
+          <li><strong><code>Cart.tsx</code></strong> — ต้อง return หน้าตะกร้าว่างด้วย early return ก่อนถึง JSX หลัก ต้องคำนวณยอดรวมด้วย <code>useMemo</code> และต้องไม่มี <code>useState</code> ใด ๆ ในไฟล์ ต้องไม่ยิง API</li>
+        </ul>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> — แชทใหม่ โหมด Agent สังเกตว่า <code>ข้อกำหนดทางเทคนิค:</code> ของบทนี้ยาวผิดปกติเมื่อเทียบกับจำนวนไฟล์ นั่นเพราะเนื้อหาเกือบทั้งหมดคือ<em>ชื่อ class กับข้อความบนจอ</em> ซึ่งเป็นสิ่งที่ Agent เดาแทนเราไม่ได้:</p>
+          <pre><code class="language-text">สร้างตารางรายการสินค้าในตะกร้า แล้วเขียนหน้า Cart ทับ stub เดิม
+
+บริบท: @src/pages/Cart/Cart.tsx @src/features/cart/useCart.ts @src/features/cart/store/CartContext.tsx @src/features/cart/components/CartSummary/CartSummary.tsx @src/pages/Category/components/CategoryBanner/CategoryBanner.tsx @src/shared/components/Button/Button.tsx @src/shared/hooks/useProductRoute.tsx @src/styles/_components.scss
+src/pages/Cart/Cart.tsx ตอนนี้เป็น stub ที่ return h1 อย่างเดียว ให้เขียนทับทั้งไฟล์
+src/features/cart/useCart.ts export named useCart คืน
+  { cart, addToCart, removeFromCart, updateQuantity, clearCart }
+  cart มีรูปร่าง { items: CartItem[] }
+  removeFromCart มี signature (id: number) =&gt; void
+  updateQuantity มี signature (id: number, quantity: number) =&gt; void
+CartItem มีฟิลด์ id (number), title (string), price (number), quantity (number),
+  image (string) และ originalPrice ที่เป็น optional (number | undefined)
+src/pages/Category/components/CategoryBanner/CategoryBanner.tsx เป็น default export
+  รับ prop name?: string | null
+src/shared/components/Button/Button.tsx เป็น default export รับ children
+  เป็น React.ReactNode และ onClick?: () =&gt; void
+src/shared/hooks/useProductRoute.tsx เป็น default export (นามสกุล .tsx จริงตามนี้)
+  คืน goToProductDetails, goToCartSummary, goToCheckout, goToOrderSuccess
+  ไฟล์นี้เป็นที่เดียวในโปรเจกต์ที่ได้รับอนุญาตให้มี URL string ของการ navigate
+src/styles/_components.scss มี global class เหล่านี้อยู่แล้วตั้งแต่บทเรียน 04
+  ให้ใช้ตามชื่อนี้เป๊ะ ห้ามเปลี่ยนชื่อและห้ามสร้างใหม่:
+  table, table-image, table-discount, table-original-price, table-actions,
+  table-quantity, table-total
+utility class ที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว: container, pointer,
+  inline-block, text-center, text-right, text-muted, fw-bold, fs-18, fs-24, fs-32,
+  mr-5, mt-5, mt-15, mt-50, mb-40, pt-20, pt-30, pr-20, pb-30, pb-60
+
+โครงสร้าง: แตะสองไฟล์นี้เท่านั้น
+- src/features/cart/components/CartTable/CartTable.tsx (สร้างใหม่ ไม่มีไฟล์ .module.scss)
+- src/pages/Cart/Cart.tsx (เขียนทับ stub ทั้งไฟล์)
+
+ข้อกำหนดทางเทคนิค:
+- CartTable.tsx: import React แล้ว useCart จาก "@/features/cart/useCart"
+  interface CartTableProps สองตัว:
+    onRemoveItem: (id: number) =&gt; void
+    onUpdateQuantity: (id: number, quantity: number) =&gt; void
+  ในคอมโพเนนต์ดึงเฉพาะ const { cart } = useCart();
+    ห้ามดึง removeFromCart หรือ updateQuantity จาก useCart ในไฟล์นี้
+  JSX: div ครอบ table className="table" ที่มี
+    thead -&gt; tr ที่มี th หกช่องตามลำดับนี้พอดี
+      Action, Image, Product Name, Price, Quantity, Total
+    tbody ที่วน cart.items.map((item) =&gt; ...) render tr key={item.id} ที่มี td หกช่อง
+      1) button className="table-actions pointer" onClick เรียก onRemoveItem(item.id)
+         เนื้อในปุ่มเป็นอักขระ × (multiplication sign ตัวเดียว ไม่ใช่ตัวอักษร x)
+      2) img src={item.image || "/placeholder.png"} alt={item.title}
+         className="table-image"
+      3) {item.title}
+      4) span className="fw-bold mr-5 fs-18" แสดง $ ติดกับ item.price.toFixed(2)
+         แล้ว {item.originalPrice &amp;&amp; ...} ที่ครอบด้วย fragment ว่าง มีสามอย่างเรียงกัน
+           span className="table-original-price" แสดง $ ติดกับ
+             item.originalPrice.toFixed(2)
+           br
+           span className="table-discount mt-5 inline-block fw-bold" แสดงข้อความ
+             You Save: $ ติดกับ (item.originalPrice - item.price).toFixed(2)
+      5) div className="table-quantity" ที่มีสามอย่างเรียงกัน
+           button onClick เรียก onUpdateQuantity(item.id, item.quantity - 1)
+             และมี disabled={item.quantity &lt;= 1}
+             เนื้อในปุ่มเขียนเป็น HTML entity &amp;lt; ไม่ใช่เครื่องหมายน้อยกว่าดิบ ๆ
+           span แสดง {item.quantity}
+           button onClick เรียก onUpdateQuantity(item.id, item.quantity + 1)
+             ไม่มี disabled
+             เนื้อในปุ่มเขียนเป็น HTML entity &amp;gt;
+      6) แสดง $ ติดกับ (item.price * item.quantity).toFixed(2)
+  ห้ามมี state ห้ามมี useMemo ห้ามคำนวณยอดรวมของทั้งตารางในไฟล์นี้
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย
+- Cart.tsx: บรรทัด import เรียงตามลำดับนี้พอดี
+    import React, { useMemo } from "react";
+    import { useCart } from "@/features/cart/useCart";
+    import CategoryBanner from "@/pages/Category/components/CategoryBanner/CategoryBanner";
+    import CartTable from "@/features/cart/components/CartTable/CartTable";
+    import Button from "@/shared/components/Button/Button";
+    import useProductRoute from "@/shared/hooks/useProductRoute";
+  ในคอมโพเนนต์ Cart ที่ประกาศเป็น React.FC เรียงตามนี้
+    const { cart, removeFromCart, updateQuantity } = useCart();
+    const { goToCheckout } = useProductRoute();
+    const calculateTotalPrice = useMemo(...) ที่ return ผลของ cart.items
+      .reduce((total, item) =&gt; total + item.price * item.quantity, 0)
+      .toFixed(2) โดยมี dependency array เป็น [cart.items]
+      ชื่อตัวแปรคือ calculateTotalPrice ตามนี้ ห้ามเปลี่ยน
+    const onCheckout = () =&gt; { goToCheckout(); };
+    early return เมื่อ cart.items.length === 0 คืน fragment ว่างที่มี
+      CategoryBanner name="Cart"
+      div className="container text-center mt-50 pb-60" ที่มี
+        h2 className="fs-32 fw-bold mb-40" ข้อความ Your Cart is Empty
+        p className="text-muted fs-24" ข้อความ
+          You haven't added any items to your cart yet.
+  JSX หลัก: fragment ว่างที่มี
+    CategoryBanner name="Cart"
+    div className="container pt-30 pb-30" ที่มี
+      CartTable onRemoveItem={removeFromCart} onUpdateQuantity={updateQuantity}
+        ส่งฟังก์ชันจาก store เข้าไปตรง ๆ ห้ามห่อด้วย arrow function
+      div className="table-total pr-20 pt-20 text-right" ที่มี
+        h3 ข้อความ Total Price: $ ติดกับ {calculateTotalPrice}
+        div className="inline-block mt-15" ครอบ Button onClick={onCheckout}
+          children ข้อความ Checkout
+  ห้ามใช้ useState ห้ามใช้ useEffect ห้ามยิง API และห้ามใช้ TanStack Query
+  ห้ามใส่ข้อความยืนยันก่อนลบสินค้า และห้ามใส่ปุ่ม Clear Cart
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามสร้าง CartTable.module.scss หรือ Cart.module.scss
+- ห้ามแก้ไฟล์ใน src/features/cart/store/, useCart.ts, CartSummary,
+  AddToCartModalContent, Header.tsx, Product.tsx, CategoryBanner หรือ router.tsx
+- ห้ามแก้ src/styles/ แม้แต่บรรทัดเดียว class ที่ต้องใช้มีครบแล้ว
+- ห้ามเพิ่ม action ใหม่ใน reducer และห้ามแก้กติกาจำนวนสินค้าใน store
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ห้ามเขียนเทสต์ (หน้านี้จะมี integration test ในบทเรียน 33)</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>กติกาจำนวนขั้นต่ำของปุ่มลด</em> โค้ดอ้างอิงกันเรื่องนี้ด้วยวิธีเดียวคือ <code>disabled={item.quantity &lt;= 1}</code> บนปุ่มลด — reducer ไม่ได้ช่วยอะไรเลย <code>UPDATE_QUANTITY</code> เขียนทับค่าที่ส่งมาตรง ๆ ไม่ว่าจะเป็น 0, -1 หรือ -99 อาการที่เจอมีสองแบบ แบบแรกคือ <strong>Agent ลืม <code>disabled</code></strong> ผลคือกด <code>&lt;</code> รัว ๆ แล้วจำนวนลงเป็น 0 แล้วติดลบต่อไปเรื่อย ๆ ช่อง Total ท้ายแถวกลายเป็นเลขติดลบ และ Total Price ล่างขวาก็ติดลบตาม (ลองคิดภาพร้านที่ยิ่งกดยิ่งได้เงินคืน) แบบที่สองแนบเนียนกว่าและ<em>ดูใจดีกว่า</em>ด้วย: มันเขียนว่าถ้า <code>quantity - 1 === 0</code> ให้เรียก <code>onRemoveItem(item.id)</code> แทน คือลบแถวทิ้งให้อัตโนมัติ ซึ่งเป็นพฤติกรรมที่เว็บจริงหลายเจ้าทำ แต่<strong>ไม่ใช่สิ่งที่แอปนี้ตัดสินใจ</strong> — เราเลือกให้การเอาของออกต้องเป็นการกดปุ่ม × อย่างตั้งใจ ไม่ใช่ผลข้างเคียงของการกดลด และการเปลี่ยนตรงนี้เงียบ ๆ จะทำให้ผู้ใช้ที่กดลดเพลิน ๆ เห็นสินค้าหายไปจากตะกร้าโดยไม่รู้ตัว วิธีตรวจ: <code>grep -n "disabled" src/features/cart/components/CartTable/CartTable.tsx</code> ต้องเจอ<strong>หนึ่งบรรทัด</strong>ที่เป็น <code>item.quantity &lt;= 1</code> และ <code>grep -n "onRemoveItem" src/features/cart/components/CartTable/CartTable.tsx</code> ต้องเจอ<strong>หนึ่งบรรทัด</strong>เท่านั้นคือในปุ่ม × ถ้าเจอสองบรรทัด แปลว่าเจอแบบที่สอง จากนั้นทดสอบด้วยมือ: เหลือของหนึ่งชิ้นแล้วกด <code>&lt;</code> — ปุ่มต้องกดไม่ลง ไม่ใช่แถวหายไป</li>
+            <li>ไฟล์ใหม่ <strong>1 ไฟล์</strong> (<code>CartTable.tsx</code>) และ modified <strong>1 ไฟล์</strong> (<code>Cart.tsx</code>) เท่านั้น — ไม่มี <code>.module.scss</code> โผล่มา ไม่มีไฟล์ใน <code>src/styles/</code> ขึ้นสถานะ modified และไม่มี <code>Header.tsx</code> หรือ <code>Product.tsx</code> ติดมาด้วย</li>
+            <li><code>grep -n "removeFromCart\|updateQuantity" src/features/cart/components/CartTable/CartTable.tsx</code> ต้องว่างเปล่า — ตารางต้องรู้จักแค่ <code>onRemoveItem</code> กับ <code>onUpdateQuantity</code> ที่รับมาเป็น props ถ้ามันดึงฟังก์ชันจาก <code>useCart</code> มาเรียกเอง โค้ดจะทำงานถูกต้องทุกประการบนหน้าจอ (ทั้งสองทางไปจบที่ dispatch เดียวกัน) แต่คำตอบของคำถาม "ใครแก้ตะกร้าในหน้านี้" จะกระจายเป็นสองไฟล์ทันที ข้อนี้ตรวจได้ด้วย grep เท่านั้น หน้าเว็บบอกไม่ได้</li>
+            <li><code>onRemoveItem={removeFromCart}</code> และ <code>onUpdateQuantity={updateQuantity}</code> ส่งฟังก์ชันเข้าไปตรง ๆ ไม่ใช่ <code>onRemoveItem={(id) =&gt; removeFromCart(id)}</code> ที่ห่อไว้เปล่า ๆ — signature ตรงกันอยู่แล้ว การห่อเพิ่มไม่ได้อะไรนอกจากฟังก์ชันใหม่ทุก render</li>
+            <li><strong>ข้อความบนจอต้องตรงตัวอักษร</strong> — <code>Total Price: $</code>, <code>Your Cart is Empty</code>, <code>You Save: $</code> และหัวตารางทั้งหกช่อง เพราะบทเรียน 33 จะเขียน integration test ของหน้านี้โดยค้นหาด้วยข้อความจริง เช่น <code>getByText("Total Price: $10.00")</code> ถ้า Agent ปรับถ้อยคำให้ "สวยขึ้น" (เช่น <code>Grand Total:</code>) วันนี้ไม่มีอะไรพัง แต่บทเรียน 33 จะพังโดยที่คุณจะโทษเทสต์แทนที่จะโทษบรรทัดนี้</li>
+            <li>เนื้อในของปุ่มสามตัวคือ <code>×</code>, <code>&amp;lt;</code> และ <code>&amp;gt;</code> — ไม่ใช่คำว่า <code>Remove</code>, <code>-</code>/<code>+</code> หรือไอคอน Font Awesome ด้วยเหตุผลเดียวกับข้อบน: บทเรียน 33 หาปุ่มด้วย <code>getByRole("button", { name: "×" })</code> และ <code>{ name: "&gt;" }</code> ตัว × ต้องเป็นอักขระ multiplication sign ไม่ใช่ตัวอักษร <code>x</code> ธรรมดา (สองตัวนี้หน้าตาเกือบเหมือนกันในโค้ดเอดิเตอร์ ก๊อปจากโค้ดอ้างอิงมาวางจะปลอดภัยที่สุด)</li>
+            <li><code>key={item.id}</code> ไม่ใช่ <code>key={index}</code> — และไม่ใช่ <code>key={`${item.id}-${item.quantity}`}</code> ที่ Agent บางตัวชอบใส่ "เพื่อให้ re-render แน่ ๆ" ซึ่งจะทำให้ทั้งแถวถูกสร้างใหม่ทุกครั้งที่กดปุ่มปรับจำนวน</li>
+            <li><code>grep -n "useState\|useEffect" src/pages/Cart/Cart.tsx</code> ต้องว่างเปล่า — หน้านี้ไม่มี state ของตัวเองเลยสักตัว ทุกอย่างมาจาก store ถ้า Agent ทำ <code>const [items, setItems] = useState(cart.items)</code> เพื่อ "จัดการ local" นั่นคือการสร้างสำเนาที่จะเพี้ยนจากของจริงทันทีที่ Header เปลี่ยนอะไร</li>
+            <li><code>useMemo</code> ใน <code>Cart.tsx</code> มี dependency array เป็น <code>[cart.items]</code> และตัวมันคืน<em>ค่า</em> ไม่ใช่ฟังก์ชัน — จุดใช้งานต้องเป็น <code>{calculateTotalPrice}</code> ไม่ใช่ <code>{calculateTotalPrice()}</code> (ถ้าเห็นวงเล็บที่จุดใช้งาน typecheck จะฟ้อง ซึ่งดี — เหตุผลที่ชื่อนี้ชวนให้พิมพ์วงเล็บอยู่ในกล่อง 💡 ท้ายบท)</li>
+            <li>ทั้งสองกิ่งของ <code>return</code> ใน <code>Cart.tsx</code> มี <code>&lt;CategoryBanner name="Cart" /&gt;</code> เหมือนกัน และตัวนอกสุดเป็น <strong>fragment</strong> (<code>&lt;&gt;</code>) ไม่ใช่ <code>&lt;div&gt;</code> — ต่างจากหน้า Product ที่ใช้ <code>&lt;div&gt;</code> สี่หน้าในโปรเจกต์นี้ใช้กันคนละท่า ซึ่งเป็นความจริงของต้นฉบับ ไม่ต้องทำให้เหมือนกัน แค่รู้ว่ามันต่าง</li>
+            <li>ค้นชื่อ class ทุกตัวที่โผล่ใน <code>className</code> ของทั้งสองไฟล์ว่ามีจริงใน <code>src/styles/</code> — <code>grep -rn "table-quantity" src/styles/</code> ทำนองนี้ไล่ให้ครบทั้งเจ็ดตัวที่ขึ้นต้นด้วย <code>table</code> บวก utility ที่เหลือ บทเรียน 18, 19 และ 21 มีชื่อที่หลุดมาแล้วบทละตัว งานนี้ใช้เวลาสองนาทีและไม่มีเครื่องมือไหนทำแทนได้ (และคราวนี้มีของจะเจอจริง — อ่านกล่อง 💡 ใต้ <code>CartTable.tsx</code> หลังไล่เสร็จ)</li>
+            <li><code>npm run dev</code> แล้วเปิด <code>/cart</code> ตอนตะกร้าว่าง — ต้องเห็น "Your Cart is Empty" พร้อมแถบหัวเพจ ไม่ใช่ตารางเปล่าที่มีแต่หัวคอลัมน์ และไม่ใช่หน้าขาว</li>
+            <li>ถ้าเปิด <code>/cart</code> แล้วเจอ error <code>useCart must be used within a CartProvider</code> แปลว่า <code>providers.tsx</code> ของคุณยังไม่ได้เพิ่ม <code>CartProvider</code> จากบทเรียน 22 — กลับไปเช็คก่อน อย่าแก้ด้วยการลบ <code>throw</code> ทิ้ง ยามคนนี้เพิ่งทำหน้าที่ของมันพอดี</li>
+          </ul>
+        </blockquote>
+
+        <p>เหมือนบทก่อน ๆ: <code>npm run lint</code> อาจตกเรื่อง <code>import-x/order</code> ก่อน แก้ด้วย <code>npx eslint . --fix</code> แล้วรันซ้ำให้ผ่านเงียบ ๆ จากนั้นค่อย <code>npm run typecheck</code></p>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/features/cart/components/CartTable/CartTable.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { useCart } from "@/features/cart/useCart";
+
+interface CartTableProps {
+  onRemoveItem: (id: number) =&gt; void;
+  onUpdateQuantity: (id: number, quantity: number) =&gt; void;
+}
+
+const CartTable: React.FC&lt;CartTableProps&gt; = ({
+  onRemoveItem,
+  onUpdateQuantity,
+}) =&gt; {
+  const { cart } = useCart();
+
+  return (
+    &lt;div&gt;
+      &lt;table className="table"&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;Action&lt;/th&gt;
+            &lt;th&gt;Image&lt;/th&gt;
+            &lt;th&gt;Product Name&lt;/th&gt;
+            &lt;th&gt;Price&lt;/th&gt;
+            &lt;th&gt;Quantity&lt;/th&gt;
+            &lt;th&gt;Total&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          {cart.items.map((item) =&gt; (
+            &lt;tr key={item.id}&gt;
+              &lt;td&gt;
+                &lt;button
+                  className="table-actions pointer"
+                  onClick={() =&gt; onRemoveItem(item.id)}
+                &gt;
+                  ×
+                &lt;/button&gt;
+              &lt;/td&gt;
+              &lt;td&gt;
+                &lt;img
+                  src={item.image || "/placeholder.png"}
+                  alt={item.title}
+                  className="table-image"
+                /&gt;
+              &lt;/td&gt;
+              &lt;td&gt;{item.title}&lt;/td&gt;
+              &lt;td&gt;
+                &lt;span className="fw-bold mr-5 fs-18"&gt;
+                  ${item.price.toFixed(2)}
+                &lt;/span&gt;
+                {item.originalPrice &amp;&amp; (
+                  &lt;&gt;
+                    &lt;span className="table-original-price"&gt;
+                      ${item.originalPrice.toFixed(2)}
+                    &lt;/span&gt;
+                    &lt;br /&gt;
+                    &lt;span className="table-discount mt-5 inline-block fw-bold"&gt;
+                      You Save: ${(item.originalPrice - item.price).toFixed(2)}
+                    &lt;/span&gt;
+                  &lt;/&gt;
+                )}
+              &lt;/td&gt;
+              &lt;td&gt;
+                &lt;div className="table-quantity"&gt;
+                  &lt;button
+                    onClick={() =&gt; onUpdateQuantity(item.id, item.quantity - 1)}
+                    disabled={item.quantity &lt;= 1}
+                  &gt;
+                    &amp;lt;
+                  &lt;/button&gt;
+                  &lt;span&gt;{item.quantity}&lt;/span&gt;
+                  &lt;button
+                    onClick={() =&gt; onUpdateQuantity(item.id, item.quantity + 1)}
+                  &gt;
+                    &amp;gt;
+                  &lt;/button&gt;
+                &lt;/div&gt;
+              &lt;/td&gt;
+              &lt;td&gt;${(item.price * item.quantity).toFixed(2)}&lt;/td&gt;
+            &lt;/tr&gt;
+          ))}
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default CartTable;
+</code></pre>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — สองข้อในไฟล์เดียว และทั้งคู่หา grep ไม่เจอ:</strong> ข้อแรกคือ <code>className="table-actions pointer"</code> บนปุ่ม × เปิด <code>src/styles/_components.scss</code> ดูจะเห็นว่า class นี้เขียนไว้แบบนี้: <code>.table-actions { button { background: none; border: none; font-size: 20px; cursor: pointer; } }</code> — สังเกตว่ากฎทั้งหมดอยู่ใน selector ลูก <code>.table-actions button</code> ไม่ใช่ <code>.table-actions</code> เอง แปลว่าคนเขียน SCSS ตั้งใจให้ class นี้แปะบน<em>กล่องที่ห่อปุ่ม</em> (เช่น <code>&lt;td&gt;</code>) แต่ JSX ของเราแปะมันบนตัวปุ่มโดยตรง ผลคือปุ่ม × ไม่ได้รับกฎสักข้อ: มันยังมีพื้นหลังเทากับกรอบแบบปุ่มมาตรฐานของเบราว์เซอร์ และตัวอักษรยังเป็นขนาดปกติแทนที่จะเป็น 20px (ที่ยัง<em>มี</em> cursor เป็นรูปมือก็เพราะ utility class <code>pointer</code> ที่แปะคู่มา ไม่ใช่เพราะ <code>table-actions</code>) นี่คือ<em>ประเภทที่สาม</em>ของปัญหาชื่อ class ที่คอร์สนี้เจอมา: บทเรียน 18 กับ 19 เจอชื่อที่ไม่เคยมีอยู่, บทเรียน 21 เจอชื่อที่เกือบถูก (<code>font-bold</code> แทน <code>fw-bold</code>) ส่วนคราวนี้ชื่อ<em>มีอยู่จริงและสะกดถูกทุกตัวอักษร</em> แต่ถูกแปะผิดชั้น — <code>grep</code> เจอแน่นอน แต่ตอบไม่ได้ว่าถูกที่หรือเปล่า จับได้ทางเดียวคือเปิดไฟล์ SCSS อ่านว่ากฎนั้นอยู่ใน selector ไหน หรือใช้ DevTools คลิกที่ปุ่มแล้วดูว่า Styles ฝั่งขวามีกฎอะไรบ้าง ข้อสองสั้นกว่า: <code>item.image || "/placeholder.png"</code> ชี้ไปที่ไฟล์ที่<strong>ไม่มีอยู่จริง</strong> — <code>public/</code> ของโปรเจกต์เรามีแค่ <code>vite.svg</code> กับโฟลเดอร์ <code>images/</code> ดังนั้น fallback ที่ตั้งใจกันเลย์เอาต์พังกลับให้ไอคอนรูปเสียแทน (ในทางปฏิบัติมันไม่เคยทำงาน เพราะ <code>image</code> มาจาก <code>thumbnail</code> ที่ dummyjson ส่งมาครบทุกชิ้น — เป็น fallback ที่ทั้งไม่ถูกและไม่เคยถูกเรียกใช้ ซึ่งเป็นคู่ที่แย่ที่สุด เพราะไม่มีวันมีใครสังเกต) ข้อสามเป็นเรื่องของ repo ต้นฉบับล้วน ๆ: ในนั้นมีไฟล์ <code>CartTable.module.scss</code> อยู่จริงแต่<em>ว่างเปล่า</em>และไม่มีใคร import เราจึงไม่สั่งสร้างมันในบทนี้ ไฟล์เปล่าที่ไม่มีใครใช้คือของที่ควรถูกลบในรีวิว ไม่ใช่ของที่ควรลอกตาม</blockquote>
+
+        <p><code>src/pages/Cart/Cart.tsx</code> — เขียนทับ stub ที่นั่งรอมาตั้งแต่บทเรียน 09:</p>
+
+        <pre><code class="language-typescript">import React, { useMemo } from "react";
+import { useCart } from "@/features/cart/useCart";
+import CategoryBanner from "@/pages/Category/components/CategoryBanner/CategoryBanner";
+import CartTable from "@/features/cart/components/CartTable/CartTable";
+import Button from "@/shared/components/Button/Button";
+import useProductRoute from "@/shared/hooks/useProductRoute";
+
+const Cart: React.FC = () =&gt; {
+  const { cart, removeFromCart, updateQuantity } = useCart();
+  const { goToCheckout } = useProductRoute();
+
+  const calculateTotalPrice = useMemo(() =&gt; {
+    return cart.items
+      .reduce((total, item) =&gt; total + item.price * item.quantity, 0)
+      .toFixed(2);
+  }, [cart.items]);
+
+  const onCheckout = () =&gt; {
+    goToCheckout();
+  };
+
+  if (cart.items.length === 0) {
+    return (
+      &lt;&gt;
+        &lt;CategoryBanner name="Cart" /&gt;
+        &lt;div className="container text-center mt-50 pb-60"&gt;
+          &lt;h2 className="fs-32 fw-bold mb-40"&gt;Your Cart is Empty&lt;/h2&gt;
+          &lt;p className="text-muted fs-24"&gt;
+            You haven't added any items to your cart yet.
+          &lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/&gt;
+    );
+  }
+
+  return (
+    &lt;&gt;
+      &lt;CategoryBanner name="Cart" /&gt;
+      &lt;div className="container pt-30 pb-30"&gt;
+        &lt;CartTable
+          onRemoveItem={removeFromCart}
+          onUpdateQuantity={updateQuantity}
+        /&gt;
+        &lt;div className="table-total pr-20 pt-20 text-right"&gt;
+          &lt;h3&gt;Total Price: ${calculateTotalPrice}&lt;/h3&gt;
+          &lt;div className="inline-block mt-15"&gt;
+            &lt;Button onClick={onCheckout}&gt;Checkout&lt;/Button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/&gt;
+  );
+};
+
+export default Cart;
+</code></pre>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> <code>calculateTotalPrice</code> ไม่ใช่ฟังก์ชัน มันคือ<em>ค่า</em> — เป็น string อย่าง <code>"39.98"</code> ที่ <code>useMemo</code> คืนมา ชื่อที่ขึ้นต้นด้วยคำกริยาว่า "calculate" ชวนให้คนอ่านพิมพ์ <code>calculateTotalPrice()</code> ที่จุดใช้งานโดยอัตโนมัติ (โชคดีที่ TypeScript ฟ้องทันที ข้อนี้จึงเป็นบั๊กที่<em>ดัง</em> ไม่ใช่บั๊กเงียบ) ชื่อที่ตรงกว่าคือ <code>totalPrice</code> เฉย ๆ เทียบกับไฟล์ข้าง ๆ ได้เลย: <code>CartSummary</code> ในบทเรียน 23 ใช้ <code>useMemo</code> ท่าเดียวกันเป๊ะแต่ตั้งชื่อว่า <code>totalItems</code> ซึ่งอ่านออกทันทีว่าเป็นค่า — สองไฟล์ในฟีเจอร์เดียวกัน สองธรรมเนียมการตั้งชื่อ นี่คือรูปแบบเดิมที่คอร์สนี้เจอมาตลอด: สิ่งที่ไม่มีเครื่องมือบังคับจะเพี้ยนไปทีละไฟล์ เราสั่งชื่อตามต้นฉบับใน prompt เพื่อให้ diff ตรง แต่ในรีวิวจริงนี่คือ comment หนึ่งบรรทัดที่แก้ง่ายที่สุดในบทนี้</blockquote>
+
+        <p>ปิดท้ายด้วยข้อสังเกตที่มองเห็นได้เฉพาะตอนที่ทุกอย่างต่อกันครบแล้ว: ลองกดปุ่ม <code>&gt;</code> ในตารางหนึ่งครั้ง แล้วดูสามจุดบนจอพร้อมกัน — Total ท้ายแถว, Total Price ล่างขวา และ badge บน Header ทั้งสามขยับ<em>พร้อมกัน</em>โดยที่คอมโพเนนต์ทั้งสามตัวไม่รู้จักกันเลย ไม่มีใครส่ง props หากัน ไม่มี event bus ไม่มีการ refetch สิ่งที่เกิดขึ้นคือ dispatch หนึ่งครั้ง → reducer คืน state ก้อนใหม่ → context เปลี่ยน → ทุกคนที่ subscribe อ่านค่าใหม่ นี่คือของที่คุณลงทุนสร้างไว้ในบทเรียน 22 กำลังทำงานเต็มรูปแบบ และเป็นเหตุผลที่บทนั้นยืนยันว่าตะกร้าต้องเป็น client state ที่มีเจ้าของชัดเจนหนึ่งเดียว</p>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>ลบ <code>disabled={item.quantity &lt;= 1}</code> ออกจากปุ่มลด แล้วกด <code>&lt;</code> จนจำนวนติดลบ — ไล่ให้ครบว่ามีกี่จุดบนจอที่แสดงตัวเลขผิด (ตารางกี่จุด นอกตารางกี่จุด) จากนั้นตอบว่ากติกา "ห้ามต่ำกว่า 1" นี้ควรอยู่ที่ปุ่ม ที่ <code>Cart.tsx</code> หรือใน <code>cartReducer</code> และเหตุผล — ถ้าย้ายไปไว้ใน reducer จะมีอะไรในบทเรียน 31 ที่ต้องเพิ่ม (เสร็จแล้วเติมกลับ)</li>
+          <li><code>onRemoveItem={removeFromCart}</code> เสียบตรง ๆ ได้โดยไม่ต้องห่อ อธิบายว่าเพราะอะไร แล้วสมมติว่าเราอยากเปลี่ยน <code>CartTableProps</code> ให้ <code>onRemoveItem</code> รับ <code>item: CartItem</code> ทั้งก้อนแทน <code>id</code> — บอกให้ได้ว่าต้องแก้กี่ไฟล์ ไฟล์ไหนบ้าง และ TypeScript จะฟ้องที่บรรทัดไหนก่อน</li>
+          <li><code>CartTable</code> อ่าน <code>cart.items</code> จาก <code>useCart</code> เอง แต่รับฟังก์ชันแก้ไขเป็น props — ลองแก้ให้มันเรียก <code>removeFromCart</code> จาก <code>useCart</code> เองเลย หน้าเว็บทำงานเหมือนเดิมทุกประการ อธิบายว่าอะไรที่ยากขึ้นสำหรับคนที่มาอ่านโค้ดนี้ในอีกหกเดือน และตอบด้วยว่าถ้าเป็นแบบนั้น <code>Cart.tsx</code> จะเหลือหน้าที่อะไรบ้าง (เสร็จแล้วแก้กลับ)</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> ตะกร้าต้องจัดการได้ครบวงจรแล้ว: เพิ่มสินค้า 2–3 ตัวจากหน้า Product แล้วคลิกไอคอนตะกร้า → เห็นตารางครบทุกแถว พร้อมรูป ราคา และ "You Save" สำหรับตัวที่มีส่วนลด → กดปุ่ม <code>&gt;</code> เพิ่มจำนวน แล้วดู Total ท้ายแถว, Total Price ล่างขวา และ badge บน Header ขยับ<em>พร้อมกันทั้งสามจุด</em> (ทุกคนอ่านจาก store เดียวกัน) → กด <code>&lt;</code> ลดจนเหลือ 1 แล้วปุ่มต้อง disabled ไม่ใช่แถวหายไป → กด × ลบทีละแถวจนหมด → เจอ "Your Cart is Empty" และ badge หายไป → เพิ่มของใหม่แล้ว refresh → ทุกอย่างยังอยู่ครบจาก localStorage → กด Checkout → ไปโผล่หน้า stub <code>/checkout</code> ปิดท้ายด้วยการบ้านสองข้อของบทนี้: (1) เปิด DevTools คลิกที่ปุ่ม × แล้วดูช่อง Styles ว่ามีกฎจาก <code>.table-actions</code> มาถึงมันหรือเปล่า (2) เปิดแท็บ Network ค้างไว้ระหว่างกดปุ่มปรับจำนวนรัว ๆ — ต้องไม่มี request ออกไปแม้แต่รายการเดียว เพราะตะกร้าเป็น client state ล้วน เมื่อ <code>npm run lint</code> และ <code>npm run typecheck</code> ผ่านแล้ว commit ได้ Chapter ตะกร้าสินค้าจบบริบูรณ์ — บทหน้าเราจะเริ่ม chapter ชำระเงินด้วยการเขียน schema ของฟอร์มด้วย zod ซึ่งเป็นบทที่กลับมาพิมพ์เองอีกครั้ง — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="23_add_to_cart.html" rel="prev">ก่อนหน้า: Add to Cart และ Mini Cart</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="25_checkout_schema.html" rel="next">ถัดไป: Zod Schema</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
