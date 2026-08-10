@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="ติดตั้ง Vitest, React Testing Library และ MSW เข้าโปรเจกต์ แล้วให้ Cursor วางโครงสร้างพื้นฐานการทดสอบทั้งหมดสองรอบ พร้อมวิธีจับกับดัก MSW เวอร์ชันเก่าที่ AI เขียนบ่อยที่สุด" />
+    <meta name="description" content="ติดตั้ง Vitest, React Testing Library และ MSW เข้าโปรเจกต์ แล้วให้ Cursor วางโครงสร้างพื้นฐานการทดสอบทั้งหมดสองรอบ พร้อมวิธีจับกับดัก MSW เวอร์ชันเก่าที่ AI ยังเขียนออกมาได้" />
     <title>ติดตั้งชุดทดสอบ | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
     <link rel="stylesheet" href="lesson.css" />
   </head>
@@ -195,7 +195,7 @@ alias @/ ชี้ไปที่ src/ ส่วนไฟล์ในโฟล�
        คืน HttpResponse.json({ id: 1, ...body }, { status: 201 })
   ลำดับสำคัญ: /products/categories ต้องมาก่อน /products/:id เสมอ
   ไฟล์นี้ห้าม import อะไรจาก @testing-library และห้ามมี expect
-- src/test/msw/server.ts: สามบรรทัดพอดี
+- src/test/msw/server.ts: สามบรรทัดโค้ดพอดี (มีบรรทัดว่างคั่นก่อน export)
     import { setupServer } from "msw/node";
     import { handlers } from "./handlers";
     export const server = setupServer(...handlers);
@@ -265,7 +265,7 @@ alias @/ ชี้ไปที่ src/ ส่วนไฟล์ในโฟล�
       &lt;QueryClientProvider client={queryClient}&gt;{children}&lt;/QueryClientProvider&gt;
     ต้องเป็น named function ชื่อ Wrapper ไม่ใช่ arrow function ไม่มีชื่อ
   ไฟล์นี้ห้าม import queryClient ตัวจริงจาก @/app/queryClient
-- renderRoute.tsx: import ห้าบรรทัด ตามลำดับนี้
+- renderRoute.tsx: import เจ็ดบรรทัด ตามลำดับนี้
     import { QueryClientProvider } from "@tanstack/react-query";
     import { render } from "@testing-library/react";
     import { createMemoryRouter } from "react-router";
@@ -299,7 +299,7 @@ alias @/ ชี้ไปที่ src/ ส่วนไฟล์ในโฟล�
         <blockquote class="lesson-ai-review">
           <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อนทุกรอบ ข้อแรกเป็นข้อของรอบที่ 1 และเป็นข้อที่ต้องดูก่อนข้ออื่นทั้งหมด:</p>
           <ul>
-            <li><strong>AI มักพลาดตรงนี้:</strong> <em>เขียน MSW ด้วยไวยากรณ์ v1</em> — <code>import { rest } from "msw"</code> แล้ว <code>rest.get("/products", (req, res, ctx) =&gt; res(ctx.json(...)))</code> แทนที่จะเป็น <code>http.get(url, () =&gt; HttpResponse.json(...))</code> ของ v2 นี่คือตระกูล 2 จากบทเรียน 29 ตรง ๆ — โมเดลเห็นโค้ด msw v1 ในโลกมากกว่า v2 หลายเท่า เพราะ v1 อยู่มานานกว่าและ tutorial ส่วนใหญ่ยังเป็นของเดิม ข่าวดีคือมันเป็นบั๊ก<strong>ดัง</strong>: <code>msw</code> v2 ไม่ได้ export ชื่อ <code>rest</code> เลย <code>npm run typecheck</code> จะฟ้อง <code>TS2305: Module '"msw"' has no exported member 'rest'</code> ทันที ข่าวร้ายคือ<em>วิธีที่ Agent เลือกแก้</em>: เมื่อมันเห็น error นี้ ทางที่สั้นที่สุดในสายตามันคือ downgrade <code>msw</code> ใน <code>package.json</code> ให้กลับไปเป็น <code>^1</code> ซึ่งทำให้ typecheck เขียวจริง ๆ และทำให้โค้ดทั้งไฟล์ถูกจริง ๆ ตามเวอร์ชันนั้น — แต่คุณจะได้ไลบรารีคนละรุ่นกับที่คอร์สนี้ใช้ตลอดสามบทข้างหน้า วิธีตรวจสองคำสั่ง: <code>grep -rn "rest\." src/test/</code> ต้องว่างเปล่า และ <code>git diff package.json</code> ต้องมีบรรทัดที่เปลี่ยน<strong>เฉพาะใน scripts</strong> ถ้าเห็นบรรทัด <code>"msw"</code> โผล่ใน diff ให้ถอยทันทีโดยไม่ต้องอ่านต่อ — และวิธีป้องกันคือบรรทัดใน <code>บริบท:</code> ที่ระบุเลขเวอร์ชันกับบรรทัดใน <code>ขอบเขต:</code> ที่ห้ามแก้เวอร์ชัน สองบรรทัดนั้นมีอยู่ใน prompt ข้างบนแล้วด้วยเหตุผลนี้</li>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>เขียน MSW ด้วยไวยากรณ์ v1</em> — <code>import { rest } from "msw"</code> แล้ว <code>rest.get("/products", (req, res, ctx) =&gt; res(ctx.json(...)))</code> แทนที่จะเป็น <code>http.get(url, () =&gt; HttpResponse.json(...))</code> ของ v2 นี่คือตระกูล 2 จากบทเรียน 29 ตรง ๆ — v1 อยู่มาก่อนและโค้ดที่เขียนด้วย v1 ยังกระจายอยู่ทั่วอินเทอร์เน็ต เวลาไม่มีอะไรบังคับ โมเดลจะเขียนแบบที่มันเห็นบ่อยกว่า ข่าวดีคือมันเป็นบั๊ก<strong>ดัง</strong>: <code>msw</code> v2 ไม่ได้ export ชื่อ <code>rest</code> เลย <code>npm run typecheck</code> จะฟ้อง <code>TS2305: Module '"msw"' has no exported member 'rest'</code> ทันที ข่าวร้ายคือ<em>วิธีที่ Agent เลือกแก้</em>: เมื่อมันเห็น error นี้ ทางที่สั้นที่สุดในสายตามันคือ downgrade <code>msw</code> ใน <code>package.json</code> ให้กลับไปเป็น <code>^1</code> ซึ่งทำให้ typecheck เขียวจริง ๆ และทำให้โค้ดทั้งไฟล์ถูกจริง ๆ ตามเวอร์ชันนั้น — แต่คุณจะได้ไลบรารีคนละรุ่นกับที่คอร์สนี้ใช้ตลอดสามบทข้างหน้า วิธีตรวจสองคำสั่ง: <code>grep -rn "rest\." src/test/</code> ต้องว่างเปล่า และ <code>git diff package.json</code> ต้องมีบรรทัดที่เปลี่ยน<strong>เฉพาะใน scripts</strong> ถ้าเห็นบรรทัด <code>"msw"</code> โผล่ใน diff ให้ถอยทันทีโดยไม่ต้องอ่านต่อ — และวิธีป้องกันคือบรรทัดใน <code>บริบท:</code> ที่ระบุเลขเวอร์ชันกับบรรทัดใน <code>ขอบเขต:</code> ที่ห้ามแก้เวอร์ชัน สองบรรทัดนั้นมีอยู่ใน prompt ข้างบนแล้วด้วยเหตุผลนี้</li>
           </ul>
           <p><strong>รอบที่ 1:</strong></p>
           <ul>
