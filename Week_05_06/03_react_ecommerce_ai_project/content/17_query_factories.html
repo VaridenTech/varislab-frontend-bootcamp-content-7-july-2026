@@ -69,7 +69,7 @@ useQuery({
         <pre><code class="language-bash">npm install -D @tanstack/eslint-plugin-query
 git add -A &amp;&amp; git commit -m "chore: install tanstack query eslint plugin"</code></pre>
 
-        <blockquote>💡 บทเรียน 03 ตอนที่เราเขียน <code>eslint.config.js</code> ทั้งไฟล์ ได้ทิ้งไว้แล้วว่า "ไฟล์นี้ยังไม่ใช่เวอร์ชันสุดท้าย — ในบทที่ 17 เราจะกลับมาเพิ่มอีกสองบรรทัด" นี่คือบทนั้น</blockquote>
+        <blockquote>💡 ตอนเขียน <code>eslint.config.js</code> ทั้งไฟล์ในบทเรียน 03 เราทิ้งท้ายไว้ว่าไฟล์นั้นยังไม่ใช่เวอร์ชันสุดท้าย และจะกลับมาเพิ่ม <code>@tanstack/eslint-plugin-query</code> อีกสองบรรทัดในบทเรียน 17 — นี่คือบทนั้น</blockquote>
 
         <h2>เป้าหมายของบทนี้</h2>
 
@@ -114,7 +114,7 @@ export const productKeys = {
     [...productKeys.details(), String(id)] as const,
 };
 </code></pre>
-          <p><strong>เหตุผล:</strong> cache key ผิด = bug ที่หาไม่เจอ — key ที่สะกดเพี้ยนไม่ทำให้อะไรพัง ไม่มี error ไม่มี warning ไม่มีเส้นแดง มันแค่ทำให้ TanStack Query สร้าง cache ก้อนใหม่เงียบ ๆ แล้วยิง request ซ้ำ หรือหนักกว่านั้นคือแสดงข้อมูลเก่าค้างอยู่ทั้งที่ข้อมูลเปลี่ยนไปแล้ว การพิมพ์ก้อนนี้เองคือวิธีเดียวที่จะทำให้คุณจำโครงต้นไม้ของ key ได้ และตอนที่ Agent สร้าง key ผิดที่ในบทหลัง ๆ สิ่งเดียวที่ทำให้คุณจับได้คือคุณรู้ว่าผังที่ถูกต้องหน้าตาอย่างไรโดยไม่ต้องเปิดไฟล์ดู</p>
+          <p><strong>เหตุผล:</strong> cache key ผิด = bug ที่หาไม่เจอ — key ที่สะกดเพี้ยนไม่ทำให้อะไรพัง ไม่มี error ไม่มี warning ไม่มีเส้นแดง มันแค่ทำให้ TanStack Query สร้าง cache ก้อนใหม่เงียบ ๆ แล้วยิง request ซ้ำ หรือหนักกว่านั้นคือแสดงข้อมูลเก่าค้างอยู่ทั้งที่ข้อมูลเปลี่ยนไปแล้ว การพิมพ์ก้อนนี้เองคือวิธีเดียวที่จะทำให้โครงต้นไม้ของ key อยู่ในหัวคุณ และนั่นคือสิ่งเดียวที่ใช้ตรวจได้ เพราะทุกครั้งที่คุณอ่านโค้ดที่แตะ cache หลังจากนี้ — <code>productQueries</code> ที่ Agent กำลังจะเขียนต่อในอีกไม่กี่นาที และเทสต์ของชั้น query ในบทเรียน 32 — สิ่งที่บอกว่า key ถูกหรือผิดคือความจำของคุณ ไม่ใช่เครื่องมือตัวไหน</p>
         </blockquote>
 
         <h3>productKeys — ลำดับชั้นของ key</h3>
@@ -196,7 +196,7 @@ eslint.config.js เป็น flat config ที่เขียนเองต�
         <blockquote class="lesson-ai-review">
           <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ:</p>
           <ul>
-            <li><strong>AI มักพลาดตรงนี้:</strong> เขียนด้วยไวยากรณ์ TanStack Query <strong>v4</strong> ซึ่งยังเป็นเวอร์ชันที่มีโค้ดในอินเทอร์เน็ตมากกว่า v5 มาก อาการมีสองแบบที่ต้องแยกให้ออก แบบแรกคือรูปทรงผิดทั้งก้อน: มันทิ้ง <code>queryOptions</code> แล้วเขียนเป็น custom hook ที่เรียก <code>useQuery(key, fn)</code> แบบส่ง argument สองตัว (v5 รับ options object ก้อนเดียวเท่านั้น) — กรณีนี้ typecheck จะฟ้อง ถ้าเจอให้ <code>git restore .</code> แล้วสั่งใหม่ ไม่ใช่ไล่แก้ทีละบรรทัด แบบที่สองอันตรายกว่ามากเพราะ<em>เงียบสนิท</em>: มันเขียน <code>keepPreviousData: true</code> (option ของ v4 ที่ถูกถอดออกไปแล้ว) แทน <code>placeholderData: keepPreviousData</code> หรือลืมบรรทัดนั้นไปทั้งบรรทัด lint ผ่าน typecheck ผ่าน หน้าเว็บวันนี้ก็ยังไม่มีอะไรให้ดู แล้วอาการจะไปโผล่ตอนบทเรียน 20 เป็นกริดสินค้าทั้งกริดหายวับกลายเป็น spinner ทุกครั้งที่ผู้ใช้กดเปลี่ยนหน้า — เปิดจาน <code>byCategory</code> ดูเป็นจุดแรกเสมอ</li>
+            <li><strong>AI มักพลาดตรงนี้:</strong> เขียนด้วยไวยากรณ์ TanStack Query <strong>v4</strong> ซึ่งยังเป็นเวอร์ชันที่มีโค้ดในอินเทอร์เน็ตมากกว่า v5 มาก มีสามอาการ และเส้นแบ่งที่สำคัญคือ<em>อันไหน compiler จับได้ อันไหนจับไม่ได้</em> สองอาการแรกดัง: (1) รูปทรงผิดทั้งก้อน — มันทิ้ง <code>queryOptions</code> แล้วเขียนเป็น custom hook ที่เรียก <code>useQuery(key, fn)</code> แบบส่ง argument สองตัว (v5 รับ options object ก้อนเดียวเท่านั้น) ถ้าเจอให้ <code>git restore .</code> แล้วสั่งใหม่ ไม่ใช่ไล่แก้ทีละบรรทัด (2) เขียน <code>keepPreviousData: true</code> ซึ่งเป็น option ของ v4 ที่ถูกถอดออกไปแล้ว แทนที่จะเป็น <code>placeholderData: keepPreviousData</code> — อาการนี้ typecheck ก็ฟ้องเหมือนกัน เพราะ <code>queryOptions</code> รับ object literal ตรง ๆ TypeScript จึงตรวจ excess property ให้ครบทุก overload ข้อความที่ได้หน้าตาแบบนี้: <code>error TS2769: No overload matches this call. Object literal may only specify known properties, and 'keepPreviousData' does not exist in type 'UndefinedInitialDataOptions&lt;...&gt;'.</code> เจอแล้วแก้ชื่อ option ให้ถูกได้เลย ส่วนอาการที่สามคืออาการที่<em>เงียบสนิท</em>และเป็นตัวที่ต้องใช้ตาคน: <strong>ลืมบรรทัดนั้นไปทั้งบรรทัด</strong> — ไม่มี property แปลกปลอมให้ compiler ตรวจ lint ผ่าน typecheck ผ่าน หน้าเว็บวันนี้ก็ยังไม่มีอะไรให้ดู แล้วอาการจะไปโผล่ตอนบทเรียน 20 เป็นกริดสินค้าทั้งกริดหายวับกลายเป็น spinner ทุกครั้งที่ผู้ใช้กดเปลี่ยนหน้า — เปิดจาน <code>byCategory</code> นับบรรทัดดูเป็นจุดแรกเสมอ</li>
             <li><strong>ไม่มีไฟล์ใหม่แม้แต่ไฟล์เดียว</strong> — <code>git status</code> ต้องเห็นแค่ <code>queries.ts</code> กับ <code>eslint.config.js</code> ขึ้นสถานะ modified ไม่มี <code>useProducts.ts</code>, <code>index.ts</code> หรือ hook อะไรแถมมา</li>
             <li><code>git diff src/features/products/queries.ts</code> ต้อง<strong>ไม่มีบรรทัดไหนใน <code>productKeys</code> ขึ้นเป็นสีแดง</strong> เลย มีแค่บรรทัด import ที่ถูกขยาย กับของที่ต่อท้ายไฟล์ — ถ้า Agent จัดรูปแบบ <code>productKeys</code> ใหม่หรือ "ปรับปรุง" ให้ ให้ย้อนเฉพาะส่วนนั้นกลับ</li>
             <li>ทุกจานใน <code>productQueries</code> คืนผลของ <code>queryOptions({...})</code> จริง ไม่ใช่ object ธรรมดา — สองแบบนี้หน้าตาเกือบเหมือนกัน ต่างกันตรงที่แบบหลังทำให้ <code>data</code> ในหน้าเพจสูญ type ไปเงียบ ๆ</li>
@@ -205,6 +205,7 @@ eslint.config.js เป็น flat config ที่เขียนเองต�
             <li><code>staleTime: 5 * 60 * 1000</code> อยู่ใน <code>categories</code> จานเดียว และ <code>src/app/queryClient.ts</code> <em>ไม่</em>ขึ้นสถานะ modified — นโยบาย cache ของข้อมูลชนิดหนึ่งต้องไม่ถูกแก้ด้วยการเปลี่ยนค่า default ของทั้งแอป</li>
             <li><code>queryFn: getCategories</code> เขียนแบบส่งฟังก์ชันตรง ๆ ไม่ใช่ <code>() =&gt; getCategories()</code> — ต่างกันแค่รูปแบบ ไม่ต่างกันที่ผล แต่เป็นข้อที่ diff กับโค้ดอ้างอิงจะไม่ตรงถ้าไม่ตรวจ</li>
             <li><code>eslint.config.js</code>: <code>git diff</code> ต้องเห็นบรรทัดใหม่แค่<strong>สองบรรทัด</strong> (บรรทัด <code>import pluginQuery</code> และบรรทัด <code>...pluginQuery.configs["flat/recommended"],</code>) บวกกับการที่ array <code>extends</code> ถูกแตกจากบรรทัดเดียวเป็นหลายบรรทัด — อย่างหลังคือฝีมือ Prettier ที่ขึ้นบรรทัดใหม่เมื่อบรรทัดยาวเกิน ไม่ใช่ Agent ทำเกินคำสั่ง กฎใน <code>rules</code> ทุกข้อต้องเหมือนเดิมทุกตัวอักษร</li>
+            <li>สี่จานใน <code>productQueries</code> คั่นกันด้วยบรรทัดว่างหนึ่งบรรทัด เหมือนโค้ดอ้างอิงข้างล่าง — ข้อนี้ prompt ไม่ได้สั่งไว้ และ Prettier ก็ไม่ยุ่งกับบรรทัดว่างที่คนเขียนวางเอง ถ้าของที่ได้มาอัดติดกันหมดก็ไม่ผิดอะไร แค่ diff กับโค้ดอ้างอิงจะไม่ตรง — เป็นตัวอย่างเล็ก ๆ ว่าอะไรที่ prompt ไม่ได้สั่ง คุณจะไม่ได้มันคืนมาเหมือนเดิมทุกครั้ง</li>
             <li><code>npm run lint</code> ต้องผ่านเงียบ ๆ — ถ้ามันเริ่มฟ้องกฎที่ขึ้นต้นด้วย <code>@tanstack/query/</code> นั่นแปลว่า plugin ต่อติดแล้วและกำลังทำงาน ให้อ่านสิ่งที่มันฟ้องจริง ๆ ก่อนแก้</li>
             <li>ไม่มี <code>any</code>, ไม่มี <code>as</code> กลบ type และไม่มี comment อธิบายสิ่งที่โค้ดบอกอยู่แล้ว</li>
           </ul>
@@ -340,7 +341,7 @@ export default tseslint.config(
         <h2>🤔 อธิบายให้ได้</h2>
 
         <ol>
-          <li>เขียนออกมาให้ได้ว่า <code>productKeys.detail(42)</code> กับ <code>productKeys.detail("42")</code> คืน array หน้าตาอย่างไรทั้งคู่ ชี้บรรทัดที่ทำให้มันเท่ากัน แล้วบอกว่าถ้าลบส่วนนั้นออก หน้าไหนของแอปจะยิง request ซ้ำโดยที่ผู้ใช้ไม่รู้ตัว</li>
+          <li>เขียนออกมาให้ได้ว่า <code>productKeys.detail(42)</code> กับ <code>productKeys.detail("42")</code> คืน array หน้าตาอย่างไรทั้งคู่ ชี้บรรทัดที่ทำให้มันเท่ากัน แล้วค้นทั้งโปรเจกต์ (รวมบทที่ยังมาไม่ถึง) ว่า<em>ที่ไหน</em>บ้างที่เรียก <code>detail</code> ด้วย number และที่ไหนเรียกด้วย string — ถ้าลบการ normalize ออก ที่ไหนจะได้ cache คนละก้อนกับที่ไหน</li>
           <li>สั่ง <code>invalidateQueries({ queryKey: productKeys.lists() })</code> หนึ่งครั้ง จะล้าง cache ของจานไหนบ้างในสี่จาน และไม่ล้างจานไหน ตอบจากโครงของ key ล้วน ๆ โดยไม่ต้องเปิดเอกสาร TanStack Query</li>
           <li><code>categories</code> เขียน <code>queryFn: getCategories</code> แต่ <code>list</code> เขียน <code>queryFn: () =&gt; getProducts(params)</code> — อธิบายว่าทำไมสองจานนี้เขียนคนละท่า และจะเกิดอะไรขึ้นถ้าเปลี่ยน <code>list</code> เป็น <code>queryFn: getProducts</code> เฉย ๆ</li>
         </ol>

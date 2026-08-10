@@ -187,7 +187,7 @@ export const apiClient = axios.create({
           <ol>
             <li>เปิด <code>src/shared/api/client.ts</code></li>
             <li>แก้บรรทัดบนสุดจาก <code>import axios from "axios";</code> เป็น <code>import axios, { AxiosError } from "axios";</code> — ตอนนี้เรามีที่ใช้มันแล้ว</li>
-            <li>พิมพ์บล็อก interceptor ต่อท้ายไฟล์ทั้งก้อน — ระหว่างพิมพ์ให้หยุดถามตัวเองที่คำว่า <code>Promise.reject</code> ว่าถ้าเปลี่ยนเป็น <code>return</code> เฉย ๆ จะเกิดอะไรขึ้น</li>
+            <li>เว้นบรรทัดว่างหนึ่งบรรทัดต่อจาก <code>});</code> ของ <code>axios.create</code> แล้วพิมพ์บล็อก interceptor ต่อท้ายไฟล์ทั้งก้อน — ระหว่างพิมพ์ให้หยุดถามตัวเองที่คำว่า <code>Promise.reject</code> ว่าถ้าเปลี่ยนเป็น <code>return</code> เฉย ๆ จะเกิดอะไรขึ้น</li>
             <li><code>npm run lint</code> และ <code>npm run typecheck</code> ให้ผ่านทั้งคู่ แล้วทดสอบสองขาตามหัวข้อถัดไป จากนั้นค่อย <code>git commit</code></li>
           </ol>
           <p><code>src/shared/api/client.ts</code> — ต่อท้ายไฟล์:</p>
