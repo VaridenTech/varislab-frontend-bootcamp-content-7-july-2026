@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สั่ง Cursor สร้างฟอร์มที่อยู่จัดส่งด้วย react-hook-form + zodResolver แล้วตรวจให้แน่ว่ามันใช้ register จริง ไม่ใช่ controlled input ที่ผูกกับ useState" />
+    <title>ฟอร์มที่อยู่ | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 26 · ชำระเงิน (Checkout)</p>
+          <h1>ฟอร์มที่อยู่ด้วย react-hook-form</h1>
+          <p class="lesson-original-title" lang="en">Address Form</p>
+        </header>
+
+        <p>schema พร้อมแล้วจากบทที่แล้ว บทนี้เราจะสร้างฟอร์มที่อยู่จัดส่งตัวจริง — และได้เจอกับ <strong>react-hook-form</strong> ซึ่งเป็น library จัดการฟอร์มที่ครองตลาด React มาหลายปี ก่อนเขียน prompt มาทำความเข้าใจกันก่อนว่ามันแก้ปัญหาอะไร เพราะปรัชญาของมันต่อตรงกับสิ่งที่คุณเรียนมาแล้วใน Week 4 พอดี และเพราะถ้าคุณไม่รู้ว่ามันควรทำงานอย่างไร คุณจะตรวจไม่ออกว่าโค้ดที่ Agent ส่งกลับมา<em>ใช้มันจริงหรือแค่ import มันมาวางไว้เฉย ๆ</em></p>
+
+        <h2>ปรัชญาของ react-hook-form: uncontrolled แต่สบายกว่า</h2>
+
+        <p>ย้อนกลับไปบท Hooks และบท Uncontrolled Forms ของ Week 4 — ตอนนั้นเราสรุปกันว่าฟอร์มมาตรฐานควรเป็น <em>uncontrolled</em>: ปล่อยให้ DOM เก็บค่าของ input เอง แล้วค่อยไปอ่านค่าทีเดียวตอน submit ส่วน <em>controlled form</em> (ผูกทุก input กับ <code>useState</code>) เก็บไว้ใช้เมื่อจำเป็นจริง ๆ เช่นต้องตอบสนองทุกตัวอักษรที่พิมพ์ เหตุผลเรื่อง performance ก็ชัดเจน: controlled form ทำให้ทั้งฟอร์ม re-render <em>ทุกครั้งที่กดคีย์บอร์ดหนึ่งที</em> ในขณะที่ uncontrolled ไม่ re-render อะไรเลยระหว่างพิมพ์</p>
+
+        <p>แต่ uncontrolled แบบดิบ ๆ (อ่าน <code>FormData</code> เองตอน submit) ก็มีงานน่าเบื่อ: ต้องแปลงค่าเป็น type ที่ถูกต้องเอง ต้อง validate เอง ต้องจัดการแสดง error ต่อ field เอง <strong>react-hook-form คือ uncontrolled form ที่มีคนทำงานน่าเบื่อพวกนั้นให้หมดแล้ว</strong>:</p>
+
+        <ul>
+          <li>input ยังเป็น uncontrolled — react-hook-form เกาะกับ DOM ผ่าน <code>ref</code> ค่าอยู่ใน DOM ไม่อยู่ใน state → พิมพ์เร็วแค่ไหนก็ไม่มี re-render</li>
+          <li>ตอน submit มันรวบรวมค่าทุก field, ส่งให้ resolver validate (ของเราคือ zod schema จากบทที่แล้ว), แล้วเรียก callback ของเราพร้อมข้อมูลที่<em>ผ่านการตรวจและมี type ถูกต้อง</em>แล้วเท่านั้น</li>
+          <li>ถ้าไม่ผ่าน มันเก็บข้อความ error รายฟิลด์ไว้ใน <code>formState.errors</code> แล้ว re-render เฉพาะตอนที่ชุด error เปลี่ยนจริง ๆ</li>
+        </ul>
+
+        <p>ประโยคสุดท้ายคือสิ่งที่ทำให้บทนี้มีข้อ <strong>AI มักพลาดตรงนี้</strong> ที่ตรวจยากกว่าปกติ: ฟอร์มที่เขียนด้วย <code>useState</code> ผูกทุกช่องแบบ controlled จะ<em>ทำงานถูกต้องทุกประการบนหน้าจอ</em> — กรอกได้ ตรวจได้ error ขึ้นครบ ผู้ใช้แยกไม่ออก คุณแยกไม่ออกจากภาพหน้าจอเช่นกัน ต่างกันแค่จำนวน re-render ที่ไม่มีใครเห็น และความจริงที่ว่า library ที่เราเพิ่งลงไปทั้งตัวถูกใช้ไปแค่เศษเสี้ยว</p>
+
+        <h2>งานสองไฟล์ที่ต้องมาคู่กัน</h2>
+
+        <p>บทนี้จะส่ง prompt<strong>รอบเดียว</strong> เกณฑ์จากบทเรียน 19 บอกให้แบ่งเมื่อของที่ต้องตรวจเกินหนึ่งหน้าจอ หรือเมื่อของนั้นแยกเป็นก้อนที่ทดสอบแยกกันได้ งานวันนี้ไม่เข้าทั้งสองข้อ: <code>CheckoutAddressBox</code> import <code>CheckoutAddressForm</code> ตรง ๆ (แถม import type จากมันด้วย — เดี๋ยวเราจะกลับมาคุยเรื่องนี้) ได้มาไฟล์เดียวก็ประกอบอะไรไม่ได้ และ diff ทั้งหมดสั้นพอที่จะอ่านจบในครั้งเดียว</p>
+
+        <p>สิ่งที่ต้องตัดสินใจให้จบก่อนเขียน prompt คือ <em>state ของ "ที่อยู่ที่ submit แล้ว" อยู่ที่ไหน</em> — คำตอบ: <strong>ไม่ได้อยู่ในสองไฟล์นี้เลย</strong> ไล่เส้นทางของข้อมูลดู:</p>
+
+        <ol>
+          <li>ระหว่างพิมพ์ ค่าของแต่ละช่องอยู่ใน DOM ภายใต้การดูแลของ react-hook-form (เรื่องของ <code>CheckoutAddressForm</code> ล้วน ๆ)</li>
+          <li>กด Submit ผ่าน validation → ฟอร์มเรียก <code>onSubmit</code> → กล่องรับต่อใน <code>onSubmitAddress</code> → ส่งขึ้นไปอีกชั้นผ่าน <code>onUpdateAddress</code></li>
+          <li>เจ้าของ state ตัวจริงคือ hook <code>useCheckout</code> ที่เราจะเขียนในบทเรียน 28 — มัน <code>setState</code> เก็บที่อยู่ไว้ แล้วส่ง<em>กลับลงมา</em>เป็น prop <code>checkoutAddress</code></li>
+          <li>กล่องเห็น <code>checkoutAddress</code> ไม่เป็น <code>null</code> แล้ว จึง render บล็อกสรุปที่อยู่ (เงื่อนไข <code>{checkoutAddress &amp;&amp; ...}</code>) โผล่เหนือฟอร์ม</li>
+        </ol>
+
+        <p>นี่คือ pattern <em>lifting state up</em> ที่คุณรู้จักดี: กล่องเป็นแค่ตัวแสดงผลที่ถูกควบคุมจากข้างบน ตัวมันเองไม่มี <code>useState</code> สักตัว ผลพลอยได้ที่เนียนมากคือ<strong>ฟอร์มยัง render อยู่ตลอด</strong>แม้ submit ไปแล้ว — ผู้ใช้กรอกใหม่แล้วกด Submit ซ้ำเพื่อแก้ที่อยู่ได้ทุกเมื่อ ค่าที่ submit ล่าสุดจะทับของเดิมเฉย ๆ ไม่ต้องมีปุ่ม Edit ไม่ต้องมี mode สลับไปมา</p>
+
+        <p>ข้อนี้ต้องเขียนลง prompt ให้ชัด เพราะ "ฟอร์มที่อยู่ที่กรอกแล้วแก้ได้" เป็นโจทย์ที่มีทางออกมาตรฐานอยู่สามสี่ทาง (มี state <code>isEditing</code>, มีปุ่ม Edit, ซ่อนฟอร์มหลัง submit) และทุกทางนั้นต้องมี <code>useState</code> ในกล่อง ถ้าเราไม่บอกว่าเราเลือกทางไหน Agent จะเลือกให้ แล้วบทเรียน 28 จะมี state สองแหล่งที่ต้อง sync กัน</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <pre><code class="language-bash">src/
+└── features/
+    └── checkout/
+        └── components/
+            ├── CheckoutAddressForm/
+            │   └── CheckoutAddressForm.tsx      # 🤖 ไฟล์ใหม่ — ไม่มี .module.scss
+            └── CheckoutAddressBox/
+                ├── CheckoutAddressBox.tsx       # 🤖 ไฟล์ใหม่
+                └── CheckoutAddressBox.module.scss # 🤖 ไฟล์ใหม่</code></pre>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>CheckoutAddressForm.tsx</code></strong> — ต้องผูก input ทุกช่องเข้ากับ react-hook-form ผ่าน <code>register</code> และต้องได้กติกา validate มาจาก <code>checkoutAddressSchema</code> เท่านั้น ต้องไม่มี <code>useState</code> ไม่มีการเขียนเงื่อนไข validate เองแม้แต่บรรทัดเดียว และต้องไม่เก็บที่อยู่ที่ submit แล้วไว้เอง</li>
+          <li><strong><code>CheckoutAddressBox.tsx</code></strong> — ต้องแสดงที่อยู่ที่ได้รับมาเป็น prop และส่งค่าที่ submit ขึ้นไปให้ parent ต้องไม่มี state ของตัวเอง ไม่มีปุ่ม Edit ไม่มีการซ่อนฟอร์ม และต้องไม่รู้จัก zod หรือ react-hook-form เลย</li>
+          <li><strong><code>CheckoutAddressBox.module.scss</code></strong> — ต้องมีเฉพาะ class <code>container</code> ที่ตั้งสีพื้นหลัง ต้องไม่มีกฎอื่น</li>
+        </ul>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> — แชทใหม่ โหมด Agent สังเกตว่า <code>บริบท:</code> ต้องบอกรูปร่างของ <code>Input</code> ให้ครบ ทั้งเรื่อง <code>forwardRef</code> และ prop <code>error</code> เพราะสองอย่างนั้นคือเหตุผลเดียวที่ฟอร์มนี้เขียนสั้นได้ขนาดนี้:</p>
+          <pre><code class="language-text">สร้างฟอร์มที่อยู่จัดส่งด้วย react-hook-form + zod แล้วห่อด้วยกล่องที่แสดงที่อยู่ที่ submit แล้ว
+
+บริบท: @src/features/checkout/schema.ts @src/shared/components/Input/Input.tsx @src/shared/components/Button/Button.tsx @src/styles/_utilities.scss @src/styles/_variables.scss
+src/features/checkout/schema.ts export const checkoutAddressSchema (zod object ที่มี
+  address, email, phone) และ export type CheckoutAddressFormData ที่มาจาก z.infer
+  ข้อความ error ทุกก้อนอยู่ใน schema แล้ว ห้ามเขียนเงื่อนไข validate ซ้ำในคอมโพเนนต์
+zod เป็นเวอร์ชัน 4 ส่วน react-hook-form และ @hookform/resolvers ติดตั้งแล้วในบทเรียนที่แล้ว
+src/shared/components/Input/Input.tsx เป็น default export ที่ห่อด้วย forwardRef
+  props extends React.InputHTMLAttributes&lt;HTMLInputElement&gt; แล้วเพิ่ม
+  label?: string และ error?: string
+  ref ที่ส่งเข้าไปจะไปถึงแท็ก input จริง และ error ที่ส่งเข้าไปจะแสดงเป็นข้อความสีแดงใต้ช่อง
+src/shared/components/Button/Button.tsx เป็น default export รับ children: React.ReactNode
+  และ type?: "button" | "reset" | "submit" โดยค่า default ของ type คือ "button"
+src/features/checkout/ ตอนนี้มีสามไฟล์: schema.ts, types.ts, consts.ts และยังไม่มีโฟลเดอร์
+  components เลย
+utility class ที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว ห้ามสร้างใหม่และห้ามแก้ไฟล์ในนั้น:
+  mb-15, mb-20, p-20, pb-10, flex, gap-15, width-50, fs-20, fw-bold, lh-1-5
+src/styles/_variables.scss มีตัวแปร $grey05 อยู่แล้ว
+
+โครงสร้าง: สร้างสามไฟล์นี้ ไม่มากไม่น้อยกว่านี้
+- src/features/checkout/components/CheckoutAddressForm/CheckoutAddressForm.tsx
+  (ไม่มีไฟล์ .module.scss คู่กัน)
+- src/features/checkout/components/CheckoutAddressBox/CheckoutAddressBox.tsx
+- src/features/checkout/components/CheckoutAddressBox/CheckoutAddressBox.module.scss
+
+ข้อกำหนดทางเทคนิค:
+- ทั้งสองไฟล์ .tsx ขึ้นต้นด้วย import React from "react"; ประกาศคอมโพเนนต์เป็น React.FC
+  พร้อม interface ของ props ไว้เหนือคอมโพเนนต์ และปิดท้ายไฟล์ด้วย export default
+  รูปทรงเดียวกับคอมโพเนนต์อื่นทั้งหมดในโปรเจกต์ตั้งแต่บทเรียน 12
+- CheckoutAddressForm.tsx: บรรทัด import เรียงตามลำดับนี้พอดี
+    import React from "react";
+    import { useForm } from "react-hook-form";
+    import { zodResolver } from "@hookform/resolvers/zod";
+    import { checkoutAddressSchema, CheckoutAddressFormData } from
+      "@/features/checkout/schema";
+    import Input from "@/shared/components/Input/Input";
+    import Button from "@/shared/components/Button/Button";
+  ใต้บรรทัด import ให้มีบรรทัดนี้พอดีหนึ่งบรรทัด
+    export type { CheckoutAddressFormData };
+  interface CheckoutAddressFormProps มี field เดียว
+    onSubmit: (data: CheckoutAddressFormData) =&gt; void
+  ในคอมโพเนนต์ ดึงของจาก useForm สามอย่างพอดี คือ register, handleSubmit
+    และ formState: { errors } โดยเรียกเป็น
+    useForm&lt;CheckoutAddressFormData&gt;({ resolver: zodResolver(checkoutAddressSchema) })
+    ต้องใส่ generic ตัวนี้ให้ useForm ห้ามปล่อยว่าง
+  const onFormSubmit = (data: CheckoutAddressFormData) =&gt; { onSubmit({ ...data }); };
+  JSX: form ที่มี onSubmit={handleSubmit(onFormSubmit)} ข้างในเรียงตามนี้
+    div className="mb-15" ครอบ Input ที่มี label="Address" type="text"
+      placeholder="Enter Address" แล้ว {...register("address")}
+      แล้ว error={errors.address?.message} ตามลำดับ prop นี้พอดี
+    บรรทัดว่างหนึ่งบรรทัด
+    div className="flex gap-15 mb-15" ที่มี div className="width-50" สองอัน
+      อันแรกครอบ Input label="Email" type="email" placeholder="Enter Email"
+        {...register("email")} error={errors.email?.message}
+      อันที่สองครอบ Input label="Phone Number" type="text"
+        placeholder="Enter Phone Number" {...register("phone")}
+        error={errors.phone?.message}
+    บรรทัดว่างหนึ่งบรรทัด
+    Button type="submit" ที่มี children เป็นข้อความ Submit
+  ห้ามใช้ useState ห้ามใช้ Controller ห้ามใส่ value หรือ onChange ให้ Input เอง
+  ห้ามเรียก e.preventDefault() ห้ามเรียก safeParse หรือ parse เอง
+  ห้ามใส่ defaultValues ห้ามใส่ mode ให้ useForm
+  ห้ามใช้แท็ก input ดิบ ๆ ต้องใช้คอมโพเนนต์ Input เท่านั้น
+- CheckoutAddressBox.tsx: บรรทัด import เรียงตามลำดับนี้พอดี
+    import React from "react";
+    import styles from "./CheckoutAddressBox.module.scss";
+    import CheckoutAddressForm, { CheckoutAddressFormData } from
+      "@/features/checkout/components/CheckoutAddressForm/CheckoutAddressForm";
+    บรรทัดที่สามนี้ import type มาจากตัวคอมโพเนนต์ ไม่ใช่จาก schema.ts ตามนี้จริง
+  interface CheckoutAddressBoxProps สามตัวตามลำดับนี้
+    title: string
+    checkoutAddress: CheckoutAddressFormData | null
+    onUpdateAddress: (data: CheckoutAddressFormData) =&gt; void
+  const onSubmitAddress = (data: CheckoutAddressFormData) =&gt; { onUpdateAddress(data); };
+  JSX: div className={`${styles.container} p-20`} ที่มี
+    h3 className="fs-20 pb-10" แสดง {title}
+    hr className="mb-20"
+    {checkoutAddress &amp;&amp; ( ... )} ที่ครอบ p className="lh-1-5 mb-20" ซึ่งข้างในมี
+      span className="fw-bold" ข้อความ Address แล้วตามด้วย " : " แล้ว
+        {checkoutAddress.address}
+      br
+      span className="fw-bold" ข้อความ email (ตัวเล็กตามนี้) แล้ว " : " แล้ว
+        {checkoutAddress.email}
+      br
+      span className="fw-bold" ข้อความ phone (ตัวเล็กตามนี้) แล้ว " : " แล้ว
+        {checkoutAddress.phone}
+    บรรทัดว่างหนึ่งบรรทัด
+    CheckoutAddressForm onSubmit={onSubmitAddress}
+  ห้ามมี useState ห้ามมีปุ่ม Edit ห้ามซ่อนฟอร์มหลัง submit
+  ห้าม import zod, react-hook-form หรือ schema.ts ในไฟล์นี้
+- CheckoutAddressBox.module.scss: สองส่วนเท่านั้น
+    @use "../../../../styles/variables";
+    .container { background-color: variables.$grey05; }
+  ห้ามใส่ padding, border, radius หรือกฎอื่นใดเพิ่ม
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ schema.ts, types.ts หรือ consts.ts
+- ห้ามแก้ Input.tsx, Button.tsx หรือไฟล์ใด ๆ ใน src/shared
+- ห้ามแก้ src/styles/ แม้แต่บรรทัดเดียว
+- ห้ามแตะ src/pages ทั้งโฟลเดอร์ โดยเฉพาะ Checkout.tsx ที่ยังเป็น stub
+- ห้ามสร้าง CheckoutAddressForm.module.scss
+- ห้ามสร้างคอมโพเนนต์อื่นของหน้า Checkout (Delivery, Payment, Summary, Billing)
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ห้ามเขียนเทสต์ (ฟอร์มนี้จะถูกกรอกจริงใน integration test บทเรียน 33)</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>ผูก input เป็น controlled ด้วย <code>useState</code> แทนที่จะใช้ <code>register</code></em> — สิ่งที่ได้กลับมาคือ <code>const [email, setEmail] = useState("")</code> สามตัว แล้ว <code>&lt;Input value={email} onChange={(e) =&gt; setEmail(e.target.value)} /&gt;</code> ส่วน <code>handleSubmit</code> ถูกแทนด้วย <code>onSubmit</code> ที่เรียก <code>checkoutAddressSchema.safeParse({ address, email, phone })</code> เองแล้วยัด error ลง state อีกก้อน โค้ดแบบนี้<strong>ทำงานถูกต้องทุกประการบนหน้าจอ</strong>: กรอกได้ error ขึ้นครบ submit ได้ ไม่มี lint ไม่มี typecheck ตัวไหนบ่นสักคำ สิ่งที่หายไปคือเหตุผลทั้งหมดที่เราลง react-hook-form — ทุกตัวอักษรที่ผู้ใช้พิมพ์จะ re-render ทั้งฟอร์มหนึ่งรอบ, <code>zodResolver</code> ที่เป็นสะพานทั้งเส้นไม่ถูกใช้, และ <code>forwardRef</code> ที่เราลงแรงใส่ <code>Input</code> ไว้ตั้งแต่บทเรียน 12 ก็ไม่มีใครเรียกใช้ วิธีตรวจสามคำสั่ง: <code>grep -n "useState" src/features/checkout/components/CheckoutAddressForm/CheckoutAddressForm.tsx</code> ต้อง<strong>ว่างเปล่า</strong>, <code>grep -c "register(" .../CheckoutAddressForm.tsx</code> ต้องได้ <strong>3</strong> พอดี และ <code>grep -n "safeParse\|parse(" .../CheckoutAddressForm.tsx</code> ต้องว่างเปล่า อาการครึ่งทางที่เจอบ่อยไม่แพ้กันคือมันใช้ <code>register</code> ถูกทุกช่อง แต่เผลอใส่ <code>value={...}</code> เพิ่มให้ด้วย "เพื่อความชัวร์" — ช่องนั้นจะกลายเป็น controlled ที่ค่าไม่มีวันเปลี่ยน คือ<em>พิมพ์ไม่ได้</em> ข้อนี้เห็นได้จากหน้าจอทันที ต่างจากข้อแรกที่เห็นไม่ได้เลย</li>
+            <li>ไฟล์ใหม่ <strong>3 ไฟล์พอดี</strong> ไม่มี <code>CheckoutAddressForm.module.scss</code> โผล่มา ไม่มีไฟล์ใน <code>src/styles/</code> หรือ <code>src/shared/</code> ขึ้นสถานะ modified และ <code>src/pages/Checkout/Checkout.tsx</code> ต้องยังเป็น stub เหมือนเดิม (Agent ที่เห็นว่าคอมโพเนนต์ใหม่ยังไม่มีใคร render ชอบ "ช่วยต่อให้")</li>
+            <li><code>{...register("address")}</code> วาง<em>ก่อน</em> <code>error={...}</code> และวาง<em>หลัง</em> <code>placeholder</code> ตามโค้ดอ้างอิง — ลำดับ prop มีผลจริงเวลามีชื่อชนกัน (prop ที่มาทีหลังชนะ) ในกรณีนี้ไม่มีชื่อชนกันเลย ทั้ง <code>name</code>, <code>ref</code>, <code>onChange</code>, <code>onBlur</code> ที่ <code>register</code> คืนมาไม่ทับกับอะไร แต่ให้เรียงตามนี้เพื่อให้ diff ตรง และเพื่อให้คุณชินกับการอ่านลำดับ prop เป็นเรื่องสำคัญ</li>
+            <li><strong>placeholder ทั้งสามก้อนต้องตรงทุกตัวอักษร</strong> — <code>Enter Address</code>, <code>Enter Email</code>, <code>Enter Phone Number</code> และปุ่มต้องมีข้อความว่า <code>Submit</code> เพราะ integration test ของหน้า Checkout ในบทเรียน 33 หาช่องกรอกด้วย <code>getByPlaceholderText("Enter Address")</code> และหาปุ่มด้วย <code>getByRole("button", { name: "Submit" })</code> ถ้า Agent ปรับถ้อยคำให้ "สวยขึ้น" (<code>Street address</code>, <code>Save address</code>) วันนี้ไม่มีอะไรพัง แต่บทเรียน 33 จะพังโดยที่คุณจะโทษเทสต์แทนที่จะโทษบรรทัดนี้</li>
+            <li><code>label</code> ของทั้งสามช่องคือ <code>Address</code>, <code>Email</code>, <code>Phone Number</code> และ <code>type</code> ของช่อง phone เป็น <code>"text"</code> ไม่ใช่ <code>"tel"</code> — <code>tel</code> ถูกกว่าในเชิง HTML (คีย์บอร์ดมือถือขึ้นแป้นตัวเลขให้) และ Agent จำนวนมากจะ "แก้ให้" ข้อนี้เป็นข้อที่ต้นฉบับทำไม่ดีจริง แต่เราคงไว้เพื่อให้ diff ตรง แล้วจดไว้ในบันทึกรีวิวของคุณ</li>
+            <li><code>&lt;form onSubmit={handleSubmit(onFormSubmit)}&gt;</code> ไม่ใช่ <code>onSubmit={onFormSubmit}</code> เปล่า ๆ และในไฟล์ต้องไม่มี <code>e.preventDefault()</code> — <code>grep -n "preventDefault" .../CheckoutAddressForm.tsx</code> ต้องว่างเปล่า <code>handleSubmit</code> ทำให้แล้ว ถ้ามันโผล่มา แปลว่า Agent เขียน handler เองแล้วเพิ่งนึกได้ว่าต้องกัน default</li>
+            <li><code>useForm&lt;CheckoutAddressFormData&gt;</code> มี generic จริง — ถ้าปล่อยว่างเป็น <code>useForm({ resolver })</code> โค้ดยังรันได้และ type ก็ยัง infer มาจาก resolver ได้ระดับหนึ่ง แต่ <code>register("adress")</code> ที่สะกดผิดจะไม่ถูกฟ้อง ซึ่งเป็นบั๊กที่เงียบสนิท (ช่องนั้นจะไม่ถูกส่งค่าไปไหนเลย)</li>
+            <li><code>grep -n "useState\|useEffect" .../CheckoutAddressBox/CheckoutAddressBox.tsx</code> ต้องว่างเปล่า — กล่องไม่มี state ของตัวเอง ถ้ามันเก็บ <code>const [address, setAddress] = useState(checkoutAddress)</code> ไว้ "เผื่อ" นั่นคือสำเนาที่จะเพี้ยนจากของจริงทันทีที่ <code>useCheckout</code> ในบทเรียน 28 อัปเดตค่า</li>
+            <li>ไม่มีปุ่ม Edit ไม่มีเงื่อนไขซ่อนฟอร์มหลัง submit — ฟอร์มต้อง render อยู่เสมอ ทดสอบด้วยมือได้ในบทเรียน 28: submit แล้วต้องยังพิมพ์ทับได้เลย</li>
+            <li><code>grep -n "zod\|react-hook-form" .../CheckoutAddressBox.tsx</code> ต้องว่างเปล่า — กล่องเป็นแค่ layout ความรู้เรื่องฟอร์มทั้งหมดถูกกักไว้ในไฟล์เดียว</li>
+            <li>ไฟล์ <code>.module.scss</code> มีแค่ <code>@use</code> กับ <code>.container</code> ที่มีกฎบรรทัดเดียว — ถ้ามี <code>padding: 20px</code> โผล่มาด้วย แปลว่า Agent ไม่เชื่อว่า <code>p-20</code> มีจริง (มันมีจริง ตรวจได้ด้วย <code>grep -rn "p-20\|generate-padding" src/styles/</code>) และคุณจะได้ padding สองชั้นทับกัน</li>
+            <li>path ใน <code>@use</code> เป็น <code>"../../../../styles/variables"</code> สี่ชั้นพอดี นับจาก <code>components/CheckoutAddressBox/</code> ขึ้นไปถึง <code>src/</code> — ผิดชั้นเดียว sass จะ error ตอน build ไม่ใช่ตอน typecheck ซึ่งแปลว่า <code>npm run typecheck</code> ผ่านแล้วก็ยังพังได้ ต้องเปิด <code>npm run dev</code> ดูจริง</li>
+            <li>ไม่มี <code>any</code> ไม่มี comment ที่เขียนซ้ำสิ่งที่โค้ดบอกอยู่แล้ว และไม่มีไฟล์เทสต์โผล่มา</li>
+          </ul>
+        </blockquote>
+
+        <p>เหมือนบทก่อน ๆ: <code>npm run lint</code> อาจตกเรื่อง <code>import-x/order</code> ก่อน แก้ด้วย <code>npx eslint . --fix</code> แล้วรันซ้ำให้ผ่านเงียบ ๆ จากนั้นค่อย <code>npm run typecheck</code> — <code>CheckoutAddressForm.tsx</code> มี import หกบรรทัดที่ปน <code>react</code>, แพ็กเกจภายนอกสองตัว และ <code>@/</code> อีกสามบรรทัด ถ้า <code>--fix</code> สลับลำดับให้ต่างจากโค้ดอ้างอิง นั่นคือฝีมือเครื่องมือ ไม่ใช่ความผิดของ Agent ให้ยอมรับผลของมันแล้วอ่าน diff อีกรอบ</p>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/features/checkout/components/CheckoutAddressForm/CheckoutAddressForm.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  checkoutAddressSchema,
+  CheckoutAddressFormData,
+} from "@/features/checkout/schema";
+import Input from "@/shared/components/Input/Input";
+import Button from "@/shared/components/Button/Button";
+
+export type { CheckoutAddressFormData };
+
+interface CheckoutAddressFormProps {
+  onSubmit: (data: CheckoutAddressFormData) =&gt; void;
+}
+
+const CheckoutAddressForm: React.FC&lt;CheckoutAddressFormProps&gt; = ({
+  onSubmit,
+}) =&gt; {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm&lt;CheckoutAddressFormData&gt;({
+    resolver: zodResolver(checkoutAddressSchema),
+  });
+
+  const onFormSubmit = (data: CheckoutAddressFormData) =&gt; {
+    onSubmit({ ...data });
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit(onFormSubmit)}&gt;
+      &lt;div className="mb-15"&gt;
+        &lt;Input
+          label="Address"
+          type="text"
+          placeholder="Enter Address"
+          {...register("address")}
+          error={errors.address?.message}
+        /&gt;
+      &lt;/div&gt;
+
+      &lt;div className="flex gap-15 mb-15"&gt;
+        &lt;div className="width-50"&gt;
+          &lt;Input
+            label="Email"
+            type="email"
+            placeholder="Enter Email"
+            {...register("email")}
+            error={errors.email?.message}
+          /&gt;
+        &lt;/div&gt;
+        &lt;div className="width-50"&gt;
+          &lt;Input
+            label="Phone Number"
+            type="text"
+            placeholder="Enter Phone Number"
+            {...register("phone")}
+            error={errors.phone?.message}
+          /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;Button type="submit"&gt;Submit&lt;/Button&gt;
+    &lt;/form&gt;
+  );
+};
+
+export default CheckoutAddressForm;
+</code></pre>
+
+        <p>ไฟล์ไม่ยาว แต่ทุกบรรทัดมีเรื่องเล่า ไล่จากบนลงล่าง:</p>
+
+        <h3><code>useForm</code> + <code>zodResolver</code></h3>
+
+        <p><code>useForm</code> คือศูนย์บัญชาการของฟอร์ม เราส่ง generic <code>CheckoutAddressFormData</code> (type ที่ <code>z.infer</code> สกัดให้เมื่อบทที่แล้ว) เพื่อบอกว่าฟอร์มนี้มี field อะไรบ้าง — ผลคือ <code>register("address")</code> จะ autocomplete ชื่อ field ให้ และถ้าพิมพ์ <code>register("adress")</code> TypeScript ฟ้องทันที ส่วน <code>resolver: zodResolver(checkoutAddressSchema)</code> คือการเสียบ schema ของเราเข้าเป็นกติกา validate ของฟอร์ม — สังเกตว่าเราไม่ต้องเขียน logic validate ในคอมโพเนนต์นี้เลยแม้แต่บรรทัดเดียว กติกาทั้งหมดอยู่ใน <code>schema.ts</code> ที่เดียว ซึ่งเป็นเหตุผลที่บทที่แล้วถึงให้คุณพิมพ์ไฟล์นั้นเอง</p>
+
+        <h3><code>register</code> — จุดเชื่อมระหว่าง input กับฟอร์ม</h3>
+
+        <p><code>{...register("address")}</code> เป็นท่าที่ดูแปลกตาตอนแรก แต่จริง ๆ ตรงไปตรงมา: <code>register("address")</code> คืน object ที่มี <code>name</code>, <code>ref</code>, <code>onChange</code>, <code>onBlur</code> แล้วเรา spread ทั้งก้อนลงบน <code>&lt;Input /&gt;</code> — เท่ากับสมัคร input ตัวนี้เข้าระบบของ react-hook-form ตัวสำคัญที่สุดในก้อนคือ <code>ref</code>: react-hook-form ใช้มันจับ DOM element ตรง ๆ เพื่ออ่านค่าโดยไม่ต้องพึ่ง state</p>
+
+        <p>และตรงนี้เองที่การบ้านเก่าของเราออกดอกผล — จำได้ไหมว่าตอนสร้าง <code>Input</code> ในบทเรียน 12 เราห่อมันด้วย <code>forwardRef</code>? เพราะ <code>ref</code> ไม่ใช่ prop ธรรมดา คอมโพเนนต์ที่รับ <code>ref</code> แล้วส่งต่อให้ <code>&lt;input&gt;</code> ข้างในต้องประกาศตัวเป็น <code>forwardRef</code> อย่างชัดเจน ถ้าตอนนั้นเราสร้าง <code>Input</code> แบบธรรมดา วันนี้ <code>register</code> จะจับ input ข้างในไม่ได้ และฟอร์มจะอ่านค่าไม่ออกแบบเงียบ ๆ อาการงง ๆ อันดับหนึ่งของคนใช้ react-hook-form กับ custom component คือเรื่องนี้แหละ — และเป็นเหตุผลที่ checklist ของบทเรียน 12 มีข้อ "<code>ref</code> ถูกส่งไปที่แท็ก <code>&lt;input&gt;</code> ไม่ใช่ที่ <code>&lt;div&gt;</code> ข้างนอก" รออยู่ตั้งแต่วันนั้น ถ้าคุณกด accept ข้ามข้อนั้นไปเมื่อสิบสี่บทก่อน วันนี้คือวันที่มันมาเก็บเงิน</p>
+
+        <p>ส่วน <code>error={errors.address?.message}</code> คือปลายทางของ zod: ถ้า validate ไม่ผ่าน ข้อความอย่าง "Address is required" จะมาอยู่ใน <code>errors.address.message</code> แล้ว <code>Input</code> ของเรา (ที่มี prop <code>error</code> เตรียมไว้ตั้งแต่บทเรียน 12 เช่นกัน) ก็แสดงเป็นตัวหนังสือสีแดงใต้ช่องกรอก — ใช้ optional chaining (<code>?.</code>) เพราะตอนที่ยังไม่มี error <code>errors.address</code> เป็น <code>undefined</code></p>
+
+        <h3><code>handleSubmit</code> — ด่านตรวจก่อนถึงมือเรา</h3>
+
+        <p><code>&lt;form onSubmit={handleSubmit(onFormSubmit)}&gt;</code> ไม่ได้เรียก <code>onFormSubmit</code> ตรง ๆ แต่ห่อไว้ด้วย <code>handleSubmit</code> ซึ่งทำงานตามลำดับนี้ทุกครั้งที่ผู้ใช้กด submit:</p>
+
+        <ol>
+          <li>กัน default behavior ของเบราว์เซอร์ (ไม่ต้องเขียน <code>e.preventDefault()</code> เอง)</li>
+          <li>รวบรวมค่าทุก field จาก DOM แล้วส่งให้ zod ตรวจ</li>
+          <li>ถ้า<em>ไม่ผ่าน</em> — เติม <code>formState.errors</code> แล้ว re-render ให้ข้อความ error โผล่ <code>onFormSubmit</code> ไม่ถูกเรียกเลย</li>
+          <li>ถ้า<em>ผ่าน</em> — เรียก <code>onFormSubmit(data)</code> โดย <code>data</code> เป็น <code>CheckoutAddressFormData</code> ที่การันตีแล้วว่าครบและถูกต้อง</li>
+        </ol>
+
+        <p>แปลว่าโค้ดฝั่งเราไม่มีทางได้รับข้อมูลครึ่ง ๆ กลาง ๆ — ทุกเส้นทางที่ <code>onSubmit</code> ของ parent ถูกเรียก ข้อมูลผ่าน schema มาแล้วเสมอ และนั่นคือเหตุผลที่ <code>useCheckout</code> ในบทเรียน 28 เก็บที่อยู่ลง state ได้โดยไม่ต้องตรวจอะไรซ้ำอีก</p>
+
+        <p>เกร็ดสุดท้าย: class อย่าง <code>mb-15</code>, <code>flex gap-15</code>, <code>width-50</code> คือ utility classes จาก <code>_utilities.scss</code> และ <code>_spacing.scss</code> ที่เราวางไว้ตั้งแต่บทเรียน 04 — สอง input ล่างเลยเรียงเป็นสองคอลัมน์เท่า ๆ กันโดยไม่ต้องมี SCSS module ของตัวเอง นี่คือเหตุผลที่ไฟล์นี้เป็นคอมโพเนนต์เดียวในบทที่ไม่มี <code>.module.scss</code> คู่</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — สองข้อ และข้อแรกจะตามหลอกหลอนไปถึงบทเรียน 28:</strong> บรรทัด <code>export type { CheckoutAddressFormData };</code> คือการ re-export type ที่ไฟล์นี้ไม่ได้เป็นเจ้าของ ผลคือ <code>CheckoutAddressBox</code> import type ตัวนี้มาจาก<em>คอมโพเนนต์</em> ไม่ใช่จาก <code>schema.ts</code> ที่เป็นต้นทางจริง — ลองเทียบกับสิ่งที่ checklist ของบทที่แล้วเพิ่งปฏิเสธไป: เราห้าม Agent เขียน <code>export type { CheckoutAddressFormData } from "./schema";</code> ใน <code>types.ts</code> ด้วยเหตุผลว่า "สร้างทางเข้าที่สองให้ของชิ้นเดียว" แล้ววันนี้ต้นฉบับก็สร้างทางเข้าที่สองนั้นเองในไฟล์คอมโพเนนต์ ผลจริงที่ตามมา: หลังบทเรียน 28 คุณจะมีสามไฟล์ที่ import type นี้จากคนละที่กัน — <code>CheckoutAddressBox</code> เอาจากคอมโพเนนต์ ส่วน <code>api.ts</code> กับ <code>useCheckout.ts</code> เอาจาก <code>schema.ts</code> โดยตรง วันที่มีคนย้าย schema ไปไฟล์อื่น เขาจะไล่แก้ไม่ครบเพราะ grep คำว่า "schema" แล้วเจอไม่หมด ทางแก้ในรีวิวจริงคือลบบรรทัดนี้ทิ้งแล้วให้ทุกคน import จาก <code>@/features/checkout/schema</code> เหมือนกันหมด ข้อสองเล็กกว่าแต่อยู่ในสายตาเหมือนกัน: <code>onSubmit({ ...data })</code> spread เพื่อ "ให้ parent ได้สำเนาของตัวเอง" ซึ่งฟังดูมีเหตุผลจนกระทั่งคุณเปิดดูว่า <code>data</code> ที่ <code>handleSubmit</code> ส่งมาคือ object ที่ react-hook-form สร้างใหม่ทุกครั้งที่ submit อยู่แล้ว ไม่มีใครถือ reference นี้ต่อ การ spread จึงคัดลอกของที่ไม่มีใครแตะ และมันยังเป็น shallow copy ที่ถ้าวันหน้า schema มี field ที่เป็น object ซ้อน ก็จะไม่ได้ป้องกันอะไรอยู่ดี</blockquote>
+
+        <p><code>src/features/checkout/components/CheckoutAddressBox/CheckoutAddressBox.tsx</code> — ฟอร์มอย่างเดียวยังไม่พอ บนหน้า Checkout จริงเราอยากให้ผู้ใช้กด Submit แล้ว<em>เห็นที่อยู่ที่ตัวเองกรอกแสดงยืนยันอยู่ด้านบน</em> พร้อมยังแก้ไขซ้ำได้:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./CheckoutAddressBox.module.scss";
+import CheckoutAddressForm, {
+  CheckoutAddressFormData,
+} from "@/features/checkout/components/CheckoutAddressForm/CheckoutAddressForm";
+
+interface CheckoutAddressBoxProps {
+  title: string;
+  checkoutAddress: CheckoutAddressFormData | null;
+  onUpdateAddress: (data: CheckoutAddressFormData) =&gt; void;
+}
+
+const CheckoutAddressBox: React.FC&lt;CheckoutAddressBoxProps&gt; = ({
+  title,
+  checkoutAddress,
+  onUpdateAddress,
+}) =&gt; {
+  const onSubmitAddress = (data: CheckoutAddressFormData) =&gt; {
+    onUpdateAddress(data);
+  };
+
+  return (
+    &lt;div className={`${styles.container} p-20`}&gt;
+      &lt;h3 className="fs-20 pb-10"&gt;{title}&lt;/h3&gt;
+      &lt;hr className="mb-20" /&gt;
+      {checkoutAddress &amp;&amp; (
+        &lt;p className="lh-1-5 mb-20"&gt;
+          &lt;span className="fw-bold"&gt;Address&lt;/span&gt; : {checkoutAddress.address}
+          &lt;br /&gt;
+          &lt;span className="fw-bold"&gt;email&lt;/span&gt; : {checkoutAddress.email}
+          &lt;br /&gt;
+          &lt;span className="fw-bold"&gt;phone&lt;/span&gt; : {checkoutAddress.phone}
+        &lt;/p&gt;
+      )}
+
+      &lt;CheckoutAddressForm onSubmit={onSubmitAddress} /&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default CheckoutAddressBox;
+</code></pre>
+
+        <p>แล้วก็ style ของกล่อง <code>CheckoutAddressBox.module.scss</code> ที่อยู่ข้าง ๆ กัน:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.container {
+  background-color: variables.$grey05;
+}
+</code></pre>
+
+        <p>ดีไซน์ของกล่องนี้ (พื้นเทา <code>$grey05</code> + padding จาก utility class <code>p-20</code> + หัวข้อ + เส้นคั่น) จะกลายเป็นหน้าตามาตรฐานของ<em>ทุกกล่อง</em>บนหน้า Checkout — บทหน้าคุณจะเห็นกล่อง Delivery, Payment และ Summary ใช้สูตรเดียวกันเป๊ะ ซึ่งฟังดูดีจนกระทั่งคุณอ่านกล่องข้างล่างนี้</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — และรีบทักตอนนี้เลย เพราะบทหน้ามันจะถูกคูณสี่:</strong> เปิด <code>src/styles/_utilities.scss</code> ที่เราเขียนไว้ตั้งแต่บทเรียน 04 แล้วมองหา class ชื่อ <code>bg-grey05</code> — มันมีอยู่แล้ว และเนื้อในของมันคือ <code>background-color: variables.$grey05;</code> ตัวอักษรต่อตัวอักษรเดียวกับ <code>.container</code> ที่เราเพิ่งสร้าง แปลว่าไฟล์ <code>.module.scss</code> ทั้งไฟล์นี้แทนได้ด้วยการเปลี่ยน <code>className={`${styles.container} p-20`}</code> เป็น <code>className="bg-grey05 p-20"</code> แล้วลบไฟล์ทิ้ง ค่าใช้จ่ายของการไม่ทำแบบนั้นไม่ได้อยู่ที่วันนี้ (สี่บรรทัด ใครจะสน) แต่อยู่ที่บทเรียน 27: กล่อง Delivery, Payment, Summary Order และ Billing Summary จะได้ไฟล์ <code>.module.scss</code> หน้าตาเหมือนกันเป๊ะไฟล์ละหนึ่งไฟล์ รวมเป็น<strong>ห้าไฟล์ที่มีเนื้อในเดียวกัน</strong> และวันที่ดีไซเนอร์ขอเปลี่ยนสีพื้นกล่องบนหน้า Checkout คนแก้ต้องเปิดห้าไฟล์ — หรือแก้สี่แล้วลืมหนึ่ง ซึ่งจะได้กล่องที่สีเพี้ยนอยู่ใบเดียวบนหน้าจอ นี่คือรูปแบบเดิมที่คอร์สนี้เจอมาตลอด: ของที่<em>ถูกต้องในไฟล์เดียว</em> กลายเป็นปัญหาเมื่อถูกคูณ เราสั่งตามต้นฉบับเพื่อให้ diff ตรง แต่ถ้านี่เป็น pull request จริง ข้อนี้ควรถูกทักในบทนี้ ก่อนที่มันจะขยายพันธุ์ในบทหน้า <strong>ข้อพ่วงในไฟล์เดียวกัน:</strong> <code>onSubmitAddress</code> เป็น wrapper ที่เรียก <code>onUpdateAddress(data)</code> เฉย ๆ — <code>&lt;CheckoutAddressForm onSubmit={onUpdateAddress} /&gt;</code> ให้ผลเหมือนกันทุกประการ เป็นท่าเดียวกับ <code>onCheckout</code> ในบทเรียน 24 ที่เราทักไปแล้วรอบหนึ่ง และข้อสุดท้ายเป็นเรื่องที่ผู้ใช้เห็นจริง: บล็อกสรุปที่อยู่เขียนหัวข้อว่า <code>Address</code> ตัวใหญ่ แต่อีกสองบรรทัดเป็น <code>email</code> กับ <code>phone</code> ตัวเล็ก ทั้งที่อยู่ในย่อหน้าเดียวกันและ label ของช่องกรอกข้างล่างเขียนว่า <code>Email</code> กับ <code>Phone Number</code> — ความไม่สม่ำเสมอที่ไม่มีเครื่องมือไหนจับได้ และเป็นข้อที่รีวิวเวอร์คนแรกจะเห็นก่อนใครเพราะมันอยู่บนหน้าจอ</blockquote>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>ใส่ <code>console.log("render")</code> เป็นบรรทัดแรกของตัวคอมโพเนนต์ <code>CheckoutAddressForm</code> แล้วพิมพ์คำว่า <code>bangkok</code> ลงช่อง Address ทีละตัวอักษร จดจำนวนบรรทัดใน console จากนั้นแปลงช่อง Address ให้เป็น controlled ด้วย <code>useState</code> ชั่วคราวแล้วทำซ้ำ — ตอบว่าสองตัวเลขต่างกันเท่าไรและเพราะอะไร แล้วตอบต่อว่าถ้าฟอร์มนี้มีสิบช่องแทนที่จะเป็นสามช่อง ตัวเลขฝั่ง controlled จะเปลี่ยนไปอย่างไร (เสร็จแล้วแก้กลับ)</li>
+          <li>ลบ <code>error={errors.email?.message}</code> ออกจากช่อง Email แล้วกด Submit ด้วย email ว่าง — ตอบว่าฟอร์มยังถูกกันไม่ให้ submit หรือไม่ ผู้ใช้เห็นอะไร และอธิบายให้ได้ว่าใครเป็นคน "ตัดสิน" ว่าไม่ผ่าน กับใครเป็นคน "แสดง" ว่าไม่ผ่าน — สองหน้าที่นี้อยู่คนละไฟล์กันตรงไหนบ้าง (เสร็จแล้วเติมกลับ)</li>
+          <li><code>CheckoutAddressBox</code> ไม่มี <code>useState</code> เลยสักตัว แต่มันแสดงที่อยู่ที่ผู้ใช้เพิ่งกรอกได้ — ไล่ให้ครบว่าค่านั้นเดินทางจากช่องกรอกไปถึงบล็อกสรุปด้านบนผ่านกี่ทอด ใครเป็นเจ้าของ (ไฟล์ไหน บทไหน) และตอบด้วยว่าถ้ากล่องเก็บสำเนาของตัวเองไว้ด้วย <code>useState</code> อาการที่ผู้ใช้จะเห็นในบทเรียน 28 คืออะไร</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> บทนี้ยังทดสอบบนหน้าจอไม่ได้ — <code>Checkout.tsx</code> ของเรายังเป็น stub จากบทเรียน 09 อยู่ ยังไม่มีใคร render คอมโพเนนต์ที่เพิ่งสร้าง ทุกอย่างจะถูกประกอบเข้าหน้า Checkout จริงพร้อมกันในบทเรียน 28 ตอนนี้ checkpoint ของคุณคือโค้ดต้อง compile ผ่าน ไม่มีเส้นแดง <code>npm run lint</code> กับ <code>npm run typecheck</code> ผ่านทั้งคู่ และโครงไฟล์ตรงนี้: <code>features/checkout/components/CheckoutAddressForm/CheckoutAddressForm.tsx</code>, <code>CheckoutAddressBox/CheckoutAddressBox.tsx</code> + <code>.module.scss</code> ถ้าอยากเห็นฟอร์มตอนนี้จริง ๆ จะลองเอา <code>&lt;CheckoutAddressBox title="Shipping Address" checkoutAddress={null} onUpdateAddress={console.log} /&gt;</code> ไปวางชั่วคราวในหน้าไหนสักหน้าก็ได้ — แล้วกด Submit ทั้งที่ฟอร์มว่างเพื่อดูข้อความ error ทั้งสามก้อนจาก schema ที่คุณพิมพ์เองเมื่อบทที่แล้วโผล่ขึ้นมาพร้อมกัน (พร้อมกรอก email มั่ว ๆ ดูว่าได้ "Enter a valid email address" จริง) แต่อย่าลืมถอดออกและ <code>git status</code> ให้สะอาดก่อนไปบทถัดไป บทหน้าคือบทที่ Agent จะทำงานคุ้มที่สุดในคอร์สนี้: เจ็ดคอมโพเนนต์กับสิบสองไฟล์ในสองรอบ — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="25_checkout_schema.html" rel="prev">ก่อนหน้า: Zod Schema</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="27_delivery_payment_summary.html" rel="next">ถัดไป: จัดส่ง ชำระเงิน และสรุปรายการ</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
