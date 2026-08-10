@@ -29,7 +29,7 @@ git add -A &amp;&amp; git commit -m "chore: install dayjs"</code></pre>
 
         <p>นี่คือ dependency ตัวสุดท้ายของ chapter หน้าเพจ เราจะได้ใช้มันครั้งแรกใน ReviewCard — เรียก <code>dayjs(isoString).format("DD MMMM YYYY")</code> จบในบรรทัดเดียว</p>
 
-        <h2>แบ่งสองรอบอีกครั้ง — คราวนี้ตัดตามเส้นสถาปัตยกรรม</h2>
+        <h2>แบ่งสองรอบอีกครั้ง — คราวนี้ตัดตามทิศทางการพึ่งพา</h2>
 
         <p>บทเรียน 19 ให้เกณฑ์ไว้ว่า: ถ้า prompt เดียวทำให้เกิดของที่ต้องตรวจเกินหนึ่งหน้าจอ และของนั้นแบ่งเป็นก้อนที่ทดสอบแยกกันได้ ให้แบ่ง บทนี้เข้าเกณฑ์ข้อแรกเต็ม ๆ (เจ็ดไฟล์ใหม่ในรอบเดียว) แต่<em>ไม่</em>เข้าเกณฑ์ข้อสอง — คอมโพเนนต์ทั้งห้าตัวยังไม่มีใครเรียกใช้จนกว่าหน้าเพจจะเสร็จ จบรอบแรกไปก็ยังไม่มีอะไรให้เปิดดูในเบราว์เซอร์</p>
 
@@ -161,6 +161,7 @@ ProductDetailInfo ต้องไม่มีไฟล์ .module.scss
         border: 2px solid transparent, transition: border-color 0.3s ease
         nested img -&gt; width: 100%, height: 100%, object-fit: cover
         nested &amp;.active -&gt; border-color: #000
+          พร้อม comment ท้ายบรรทัดว่า // Highlight for the selected thumbnail
         nested &amp;:hover -&gt; border-color: #ccc
 - ProductImageGallery.tsx: import React, { useState }, Skeleton จาก "react-loading-skeleton"
     และ styles จาก "./ProductImageGallery.module.scss"
@@ -174,11 +175,15 @@ ProductDetailInfo ต้องไม่มีไฟล์ .module.scss
       {!isImageLoaded &amp;&amp; ...} div className="mb-30" ครอบ Skeleton height={400}
       img src={selectedImage} alt="Selected image"
         style display เป็น "inline-block" เมื่อโหลดแล้ว ไม่งั้นเป็น "none"
-        onLoad ที่เรียก setIsImageLoaded(true)
+        onLoad ที่เขียนเป็น arrow function แบบย่อบรรทัดเดียว () =&gt; setIsImageLoaded(true)
+          (ไม่ใช่แบบมีปีกกาอย่างที่ ProductCard เขียนไว้ในบทเรียน 18 — สองไฟล์นี้เขียนคนละท่า
+           และ Prettier เก็บไว้ตามที่คนเขียนวางทั้งคู่)
     ส่วนล่าง div className={styles.thumbnailList} ที่วน images.map((image, index) =&gt; ...)
       render div key={index} className ที่ต่อ styles.thumbnail กับ styles.active
         เมื่อ selectedImage === image และ onClick ที่เรียก handleImageClick(image)
         ข้างในเป็น img src={image} alt ที่เป็นข้อความ Thumbnail ตามด้วย index + 1
+  เว้นบรรทัดว่างหนึ่งบรรทัดคั่นระหว่างส่วนบนกับ comment ของส่วนล่าง
+    ที่อื่นใน JSX ห้ามมีบรรทัดว่าง
   ใส่ comment ได้สองจุดเท่านั้น: บรรทัดเหนือส่วนบนว่า Large Displayed Image
     และบรรทัดเหนือส่วนล่างว่า Image Thumbnails
 - ProductDetailInfo.tsx: import React, faCartPlus จาก "@fortawesome/free-solid-svg-icons",
@@ -210,17 +215,19 @@ ProductDetailInfo ต้องไม่มีไฟล์ .module.scss
       {availabilityStatus &amp;&amp; ...} li className="text-muted" แสดง Stock Status: {availabilityStatus}
     div ที่มี h4 ข้อความ Delivery Details: และ ul className="pl-15 lh-1-75 mt-10" ที่มี
       li className="text-muted" แสดง shippingInfo และอีก li แสดง warrantyInfo
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลยแม้แต่บรรทัดเดียว ทุก div ต่อกันติด
   ห้ามมี state ห้ามมี useEffect และห้าม import อะไรที่เกี่ยวกับตะกร้า
 - RatingBreakdown.module.scss: @use "../../../../styles/variables";
   .starIcon -&gt; color: variables.$orange01
   .bar -&gt; position: relative, flex-grow: 1, height: 9px,
     background-color: variables.$grey03, border-radius: 4px, overflow: hidden
     nested .fill -&gt; height: 100%, border-radius: 4px
-  .greenBar -&gt; background-color: #28a745
-  .orangeBar -&gt; background-color: #ffc107
-  .redBar -&gt; background-color: #dc3545
-  .defaultBar -&gt; background-color: #ced4da
+  .greenBar -&gt; background-color: #28a745  // Green for 4 and 5 stars
+  .orangeBar -&gt; background-color: #ffc107  // Orange for 3 stars
+  .redBar -&gt; background-color: #dc3545  // Red for 1 and 2 stars
+  .defaultBar -&gt; background-color: #ced4da  // Default gray
   ทั้งสี่ค่านี้เป็น hex ตรง ๆ ตามต้นฉบับ ห้ามย้ายไปไว้ใน _variables.scss
+  และทั้งสี่บรรทัดต้องมี comment ท้ายบรรทัดตามที่เขียนไว้ข้างบนนี้ทุกตัวอักษร
 - RatingBreakdown.tsx: import React, FontAwesomeIcon, faStar จาก free-solid-svg-icons
     และ styles จาก "./RatingBreakdown.module.scss"
   prop เดียวคือ reviews: { rating: number }[]
@@ -229,11 +236,14 @@ ProductDetailInfo ต้องไม่มีไฟล์ .module.scss
   const ratingCounts = Array(5).fill(0).map((_, index) =&gt; { ... }) ที่แต่ละรอบ
     const stars = 5 - index; พร้อม comment ท้ายบรรทัดว่า // Descending from 5 to 1
     const count = reviews.filter((review) =&gt; Math.round(review.rating / 2) === stars).length;
+    เว้นบรรทัดว่างหนึ่งบรรทัด
     const percentage = totalReviews ? (count / totalReviews) * 100 : 0;
     return { stars, count, percentage };
   ห้ามรับคะแนนเฉลี่ยเป็น prop และห้ามคำนวณ count จากค่าอื่นนอกจาก array reviews
   ฟังก์ชัน getBarStyleClass(stars: number) เป็น switch ที่ 5 กับ 4 คืน styles.greenBar,
     3 คืน styles.orangeBar, 2 กับ 1 คืน styles.redBar, default คืน styles.defaultBar
+    ทุกบรรทัด return ในนั้นมี comment ท้ายบรรทัดตามลำดับนี้: // Class for green,
+    // Class for orange, // Class for red และ // Default class
   JSX: div ครอบ ratingCounts.map(({ stars, count, percentage }) =&gt; ...)
     div key={stars} className="flex align-item-center gap-15 mb-10" ที่มี
       div className="fw-bold flex align-item-center gap-5" ที่มี span แสดง stars
@@ -241,7 +251,9 @@ ProductDetailInfo ต้องไม่มีไฟล์ .module.scss
       div className={styles.bar} ครอบ div ที่ className ต่อ styles.fill
         กับผลของ getBarStyleClass(stars) และ style width เป็นเปอร์เซ็นต์จาก percentage
       div className="text-muted" แสดง count
-  ใส่ comment ได้สองจุด: เหนือ ratingCounts ว่า Compute counts for each rating (1-5 stars)
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย
+  นอกจาก comment ท้ายบรรทัดที่ระบุไว้ข้างบน ใส่ comment บรรทัดเดี่ยวได้อีกสองจุด:
+    เหนือ ratingCounts ว่า Compute counts for each rating (1-5 stars)
     และเหนือ getBarStyleClass ว่า Helper function to determine bar style class based on stars
 - ReviewCard.module.scss: @use "../../../../styles/variables";
   .reviewCard -&gt; border: 1px solid variables.$grey04
@@ -259,6 +271,8 @@ ProductDetailInfo ต้องไม่มีไฟล์ .module.scss
           span className="text-muted fs-14" แสดง dayjs(date).format("DD MMMM YYYY")
         StarReview score={rating}
         p className="fs-14 text-muted lh-1-5 mt-10" แสดง review
+  เว้นบรรทัดว่างหนึ่งบรรทัดสามจุด: ก่อน div ตัวที่สอง (ตัวที่ครอบข้อมูลผู้ใช้),
+    ก่อน comment Rating และก่อน comment Review Text ที่อื่นใน JSX ห้ามมีบรรทัดว่าง
   ใส่ comment ได้สี่จุดตามต้นฉบับ: User Initial Avatar, User Information, Rating, Review Text
 
 ขอบเขต:
@@ -315,6 +329,7 @@ utility class ที่งานนี้ใช้มีอยู่จริง
     div className="width-50" ที่วน reviews.map(({ reviewerName, date, comment, rating }, index) =&gt; ...)
       render div key={index} className="mb-15" ครอบ ReviewCard
         name={reviewerName} date={date} review={comment} rating={rating}
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย
 - Product.tsx: บรรทัด import เรียงตามลำดับนี้พอดี
     import React from "react";
     import ClipLoader from "react-spinners/ClipLoader";
@@ -355,6 +370,9 @@ utility class ที่งานนี้ใช้มีอยู่จริง
           warrantyInfo={warrantyInformation}, onButtonClick={onAddToCart}
       div className="pb-30" ที่มี h3 className="fs-24" ข้อความ Reviews
         และ ReviewSection rating={rating} reviews={reviews}
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย ส่วนนอก JSX ให้เว้นบรรทัดว่างหนึ่งบรรทัดคั่น
+    ระหว่าง useQuery กับ onAddToCart, ระหว่าง onAddToCart กับ if ก้อนแรก,
+    ระหว่าง if สองก้อน, ระหว่าง if ก้อนที่สองกับการ destructure และก่อน return
   ห้ามใช้ useState ในไฟล์นี้ ห้ามใช้ useEffect ห้ามเขียน queryKey เอง
 
 ขอบเขต:
@@ -384,6 +402,7 @@ utility class ที่งานนี้ใช้มีอยู่จริง
             <li><code>RatingBreakdown</code> ใช้ <code>Array(5).fill(0)</code> (มี <code>.fill</code>) ไม่ใช่ <code>[...Array(5)]</code> แบบ <code>StarReview</code> ในบทเรียน 14 — สองไฟล์ในโปรเจกต์เดียวกัน สองท่าที่ให้ผลเหมือนกัน อีกหนึ่งข้อสังเกตสำหรับรีวิว</li>
             <li><code>getBarStyleClass</code> เป็น <code>switch</code> ที่มี <code>default</code> จริง — <code>stars</code> มีค่าได้แค่ 1 ถึง 5 เท่านั้นตามโครงของ <code>Array(5)</code> ดังนั้น <code>styles.defaultBar</code> เป็น branch ที่<em>ไม่มีวันถูกเรียก</em> และ <code>.defaultBar</code> ใน SCSS ก็เป็น class ที่ไม่มีวันถูกใช้ นี่ไม่ผิดแต่เป็น dead code ที่ควรถูกทักในรีวิวจริง</li>
             <li>ทั้ง <code>RatingBreakdown.module.scss</code> และ <code>ReviewCard.module.scss</code> ขึ้นต้นด้วย <code>@use "../../../../styles/variables";</code> — <strong>สี่ชั้น</strong> ไม่ใช่สามชั้นแบบไฟล์ใน <code>shared/components/</code> ถ้านับผิด SCSS จะ compile ไม่ผ่านและ <code>npm run dev</code> จะแดงทันที (ข้อนี้เป็นข้อที่<em>ดัง</em> ต่างจากข้ออื่นในบทนี้)</li>
+            <li>comment ท้ายบรรทัดครบตามที่ prompt สั่ง: สี่บรรทัดใน <code>RatingBreakdown.module.scss</code>, สี่บรรทัด <code>return</code> ใน <code>getBarStyleClass</code>, และบรรทัด <code>&amp;.active</code> ใน <code>ProductImageGallery.module.scss</code> — ทั้งเก้าบรรทัดนี้บอกสิ่งที่โค้ดบอกอยู่แล้ว และตามไฟล์ rules ของเราแล้วไม่ควรมี แต่ต้นฉบับมี เราจึงสั่งไว้เพื่อให้ diff ตรง ถ้าไม่สั่ง Agent จะไม่ใส่มาให้ ซึ่งก็ไม่ผิด</li>
             <li>ค่าสี่ค่าใน <code>RatingBreakdown.module.scss</code> (<code>#28a745</code>, <code>#ffc107</code>, <code>#dc3545</code>, <code>#ced4da</code>) ยังเป็น hex ตรง ๆ ไม่ถูกย้ายไปเป็นตัวแปร — เป็นเรื่องเดียวกับ <code>#007bff</code> ใน Pagination บทเรียน 13 ทุกประการ ปล่อยไว้ตามต้นฉบับ แล้วเขียนไว้ในรีวิว</li>
             <li>ค้นชื่อ class ทุกตัวใน <code>className</code> ว่ามีจริงใน <code>src/styles/</code> — จะมีอยู่ตัวหนึ่งใน <code>ReviewCard</code> ที่หาไม่เจอ อ่านกล่อง 💡 ใต้ <code>ReviewCard.tsx</code> ก่อนแตะมัน</li>
             <li><code>ProductDetailInfo</code> render <code>{brand}</code> ตรง ๆ ไม่มี <code>?? ""</code> ไม่มี <code>{brand &amp;&amp; …}</code> — เหตุผลอยู่ในกล่อง 💡 ใต้โค้ดอ้างอิงของไฟล์นั้น อย่าเพิ่ง "ซ่อม" ให้</li>
@@ -956,9 +975,7 @@ export default Product;
           <li>หน้า Home กับ Category จัดการ loading/error แบบ inline รายส่วน ส่วนหน้านี้ early return ทั้งหน้า — อธิบายว่าอะไรคือเงื่อนไขที่ทำให้เลือกแบบหลังได้ และถ้าวันหนึ่งหน้านี้ต้องยิง query ตัวที่สอง (เช่น "สินค้าที่คนอื่นดูด้วย") โครงปัจจุบันจะต้องเปลี่ยนอย่างไร</li>
         </ol>
 
-        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run dev</code> แล้วคลิกการ์ดสินค้าจากหน้า Home หรือ Category (หรือเปิด <code>http://localhost:5173/products/1</code> ตรง ๆ) — ระหว่างโหลดเห็น ClipLoader แวบหนึ่ง แล้วหน้าเต็มต้องปรากฏ: แถบชื่อสินค้าด้านบน, แกลเลอรีรูปฝั่งซ้ายที่คลิก thumbnail แล้วรูปใหญ่สลับตาม (มี skeleton คั่นระหว่างรอ และ thumbnail ที่เลือกมีกรอบดำ), ข้อมูลราคา/ส่วนลด/สต็อกฝั่งขวา และ section Reviews ด้านล่างพร้อมการ์ดรีวิวที่วันที่อ่านง่ายแบบ <code>30 April 2025</code> จากนั้นตรวจสามอย่างที่เป็นการบ้านจริงของบทนี้: (1) นับตัวเลขท้ายแท่งในกราฟรีวิวรวมกัน ต้องเท่ากับจำนวนรีวิวที่ <code>Based on N Reviews</code> บอกไว้เป๊ะ (2) เปิด <code>/products/16</code> เทียบกับ <code>/products/1</code> — สังเกตช่องว่างใต้ชื่อสินค้าของตัวแรก นั่นคือ <code>brand</code> ที่หายไปตามที่กล่อง 💡 อธิบายไว้ (3) มองตัวเลขคะแนนตัวใหญ่ใน section Reviews คู่กับดาวที่อยู่ข้าง ๆ มัน แล้วถามตัวเองว่าสองอย่างนี้เล่าเรื่องเดียวกันหรือเปล่า ปิดท้ายด้วยการเปิด <code>/products/999999</code> ซึ่งต้องเห็นข้อความ error ไม่ใช่จอขาวหรือ spinner ค้าง และกดปุ่ม Add To Cart หนึ่งครั้ง — <em>ไม่มีอะไรเกิดขึ้น</em> คือผลลัพธ์ที่ถูกต้อง รอบทเรียน 23 เมื่อ <code>npm run lint</code> และ <code>npm run typecheck</code> ผ่านแล้ว commit ได้ — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
-
-        <p>Chapter สร้างหน้าเพจจบบริบูรณ์ — ผู้ใช้ไล่ดูสินค้าได้ตั้งแต่หน้าแรกยันหน้ารายละเอียดครบทุกเส้นทางแล้ว เหลืออย่างเดียวที่ยังซื้ออะไรไม่ได้: ตะกร้าสินค้า บทถัดไปเราจะเริ่ม chapter ใหม่ด้วยการสร้าง cart store ด้วย Context + useReducer + localStorage — client state ตัวจริงตัวแรกของแอป และเป็นบทที่กลับมาพิมพ์เองอีกครั้ง</p>
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run dev</code> แล้วคลิกการ์ดสินค้าจากหน้า Home หรือ Category (หรือเปิด <code>http://localhost:5173/products/1</code> ตรง ๆ) — ระหว่างโหลดเห็น ClipLoader แวบหนึ่ง แล้วหน้าเต็มต้องปรากฏ: แถบชื่อสินค้าด้านบน, แกลเลอรีรูปฝั่งซ้ายที่คลิก thumbnail แล้วรูปใหญ่สลับตาม (มี skeleton คั่นระหว่างรอ และ thumbnail ที่เลือกมีกรอบดำ), ข้อมูลราคา/ส่วนลด/สต็อกฝั่งขวา และ section Reviews ด้านล่างพร้อมการ์ดรีวิวที่วันที่อ่านง่ายแบบ <code>30 April 2025</code> จากนั้นตรวจสามอย่างที่เป็นการบ้านจริงของบทนี้: (1) นับตัวเลขท้ายแท่งในกราฟรีวิวรวมกัน ต้องเท่ากับจำนวนรีวิวที่ <code>Based on N Reviews</code> บอกไว้เป๊ะ (2) เปิด <code>/products/16</code> เทียบกับ <code>/products/1</code> — สังเกตช่องว่างใต้ชื่อสินค้าของตัวแรก นั่นคือ <code>brand</code> ที่หายไปตามที่กล่อง 💡 อธิบายไว้ (3) มองตัวเลขคะแนนตัวใหญ่ใน section Reviews คู่กับดาวที่อยู่ข้าง ๆ มัน แล้วถามตัวเองว่าสองอย่างนี้เล่าเรื่องเดียวกันหรือเปล่า ปิดท้ายด้วยการเปิด <code>/products/999999</code> ซึ่งต้องเห็นข้อความ error ไม่ใช่จอขาวหรือ spinner ค้าง และกดปุ่ม Add To Cart หนึ่งครั้ง — <em>ไม่มีอะไรเกิดขึ้น</em> คือผลลัพธ์ที่ถูกต้อง รอบทเรียน 23 เมื่อ <code>npm run lint</code> และ <code>npm run typecheck</code> ผ่านแล้ว commit ได้ Chapter สร้างหน้าเพจจบบริบูรณ์ — ผู้ใช้ไล่ดูสินค้าได้ตั้งแต่หน้าแรกยันหน้ารายละเอียดครบทุกเส้นทางแล้ว เหลืออย่างเดียวที่ยังซื้ออะไรไม่ได้: ตะกร้าสินค้า บทถัดไปเราจะเริ่ม chapter ใหม่ด้วยการสร้าง cart store ด้วย Context + useReducer + localStorage — client state ตัวจริงตัวแรกของแอป และเป็นบทที่กลับมาพิมพ์เองอีกครั้ง — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="20_category_page.html" rel="prev">ก่อนหน้า: หน้า Category</a>

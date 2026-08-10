@@ -243,10 +243,10 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่
     import { useQuery } from "@tanstack/react-query";
     import styles from "./Home.module.scss";
     import Banner from "./components/Banner/Banner";
+    import ImageZoom from "@/shared/components/ImageZoom/ImageZoom";
     import CategoryMenu from "@/features/products/components/CategoryMenu/CategoryMenu";
     import ProductsList from "@/features/products/components/ProductsList/ProductsList";
     import FeatureCard from "@/shared/components/FeatureCard/FeatureCard";
-    import ImageZoom from "@/shared/components/ImageZoom/ImageZoom";
     import useProductRoute from "@/shared/hooks/useProductRoute";
     import { productQueries } from "@/features/products/queries";
     import { Category as CategoryType } from "@/features/products/types";
@@ -279,6 +279,9 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่
         : &lt;ProductsList products={categoryProducts?.products} onProductClick={onProductClick} /&gt;
     section className="pt-60 pb-30" ที่มี ImageZoom src="/images/banners/03.png"
       alt="banner long" className="mb-20 " (สังเกตช่องว่างท้ายค่า ให้คงไว้ตามนี้)
+  เว้นบรรทัดว่างหนึ่งบรรทัดคั่นระหว่างแท็กปิด &lt;/section&gt; กับแท็กเปิด &lt;section&gt;
+    ตัวถัดไปทุกคู่ ส่วนที่อื่นใน JSX ห้ามมีบรรทัดว่าง
+    รวมถึงระหว่าง &lt;Banner /&gt; กับ section แรกที่ต้องติดกัน
   ห้ามใช้ useEffect ห้ามเขียน queryKey เอง ห้ามเรียก fetch หรือ axios
   ห้ามใส่ retry, staleTime หรือ gcTime ที่ระดับ useQuery
   ห้ามตัดสาขา error หรือสาขา loading ออกไม่ว่ากรณีใด
@@ -349,6 +352,9 @@ utility class ที่เพิ่มใหม่รอบนี้มีอย
       div className={styles.secondDealBox} ครอบ ImageZoom src="/images/deals/02.png"
         alt="deal 2" className="mb-20" แล้วตามด้วย ImageZoom src="/images/deals/03.png" alt="deal 3"
       div className={styles.thirdDealBox} ครอบ ImageZoom src="/images/deals/04.png" alt="deal 4"
+  section ใหม่ทั้งสองต้องมีบรรทัดว่างหนึ่งบรรทัดคั่นจาก section ที่อยู่ก่อนหน้า
+    และจาก section ที่อยู่ถัดไป ตามแบบเดิมของไฟล์ที่ทุกคู่ &lt;/section&gt; กับ &lt;section&gt;
+    คั่นด้วยบรรทัดว่างหนึ่งบรรทัด ส่วนข้างใน section ห้ามมีบรรทัดว่าง
 - ห้ามแก้ของเดิมในไฟล์นี้นอกจากบรรทัด import ที่ระบุไว้ข้างบน
   โดยเฉพาะห้ามแตะ currentCategory, enabled, CategoryMenu, ternary ของ section หมวดหมู่
   และ section แบนเนอร์ยาวท้ายไฟล์
@@ -623,6 +629,8 @@ const Home: React.FC = () =&gt; {
 export default Home;
 </code></pre>
 
+        <blockquote>🚨 ถ้ารูปแบนเนอร์หรือรูปดีลไม่ขึ้น (กล่องรูปแตก) ให้เช็ค path ของไฟล์ใน <code>public/images</code> ว่าตรงกับโครงสร้างต้นบทเป๊ะ รวมถึงชื่อไฟล์ต้องเป็นเลขศูนย์นำหน้า (<code>01.png</code> ไม่ใช่ <code>1.png</code>) — ข้อนี้ Agent ช่วยอะไรไม่ได้เลยเพราะมันสร้างไฟล์รูปให้ไม่ได้ และมันจะไม่บอกคุณด้วยว่าไฟล์ไม่มีอยู่จริง อ่านให้จบก่อนไปถึง Checkpoint เพราะนี่คืออาการที่คุณมีสิทธิ์เจอ<em>ระหว่าง</em>ทำ Checkpoint มากที่สุด</blockquote>
+
         <p>สามอย่างในไฟล์นี้ที่ prompt ต้องสั่งไว้ตรง ๆ ไม่งั้นคุณจะไม่ได้มันคืนมาเหมือนเดิม และทั้งสามอย่างเป็นเรื่องรูปแบบล้วน ๆ ไม่ใช่ความถูกผิด:</p>
 
         <ul>
@@ -669,11 +677,7 @@ export default Home;
           <li>หน้า Home ส่ง <code>onCategoryClick={setSelectedCategory}</code> ตรง ๆ ได้ แต่บทหน้าหน้า Category จะส่งฟังก์ชันของตัวเองแทน — เปิด contract ของ <code>CategoryMenu</code> อ่านอีกรอบแล้วเดาให้ได้ว่าหน้า Category ต้องทำอะไรเพิ่มอีกอย่างหนึ่งตอนผู้ใช้เปลี่ยนหมวด และถ้าไม่ทำ ผู้ใช้จะเจออะไร</li>
         </ol>
 
-        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run dev</code> แล้วเปิด <code>http://localhost:5173/</code> — คุณควรเห็นหน้า Home เต็มรูปแบบ: แบนเนอร์เลื่อนเองทุก 3 วินาทีพร้อมปุ่มลูกศรและจุดที่กดได้, แถวไอคอนบริการ 4 ช่อง, "DEALS OF THE DAY" พร้อมตัวเลขนับถอยหลังที่เดินทุกวินาทีและการ์ดสินค้า 5 ใบจาก dummyjson (รูปแต่ละใบขึ้นเป็น skeleton สีเทาแวบหนึ่งก่อนรูปจริงโหลดเสร็จ), ตารางรูปโปรโมชัน, เมนูหมวดหมู่ที่หมวดแรกถูกไฮไลต์อัตโนมัติและคลิกสลับหมวดได้ทันที และแบนเนอร์ยาวปิดท้าย เปิด TanStack Query Devtools ดูจะเห็นสาม queries: <code>["products","list",…]</code>, <code>["products","categories"]</code> และ <code>["products","list","category",…]</code> จากนั้นทำสองอย่างที่เป็นการบ้านของบทนี้จริง ๆ: (1) ทดสอบ error state ตามที่ checklist บอก — ตั้ง Network เป็น Offline แล้ว reload ทั้งสอง section ต้องขึ้นข้อความ ไม่ใช่ที่ว่าง (2) กด <strong>Groceries</strong> ในเมนูหมวดหมู่ แล้วมองใต้ชื่อสินค้าทั้ง 12 ใบ — ช่องว่างที่คุณเห็นคือ <code>brand</code> ที่ dummyjson ไม่ได้ส่งมา ซึ่งบทเรียน 16 ทำนายไว้และบทเรียน 18 ชี้บรรทัดให้แล้ว ตอนนี้คุณเห็นมันกับตาแล้ว ปิดท้ายด้วย commit — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
-
-        <blockquote>🚨 ถ้ารูปแบนเนอร์หรือรูปดีลไม่ขึ้น (กล่องรูปแตก) ให้เช็ค path ของไฟล์ใน <code>public/images</code> ว่าตรงกับโครงสร้างข้างบนเป๊ะ รวมถึงชื่อไฟล์ต้องเป็นเลขศูนย์นำหน้า (<code>01.png</code> ไม่ใช่ <code>1.png</code>) — ข้อนี้ Agent ช่วยอะไรไม่ได้เลยเพราะมันสร้างไฟล์รูปให้ไม่ได้ และมันจะไม่บอกคุณด้วยว่าไฟล์ไม่มีอยู่จริง</blockquote>
-
-        <p>หน้าแรกเสร็จแล้ว! แต่รายการสินค้าในหน้านี้จำกัดที่ 12 ตัวและไม่มีการแบ่งหน้า บทถัดไปเราจะสร้างหน้า Category สำหรับการไล่ดูสินค้าจริงจัง — ครบทั้ง pagination และเทคนิค <code>keepPreviousData</code> ที่ทำให้เปลี่ยนหน้าได้ลื่นไม่กะพริบ</p>
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run dev</code> แล้วเปิด <code>http://localhost:5173/</code> — คุณควรเห็นหน้า Home เต็มรูปแบบ: แบนเนอร์เลื่อนเองทุก 3 วินาทีพร้อมปุ่มลูกศรและจุดที่กดได้, แถวไอคอนบริการ 4 ช่อง, "DEALS OF THE DAY" พร้อมตัวเลขนับถอยหลังที่เดินทุกวินาทีและการ์ดสินค้า 5 ใบจาก dummyjson (รูปแต่ละใบขึ้นเป็น skeleton สีเทาแวบหนึ่งก่อนรูปจริงโหลดเสร็จ), ตารางรูปโปรโมชัน, เมนูหมวดหมู่ที่หมวดแรกถูกไฮไลต์อัตโนมัติและคลิกสลับหมวดได้ทันที และแบนเนอร์ยาวปิดท้าย เปิด TanStack Query Devtools ดูจะเห็นสาม queries: <code>["products","list",…]</code>, <code>["products","categories"]</code> และ <code>["products","list","category",…]</code> จากนั้นทำสองอย่างที่เป็นการบ้านของบทนี้จริง ๆ: (1) ทดสอบ error state ตามที่ checklist บอก — ตั้ง Network เป็น Offline แล้ว reload ทั้งสอง section ต้องขึ้นข้อความ ไม่ใช่ที่ว่าง (2) กด <strong>Groceries</strong> ในเมนูหมวดหมู่ แล้วมองใต้ชื่อสินค้าทั้ง 12 ใบ — ช่องว่างที่คุณเห็นคือ <code>brand</code> ที่ dummyjson ไม่ได้ส่งมา ซึ่งบทเรียน 16 ทำนายไว้และบทเรียน 18 ชี้บรรทัดให้แล้ว ตอนนี้คุณเห็นมันกับตาแล้ว ปิดท้ายด้วย commit หน้าแรกเสร็จแล้ว แต่รายการสินค้าในหน้านี้จำกัดที่ 12 ตัวและไม่มีการแบ่งหน้า บทถัดไปเราจะสร้างหน้า Category สำหรับการไล่ดูสินค้าจริงจัง — ครบทั้ง pagination และเทคนิค <code>keepPreviousData</code> ที่ทำให้เปลี่ยนหน้าได้ลื่นไม่กะพริบ — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="18_product_list_components.html" rel="prev">ก่อนหน้า: คอมโพเนนต์รายการสินค้า</a>

@@ -34,7 +34,7 @@
         <p>สี่<em>ท่า</em>ที่อยู่ในไฟล์สั้น ๆ นี้ และเป็นสิ่งที่ต้องตรวจให้ออกทีหลัง:</p>
 
         <ul>
-          <li><strong><code>Math.round(score / 2)</code></strong> — contract ของคอมโพเนนต์ (ตาม comment ในโค้ด) คือรับ <code>score</code> สเกล 0–10 การหารสองแปลงเป็นสเกล 0–5 แล้วปัดเป็นจำนวนเต็ม ได้ "จำนวนดาวทึบ" เช่น score 9 → 4.5 → ปัดเป็น 5 ดวงทึบ</li>
+          <li><strong><code>Math.round(score / 2)</code></strong> — contract ของคอมโพเนนต์ (ตาม comment ในโค้ด) คือรับ <code>score</code> สเกล 0–10 การหารสองแปลงเป็นสเกล 0–5 แล้วปัดเป็นจำนวนเต็ม ได้ "จำนวนดาวทึบ" เช่น score 9 → 4.5 → ปัดเป็น 5 ดวงทึบ — คำว่า "สเกล 0–10" นี้เป็น<em>สมมติฐาน</em>ที่มาจาก comment ในโค้ดต้นฉบับ ไม่ใช่สิ่งที่ใครไปตรวจกับข้อมูลจริง บทเรียน 21 จะเอามันไปเทียบกับ payload ของ dummyjson แล้วคุยกันว่าเกิดอะไรขึ้น</li>
           <li><strong><code>[...Array(5)]</code></strong> — ท่าสร้าง array ยาว 5 ช่องเพื่อเอาไว้ <code>.map()</code> — ทำไมต้อง spread? เพราะ <code>Array(5)</code> เฉย ๆ ได้ array โปร่ง (sparse) ที่ <code>.map()</code> จะข้ามช่องว่างไปเลย spread ก่อนหนึ่งทีจะเติม <code>undefined</code> ให้ครบทุกช่อง map ได้ครบ 5 รอบ</li>
           <li><strong><code>index &lt; stars ? solidStar : regularStar</code></strong> — ดาวดวงที่ index 0 ถึง <code>stars - 1</code> เป็นดวงทึบ ที่เหลือเป็นดวงโปร่ง เงื่อนไขเดียวบรรทัดนี้คือทั้งหมดของ "ดาวสามดวงครึ่ง" ที่ผู้ใช้เห็น</li>
           <li><strong><code>key={index}</code></strong> — ปกติเราหลีกเลี่ยง index เป็น key แต่กรณีนี้ list ยาว 5 ตายตัว ไม่มีการสลับลำดับหรือเพิ่มลด ใช้ index ได้ปลอดภัย</li>

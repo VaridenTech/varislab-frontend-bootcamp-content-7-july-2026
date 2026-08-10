@@ -168,6 +168,8 @@ ProductCard และ ProductsList ต้องไม่มีไฟล์ .modu
             แสดง $ ตามด้วย originalPrice.toFixed(2)
           {discount &amp;&amp; ...} span className="fs-14 fw-medium ml-10 text-primary"
             แสดง {discount}% Off
+  เว้นบรรทัดว่างหนึ่งบรรทัดคั่นระหว่าง div ของรูปกับ div ที่ครอบข้อความ
+    ที่อื่นใน JSX ห้ามมีบรรทัดว่าง
   ห้าม import Product, ห้าม import useNavigate และห้ามสร้างไฟล์ .module.scss ให้ไฟล์นี้
 - ProductsList.tsx: import React, Product จาก "@/features/products/types",
     ProductCard จาก "@/features/products/components/ProductCard/ProductCard"
@@ -182,6 +184,7 @@ ProductCard และ ProductsList ต้องไม่มีไฟล์ .modu
     price={price}, originalPrice={calculateOriginalPrice(price, discountPercentage)},
     discount={discountPercentage}, rating={rating},
     reviewsCount={reviews.length}, onProductClick={onProductClick}
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย
   ห้ามส่ง skeletonHeight และห้ามใส่ fallback ให้ brand ไม่ว่าจะเป็น "" หรือ "-"
 - CategoryMenu.module.scss: มี class เดียวคือ .categoryMenu ที่ตั้ง width: 16%
     ไม่ต้อง @use variables เพราะไม่ได้ใช้ตัวแปรเลย
@@ -194,6 +197,7 @@ ProductCard และ ProductsList ต้องไม่มีไฟล์ .modu
     className เป็น template literal ว่า `nav-link block mb-20 pointer ` ต่อด้วย
       activeCategory === cat.slug ? "fw-bold text-primary" : ""
     onClick={() =&gt; onCategoryClick(cat)} และแสดง {cat.name}
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย
   ห้ามมี useState, useEffect หรือ state ภายในใด ๆ
 - main.tsx: เพิ่มบรรทัด import "react-loading-skeleton/dist/skeleton.css";
     ไว้ใต้บรรทัด import "./styles/main.scss"; พอดี และเหนือบรรทัด import App
@@ -424,7 +428,7 @@ export default ProductsList;
 
         <blockquote>💡 สังเกตว่าเมื่อสินค้าไม่มีส่วนลด <code>calculateOriginalPrice</code> คืนราคาเดิมกลับมา การ์ดจึงยังแสดงราคาขีดฆ่าที่เท่ากับราคาจริง — ฟังดูแปลก แต่สินค้าของ dummyjson มี <code>discountPercentage</code> ติดมา<em>ครบทั้ง 194 ชิ้น</em> (ตรวจมาแล้วในบทเรียน 16) เคสนี้จึงไม่ปรากฏบนจอเลย ส่วนป้าย "% Off" ถูกซ่อนอยู่แล้วด้วย <code>{discount &amp;&amp; …}</code> ใน ProductCard</blockquote>
 
-        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — และเป็นคำทำนายจากบทเรียน 16 ที่ถึงกำหนดวันนี้:</strong> กล่อง 💡 ใต้ <code>types.ts</code> ในบทเรียน 16 บอกไว้ว่า <code>brand: string</code> ถูกประกาศแบบ<em>บังคับ</em> ทั้งที่ dummyjson ไม่ได้ส่งฟิลด์นี้มาใน 92 ชิ้นจาก 194 (หมวด <code>groceries</code>, <code>home-decoration</code>, <code>kitchen-accessories</code>, <code>sports-accessories</code>, <code>tops</code>, <code>womens-dresses</code>, <code>womens-jewellery</code> ตั้งแต่ id 16 ขึ้นไป) และบอกด้วยว่าผลของมันจะไปโผล่ที่ <code>ProductsList.tsx</code> บรรทัด 33 — คือบรรทัด <code>description={brand}</code> ที่คุณเพิ่งอ่านจบ ผลจริงคือ <code>brand</code> เป็น <code>undefined</code> ตอนรัน React ไม่ render อะไรเลยสำหรับ <code>undefined</code> ดังนั้น <code>&lt;p className="fs-14 text-muted mb-10 mt-0"&gt;&lt;/p&gt;</code> จะเป็น<strong>ย่อหน้าว่างที่กินความสูงจริง</strong>อยู่ใต้ชื่อสินค้าเกือบครึ่งร้าน โดยที่ TypeScript รับประกันกับคุณตลอดทางว่ามันเป็น <code>string</code> แน่นอน วันนี้ยังไม่มีหน้าไหน render มัน วิธีเห็นด้วยตาวันนี้คือเปิด <code>https://dummyjson.com/products?limit=5&amp;skip=15</code> (URL เดิมจาก checklist บทเรียน 16) แล้วค้นคำว่า <code>brand</code> — ไม่เจอสักตัว ส่วนวิธีเห็นบนหน้าจอจริงคือบทหน้า: หน้า Home จะมีเมนูหมวดหมู่ กด <strong>Groceries</strong> (ตัวที่สี่ในเมนู) แล้วดูใต้ชื่อสินค้าทั้ง 12 ใบ นั่นคือเหตุผลที่ prompt สั่งห้ามใส่ fallback ให้ <code>brand</code> — ถ้าเราปล่อยให้ Agent ใส่ <code>brand ?? ""</code> ให้เงียบ ๆ อาการนี้จะถูกกลบและคุณจะไม่มีวันรู้ว่า type ของคุณโกหก ทางแก้ที่ถูกอยู่ที่ต้นทาง (<code>brand?: string</code> ใน <code>types.ts</code>) ไม่ใช่ที่ปลายทาง และการตัดสินใจว่าจะแก้เมื่อไหร่เป็นของคุณ ไม่ใช่ของ Agent</blockquote>
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — และเป็นคำทำนายจากบทเรียน 16 ที่ถึงกำหนดวันนี้:</strong> กล่อง 💡 ใต้ <code>types.ts</code> ในบทเรียน 16 บอกไว้ว่า <code>brand: string</code> ถูกประกาศแบบ<em>บังคับ</em> ทั้งที่ dummyjson ไม่ได้ส่งฟิลด์นี้มาใน 92 ชิ้นจาก 194 (หมวด <code>groceries</code>, <code>home-decoration</code>, <code>kitchen-accessories</code>, <code>sports-accessories</code>, <code>tops</code>, <code>womens-dresses</code>, <code>womens-jewellery</code> ตั้งแต่ id 16 ขึ้นไป) และบอกด้วยว่าผลของมันจะไปโผล่ที่ <code>ProductsList.tsx</code> บรรทัด 33 — คือบรรทัด <code>description={brand}</code> ที่คุณเพิ่งอ่านจบ ผลจริงคือ <code>brand</code> เป็น <code>undefined</code> ตอนรัน React ไม่ render อะไรเลยสำหรับ <code>undefined</code> ดังนั้น <code>&lt;p className="fs-14 text-muted mb-10 mt-0"&gt;&lt;/p&gt;</code> จะเป็น<strong>ย่อหน้าว่างที่กินความสูงจริง</strong>อยู่ใต้ชื่อสินค้าเกือบครึ่งร้าน โดยที่ TypeScript รับประกันกับคุณตลอดทางว่ามันเป็น <code>string</code> แน่นอน วันนี้ยังไม่มีหน้าไหน render มัน วิธีเห็นด้วยตาวันนี้คือเปิด <code>https://dummyjson.com/products?limit=5&amp;skip=15</code> (URL เดิมจาก Checkpoint บทเรียน 16) แล้วค้นคำว่า <code>brand</code> — ไม่เจอสักตัว ส่วนวิธีเห็นบนหน้าจอจริงคือบทหน้า: หน้า Home จะมีเมนูหมวดหมู่ กด <strong>Groceries</strong> (ตัวที่สี่ในเมนู) แล้วดูใต้ชื่อสินค้าทั้ง 12 ใบ นั่นคือเหตุผลที่ prompt สั่งห้ามใส่ fallback ให้ <code>brand</code> — ถ้าเราปล่อยให้ Agent ใส่ <code>brand ?? ""</code> ให้เงียบ ๆ อาการนี้จะถูกกลบและคุณจะไม่มีวันรู้ว่า type ของคุณโกหก ทางแก้ที่ถูกอยู่ที่ต้นทาง (<code>brand?: string</code> ใน <code>types.ts</code>) ไม่ใช่ที่ปลายทาง และการตัดสินใจว่าจะแก้เมื่อไหร่เป็นของคุณ ไม่ใช่ของ Agent</blockquote>
 
         <p><code>src/features/products/components/CategoryMenu/CategoryMenu.module.scss</code>:</p>
 

@@ -90,9 +90,9 @@ const totalPages = data ? calculateTotalPages(data.total, PAGE_LIMIT) : 0;
 
         <h2>เลขหน้าอยู่ใน state ไม่ได้อยู่ใน URL</h2>
 
-        <p>อีกเรื่องที่ต้องเข้าใจก่อนส่ง prompt เพราะมันจะเป็นข้อแรกของ checklist: หน้านี้เก็บเลขหน้าไว้ใน <code>useState(1)</code> และเก็บหมวดที่เลือกไว้ใน <code>useState&lt;CategoryType | null&gt;(null)</code> — ทั้งสองอย่าง<strong>ไม่ปรากฏใน URL เลย</strong> URL ของหน้านี้คือ <code>/categories</code> เฉย ๆ ตั้งแต่ต้นจนจบ ไม่ว่าผู้ใช้จะกดอะไรไปแล้วบ้าง</p>
+        <p>อีกเรื่องที่ต้องเข้าใจก่อนส่ง prompt: หน้านี้เก็บเลขหน้าไว้ใน <code>useState(1)</code> และเก็บหมวดที่เลือกไว้ใน <code>useState&lt;CategoryType | null&gt;(null)</code> — ทั้งสองอย่าง<strong>ไม่ปรากฏใน URL เลย</strong> URL ของหน้านี้คือ <code>/categories</code> เฉย ๆ ตั้งแต่ต้นจนจบ ไม่ว่าผู้ใช้จะกดอะไรไปแล้วบ้าง</p>
 
-        <p>นี่คือสิ่งที่ต้นฉบับทำ และ prompt ของเราจะสั่งตามนั้น เพราะโค้ดอ้างอิงของคอร์สนี้คือแอปจริง แต่มันมีราคาที่จ่ายจริงและควรถูกพูดถึงตั้งแต่ตอนนี้ ไม่ใช่ปล่อยผ่าน — รายละเอียดว่าราคานั้นคืออะไรและพิสูจน์อย่างไร อยู่ในบรรทัดแรกของกล่อง ✅</p>
+        <p>นี่คือสิ่งที่ต้นฉบับทำ และ prompt ของเราจะสั่งตามนั้น เพราะโค้ดอ้างอิงของคอร์สนี้คือแอปจริง แต่มันมีราคาที่จ่ายจริงและควรถูกพูดถึงตั้งแต่ตอนนี้ ไม่ใช่ปล่อยผ่าน — รายละเอียดว่าราคานั้นคืออะไรและพิสูจน์อย่างไร อยู่ในกล่อง 💡 ใต้โค้ดอ้างอิงของ <code>Category.tsx</code></p>
 
         <h2>เป้าหมายของบทนี้</h2>
 
@@ -149,6 +149,7 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx
   return div className="bg-grey01 pt-30 pb-30" ครอบ
     h2 className="fs-32 text-center" ที่แสดง name ถ้ามี ไม่งั้นแสดงข้อความ Category
     เขียนเงื่อนไขเป็น ternary ว่า name ? name : "Category"
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย
   ห้าม import Category จาก types และห้ามมี state
 - Category.tsx: บรรทัด import เรียงตามลำดับนี้พอดี
     import React, { useState } from "react";
@@ -191,6 +192,10 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx
               products={data?.products} onProductClick={onProductClick}
             {totalPages &gt; 0 &amp;&amp; ...} ครอบ Pagination currentPage={page}
               totalPages={totalPages} onPageChange={setPage}
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย ส่วนนอก JSX ให้เว้นบรรทัดว่างหนึ่งบรรทัด
+    หลังแต่ละกลุ่มนี้: หลังบรรทัด useProductRoute, หลัง currentCategory,
+    หลัง useQuery ก้อนที่สอง, หลัง totalPages, หลัง onCategoryClick
+    และหลัง onProductClick (คือบรรทัดก่อน return)
   เก็บ page ไว้ใน useState เท่านั้น ห้ามใช้ useSearchParams ห้ามแตะ URL
     และห้ามซิงก์ page หรือหมวดที่เลือกเข้ากับ query string
   ห้ามเก็บ totalPages ลง useState ต้องคำนวณสดทุก render
@@ -206,15 +211,14 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx
 - ห้ามสร้าง Category.module.scss หรือ CategoryBanner.module.scss</code></pre>
         </blockquote>
 
-        <p>บรรทัด "ห้ามใช้ <code>useSearchParams</code>" ในข้อกำหนดไม่ได้อยู่ตรงนั้นเพราะ <code>useSearchParams</code> เป็นของไม่ดี — ตรงกันข้ามเลย มันอยู่ตรงนั้นเพราะเราต้องการให้ของที่ได้<em>ตรงกับโค้ดอ้างอิง</em> และเพราะเราอยากให้คุณเห็นข้อจำกัดของทางเลือกนี้ด้วยตาก่อนจะตัดสินใจอะไร กล่อง ✅ ข้างล่างจะอธิบายว่าเราจ่ายอะไรไปบ้าง</p>
+        <p>บรรทัด "ห้ามใช้ <code>useSearchParams</code>" ในข้อกำหนดไม่ได้อยู่ตรงนั้นเพราะ <code>useSearchParams</code> เป็นของไม่ดี — ตรงกันข้ามเลย มันอยู่ตรงนั้นเพราะเราต้องการให้ของที่ได้<em>ตรงกับโค้ดอ้างอิง</em> และเพราะเราอยากให้คุณเห็นข้อจำกัดของทางเลือกนี้ด้วยตาก่อนจะตัดสินใจอะไร กล่อง 💡 ใต้โค้ดอ้างอิงของ <code>Category.tsx</code> จะอธิบายว่าเราจ่ายอะไรไปบ้าง</p>
 
         <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
 
         <blockquote class="lesson-ai-review">
           <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ:</p>
           <ul>
-            <li><strong>AI มักพลาดตรงนี้:</strong> <em>เก็บเลขหน้าไว้ใน component state โดยไม่ผูกกับ URL เลย</em> แล้วส่งงานให้คุณโดยไม่บอกอะไรสักคำ — และข้อนี้ต่างจากทุกข้อที่ผ่านมาในคอร์ส เพราะ<strong>ต้นฉบับก็ทำแบบนี้ และ prompt ของเราก็สั่งแบบนี้</strong> ดังนั้นสิ่งที่คุณกำลังตรวจไม่ใช่ "Agent ทำผิดคำสั่งไหม" แต่คือ "คุณมองออกไหมว่าคำสั่งนี้แลกอะไรไป" พิสูจน์ด้วยตัวเองสามข้อ หลังหน้าเสร็จ: (1) เปิด <code>/categories</code> เลือกหมวด Kitchen Accessories แล้วกดไปหน้า 2 — มองแถบที่อยู่ของเบราว์เซอร์ มันยังเป็น <code>/categories</code> เฉย ๆ ก๊อป URL นั้นส่งให้เพื่อน เพื่อนจะเปิดมาเจอหน้า 1 ของหมวดแรกเสมอ ไม่ใช่สิ่งที่คุณตั้งใจส่ง (2) กด F5 ตอนอยู่หน้า 2 — กลับไปหน้า 1 ของหมวด Beauty งานที่ผู้ใช้ทำมาหายหมด (3) กดปุ่ม Back ของเบราว์เซอร์หลังสลับหมวดและเปลี่ยนหน้ามาหลายครั้ง — คุณจะ<em>ออกจากหน้า Category ไปเลย</em> ไม่ใช่ถอยกลับไปทีละขั้น เพราะไม่เคยมีรายการใน history เกิดขึ้น ทางแก้ที่ถูกในงานจริงคือย้าย <code>page</code> กับ slug ของหมวดไปอยู่ใน query string ด้วย <code>useSearchParams</code> ของ react-router (มีให้ใช้ตั้งแต่บทเรียน 09) แล้ว derive state จาก URL แทน — ซึ่งจะทำให้ทั้งสามอาการหายไปพร้อมกัน แต่<em>อย่าเพิ่งทำในบทนี้</em> เก็บไว้เป็นข้อสังเกตในรีวิวของคุณก่อน ประเด็นของข้อนี้คือ: ของที่ Agent ทำ "ถูกตามสั่ง" ไม่ได้แปลว่ามันเป็นการออกแบบที่ดีที่สุด และไม่มี lint ตัวไหนบอกคุณเรื่องนี้ได้เลย มีแต่การลองใช้เว็บอย่างที่ผู้ใช้จริงใช้</li>
-            <li><strong>ข้อที่ Agent พลาดจริงบ่อยที่สุดในบทนี้:</strong> <code>onCategoryClick</code> ที่<em>ลืม <code>setPage(1)</code></em> หรือหนักกว่านั้นคือส่ง <code>onCategoryClick={setSelectedCategory}</code> ไปตรง ๆ ตามที่ลอกมาจาก <code>Home.tsx</code> ที่มันเพิ่งเขียนเมื่อบทที่แล้ว lint ผ่าน typecheck ผ่าน และแม้แต่ตอนคุณลองกดเล่นก็อาจไม่เจอ เพราะที่ <code>PAGE_LIMIT = 20</code> หมวดส่วนใหญ่ของ dummyjson มีหน้าเดียว วิธียืนยันจึงต้องเลือกหมวดให้ถูกและทำตามลำดับนี้เป๊ะ ๆ: เลือก <strong>Kitchen Accessories</strong> (30 ชิ้น = 2 หน้า) กดไปหน้า 2 แล้วสลับไปหมวด <strong>Beauty</strong> ซึ่งมีสินค้าแค่ 5 ชิ้น (หน้าเดียว) — ถ้าลืมรีเซ็ต query จะยิงด้วย <code>page=2</code> ได้ <code>products</code> เป็น array ว่างกลับมา คุณจะเห็นกริดเปล่า ๆ พร้อมแถบเลขหน้าที่มีปุ่มเดียว แทนที่จะเห็นสินค้า 5 ชิ้นของ Beauty</li>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <code>onCategoryClick</code> ที่<em>ลืม <code>setPage(1)</code></em> หรือหนักกว่านั้นคือส่ง <code>onCategoryClick={setSelectedCategory}</code> ไปตรง ๆ ตามที่ลอกมาจาก <code>Home.tsx</code> — ซึ่งเป็นเหตุผลที่ฟังขึ้นมากในสายตาของ Agent เพราะเราเพิ่ง <code>@</code>-mention ไฟล์นั้นเป็นแม่แบบไปเองในบรรทัดแรกของ <code>บริบท:</code> lint ผ่าน typecheck ผ่าน และแม้แต่ตอนคุณลองกดเล่นก็อาจไม่เจอ เพราะที่ <code>PAGE_LIMIT = 20</code> หมวดส่วนใหญ่ของ dummyjson มีหน้าเดียว วิธียืนยันจึงต้องเลือกหมวดให้ถูกและทำตามลำดับนี้เป๊ะ ๆ: เลือก <strong>Kitchen Accessories</strong> (30 ชิ้น = 2 หน้า) กดไปหน้า 2 แล้วสลับไปหมวด <strong>Beauty</strong> ซึ่งมีสินค้าแค่ 5 ชิ้น (หน้าเดียว) — ถ้าลืมรีเซ็ต query จะยิงด้วย <code>page=2</code> ได้ <code>products</code> เป็น array ว่างกลับมา คุณจะเห็นกริดเปล่า ๆ พร้อมแถบเลขหน้าที่มีปุ่มเดียว แทนที่จะเห็นสินค้า 5 ชิ้นของ Beauty ส่วนในโค้ด <code>grep -n "setPage(1)" src/pages/Category/Category.tsx</code> ต้องเจอหนึ่งบรรทัดพอดี และบรรทัดนั้นต้องอยู่ใน <code>onCategoryClick</code> ไม่ใช่ใน <code>useEffect</code></li>
             <li>ไฟล์ใหม่ <strong>1 ไฟล์</strong> (<code>CategoryBanner.tsx</code>) และ modified <strong>1 ไฟล์</strong> (<code>Category.tsx</code>) — ไม่มี <code>.module.scss</code> ไม่มี <code>Home.tsx</code> ขึ้นมาด้วย (Agent ที่เห็น <code>Home.tsx</code> ในบริบทชอบ "ปรับให้เข้าชุดกัน")</li>
             <li><code>grep -n "useState" src/pages/Category/Category.tsx</code> ต้องเจอ<strong>สองบรรทัด</strong>เท่านั้น ถ้าเจอสาม ให้ดูว่าตัวที่สามคือ <code>totalPages</code> หรือเปล่า — <code>const totalPages = data ? … : 0;</code> ต้องเป็น <code>const</code> ที่คำนวณสดทุก render ไม่ใช่ state ที่ต้องคอย set ตาม <code>data</code></li>
             <li><code>grep -n "useEffect" src/pages/Category/Category.tsx</code> ต้องว่างเปล่า — ที่นี่มีสองที่ที่ effect ชอบแอบเข้ามา: sync หมวดแรกจาก <code>categories</code> และ reset <code>page</code> เมื่อ <code>currentCategory</code> เปลี่ยน อย่างหลังทำงานได้แต่ช้ากว่าหนึ่ง render เสมอ (ยิง query ของหมวดใหม่ด้วยเลขหน้าเก่าไปแล้วหนึ่งครั้งก่อนจะ reset) — สังเกตให้ดีว่า <code>setPage(1)</code> ใน event handler ไม่มีปัญหานี้เลย</li>
@@ -355,6 +359,8 @@ export default Category;
           <li><strong><code>&lt;section&gt;</code> ที่ไม่มี className</strong> — ห่อ <code>&lt;div className="flex gap-25"&gt;</code> ไว้อีกชั้นโดยไม่ได้ทำอะไรกับ layout เลย มันมีค่าในเชิงความหมายของ HTML อยู่บ้าง (บอกว่านี่คือ section หนึ่งของหน้า) แต่ที่นี่ไม่มี heading อยู่ข้างในเลยสักตัว ซึ่งเป็นเงื่อนไขที่ทำให้ <code>&lt;section&gt;</code> มีประโยชน์จริง ๆ — เป็นอีกบรรทัดที่รีวิวจริงจะทัก</li>
         </ul>
 
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> <em>เลขหน้าถูกเก็บไว้ใน component state โดยไม่ผูกกับ URL เลย</em> — และข้อนี้ต่างจากข้อบกพร่องอื่นในคอร์ส เพราะ<strong>ต้นฉบับก็ทำแบบนี้ และ prompt ของเราก็สั่งแบบนี้</strong> ดังนั้นสิ่งที่คุณกำลังตรวจไม่ใช่ "Agent ทำผิดคำสั่งไหม" แต่คือ "คุณมองออกไหมว่าคำสั่งนี้แลกอะไรไป" พิสูจน์ด้วยตัวเองสามข้อ หลังหน้าเสร็จ: (1) เปิด <code>/categories</code> เลือกหมวด Kitchen Accessories แล้วกดไปหน้า 2 — มองแถบที่อยู่ของเบราว์เซอร์ มันยังเป็น <code>/categories</code> เฉย ๆ ก๊อป URL นั้นส่งให้เพื่อน เพื่อนจะเปิดมาเจอหน้า 1 ของหมวดแรกเสมอ ไม่ใช่สิ่งที่คุณตั้งใจส่ง (2) กด F5 ตอนอยู่หน้า 2 — กลับไปหน้า 1 ของหมวด Beauty งานที่ผู้ใช้ทำมาหายหมด (3) กดปุ่ม Back ของเบราว์เซอร์หลังสลับหมวดและเปลี่ยนหน้ามาหลายครั้ง — คุณจะ<em>ออกจากหน้า Category ไปเลย</em> ไม่ใช่ถอยกลับไปทีละขั้น เพราะไม่เคยมีรายการใน history เกิดขึ้น ทางแก้ที่ถูกในงานจริงคือย้าย <code>page</code> กับ slug ของหมวดไปอยู่ใน query string ด้วย <code>useSearchParams</code> ของ react-router (มีให้ใช้ตั้งแต่บทเรียน 09) แล้ว derive state จาก URL แทน — ซึ่งจะทำให้ทั้งสามอาการหายไปพร้อมกัน แต่<em>อย่าเพิ่งทำในบทนี้</em> เก็บไว้เป็นข้อสังเกตในรีวิวของคุณก่อน ประเด็นของข้อนี้คือ: ของที่ Agent ทำ "ถูกตามสั่ง" ไม่ได้แปลว่ามันเป็นการออกแบบที่ดีที่สุด และไม่มี lint ตัวไหนบอกคุณเรื่องนี้ได้เลย มีแต่การลองใช้เว็บอย่างที่ผู้ใช้จริงใช้</blockquote>
+
         <h2>🤔 อธิบายให้ได้</h2>
 
         <ol>
@@ -363,9 +369,7 @@ export default Category;
           <li>เปิด <code>queries.ts</code> ลบ <code>placeholderData: keepPreviousData</code> ออกหนึ่งบรรทัด แล้วกดเปลี่ยนหน้าในหน้า Category — บอกให้ได้ว่า <code>isLoading</code> เปลี่ยนค่าตอนไหนบ้างในสองกรณี และตอบด้วยว่าถ้าแทนที่จะลบ เราเขียน <code>keepPreviousData: true</code> ลงไปแทน จะเกิดอะไรขึ้นและใครเป็นคนบอกเรา (เสร็จแล้วเติมกลับ)</li>
         </ol>
 
-        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run dev</code> แล้วกดเมนู Category ที่ Header (path <code>/categories</code>) — แถบ CategoryBanner ต้องแสดงคำว่า <strong>Beauty</strong> (หมวดแรกที่ dummyjson ตอบมา) โดยอัตโนมัติ พร้อมสินค้า 5 ชิ้นและแถบเลขหน้าที่มีปุ่มเดียว — ที่ <code>PAGE_LIMIT = 20</code> หมวดที่มีมากกว่าหนึ่งหน้ามีอยู่แค่ห้าหมวด ให้กด <strong>Kitchen Accessories</strong> (30 ชิ้น) หรือ <strong>Groceries</strong> (27 ชิ้น) เพื่อเห็นสองหน้าจริง ๆ แล้วทดสอบสี่อย่าง: (1) กดเลขหน้า 2 / Next — สินค้าหน้าเดิมต้องค้างอยู่แล้วสลับเป็นหน้าใหม่แบบไม่มี spinner ไม่มีจอว่างคั่น (2) อยู่ที่หน้า 2 แล้วสลับหมวด — ต้องเด้งกลับมาหน้า 1 ของหมวดใหม่เสมอ และชื่อบนแบนเนอร์ต้องเปลี่ยนตาม (3) คลิกการ์ดสินค้า — ต้องพาไป <code>/products/&lt;id&gt;</code> ซึ่งยังเป็น stub อยู่ (บทถัดไปจัดการ) (4) ไปหน้า 2 แล้วกด F5 — ต้องกลับมาหน้า 1 ซึ่งเป็นข้อจำกัดที่เราคุยกันไว้ในกล่อง ✅ ไม่ใช่บั๊กที่ต้องแก้วันนี้ แต่เป็นข้อที่ควรอยู่ในบันทึกรีวิวของคุณ ถ้าข้อ (1) ล้มเหลว — เห็น spinner ทุกครั้งที่เปลี่ยนหน้า — แปลว่า <code>placeholderData: keepPreviousData</code> ใน <code>queries.ts</code> หายไป กลับไปเช็คบทเรียน 17 ปิดท้ายด้วย <code>npm run lint</code>, <code>npm run typecheck</code> แล้ว commit — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
-
-        <p>สองหน้าหลักของฝั่ง "เลือกซื้อ" เสร็จแล้ว เหลือหน้าสุดท้ายของ chapter นี้: หน้า Product detail ที่จะเป็นหน้าที่มีคอมโพเนนต์ประกอบเยอะที่สุดในแอป — แกลเลอรีรูป, ข้อมูลราคา, กราฟรีวิว และปุ่ม Add to Cart ที่จะกลายเป็นสะพานเชื่อมไปสู่ chapter ตะกร้าสินค้า</p>
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run dev</code> แล้วกดเมนู Category ที่ Header (path <code>/categories</code>) — แถบ CategoryBanner ต้องแสดงคำว่า <strong>Beauty</strong> (หมวดแรกที่ dummyjson ตอบมา) โดยอัตโนมัติ พร้อมสินค้า 5 ชิ้นและแถบเลขหน้าที่มีปุ่มเดียว — ที่ <code>PAGE_LIMIT = 20</code> หมวดที่มีมากกว่าหนึ่งหน้ามีอยู่แค่สองหมวด ให้กด <strong>Kitchen Accessories</strong> (30 ชิ้น) หรือ <strong>Groceries</strong> (27 ชิ้น) เพื่อเห็นสองหน้าจริง ๆ แล้วทดสอบสี่อย่าง: (1) กดเลขหน้า 2 / Next — สินค้าหน้าเดิมต้องค้างอยู่แล้วสลับเป็นหน้าใหม่แบบไม่มี spinner ไม่มีจอว่างคั่น (2) อยู่ที่หน้า 2 แล้วสลับหมวด — ต้องเด้งกลับมาหน้า 1 ของหมวดใหม่เสมอ และชื่อบนแบนเนอร์ต้องเปลี่ยนตาม (3) คลิกการ์ดสินค้า — ต้องพาไป <code>/products/&lt;id&gt;</code> ซึ่งยังเป็น stub อยู่ (บทถัดไปจัดการ) (4) ไปหน้า 2 แล้วกด F5 — ต้องกลับมาหน้า 1 ซึ่งเป็นข้อจำกัดที่เราคุยกันไว้ในกล่อง 💡 ใต้โค้ดอ้างอิง ไม่ใช่บั๊กที่ต้องแก้วันนี้ แต่เป็นข้อที่ควรอยู่ในบันทึกรีวิวของคุณ ถ้าข้อ (1) ล้มเหลว — เห็น spinner ทุกครั้งที่เปลี่ยนหน้า — แปลว่า <code>placeholderData: keepPreviousData</code> ใน <code>queries.ts</code> หายไป กลับไปเช็คบทเรียน 17 ปิดท้ายด้วย <code>npm run lint</code>, <code>npm run typecheck</code> แล้ว commit สองหน้าหลักของฝั่ง "เลือกซื้อ" เสร็จแล้ว เหลือหน้าสุดท้ายของ chapter นี้: หน้า Product detail ที่จะเป็นหน้าที่มีคอมโพเนนต์ประกอบเยอะที่สุดในแอป — แกลเลอรีรูป, ข้อมูลราคา, กราฟรีวิว และปุ่ม Add to Cart ที่จะกลายเป็นสะพานเชื่อมไปสู่ chapter ตะกร้าสินค้า — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="19_home_page.html" rel="prev">ก่อนหน้า: หน้า Home</a>
