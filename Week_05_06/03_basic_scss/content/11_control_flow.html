@@ -64,7 +64,9 @@
           โดยไม่ต้องคัดลอกโค้ดทีละก้อน
         </p>
 
-        <pre><code>$alert-colors: (
+        <pre><code>@use "sass:color";
+
+$alert-colors: (
   success: #1f9d55,
   warning: #d97706,
   danger: #dc2626,
@@ -73,7 +75,7 @@
 @each $name, $value in $alert-colors {
   .alert-#{$name} {
     border-left: 4px solid $value;
-    background-color: rgba($value, 0.12);
+    background-color: color.change($value, $alpha: 0.12);
     color: $value;
     padding: 1rem;
   }
@@ -100,6 +102,12 @@
   color: #dc2626;
   padding: 1rem;
 }</code></pre>
+
+        <p>
+          จุดสำคัญคือเรายังใช้การวนซ้ำแบบเดิมได้ แต่ย้ายการจัดการ alpha
+          ไปอยู่ใน <code>sass:color</code> แบบ namespaced
+          เพื่อให้ตัวอย่างสอดคล้องกับ syntax สมัยใหม่ของ Dart Sass
+        </p>
 
         <h2><code>@for ... through</code> เหมาะกับช่วงตัวเลขที่รู้ขอบเขตแน่ชัด</h2>
         <p>

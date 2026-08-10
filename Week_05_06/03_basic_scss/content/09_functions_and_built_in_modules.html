@@ -119,21 +119,22 @@ $brand: #6f3cc3;
 
 .button-primary {
   background-color: $brand;
-  border: 1px solid color.adjust($brand, $lightness: -10%);
-  box-shadow: 0 10px 24px color.adjust($brand, $alpha: -0.7);
+  border: 1px solid color.adjust($brand, $red: -16, $green: -16, $blue: -31);
+  box-shadow: 0 10px 24px color.change($brand, $alpha: 0.3);
 }</code></pre>
 
         <p>CSS ที่คอมไพล์แล้วจะเป็น:</p>
         <pre><code>.button-primary {
   background-color: #6f3cc3;
-  border: 1px solid #592ca4;
+  border: 1px solid #5f2ca4;
   box-shadow: 0 10px 24px rgba(111, 60, 195, 0.3);
 }</code></pre>
 
         <p>
-          การใช้ <code>color.adjust()</code> แบบ namespaced
-          อ่านชัดกว่า helper global รุ่นเก่า และสื่อเจตนาว่าเรากำลังปรับ channel
-          ของสี ไม่ได้สร้างสีใหม่แบบลอย ๆ
+          การใช้ <code>color.adjust()</code> และ <code>color.change()</code>
+          แบบ namespaced อ่านชัดกว่า helper global รุ่นเก่า
+          และสื่อเจตนาว่าเรากำลังปรับ channel ของสีหรือค่า alpha
+          อย่างตรงไปตรงมา ไม่ได้สร้างสีใหม่แบบลอย ๆ
         </p>
 
         <h2>เลือก function หรือ mixin ดี?</h2>
