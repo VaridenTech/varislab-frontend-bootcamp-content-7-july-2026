@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="พิมพ์ query key factory ของสินค้าด้วยมือให้เป็นแหล่งความจริงเดียวของ cache แล้วสั่ง Cursor ต่อ queryOptions ทั้งสี่จานและติดตั้ง ESLint plugin ของ TanStack Query" />
+    <title>Query Factories | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 17 · ชั้นข้อมูลสินค้า (Products Data Layer)</p>
+          <h1>Query Factories</h1>
+          <p class="lesson-original-title" lang="en">Query Factories</p>
+        </header>
+
+        <p>ชิ้นสุดท้ายของชั้นข้อมูลสินค้ามาถึงแล้ว เรามีฟังก์ชัน typed ครบสี่ตัวจากบทที่แล้ว และมี <code>QueryClientProvider</code> ครอบแอปไว้ตั้งแต่บทเรียน 11 — เหลือแค่ตอบคำถามเดียว: <strong>หน้าเพจควรเรียก <code>useQuery</code> อย่างไร?</strong> คำตอบแบบที่เราเรียนมาจาก Week 4 คือเขียน <code>queryKey</code> กับ <code>queryFn</code> สด ๆ ในคอมโพเนนต์ ซึ่งใช้ได้ดีในแอปที่มี query สองสามตัว แต่แอปของเรากำลังจะมี query กระจายอยู่หลายหน้า และวิธีนั้นมีกับดักซ่อนอยู่</p>
+
+        <h2>ปัญหา: query key ที่เขียนด้วยมือจะค่อย ๆ เพี้ยน</h2>
+
+        <p>ลองดูสถานการณ์สมมติที่เกิดจริงในทุกทีม — สองหน้าต้องการข้อมูลชุดเดียวกัน แต่เขียนคนละวัน:</p>
+
+        <pre><code class="language-typescript">// หน้า Home — เขียนวันจันทร์
+useQuery({
+  queryKey: ["products", page],
+  queryFn: () =&gt; getProducts({ page }),
+});
+
+// หน้า Category — เขียนวันพฤหัส
+useQuery({
+  queryKey: ["product-list", category, page],
+  queryFn: () =&gt; getProductsByCategory({ category, page }),
+});
+</code></pre>
+
+        <p>โค้ดนี้รันได้ ไม่มี error ไม่มี warning แต่มันป่วยแล้ว:</p>
+
+        <ul>
+          <li><strong>ข้อมูลชนิดเดียวกัน สะกด key คนละแบบ</strong> — <code>"products"</code> กับ <code>"product-list"</code> ทำให้คำสั่งกวาดล้าง cache อย่าง <code>invalidateQueries({ queryKey: ["products"] })</code> โดนแค่ตัวแรก ตัวที่สองรอดไปหน้าตาเฉย แสดงข้อมูลเก่าต่อไปเงียบ ๆ</li>
+          <li><strong>สะกดผิดคือ cache ใหม่ ไม่ใช่ error</strong> — พิมพ์ <code>"prodcuts"</code> ที่ไหนสักแห่ง TypeScript ไม่ว่าอะไรเลย เพราะ key เป็นแค่ array ธรรมดา ผลคือได้ cache แยกอีกก้อน ยิง request ซ้ำโดยไม่มีใครรู้</li>
+          <li><strong>ลืมใส่ตัวแปรใน key</strong> — ถ้า <code>queryFn</code> ใช้ <code>page</code> แต่ key ไม่มี <code>page</code> การเปลี่ยนหน้าจะไม่ refetch เพราะ TanStack Query มองว่า key เดิม = ข้อมูลเดิม นี่คือ bug คลาสสิกที่ debug ยากที่สุดตระกูลหนึ่ง</li>
+        </ul>
+
+        <p>ต้นตอของทั้งหมดคือ query key เป็น "ข้อความอิสระ" ที่ไม่มีแหล่งความจริงกลาง วิธีแก้แบบมืออาชีพมีสองท่อนประกอบกัน:</p>
+
+        <ul>
+          <li><strong>Query key factory</strong> — object เดียวที่เป็นเจ้าของ key ทุกตัวของฟีเจอร์ ใครอยากได้ key ต้องมาขอจากที่นี่ จะไม่มีการสะกดมือกระจายตามหน้าอีกเลย</li>
+          <li><strong><code>queryOptions()</code></strong> — helper ของ TanStack Query v5 ที่มัด <code>queryKey</code> + <code>queryFn</code> + option อื่น ๆ เป็นก้อนเดียวที่ type ครบสมบูรณ์ หน้าเพจแค่ <code>useQuery(productQueries.list())</code> แล้วได้ <code>data</code> ที่ TypeScript รู้ type เป๊ะ ๆ โดยไม่ต้องประกาศอะไรเพิ่ม</li>
+        </ul>
+
+        <h2>ทำไมบทนี้ถึงพิมพ์ productKeys เอง</h2>
+
+        <p>บทนี้สลับลำดับกลับไปเป็นแบบบทเรียน 12: กล่อง ✍️ มาก่อนกล่อง 🤖 และคราวนี้เหตุผลไม่ใช่เรื่อง "ให้ไฟล์ตัวอย่างเป็นบริบท" อย่างเดียว แต่เป็นเรื่องทิศทางการพึ่งพาล้วน ๆ</p>
+
+        <p>ทวนกฎจากบทเรียน 09 อีกครั้ง: <strong>สิ่งที่พังเมื่อคุณตัดของออกจาก prompt คือสิ่งที่<em>อ้างถึง</em>ของชิ้นนั้น ไม่ใช่ตัวมันเอง</strong> บทที่แล้วเราเจอกรณีที่ลูกศรชี้ทางเดียว: บล็อก interceptor อ้างถึง <code>apiClient</code> เราจึงต้องให้ Agent สร้าง <code>apiClient</code> ก่อน บทนี้ลูกศรชี้กลับด้าน</p>
+
+        <p>เปิดดูโครงของ <code>queries.ts</code> ที่เรากำลังจะได้: ครึ่งบนคือ <code>productKeys</code> ครึ่งล่างคือ <code>productQueries</code> และครึ่งล่างอ้างถึงครึ่งบน<em>ทุกจาน</em> — <code>productKeys.list(params)</code>, <code>productKeys.byCategory(params)</code>, <code>productKeys.categories()</code>, <code>productKeys.detail(id)</code> ถ้าเราสั่งว่า "สร้าง <code>productQueries</code> แต่ห้ามแตะ <code>productKeys</code>" โดยที่ <code>productKeys</code> ยังไม่มีตัวตน สิ่งที่พังไม่ใช่ <code>productKeys</code> แต่คือ <code>productQueries</code> ทั้งก้อน: typecheck ตายที่บรรทัดแรกของทุกจาน แล้วคุณจะเดินวงจรตรวจงานขั้นที่สามไม่ได้เลย</p>
+
+        <p>ดังนั้นลำดับของบทนี้จึงถูกบังคับไว้แล้ว: พิมพ์ <code>productKeys</code> เอง ให้ lint กับ typecheck ผ่าน <code>git commit</code> ให้ working tree สะอาด แล้วค่อยส่ง prompt ที่ <code>@</code>-mention ไฟล์นั้น — ไฟล์ต้องมีอยู่จริงก่อน <code>@</code>-mention ถึงจะมีน้ำหนัก และของที่คุณพิมพ์เองก็กลายเป็นบริบทที่แม่นที่สุดของงานถัดไปพอดี</p>
+
+        <p>ส่วนเหตุผลว่าทำไมต้องเป็น <code>productKeys</code> ที่พิมพ์เอง ไม่ใช่ <code>productQueries</code>: ทั้งสองก้อนยาวพอ ๆ กัน แต่ก้อนบนคือก้อนที่ผิดแล้ว<em>ไม่มีใครบอก</em> — ไม่ใช่ compiler ไม่ใช่ lint ไม่ใช่หน้าเว็บ ส่วนก้อนล่างถ้าผิดรูปทรง typecheck จับได้ทันที</p>
+
+        <h2>ติดตั้ง ESLint plugin ด้วยมือ</h2>
+
+        <p>factory ป้องกัน key เพี้ยนได้เกือบหมด แต่ "เกือบ" ยังไม่พอสำหรับเรา — TanStack ทำ ESLint plugin ที่ตรวจจับการใช้ query ผิดท่าให้ตั้งแต่ตอนเขียน ตามกติกาเดิม dependency เราติดตั้งเอง ส่วนการ<em>ต่อสาย</em>เข้า config เป็นงานของ Agent เดี๋ยวนี้:</p>
+
+        <pre><code class="language-bash">npm install -D @tanstack/eslint-plugin-query
+git add -A &amp;&amp; git commit -m "chore: install tanstack query eslint plugin"</code></pre>
+
+        <blockquote>💡 บทเรียน 03 ตอนที่เราเขียน <code>eslint.config.js</code> ทั้งไฟล์ ได้ทิ้งไว้แล้วว่า "ไฟล์นี้ยังไม่ใช่เวอร์ชันสุดท้าย — ในบทที่ 17 เราจะกลับมาเพิ่มอีกสองบรรทัด" นี่คือบทนั้น</blockquote>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <pre><code class="language-bash">eslint.config.js                        # 🤖 Agent แก้ — เพิ่มสองบรรทัด
+src/
+└── features/
+    └── products/
+        └── queries.ts                  # ✍️ productKeys พิมพ์เอง
+                                        # 🤖 productQueries ให้ Agent ต่อ</code></pre>
+
+        <p>สัญญาที่แต่ละส่วนต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>productKeys</code></strong> — ต้องเป็นแหล่งเดียวของ query key ทั้งฟีเจอร์ และทุก key ต้องต่อยอดจาก key ชั้นบนด้วย spread ต้องไม่มี key ไหนเขียนขึ้นมาลอย ๆ</li>
+          <li><strong><code>productQueries</code></strong> — ต้องคืนผลของ <code>queryOptions()</code> ทุกจาน และหยิบ key จาก <code>productKeys</code> เท่านั้น ต้องไม่เรียก <code>useQuery</code> เอง ต้องไม่เป็น custom hook และต้องไม่มี array ของ key เขียนสด ๆ อยู่ในไฟล์</li>
+          <li><strong><code>eslint.config.js</code></strong> — ต้องเพิ่มแค่ import ตัว plugin กับ config แนะนำของมันใน <code>extends</code> ต้องไม่แตะกฎเดิมสักข้อ</li>
+        </ul>
+
+        <h2>✍️ ส่วนนี้พิมพ์เอง</h2>
+
+        <blockquote class="lesson-manual">
+          <p>✍️ <strong>ส่วนนี้พิมพ์เอง</strong> — ทำตามลำดับนี้ ห้ามก๊อปวาง ห้ามให้ Agent ช่วยเติม (ถ้าปุ่ม autocomplete ของ Cursor เด้งขึ้นมาแล้วคุณกด Tab รับ นั่นก็คือการก๊อป):</p>
+          <ol>
+            <li>สร้างไฟล์ <code>src/features/products/queries.ts</code></li>
+            <li>พิมพ์ทั้งก้อนข้างล่างนี้ — ระหว่างพิมพ์ให้หยุดถามตัวเองที่ <code>String(id)</code> ว่ามันมีไว้ทำไม</li>
+            <li><code>npm run lint</code> และ <code>npm run typecheck</code> ให้ผ่านทั้งคู่ (จะผ่าน เพราะ <code>productKeys</code> ถูก export และ type ที่ import มาถูกใช้ครบ)</li>
+            <li><code>git commit</code> — ไฟล์ต้องมีอยู่จริงในโปรเจกต์ก่อน prompt ถึงจะ <code>@</code>-mention ได้ และต้อง commit ให้ working tree สะอาด ไม่งั้น <code>git diff</code> ในขั้นตรวจงานจะปนโค้ดที่คุณพิมพ์เองเข้ากับโค้ดของ Agent</li>
+          </ol>
+          <p><code>src/features/products/queries.ts</code>:</p>
+          <pre><code class="language-typescript">import { CategoryProductsParams, ProductListParams } from "./api";
+
+export const productKeys = {
+  all: ["products"] as const,
+  lists: () =&gt; [...productKeys.all, "list"] as const,
+  list: (params: ProductListParams) =&gt;
+    [...productKeys.lists(), params] as const,
+  byCategory: (params: CategoryProductsParams) =&gt;
+    [...productKeys.lists(), "category", params] as const,
+  categories: () =&gt; [...productKeys.all, "categories"] as const,
+  details: () =&gt; [...productKeys.all, "detail"] as const,
+  detail: (id: string | number) =&gt;
+    [...productKeys.details(), String(id)] as const,
+};
+</code></pre>
+          <p><strong>เหตุผล:</strong> cache key ผิด = bug ที่หาไม่เจอ — key ที่สะกดเพี้ยนไม่ทำให้อะไรพัง ไม่มี error ไม่มี warning ไม่มีเส้นแดง มันแค่ทำให้ TanStack Query สร้าง cache ก้อนใหม่เงียบ ๆ แล้วยิง request ซ้ำ หรือหนักกว่านั้นคือแสดงข้อมูลเก่าค้างอยู่ทั้งที่ข้อมูลเปลี่ยนไปแล้ว การพิมพ์ก้อนนี้เองคือวิธีเดียวที่จะทำให้คุณจำโครงต้นไม้ของ key ได้ และตอนที่ Agent สร้าง key ผิดที่ในบทหลัง ๆ สิ่งเดียวที่ทำให้คุณจับได้คือคุณรู้ว่าผังที่ถูกต้องหน้าตาอย่างไรโดยไม่ต้องเปิดไฟล์ดู</p>
+        </blockquote>
+
+        <h3>productKeys — ลำดับชั้นของ key</h3>
+
+        <p>สังเกตว่าแต่ละ key ไม่ได้เขียนขึ้นมาลอย ๆ แต่<em>ต่อยอด</em>จาก key ชั้นบนด้วย spread (<code>...</code>) เสมอ ทำให้ key ทั้งหมดเรียงเป็นต้นไม้:</p>
+
+        <ul>
+          <li><code>productKeys.all</code> → <code>["products"]</code> — รากของทุกอย่างเกี่ยวกับสินค้า</li>
+          <li><code>productKeys.lists()</code> → <code>["products", "list"]</code> — กิ่ง "รายการสินค้า" ทุกแบบ</li>
+          <li><code>productKeys.list({ page: 1 })</code> → <code>["products", "list", { page: 1 }]</code> — รายการรวม หน้า 1</li>
+          <li><code>productKeys.byCategory({ category: "beauty", page: 2 })</code> → <code>["products", "list", "category", { category: "beauty", page: 2 }]</code> — รายการตามหมวด</li>
+          <li><code>productKeys.categories()</code> → <code>["products", "categories"]</code> — รายชื่อหมวดหมู่</li>
+          <li><code>productKeys.details()</code> → <code>["products", "detail"]</code> — กิ่ง "รายละเอียดสินค้า"</li>
+          <li><code>productKeys.detail(42)</code> → <code>["products", "detail", "42"]</code> — สินค้าชิ้นเดียว</li>
+        </ul>
+
+        <p>โครงต้นไม้นี้ไม่ใช่ความสวยงามเปล่า ๆ — มันคือกลไก เพราะเวลา TanStack Query จับคู่ key มันจับแบบ prefix: สั่ง <code>invalidateQueries({ queryKey: productKeys.lists() })</code> ครั้งเดียว รายการ<em>ทุกแบบทุกหน้า</em>โดนหมด (ทั้ง <code>list</code> และ <code>byCategory</code> เพราะขึ้นต้นด้วย <code>["products", "list"]</code> เหมือนกัน) แต่ cache ของหน้ารายละเอียดสินค้าไม่ถูกแตะเลย อยากล้างทุกอย่างของฟีเจอร์นี้ก็ <code>productKeys.all</code> จบ — ระดับความละเอียดของการ invalidate ออกแบบไว้ล่วงหน้าแล้วในโครงต้นไม้</p>
+
+        <p>ส่วน <code>as const</code> ที่ห้อยท้ายทุกบรรทัด บอก TypeScript ว่า array เหล่านี้เป็น tuple ค่าตายตัว ไม่ใช่ <code>string[]</code> กว้าง ๆ ซึ่งทำให้ type ของแต่ละ key แม่นยำและ <code>queryOptions</code> นำไป infer ต่อได้เต็มที่</p>
+
+        <p>และ <code>String(id)</code> ในบรรทัดสุดท้าย: จำที่ <code>getProduct</code> รับ <code>string | number</code> ได้ไหม? id จาก URL param เป็น string <code>"42"</code> แต่ id จาก object สินค้าเป็น number <code>42</code> สำหรับ TanStack Query สองค่านี้คือ key คนละตัว! ถ้าไม่จัดการ เราจะได้ cache สองก้อนของสินค้าชิ้นเดียวกัน และยิง request ซ้ำฟรี ๆ factory จึง normalize ตรงชั้น key — ไม่ว่าใครส่งอะไรมา key ลงเอยเป็น <code>["products", "detail", "42"]</code> ก้อนเดียวเสมอ ปัญหาทั้งตระกูลถูกปิดที่บรรทัดเดียว</p>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> — แชทใหม่ โหมด Agent สังเกตว่า <code>โครงสร้าง:</code> ของบทนี้ไม่มีคำว่า "สร้างไฟล์" เลยสักบรรทัด งานนี้เป็นการ<em>แก้</em>ไฟล์ที่มีอยู่แล้วทั้งสองไฟล์ ซึ่งเป็นงานที่ต้องระบุขอบเขตให้แน่นกว่าเดิม:</p>
+          <pre><code class="language-text">ต่อ queryOptions ของสินค้าลงในไฟล์ queries.ts ที่มี productKeys อยู่แล้ว และต่อสาย ESLint plugin ของ TanStack Query
+
+บริบท: @src/features/products/queries.ts @src/features/products/api.ts @src/app/queryClient.ts @eslint.config.js
+src/features/products/queries.ts มี productKeys ที่เขียนเสร็จและ commit แล้ว ใช้เป็นแหล่งเดียวของ query key
+src/features/products/api.ts export ฟังก์ชัน getProducts, getProductsByCategory, getCategories, getProduct
+และ export interface ProductListParams, CategoryProductsParams
+ติดตั้ง @tanstack/react-query 5 ไว้แล้วตั้งแต่บทเรียน 11 และ QueryClientProvider ครอบแอปอยู่แล้ว
+src/app/queryClient.ts ตั้ง default ไว้ที่ staleTime: 60 * 1000 และ retry: 1
+ติดตั้ง @tanstack/eslint-plugin-query เป็น devDependency ไว้แล้ว ยังไม่ได้ต่อเข้า config
+eslint.config.js เป็น flat config ที่เขียนเองตั้งแต่บทเรียน 03
+
+โครงสร้าง: แก้สองไฟล์นี้เท่านั้น ไม่สร้างไฟล์ใหม่แม้แต่ไฟล์เดียว
+- src/features/products/queries.ts (เพิ่มของต่อท้าย ห้ามแก้ productKeys)
+- eslint.config.js (เพิ่มสองบรรทัด)
+
+ข้อกำหนดทางเทคนิค:
+- queries.ts: เพิ่ม import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+  ไว้เป็นบรรทัดแรกสุดของไฟล์ เหนือ import เดิมจาก "./api"
+- ขยาย import เดิมจาก "./api" ให้มีหกชื่อ เรียงตามลำดับนี้พอดี:
+  CategoryProductsParams, ProductListParams, getCategories, getProduct,
+  getProducts, getProductsByCategory
+- ต่อท้ายไฟล์ด้วย export const productQueries = { ... } ที่มีสี่จานตามลำดับนี้
+  ทุกจานคืนผลของ queryOptions({ ... }) และหยิบ queryKey จาก productKeys เท่านั้น
+  list: (params: ProductListParams = {}) -&gt; queryKey: productKeys.list(params),
+    queryFn: () =&gt; getProducts(params)
+  byCategory: (params: CategoryProductsParams) -&gt; queryKey: productKeys.byCategory(params),
+    queryFn: () =&gt; getProductsByCategory(params),
+    placeholderData: keepPreviousData
+  categories: () -&gt; queryKey: productKeys.categories(),
+    queryFn: getCategories (ส่งฟังก์ชันตรง ๆ ไม่ต้องห่อ arrow function),
+    staleTime: 5 * 60 * 1000
+  detail: (id: string | number) -&gt; queryKey: productKeys.detail(id),
+    queryFn: () =&gt; getProduct(id)
+  ห้ามใส่ option อื่นนอกจากที่ระบุ เช่น retry, gcTime, refetchOnWindowFocus หรือ enabled
+  ห้ามเขียน queryKey เป็น array สด ๆ ต้องเรียกผ่าน productKeys ทุกจุด
+  ห้ามเรียก useQuery ในไฟล์นี้ และห้ามสร้าง custom hook เช่น useProducts
+- eslint.config.js: เพิ่ม import pluginQuery from "@tanstack/eslint-plugin-query";
+  ไว้ต่อจากบรรทัด import importX และก่อนบรรทัด import prettierConfig
+  แล้วเพิ่ม ...pluginQuery.configs["flat/recommended"] เป็นสมาชิกตัวที่สามของ extends
+  ต่อจาก ...tseslint.configs.recommended
+  ห้ามแก้บรรทัดอื่นในไฟล์นี้ ทั้ง ignores, files, languageOptions, plugins และ rules
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ productKeys แม้แต่ตัวอักษรเดียว
+- ห้ามแก้ api.ts, types.ts, queryClient.ts, providers.tsx หรือหน้าเพจใด ๆ
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ยังไม่ต้องเอา productQueries ไปใช้ในหน้าไหน</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> เขียนด้วยไวยากรณ์ TanStack Query <strong>v4</strong> ซึ่งยังเป็นเวอร์ชันที่มีโค้ดในอินเทอร์เน็ตมากกว่า v5 มาก อาการมีสองแบบที่ต้องแยกให้ออก แบบแรกคือรูปทรงผิดทั้งก้อน: มันทิ้ง <code>queryOptions</code> แล้วเขียนเป็น custom hook ที่เรียก <code>useQuery(key, fn)</code> แบบส่ง argument สองตัว (v5 รับ options object ก้อนเดียวเท่านั้น) — กรณีนี้ typecheck จะฟ้อง ถ้าเจอให้ <code>git restore .</code> แล้วสั่งใหม่ ไม่ใช่ไล่แก้ทีละบรรทัด แบบที่สองอันตรายกว่ามากเพราะ<em>เงียบสนิท</em>: มันเขียน <code>keepPreviousData: true</code> (option ของ v4 ที่ถูกถอดออกไปแล้ว) แทน <code>placeholderData: keepPreviousData</code> หรือลืมบรรทัดนั้นไปทั้งบรรทัด lint ผ่าน typecheck ผ่าน หน้าเว็บวันนี้ก็ยังไม่มีอะไรให้ดู แล้วอาการจะไปโผล่ตอนบทเรียน 20 เป็นกริดสินค้าทั้งกริดหายวับกลายเป็น spinner ทุกครั้งที่ผู้ใช้กดเปลี่ยนหน้า — เปิดจาน <code>byCategory</code> ดูเป็นจุดแรกเสมอ</li>
+            <li><strong>ไม่มีไฟล์ใหม่แม้แต่ไฟล์เดียว</strong> — <code>git status</code> ต้องเห็นแค่ <code>queries.ts</code> กับ <code>eslint.config.js</code> ขึ้นสถานะ modified ไม่มี <code>useProducts.ts</code>, <code>index.ts</code> หรือ hook อะไรแถมมา</li>
+            <li><code>git diff src/features/products/queries.ts</code> ต้อง<strong>ไม่มีบรรทัดไหนใน <code>productKeys</code> ขึ้นเป็นสีแดง</strong> เลย มีแค่บรรทัด import ที่ถูกขยาย กับของที่ต่อท้ายไฟล์ — ถ้า Agent จัดรูปแบบ <code>productKeys</code> ใหม่หรือ "ปรับปรุง" ให้ ให้ย้อนเฉพาะส่วนนั้นกลับ</li>
+            <li>ทุกจานใน <code>productQueries</code> คืนผลของ <code>queryOptions({...})</code> จริง ไม่ใช่ object ธรรมดา — สองแบบนี้หน้าตาเกือบเหมือนกัน ต่างกันตรงที่แบบหลังทำให้ <code>data</code> ในหน้าเพจสูญ type ไปเงียบ ๆ</li>
+            <li><code>grep -n "queryKey: \[" src/features/products/queries.ts</code> ต้องไม่เจออะไรเลย — ทุก key มาจาก <code>productKeys</code> ทั้งหมด ถ้าเจอ array สด ๆ แม้แต่ที่เดียว แปลว่า factory ถูกข้ามไปแล้วตั้งแต่วันแรก</li>
+            <li><code>placeholderData: keepPreviousData</code> อยู่ใน <code>byCategory</code> <strong>จานเดียว</strong> และ <code>keepPreviousData</code> ต้องเป็นค่าที่ import มาจาก <code>@tanstack/react-query</code> ไม่ใช่ <code>true</code></li>
+            <li><code>staleTime: 5 * 60 * 1000</code> อยู่ใน <code>categories</code> จานเดียว และ <code>src/app/queryClient.ts</code> <em>ไม่</em>ขึ้นสถานะ modified — นโยบาย cache ของข้อมูลชนิดหนึ่งต้องไม่ถูกแก้ด้วยการเปลี่ยนค่า default ของทั้งแอป</li>
+            <li><code>queryFn: getCategories</code> เขียนแบบส่งฟังก์ชันตรง ๆ ไม่ใช่ <code>() =&gt; getCategories()</code> — ต่างกันแค่รูปแบบ ไม่ต่างกันที่ผล แต่เป็นข้อที่ diff กับโค้ดอ้างอิงจะไม่ตรงถ้าไม่ตรวจ</li>
+            <li><code>eslint.config.js</code>: <code>git diff</code> ต้องเห็นบรรทัดใหม่แค่<strong>สองบรรทัด</strong> (บรรทัด <code>import pluginQuery</code> และบรรทัด <code>...pluginQuery.configs["flat/recommended"],</code>) บวกกับการที่ array <code>extends</code> ถูกแตกจากบรรทัดเดียวเป็นหลายบรรทัด — อย่างหลังคือฝีมือ Prettier ที่ขึ้นบรรทัดใหม่เมื่อบรรทัดยาวเกิน ไม่ใช่ Agent ทำเกินคำสั่ง กฎใน <code>rules</code> ทุกข้อต้องเหมือนเดิมทุกตัวอักษร</li>
+            <li><code>npm run lint</code> ต้องผ่านเงียบ ๆ — ถ้ามันเริ่มฟ้องกฎที่ขึ้นต้นด้วย <code>@tanstack/query/</code> นั่นแปลว่า plugin ต่อติดแล้วและกำลังทำงาน ให้อ่านสิ่งที่มันฟ้องจริง ๆ ก่อนแก้</li>
+            <li>ไม่มี <code>any</code>, ไม่มี <code>as</code> กลบ type และไม่มี comment อธิบายสิ่งที่โค้ดบอกอยู่แล้ว</li>
+          </ul>
+        </blockquote>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/features/products/queries.ts</code> ฉบับเต็มหลังจากรวมสองมือแล้ว (ครึ่งบนคือของที่คุณพิมพ์เอง):</p>
+
+        <pre><code class="language-typescript">import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import {
+  CategoryProductsParams,
+  ProductListParams,
+  getCategories,
+  getProduct,
+  getProducts,
+  getProductsByCategory,
+} from "./api";
+
+export const productKeys = {
+  all: ["products"] as const,
+  lists: () =&gt; [...productKeys.all, "list"] as const,
+  list: (params: ProductListParams) =&gt;
+    [...productKeys.lists(), params] as const,
+  byCategory: (params: CategoryProductsParams) =&gt;
+    [...productKeys.lists(), "category", params] as const,
+  categories: () =&gt; [...productKeys.all, "categories"] as const,
+  details: () =&gt; [...productKeys.all, "detail"] as const,
+  detail: (id: string | number) =&gt;
+    [...productKeys.details(), String(id)] as const,
+};
+
+export const productQueries = {
+  list: (params: ProductListParams = {}) =&gt;
+    queryOptions({
+      queryKey: productKeys.list(params),
+      queryFn: () =&gt; getProducts(params),
+    }),
+
+  byCategory: (params: CategoryProductsParams) =&gt;
+    queryOptions({
+      queryKey: productKeys.byCategory(params),
+      queryFn: () =&gt; getProductsByCategory(params),
+      placeholderData: keepPreviousData,
+    }),
+
+  categories: () =&gt;
+    queryOptions({
+      queryKey: productKeys.categories(),
+      queryFn: getCategories,
+      staleTime: 5 * 60 * 1000,
+    }),
+
+  detail: (id: string | number) =&gt;
+    queryOptions({
+      queryKey: productKeys.detail(id),
+      queryFn: () =&gt; getProduct(id),
+    }),
+};
+</code></pre>
+
+        <p>สังเกตว่าไฟล์นี้ import จาก <code>"./api"</code> แบบ relative เพราะอยู่โฟลเดอร์เดียวกัน — ซึ่งตรงตามกติกาในไฟล์ rules และ<em>ไม่ตรง</em>กับ <code>api.ts</code> ที่ import <code>types</code> ในโฟลเดอร์เดียวกันด้วย <code>@/features/products/types</code> ตามที่ทักไว้ในบทที่แล้ว ตอนนี้คุณเห็นความไม่สม่ำเสมอนั้นครบทั้งสองฝั่งแล้ว</p>
+
+        <h3>productQueries — เมนูสำเร็จรูปสี่จาน</h3>
+
+        <p><code>productQueries</code> คือชั้นที่หน้าเพจจะใช้จริง แต่ละตัว return ผลของ <code>queryOptions()</code> ซึ่งมัด key (จาก factory) + ฟังก์ชัน (จาก <code>api.ts</code>) + พฤติกรรมเฉพาะตัว เป็นก้อนเดียว มาดูการตัดสินใจในแต่ละจาน:</p>
+
+        <p><strong><code>list</code></strong> — จานพื้นฐานที่สุด: key คู่กับ <code>getProducts</code> ตรง ๆ ให้ default <code>= {}</code> เพื่อให้เรียก <code>productQueries.list()</code> เปล่า ๆ ได้เลย สังเกตว่า <code>params</code> ก้อนเดียวกันถูกส่งเข้าทั้ง key และ <code>queryFn</code> — ตัวแปรที่มีผลต่อข้อมูลอยู่ใน key ครบเสมอโดยโครงสร้าง ไม่ใช่โดยความจำของคนเขียน bug "ลืมใส่ตัวแปรใน key" ตายตั้งแต่เกิด จานนี้จะถูกใช้ครั้งแรกในหน้า Home บทเรียน 19 (<code>productQueries.list({ limit: 5 })</code> สำหรับแถบ Deals of the day)</p>
+
+        <p><strong><code>byCategory</code> กับ <code>placeholderData: keepPreviousData</code></strong> — จานนี้แก้ปัญหา UX ที่ชื่อว่า pagination flash: ลองนึกภาพหน้า Category ตอนผู้ใช้กดไปหน้า 2 — เลขหน้าที่เปลี่ยนทำให้ query key เปลี่ยน กลายเป็น query ใหม่เอี่ยมที่ยังไม่มีข้อมูลใน cache ผลคือ <code>data</code> เป็น <code>undefined</code> ชั่วขณะ รายการสินค้าทั้งกริดหายวับกลายเป็น spinner แล้วค่อยเด้งกลับมา — จอกะพริบ ความสูงหน้ากระโดด scroll หลุด ทุกครั้งที่เปลี่ยนหน้า <code>keepPreviousData</code> สั่งว่า "ระหว่างรอข้อมูลหน้าใหม่ ให้โชว์ข้อมูลหน้าเก่าไปพลาง ๆ" หน้าจอเลยนิ่งสนิท พอของใหม่มาถึงค่อยสลับเนียน ๆ (ข้อมูลเก่าที่ยืมมาโชว์เป็นแค่ placeholder — ไม่ได้ถูกบันทึกเป็น cache ของ key ใหม่) จานนี้ถูกใช้ทั้งในหน้า Home (บทเรียน 19) และหน้า Category (บทเรียน 20) โดยทั้งสองหน้าจะ spread มันแล้วเติม <code>enabled</code> เข้าไปตอนเรียก</p>
+
+        <p><strong><code>categories</code> กับ <code>staleTime: 5 * 60 * 1000</code></strong> — รายชื่อหมวดหมู่เป็นข้อมูลที่แทบไม่เคยเปลี่ยน แต่ถูกใช้แสดงเมนูซึ่งโผล่บ่อยมาก ถ้าปล่อยตาม default ของแอป (60 วินาที ที่ตั้งไว้ใน <code>queryClient.ts</code> บทเรียน 11) เราจะ refetch รายชื่อหมวดหมู่ถี่เกินเหตุ จานนี้จึง override เป็น 5 นาที: ภายในช่วงนั้นทุกหน้าที่ mount ขึ้นมาได้ข้อมูลจาก cache ทันทีโดยไม่ยิง network เลย นี่คือความสวยของ <code>queryOptions</code> — นโยบาย cache ของข้อมูลแต่ละชนิดถูกประกาศไว้<em>ที่เดียว</em>คู่กับตัว query ไม่ใช่ให้แต่ละหน้าไปตั้งกันเอง</p>
+
+        <p><strong><code>detail</code></strong> — จานเดียวที่ key ผ่านการ normalize มาแล้ว (ด้วย <code>String(id)</code> ที่คุณพิมพ์เอง) หน้า Product ในบทเรียน 21 จะส่ง <code>id</code> ที่ได้จาก <code>useParams()</code> ซึ่งเป็น string เข้ามา ส่วนเทสต์ในบทเรียน 32 เรียกมันด้วย number ตรง ๆ (<code>productQueries.detail(7)</code>) — ทั้งสองทางลงเอยที่ cache ก้อนเดียวกัน เพราะ <code>Product["id"]</code> เป็น number ส่วน URL param เป็น string เสมอ</p>
+
+        <blockquote>💡 ตำแหน่งของไฟล์นี้ก็สื่อสารเจตนา: <code>queries.ts</code> อยู่ใน <code>features/products</code> ประกบ <code>api.ts</code> และ <code>types.ts</code> — ฟีเจอร์สินค้าเป็นเจ้าของข้อมูลของตัวเองครบวงจร ตั้งแต่รูปร่างข้อมูล การเรียก ยันนโยบาย cache ภายหลังถ้าเพิ่มฟีเจอร์ที่มีข้อมูลฝั่ง server ของตัวเอง ก็ทำซ้ำแพตเทิร์นเดิมนี้ได้เลย — <code>features/checkout</code> ในบทเรียน 28 จะเป็นตัวอย่างที่สอง</blockquote>
+
+        <h3>eslint.config.js หลังต่อสาย</h3>
+
+        <p>ไฟล์ฉบับสมบูรณ์เป็นแบบนี้ — สองบรรทัดที่เพิ่มคือบรรทัด <code>import pluginQuery</code> กับบรรทัด <code>...pluginQuery.configs["flat/recommended"]</code> ที่เหลือเหมือนเดิมทุกตัวอักษร:</p>
+
+        <pre><code class="language-typescript">import js from "@eslint/js";
+import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
+import importX from "eslint-plugin-import-x";
+import pluginQuery from "@tanstack/eslint-plugin-query";
+import prettierConfig from "eslint-config-prettier";
+
+export default tseslint.config(
+  { ignores: ["dist", "coverage"] },
+  {
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+      ...pluginQuery.configs["flat/recommended"],
+    ],
+    files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.browser,
+    },
+    plugins: {
+      "react-hooks": reactHooks,
+      "react-refresh": reactRefresh,
+      "import-x": importX,
+    },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true },
+      ],
+      "import-x/order": "error",
+    },
+  },
+  prettierConfig,
+);
+</code></pre>
+
+        <p>ตัวอย่างกฎที่ได้มา:</p>
+
+        <ul>
+          <li><strong><code>@tanstack/query/exhaustive-deps</code></strong> — ตัวจับ bug คลาสสิกที่เล่าไว้ต้นบท: ถ้า <code>queryFn</code> ใช้ตัวแปรที่ไม่อยู่ใน <code>queryKey</code> จะโดนขีดเส้นเตือนทันทีตั้งแต่ใน editor ไม่ต้องรอไปงงตอนหน้าเว็บไม่ refetch</li>
+          <li><strong><code>@tanstack/query/stable-query-client</code></strong> — เตือนถ้าเผลอสร้าง <code>QueryClient</code> ข้างในคอมโพเนนต์ ซึ่งจะทำให้ cache ถูกโยนทิ้งทุก re-render (เราทำถูกไปแล้วในบทเรียน 11 — สร้างไว้นอกคอมโพเนนต์ใน <code>queryClient.ts</code>)</li>
+          <li><strong><code>@tanstack/query/no-rest-destructuring</code></strong> — เตือนการ destructure ผลของ <code>useQuery</code> ด้วย rest spread ซึ่งทำลายการ optimize เรื่อง re-render ของ TanStack Query</li>
+        </ul>
+
+        <p>สังเกตว่ากฎชุดนี้ยังไม่มีอะไรให้จับในวันนี้ เพราะไฟล์ที่เราเพิ่งเขียนไม่มี <code>useQuery</code> สักตัว มันจะเริ่มทำงานจริงตั้งแต่บทเรียน 19 เป็นต้นไป ตอนที่หน้าเพจเริ่มเรียก query — และนั่นคือจังหวะที่ถูกต้องของการติดตั้ง linter: <em>ก่อน</em>โค้ดที่มันต้องตรวจจะถูกเขียน ไม่ใช่หลัง</p>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>เขียนออกมาให้ได้ว่า <code>productKeys.detail(42)</code> กับ <code>productKeys.detail("42")</code> คืน array หน้าตาอย่างไรทั้งคู่ ชี้บรรทัดที่ทำให้มันเท่ากัน แล้วบอกว่าถ้าลบส่วนนั้นออก หน้าไหนของแอปจะยิง request ซ้ำโดยที่ผู้ใช้ไม่รู้ตัว</li>
+          <li>สั่ง <code>invalidateQueries({ queryKey: productKeys.lists() })</code> หนึ่งครั้ง จะล้าง cache ของจานไหนบ้างในสี่จาน และไม่ล้างจานไหน ตอบจากโครงของ key ล้วน ๆ โดยไม่ต้องเปิดเอกสาร TanStack Query</li>
+          <li><code>categories</code> เขียน <code>queryFn: getCategories</code> แต่ <code>list</code> เขียน <code>queryFn: () =&gt; getProducts(params)</code> — อธิบายว่าทำไมสองจานนี้เขียนคนละท่า และจะเกิดอะไรขึ้นถ้าเปลี่ยน <code>list</code> เป็น <code>queryFn: getProducts</code> เฉย ๆ</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> <code>npm run lint</code> และ <code>npm run typecheck</code> ต้องผ่านทั้งคู่ และ <code>git diff</code> ของ <code>eslint.config.js</code> ต้องมีบรรทัดใหม่แค่สองบรรทัดตามที่ระบุไว้ใน checklist ส่วนหน้าเว็บ? ยังเหมือนเดิมทุกประการ — และนั่นตั้งใจแล้ว สามบทที่ผ่านมาเราวางท่อครบทั้งเส้น: <code>client.ts</code> คุยกับ server และ normalize error → <code>types.ts</code> ให้รูปร่างข้อมูล → <code>api.ts</code> ให้ฟังก์ชันเรียกแบบ typed → <code>queries.ts</code> ให้ cache ที่มีระเบียบ สิ่งเดียวที่ยังไม่มีคือคนเปิดก๊อก ในบทหน้าเราจะเริ่มสร้างคอมโพเนนต์รายการสินค้า แล้วหลังจากนั้นหน้า Home ทั้งหน้าจะมีชีวิตขึ้นมาด้วยโค้ดสั้นแค่ <code>useQuery(productQueries.list({ limit: 5 }))</code> — ความง่ายขนาดนั้นคือรางวัลของงานระบบที่เราเพิ่งทำเสร็จ ปิดท้ายด้วยการ commit — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="16_product_types_api.html" rel="prev">ก่อนหน้า: Types และ Products API</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="18_product_list_components.html" rel="next">ถัดไป: คอมโพเนนต์รายการสินค้า</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

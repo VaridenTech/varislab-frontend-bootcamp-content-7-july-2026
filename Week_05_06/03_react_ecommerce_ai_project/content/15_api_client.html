@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ติดตั้ง axios แล้วสั่ง Cursor สร้าง API client กลางของแอป จากนั้นพิมพ์ response interceptor ที่แปลงทุกความผิดพลาดให้เป็น ApiError รูปแบบเดียวด้วยมือ" />
+    <title>API Client | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 15 · ชั้นข้อมูลสินค้า (Products Data Layer)</p>
+          <h1>API Client</h1>
+          <p class="lesson-original-title" lang="en">API Client</p>
+        </header>
+
+        <p>ถึงตอนนี้เปลือกของแอปเราครบแล้ว: router พาไปหน้าต่าง ๆ ได้, Header/Footer แสดงทุกหน้า, และเรามีคลังคอมโพเนนต์กลางตั้งแต่ Button ยัน ImageZoom แต่ทุกหน้ายังว่างเปล่า เพราะยังขาดสิ่งสำคัญที่สุดของเว็บขายของ นั่นคือ<strong>ข้อมูลสินค้า</strong></p>
+
+        <p>สามบทต่อจากนี้คือการสร้าง "ชั้นข้อมูลสินค้า" (products data layer) ทีละชั้นจากล่างขึ้นบน: บทนี้เราสร้าง <strong>API client กลาง</strong>ที่ทุก request ในแอปต้องวิ่งผ่าน บทหน้าเราใส่ <strong>type และฟังก์ชันเรียก API</strong> และบทถัดไปเราประกอบทุกอย่างเป็น <strong>query factory</strong> ให้ TanStack Query จบชั้นนี้แล้ว หน้าเพจในบทต่อ ๆ ไปจะแทบไม่ต้องคิดเรื่องข้อมูลเลย — แค่หยิบไปใช้</p>
+
+        <h2>รู้จัก dummyjson.com</h2>
+
+        <p>แอปของเราไม่มี backend ของตัวเอง เราดึงข้อมูลจาก <a href="https://dummyjson.com">dummyjson.com</a> ซึ่งเป็น <strong>API ปลอมฟรีสำหรับฝึกซ้อม</strong> — ไม่ต้องสมัครสมาชิก ไม่ต้องขอ API key มีข้อมูลสินค้าจริงจังราว 200 ชิ้นพร้อมรูปภาพ ราคา ส่วนลด รีวิว และหมวดหมู่ ครบพอจะสร้างหน้าร้านทั้งเว็บ endpoint ที่เราจะใช้มีสี่ตัว:</p>
+
+        <ul>
+          <li><code>GET /products</code> — รายการสินค้าทั้งหมด แบ่งหน้าได้ด้วยพารามิเตอร์ <code>limit</code> และ <code>skip</code></li>
+          <li><code>GET /products/category/:slug</code> — สินค้าเฉพาะหมวดหมู่</li>
+          <li><code>GET /products/categories</code> — รายชื่อหมวดหมู่ทั้งหมด</li>
+          <li><code>GET /products/:id</code> — รายละเอียดสินค้าชิ้นเดียว</li>
+        </ul>
+
+        <p>ลองเปิด <a href="https://dummyjson.com/products/1">dummyjson.com/products/1</a> ในเบราว์เซอร์ดูตอนนี้เลยก็ได้ — คุณจะเห็น JSON ของสินค้าหนึ่งชิ้นเต็ม ๆ นี่แหละคือข้อมูลที่อีกไม่กี่บทจะกลายเป็นหน้า Product ของเรา</p>
+
+        <p>ยังจำได้ไหมว่าในบทเรียน 02 เราสร้างไฟล์ <code>.env</code> ไว้แล้ว:</p>
+
+        <pre><code class="language-bash"># .env
+VITE_API_BASE_URL=https://dummyjson.com
+</code></pre>
+
+        <p>ค่านี้อ่านได้ในโค้ดผ่าน <code>import.meta.env.VITE_API_BASE_URL</code> (Vite เปิดเผยเฉพาะตัวแปรที่ขึ้นต้นด้วย <code>VITE_</code> ให้ฝั่งเบราว์เซอร์) การแยก URL ออกมาเป็น environment variable แปลว่าวันหนึ่งถ้าเราย้ายไปใช้ backend จริง เราแก้ไฟล์เดียวโดยไม่ต้องแตะโค้ดสักบรรทัด</p>
+
+        <h2>ทำไมต้อง axios ในเมื่อมี fetch</h2>
+
+        <p>ใน Week 4 เราเรียก API ด้วย <code>fetch</code> ที่มากับเบราว์เซอร์ ซึ่งใช้งานได้ดีในโปรเจกต์เล็ก แต่พอแอปโตขึ้น จุดอ่อนของมันจะเริ่มกวนใจ:</p>
+
+        <ul>
+          <li><strong><code>fetch</code> ไม่ถือว่า HTTP error เป็น error</strong> — server ตอบ 404 หรือ 500 กลับมา promise ก็ยัง resolve ปกติ! คุณต้องจำไปเช็ค <code>response.ok</code> เองทุกครั้ง ลืมเมื่อไหร่ bug เงียบเมื่อนั้น ส่วน axios จะ reject ให้ทันทีเมื่อ status ไม่ใช่ 2xx</li>
+          <li><strong>ต้องแปลง JSON เอง</strong> — <code>fetch</code> ต้อง <code>await response.json()</code> ทุกครั้ง axios แปลงให้อัตโนมัติใน <code>response.data</code></li>
+          <li><strong>ไม่มี baseURL</strong> — <code>fetch</code> ต้องพิมพ์ URL เต็มทุกจุดที่เรียก axios ตั้ง baseURL ครั้งเดียวแล้วเขียนแค่ path สั้น ๆ เช่น <code>/products</code></li>
+          <li><strong>ไม่มี interceptor</strong> — นี่คือเหตุผลข้อใหญ่ที่สุดของเรา interceptor คือ "ด่านตรวจ" ที่ request/response ทุกตัวต้องผ่าน ทำให้เราจัดการ error ของ<em>ทั้งแอป</em>ได้ในที่เดียว เดี๋ยวได้เห็นพลังของมันในบทนี้เลย</li>
+          <li><strong>typed generics</strong> — axios ให้เราบอกได้ว่า <code>apiClient.get&lt;Product&gt;(...)</code> แล้ว <code>response.data</code> จะมี type เป็น <code>Product</code> ทันที (เราจะใช้จริงจังในบทหน้า)</li>
+        </ul>
+
+        <h2>ติดตั้ง axios ด้วยมือ</h2>
+
+        <p>ตามกติกาเดิมตั้งแต่บทเรียน 08: dependency เราติดตั้งเอง แล้ว commit ให้ working tree สะอาดก่อนเปิดแชท</p>
+
+        <pre><code class="language-bash">npm install axios
+git add -A &amp;&amp; git commit -m "chore: install axios"</code></pre>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <p>บทนี้มีไฟล์ใหม่ไฟล์เดียว และมันสั้นมาก — แต่เราจะแบ่งมันเป็นสองส่วน:</p>
+
+        <pre><code class="language-bash">src/
+└── shared/
+    └── api/
+        └── client.ts     # 🤖 Agent สร้าง ApiError + apiClient
+                          # ✍️ เราพิมพ์ response interceptor ต่อท้ายเอง</code></pre>
+
+        <p>ไฟล์นี้อยู่ใน <code>shared</code> ไม่ใช่ <code>features</code> เพราะมันไม่ได้เป็นของฟีเจอร์ใดฟีเจอร์หนึ่ง — products, cart, checkout ทุกฟีเจอร์จะยิง request ผ่าน client ตัวเดียวกันนี้ (โฟลเดอร์ <code>src/shared/api/</code> เราสั่ง <code>mkdir</code> ทิ้งไว้ตั้งแต่บทเรียน 05 แล้ว ตอนนี้ยังว่างอยู่)</p>
+
+        <p>สัญญาที่ไฟล์นี้ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>ApiError</code></strong> — ต้องเป็น <code>class</code> ที่ <code>extends Error</code> จริง (ไม่ใช่ <code>interface</code> หรือ object ธรรมดา) ต้องตั้ง <code>name</code> เป็น <code>"ApiError"</code> และเก็บ <code>status</code> แบบไม่บังคับ ต้องไม่รับ field อื่นเพิ่ม</li>
+          <li><strong><code>apiClient</code></strong> — ต้องเป็น instance ที่สร้างจาก <code>axios.create()</code> และอ่าน <code>baseURL</code> จาก environment variable ต้องไม่มี URL ของ dummyjson พิมพ์ตรง ๆ อยู่ในไฟล์ และต้องไม่ตั้ง <code>timeout</code> หรือ <code>headers</code> อะไรเพิ่มที่เราไม่ได้สั่ง</li>
+          <li><strong>response interceptor</strong> — ต้องแปลงทุกความล้มเหลวเป็น <code>ApiError</code> แล้ว<em>โยนต่อ</em> ต้องไม่กลืน error ไว้เอง และต้องไม่แตะขาที่สำเร็จ</li>
+        </ul>
+
+        <h2>ทำไม interceptor ถึงมาทีหลัง prompt</h2>
+
+        <p>กฎที่เราได้จากบทเรียน 09 คือ <strong>สิ่งที่พังเมื่อคุณตัดไฟล์ X ออกจาก prompt คือไฟล์ที่ import X ไม่ใช่ตัว X เอง</strong> บทนี้เป็นกรณีที่ต่างออกไปหนึ่งชั้น เพราะเราไม่ได้ตัดทั้งไฟล์ เราตัด<em>บล็อกเดียว</em>ที่อยู่ในไฟล์ และไม่มีใคร import บล็อกได้ — interceptor เป็น side effect ระดับ module ที่ทำงานตอนไฟล์ถูกโหลด ไม่ใช่ของที่ export ออกไป</p>
+
+        <p>คำถามจึงเปลี่ยนเป็นสองข้อ ข้อแรก: <em>ถ้าไม่มีบล็อกนี้ ของที่เหลือยังคอมไพล์และรันได้ไหม</em> คำตอบคือได้สบาย ๆ <code>ApiError</code> กับ <code>apiClient</code> ไม่ได้พึ่งพา interceptor เลย ดังนั้นเราสั่ง Agent สร้างสองชิ้นนั้นก่อนได้ แล้ววงจรตรวจงานขั้นที่สาม (<code>npm run lint</code> และ <code>npm run typecheck</code>) ก็ยังเดินได้ครบ</p>
+
+        <p>ข้อสอง: <em>มีไฟล์ไหนในโปรเจกต์ที่ import <code>client.ts</code> อยู่บ้าง</em> ตอนนี้ยังไม่มีสักไฟล์ — ค้นดูได้ด้วย <code>grep -rn "shared/api/client" src/</code> แล้วจะไม่เจออะไรเลย ไฟล์แรกที่จะ import มันคือ <code>src/features/products/api.ts</code> ในบทหน้า ตามด้วย <code>src/features/checkout/api.ts</code> ในบทเรียน 28 และ <code>src/shared/api/client.test.ts</code> ในบทเรียน 31 ทั้งสามที่นั้นตั้งอยู่บนสัญญาข้อเดียวกัน: <em>error ที่หลุดออกมามี <code>.message</code> ที่พร้อมแสดงผลเสมอ</em> ซึ่งเป็นสัญญาที่ interceptor เป็นคนทำให้เป็นจริง</p>
+
+        <p>เทียบกับบทเรียน 12 ที่พลิกลำดับได้ (พิมพ์ <code>Button</code> เองก่อน แล้วค่อยส่ง prompt) บทนี้พลิกไม่ได้ เพราะบล็อกที่เราจะพิมพ์เอง<em>อ้างถึง</em> <code>apiClient</code> และ <code>ApiError</code> ที่ยังไม่มีตัวตน ทิศทางการพึ่งพาชี้กลับด้าน ลำดับจึงต้องเป็น 🤖 ก่อน ✍️ ทีหลัง — ส่วนบทเรียน 17 คุณจะเจอกรณีที่ลูกศรชี้กลับด้านอีกครั้ง แล้วลำดับจะพลิกกลับไปเป็นแบบบทเรียน 12</p>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> — แชทใหม่ โหมด Agent สังเกตว่า <code>ข้อกำหนดทางเทคนิค:</code> สั่งบรรทัด import ไว้ชัดเจนว่าให้มีแค่ <code>axios</code> ตัวเดียว เดี๋ยวอธิบายว่าทำไม:</p>
+          <pre><code class="language-text">สร้าง API client กลางของแอปด้วย axios พร้อม error class ของชั้น API
+
+บริบท: @src/shared/api @.env @src/shared/components/ErrorMessage/ErrorMessage.tsx
+src/shared/api/ ยังเป็นโฟลเดอร์ว่าง ยังไม่มีไฟล์ไหนในโปรเจกต์ยิง request ออกไปเลย
+ติดตั้ง axios ไว้แล้ว
+ไฟล์ .env ที่ root มี VITE_API_BASE_URL=https://dummyjson.com อยู่แล้ว
+alias @/ ชี้ไปที่ src/ ตั้งค่าไว้แล้วทั้งใน vite.config.ts และ tsconfig.app.json
+
+โครงสร้าง: สร้างไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
+- src/shared/api/client.ts
+
+ข้อกำหนดทางเทคนิค:
+- บรรทัด import บนสุดต้องเป็น import axios from "axios"; เท่านั้น
+  ห้าม import type อื่นของ axios มาในรอบนี้ เพราะยังไม่มีอะไรใช้มัน
+- export class ApiError extends Error
+  ประกาศ field readonly status?: number; ไว้บนสุดของ class
+  constructor(message: string, status?: number)
+  ในตัว constructor เรียก super(message) แล้วตั้ง this.name = "ApiError"
+  จากนั้น this.status = status
+  ห้ามเพิ่ม field หรือ method อื่นนอกเหนือจากนี้
+- export const apiClient = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL })
+  ห้ามใส่ option อื่นใน axios.create เช่น timeout, headers หรือ withCredentials
+  ห้ามพิมพ์ URL ของ dummyjson ลงในไฟล์นี้ตรง ๆ
+- ห้ามใส่ interceptor ใด ๆ ในรอบนี้ ทั้ง request และ response
+- ห้ามมี try/catch ในไฟล์นี้
+- ห้ามมี default export ไฟล์นี้ export แบบ named ทั้งหมด
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ .env, vite.config.ts, tsconfig หรือไฟล์อื่นนอกจากที่ระบุ
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ยังไม่ต้องสร้าง type ของสินค้า ฟังก์ชันเรียก API หรือเอา apiClient ไปใช้ในหน้าไหน</code></pre>
+        </blockquote>
+
+        <p>บรรทัด <code>@src/shared/components/ErrorMessage/ErrorMessage.tsx</code> ใน <code>บริบท:</code> ไม่ได้อยู่ตรงนั้นเพราะงานนี้ต้องแก้ไฟล์นั้น — เราสั่งห้ามแตะไปแล้วในขอบเขต มันอยู่ตรงนั้นเพราะข้อความ fallback ที่ Agent จะเห็นในไฟล์นั้นคือข้อความเดียวกับที่เราจะใช้ในอีกสองนาที และเดี๋ยวเราจะกลับมาคุยกันว่าการที่ข้อความเดียวกันอยู่สองไฟล์คือเรื่องที่ควรถูกทักในรีวิว</p>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> เติม response interceptor มาให้เองทั้งที่เราสั่งห้าม (axios + interceptor เป็นคู่ที่มาด้วยกันในโค้ดตัวอย่างทั้งอินเทอร์เน็ต) และตัวที่มันเติมมามัก<em>กลืน error ทิ้ง</em> อาการมีสองแบบ แบบแรกคือขาที่ล้มเหลวจบด้วย <code>console.error(error)</code> เฉย ๆ หรือ <code>return null</code> — ผลคือ promise กลับไป resolve สำเร็จพร้อมค่า <code>undefined</code> TanStack Query จะไม่มีวันรู้ว่า request พัง หน้าเว็บค้างอยู่ที่ loading หรือแสดงกริดเปล่า แบบที่สองคือมันโยน <code>new Error("Request failed")</code> ก้อนเดียวกันทุกกรณี ทิ้ง <code>error.response.data.message</code> กับ <code>status</code> ของจริงไป — ผลคือ 404 "ไม่พบสินค้า", 500 ของเซิร์ฟเวอร์ และเน็ตหลุด แสดงข้อความเดียวกันหมดจนแยกไม่ออกว่าเกิดอะไรขึ้น ถ้าเจอ interceptor ในไฟล์ ให้<strong>ลบทิ้งทั้งบล็อก</strong> ไม่ต้องไล่แก้ — เดี๋ยวคุณพิมพ์ตัวที่ถูกเองในกล่อง ✍️ ข้างล่าง</li>
+            <li>ไฟล์ใหม่ <strong>1 ไฟล์พอดี</strong> ไม่มี <code>index.ts</code>, <code>types.ts</code> หรือ <code>api.ts</code> แถมมา และไม่มีไฟล์เดิมไฟล์ไหนขึ้นสถานะ modified</li>
+            <li><code>ApiError</code> เขียนว่า <code>class ApiError extends Error</code> จริง — ไม่ใช่ <code>interface ApiError</code> และไม่ใช่ <code>type ApiError = { message: string; status?: number }</code> ทั้งสองแบบหลังทำให้ <code>error instanceof ApiError</code> ในเทสต์บทเรียน 31 เขียนไม่ได้เลย</li>
+            <li>ในตัว constructor มีบรรทัด <code>this.name = "ApiError";</code> อยู่จริง — ถ้าขาด error ที่ log ออกมาจะขึ้นว่า <code>Error</code> เฉย ๆ แยกไม่ออกว่ามาจากชั้นไหนของแอป</li>
+            <li><code>status</code> เป็น optional (<code>status?: number</code>) ไม่ใช่ <code>number</code> ตรง ๆ — เน็ตหลุดคือกรณีที่<em>ไม่มี</em> status จริง ๆ</li>
+            <li><code>baseURL</code> อ่านจาก <code>import.meta.env.VITE_API_BASE_URL</code> — ลอง <code>grep -rn "dummyjson" src/</code> ต้องไม่เจอสักบรรทัด ถ้าเจอแปลว่ามันพิมพ์ URL ทับลงไปตรง ๆ ซึ่ง lint และ typecheck ผ่านสบาย แต่ทำให้ <code>.env</code> กลายเป็นไฟล์หลอก</li>
+            <li>บรรทัด import เป็น <code>import axios from "axios";</code> บรรทัดเดียว — ถ้ามี <code>AxiosError</code> ติดมาด้วยโดยที่ยังไม่มี interceptor <code>npm run lint</code> จะฟ้อง unused ทันที (กฎ <code>@typescript-eslint/no-unused-vars</code> มาจาก <code>tseslint.configs.recommended</code> ที่เราตั้งไว้บทเรียน 03)</li>
+            <li>ไม่มี <code>default export</code> และไม่มี <code>any</code> โผล่ในไฟล์</li>
+            <li>ไม่มี comment อธิบายสิ่งที่โค้ดบอกอยู่แล้ว เช่น <code>// create axios instance</code> — ผิดกติกาข้อสุดท้ายในไฟล์ rules</li>
+          </ul>
+        </blockquote>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p>ของที่ควรได้กลับมาจากรอบนี้ — สังเกตว่ามันยัง<em>ไม่ครบไฟล์</em> ยังขาดท่อนสำคัญที่สุดอยู่:</p>
+
+        <pre><code class="language-typescript">import axios from "axios";
+
+export class ApiError extends Error {
+  readonly status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+export const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+});
+</code></pre>
+
+        <h3>ApiError — error หนึ่งรูปแบบของทั้งแอป</h3>
+
+        <p><code>ApiError</code> เป็น class ที่ extends <code>Error</code> ธรรมดา เพิ่มของแค่สองอย่าง: ตั้ง <code>name</code> เป็น <code>"ApiError"</code> เพื่อให้เวลา log ออกมาแล้วรู้ทันทีว่า error นี้มาจากชั้น API และเก็บ <code>status</code> (HTTP status code) ไว้เผื่อโค้ดฝั่ง UI อยากแยกกรณี เช่น 404 แสดง "ไม่พบสินค้า" สังเกตว่า <code>status</code> เป็น optional (<code>?</code>) — เพราะบางความผิดพลาด<em>ไม่มี</em> status เลย เช่น เน็ตหลุด server ไม่ได้ตอบอะไรกลับมาสักไบต์</p>
+
+        <p>การใช้ class แทน object ธรรมดายังทำให้เราเช็ค <code>error instanceof ApiError</code> ได้ ซึ่งจะมีประโยชน์ตอนเขียนเทสต์ในบทเรียน 31</p>
+
+        <h3>axios.create — instance ของเราเอง</h3>
+
+        <p><code>axios.create()</code> สร้าง instance แยกที่มีการตั้งค่าของตัวเอง แทนที่จะใช้ axios ตัว global เราตั้ง <code>baseURL</code> จาก environment variable ที่เตรียมไว้ ต่อจากนี้ทุกที่ในแอป import <code>apiClient</code> ตัวนี้ไปใช้ แล้วเขียนแค่ <code>apiClient.get("/products")</code> — axios ต่อ URL เต็มให้เอง</p>
+
+        <h2>✍️ ส่วนนี้พิมพ์เอง</h2>
+
+        <p>ตอนนี้ไฟล์มี "ท่อ" แล้ว แต่ยังไม่มี "ด่าน" ท่อนที่เหลือคือหัวใจของบท และเป็นของที่ต้องผ่านมือคุณ</p>
+
+        <blockquote class="lesson-manual">
+          <p>✍️ <strong>ส่วนนี้พิมพ์เอง</strong> — เมื่อวงจรตรวจงานถึงขั้นที่สามและ <code>npm run lint</code> กับ <code>npm run typecheck</code> ผ่านแล้ว ให้ทำตามนี้ตามลำดับ ห้ามก๊อปวาง ห้ามกด Tab รับ autocomplete ของ Cursor:</p>
+          <ol>
+            <li>เปิด <code>src/shared/api/client.ts</code></li>
+            <li>แก้บรรทัดบนสุดจาก <code>import axios from "axios";</code> เป็น <code>import axios, { AxiosError } from "axios";</code> — ตอนนี้เรามีที่ใช้มันแล้ว</li>
+            <li>พิมพ์บล็อก interceptor ต่อท้ายไฟล์ทั้งก้อน — ระหว่างพิมพ์ให้หยุดถามตัวเองที่คำว่า <code>Promise.reject</code> ว่าถ้าเปลี่ยนเป็น <code>return</code> เฉย ๆ จะเกิดอะไรขึ้น</li>
+            <li><code>npm run lint</code> และ <code>npm run typecheck</code> ให้ผ่านทั้งคู่ แล้วทดสอบสองขาตามหัวข้อถัดไป จากนั้นค่อย <code>git commit</code></li>
+          </ol>
+          <p><code>src/shared/api/client.ts</code> — ต่อท้ายไฟล์:</p>
+          <pre><code class="language-typescript">apiClient.interceptors.response.use(
+  (response) =&gt; response,
+  (error: AxiosError&lt;{ message?: string }&gt;) =&gt;
+    Promise.reject(
+      new ApiError(
+        error.response?.data?.message ??
+          "Something went wrong. Please try again.",
+        error.response?.status,
+      ),
+    ),
+);
+</code></pre>
+          <p><strong>เหตุผล:</strong> กติกาการแปลง error ของทั้งแอปอยู่ตรงนี้จุดเดียว — ทุกความล้มเหลวของทุก request ในทุกหน้า ตั้งแต่หน้า Home ยันการยิงคำสั่งซื้อในบทเรียน 28 จะไหลผ่านฟังก์ชันเจ็ดบรรทัดนี้ก่อนถึงมือคนเรียกเสมอ ถ้าคุณไม่เคยพิมพ์มันเอง วันที่ error ในแอปเริ่มมีหน้าตาแปลก ๆ คุณจะไม่รู้ด้วยซ้ำว่าต้องไปเปิดไฟล์ไหน</p>
+        </blockquote>
+
+        <h3>Response interceptor — ด่านแปลง error</h3>
+
+        <p><code>interceptors.response.use</code> รับ function สองตัว: ตัวแรกทำงานเมื่อ request <em>สำเร็จ</em> (เราส่ง response ผ่านไปเฉย ๆ ไม่ยุ่ง) ตัวที่สองทำงานเมื่อ<em>ล้มเหลว</em> และตรงนี้คือหัวใจของบทนี้: ไม่ว่าความล้มเหลวจะหน้าตาแบบไหน เราแปลงมันเป็น <code>ApiError</code> รูปแบบเดียวเสมอ</p>
+
+        <ul>
+          <li>server ตอบ error พร้อมข้อความ (dummyjson ส่ง <code>{ "message": "..." }</code> กลับมาเวลา 404) — เราใช้ข้อความนั้น: <code>error.response?.data?.message</code></li>
+          <li>server ตอบ error แต่ไม่มีข้อความ หรือเน็ตหลุดจนไม่มี response เลย — optional chaining ทำให้ค่าเป็น <code>undefined</code> แล้ว <code>??</code> ถอยไปใช้ข้อความกลาง <code>"Something went wrong. Please try again."</code></li>
+          <li>มี status ก็แนบไปด้วย ไม่มีก็ปล่อยเป็น <code>undefined</code></li>
+        </ul>
+
+        <p>แล้วส่งต่อด้วย <code>Promise.reject(...)</code> — จุดนี้สำคัญ: interceptor ไม่ได้ "กลืน" error ให้หายไป มันแค่<em>เปลี่ยนรูป</em>แล้วโยนต่อ ฝั่งที่เรียกยังเห็นว่า request ล้มเหลวเหมือนเดิม แค่ได้ error ที่หน้าตาสะอาดและคาดเดาได้</p>
+
+        <p>ส่วน <code>AxiosError&lt;{ message?: string }&gt;</code> ที่เพิ่งเติมเข้าไปในบรรทัด import คือการบอก TypeScript ว่า "ก้อน <code>data</code> ที่ server ส่งมาตอน error มีฟิลด์ <code>message</code> ที่เป็น string หรือไม่มีก็ได้" — ถ้าไม่ประกาศ generic ตัวนี้ <code>error.response?.data</code> จะมี type เป็น <code>unknown</code> แล้วบรรทัด <code>?.message</code> จะคอมไพล์ไม่ผ่าน</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> ข้อความ <code>"Something went wrong. Please try again."</code> ในไฟล์นี้ เป็นข้อความ<em>เดียวกันตัวอักษรต่อตัวอักษร</em>กับค่า default ของ prop <code>message</code> ใน <code>ErrorMessage.tsx</code> ที่เราสร้างไว้บทเรียน 09 (ลอง <code>grep -rn "Something went wrong. Please try again." src/</code> ดู จะเจอสองที่) ในโค้ดที่จัดระเบียบดีแล้ว ข้อความที่ผูกกันแบบนี้ควรอยู่ที่เดียวแล้วอีกฝั่ง import ไปใช้ ของจริงคือถ้าวันหนึ่งมีคนแก้ข้อความในไฟล์หนึ่ง อีกไฟล์จะเงียบสนิทและข้อความในแอปจะไม่ตรงกันโดยไม่มีเครื่องมือตัวไหนบอก เราพิมพ์ตามต้นฉบับ แต่ถ้านี่เป็น pull request ในงานจริง นี่คือ comment ที่ควรเขียนทิ้งไว้</blockquote>
+
+        <h3>ทำไมการ normalize error ถึงเปลี่ยนชีวิต</h3>
+
+        <p>ลองนึกภาพแอปที่<em>ไม่มี</em>ด่านนี้: ทุกคอมโพเนนต์ที่เรียก API ต้องเขียน <code>catch (e: any)</code> แล้วนั่งเดาเอาเองว่า error ก้อนนี้เป็นชนิดไหน — <code>e.response?.data?.message</code> หรือ <code>e.message</code> หรือ string เปล่า ๆ? โค้ดเดา ๆ แบบนี้จะโผล่ซ้ำ ๆ กระจายไปทุกไฟล์ และแต่ละไฟล์เดาไม่เหมือนกัน พอ backend เปลี่ยนรูปแบบ error ทีเดียว ต้องไล่แก้ทั้งแอป</p>
+
+        <p>แต่พอทุกความล้มเหลวถูกบีบให้เป็น <code>ApiError</code> ตั้งแต่ต้นทาง สัญญาที่เหลือของทั้งแอปจะเรียบง่ายมาก: <strong>error ที่หลุดออกจากชั้น API มี <code>.message</code> ที่พร้อมแสดงผลเสมอ</strong> TanStack Query จะเก็บ error ก้อนนี้ไว้ให้ แล้วคอมโพเนนต์แค่เช็ค <code>isError</code> แล้ว render <code>ErrorMessage</code> ได้อย่างมั่นใจโดยไม่ต้องมี <code>try/catch</code> สักตัว — เดี๋ยวคุณจะเห็นในบทเรียน 19 ว่าหน้า Home จัดการ error ทั้งหน้าด้วยเงื่อนไขบรรทัดเดียว และถ้าวันหนึ่งอยากเพิ่มของอย่าง auth token หรือส่ง error เข้าระบบ logging ก็มาเพิ่มที่ด่านนี้ที่เดียว ทุก request ได้รับผลทันที</p>
+
+        <h3>ทดสอบ client ด้วยตาตัวเอง</h3>
+
+        <p>เรายังไม่มีหน้าไหนใช้ client จริง แต่เราพิสูจน์ได้ว่ามันทำงาน เปิด <code>src/pages/Home/Home.tsx</code> แล้ววางโค้ด<em>ชั่วคราว</em>นี้ไว้บนสุดของไฟล์ (นอกตัว component — โค้ดระดับ module จะทำงานทันทีที่ไฟล์ถูกโหลด):</p>
+
+        <pre><code class="language-typescript">// TEMP: ทดสอบ apiClient — ลบทิ้งเมื่อเช็คเสร็จ
+import { apiClient } from "@/shared/api/client";
+
+apiClient
+  .get("/products", { params: { limit: 1 } })
+  .then((response) =&gt; console.log("API OK:", response.data))
+  .catch((error) =&gt; console.error("API ERROR:", error));
+</code></pre>
+
+        <p>รัน <code>npm run dev</code> เปิดหน้า Home แล้วดู console ในเบราว์เซอร์ — คุณควรเห็น <code>API OK:</code> ตามด้วย object ที่มีสินค้าหนึ่งชิ้น แปลว่า baseURL ต่อถูก, .env อ่านได้ และ JSON ถูกแปลงให้อัตโนมัติ</p>
+
+        <p>ทีนี้ทดสอบขาที่สำคัญกว่า — ขา error เปลี่ยน path เป็นสินค้าที่ไม่มีอยู่จริง:</p>
+
+        <pre><code class="language-typescript">  .get("/products/0", { params: { limit: 1 } })
+</code></pre>
+
+        <p>รีเฟรชแล้วดู console อีกครั้ง: คราวนี้ควรเห็น <code>API ERROR:</code> ตามด้วย <code>ApiError</code> ที่มี <code>message</code> เป็นข้อความจาก server และ <code>status: 404</code> — นี่คือ interceptor ที่คุณเพิ่งพิมพ์ทำงานให้แล้ว ความล้มเหลวดิบ ๆ ของ axios ถูกแปลงเป็นรูปแบบเดียวที่เราออกแบบไว้ ถ้าเห็นเป็น <code>AxiosError</code> แทน แปลว่า interceptor ไม่ถูกโหลดหรือพิมพ์ผิดที่</p>
+
+        <blockquote>🚨 เช็คครบทั้งสองขาแล้ว <strong>อย่าลืมลบโค้ดชั่วคราวทั้งก้อนออกจาก <code>Home.tsx</code></strong> ให้ไฟล์กลับไปเป็นเหมือนเดิมก่อนไปบทถัดไป — การยิง API ระดับ module แบบนี้เหมาะแค่กับการทดลองเท่านั้น ของจริงเราจะให้ TanStack Query เป็นคนเรียกเสมอ และถ้าลืมลบ <code>git diff</code> ของบทหน้าจะมีของแปลกปนมาทันที</blockquote>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>เปลี่ยน <code>Promise.reject(new ApiError(...))</code> ในบล็อกที่คุณพิมพ์เอง เป็น <code>new ApiError(...)</code> เฉย ๆ (ไม่ห่อ <code>Promise.reject</code>) แล้วรัน <code>npm run lint</code> กับ <code>npm run typecheck</code> — ทั้งคู่ยังผ่าน อธิบายว่าโค้ดทดสอบใน <code>Home.tsx</code> จะพิมพ์อะไรออก console แทน และหน้าเว็บในบทเรียน 19 จะแสดงอะไรให้ผู้ใช้เห็น</li>
+          <li><code>error.response?.data?.message</code> มีเครื่องหมาย <code>?</code> อยู่สองจุด ยกกรณีจริงมาหนึ่งกรณีต่อหนึ่งจุด ว่าอะไรที่ทำให้ค่าตรงนั้นเป็น <code>undefined</code> ได้ และบอกว่าถ้าลบ <code>?</code> ทั้งสองตัวออก จะพังตอนไหน — ตอนคอมไพล์หรือตอนรัน</li>
+          <li>prompt สั่งให้ import แค่ <code>axios</code> ตัวเดียว ทั้งที่เรารู้อยู่แล้วว่าโค้ดสุดท้ายต้องมี <code>AxiosError</code> ด้วย อธิบายว่าถ้าสั่งให้ import มาตั้งแต่รอบแรก <code>npm run lint</code> จะฟ้องอะไร และกฎตัวไหนเป็นคนฟ้อง</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> <code>src/shared/api/client.ts</code> ต้องมีครบสามส่วน: <code>ApiError</code>, <code>apiClient</code> และ interceptor ที่คุณพิมพ์เอง โดยบรรทัด import บนสุดเป็น <code>import axios, { AxiosError } from "axios";</code> รันโค้ดทดสอบใน <code>Home.tsx</code> แล้วต้องเห็นครบทั้งสองขา — <code>API OK:</code> พร้อมข้อมูลสินค้า และ <code>API ERROR:</code> พร้อม <code>ApiError</code> ที่มี <code>status: 404</code> จากนั้นลบโค้ดทดสอบออกให้หมด แล้ว <code>npm run lint</code> กับ <code>npm run typecheck</code> ผ่านทั้งคู่ก่อน commit ถ้า console ขึ้น <code>API ERROR:</code> ตั้งแต่ขาแรก ให้เช็ค <code>.env</code> ว่ามีค่า <code>VITE_API_BASE_URL</code> อยู่จริง แล้ว<em>restart dev server</em> ก่อนลองใหม่ สังเกตด้วยว่าตอนนี้ <code>response.data</code> ยังเป็น type กว้าง ๆ ที่ TypeScript ช่วยอะไรเราไม่ได้ เพราะเรายังไม่ได้บอกว่าข้อมูลหน้าตาเป็นอย่างไร นั่นคืองานของบทถัดไป — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="14_display_components.html" rel="prev">ก่อนหน้า: คอมโพเนนต์แสดงผล</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="16_product_types_api.html" rel="next">ถัดไป: Types และ Products API</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
