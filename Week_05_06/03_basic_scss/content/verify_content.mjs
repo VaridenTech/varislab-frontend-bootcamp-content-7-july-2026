@@ -7,20 +7,39 @@ const contentPath = path.resolve(contentDir.pathname);
 
 export const LESSONS = [
   { file: "01_what_is_scss.html", title: "SCSS คืออะไร?" },
-  { file: "02_install_sass.html", title: "ติดตั้ง Sass และเริ่มคอมไพล์" },
-  { file: "03_variables_and_nesting.html", title: "ตัวแปรและการซ้อน Selector" },
-  { file: "04_partials_and_use.html", title: "แยกไฟล์ Partial และ @use" },
-  { file: "05_mixins.html", title: "Mixin และ @include" },
-  { file: "06_extend_and_placeholder.html", title: "@extend และ Placeholder Selector" },
-  { file: "07_interpolation_and_math.html", title: "Interpolation และการคำนวณ" },
-  { file: "08_lists_and_maps.html", title: "Lists และ Maps" },
-  { file: "09_loops_and_each.html", title: "Loops และ @each" },
-  { file: "10_functions_and_tokens.html", title: "Functions และ Design Tokens" },
-  { file: "11_project_structure.html", title: "จัดโครงสร้างโปรเจกต์ SCSS" },
-  { file: "12_final_practice.html", title: "แบบฝึกหัดสรุปท้ายคอร์ส" },
+  { file: "02_installing_and_compiling_sass.html", title: "ติดตั้งและคอมไพล์ Sass" },
+  { file: "03_variables.html", title: "ตัวแปรใน SCSS" },
+  { file: "04_nesting_and_parent_selector.html", title: "Nesting และ Parent Selector" },
+  { file: "05_partials_and_use.html", title: "Partial และ @use" },
+  { file: "06_organizing_files_and_modules.html", title: "จัดระเบียบไฟล์และโมดูล" },
+  { file: "07_mixins_and_include.html", title: "Mixins และ @include" },
+  { file: "08_mixin_parameters_and_content.html", title: "พารามิเตอร์ของ Mixin และ @content" },
+  { file: "09_functions_and_built_in_modules.html", title: "Functions และ Built-in Modules" },
+  { file: "10_lists_and_maps.html", title: "Lists และ Maps" },
+  { file: "11_control_flow.html", title: "Control Flow" },
+  { file: "12_css_output_source_maps_and_best_practices.html", title: "CSS Output, Source Maps และ Best Practices" },
 ];
 
 const localHrefPattern = /href="([^":#][^"#]*)"/g;
+const semanticBlockPattern =
+  /<(p|li|blockquote|summary|details|pre|td|th)[^>]*>[\s\S]*?<\/\1>/g;
+const negativeImportGuidancePhrases = [
+  "legacy",
+  "deprecated",
+  "deprecate",
+  "should not be used",
+  "do not use",
+  "not be used for new code",
+  "avoid",
+  "ไม่ควรใช้",
+  "ห้ามใช้",
+  "เลิกใช้",
+  "ไม่แนะนำ",
+  "deprecated and should not be used",
+  "use @use instead",
+  "replace with @use",
+  "แทนที่ด้วย @use",
+];
 
 async function readLocalFile(relativePath) {
   return readFile(path.join(contentPath, relativePath), "utf8");
@@ -28,6 +47,45 @@ async function readLocalFile(relativePath) {
 
 function collectLocalHrefs(html) {
   return Array.from(html.matchAll(localHrefPattern), (match) => match[1]);
+}
+
+function stripHtml(html) {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function collectSemanticBlocks(html) {
+  return Array.from(html.matchAll(semanticBlockPattern), (match) => ({
+    html: match[0],
+    start: match.index ?? 0,
+    end: (match.index ?? 0) + match[0].length,
+    text: stripHtml(match[0]).toLowerCase(),
+  }));
+}
+
+function assertImportUsagePolicy(html) {
+  const blocks = collectSemanticBlocks(html);
+  const importMentions = Array.from(html.matchAll(/@import\b/g));
+
+  for (const mention of importMentions) {
+    const mentionIndex = mention.index ?? 0;
+    const containingBlock = blocks.find(
+      (block) => mentionIndex >= block.start && mentionIndex < block.end
+    );
+
+    assert.ok(
+      containingBlock,
+      "Each @import mention must live inside a semantic teaching block."
+    );
+
+    const hasNegativeGuidance = negativeImportGuidancePhrases.some((phrase) =>
+      containingBlock.text.includes(phrase)
+    );
+
+    assert.ok(
+      hasNegativeGuidance,
+      `@import may only appear in explicitly negative/deprecated guidance. Block text: "${containingBlock.text}"`
+    );
+  }
 }
 
 async function assertLocalTargetsExist(sourceFile, html) {
@@ -54,7 +112,7 @@ function assertCommonLessonContract(html) {
   assert.match(html, /href="index\.html"/);
   assert.equal((html.match(/<title>/g) ?? []).length, 1);
   assert.match(html, /<\/html>\s*$/);
-  assert.doesNotMatch(html, /@import\b/, "Lessons must not recommend Sass @import.");
+  assertImportUsagePolicy(html);
 }
 
 function assertAdjacentNavigation(html, index) {
