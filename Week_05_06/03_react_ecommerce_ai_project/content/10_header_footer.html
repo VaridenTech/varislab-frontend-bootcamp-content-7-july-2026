@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สั่ง Cursor สร้าง Header, Footer และ hook รวมเส้นทาง useProductRoute พร้อมติดตั้ง Font Awesome และเติมทั้งสองตัวเข้า MainLayout ด้วย sticky footer" />
+    <title>Header และ Footer | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 10 · โครงแอปและเราเตอร์ (App Shell &amp; Routing)</p>
+          <h1>Header และ Footer</h1>
+          <p class="lesson-original-title" lang="en">Header &amp; Footer</p>
+        </header>
+
+        <p>ตอนนี้ทุก URL ของเราเปิดได้แล้ว แต่หน้าตายังเป็นแค่ตัวหนังสือลอย ๆ กลางหน้าขาว บทนี้เราจะเติมสองชิ้นส่วนที่ทำให้มัน "ดูเป็นเว็บ" ขึ้นมาทันที: <strong>Header</strong> ที่มีโลโก้และเมนูนำทางอยู่บนสุดของทุกหน้า และ <strong>Footer</strong> ที่มีข้อมูลร้านอยู่ล่างสุดของทุกหน้า — และเพราะเราวาง MainLayout ไว้แล้วในบทที่แล้ว ทั้งสองตัวจะเขียน<em>ครั้งเดียว</em>แล้วโผล่ครบทุกหน้าโดยอัตโนมัติ</p>
+
+        <h2>Font Awesome คืออะไร แบ่งเป็นห้า package ทำไม</h2>
+
+        <p>Footer ของเรา (และอีกหลาย component ในบทถัด ๆ ไป) ใช้ไอคอนจาก <strong>Font Awesome</strong> ซึ่งเป็นชุดไอคอนที่แพร่หลายที่สุดชุดหนึ่งของเว็บ มันแตกเป็นห้า package ที่แบ่งหน้าที่กันชัดเจน:</p>
+
+        <ul>
+          <li><code>fontawesome-svg-core</code> — เครื่องยนต์กลางที่แปลงข้อมูลไอคอนเป็น SVG</li>
+          <li><code>react-fontawesome</code> — component <code>&lt;FontAwesomeIcon&gt;</code> สำหรับใช้ใน JSX</li>
+          <li><code>free-solid-svg-icons</code> / <code>free-regular-svg-icons</code> / <code>free-brands-svg-icons</code> — ตัวไอคอนจริง ๆ สามสไตล์: แบบทึบ แบบเส้น และโลโก้แบรนด์ต่าง ๆ</li>
+        </ul>
+
+        <p>วันนี้เราใช้แค่ชุด solid ส่วนชุด regular จะได้ใช้ตอนทำดาวรีวิวในบทเรียน 14 และหน้า Home ในบทเรียน 19 ข้อดีของ Font Awesome ยุคใหม่คือมันเป็น <strong>SVG + tree-shaking</strong>: เรา import ไอคอนเป็นราย ๆ ตัว ตัวไหนไม่ได้ import ก็ไม่ติดไปกับ bundle — ไม่เหมือนสมัยก่อนที่ต้องโหลดฟอนต์ไอคอนทั้งพันตัวมาเพื่อใช้สามตัว</p>
+
+        <h2>useProductRoute: รวมเส้นทางไว้ที่เดียว</h2>
+
+        <p>ก่อนสร้าง Header เราจะสร้าง hook เล็ก ๆ ที่เป็นการตัดสินใจเชิงสถาปัตยกรรมที่ดีมากของโปรเจกต์นี้ ลองนึกภาพ: ปุ่ม "ดูสินค้า" บนการ์ดสินค้า, ปุ่มไอคอนตะกร้าบน Header, ปุ่ม "ไปชำระเงิน" ในหน้า Cart — ทุกจุดต้องสั่ง navigate ไปยัง URL สักเส้น ถ้าแต่ละจุดเขียน <code>navigate(`/products/${id}`)</code> เองกระจัดกระจายทั่วแอป วันที่เราอยากเปลี่ยน URL scheme (เช่น <code>/products/:id</code> เป็น <code>/p/:id</code>) จะต้องไล่แก้ทุกไฟล์แล้วภาวนาว่าไม่ตกหล่นสักที่</p>
+
+        <p>ทางแก้คือรวม "เส้นทางที่แอปนี้เดินได้" ไว้ใน hook เดียว ซึ่งห่อ <code>useNavigate</code> ของ react-router (ฝั่ง TanStack Router ใน Week 4 ก็มี hook ชื่อเดียวกันนี้เลย) อีกชั้นเพื่อให้ได้ประโยชน์สามข้อ:</p>
+
+        <ul>
+          <li><strong>แก้ที่เดียว</strong> — URL string ของทุกเส้นทางอยู่ในไฟล์นี้ไฟล์เดียว เปลี่ยนเมื่อไหร่ก็จบในไฟล์เดียว</li>
+          <li><strong>อ่านรู้เรื่อง</strong> — จุดที่เรียกใช้เขียนว่า <code>goToProductDetails(id)</code> ซึ่งบอก<em>เจตนา</em> ชัดกว่า <code>navigate(`/products/${id}`)</code> ที่บอกแค่กลไก</li>
+          <li><strong>type-safe</strong> — <code>goToProductDetails</code> บังคับรับ <code>id: number</code> จะลืมส่ง id หรือส่งผิด type ก็โดน TypeScript จับตั้งแต่ตอนพิมพ์</li>
+        </ul>
+
+        <p>จบบทนี้ยังไม่มีใครเรียกใช้มันสักที่ — แต่อีกไม่กี่บทมันจะกลายเป็น hook ยอดนิยมของโปรเจกต์: หน้า Home, Category, Cart และตัว Header เอง (ในบทเรียน 23) ล้วนต้องใช้</p>
+
+        <h2>Link ไม่ใช่ a</h2>
+
+        <p>จุดที่สำคัญที่สุดของ Header คือทุกลิงก์ต้องเป็น <code>&lt;Link to="..."&gt;</code> ของ react-router ไม่ใช่ <code>&lt;a href="..."&gt;</code> ธรรมดา สองตัวนี้หน้าตาผลลัพธ์เหมือนกัน (Link ก็ render เป็น <code>&lt;a&gt;</code> ใน DOM) แต่พฤติกรรมต่างกันสุดขั้ว:</p>
+
+        <ul>
+          <li><strong><code>&lt;a href&gt;</code></strong> สั่งเบราว์เซอร์โหลดหน้าใหม่ทั้งหน้า — JavaScript ทั้งแอปถูกโยนทิ้งแล้วเริ่มใหม่หมด state ทุกอย่าง (เช่น ของในตะกร้าที่ยังไม่ได้ save) หายเกลี้ยง แถมผู้ใช้เห็นจอกะพริบ</li>
+          <li><strong><code>&lt;Link to&gt;</code></strong> ดัก click ไว้แล้วบอก router ให้สลับ component พร้อมอัปเดต URL ผ่าน History API — ไม่มีการโหลดหน้าใหม่ แอปยังมีชีวิตต่อเนื่อง เร็วกว่ากันคนละโลก</li>
+        </ul>
+
+        <p>กฎจำง่าย: <strong>ลิงก์ภายในแอปใช้ <code>Link</code> เสมอ ลิงก์ออกไปเว็บอื่นใช้ <code>&lt;a&gt;</code></strong> และของที่ผู้ใช้กดเพื่อ<em>ไปหน้าอื่น</em> ต้องเป็นลิงก์จริง ๆ ไม่ใช่ <code>&lt;div onClick&gt;</code> ที่หน้าตาเหมือนลิงก์ — เพราะ div กดผ่านคีย์บอร์ดไม่ได้ คลิกขวาเปิดแท็บใหม่ไม่ได้ และ screen reader ไม่รู้ว่ามันพาไปไหน</p>
+
+        <h2>เมื่อไหร่ถึงต้องมี .module.scss</h2>
+
+        <p>บทนี้จะเห็นทั้งสองฝั่งของกติกาข้อนี้ในบทเดียว: <strong>Header ไม่มี</strong> ไฟล์ <code>.module.scss</code> เพราะทุกอย่างที่มันต้องการ — ระยะห่าง (<code>pt-25</code>), การจัดแถว (<code>flex space-between align-item-center</code>), หน้าตาลิงก์ (<code>nav-link</code>) — มีครบใน utility classes ที่เราเขียนไว้บทเรียน 04 แล้ว ส่วน <strong>Footer มี</strong> เพราะมันต้องการของที่ utility class ไม่ครอบคลุม: พื้นหลังสีเข้มทั้งแถบ หลักคิดคือ <em>สร้างไฟล์ style เมื่อมี style เฉพาะตัวจริง ๆ เท่านั้น</em></p>
+
+        <p>ไฟล์ที่สามคือ <code>MainLayout.module.scss</code> ที่บทที่แล้วเว้นไว้ ในนั้นมีสองกฎที่รวมกันเป็นสูตรคลาสสิกชื่อ <strong>sticky footer</strong>: ตัว container เป็น flex column ที่สูงอย่างน้อยเต็มจอ (<code>min-height: 100vh</code>) และส่วนเนื้อหากลางถูกสั่งให้ <code>flex-grow: 1</code> คือยืดกินพื้นที่ที่เหลือทั้งหมด ผลคือหน้าที่เนื้อหาสั้น ๆ Footer ก็ยังถูกดันไปอยู่ขอบล่างของจอเสมอ ไม่ลอยขึ้นมากลางหน้า</p>
+
+        <p>และนี่คือไฟล์ SCSS Module ตัวแรกของโปรเจกต์ สังเกต pattern ให้ดีเพราะเราจะใช้ซ้ำตลอดทั้งคอร์ส: ตั้งชื่อไฟล์ลงท้าย <code>.module.scss</code>, import เข้ามาเป็น object ชื่อ <code>styles</code>, แล้วอ้าง class ผ่าน <code>styles.container</code> — ตอน build ชื่อ class จะถูกแปลงเป็นชื่อไม่ซ้ำใคร (เช่น <code>_container_x7f2k</code>) ดังนั้นต่อให้ไฟล์อื่นมี class ชื่อ <code>.container</code> เหมือนกันก็ไม่มีทางชนกัน</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <pre><code class="language-bash">src/
+├── app/
+│   └── layouts/
+│       └── MainLayout/
+│           ├── MainLayout.module.scss   # ใหม่ — sticky footer
+│           └── MainLayout.tsx           # แก้ — เติม Header/Footer
+└── shared/
+    ├── components/
+    │   ├── Header/Header.tsx            # ใหม่ — เวอร์ชันแรก
+    │   └── Footer/
+    │       ├── Footer.module.scss       # ใหม่
+    │       └── Footer.tsx               # ใหม่
+    └── hooks/
+        └── useProductRoute.tsx          # ใหม่</code></pre>
+
+        <p>สัญญาของแต่ละไฟล์:</p>
+
+        <ul>
+          <li><strong><code>useProductRoute.tsx</code></strong> — ต้องคืนฟังก์ชันสี่ตัวที่ครอบ <code>useNavigate</code> และต้องเป็นที่<em>เดียว</em>ในโปรเจกต์ที่มี URL string ของการ navigate ต้องไม่มีใครเรียกใช้มันในบทนี้</li>
+          <li><strong><code>Header.tsx</code></strong> — ต้องมีโลโก้และเมนูสองรายการที่เป็น <code>Link</code> ทั้งหมด ต้องไม่มีไอคอนตะกร้า ไม่มี badge จำนวนสินค้า และไม่มีไฟล์ <code>.module.scss</code></li>
+          <li><strong><code>Footer.tsx</code> + <code>Footer.module.scss</code></strong> — ต้องใช้สีจาก <code>_variables.scss</code> ผ่าน <code>@use</code> ต้องไม่ hardcode ค่าสีเป็น hex ในไฟล์ใด ๆ</li>
+          <li><strong><code>MainLayout</code></strong> — ต้องกลายเป็นเวอร์ชันสมบูรณ์: Header ข้างบน <code>&lt;Outlet /&gt;</code> ตรงกลาง Footer ข้างล่าง และ Footer ต้องติดขอบล่างจอแม้เนื้อหาสั้น ต้องไม่แตะ <code>router.tsx</code> หรือหน้าใด ๆ ใน <code>pages/</code></li>
+        </ul>
+
+        <blockquote>💡 Header ที่ได้จากบทนี้เป็น<strong>เวอร์ชันแรก</strong> — เว็บ E-commerce จริงต้องมีไอคอนตะกร้าพร้อม badge บอกจำนวนสินค้าอยู่มุมขวา แต่ตัวเลขนั้นต้องอ่านจาก cart state ซึ่งเรายังไม่ได้สร้าง <strong>บทเรียน 23</strong> เราจะกลับมาเติม component <code>&lt;CartSummary /&gt;</code> ตรงมุมขวานี้ พร้อมเรียก <code>goToCartSummary</code> จาก useProductRoute ที่กำลังจะสร้าง — อย่าเพิ่งทำในบทนี้ และเหตุผลที่ยังไม่เขียนบรรทัด <code>useProductRoute()</code> ค้างไว้ใน Header ตั้งแต่ตอนนี้ ก็เพราะตัวแปรที่ประกาศแล้วไม่ได้ใช้จะโดน ESLint ของเราฟ้องทันที (และมันฟ้องถูกแล้ว)</blockquote>
+
+        <h2>ติดตั้ง Font Awesome ด้วยมือ</h2>
+
+        <p>ติดตั้งตาม <code>package.json</code> ของโปรเจกต์จริงให้ครบชุดในครั้งเดียว แล้ว commit ก่อนเปิดแชท:</p>
+
+        <pre><code class="language-bash">npm install @fortawesome/fontawesome-svg-core @fortawesome/react-fontawesome @fortawesome/free-solid-svg-icons @fortawesome/free-regular-svg-icons @fortawesome/free-brands-svg-icons
+git add -A &amp;&amp; git commit -m "chore: install font awesome"</code></pre>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> — แชทใหม่ โหมด Agent สังเกตว่า <code>ข้อกำหนดทางเทคนิค:</code> รอบนี้ยาวกว่าบทที่แล้วมาก เพราะเนื้อหาใน Header/Footer เป็นข้อความจริงที่เดาไม่ได้ ทุกอย่างที่คุณไม่พิมพ์ Agent จะแต่งให้เอง:</p>
+          <pre><code class="language-text">สร้าง Header, Footer และ hook รวมเส้นทางของแอป แล้วเติมสองตัวแรกเข้า MainLayout
+
+บริบท: @src/app/layouts/MainLayout @src/shared/components @src/shared/hooks @src/styles
+ติดตั้ง Font Awesome ครบทั้งห้า package ไว้แล้ว
+MainLayout ตอนนี้ render แค่ Outlet ในแท็ก main ยังไม่มี Header, Footer และยังไม่มีไฟล์ .module.scss
+src/shared/hooks/ ยังเป็นโฟลเดอร์ว่าง ส่วน src/shared/components/ มีแค่ ErrorMessage จากบทที่แล้ว
+utility class ทุกตัวที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว: container, flex, space-between,
+align-item-center, gap-20, list-none, nav-link, m-0, p-0, mr-10, mb-10, mb-20, mb-25,
+text-white, fw-bold, fs-14, fs-24, fs-32, pt-25, pb-25, pt-60, pb-60
+ตัวแปรสีอยู่ใน src/styles/_variables.scss เช่น $black02 และ $white
+alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่วนไฟล์ .scss ต้องอ้าง path แบบ relative
+
+โครงสร้าง: สร้างไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
+- src/shared/hooks/useProductRoute.tsx
+- src/shared/components/Header/Header.tsx
+- src/shared/components/Footer/Footer.tsx
+- src/shared/components/Footer/Footer.module.scss
+- src/app/layouts/MainLayout/MainLayout.module.scss
+และแก้ src/app/layouts/MainLayout/MainLayout.tsx ให้เติม Header กับ Footer เข้าไป
+
+ข้อกำหนดทางเทคนิค:
+- useProductRoute: default export ชื่อ useProductRoute ที่เรียก useNavigate จาก "react-router"
+  คืน object ที่มีสี่ฟังก์ชัน:
+    goToProductDetails(id: number) -&gt; /products/{id}
+    goToCartSummary()              -&gt; /cart
+    goToCheckout()                 -&gt; /checkout
+    goToOrderSuccess()             -&gt; /order/success
+  บทนี้ยังไม่มีใครเรียกใช้ hook นี้ สร้างไว้เฉย ๆ ห้ามไปเสียบใน Header
+- Header: default export ไม่รับ prop
+  โครงคือ header className="pt-25 pb-25" &gt; div className="container"
+  &gt; div className="flex space-between align-item-center"
+  ซ้าย: Link to="/" className="nav-link fw-bold fs-24" ข้อความ My Store
+  ขวา: แท็ก nav ครอบ ul className="flex gap-20 m-0 p-0 list-none" มีสอง li
+    Link to="/" className="nav-link" ข้อความ Home
+    Link to="/categories" className="nav-link" ข้อความ Products
+  ลิงก์ทุกจุดใช้ Link จาก "react-router" ห้ามใช้แท็ก a และห้ามใช้ div ที่มี onClick
+- Footer.module.scss: ขึ้นต้นด้วย @use "../../../styles/variables";
+  แล้วประกาศ class .footer ที่มี background-color: variables.$black02
+  color: variables.$white และ nested rule ให้แท็ก p มี line-height: 2
+- Footer: default export ที่ import styles from "./Footer.module.scss"
+  แท็กนอกสุดคือ footer className={`pt-60 pb-60 ${styles.footer}`} ครอบ div className="container"
+  ครอบ div className="flex space-between" ที่มีสามคอลัมน์เรียงตามนี้:
+  1) h2 className="fs-32 fw-bold text-white mb-25" ข้อความ My Store
+     ตามด้วยสาม div ที่ขึ้นต้นด้วย FontAwesomeIcon className="mr-10" แล้วตามด้วยข้อความ:
+       faMapMarkerAlt + "Bangkok Thailand 10150"      (div className="fs-14 mb-20")
+       faPhone        + "Call Us: 123-456-7898"        (div className="fs-14 mb-20")
+       faEnvelope     + "Email Us: admin@mystore.com"  (div className="fs-14")
+     ไอคอนทั้งสามตัว import จาก "@fortawesome/free-solid-svg-icons"
+  2) h3 className="fs-24 fw-bold text-white mb-25" ข้อความ Categories
+     ตามด้วย ul className="list-none p-0 m-0" ที่มี li className="mb-10" ห้ารายการ:
+     Beauty, Fragrances, Furniture, Groceries, Laptops
+  3) h3 className="fs-24 fw-bold text-white mb-25" ข้อความ Pages
+     ตามด้วย ul className="list-none p-0 m-0" ที่มี li className="mb-10" สามรายการ:
+     Home, Products, Cart
+  รายการในสองคอลัมน์หลังเป็นข้อความเปล่า ยังไม่ต้องทำเป็นลิงก์
+- MainLayout.module.scss: class .container เป็น flex column ที่ min-height: 100vh
+  และ class .main ที่ flex-grow: 1
+- MainLayout.tsx: div className={styles.container} ครอบ Header, แท็ก main className={styles.main}
+  ที่มี Outlet อยู่ข้างใน และ Footer เรียงตามลำดับนี้
+  import Header กับ Footer ด้วย alias @/
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ยังไม่ต้องทำไอคอนตะกร้า badge จำนวนสินค้า หรือ CartSummary ใด ๆ ใน Header
+- ห้ามสร้าง Header.module.scss
+- ห้ามแก้ router.tsx, App.tsx, main.tsx และไฟล์ใน src/pages/</code></pre>
+        </blockquote>
+
+        <p>สังเกตบรรทัดในส่วน <code>บริบท:</code> ที่ไล่ชื่อ utility class ทั้งหมดออกมา — มันดูเยิ่นเย้อ แต่นี่คือบรรทัดที่กันปัญหาที่บทเรียน 08 เตือนไว้: ชื่อ class ของเราหน้าตาคล้าย Tailwind มาก ถ้าไม่ยืนยันว่ามีตัวไหนอยู่จริงบ้าง Agent จะแต่ง <code>text-gray-400</code> หรือ <code>py-6</code> ขึ้นมาเอง แล้วหน้าเว็บจะขึ้นตามปกติโดยไม่มี style และไม่มีเครื่องมือตัวไหนบ่น</p>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git diff</code> ก่อน แล้วไล่ทีละข้อ:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> การนำทาง — สองอาการที่เจอบ่อยคือเขียนลิงก์เป็น <code>&lt;a href="/categories"&gt;</code> หรือ <code>&lt;div onClick={() =&gt; navigate("/cart")}&gt;</code> แทนที่จะใช้ <code>&lt;Link to&gt;</code> และ hardcode URL string ไว้ที่จุดเรียกใช้แทนที่จะให้เส้นทางทั้งหมดอยู่รวมกันใน <code>useProductRoute</code> ที่เพิ่งสร้าง ค้นในไฟล์ที่ได้มาด้วยคำว่า <code>href=</code> และ <code>onClick</code> เป็นอย่างแรก — ทั้งสองแบบดูเหมือนใช้ได้บนจอ แต่แบบ <code>&lt;a&gt;</code> โหลดหน้าใหม่ทั้งแอปทุกครั้งที่กด และแบบ <code>&lt;div&gt;</code> กดด้วยคีย์บอร์ดไม่ได้เลย</li>
+            <li>ไฟล์ใหม่ 5 ไฟล์ ไฟล์ที่ถูกแก้ 1 ไฟล์ (<code>MainLayout.tsx</code>) — ไม่มีอย่างอื่นใน <code>git status</code></li>
+            <li>ไม่มี <code>Header.module.scss</code> เกิดขึ้น (กติกาในไฟล์ rules บอกให้สร้าง แต่ prompt ยกเว้นไว้)</li>
+            <li>Header ไม่มีไอคอนตะกร้า ไม่มี badge และไม่มีบรรทัด <code>useProductRoute()</code> ค้างอยู่</li>
+            <li><code>Footer.module.scss</code> ขึ้นต้นด้วย <code>@use "../../../styles/variables";</code> และใช้ <code>variables.$black02</code> ไม่ใช่ <code>#212121</code></li>
+            <li>ไม่มีค่าสีแบบ hex โผล่ในไฟล์ <code>.tsx</code> หรือ <code>.module.scss</code> ที่สร้างใหม่เลยสักจุด</li>
+            <li>Footer import ไอคอนเป็นราย ๆ ตัวจาก <code>@fortawesome/free-solid-svg-icons</code> ไม่ใช่ import ทั้งชุด</li>
+            <li>ข้อความใน Footer ตรงกับ prompt ทุกตัวอักษร — เบอร์โทร อีเมล ที่อยู่ และรายชื่อหมวดหมู่ห้ารายการ</li>
+            <li><code>MainLayout.tsx</code> เรียงเป็น Header → <code>&lt;main&gt;</code> ที่มี Outlet → Footer และ <code>&lt;Outlet /&gt;</code> ยังอยู่ในแท็ก <code>main</code> ไม่ได้ถูกย้ายออกมา</li>
+            <li><code>MainLayout.module.scss</code> มีทั้ง <code>.container</code> และ <code>.main</code> และ <code>.main</code> มี <code>flex-grow: 1</code> จริง (ถ้าขาดข้อนี้ Footer จะลอยขึ้นมากลางจอในหน้าที่เนื้อหาสั้น)</li>
+            <li>import ข้ามโฟลเดอร์ในไฟล์ <code>.tsx</code> ใช้ <code>@/</code> แต่ <code>@use</code> ในไฟล์ <code>.scss</code> เป็น path แบบ relative — สองระบบนี้คนละเรื่องกัน</li>
+            <li><code>useProductRoute</code> มีครบสี่ฟังก์ชัน และ <code>goToProductDetails</code> รับ <code>id: number</code> ไม่ใช่ <code>string</code> หรือ <code>any</code></li>
+          </ul>
+        </blockquote>
+
+        <p>รอบนี้ก็เหมือนบทที่แล้ว: <code>npm run lint</code> อาจตกเรื่อง <code>import-x/order</code> ก่อน แก้ด้วย <code>npx eslint . --fix</code> แล้วรันซ้ำให้ผ่านเงียบ ๆ จากนั้นค่อย <code>npm run typecheck</code></p>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/shared/hooks/useProductRoute.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import { useNavigate } from "react-router";
+
+const useProductRoute = () =&gt; {
+  const navigate = useNavigate();
+
+  const goToProductDetails = (id: number) =&gt; {
+    navigate(`/products/${id}`);
+  };
+
+  const goToCartSummary = () =&gt; {
+    navigate("/cart");
+  };
+
+  const goToCheckout = () =&gt; {
+    navigate("/checkout");
+  };
+
+  const goToOrderSuccess = () =&gt; {
+    navigate("/order/success");
+  };
+
+  return {
+    goToProductDetails,
+    goToCartSummary,
+    goToCheckout,
+    goToOrderSuccess,
+  };
+};
+
+export default useProductRoute;
+</code></pre>
+
+        <p><code>src/shared/components/Header/Header.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { Link } from "react-router";
+
+const Header: React.FC = () =&gt; {
+  return (
+    &lt;header className="pt-25 pb-25"&gt;
+      &lt;div className="container"&gt;
+        &lt;div className="flex space-between align-item-center"&gt;
+          &lt;Link className="nav-link fw-bold fs-24" to="/"&gt;
+            My Store
+          &lt;/Link&gt;
+
+          &lt;nav&gt;
+            &lt;ul className="flex gap-20 m-0 p-0 list-none"&gt;
+              &lt;li&gt;
+                &lt;Link to="/" className="nav-link"&gt;
+                  Home
+                &lt;/Link&gt;
+              &lt;/li&gt;
+              &lt;li&gt;
+                &lt;Link to="/categories" className="nav-link"&gt;
+                  Products
+                &lt;/Link&gt;
+              &lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/nav&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/header&gt;
+  );
+};
+
+export default Header;
+</code></pre>
+
+        <p><code>src/shared/components/Footer/Footer.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../styles/variables";
+
+.footer {
+  background-color: variables.$black02;
+  color: variables.$white;
+
+  p {
+    line-height: 2;
+  }
+}
+</code></pre>
+
+        <p>บรรทัด <code>@use</code> ดึงไฟล์ <code>_variables.scss</code> จากบทเรียน 04 เข้ามาภายใต้ namespace ชื่อ <code>variables</code> เราจึงอ้างสีกลางของแอปได้ด้วย <code>variables.$black02</code> แทนการ hardcode <code>#212121</code> ซ้ำอีกรอบ — สีหลักของแบรนด์เปลี่ยนเมื่อไหร่ Footer ก็เปลี่ยนตามเองโดยไม่ต้องแตะไฟล์นี้</p>
+
+        <p><code>src/shared/components/Footer/Footer.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faMapMarkerAlt,
+  faPhone,
+  faEnvelope,
+} from "@fortawesome/free-solid-svg-icons";
+import styles from "./Footer.module.scss";
+
+const Footer: React.FC = () =&gt; {
+  return (
+    &lt;footer className={`pt-60 pb-60 ${styles.footer}`}&gt;
+      &lt;div className="container"&gt;
+        &lt;div className="flex space-between"&gt;
+          &lt;div&gt;
+            &lt;h2 className="fs-32 fw-bold text-white mb-25"&gt;My Store&lt;/h2&gt;
+            &lt;div className="fs-14 mb-20"&gt;
+              &lt;FontAwesomeIcon icon={faMapMarkerAlt} className="mr-10" /&gt;
+              Bangkok Thailand 10150
+            &lt;/div&gt;
+            &lt;div className="fs-14 mb-20"&gt;
+              &lt;FontAwesomeIcon icon={faPhone} className="mr-10" /&gt;
+              Call Us: 123-456-7898
+            &lt;/div&gt;
+            &lt;div className="fs-14"&gt;
+              &lt;FontAwesomeIcon icon={faEnvelope} className="mr-10" /&gt;
+              Email Us: admin@mystore.com
+            &lt;/div&gt;
+          &lt;/div&gt;
+
+          &lt;div&gt;
+            &lt;h3 className="fs-24 fw-bold text-white mb-25"&gt;Categories&lt;/h3&gt;
+            &lt;ul className="list-none p-0 m-0"&gt;
+              &lt;li className="mb-10"&gt;Beauty&lt;/li&gt;
+              &lt;li className="mb-10"&gt;Fragrances&lt;/li&gt;
+              &lt;li className="mb-10"&gt;Furniture&lt;/li&gt;
+              &lt;li className="mb-10"&gt;Groceries&lt;/li&gt;
+              &lt;li className="mb-10"&gt;Laptops&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/div&gt;
+
+          &lt;div&gt;
+            &lt;h3 className="fs-24 fw-bold text-white mb-25"&gt;Pages&lt;/h3&gt;
+            &lt;ul className="list-none p-0 m-0"&gt;
+              &lt;li className="mb-10"&gt;Home&lt;/li&gt;
+              &lt;li className="mb-10"&gt;Products&lt;/li&gt;
+              &lt;li className="mb-10"&gt;Cart&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/footer&gt;
+  );
+};
+
+export default Footer;
+</code></pre>
+
+        <p>ไฟล์นี้สาธิตวิธีใช้ Font Awesome ครบวงจร: import ตัว component <code>FontAwesomeIcon</code> หนึ่งครั้ง, import ไอคอนที่ต้องการเป็นราย ๆ ตัวจากชุด solid, แล้ววางใน JSX ด้วย <code>&lt;FontAwesomeIcon icon={faPhone} /&gt;</code> — ตัวมัน render ออกมาเป็น SVG จึงคมทุกขนาด และรับ <code>className</code> ได้เหมือน element ปกติ (เราใช้ <code>mr-10</code> ดันข้อความให้ห่างจากไอคอน)</p>
+
+        <p>สังเกตการผสม class สองระบบบนบรรทัด <code>&lt;footer&gt;</code>: <code>`pt-60 pb-60 ${styles.footer}`</code> — utility class จากระบบ global อยู่ร่วมกับ class จาก SCSS Module ได้สบาย ๆ ผ่าน template literal นี่คือ pattern ที่จะเห็นตลอดทั้งโปรเจกต์: ของทั่วไปใช้ utility ของเฉพาะตัวใช้ module</p>
+
+        <p><code>src/app/layouts/MainLayout/MainLayout.module.scss</code>:</p>
+
+        <pre><code class="language-scss">.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex-grow: 1;
+}
+</code></pre>
+
+        <p>และ <code>src/app/layouts/MainLayout/MainLayout.tsx</code> เวอร์ชันสมบูรณ์ — ไฟล์นี้จะไม่เปลี่ยนอีกตลอดคอร์ส:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { Outlet } from "react-router";
+import styles from "./MainLayout.module.scss";
+import Header from "@/shared/components/Header/Header";
+import Footer from "@/shared/components/Footer/Footer";
+
+const MainLayout: React.FC = () =&gt; {
+  return (
+    &lt;div className={styles.container}&gt;
+      &lt;Header /&gt;
+      &lt;main className={styles.main}&gt;
+        &lt;Outlet /&gt;
+      &lt;/main&gt;
+      &lt;Footer /&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default MainLayout;
+</code></pre>
+
+        <p>นี่แหละคือผลตอบแทนของการลงทุนทำ layout route ในบทที่แล้ว: เพิ่มโค้ดสี่บรรทัดใน<em>ไฟล์เดียว</em> แล้วทั้งหกหน้าได้ Header กับ Footer พร้อมกันทันที ไม่ต้องไปตามแปะทีละหน้า และเมื่อผู้ใช้เปลี่ยนหน้า react-router สลับเฉพาะส่วน <code>&lt;Outlet /&gt;</code> ตรงกลาง — Header กับ Footer ไม่ถูก render ใหม่โดยไม่จำเป็น</p>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li><code>&lt;Link to="/"&gt;</code> render ออกมาเป็นแท็ก <code>&lt;a&gt;</code> ใน DOM เหมือน <code>&lt;a href="/"&gt;</code> ทุกประการ — เปิด DevTools แล้วบอกวิธีพิสูจน์<em>ตอนรันจริง</em>ว่าอันไหนเป็นอันไหน โดยไม่เปิดดูซอร์สโค้ด</li>
+          <li><code>MainLayout.module.scss</code> มี class ชื่อ <code>.container</code> และ <code>src/styles/</code> ก็มี utility class ชื่อ <code>container</code> ที่ Header กับ Footer ใช้อยู่ — สองตัวนี้ชนกันหรือไม่ ตอบจากสิ่งที่เกิดขึ้นกับชื่อ class ตอน build</li>
+          <li><code>useProductRoute</code> จบบทนี้ยังไม่มีใครเรียกใช้ แต่ <code>npm run lint</code> ผ่านสบาย ๆ ในขณะที่ถ้าเราเขียน <code>const { goToCartSummary } = useProductRoute();</code> ค้างไว้ใน Header มันจะฟ้องทันที — สองกรณีนี้ต่างกันตรงไหนในสายตาของ ESLint</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run dev</code> แล้วไล่เปิดทุก route จากบทที่แล้ว — ทุกหน้าต้องมี Header (โลโก้ My Store + เมนู Home/Products) อยู่บนสุด และ Footer พื้นดำอยู่ล่างสุดติดขอบจอเสมอแม้เนื้อหากลางจะสั้นนิดเดียว (ฝีมือ sticky footer) จากนั้นลองคลิกสลับเมนู Home กับ Products ไปมา — หน้าต้องเปลี่ยน<em>โดยจอไม่กะพริบและไม่มีการโหลดหน้าใหม่</em> ถ้าไม่แน่ใจ เปิด Network tab ของ DevTools ดู: คลิก Link แล้วต้องไม่มี request ของ document ใหม่โผล่มา สุดท้ายรัน <code>npm run lint</code> และ <code>npm run typecheck</code> ให้ผ่านทั้งคู่ก่อน commit — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="09_react_router.html" rel="prev">ก่อนหน้า: react-router 8</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="11_providers_query_client.html" rel="next">ถัดไป: Providers และ QueryClient</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

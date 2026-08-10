@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สั่ง Cursor ตั้งค่า TanStack Query: QueryClient แบบ singleton ที่ระดับ module, AppProviders ที่รวม provider ไว้ไฟล์เดียว และ Devtools ที่ติดเฉพาะโหมด dev" />
+    <title>Providers และ QueryClient | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 11 · โครงแอปและเราเตอร์ (App Shell &amp; Routing)</p>
+          <h1>Providers และ QueryClient</h1>
+          <p class="lesson-original-title" lang="en">Providers &amp; QueryClient</p>
+        </header>
+
+        <p>บทนี้เป็นชิ้นสุดท้ายของโครงแอป: วางระบบจัดการข้อมูลจาก server ให้พร้อมใช้ทั่วทั้งแอป ก่อนลงมือ ทวนแนวคิดสำคัญจาก Week 4 กันหนึ่งย่อหน้า — state ในแอปเรามีสองพันธุ์ที่ต้องจัดการคนละวิธี:</p>
+
+        <ul>
+          <li><strong>Server state</strong> — ข้อมูลที่เจ้าของตัวจริงอยู่บน server เช่น รายการสินค้า ราคา รีวิว เราเป็นแค่ผู้ยืมมาแสดง มันเลยมีปัญหาเฉพาะตัว: ต้องโหลด อาจโหลดพลาด อาจหมดอายุ ต้อง cache — ทั้งหมดนี้คือหน้าที่ของ <strong>TanStack Query</strong></li>
+          <li><strong>Client state</strong> — ข้อมูลที่เกิดและจบในเบราว์เซอร์ เช่น ของในตะกร้า modal เปิดอยู่ไหม — อันนี้เป็นหน้าที่ของ React เอง (ในโปรเจกต์นี้คือ Context + useReducer ซึ่งจะสร้างกันในบทเรียน 22)</li>
+        </ul>
+
+        <p>บทเรียนราคาแพงข้อหนึ่งของมือใหม่คือการเอา <code>useEffect</code> + <code>useState</code> ไปจัดการ server state เอง — ได้โค้ดที่ไม่มี cache, โหลดซ้ำซ้อน และ race condition เพียบ เราจะไม่ทำแบบนั้นแม้แต่บรรทัดเดียวในโปรเจกต์นี้ และไฟล์ rules ของเราก็เขียนห้ามไว้ตั้งแต่บทเรียน 07 แล้ว</p>
+
+        <h2>QueryClient: cache หนึ่งก้อนต่อหนึ่งแอป</h2>
+
+        <p>ทุกอย่างใน TanStack Query หมุนรอบ object ตัวเดียวชื่อ <code>QueryClient</code> — มันคือทั้งตัว cache และศูนย์ตั้งค่าพฤติกรรมของทุก query ในแอป ค่า default สองตัวที่เราจะตั้ง คือการตัดสินใจที่คิดมาแล้วสำหรับแอปแบบนี้โดยเฉพาะ:</p>
+
+        <ul>
+          <li><strong><code>staleTime: 60 * 1000</code></strong> — ข้อมูลที่โหลดมาแล้วถือว่า "ยังสด" อยู่ 60 วินาที ระหว่างนั้นถ้า component ไหนขอข้อมูลก้อนเดิม TanStack Query จะส่งของจาก cache ให้ทันทีโดย<em>ไม่ยิง API ซ้ำ</em> (ค่า default ของ library คือ <code>0</code> — สลับหน้าไปมาทีเดียวยิงใหม่ทุกครั้ง) ข้อมูลสินค้าของเราไม่ได้เปลี่ยนวินาทีต่อวินาที หนึ่งนาทีจึงเป็นจุดสมดุลที่ดีระหว่างความสดกับจำนวน request — เขียน <code>60 * 1000</code> แทน <code>60000</code> เพื่อให้อ่านออกทันทีว่าหน่วยคือ "60 วินาที คูณเป็น milliseconds"</li>
+          <li><strong><code>retry: 1</code></strong> — query ที่ล้มเหลวจะถูกลองใหม่อีก 1 ครั้งก่อนประกาศว่า error จริง (default คือ 3 ครั้งพร้อม delay ที่เพิ่มขึ้นเรื่อย ๆ ซึ่งแปลว่าผู้ใช้ต้องจ้องหน้า loading นานหลายวินาทีกว่าจะเห็นข้อความ error) ลองหนึ่งครั้งพอกันเหตุ network สะดุดชั่วขณะ แต่ถ้าพังจริงก็บอกผู้ใช้ให้เร็ว</li>
+        </ul>
+
+        <p>เรื่องที่สำคัญกว่าค่าทั้งสองคือ<strong>ตำแหน่ง</strong>ที่สร้างมัน: client ต้องถูกสร้างไว้<strong>นอก component ที่ระดับ module</strong> ไฟล์จะถูกประมวลผลครั้งเดียวตอนแอปเริ่ม เราจึงได้ <strong>singleton</strong>: cache หนึ่งก้อนต่อหนึ่งแอปตลอดอายุของมัน ถ้าเผลอไปเขียน <code>new QueryClient()</code> ข้างในตัว component จะได้ client ตัวใหม่ (cache เปล่า ๆ) ทุกครั้งที่ component นั้นถูก render ใหม่ — เท่ากับ cache ที่ลืมทุกอย่างตลอดเวลา</p>
+
+        <p>อีกเหตุผลที่แยกเป็นไฟล์ของตัวเอง: ตอนวางชุดทดสอบในบทเรียน 30 เราจะสร้าง client คนละตัวสำหรับเทสต์โดยเฉพาะ การที่ "ตัว client" กับ "ตัว provider" แยกจากกันทำให้สลับได้ง่าย</p>
+
+        <h2>providers.tsx: รวมทุก provider ไว้ประตูเดียว</h2>
+
+        <p>แอปจริงมักมี provider หลายตัวซ้อนกันเป็นหัวหอม: query client, theme, auth, cart ฯลฯ ถ้าซ้อนกันสด ๆ ใน App.tsx ไฟล์นั้นจะรกขึ้นเรื่อย ๆ ทุกครั้งที่มีของใหม่ pattern ที่โปรเจกต์นี้ใช้คือสร้าง component <code>AppProviders</code> ที่เดียวจบ — ใครอยากรู้ว่าแอปนี้มี provider อะไรบ้าง ลำดับไหน เปิดไฟล์เดียวเห็นครบ</p>
+
+        <ul>
+          <li><strong><code>children: ReactNode</code></strong> — pattern เดียวกับที่เรียนใน Week 4: component ที่รับ "อะไรก็ได้ที่ render ได้" มาห่อ ทำให้ AppProviders ไม่ต้องรู้จักเนื้อในของแอปแม้แต่นิดเดียว</li>
+          <li><strong><code>QueryClientProvider</code></strong> — ส่ง <code>queryClient</code> ของเราลงไปผ่าน context ให้ทุก component ใต้ต้นไม้เรียกใช้ <code>useQuery</code> ได้ ตัว client อยู่ไฟล์หนึ่ง ตัว provider อยู่อีกไฟล์ — แยกหน้าที่ "สร้างของ" กับ "แจกของ" ออกจากกัน</li>
+          <li><strong><code>import.meta.env.DEV</code></strong> — ตัวแปรพิเศษที่ Vite แทนค่าให้<em>ตอน build</em>: ระหว่าง <code>npm run dev</code> มันคือ <code>true</code> แต่ใน production build มันคือ <code>false</code> ทั้งบรรทัดจึงกลายเป็น dead code ที่ถูกตัดทิ้งจาก bundle ไปเลย — Devtools จึงไม่มีทางหลุดไปถึงหน้าจอผู้ใช้จริงแม้แต่ byte เดียว สอดคล้องกับที่เราติดตั้งมันเป็น devDependency</li>
+          <li><strong><code>initialIsOpen={false}</code></strong> — ให้ Devtools เริ่มแบบหุบอยู่ เหลือแค่ปุ่มลอยเล็ก ๆ ไว้กดเปิดเมื่ออยากดู</li>
+        </ul>
+
+        <blockquote>💡 <code>providers.tsx</code> ที่ได้จากบทนี้เป็น<strong>เวอร์ชันแรก</strong> — ในบทเรียน 22 เมื่อเราสร้างระบบตะกร้าสินค้าเสร็จ จะมี <code>&lt;CartProvider&gt;</code> เข้ามาห่อ <code>{children}</code> เพิ่มอีกหนึ่งชั้นตรงนี้ อย่าเพิ่งสร้างในบทนี้ — และนั่นแหละคือจุดขายของ pattern นี้: วันนั้นเราจะแก้แค่ไฟล์นี้ไฟล์เดียว App.tsx ไม่ต้องรู้เรื่องเลย</blockquote>
+
+        <h2>ลำดับการห่อใน App.tsx</h2>
+
+        <p>สุดท้ายคือการเอา <code>AppProviders</code> ไปห่อ <code>RouterProvider</code> ใน <code>App.tsx</code> — และหลังบทนี้ไฟล์นั้นจะไม่เปลี่ยนอีกเลยตลอดคอร์ส อ่านจากนอกเข้าใน: providers ห่อ router, router เลือกหน้า, หน้าถูกวางใน layout — สามบรรทัดนี้เล่าโครงสร้างทั้งแอปจบ</p>
+
+        <p>การที่ providers อยู่<em>นอก</em> RouterProvider สำคัญนะ: มันแปลว่าทุกหน้า ทุก layout รวมถึง <code>RouteErrorFallback</code> ล้วนอยู่ใต้ QueryClientProvider และใช้ query ได้หมด ไม่มีมุมอับ</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <pre><code class="language-bash">src/
+└── app/
+    ├── App.tsx          # แก้ — ให้ AppProviders ห่อ RouterProvider
+    ├── providers.tsx    # ใหม่ — เวอร์ชันแรก มีแค่ QueryClientProvider
+    └── queryClient.ts   # ใหม่ — singleton ที่ระดับ module</code></pre>
+
+        <ul>
+          <li><strong><code>queryClient.ts</code></strong> — ต้องสร้าง <code>QueryClient</code> ที่ระดับ module และ export ชื่อ <code>queryClient</code> ต้องไม่มี JSX ในไฟล์ (นามสกุลจึงเป็น <code>.ts</code> ไม่ใช่ <code>.tsx</code>)</li>
+          <li><strong><code>providers.tsx</code></strong> — ต้อง export ชื่อ <code>AppProviders</code> แบบ named export และ Devtools ต้องอยู่ใต้เงื่อนไข <code>import.meta.env.DEV</code> ต้องไม่มีคำว่า <code>new QueryClient</code> อยู่ในไฟล์นี้เลย</li>
+          <li><strong><code>App.tsx</code></strong> — ต้องยังใช้ <code>router</code> ตัวเดิมจาก <code>./router</code> และยัง import <code>RouterProvider</code> จาก <code>react-router/dom</code> ต้องไม่มีอะไรอื่นเพิ่มเข้ามาในไฟล์นี้</li>
+        </ul>
+
+        <h2>ติดตั้ง TanStack Query ด้วยมือ</h2>
+
+        <p>ตัว library หลักเป็น dependency ปกติ ส่วน Devtools ติดตั้งเป็น <code>-D</code> (devDependency) เพราะเป็นเครื่องมือของนักพัฒนา ไม่ใช่ของที่ผู้ใช้จริงต้องได้รับ — สังเกตว่าเราเป็นคนตัดสินใจเรื่องนี้เอง ไม่ได้ปล่อยให้ Agent เลือกให้:</p>
+
+        <pre><code class="language-bash">npm install @tanstack/react-query
+npm install -D @tanstack/react-query-devtools
+git add -A &amp;&amp; git commit -m "chore: install tanstack query"</code></pre>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> — แชทใหม่ โหมด Agent งานรอบนี้เล็กที่สุดในสามบทของช่วงนี้ แต่ <code>ข้อกำหนดทางเทคนิค:</code> ยังต้องระบุตำแหน่งที่สร้าง client ให้ชัด เพราะนั่นคือจุดที่พลาดแล้วไม่มีเครื่องมือไหนบอก:</p>
+          <pre><code class="language-text">ตั้งค่า TanStack Query: สร้าง queryClient กับ AppProviders แล้วเอาไปห่อ RouterProvider ใน App.tsx
+
+บริบท: @src/app/App.tsx @src/app/router.tsx @src/app
+ติดตั้ง @tanstack/react-query และ @tanstack/react-query-devtools (ตัวหลังเป็น devDependency) ไว้แล้ว
+src/app/App.tsx ตอนนี้ return RouterProvider พร้อม prop router={router} เท่านั้น
+โปรเจกต์นี้เป็น Vite ใช้ import.meta.env.DEV ได้เลย
+
+โครงสร้าง: สร้างไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
+- src/app/queryClient.ts
+- src/app/providers.tsx
+และแก้ src/app/App.tsx ให้ AppProviders ห่อ RouterProvider
+
+ข้อกำหนดทางเทคนิค:
+- queryClient.ts: export const queryClient = new QueryClient({ ... }) ที่ระดับ module
+  สร้างนอก component เท่านั้น ห้ามสร้างข้างใน function หรือใน useState/useMemo
+  defaultOptions.queries ตั้งสองค่า: staleTime: 60 * 1000 และ retry: 1
+  เขียน 60 * 1000 แบบนี้ ไม่ต้องแปลงเป็น 60000
+  ไฟล์นี้เป็น .ts ไม่มี JSX
+- providers.tsx: export function AppProviders (named export ไม่ใช่ default)
+  รับ prop children: ReactNode โดย import ReactNode จาก "react"
+  return QueryClientProvider ที่มี prop client={queryClient} ครอบ {children}
+  ถัดจาก {children} ให้ render ReactQueryDevtools initialIsOpen={false}
+  ภายใต้เงื่อนไข import.meta.env.DEV (ห้ามใช้ process.env.NODE_ENV)
+  import queryClient จาก "./queryClient"
+- App.tsx: ให้ AppProviders ครอบ RouterProvider
+  RouterProvider ยัง import จาก "react-router/dom" และยังใช้ router ตัวเดิมจาก "./router"
+  ห้ามเปลี่ยนชื่อ export หรือย้ายไฟล์ใด ๆ
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ยังไม่ต้องสร้าง CartProvider, ThemeProvider หรือ provider อื่นใด
+- ยังไม่ต้องเขียน useQuery, queryOptions หรือฟังก์ชันเรียก API ใด ๆ
+- ห้ามสร้างไฟล์ .module.scss
+- ห้ามแก้ไฟล์อื่นนอกจากที่ระบุไว้ข้างบน</code></pre>
+        </blockquote>
+
+        <p>สังเกตบรรทัด "ห้ามสร้างข้างใน function หรือใน <code>useState</code>/<code>useMemo</code>" — ปกติเราไม่เขียนข้อห้ามละเอียดขนาดนี้ แต่จุดนี้ต่างออกไป เพราะเอกสารทางการของ TanStack Query เองก็มีตัวอย่างที่สร้าง client ใน <code>useState</code> (สำหรับแอปแบบ server-rendering ที่หนึ่ง request ต้องได้ cache ของตัวเอง) โมเดลจึงเห็น pattern นั้นมาเยอะ ทั้งที่แอปของเราเป็น SPA ล้วน ๆ ที่ต้องการ cache ก้อนเดียว</p>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git diff</code> ก่อน แล้วไล่ทีละข้อ:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> สร้าง <code>QueryClient</code> ไว้ในตัว component — <code>function AppProviders(...) { const queryClient = new QueryClient(); ... }</code> หรือ <code>useState(() =&gt; new QueryClient())</code> ผลคือได้ client ตัวใหม่ทุกครั้งที่ component ถูก render ใหม่ cache ทั้งก้อนถูกโยนทิ้งแล้วยิง API ใหม่หมด วิธีตรวจตรงที่สุด: ค้นคำว่า <code>new QueryClient</code> ในโปรเจกต์ ต้องเจอที่เดียวคือ <code>src/app/queryClient.ts</code> และบรรทัดนั้นต้องไม่มีการเว้นวรรคย่อหน้า (indent) ใด ๆ ข้างหน้า เพราะมันอยู่ระดับบนสุดของไฟล์ — อาการนี้ lint ผ่าน typecheck ผ่าน หน้าเว็บขึ้นปกติ และตอนนี้ยังไม่มี query สักตัวให้เห็นผล มันจะไปโผล่เป็น "ทำไมโหลดสินค้าใหม่ทุกครั้งที่กดเข้าออกหน้า" ในบทเรียน 19</li>
+            <li>ไฟล์ใหม่ 2 ไฟล์ ไฟล์ที่ถูกแก้ 1 ไฟล์ ไม่มีอย่างอื่นใน <code>git status</code></li>
+            <li><code>queryClient.ts</code> ลงท้ายด้วย <code>.ts</code> จริง ไม่ใช่ <code>.tsx</code> และไม่มี JSX อยู่ในนั้น</li>
+            <li><code>staleTime</code> เขียนเป็น <code>60 * 1000</code> และ <code>retry</code> เป็น <code>1</code> — ไม่ใช่ค่าอื่นที่มันคิดว่า "ดีกว่า"</li>
+            <li><code>providers.tsx</code> export ชื่อ <code>AppProviders</code> แบบ named export — ถ้ากลายเป็น <code>export default</code> บรรทัด import ใน <code>App.tsx</code> จะต่างจากที่บทหลัง ๆ อ้างถึง</li>
+            <li>เงื่อนไขของ Devtools ใช้ <code>import.meta.env.DEV</code> ไม่ใช่ <code>process.env.NODE_ENV === "development"</code> (ตัวหลังไม่มีอยู่จริงในเบราว์เซอร์ฝั่ง Vite)</li>
+            <li><code>&lt;ReactQueryDevtools /&gt;</code> อยู่<em>ข้างใน</em> <code>QueryClientProvider</code> ไม่ใช่ข้างนอก — ถ้าอยู่นอก มันจะหา client ไม่เจอ</li>
+            <li><code>package.json</code> ไม่ถูกแก้: <code>@tanstack/react-query-devtools</code> ยังอยู่ใน <code>devDependencies</code> ไม่ถูกย้ายขึ้นไป <code>dependencies</code></li>
+            <li><code>App.tsx</code> ยัง import <code>RouterProvider</code> จาก <code>"react-router/dom"</code> และ <code>AppProviders</code> อยู่<em>นอก</em> <code>RouterProvider</code> ไม่ใช่ข้างใน</li>
+            <li>ไม่มี <code>useEffect</code>, ไม่มี <code>fetch</code>, ไม่มี <code>useQuery</code> โผล่มาในสามไฟล์นี้</li>
+          </ul>
+        </blockquote>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/app/queryClient.ts</code>:</p>
+
+        <pre><code class="language-typescript">import { QueryClient } from "@tanstack/react-query";
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      retry: 1,
+    },
+  },
+});
+</code></pre>
+
+        <p><code>src/app/providers.tsx</code> เวอร์ชันแรก:</p>
+
+        <pre><code class="language-typescript">import { ReactNode } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { queryClient } from "./queryClient";
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  return (
+    &lt;QueryClientProvider client={queryClient}&gt;
+      {children}
+      {import.meta.env.DEV &amp;&amp; &lt;ReactQueryDevtools initialIsOpen={false} /&gt;}
+    &lt;/QueryClientProvider&gt;
+  );
+}
+</code></pre>
+
+        <p>และ <code>src/app/App.tsx</code> ฉบับสมบูรณ์ — ไฟล์นี้จะไม่เปลี่ยนอีกแล้วตลอดทั้งคอร์ส:</p>
+
+        <pre><code class="language-typescript">import { RouterProvider } from "react-router/dom";
+import { AppProviders } from "./providers";
+import { router } from "./router";
+
+function App() {
+  return (
+    &lt;AppProviders&gt;
+      &lt;RouterProvider router={router} /&gt;
+    &lt;/AppProviders&gt;
+  );
+}
+
+export default App;
+</code></pre>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>ถ้าย้ายบรรทัด <code>new QueryClient(...)</code> จาก <code>queryClient.ts</code> เข้าไปไว้ในตัว <code>AppProviders</code> จะเกิดอะไรขึ้นตอนผู้ใช้กดสลับหน้าไปมา และทำไม <code>npm run lint</code> กับ <code>npm run typecheck</code> ถึงยังผ่านทั้งคู่</li>
+          <li>บรรทัด <code>{import.meta.env.DEV &amp;&amp; &lt;ReactQueryDevtools ... /&gt;}</code> ยังอยู่ในซอร์สโค้ดตอน build production — แล้วทำไม Devtools ถึงไม่ติดไปกับ bundle ที่ผู้ใช้โหลด อธิบายว่าอะไรเกิดขึ้นกับบรรทัดนี้ตอน <code>npm run build</code></li>
+          <li>เปิด <code>App.tsx</code> แล้วสมมติว่าเราสลับลำดับเป็น <code>&lt;RouterProvider&gt;</code> อยู่นอกและ <code>&lt;AppProviders&gt;</code> อยู่ใน — component ตัวไหนบ้างในแอปที่จะเรียก <code>useQuery</code> ไม่ได้อีกต่อไป</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run dev</code> — แอปต้องขึ้นเหมือนเดิมทุกประการ (Header, Footer, หน้า stub ครบ) แต่มีของใหม่หนึ่งชิ้น: ปุ่มลอยของ TanStack Query Devtools ที่มุมล่างของจอ กดเปิดดูได้เลย ตอนนี้แผง queries ยังว่างเปล่าเพราะเรายังไม่ได้เขียน query สักตัว (ตัวแรกจะมาในบทเรียน 17) ปิดท้ายด้วย <code>npm run lint</code>, <code>npm run typecheck</code> และ <code>npm run build</code> ให้ผ่านทั้งหมด — ถ้า build ผ่าน แปลว่าโครงแอปทั้งสามบทของช่วงนี้ประกอบกันสนิทดีแล้ว จากนั้น commit — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="10_header_footer.html" rel="prev">ก่อนหน้า: Header และ Footer</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="12_button_input_radio.html" rel="next">ถัดไป: Button, Input และ RadioInput</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
