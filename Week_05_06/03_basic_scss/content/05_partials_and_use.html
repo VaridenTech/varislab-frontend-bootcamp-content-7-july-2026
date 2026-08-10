@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้ partial files, การใช้ @use, namespace, alias, one-time loading และกฎ top-level placement ของ SCSS modules"
+    />
+    <title>Partial และ @use</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>Partial และ @use</h1>
+
+        <p>
+          พอโปรเจกต์เริ่มมีตัวแปรและ component หลายตัว เราไม่อยากกองทุกอย่างไว้ในไฟล์เดียวอีกต่อไป
+          SCSS จึงมีแนวคิดเรื่อง <strong>partial</strong> และ <strong>module</strong>
+          เพื่อแยกของที่ใช้ซ้ำออกเป็นไฟล์ย่อย แล้วค่อยดึงกลับมาใช้แบบชัดเจนผ่าน
+          <code>@use</code>
+        </p>
+
+        <h2>Partial คืออะไร</h2>
+        <p>
+          Partial คือไฟล์ SCSS ที่ตั้งใจให้ไฟล์อื่นนำเข้าไปใช้ ไม่ได้คอมไพล์เป็นไฟล์ CSS ปลายทางโดยตรง
+          ตามธรรมเนียมเราจะขึ้นต้นชื่อไฟล์ด้วยเครื่องหมาย underscore
+          เช่น <code>_tokens.scss</code> หรือ <code>_colors.scss</code>
+        </p>
+
+        <pre><code>scss/
+├── _tokens.scss
+└── main.scss</code></pre>
+
+        <p>
+          ไฟล์แบบนี้มักเก็บ design tokens, reset, helper หรือ component ย่อย
+          แล้วให้ไฟล์ entry point เช่น <code>main.scss</code> เป็นตัวเรียกใช้
+        </p>
+
+        <h2>เวลาเรียกใช้ ไม่ต้องพิมพ์ underscore หรือ .scss</h2>
+        <p>
+          ถึงไฟล์จริงจะชื่อ <code>_tokens.scss</code> แต่เวลาใช้กับ <code>@use</code>
+          เราอ้างแค่ชื่อ module แบบสั้น ๆ ได้เลย
+        </p>
+
+        <pre><code>@use "tokens";</code></pre>
+
+        <p>
+          Sass จะหาไฟล์ <code>_tokens.scss</code> ให้เองโดยอัตโนมัติ
+          นี่เป็นเหตุผลที่ชื่อไฟล์ควรสั้น ชัด และสื่อความหมายตั้งแต่แรก
+        </p>
+
+        <h2>ค่าใน module จะมากับ namespace</h2>
+        <p>
+          จุดสำคัญของ <code>@use</code> คือมันไม่เททุกอย่างเข้ามาใน global scope
+          แต่จะบังคับให้เราอ้างชื่อผ่าน namespace ของไฟล์นั้นก่อน
+          ทำให้รู้ทันทีว่าค่านี้มาจากที่ไหน
+        </p>
+
+        <pre><code>/* _tokens.scss */
+$brand-color: #6f3cc3;
+$space-md: 1rem;
+
+/* main.scss */
+@use "tokens";
+
+.button {
+  padding: tokens.$space-md;
+  background-color: tokens.$brand-color;
+}</code></pre>
+
+        <p>CSS ที่คอมไพล์แล้วจะเป็น:</p>
+        <pre><code>.button {
+  padding: 1rem;
+  background-color: #6f3cc3;
+}</code></pre>
+
+        <h2>ถ้าชื่อยาวเกินไป ใช้ alias ได้</h2>
+        <p>
+          บางครั้งชื่อไฟล์หรือชื่อโฟลเดอร์อาจยาวเกินความจำเป็น เราสามารถตั้งชื่อ alias
+          ให้ namespace สั้นลงได้ด้วย <code>as</code>
+        </p>
+
+        <pre><code>@use "tokens" as t;
+
+.card {
+  border-color: t.$brand-color;
+  padding: t.$space-md;
+}</code></pre>
+
+        <p>
+          Alias ช่วยให้เขียนสั้นลง แต่ยังรักษาความชัดเจนว่าค่านี้มาจาก module ไหน
+          เหมาะเมื่อชื่อจริงยาวหรือมีหลาย module อยู่ในไฟล์เดียว
+        </p>
+
+        <h2>Module เดียวกันจะถูกโหลดครั้งเดียว</h2>
+        <p>
+          ถ้าหลายไฟล์ในโปรเจกต์ <code>@use "tokens"</code> เหมือนกัน Sass
+          จะจัดการให้ module นั้นถูกโหลดเพียงครั้งเดียวในระบบโมดูล
+          เราจึงไม่ต้องกังวลเรื่องการนำเข้าไฟล์เดิมซ้ำแล้วเกิด CSS ซ้ำแบบเดิม ๆ
+        </p>
+
+        <ul>
+          <li>โค้ดอ่านง่ายขึ้น เพราะ dependency ชัดเจนในแต่ละไฟล์</li>
+          <li>ลดความเสี่ยงจากตัวแปรชื่อชนกันโดยไม่ตั้งใจ</li>
+          <li>ทำให้การแยกไฟล์เป็นระบบมากขึ้นเมื่อโปรเจกต์โตขึ้น</li>
+        </ul>
+
+        <h2><code>@use</code> ต้องอยู่ top level</h2>
+        <p>
+          คำสั่ง <code>@use</code> ควรอยู่ด้านบนของไฟล์ในระดับ top level
+          ไม่ควรวางไว้ข้างใน selector, media query หรือเงื่อนไขอื่น
+          เพราะ Sass ต้องรู้ dependency ของไฟล์ตั้งแต่เริ่มคอมไพล์
+        </p>
+
+        <pre><code>@use "tokens";
+
+.profile-card {
+  padding: tokens.$space-md;
+}</code></pre>
+
+        <blockquote>
+          ให้จำง่าย ๆ ว่าเปิดไฟล์ SCSS มา สิ่งแรก ๆ ที่ควรเห็นคือรายการ
+          <code>@use</code> ของไฟล์นั้น จากนั้นค่อยเป็นตัวแปร local หรือ selector ของ component
+        </blockquote>
+
+        <h2>แล้ว <code>@import</code> ล่ะ</h2>
+        <p>
+          <code>@import</code> เป็น syntax แบบ legacy ที่ deprecated แล้ว
+          และไม่แนะนำสำหรับโค้ดใหม่ ให้ใช้ <code>@use</code> แทน
+          เพราะ <code>@use</code> จัดการ namespace และ dependency ได้ชัดกว่า
+        </p>
+
+        <h2>แนวคิดที่ควรจำจากบทนี้</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>แนวคิด</th>
+              <th>สิ่งที่ควรทำ</th>
+              <th>เหตุผล</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Partial</td>
+              <td>ตั้งชื่อไฟล์ขึ้นต้นด้วย <code>_</code></td>
+              <td>สื่อว่าเป็นไฟล์ย่อยสำหรับนำไปใช้ ไม่ใช่ entry point</td>
+            </tr>
+            <tr>
+              <td>การอ้างอิง</td>
+              <td>ใช้ <code>@use "tokens";</code></td>
+              <td>ไม่ต้องพิมพ์ underscore หรือ <code>.scss</code></td>
+            </tr>
+            <tr>
+              <td>Namespace</td>
+              <td>เรียกผ่าน <code>tokens.$brand-color</code></td>
+              <td>รู้ที่มาของค่าและลดชื่อชนกัน</td>
+            </tr>
+            <tr>
+              <td>Alias</td>
+              <td>ใช้ <code>as t</code> เมื่อต้องการชื่อสั้น</td>
+              <td>เขียนสะดวกขึ้นโดยยังมีความชัดเจน</td>
+            </tr>
+            <tr>
+              <td>Placement</td>
+              <td>วาง <code>@use</code> ไว้ด้านบนของไฟล์</td>
+              <td>ประกาศ dependency ก่อนเขียน style</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          สมมติว่ามีไฟล์ <code>_colors.scss</code> ที่เก็บตัวแปร
+          <code>$profile-bg: #f5f0ff;</code> และ <code>$profile-padding: 1.5rem;</code>
+          ให้เขียนไฟล์ <code>profile.scss</code> ที่ใช้ module นี้ด้วยชื่อ namespace
+          <code>colors</code> และสร้าง class <code>.profile-card</code>
+          จากนั้นดูว่า CSS ที่คอมไพล์แล้วควรออกมาเป็นอย่างไร
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <pre><code>/* profile.scss */
+@use "colors";
+
+.profile-card {
+  padding: colors.$profile-padding;
+  background-color: colors.$profile-bg;
+  border-radius: 16px;
+}</code></pre>
+
+          <pre><code>/* CSS ที่คอมไพล์แล้ว */
+.profile-card {
+  padding: 1.5rem;
+  background-color: #f5f0ff;
+  border-radius: 16px;
+}</code></pre>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="04_nesting_and_parent_selector.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="06_organizing_files_and_modules.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้การจัดโครงสร้างไฟล์ SCSS แบบเป็นระบบด้วย entry point, partials และโมดูลที่แยกหน้าที่ชัดเจน"
+    />
+    <title>จัดระเบียบไฟล์และโมดูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>จัดระเบียบไฟล์และโมดูล</h1>
+
+        <p>
+          เมื่อเริ่มรู้จัก partial และ <code>@use</code> แล้ว คำถามถัดไปคือ “ควรวางไฟล์ไว้ตรงไหนดี”
+          บทนี้ไม่ได้พยายามบังคับสถาปัตยกรรมใหญ่โต แต่จะสอนหลักเริ่มต้นที่ใช้ได้จริงกับโปรเจกต์เล็กถึงกลาง:
+          แยกไฟล์ตามหน้าที่ ตั้งชื่อให้สม่ำเสมอ และคอมไพล์เฉพาะไฟล์ทางเข้าเท่านั้น
+        </p>
+
+        <h2>ตัวอย่างโครงสร้างที่เข้าใจง่าย</h2>
+        <p>
+          สำหรับคอร์สเริ่มต้น โครงสร้างประมาณนี้อ่านง่ายและขยายต่อได้โดยไม่งง:
+        </p>
+
+        <div class="file-tree">scss/
+├── abstracts/
+│   └── _tokens.scss
+├── base/
+│   └── _reset.scss
+├── components/
+│   └── _button.scss
+└── main.scss</div>
+
+        <ul>
+          <li><code>abstracts/_tokens.scss</code> เก็บ design tokens เช่น สี spacing หรือ radius</li>
+          <li><code>base/_reset.scss</code> เก็บกติกาพื้นฐานของทั้งหน้า เช่น box-sizing หรือ margin เริ่มต้น</li>
+          <li><code>components/_button.scss</code> เก็บ style ของ component เดียวให้ครบในที่เดียว</li>
+          <li><code>main.scss</code> เป็น entry point ที่รวม module ที่หน้าเว็บนี้ต้องใช้</li>
+        </ul>
+
+        <h2>หลักคิดคือ single responsibility</h2>
+        <p>
+          พยายามให้แต่ละไฟล์มีหน้าที่หลักเพียงอย่างเดียว
+          ถ้าไฟล์หนึ่งทั้งเก็บ token ทั้ง reset ทั้ง component หลายแบบพร้อมกัน
+          เราจะหาของยากขึ้นและแก้ไขยากขึ้นเมื่อโปรเจกต์โต
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>ไฟล์</th>
+              <th>ควรเก็บอะไร</th>
+              <th>ไม่ควรปนอะไร</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>_tokens.scss</code></td>
+              <td>สี, spacing, radius, font tokens</td>
+              <td>selector ของ component</td>
+            </tr>
+            <tr>
+              <td><code>_reset.scss</code></td>
+              <td>style พื้นฐานของ element ทั่วไป</td>
+              <td>สีเฉพาะของปุ่มหรือ card</td>
+            </tr>
+            <tr>
+              <td><code>_button.scss</code></td>
+              <td>style ของปุ่มและสถานะที่เกี่ยวข้อง</td>
+              <td>layout ของทั้งหน้า</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Dependency ต้อง explicit</h2>
+        <p>
+          ไฟล์ใดต้องใช้ token หรือ helper จากไฟล์ไหน ให้ประกาศ <code>@use</code>
+          ไว้ในไฟล์นั้นอย่างตรงไปตรงมา อย่าหวังพึ่งว่ามีไฟล์อื่นโหลดไว้ให้แล้ว
+          เพราะการพึ่งพาแบบซ่อนเร้นทำให้ย้ายไฟล์หรือ reuse ยาก
+        </p>
+
+        <pre><code>/* components/_button.scss */
+@use "../abstracts/tokens";
+
+.button {
+  padding: tokens.$space-md;
+  background-color: tokens.$brand-color;
+  border-radius: tokens.$radius-md;
+}</code></pre>
+
+        <p>
+          เมื่อเห็นไฟล์นี้เพียงไฟล์เดียว เราก็รู้ทันทีว่าปุ่มพึ่งพา token จากโฟลเดอร์
+          <code>abstracts</code> โดยไม่ต้องเดา
+        </p>
+
+        <h2>ตั้งชื่อไฟล์ให้อ่านง่ายและสม่ำเสมอ</h2>
+        <p>
+          สำหรับผู้เริ่มต้น แนวทางที่ปลอดภัยคือใช้ <strong>lowercase kebab-case</strong>
+          กับชื่อไฟล์และโฟลเดอร์ เช่น <code>main.scss</code>, <code>_button-group.scss</code>,
+          <code>abstracts</code> และ <code>components</code>
+        </p>
+
+        <ul>
+          <li>ตัวพิมพ์เล็กทั้งหมดช่วยลดความสับสนระหว่างระบบปฏิบัติการ</li>
+          <li>kebab-case อ่านง่ายเมื่อชื่อมีหลายคำ</li>
+          <li>partial ยังคงขึ้นต้นด้วย <code>_</code> เพื่อสื่อบทบาทของไฟล์</li>
+        </ul>
+
+        <h2>คอมไพล์เฉพาะ entry point</h2>
+        <p>
+          โดยทั่วไปเราไม่สั่งคอมไพล์ไฟล์อย่าง <code>_tokens.scss</code> หรือ <code>_button.scss</code>
+          แยกทีละไฟล์ แต่จะคอมไพล์ <code>main.scss</code> ซึ่งเป็นตัวรวมทุกอย่างแทน
+          เพราะเบราว์เซอร์ควรได้ CSS ปลายทางเพียงชุดที่จัดเรียงครบแล้ว
+        </p>
+
+        <pre><code>npx sass scss/main.scss css/main.css</code></pre>
+
+        <p>
+          ถ้าวันหนึ่งโปรเจกต์มีหลายหน้า ก็อาจมีหลาย entry point ได้ เช่น
+          <code>admin.scss</code> และ <code>marketing.scss</code>
+          แต่หลักคิดยังเหมือนเดิม: partial มีไว้ประกอบ entry point ไม่ใช่คอมไพล์เดี่ยว ๆ
+        </p>
+
+        <h2>ไม่จำเป็นต้องเริ่มด้วยสถาปัตยกรรม 7–1</h2>
+        <p>
+          บางบทความพูดถึงโครงสร้างใหญ่แบบ 7–1 ซึ่งมีหลายโฟลเดอร์ย่อยมาก
+          แต่มือใหม่ไม่จำเป็นต้องเริ่มตรงนั้น ถ้าโปรเจกต์ยังเล็ก
+          โครงสร้างที่มีเพียง <code>abstracts</code>, <code>base</code>, <code>components</code>
+          และ <code>main.scss</code> ก็เพียงพอและเข้าใจง่ายกว่า
+        </p>
+
+        <blockquote>
+          เป้าหมายของการจัดไฟล์ไม่ใช่ให้ดู advanced แต่คือทำให้เราและเพื่อนร่วมทีม
+          หาไฟล์เจอ แก้ไขถูกจุด และเห็น dependency ได้ชัด
+        </blockquote>
+
+        <h2>ตัวอย่างไฟล์ <code>main.scss</code></h2>
+        <p>
+          ไฟล์ทางเข้ามักมีหน้าที่หลักคือรวบรวม module ตามลำดับที่อ่านแล้วเข้าใจง่าย เช่น
+          ของพื้นฐานก่อน แล้วค่อย component
+        </p>
+
+        <pre><code>@use "abstracts/tokens";
+@use "base/reset";
+@use "components/button";</code></pre>
+
+        <p>
+          แม้บาง module จะไม่ได้ปล่อย selector ออกมามากนัก แต่การเขียนรวมไว้ที่ entry point
+          ช่วยให้เห็นภาพรวมของชุด style ที่หน้านั้นต้องใช้
+        </p>
+
+        <h2>ข้อผิดพลาดที่พบบ่อย</h2>
+        <ul>
+          <li>ตั้งชื่อไฟล์ปนกันหลายแบบ เช่น <code>Button.scss</code>, <code>button_group.scss</code>, <code>_button.scss</code></li>
+          <li>โยนทุกอย่างลง <code>main.scss</code> จนไฟล์ยาวและใช้ซ้ำลำบาก</li>
+          <li>คอมไพล์ partial โดยตรง ทั้งที่มันควรถูกนำไปใช้ผ่าน entry point</li>
+          <li>ซ่อน dependency ไว้ ทำให้เปิดไฟล์ component มาแล้วไม่รู้ว่าพึ่ง token จากไหน</li>
+        </ul>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          ให้จัดไฟล์ทั้งหกชิ้นนี้ลงในโครงสร้างโฟลเดอร์ที่เหมาะสม:
+          <code>_tokens.scss</code>, <code>_reset.scss</code>, <code>_button.scss</code>,
+          <code>main.scss</code>, <code>_card.scss</code> และ <code>_typography.scss</code>
+          จากนั้นเขียนตัวอย่าง <code>main.scss</code> ที่เรียกใช้ module ที่จำเป็นทั้งหมด
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <pre><code>scss/
+├── abstracts/
+│   └── _tokens.scss
+├── base/
+│   ├── _reset.scss
+│   └── _typography.scss
+├── components/
+│   ├── _button.scss
+│   └── _card.scss
+└── main.scss</code></pre>
+
+          <pre><code>/* main.scss */
+@use "abstracts/tokens";
+@use "base/reset";
+@use "base/typography";
+@use "components/button";
+@use "components/card";</code></pre>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="05_partials_and_use.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="07_mixins_and_include.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>
