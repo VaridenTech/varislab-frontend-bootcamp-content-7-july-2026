@@ -31,11 +31,12 @@
 
         <p>ทุกเว็บขายของต้องมีดาว โจทย์ของเราคือ: รับตัวเลขคะแนนมาหนึ่งตัว แล้ว render ดาว 5 ดวงโดยแบ่งเป็นดวงทึบ (ได้คะแนน) กับดวงโปร่ง (ไม่ได้) — Font Awesome มีดาวให้ทั้งสองแบบ ชื่อ <code>faStar</code> เหมือนกันเป๊ะแต่มาจากคนละแพ็กเกจ (<code>free-solid-svg-icons</code> กับ <code>free-regular-svg-icons</code>) เราจึงต้องใช้ <code>as</code> ตั้งชื่อเล่นแยกกันตอน import</p>
 
-        <p>สาม<em>ท่า</em>ที่อยู่ในไฟล์สั้น ๆ นี้ และเป็นสิ่งที่ต้องตรวจให้ออกทีหลัง:</p>
+        <p>สี่<em>ท่า</em>ที่อยู่ในไฟล์สั้น ๆ นี้ และเป็นสิ่งที่ต้องตรวจให้ออกทีหลัง:</p>
 
         <ul>
           <li><strong><code>Math.round(score / 2)</code></strong> — contract ของคอมโพเนนต์ (ตาม comment ในโค้ด) คือรับ <code>score</code> สเกล 0–10 การหารสองแปลงเป็นสเกล 0–5 แล้วปัดเป็นจำนวนเต็ม ได้ "จำนวนดาวทึบ" เช่น score 9 → 4.5 → ปัดเป็น 5 ดวงทึบ</li>
           <li><strong><code>[...Array(5)]</code></strong> — ท่าสร้าง array ยาว 5 ช่องเพื่อเอาไว้ <code>.map()</code> — ทำไมต้อง spread? เพราะ <code>Array(5)</code> เฉย ๆ ได้ array โปร่ง (sparse) ที่ <code>.map()</code> จะข้ามช่องว่างไปเลย spread ก่อนหนึ่งทีจะเติม <code>undefined</code> ให้ครบทุกช่อง map ได้ครบ 5 รอบ</li>
+          <li><strong><code>index &lt; stars ? solidStar : regularStar</code></strong> — ดาวดวงที่ index 0 ถึง <code>stars - 1</code> เป็นดวงทึบ ที่เหลือเป็นดวงโปร่ง เงื่อนไขเดียวบรรทัดนี้คือทั้งหมดของ "ดาวสามดวงครึ่ง" ที่ผู้ใช้เห็น</li>
           <li><strong><code>key={index}</code></strong> — ปกติเราหลีกเลี่ยง index เป็น key แต่กรณีนี้ list ยาว 5 ตายตัว ไม่มีการสลับลำดับหรือเพิ่มลด ใช้ index ได้ปลอดภัย</li>
         </ul>
 
@@ -120,6 +121,8 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่
 - StarReview.module.scss: @use "../../../styles/variables";
   .star -&gt; margin-right: 5px, color: variables.$orange01
 - StarReview.tsx: prop เดียวคือ score: number ที่เป็นคะแนนสเกล 0 ถึง 10
+  ใส่ comment ท้ายบรรทัดนั้นใน interface ว่า // Score between 0 and 10
+    (นี่คือ contract ของคอมโพเนนต์ ซึ่งชื่อ prop บอกแทนไม่ได้ จึงเป็น comment ที่ควรมี)
   import ดาวสองแบบมาตั้งชื่อเล่นแยกกัน:
     faStar as solidStar จาก "@fortawesome/free-solid-svg-icons"
     faStar as regularStar จาก "@fortawesome/free-regular-svg-icons"
@@ -127,7 +130,7 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่
   สร้าง const fiveStars = [...Array(5)] แล้ว map เป็น FontAwesomeIcon ห้าตัว
     key={index}, className={styles.star}
     icon เป็น solidStar เมื่อ index &lt; stars ไม่งั้นเป็น regularStar
-  ครอบด้วย div className="flex fs-16"
+  ครอบด้วย div className={`${styles.starReview} flex fs-16`}
 - FeatureCard.module.scss: @use "../../../styles/variables";
   .featureCard -&gt; align-items: center, background-color: variables.$grey01, gap: 12px
     nested .icon -&gt; font-size: 32px, color: variables.$primary-color
@@ -145,6 +148,7 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่
 - CountdownTimer.tsx: prop เดียวคือ targetDate: string
   useState เก็บ object ที่มีสี่ field เป็น number: days, hours, minutes, seconds
     ค่าเริ่มต้นเป็นศูนย์ทั้งสี่
+    ระบุ type ของ state เป็น type literal ในวงเล็บมุมของ useState ตรง ๆ ห้ามประกาศ interface แยก
   ใน useEffect ประกาศฟังก์ชัน calculateTimeLeft ที่:
     หา difference = เวลาเป้าหมาย ลบ เวลาปัจจุบัน (ทั้งคู่ผ่าน getTime())
     ถ้า difference &gt; 0 ให้ setTimeLeft ด้วยค่าที่คำนวณจาก difference:
@@ -189,6 +193,7 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่
             <li>dependency array ของ effect เป็น <code>[targetDate]</code> ไม่ใช่ <code>[]</code> — ถ้าเป็น array ว่าง ค่า <code>targetDate</code> ที่เปลี่ยนทีหลังจะไม่มีผล และ <code>npm run lint</code> จะเตือน <code>react-hooks/exhaustive-deps</code> ให้เห็น</li>
             <li><code>calculateTimeLeft</code> ถูกประกาศ<em>ข้างใน</em> effect ไม่ใช่ข้างนอกคอมโพเนนต์หรือระดับ component body — ถ้าย้ายออกไปข้างนอก มันจะกลายเป็น dependency ที่ต้องใส่ใน array เพิ่ม</li>
             <li><code>StarReview</code> ใช้ <code>[...Array(5)]</code> (มี spread) ไม่ใช่ <code>Array(5)</code> เปล่า ๆ หรือ <code>Array.from({ length: 5 })</code> ที่แม้จะทำงานได้เหมือนกันแต่ไม่ตรงกับต้นฉบับ</li>
+            <li><code>className</code> ของ <code>div</code> นอกสุดใน <code>StarReview</code> เป็น <code>{`${styles.starReview} flex fs-16`}</code> ตรงตามที่สั่ง — และ <code>styles.starReview</code> คือ class ที่ไม่มีนิยามอยู่จริง (อ่านกล่อง 💡 ใต้โค้ดอ้างอิงให้จบก่อนตัดสินใจทำอะไรกับมัน)</li>
             <li><code>StarReview</code> import ดาวสองตัวจากคนละแพ็กเกจพร้อม <code>as</code> — ถ้าเจอ <code>faStar</code> ตัวเดียวแล้วเปลี่ยนสีเอาเอง แปลว่ามันไม่ได้ใช้ชุด regular ตามที่สั่ง</li>
             <li><code>FeatureCard</code> ใช้ type <code>IconDefinition</code> และ <code>Button.tsx</code> ยังใช้ <code>IconProp</code> เหมือนเดิม — สองไฟล์นี้ต้อง<em>ไม่</em>ถูกทำให้เหมือนกัน</li>
             <li><code>ImageZoom</code> ไม่มี <code>useState</code>, ไม่มี <code>onMouseEnter</code> — ถ้าเจอ แปลว่ามันไปทำ hover ด้วย JavaScript ซึ่งได้ผลลัพธ์คล้ายกันบนจอแต่หนักกว่าและกระตุกกว่า</li>
@@ -243,7 +248,7 @@ const StarReview: React.FC&lt;StarReviewProps&gt; = ({ score }) =&gt; {
 export default StarReview;
 </code></pre>
 
-        <blockquote>💡 <strong>ของที่ Agent ของคุณจะไม่มี และนั่นถูกแล้ว:</strong> ต้นฉบับเขียน <code>${styles.starReview}</code> แต่ <code>StarReview.module.scss</code> มี class เดียวคือ <code>.star</code> — ไม่มี <code>.starReview</code> อยู่ที่ไหนเลย (ลอง <code>grep -n "starReview" src/shared/components/StarReview/StarReview.module.scss</code> ดู จะไม่เจออะไร) ผลตอนรันคือ <code>styles.starReview</code> เป็น <code>undefined</code> แล้ว template literal แปลงมันเป็นข้อความ — <code>&lt;div&gt;</code> นั้นจึงมี class ชื่อ <code>undefined</code> ติดอยู่จริง ๆ ใน DOM (เปิด DevTools ดูได้) TypeScript จับไม่ได้เพราะ <code>global.d.ts</code> ที่เราเขียนบทเรียน 04 ประกาศ type ของไฟล์ <code>.scss</code> ไว้เป็น <code>{ [className: string]: string }</code> — ชื่อ key อะไรก็ผ่านหมด นี่คือญาติสนิทของ <code>text-white</code> ใน Footer บทเรียน 10: <strong>ชื่อ class ที่ไม่มีนิยาม ไม่ทำอะไรเลยแบบเงียบสนิท</strong> prompt ของเราจึงสั่งแค่ <code>className="flex fs-16"</code> ของที่ Agent ส่งกลับมาจะสั้นกว่าต้นฉบับหนึ่งชิ้นตรงนี้ และเป็นฝั่งที่ถูก</blockquote>
+        <blockquote>💡 <strong>ข้อบกพร่องที่คุณเพิ่งสั่งให้ Agent ทำซ้ำ:</strong> ต้นฉบับเขียน <code>${styles.starReview}</code> แต่ <code>StarReview.module.scss</code> มี class เดียวคือ <code>.star</code> — ไม่มี <code>.starReview</code> อยู่ที่ไหนเลย (ลอง <code>grep -n "starReview" src/shared/components/StarReview/StarReview.module.scss</code> ดู จะไม่เจออะไร) ผลตอนรันคือ <code>styles.starReview</code> เป็น <code>undefined</code> แล้ว template literal แปลงมันเป็นข้อความ — <code>&lt;div&gt;</code> นั้นจึงมี class ชื่อ <code>undefined</code> ติดอยู่จริง ๆ ใน DOM (เปิด DevTools ดูได้) TypeScript จับไม่ได้เพราะ <code>global.d.ts</code> ที่เราเขียนบทเรียน 04 ประกาศ type ของไฟล์ <code>.scss</code> ไว้เป็น <code>{ [className: string]: string }</code> — ชื่อ key อะไรก็ผ่านหมด นี่คือญาติสนิทของ <code>text-white</code> ใน Footer บทเรียน 10: <strong>ชื่อ class ที่ไม่มีนิยาม ไม่ทำอะไรเลยแบบเงียบสนิท</strong> prompt ของเราสั่งบรรทัดนี้ตามต้นฉบับตรง ๆ ด้วยเหตุผลเดียวกับ <code>#007bff</code> ในบทที่แล้ว: โค้ดอ้างอิงของคอร์สนี้คือแอปจริง ไม่ใช่แอปในอุดมคติ และการตรวจงานที่ใช้ได้จริงต้องฝึกกับของจริง หน้าที่ของคุณคือมองมันออกแล้วเขียนไว้ในรีวิว ส่วนจะลบทิ้งเมื่อไหร่ก็เป็นการตัดสินใจของคุณ ไม่ใช่ของที่หายไปเพราะ Agent เผลอ</blockquote>
 
         <p><code>src/shared/components/FeatureCard/FeatureCard.module.scss</code>:</p>
 
@@ -385,6 +390,8 @@ export default CountdownTimer;
   }
 }
 </code></pre>
+
+        <p>เหมือนกรณี comment ใน <code>Pagination.tsx</code> ของบทที่แล้ว: ไฟล์ต้นฉบับมี comment สามบรรทัด ซึ่ง prompt ของเราไม่ได้สั่ง และทั้งสามบรรทัดบอกสิ่งที่โค้ดบอกอยู่แล้ว (<code>overflow: hidden</code> ก็คือ "ไม่ให้รูปล้นกรอบ" อยู่ในตัวมันเอง) — ตรงข้ามกับ comment <code>// Score between 0 and 10</code> ใน <code>StarReview</code> ที่บอก contract ซึ่งอ่านจากโค้ดไม่ได้ ถ้าไฟล์ที่ Agent ส่งกลับมาไม่มีสามบรรทัดนี้ นั่นคือผลที่ตรงกับไฟล์ rules มากกว่าต้นฉบับ ไม่ต้องเติมเข้าไปให้เหมือน</p>
 
         <p><code>src/shared/components/ImageZoom/ImageZoom.tsx</code>:</p>
 

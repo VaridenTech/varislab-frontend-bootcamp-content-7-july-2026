@@ -153,7 +153,7 @@ git add -A &amp;&amp; git commit -m "chore: install react-spinners and enable cj
             <li><code>mkdir -p src/shared/components/Button</code></li>
             <li>พิมพ์ <code>Button.module.scss</code> ทั้งไฟล์</li>
             <li>พิมพ์ <code>Button.tsx</code> ทั้งไฟล์ — ระหว่างพิมพ์ให้หยุดถามตัวเองที่บรรทัด <code>type={type}</code> ว่ามันมีไว้ทำไม</li>
-            <li><code>npm run lint</code> และ <code>npm run typecheck</code> ให้ผ่านทั้งคู่ แล้ว <code>git commit</code> — ไฟล์นี้ต้องอยู่ใน repo จริงก่อน ไม่งั้น prompt ในหัวข้อถัดไปจะ <code>@</code>-mention ไฟล์ที่ยังไม่มี</li>
+            <li><code>npm run lint</code> และ <code>npm run typecheck</code> ให้ผ่านทั้งคู่ แล้ว <code>git commit</code> — ไฟล์ต้องมีอยู่จริงในโปรเจกต์ก่อน prompt ถึงจะ <code>@</code>-mention ได้ และต้อง commit ให้ working tree สะอาด ไม่งั้น <code>git diff</code> ในขั้นตรวจงานจะปนโค้ดที่คุณพิมพ์เองเข้ากับโค้ดของ Agent</li>
           </ol>
           <p><code>src/shared/components/Button/Button.module.scss</code>:</p>
           <pre><code class="language-scss">@use "../../../styles/variables";
@@ -178,7 +178,8 @@ git add -A &amp;&amp; git commit -m "chore: install react-spinners and enable cj
   .icon {
     font-size: 18px;
   }
-}</code></pre>
+}
+</code></pre>
           <p><code>src/shared/components/Button/Button.tsx</code>:</p>
           <pre><code class="language-typescript">import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -232,13 +233,15 @@ const Button: React.FC&lt;ButtonProps&gt; = ({
   );
 };
 
-export default Button;</code></pre>
+export default Button;
+</code></pre>
           <p><strong>เหตุผล:</strong> เป็นแม่แบบที่ AI จะลอกไปใช้กับทุก component หลังจากนี้ — อีกแปดตัวในสามบทนี้จะมีรูปทรงเดียวกับไฟล์นี้ และตั้งแต่บทเรียน 18 เป็นต้นไป component ของแต่ละฟีเจอร์ก็จะลอกตามอีกชั้น ถ้าคุณไม่เคยพิมพ์รูปทรงนี้เองสักครั้ง คุณจะไม่มีอะไรในหัวไว้เทียบตอนที่ของที่ Agent ส่งกลับมา "หน้าตาคล้าย ๆ" แต่ผิดจุดสำคัญไปหนึ่งจุด</p>
         </blockquote>
 
         <p>ไล่ดูการตัดสินใจสำคัญทีละจุด — ทุกข้อนี้คือสิ่งที่ Agent จะลอกไปใช้ต่อ:</p>
 
         <ul>
+          <li><strong>ไฟล์ module ยัง <code>@use</code> ตัวแปรกลางได้ตามปกติ</strong> — สังเกตว่า <code>Button.module.scss</code> ดึงตัวแปรจากบทเรียน 04 มาใช้ได้เหมือนไฟล์ SCSS ธรรมดา เพราะสิ่งที่ถูก scope คือ<em>ชื่อ class</em> ไม่ใช่ตัวแปร ส่วน <code>&amp;.primary</code> คือ selector ที่จับตอน element มีทั้งสอง class พร้อมกัน (เราประกอบมันใน JSX ด้วย <code>${styles.button} ${styles[variant]}</code>) และ <code>&amp;:hover:not(:disabled)</code> กันไม่ให้ปุ่มที่ถูก disable เปลี่ยนสีตอน hover ให้ผู้ใช้เข้าใจผิดว่ากดได้</li>
           <li><strong><code>ButtonProps</code> เลือก props เอง ไม่รับหมด</strong> — เราประกาศ interface ที่คัดเฉพาะ props ที่อยากเปิดให้ใช้: <code>onClick</code>, <code>type</code>, <code>disabled</code>, <code>className</code> บวกของที่เราเพิ่มเอง (<code>icon</code>, <code>variant</code>, <code>isLoading</code>) วิธีนี้ทำให้ API ของปุ่มแคบและควบคุมได้ — ใครจะใช้ปุ่มเราต้องใช้ตามกติกา สังเกตว่า <code>type</code> เรา default เป็น <code>"button"</code> เพราะค่า default จริงของ HTML คือ <code>"submit"</code> ซึ่งเป็นต้นเหตุ bug คลาสสิก "กดปุ่มแล้วฟอร์ม submit เอง" (เดี๋ยวส่วน Input จะเห็นแนวทางตรงข้าม: รับ props native ทั้งหมด — สองแนวทางนี้ใช้คู่กันได้ตามสถานการณ์)</li>
           <li><strong><code>type={type}</code> บนแท็ก <code>&lt;button&gt;</code></strong> — สองบรรทัดนี้ (<code>type = "button"</code> ตอน destructure และ <code>type={type}</code> ตอน render) ต้องมาคู่กันเสมอ ขาดตัวแรกปุ่มทุกตัวที่อยู่ในฟอร์มจะ submit ฟอร์มเอง ขาดตัวหลัง <code>&lt;Button type="submit"&gt;</code> ที่ฟอร์มบทเรียน 26 ส่งมาจะไม่มีผลอะไรเลย กดแล้วฟอร์มไม่ส่ง</li>
           <li><strong><code>styles[variant]</code></strong> — lookup แบบ dynamic: ถ้า <code>variant</code> คือ <code>"primary"</code> ก็หยิบ <code>styles.primary</code> ตอนนี้เรามี variant เดียว แต่โครงนี้พร้อมรองรับ <code>"secondary"</code> ในอนาคตโดยแก้แค่ type กับ SCSS</li>
@@ -295,7 +298,7 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่
   ห้ามมี state ภายในไฟล์นี้ ค่า checked และ onChange มาจากคนเรียกเท่านั้น
   โครงที่ return:
     div className={`flex align-item-start ${className}`}
-      input type="radio" className="mr-10 mt-3" พร้อม id, name, checked, onChange
+      input className="mr-10 mt-3" type="radio" พร้อม id, name, checked, onChange
       label htmlFor={id} แสดงค่า label
 
 ขอบเขต:
@@ -321,7 +324,8 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่
             <li>มีบรรทัด <code>Input.displayName = "Input";</code> อยู่ — ไม่มีเครื่องมือตัวไหนในโปรเจกต์นี้บังคับข้อนี้ (ESLint ที่ตั้งไว้บทเรียน 03 ไม่มีกฎ <code>react/display-name</code>) ถ้าขาดไปก็ไม่มีใครบ่น แค่ React DevTools จะแสดงชื่อคอมโพเนนต์เป็น <code>ForwardRef</code> — เป็นข้อที่ต้องดูด้วยตาล้วน ๆ</li>
             <li><code>RadioInput</code> ไม่มี <code>useState</code>, ไม่มี <code>defaultChecked</code> และไม่มี <code>onChange</code> ที่ไปแก้ค่าอะไรภายในตัวเอง — controlled แปลว่า state อยู่ที่คนเรียกทั้งหมด</li>
             <li>type ของ prop <code>label</code> ใน <code>RadioInput</code> เป็น <code>React.ReactNode</code> ไม่ใช่ <code>string</code> — บทเรียน 27 ต้องยัด JSX ทั้งก้อนเข้าไปตรงนี้</li>
-            <li><code>id</code> ที่ส่งให้ <code>&lt;input&gt;</code> กับ <code>htmlFor</code> ของ <code>&lt;label&gt;</code> เป็นค่าเดียวกัน</li>
+            <li><code>id</code> ที่ส่งให้ <code>&lt;input&gt;</code> กับ <code>htmlFor</code> ของ <code>&lt;label&gt;</code> ใน <code>RadioInput</code> เป็นค่าเดียวกัน</li>
+            <li><strong>ข้อยกเว้นที่ให้ผ่านได้</strong>: ถ้า <code>Input.tsx</code> ที่ได้มามี <code>&lt;label htmlFor={props.id}&gt;</code> ขึ้นมาเอง <em>อย่าลบทิ้ง</em> — โค้ดอ้างอิงข้างล่างไม่มีบรรทัดนั้น (ต้นฉบับผูก label กับช่องกรอกไว้ไม่ครบ) แต่การผูกมันเข้าด้วยกันคือสิ่งเดียวกับที่ <code>RadioInput</code> ทำถูกอยู่แล้ว และเป็นข้อได้เปรียบจริงสำหรับผู้ใช้: กดที่ข้อความแล้วเคอร์เซอร์เข้าช่อง กรณีนี้คือของที่ Agent ทำ<em>ดีกว่า</em>ต้นฉบับ ซึ่งเกิดขึ้นได้และควรเก็บไว้ — สิ่งที่ต้องระวังคือของที่มันทำ<em>ต่างจาก</em>คำสั่งโดยไม่มีเหตุผล ไม่ใช่ของที่มันทำดีกว่า</li>
             <li><code>Input.module.scss</code> ขึ้นต้นด้วย <code>@use "../../../styles/variables";</code> และใช้ตัวแปรทุกจุดที่เป็นสี — ไม่มี hex โผล่มาสักค่า</li>
             <li>ค้นทุกชื่อ class ที่โผล่ใน <code>className</code> ของสองไฟล์ใหม่ว่ามีอยู่จริงใน <code>src/styles/</code> ครบไหม (<code>grep -rn "ชื่อ-class" src/styles/</code>) — โดยเฉพาะ <code>mt-3</code> ที่หน้าตาเหมือนพิมพ์ผิดแต่มีจริง (ตัวสร้าง spacing ในบทเรียน 04 มีค่า 3 อยู่ในลิสต์)</li>
             <li>ไม่มี comment แบบ <code>{/* Label */}</code> หรือ <code>// error message</code> คั่นในไฟล์ — ผิดกติกาข้อสุดท้ายในไฟล์ rules</li>

@@ -170,6 +170,7 @@ utility class ที่งานนี้ใช้มีอยู่จริง
             <li>ชื่อ prop ของ <code>PaginationProps</code> ตรงตัว: <code>currentPage</code>, <code>totalPages</code>, <code>onPageChange</code> — ไม่ใช่ <code>page</code>, <code>pageCount</code> หรือ <code>onChange</code></li>
             <li><code>containerClassName</code> ผสม <code>styles.pagination</code> กับ utility <code>flex gap-10</code> ไว้ใน template literal เดียว</li>
             <li>ทุก selector ใน <code>Pagination.module.scss</code> มี <code>.pagination</code> นำหน้า — ไม่มี <code>li</code> หรือ <code>a</code> ลอย ๆ ที่จะรั่วไปโดน element อื่นทั้งแอป</li>
+            <li>ค่าสีใน <code>Pagination.module.scss</code> ยังเป็น <code>#ddd</code> / <code>#007bff</code> / <code>#ccc</code> ตามที่ prompt สั่ง ไม่ถูกแทนด้วย <code>variables.$primary-color</code> — บทนี้เป็นข้อยกเว้นที่ตั้งใจ (เหตุผลอยู่ในกล่อง 💡 ใต้ไฟล์นี้) ต่างจากบทเรียน 12 และ 14 ที่ข้อ "ไม่มี hex โผล่มาสักค่า" ยังใช้ตามปกติ</li>
             <li>ไม่มี comment เกินสองจุดที่ระบุไว้ในไฟล์ <code>Pagination.tsx</code></li>
             <li><code>npm run typecheck</code> ผ่าน — ถ้าฟ้อง <code>Could not find a declaration file for module 'react-modal'</code> แปลว่าลืมติดตั้ง <code>@types/react-modal</code></li>
           </ul>
