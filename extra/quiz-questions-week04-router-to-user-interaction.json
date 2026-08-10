@@ -126,7 +126,7 @@
     },
     {
       "prompt": "ชุดการตั้งค่าและการตั้งชื่อใดทำให้ JSX React test ถูกพบและรันใน DOM จำลองตามบทเรียน",
-      "body": "<pre><code class=\"language-typescript\">import { defineConfig } from \"vitest/config\";\n\nexport default defineConfig({\n  test: { environment: \"happy-dom\" },\n});\n\n// src/__tests__/pizza.test.tsx</code></pre>",
+      "body": "<pre><code class=\"language-typescript\">import { defineConfig } from \"vitest/config\";\n\nexport default defineConfig({\n  test: { environment: \"happy-dom\" },\n});</code></pre>",
       "choices": [
         "import `defineConfig` จาก `vite`, ตั้งชื่อ JSX test เป็น `.test.ts`",
         "ใช้ชื่อไฟล์อะไรก็ได้ เช่น `sanity.ts` เพราะ Vitest หาได้ทุกไฟล์",
