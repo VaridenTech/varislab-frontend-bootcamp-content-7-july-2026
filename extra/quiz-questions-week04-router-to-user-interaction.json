@@ -56,7 +56,6 @@
     },
     {
       "prompt": "ทำไม guard จึงเขียน `if (isLoading || !data)` แทนการเช็คแค่ `isLoading`",
-      "body": "<pre><code class=\"language-typescript\">if (isLoading || !data) {\n  return &lt;h2&gt;LOADING …&lt;/h2&gt;;\n}\n\nreturn data.map(/* ... */);</code></pre>",
       "choices": [
         "เพราะ `!data` มีผลกับ TypeScript เท่านั้น และไม่มีผลตอนรันจริง",
         "เพราะ `isLoading` เป็น false เสมอเมื่อ `data` ไม่มีค่า",
@@ -67,7 +66,6 @@
     },
     {
       "prompt": "Modal ในบทเรียน render เข้า modal area โดยไม่ทิ้ง DOM node ไว้ได้อย่างไร",
-      "body": "<pre><code class=\"language-typescript\">const elRef = useRef&lt;HTMLDivElement | null&gt;(null);\n// สร้าง div เดิมไว้ใน ref\nmodalRoot.appendChild(el);\nreturn () =&gt; modalRoot.removeChild(el);\n\nreturn createPortal(&lt;div&gt;{children}&lt;/div&gt;, elRef.current);</code></pre>",
       "choices": [
         "Portal แทนที่ `#root` ด้วย `#modal` ทั้งหมด",
         "มันเก็บ div เดียวไว้ใน ref, append เข้า `#modal`, render children ด้วย `createPortal` แล้ว remove div นั้นเมื่อ unmount",
@@ -88,7 +86,6 @@
     },
     {
       "prompt": "หลัง child เกิด error `ErrorBoundary` ที่ให้ไว้จะแสดงผลอย่างไร",
-      "body": "<pre><code class=\"language-typescript\">static getDerivedStateFromError() {\n  return { hasError: true };\n}\n\nrender() {\n  if (this.state.hasError) return &lt;h2&gt;Something went wrong&lt;/h2&gt;;\n  return this.props.children;\n}</code></pre>",
       "choices": [
         "`componentDidCatch` เพียงอย่างเดียวเลือก fallback UI ให้",
         "boundary เปลี่ยน state เป็น error แล้ว `render()` แสดง fallback; ถ้าไม่มี error ก็ render children ตามปกติ",
@@ -99,7 +96,6 @@
     },
     {
       "prompt": "เหตุใด Contact form นี้จึงเป็น uncontrolled form และแสดงสถานะสำเร็จอย่างไร",
-      "body": "<pre><code class=\"language-tsx\">const mutation = useMutation({ /* ... */ });\n\nif (mutation.isSuccess) return &lt;h2&gt;Submitted&lt;/h2&gt;;\n\n&lt;form onSubmit={handleSubmit}&gt;...&lt;/form&gt;</code></pre>",
       "choices": [
         "React Query เป็นเจ้าของค่าใน input และ `isSuccess` ตรวจทุก field ก่อน submit",
         "ต้องใช้ `useState` เสมอเพื่อสร้าง `FormData`",
@@ -110,7 +106,6 @@
     },
     {
       "prompt": "ทำไม handler จึงควรสร้าง `new FormData(e.currentTarget)` ทันที แล้วส่งข้อมูลให้ `mutate` แทนการส่ง event เข้า asynchronous mutation",
-      "body": "<pre><code class=\"language-typescript\">function handleSubmit(e: React.FormEvent&lt;HTMLFormElement&gt;) {\n  e.preventDefault();\n  const formData = new FormData(e.currentTarget);\n  mutation.mutate(formData);\n}</code></pre>",
       "choices": [
         "เพราะ `currentTarget` คือ form ที่ type ไว้ ส่วน `target` อาจเป็น child และ React จะ clear `currentTarget` หลัง handler ก่อน mutation async ใช้งาน",
         "เพราะ `target` เป็น form เสมอและ React เก็บ `currentTarget` ไว้ตลอด",
@@ -172,15 +167,15 @@
       "explanation": "TanStack Router ระบุ `component?: RouteComponent` จึงไม่ปลอดภัยจะ render property นั้นตรง ๆ การ export `ContactRoute` ทำให้ test มี component ที่ type ถูกต้องและเจตนาชัด."
     },
     {
-      "prompt": "หลัง submit contact test ตรวจอะไร และเหตุใดจึงเทียบ `new URL(requests[0].url).pathname`",
-      "body": "<pre><code class=\"language-typescript\">const h3 = await screen.findByRole(\"heading\", { level: 3 });\nexpect(h3.innerText).toContain(\"Submitted\");\nexpect(requests.length).toBe(1);\nexpect(new URL(requests[0].url).pathname).toBe(\"/api/contact\");</code></pre>",
+      "prompt": "หลัง submit contact test นี้ตรวจอะไรบ้าง และเหตุใดจึงแยกการตรวจ `pathname` ออกจาก `toHaveBeenCalledWith`",
+      "body": "<pre><code class=\"language-typescript\">const h3 = await screen.findByRole(\"heading\", { level: 3 });\n\nexpect(h3.innerText).toContain(\"Submitted\");\n\nconst requests = fetchMocker.requests();\nexpect(requests.length).toBe(1);\n// requests() เก็บ URL ที่ resolve เป็น absolute แล้ว (http://localhost:3000/api/contact)\n// เทียบเฉพาะ pathname จึงตรงประเด็นกว่าและไม่ผูกกับ base URL ของ happy-dom\nexpect(new URL(requests[0].url).pathname).toBe(\"/api/contact\");\nexpect(fetchMocker).toHaveBeenCalledWith(\"/api/contact\", {\n  body: JSON.stringify(testData),\n  headers: {\n    \"Content-Type\": \"application/json\",\n  },\n  method: \"POST\",\n});</code></pre>",
       "choices": [
-        "ตรวจหน้า success, จำนวน request หนึ่งครั้ง และ endpoint ที่ถูกต้อง; ใช้ pathname เพราะ `requests()` เก็บ URL absolute ที่ happy-dom resolve แล้ว",
-        "ตรวจเพียงว่า fetch ถูกเรียก จึงไม่ต้องรอ heading ที่แสดงผล",
-        "เทียบ pathname เพราะ `requests()[0].url` ยังคงเป็น string relative `/api/contact`"
+        "ตรวจ heading ว่า Submitted, request หนึ่งครั้ง, endpoint จาก pathname ที่ resolve แล้ว และ fetch arguments เดิมว่ามี body, Content-Type และ method `POST` ถูกต้อง; pathname ไม่ผูกกับ host ของ happy-dom",
+        "ตรวจเพียงว่า fetch ถูกเรียก จึงไม่ต้องรอ heading หรือเช็ค method, headers และ body",
+        "ใช้ pathname เพราะ `requests()[0].url` ยังเป็น string relative `/api/contact` จึงไม่ต้องตรวจ fetch arguments เดิม"
       ],
       "correctChoice": 1,
-      "explanation": "test รอผลลัพธ์ที่ผู้ใช้เห็นว่า Submitted แล้วตรวจ request หนึ่งครั้งและ POST arguments; `requests()` ให้ absolute URL จึงเทียบ pathname เพื่อไม่ผูกกับ host ของ happy-dom."
+      "explanation": "test รอผลลัพธ์ที่ผู้ใช้เห็นว่า Submitted แล้วตรวจ request หนึ่งครั้งและ endpoint จาก pathname เพราะ `requests()` เก็บ absolute URL ที่ happy-dom resolve แล้ว ส่วน `toHaveBeenCalledWith` ยังตรวจ arguments เดิมของ `fetch()` ได้ครบ ทั้ง serialized form data, Content-Type และ method `POST`."
     }
   ]
 }
