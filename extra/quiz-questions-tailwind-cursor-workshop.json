@@ -13,11 +13,11 @@
     {
       "prompt": "ถ้าต้องการให้ Cursor Agent ใช้กติกา TypeScript และ Tailwind เดิมโดยอัตโนมัติทุก prompt ควรทำอย่างไร",
       "choices": [
-        "พิมพ์กติกาเดิมซ้ำในทุกข้อความและเก็บไว้ในไฟล์ภาพ",
-        "ติดตั้ง chart library เพื่อให้ Agent จำ stack ของโปรเจกต์ได้",
-        "สร้างไฟล์กติกาใน .cursor/rules/ เช่น project.mdc และกำหนดให้ใช้เสมอ"
+        "สร้าง `.cursor/rules/project.mdc` แล้วตั้ง `alwaysApply: false` เพื่อเปิดใช้กติกาเฉพาะบางงาน",
+        "สร้าง `.cursor/rules/project.mdc` แล้วตั้ง `alwaysApply: true` เพื่อใช้กติกากับทุกงาน",
+        "สร้าง `.cursor/project.mdc` แล้วตั้ง `alwaysApply: true` เพื่อให้ Agent อ่านกติกาทั้งโปรเจกต์"
       ],
-      "correctChoice": 3,
+      "correctChoice": 2,
       "explanation": "บทติดตั้งแนะนำให้เก็บกติกาประจำโปรเจกต์ไว้ใน .cursor/rules/ โดยไฟล์ .mdc ที่มี alwaysApply: true จะถูกอ่านอัตโนมัติเมื่อ Agent ทำงาน"
     },
     {
@@ -93,9 +93,9 @@
     {
       "prompt": "ข้อใดตรงกับขอบเขตการสร้างกราฟในหน้า Dashboard ตามบทเรียน 10",
       "choices": [
-        "ต้องติดตั้ง Recharts และทำกราฟที่เชื่อม API จริงทันที",
-        "ทำภาพกราฟแบบนิ่งด้วย div หรือ SVG ให้หน้าตาตรงดีไซน์ และเก็บ mock data แยกใน src/data/",
-        "ตัดแถวกราฟออกทั้งหมด เพราะ Tailwind ไม่สามารถจัด layout กราฟได้"
+        "ติดตั้ง Recharts เพื่อสร้างกราฟจริง และแยก mock data ไว้ใน `src/data/`",
+        "ใช้ div หรือ SVG แบบนิ่งให้ตรงดีไซน์ และแยก mock data ไว้ใน `src/data/`",
+        "ใช้ div หรือ SVG แบบนิ่งให้ตรงดีไซน์ และต่อ API จริงเพื่อส่งข้อมูลให้กราฟ"
       ],
       "correctChoice": 2,
       "explanation": "บท Dashboard ระบุว่ากราฟจริงอยู่นอกขอบเขต จึงใช้ div หรือ SVG แบบนิ่ง และข้อมูลของหน้าทั้งหมดควรเป็น mock data ที่แยกไว้ใน src/data/"
@@ -153,8 +153,8 @@
     {
       "prompt": "เมื่อเริ่มทำโจทย์หน้า Profile ในบทเรียน 16 ขั้นตอนใดสอดคล้องกับโจทย์มากที่สุด",
       "choices": [
-        "เริ่มติดตั้ง chart library และสร้างหน้า Billing ก่อน เพราะ Profile ไม่ได้อยู่ใน workshop",
-        "เริ่มจากเขียน CSS แบบสุ่ม แล้วค่อยดูว่ามี hero หรือคอลัมน์อะไรในภาพ",
+        "decompose เป็น hero การ์ดโปรไฟล์ สามคอลัมน์ และ grid โปรเจกต์ แล้วกำหนด `/profile` อยู่นอก DashboardLayout ก่อน generate",
+        "decompose เป็น hero การ์ดโปรไฟล์ สามคอลัมน์ และ grid โปรเจกต์ แล้วกำหนด `/profile` ใน DashboardLayout หลัง generate",
         "decompose เป็น hero การ์ดโปรไฟล์ สามคอลัมน์ และ grid โปรเจกต์ แล้วกำหนดให้ `/profile` อยู่ใน DashboardLayout ก่อน generate"
       ],
       "correctChoice": 3,
