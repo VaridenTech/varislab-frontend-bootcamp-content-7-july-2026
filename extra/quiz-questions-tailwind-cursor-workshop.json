@@ -1,0 +1,164 @@
+{
+  "questions": [
+    {
+      "prompt": "ลำดับลูปการทำงานหลักของ workshop นี้คือข้อใด",
+      "choices": [
+        "generate → prompt → refactor → review",
+        "prompt → generate → review → refactor",
+        "review → refactor → prompt → generate"
+      ],
+      "correctChoice": 2,
+      "explanation": "บทนำกำหนดลูปไว้ว่าเริ่มจากเขียน prompt ให้ชัดเจน จากนั้นให้ Agent generate ตรวจด้วยสามเลนส์ แล้วจึง refactor เป็น component ที่ใช้ซ้ำได้"
+    },
+    {
+      "prompt": "ถ้าต้องการให้ Cursor Agent ใช้กติกา TypeScript และ Tailwind เดิมโดยอัตโนมัติทุก prompt ควรทำอย่างไร",
+      "choices": [
+        "พิมพ์กติกาเดิมซ้ำในทุกข้อความและเก็บไว้ในไฟล์ภาพ",
+        "ติดตั้ง chart library เพื่อให้ Agent จำ stack ของโปรเจกต์ได้",
+        "สร้างไฟล์กติกาใน .cursor/rules/ เช่น project.mdc และกำหนดให้ใช้เสมอ"
+      ],
+      "correctChoice": 3,
+      "explanation": "บทติดตั้งแนะนำให้เก็บกติกาประจำโปรเจกต์ไว้ใน .cursor/rules/ โดยไฟล์ .mdc ที่มี alwaysApply: true จะถูกอ่านอัตโนมัติเมื่อ Agent ทำงาน"
+    },
+    {
+      "prompt": "ข้อใดอธิบายแนวคิด utility-first ของ Tailwind ได้ถูกต้องที่สุด",
+      "choices": [
+        "หนึ่ง utility class สื่อการประกาศ CSS เล็ก ๆ หนึ่งอย่าง และนำมาประกอบกันใน markup",
+        "ทุก component ต้องมีไฟล์ SCSS แยกหนึ่งไฟล์ แล้วเรียกใช้ class ที่ตั้งชื่อเอง",
+        "เขียน style ทั้งหมดใน attribute style เพื่อให้เป็น inline style แบบง่ายที่สุด"
+      ],
+      "correctChoice": 1,
+      "explanation": "บทเรียนอธิบายว่า utility-first ใช้ class เล็ก ๆ เช่น rounded-xl หรือ px-4 แทนการสร้างไฟล์ CSS ต่อ component และประกอบดีไซน์ใน markup โดยตรง"
+    },
+    {
+      "prompt": "จาก class `grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4` บนหน้าจอที่กว้างถึง md แต่ยังไม่ถึง xl จะได้กี่คอลัมน์",
+      "choices": [
+        "4 คอลัมน์ เพราะมี prefix md และ xl อยู่ใน class",
+        "2 คอลัมน์ เพราะ md: มีผลตั้งแต่ breakpoint md ขึ้นไป ส่วน xl: ยังไม่ทำงาน",
+        "1 คอลัมน์เสมอ เพราะ class ที่ไม่มี prefix เท่านั้นที่ใช้ได้"
+      ],
+      "correctChoice": 2,
+      "explanation": "Tailwind ใช้แนวคิด mobile-first: grid-cols-1 เป็นค่าเริ่มต้น, md:grid-cols-2 เริ่มทำงานเมื่อถึง md และ xl:grid-cols-4 จะเริ่มเมื่อถึง xl"
+    },
+    {
+      "prompt": "ใน Tailwind v4 ควรประกาศ design token สีของ Purity ไว้ที่ใดเพื่อสร้าง utility เช่น `bg-primary` อัตโนมัติ",
+      "choices": [
+        "ในไฟล์ `.cursor/rules/project.mdc` เท่านั้น",
+        "ด้วยไฟล์ `tailwind.config.js` แบบเดียวกับ Tailwind v3",
+        "ใน `src/index.css` ภายในบล็อก `@theme`"
+      ],
+      "correctChoice": 3,
+      "explanation": "บทเรียน 05 ใช้ @theme ใน src/index.css เพื่อประกาศ --color-primary และ token อื่น ๆ จากนั้น Tailwind v4 จะสร้าง utility อย่าง bg-primary, text-ink และ ring-primary ให้"
+    },
+    {
+      "prompt": "เมื่ออ่าน screenshot หน้า Dashboard เพื่อเตรียม refactor ภายหลัง การ์ดสถิติ 4 ใบควรถูกมองว่าแตกต่างกันหลัก ๆ ที่อะไร",
+      "choices": [
+        "ข้อมูล เช่น ป้าย ตัวเลข เปอร์เซ็นต์ และไอคอน โดยโครงสร้างการ์ดเหมือนกัน",
+        "ต้องสร้างเป็น component คนละชนิด เพราะการ์ดทุกใบห้ามมี markup ซ้ำกัน",
+        "เฉพาะสีพื้นหลังเท่านั้น ส่วนข้อมูลของการ์ดไม่เกี่ยวกับการวิเคราะห์โครงสร้าง"
+      ],
+      "correctChoice": 1,
+      "explanation": "บทอ่าน UI ระบุว่า Stat card ทั้ง 4 ใบมีโครงเหมือนกันและต่างกันที่ข้อมูล จึงควรจด pattern นี้ไว้เพื่อแยกเป็น StatCard ตอน refactor"
+    },
+    {
+      "prompt": "กายวิภาคของ UI prompt ที่ดีตามบทเรียน 07 ประกอบด้วยสี่ส่วนใด",
+      "choices": [
+        "สี, ฟอนต์, ไอคอน และ animation",
+        "บริบท, โครงสร้าง, ข้อกำหนดทางเทคนิค และขอบเขต",
+        "ภาพ, API, database และ deployment"
+      ],
+      "correctChoice": 2,
+      "explanation": "สี่ส่วนคือบริบทของโปรเจกต์ โครงสร้างพร้อมเนื้อหาจริง ข้อกำหนดวิธีทำ และขอบเขตสิ่งที่ยังไม่ต้องทำ ซึ่งช่วยลดสิ่งที่ Agent ต้องเดา"
+    },
+    {
+      "prompt": "ใน Figma ถ้าต้องการวัดระยะห่างระหว่างการ์ดสองใบเป็น px ควรใช้วิธีใด",
+      "choices": [
+        "ดูเฉพาะชื่อ layer เพราะชื่อจะบอกค่า gap ที่ใช้",
+        "export การ์ดเป็น PNG แล้วเดาระยะจากภาพที่ได้",
+        "เลือกชิ้นหนึ่ง กด Option (หรือ Alt) ค้าง แล้วชี้ไปยังอีกชิ้น"
+      ],
+      "correctChoice": 3,
+      "explanation": "บท Figma สอนให้เลือก layer หนึ่ง กด Option/Alt ค้าง และชี้อีก layer เพื่อให้ Figma แสดงระยะห่างเป็น px ซึ่งนำไปใช้ตั้ง spacing ใน prompt ได้"
+    },
+    {
+      "prompt": "ใน app shell ของบทเรียน 09 `<Outlet />` ใน DashboardLayout มีหน้าที่อะไร",
+      "choices": [
+        "เป็นตำแหน่งที่ child route เช่นหน้า Dashboard จะแสดงเนื้อหาในพื้นที่หลัก",
+        "เป็นปุ่มที่เปิดและปิด sidebar บนมือถือโดยไม่ต้องมี router",
+        "เป็น component สำหรับสร้างกราฟ Active Users ให้แบบอัตโนมัติ"
+      ],
+      "correctChoice": 1,
+      "explanation": "ตัวอย่าง router กำหนด DashboardLayout เป็น layout route และวางหน้า Dashboard เป็น child route ดังนั้น Outlet คือจุด render เนื้อหาของ child route ใน shell"
+    },
+    {
+      "prompt": "ข้อใดตรงกับขอบเขตการสร้างกราฟในหน้า Dashboard ตามบทเรียน 10",
+      "choices": [
+        "ต้องติดตั้ง Recharts และทำกราฟที่เชื่อม API จริงทันที",
+        "ทำภาพกราฟแบบนิ่งด้วย div หรือ SVG ให้หน้าตาตรงดีไซน์ และเก็บ mock data แยกใน src/data/",
+        "ตัดแถวกราฟออกทั้งหมด เพราะ Tailwind ไม่สามารถจัด layout กราฟได้"
+      ],
+      "correctChoice": 2,
+      "explanation": "บท Dashboard ระบุว่ากราฟจริงอยู่นอกขอบเขต จึงใช้ div หรือ SVG แบบนิ่ง และข้อมูลของหน้าทั้งหมดควรเป็น mock data ที่แยกไว้ใน src/data/"
+    },
+    {
+      "prompt": "เหตุใด route `/signup` จึงต้องอยู่นอก DashboardLayout",
+      "choices": [
+        "เพราะหน้า Sign Up ต้องใช้ API จริง แต่ DashboardLayout ใช้ mock data",
+        "เพราะ React Router ไม่อนุญาตให้หน้า form เป็น child route",
+        "เพราะ Sign Up มี hero และ navbar ของตัวเอง และไม่มี sidebar หรือ navbar ของ dashboard"
+      ],
+      "correctChoice": 3,
+      "explanation": "บทเรียน 11 กำหนดให้ Sign Up เป็น route พี่น้องกับ layout เนื่องจากหน้านี้ไม่มี sidebar และใช้ navbar ใสที่ลอยอยู่บน hero ของตัวเอง"
+    },
+    {
+      "prompt": "ถ้า container `w-[1440px] mx-auto` ทำให้มือถือเกิด horizontal scroll ควรเปลี่ยนเป็นชุดใด",
+      "choices": [
+        "`mx-auto w-full max-w-[1440px] px-4 md:px-6` เพื่อให้กรอบย่อได้และมีระยะขอบ",
+        "`w-[2880px] mx-auto` เพื่อให้มีพื้นที่เหลือมากขึ้นบนมือถือ",
+        "`hidden lg:block` เพื่อซ่อนทั้งพื้นที่เนื้อหาเมื่อหน้าจอเล็ก"
+      ],
+      "correctChoice": 1,
+      "explanation": "บท Responsive Review แยกความหมายของแต่ละ utility: w-full ใช้พื้นที่ที่มี, max-w จำกัดเพดานแต่ยอมหดตามจอ และ px กันเนื้อหาชนขอบ"
+    },
+    {
+      "prompt": "หลักการ accessibility ที่บทเรียน 13 ใช้แก้เมนู sidebar ซึ่งเดิมเป็น `<div onClick>` คือข้อใด",
+      "choices": [
+        "คง div เดิมไว้ แล้วเพิ่มสี hover เพื่อให้ผู้ใช้รู้ว่าคลิกได้",
+        "ใช้ `<a>` หรือ `<button>` ตามหน้าที่ โดยเมนูนำทางควรใช้ `NavLink`",
+        "ซ่อนเมนูจาก screen reader ด้วย `aria-hidden=true` เพื่อไม่ให้เกิดปัญหา"
+      ],
+      "correctChoice": 2,
+      "explanation": "บทเรียนสรุปว่า interactive element ต้องเป็น a สำหรับการนำทางหรือ button สำหรับการกระทำ เมนู sidebar เป็นการนำทางจึงควรใช้ NavLink เพื่อได้ tab order และ active state"
+    },
+    {
+      "prompt": "ตาม checklist maintainability ถ้าพบ class string ชุดเดียวกันซ้ำอย่างน้อย 2 จุด ควรทำอย่างไรใน React + Tailwind",
+      "choices": [
+        "คัดลอกชุด class เพิ่มให้ครบทุกหน้าก่อน เพื่อให้แต่ละหน้าปรับเองได้",
+        "ย้ายทุกอย่างไปเป็น inline style เพราะ component ไม่ควรมี class ยาว",
+        "แยกเป็น React component ที่รวม markup, class และพฤติกรรมไว้ด้วยกัน"
+      ],
+      "correctChoice": 3,
+      "explanation": "บทเรียน 14 ใช้กติกา class string ซ้ำตั้งแต่ 2 จุดให้แยก component ไม่ใช่ย้ายไป CSS หรือคัดลอกต่อ เพราะ component ทำให้แก้ style และพฤติกรรมร่วมกันได้"
+    },
+    {
+      "prompt": "ในการออกแบบ props ของ `StatCard` หลักคิดใดถูกต้องตามบทเรียน 15",
+      "choices": [
+        "สิ่งที่ต่างกันระหว่างการใช้งาน เช่น label, value, delta และ icon ควรเป็น props ส่วนโครงคงที่อยู่ใน component",
+        "ส่ง class string ของทั้งการ์ดเข้ามาเป็น prop ทุกครั้ง เพื่อให้ component ไม่ต้องรู้เรื่อง UI",
+        "สร้าง StatCard แยก 4 ไฟล์ เพราะ component ที่ใช้ซ้ำไม่ควรรับข้อมูลต่างกัน"
+      ],
+      "correctChoice": 1,
+      "explanation": "บทออกแบบ props ให้ component รับข้อมูล ไม่ใช่คลาส โดย StatCard รับ label, value, delta, deltaTone และ icon ส่วน markup และ style ที่คงที่อยู่ภายใน component"
+    },
+    {
+      "prompt": "เมื่อเริ่มทำโจทย์หน้า Profile ในบทเรียน 16 ขั้นตอนใดสอดคล้องกับโจทย์มากที่สุด",
+      "choices": [
+        "เริ่มติดตั้ง chart library และสร้างหน้า Billing ก่อน เพราะ Profile ไม่ได้อยู่ใน workshop",
+        "เริ่มจากเขียน CSS แบบสุ่ม แล้วค่อยดูว่ามี hero หรือคอลัมน์อะไรในภาพ",
+        "decompose เป็น hero การ์ดโปรไฟล์ สามคอลัมน์ และ grid โปรเจกต์ แล้วกำหนดให้ `/profile` อยู่ใน DashboardLayout ก่อน generate"
+      ],
+      "correctChoice": 3,
+      "explanation": "บทสรุปให้ทำ Profile ครบลูป โดยเริ่ม decompose region หลัก เขียน prompt สี่ส่วน และระบุว่า route /profile อยู่ใน DashboardLayout พร้อมใช้ component ที่มีอยู่ก่อนสั่ง Agent generate"
+    }
+  ]
+}
