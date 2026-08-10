@@ -1,0 +1,186 @@
+{
+  "questions": [
+    {
+      "prompt": "ใน `__root.tsx` `<Outlet />` ทำหน้าที่อะไร",
+      "body": "<pre><code class=\"language-tsx\">&lt;Header /&gt;\n&lt;Outlet /&gt;\n&lt;PizzaOfTheDay /&gt;</code></pre>",
+      "choices": [
+        "เป็นจุดที่ TanStack Router render component ของ route ที่ตรงกับ URL ปัจจุบัน ส่วน Header และ PizzaOfTheDay รอบ ๆ ยังแสดงทุกหน้า",
+        "เป็น component สำหรับแสดง error เมื่อหา route ไม่เจอ",
+        "เป็นที่ประกาศรายชื่อ route ทั้งหมดของแอป"
+      ],
+      "correctChoice": 1,
+      "explanation": "`__root.tsx` เป็น template ร่วมของ routes และ `<Outlet />` แทนตำแหน่งเดิมของ Order เพื่อให้ Router สลับ route ปัจจุบันเข้ามา ขณะที่ sibling รอบ ๆ ยังคงอยู่เสมอ."
+    },
+    {
+      "prompt": "เหตุใดจึงต้องลงทะเบียน `router: typeof router` ใน `declare module`",
+      "body": "<pre><code class=\"language-typescript\">declare module \"@tanstack/react-router\" {\n  interface Register {\n    router: typeof router;\n  }\n}</code></pre>",
+      "choices": [
+        "เพื่อติดตั้ง TanStack Router เพิ่มเฉพาะไฟล์ App.tsx",
+        "เพื่อสร้าง route ใหม่ชื่อ Register",
+        "เพื่อบอก type ของ TanStack Router ว่า router ของแอปคือตัวไหน จึงตรวจ path และแนะนำ route ใน `<Link>` ได้"
+      ],
+      "correctChoice": 3,
+      "explanation": "นี่คือ module augmentation ที่เชื่อม Router กับ `routeTree` ของแอป ทำให้ `<Link to=\"/order\">` มี autocomplete และ path ที่ไม่มีจริงเป็น error ได้."
+    },
+    {
+      "prompt": "การใช้ `createLazyFileRoute(\"/order\")` ให้ผลและมีข้อควรระวังใดตามบทเรียน",
+      "body": "<pre><code class=\"language-typescript\">export const Route = createLazyFileRoute(\"/order\")({\n  component: Order,\n});</code></pre>",
+      "choices": [
+        "มัน prefetch ข้อมูล API ให้ route โดยอัตโนมัติก่อน render",
+        "มันแยก code และ lazy-load route ซึ่งช่วยในแอปใหญ่ได้ แต่ request เพิ่มอาจทำให้แอปเล็กช้าลง จึงควรวัดผล",
+        "มันซ่อน route จาก route tree จนกว่าผู้ใช้จะล็อกอิน"
+      ],
+      "correctChoice": 2,
+      "explanation": "Lazy route ทำ code splitting ให้ route นั้น แต่บทเรียนเตือนว่ารอบการเดินทางเพิ่มหนึ่งครั้งอาจมีต้นทุนในแอปเล็ก ไม่ได้เร็วขึ้นเสมอ."
+    },
+    {
+      "prompt": "ทำไม `page` จึงต้องอยู่ใน `queryKey` เมื่อ `queryFn` เรียก `getPastOrders(page)`",
+      "body": "<pre><code class=\"language-typescript\">useQuery({\n  queryKey: [\"past-orders\", page],\n  queryFn: () =&gt; getPastOrders(page),\n});</code></pre>",
+      "choices": [
+        "เพราะ `page` ใช้แสดงตัวเลขบนปุ่มเท่านั้น",
+        "เพราะค่าที่ใช้ request ข้อมูลต้องเป็นส่วนหนึ่งของ cache key เพื่อให้แต่ละหน้ามี cache ที่ถูกต้องของตนเอง",
+        "เพราะใส่ `page` แล้ว TanStack Query จะปิด cache"
+      ],
+      "correctChoice": 2,
+      "explanation": "หน้า 1 และหน้า 2 ต้องมี cache key คนละค่า เมื่อกลับมาหน้าเดิม Query จึงรู้ว่าข้อมูลของหน้านั้นมีอยู่ใน cache แล้ว."
+    },
+    {
+      "prompt": "`staleTime: 30000` ใน query ของ past orders มีไว้ทำอะไร",
+      "choices": [
+        "ถือว่าข้อมูลยัง fresh เป็นเวลา 30 วินาที จึง browse ไปมาได้โดยไม่ refetch บ่อยเกินไป",
+        "หน่วง API call แรกไว้ 30 วินาที",
+        "เก็บผลลัพธ์ไว้ถาวรและไม่เรียก API อีก"
+      ],
+      "correctChoice": 1,
+      "explanation": "30,000 milliseconds คือ 30 วินาที บทเรียนใช้เพื่อให้ข้อมูลไม่ stale เกินไปพร้อมลดการยิง API ซ้ำระหว่าง browse; หากไม่กำหนดจะ refetch ทุกครั้ง."
+    },
+    {
+      "prompt": "ทำไม guard จึงเขียน `if (isLoading || !data)` แทนการเช็คแค่ `isLoading`",
+      "body": "<pre><code class=\"language-typescript\">if (isLoading || !data) {\n  return &lt;h2&gt;LOADING …&lt;/h2&gt;;\n}\n\nreturn data.map(/* ... */);</code></pre>",
+      "choices": [
+        "เพราะ `!data` มีผลกับ TypeScript เท่านั้น และไม่มีผลตอนรันจริง",
+        "เพราะ `isLoading` เป็น false เสมอเมื่อ `data` ไม่มีค่า",
+        "เพราะ query อาจ error จน `isLoading` เป็น false แต่ `data` ยังเป็น undefined; `!data` จึงทั้ง narrow type และกัน `.map` พัง"
+      ],
+      "correctChoice": 3,
+      "explanation": "TypeScript ไม่อนุมานว่า `isLoading` กับ `data` สัมพันธ์กัน และกรณี API error ก็ทำให้โหลดจบแต่ไม่มีข้อมูลได้ การเช็ค `!data` ป้องกันทั้ง type error และ runtime error."
+    },
+    {
+      "prompt": "Modal ในบทเรียน render เข้า modal area โดยไม่ทิ้ง DOM node ไว้ได้อย่างไร",
+      "body": "<pre><code class=\"language-typescript\">const elRef = useRef&lt;HTMLDivElement | null&gt;(null);\n// สร้าง div เดิมไว้ใน ref\nmodalRoot.appendChild(el);\nreturn () =&gt; modalRoot.removeChild(el);\n\nreturn createPortal(&lt;div&gt;{children}&lt;/div&gt;, elRef.current);</code></pre>",
+      "choices": [
+        "Portal แทนที่ `#root` ด้วย `#modal` ทั้งหมด",
+        "มันเก็บ div เดียวไว้ใน ref, append เข้า `#modal`, render children ด้วย `createPortal` แล้ว remove div นั้นเมื่อ unmount",
+        "Portal render ได้เฉพาะภายใน parent DOM ปกติ จึงไม่ต้อง cleanup"
+      ],
+      "correctChoice": 2,
+      "explanation": "ref ทำให้ใช้ div ตัวเดิมข้าม renders, `createPortal` render children ไปยัง div นั้น และ cleanup ของ effect เอา div ที่ append เองออกเพื่อไม่ให้ memory รั่ว."
+    },
+    {
+      "prompt": "Error boundary ตามบทเรียนสามารถ catch error ใดได้",
+      "choices": [
+        "error ที่เกิดใน component ลูกของ boundary แต่ไม่ catch error ที่ boundary โยนเอง",
+        "error ทุกตัวในทั้งแอป ไม่ว่า boundary จะวางตำแหน่งใด รวมถึง error ของตัวมันเอง",
+        "error ของ component function ผ่าน hook ที่ชื่อ `componentDidCatch`"
+      ],
+      "correctChoice": 1,
+      "explanation": "บทเรียนระบุว่า `componentDidCatch` ต้องใช้ class component และ boundary catch ได้เฉพาะ errors ใน children ของมัน ไม่รวม error ของ boundary เอง."
+    },
+    {
+      "prompt": "หลัง child เกิด error `ErrorBoundary` ที่ให้ไว้จะแสดงผลอย่างไร",
+      "body": "<pre><code class=\"language-typescript\">static getDerivedStateFromError() {\n  return { hasError: true };\n}\n\nrender() {\n  if (this.state.hasError) return &lt;h2&gt;Something went wrong&lt;/h2&gt;;\n  return this.props.children;\n}</code></pre>",
+      "choices": [
+        "`componentDidCatch` เพียงอย่างเดียวเลือก fallback UI ให้",
+        "boundary เปลี่ยน state เป็น error แล้ว `render()` แสดง fallback; ถ้าไม่มี error ก็ render children ตามปกติ",
+        "`getDerivedStateFromError` ใช้ fetch ข้อมูล API มาแทน children"
+      ],
+      "correctChoice": 2,
+      "explanation": "`getDerivedStateFromError` ตั้ง `hasError` เพื่อให้ `render()` เลือก fallback ส่วน `componentDidCatch` เหมาะสำหรับทำงานอย่าง logging."
+    },
+    {
+      "prompt": "เหตุใด Contact form นี้จึงเป็น uncontrolled form และแสดงสถานะสำเร็จอย่างไร",
+      "body": "<pre><code class=\"language-tsx\">const mutation = useMutation({ /* ... */ });\n\nif (mutation.isSuccess) return &lt;h2&gt;Submitted&lt;/h2&gt;;\n\n&lt;form onSubmit={handleSubmit}&gt;...&lt;/form&gt;</code></pre>",
+      "choices": [
+        "React Query เป็นเจ้าของค่าใน input และ `isSuccess` ตรวจทุก field ก่อน submit",
+        "ต้องใช้ `useState` เสมอเพื่อสร้าง `FormData`",
+        "DOM เป็นเจ้าของ state ของ input จน submit, handler สร้าง `FormData` ส่งให้ mutation และ `mutation.isSuccess` สลับไปแสดง Submitted"
+      ],
+      "correctChoice": 3,
+      "explanation": "แบบ uncontrolled ไม่มี `useState` คุมทุกช่องกรอก ค่าอยู่ใน DOM จน submit แล้วจึงรวบรวมเป็น `FormData`; เมื่อ mutation สำเร็จจึง render ข้อความ Submitted."
+    },
+    {
+      "prompt": "ทำไม handler จึงควรสร้าง `new FormData(e.currentTarget)` ทันที แล้วส่งข้อมูลให้ `mutate` แทนการส่ง event เข้า asynchronous mutation",
+      "body": "<pre><code class=\"language-typescript\">function handleSubmit(e: React.FormEvent&lt;HTMLFormElement&gt;) {\n  e.preventDefault();\n  const formData = new FormData(e.currentTarget);\n  mutation.mutate(formData);\n}</code></pre>",
+      "choices": [
+        "เพราะ `currentTarget` คือ form ที่ type ไว้ ส่วน `target` อาจเป็น child และ React จะ clear `currentTarget` หลัง handler ก่อน mutation async ใช้งาน",
+        "เพราะ `target` เป็น form เสมอและ React เก็บ `currentTarget` ไว้ตลอด",
+        "เพราะ `FormData` สร้างได้เฉพาะข้างใน `mutationFn`"
+      ],
+      "correctChoice": 1,
+      "explanation": "ต้องอ่าน `FormData` จาก form synchronously ใน submit handler: `currentTarget` เป็น form ที่ type ถูกต้อง ส่วน `target` อาจเป็น element ลูก และ event ไม่ปลอดภัยเมื่อข้ามไปทำงาน async."
+    },
+    {
+      "prompt": "Vitest, React Testing Library และ happy-dom มีบทบาทต่างกันอย่างไร",
+      "choices": [
+        "Vitest render React component, Testing Library เป็น test runner และ happy-dom เป็น API server",
+        "Vitest หา/รัน/รายงานเทสต์, Testing Library render และค้นหา/โต้ตอบกับ UI, happy-dom ให้ DOM จำลองใน Node.js",
+        "ทั้งสามตัวเป็น browser จริงที่ใช้รันเทสต์คนละโหมด"
+      ],
+      "correctChoice": 2,
+      "explanation": "ทั้งสาม package ทำงานคนละชั้น: Vitest คือ runner, Testing Library คือเครื่องมือทดสอบ UI และ happy-dom เติม `document` กับ `window` แบบจำลองให้ Node.js."
+    },
+    {
+      "prompt": "ชุดการตั้งค่าและการตั้งชื่อใดทำให้ JSX React test ถูกพบและรันใน DOM จำลองตามบทเรียน",
+      "body": "<pre><code class=\"language-typescript\">import { defineConfig } from \"vitest/config\";\n\nexport default defineConfig({\n  test: { environment: \"happy-dom\" },\n});\n\n// src/__tests__/pizza.test.tsx</code></pre>",
+      "choices": [
+        "import `defineConfig` จาก `vite`, ตั้งชื่อ JSX test เป็น `.test.ts`",
+        "ใช้ชื่อไฟล์อะไรก็ได้ เช่น `sanity.ts` เพราะ Vitest หาได้ทุกไฟล์",
+        "import `defineConfig` จาก `vitest/config`, ตั้ง `environment` เป็น `happy-dom`, วาง JSX test ใน `src/__tests__` และใช้ `.test.tsx`"
+      ],
+      "correctChoice": 3,
+      "explanation": "`vitest/config` รู้จัก key `test`, happy-dom ให้ DOM จำลอง และบทเรียนกำหนด JSX test เป็น `.test.tsx` ใน `src/__tests__`; `.test.ts` ใช้กับ logic ที่ไม่มี JSX."
+    },
+    {
+      "prompt": "เหตุใดบทเรียนจึงเลือก `screen.getByRole(\"img\")` แทน CSS selector ใน React test",
+      "choices": [
+        "เพราะ CSS selector ใช้เลือก image ไม่ได้",
+        "เพราะ role query หาองค์ประกอบที่ผู้ใช้รับรู้ จึงยึดกับพฤติกรรม UI มากกว่า class หรือรายละเอียด implementation",
+        "เพราะ role query ใช้ตรวจชื่อ React component เท่านั้น"
+      ],
+      "correctChoice": 2,
+      "explanation": "React Testing Library สนับสนุนการเทสต์จากสิ่งที่ผู้ใช้เห็น เช่น image หรือข้อความบนปุ่ม ขณะที่ CSS class เป็นรายละเอียดที่ผู้ใช้ไม่รู้และเปลี่ยนได้โดยไม่เปลี่ยนพฤติกรรม."
+    },
+    {
+      "prompt": "ทำไมการทดสอบ Pizza ที่ไม่ส่ง image จึงต้องทั้งเปลี่ยน prop เป็น `image?: string` และเพิ่ม default image ใน runtime",
+      "body": "<pre><code class=\"language-typescript\">type PizzaProps = {\n  name: string;\n  description: string;\n  image?: string;\n};\n\n&lt;img src={props.image ? props.image : \"https://picsum.photos/200\"} /&gt;</code></pre>",
+      "choices": [
+        "`image?: string` ทำให้ TypeScript ยอมให้ไม่ส่ง prop ส่วน default-image expression ทำให้ UI มีภาพจริงเมื่อรัน; type check แทน behavioral test ไม่ได้",
+        "ทำ `image?: string` แล้ว React จะใส่ default image ให้อัตโนมัติ",
+        "เพิ่ม default image แล้ว prop `image` ยังคง required ได้โดยไม่กระทบ test"
+      ],
+      "correctChoice": 1,
+      "explanation": "การแก้ type เปลี่ยนสัญญาว่า prop ส่งหรือไม่ส่งได้ ส่วน fallback เปลี่ยนพฤติกรรมจริงที่ runtime จึงต้องมีทั้งสองอย่างและยังควรมี test."
+    },
+    {
+      "prompt": "เหตุใด contact test จึง import และ render `ContactRoute` โดยตรง แทน `<Route.options.component />`",
+      "choices": [
+        "เพราะ `Route.options.component` ถูกกำหนดว่ามีเสมอ และ direct export ใช้เพื่อเพิ่ม performance เท่านั้น",
+        "เพราะ direct export ข้ามความจำเป็นของ React Query ได้",
+        "เพราะ `component` ใน route options เป็น optional จึงอาจเป็น undefined และ TypeScript ใช้เป็น JSX tag ไม่ได้; direct export ชัดเจนและเทสต์หน้าที่ผู้ใช้เห็น"
+      ],
+      "correctChoice": 3,
+      "explanation": "TanStack Router ระบุ `component?: RouteComponent` จึงไม่ปลอดภัยจะ render property นั้นตรง ๆ การ export `ContactRoute` ทำให้ test มี component ที่ type ถูกต้องและเจตนาชัด."
+    },
+    {
+      "prompt": "หลัง submit contact test ตรวจอะไร และเหตุใดจึงเทียบ `new URL(requests[0].url).pathname`",
+      "body": "<pre><code class=\"language-typescript\">const h3 = await screen.findByRole(\"heading\", { level: 3 });\nexpect(h3.innerText).toContain(\"Submitted\");\nexpect(requests.length).toBe(1);\nexpect(new URL(requests[0].url).pathname).toBe(\"/api/contact\");</code></pre>",
+      "choices": [
+        "ตรวจหน้า success, จำนวน request หนึ่งครั้ง และ endpoint ที่ถูกต้อง; ใช้ pathname เพราะ `requests()` เก็บ URL absolute ที่ happy-dom resolve แล้ว",
+        "ตรวจเพียงว่า fetch ถูกเรียก จึงไม่ต้องรอ heading ที่แสดงผล",
+        "เทียบ pathname เพราะ `requests()[0].url` ยังคงเป็น string relative `/api/contact`"
+      ],
+      "correctChoice": 1,
+      "explanation": "test รอผลลัพธ์ที่ผู้ใช้เห็นว่า Submitted แล้วตรวจ request หนึ่งครั้งและ POST arguments; `requests()` ให้ absolute URL จึงเทียบ pathname เพื่อไม่ผูกกับ host ของ happy-dom."
+    }
+  ]
+}
