@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ทำความเข้าใจว่า SCSS คืออะไร ต่างจาก Sass และ CSS อย่างไร และต้องผ่านการคอมไพล์ก่อนให้เบราว์เซอร์ใช้งาน"
+    />
+    <title>SCSS คืออะไร?</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>SCSS คืออะไร?</h1>
+
+        <p>
+          SCSS คือรูปแบบไวยากรณ์ยอดนิยมของ Sass ที่ออกแบบมาให้หน้าตาคล้าย
+          CSS มากที่สุด จึงเหมาะมากสำหรับคนที่เขียน CSS อยู่แล้วและอยากเพิ่มความสามารถอย่างตัวแปร
+          การซ้อน selector และการแยกไฟล์ให้เป็นระบบมากขึ้น
+        </p>
+
+        <h2>Sass กับ SCSS ต่างกันอย่างไร?</h2>
+        <p>
+          คำว่า <strong>Sass</strong> มักใช้เรียกทั้ง ecosystem ของภาษาและ compiler ส่วน
+          <strong>SCSS</strong> คือ syntax แบบหนึ่งของ Sass ที่ยังคงใช้วงเล็บปีกกา
+          <code>{}</code> และเครื่องหมาย <code>;</code> เหมือน CSS ปกติ
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>คำ</th>
+              <th>หมายถึงอะไร</th>
+              <th>เหมาะกับมือใหม่ไหม</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Sass</code></td>
+              <td>ชื่อภาษา/ตัวแปลงที่เพิ่มพลังให้ CSS</td>
+              <td>ควรรู้ชื่อไว้ เพราะใช้เรียก package และคำสั่ง</td>
+            </tr>
+            <tr>
+              <td><code>.scss</code></td>
+              <td>ไฟล์ที่ใช้ syntax แบบ CSS-compatible</td>
+              <td>เหมาะมาก เพราะเริ่มจาก CSS เดิมแล้วค่อยเพิ่ม feature</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>SCSS ทำงานร่วมกับเบราว์เซอร์อย่างไร</h2>
+        <p>
+          เบราว์เซอร์อ่าน SCSS ไม่ออกโดยตรง สิ่งที่เบราว์เซอร์แสดงผลได้จริงยังคงเป็น
+          CSS ดังนั้น workflow พื้นฐานคือ:
+        </p>
+
+        <pre><code>SCSS → compiler → CSS → browser</code></pre>
+
+        <p>
+          ให้คิดว่า SCSS คือ “ภาษาที่ช่วยเราเขียนสไตล์ให้ฉลาดขึ้น” ส่วน compiler คือเครื่องมือที่แปล
+          SCSS ให้กลับมาเป็น CSS ธรรมดาก่อนส่งต่อให้หน้าเว็บ
+        </p>
+
+        <h2>ตัวอย่าง SCSS เทียบกับ CSS ที่ถูกคอมไพล์แล้ว</h2>
+        <div class="comparison-grid">
+          <section>
+            <h3>SCSS ต้นฉบับ</h3>
+            <pre><code>$brand-color: #6f3cc3;
+
+.button {
+  background-color: $brand-color;
+  color: white;
+}</code></pre>
+          </section>
+          <section>
+            <h3>CSS หลังคอมไพล์</h3>
+            <pre><code>.button {
+  background-color: #6f3cc3;
+  color: white;
+}</code></pre>
+          </section>
+        </div>
+
+        <p>
+          จุดสำคัญคือเครื่องหมาย <code>$</code> ไม่มีอยู่ใน CSS ปกติ
+          มันเป็น feature ของ SCSS เท่านั้น พอคอมไพล์เสร็จ compiler จะเอาค่าจริงมาแทนที่ตัวแปรให้
+        </p>
+
+        <h2>ไฟล์ .scss มีไว้ทำอะไร</h2>
+        <ul>
+          <li><strong>เก็บ logic ฝั่งสไตล์</strong> เช่น ตัวแปร การซ้อน selector และการแบ่งโมดูล</li>
+          <li><strong>ช่วยลดการคัดลอกซ้ำ</strong> เพราะค่าที่ใช้บ่อยประกาศครั้งเดียวแล้วเรียกใช้ซ้ำได้</li>
+          <li><strong>ทำให้โค้ดอ่านเป็นระบบขึ้น</strong> โดยเฉพาะโปรเจกต์ที่มีหลายหน้า หลาย component</li>
+        </ul>
+
+        <h2>ประโยชน์หลักของ SCSS</h2>
+        <ul>
+          <li><strong>Reusable</strong> — เก็บค่าซ้ำ ๆ เช่นสี ระยะห่าง และขนาดตัวอักษรไว้เป็นตัวแปร</li>
+          <li><strong>อ่านง่ายขึ้น</strong> — ความสัมพันธ์ของ component กับสถานะย่อยเห็นชัดขึ้นผ่าน nesting ที่พอดี</li>
+          <li><strong>ดูแลง่ายขึ้น</strong> — เปลี่ยนโทนสีหรือ spacing ที่จุดเดียวแล้วทั้งโปรเจกต์อัปเดตตาม</li>
+        </ul>
+
+        <h2>เมื่อไหร่ที่ CSS ธรรมดาก็เพียงพอ</h2>
+        <p>
+          ถ้าโปรเจกต์มีไฟล์สไตล์เล็กมาก มีหน้าเดียว หรือแทบไม่มีค่าที่ใช้ซ้ำกันเลย
+          การใช้ CSS ปกติก็อาจเพียงพอและลดขั้นตอน build ได้
+          SCSS ไม่ใช่สิ่งที่ “ต้องใช้เสมอ” แต่เป็นเครื่องมือที่ช่วยมากเมื่อสไตล์เริ่มโต
+        </p>
+
+        <blockquote>
+          เริ่มจากโจทย์จริงก่อน: ถ้าโปรเจกต์เริ่มมีสีหลักหลายจุด มี component ซ้ำ
+          หรือแก้สไตล์ทีหนึ่งต้องไล่หลายไฟล์ นั่นคือสัญญาณว่า SCSS เริ่มคุ้มค่า
+        </blockquote>
+
+        <h2>ข้อควรระวังสำหรับผู้เริ่มต้น</h2>
+        <ul>
+          <li>อย่าคิดว่า SCSS จะรันในเบราว์เซอร์ได้ตรง ๆ — ต้องแปลงเป็น CSS ก่อนเสมอ</li>
+          <li>อย่าสับสนระหว่าง “Sass” ที่เป็นชื่อระบบ กับ “SCSS” ที่เป็น syntax ที่เราเขียนในไฟล์</li>
+          <li>อย่าใช้ feature เพิ่มเติมเพียงเพราะทำได้ ถ้า CSS ธรรมดาอ่านง่ายกว่า ให้ใช้แบบง่ายก่อน</li>
+        </ul>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>จากสอง snippet นี้ ข้อไหนคือโค้ดที่ต้องผ่านการคอมไพล์ก่อนใช้งานในเบราว์เซอร์?</p>
+
+        <pre><code>/* Snippet A */
+.card {
+  border-radius: 12px;
+}
+
+/* Snippet B */
+$brand-color: #6f3cc3;
+
+.card {
+  border-color: $brand-color;
+}</code></pre>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>
+            <strong>Snippet B</strong> ต้องคอมไพล์ก่อน เพราะมีตัวแปร
+            <code>$brand-color</code> ซึ่งเป็นไวยากรณ์ของ SCSS ไม่ใช่ CSS
+            ที่เบราว์เซอร์อ่านได้โดยตรง
+          </p>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="02_installing_and_compiling_sass.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

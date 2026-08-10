@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้การประกาศตัวแปรใน SCSS การตั้งชื่อแบบ purpose-based token และความต่างระหว่าง Sass variables กับ CSS custom properties"
+    />
+    <title>ตัวแปรใน SCSS</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>ตัวแปรใน SCSS</h1>
+
+        <p>
+          หนึ่งใน feature ที่ทำให้ SCSS คุ้มค่ามากคือ <strong>ตัวแปร</strong>
+          เพราะมันช่วยเก็บค่าที่ใช้ซ้ำบ่อยไว้ในชื่อที่สื่อความหมาย เช่น สีหลัก ระยะห่าง มุมโค้ง
+          หรือขนาดตัวอักษร ทำให้ทั้งโปรเจกต์เปลี่ยนค่าได้จากจุดเดียว
+        </p>
+
+        <h2>ไวยากรณ์พื้นฐาน</h2>
+        <pre><code>$name: value;</code></pre>
+        <p>
+          ทุกตัวแปรของ SCSS จะขึ้นต้นด้วย <code>$</code> ตามด้วยชื่อที่เราเลือก และลงท้ายด้วย
+          <code>;</code> เหมือนการประกาศ property ใน CSS
+        </p>
+
+        <pre><code>$brand-color: #6f3cc3;
+$space-md: 1rem;
+$radius-md: 12px;</code></pre>
+
+        <h2>ทำไมตัวแปรถึงช่วยมาก</h2>
+        <ul>
+          <li><strong>เปลี่ยนค่าทีเดียว</strong> แล้วทุกจุดที่อ้างอิงถึงค่าดังกล่าวอัปเดตตาม</li>
+          <li><strong>ลดการพิมพ์ค่าซ้ำ</strong> เช่นรหัสสีเดิมหลายบรรทัด หรือ spacing ขนาดเดียวกันทั้งหน้า</li>
+          <li><strong>ทำให้ชื่อสื่อความหมาย</strong> เช่น <code>$brand-color</code> อ่านแล้วรู้ว่าเป็นสีประจำแบรนด์ ไม่ใช่แค่รหัสสีลอย ๆ</li>
+        </ul>
+
+        <h2>เริ่มต้นตั้งชื่อแบบ purpose-based token</h2>
+        <p>
+          สำหรับมือใหม่ ควรตั้งชื่อตาม “หน้าที่” มากกว่าตามค่าจริง
+          เพราะจะช่วยให้โค้ดทนต่อการเปลี่ยนดีไซน์ในอนาคต
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>หมวด</th>
+              <th>ตัวอย่างชื่อตัวแปร</th>
+              <th>เอาไว้ใช้กับอะไร</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>สี</td>
+              <td><code>$brand-color</code>, <code>$text-muted</code></td>
+              <td>สีแบรนด์ สีข้อความหลัก สีข้อความรอง</td>
+            </tr>
+            <tr>
+              <td>ระยะห่าง</td>
+              <td><code>$space-sm</code>, <code>$space-md</code></td>
+              <td>padding, margin, gap</td>
+            </tr>
+            <tr>
+              <td>ตัวอักษร</td>
+              <td><code>$font-base</code>, <code>$font-size-lg</code></td>
+              <td>font-family, font-size, line-height</td>
+            </tr>
+            <tr>
+              <td>มุมโค้ง</td>
+              <td><code>$radius-sm</code>, <code>$radius-md</code></td>
+              <td>border-radius ของ card, button, badge</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>ตัวอย่างการนำกลับมาใช้ซ้ำ</h2>
+        <pre><code>$brand-color: #6f3cc3;
+$space-md: 1rem;
+$radius-md: 12px;
+
+.button {
+  padding: $space-md;
+  border-radius: $radius-md;
+  background-color: $brand-color;
+}
+
+.card {
+  padding: $space-md;
+  border: 2px solid $brand-color;
+  border-radius: $radius-md;
+}</code></pre>
+
+        <p>
+          จะเห็นว่าค่าเดียวกันถูกใช้ได้หลาย selector โดยไม่ต้องคัดลอกตัวเลขหรือรหัสสีซ้ำหลายจุด
+        </p>
+
+        <h2>เรื่อง scope แบบเริ่มต้นที่ควรรู้</h2>
+        <p>
+          ในบทเริ่มต้น ให้จำแบบง่ายก่อนว่า ตัวแปรที่ประกาศไว้ด้านบนของไฟล์มักถูกใช้ซ้ำได้ในส่วนล่างของไฟล์เดียวกัน
+          นี่เป็นเหตุผลที่โปรเจกต์จำนวนมากเก็บ token พื้นฐานไว้ส่วนบนของไฟล์หรือแยกเป็นไฟล์เฉพาะในบทถัดไป
+        </p>
+
+        <p>
+          เมื่อเรียนลึกขึ้น เราจะเจอแนวคิดเรื่อง scope ของ module และการจัดการตัวแปรข้ามไฟล์
+          แต่ตอนนี้ขอให้โฟกัสก่อนว่าตัวแปรช่วยลดความซ้ำซ้อนและทำให้ชื่อของค่าต่าง ๆ ชัดขึ้น
+        </p>
+
+        <h2>Sass variables ต่างจาก CSS custom properties อย่างไร</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>หัวข้อ</th>
+              <th>Sass variables</th>
+              <th>CSS custom properties</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ช่วงเวลาที่ทำงาน</td>
+              <td>ตอนคอมไพล์</td>
+              <td>ตอน runtime ในเบราว์เซอร์</td>
+            </tr>
+            <tr>
+              <td>หน้าตา syntax</td>
+              <td><code>$brand-color</code></td>
+              <td><code>--brand-color</code> และ <code>var(--brand-color)</code></td>
+            </tr>
+            <tr>
+              <td>เบราว์เซอร์เห็นชื่อเดิมไหม</td>
+              <td>ไม่เห็น ชื่อถูกแทนด้วยค่าจริงใน CSS ที่คอมไพล์แล้ว</td>
+              <td>เห็น เพราะ custom property ยังอยู่ใน CSS ที่ส่งไปยังเบราว์เซอร์</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre><code>/* Sass variable */
+$brand-color: #6f3cc3;
+
+.banner {
+  color: $brand-color;
+}
+
+/* CSS custom property */
+:root {
+  --brand-color: #6f3cc3;
+}
+
+.banner {
+  color: var(--brand-color);
+}</code></pre>
+
+        <p>
+          ถ้าต้องการค่าที่เปลี่ยนตาม runtime เช่น theme สว่าง/มืดในเบราว์เซอร์
+          CSS custom properties มักตอบโจทย์กว่า แต่ถ้าต้องการลดความซ้ำซ้อนตอนเขียนโค้ดและจัดระบบ token
+          SCSS variables ก็มีประโยชน์มาก
+        </p>
+
+        <h2>ข้อผิดพลาดที่พบบ่อย</h2>
+        <ul>
+          <li>ลืมใส่ <code>$</code> ตอนเรียกใช้ ทำให้ compiler มองเป็นข้อความธรรมดาหรือ property ผิดรูปแบบ</li>
+          <li>ตั้งชื่อตามค่าจริงเกินไป เช่น <code>$purple-1</code> จนอ่านไม่ออกว่าใช้เชิงหน้าที่อะไร</li>
+          <li>คัดลอกค่าลงไปตรง ๆ แทนใช้ตัวแปร ทำให้พอจะแก้ดีไซน์ต้องไล่หลายจุดอีกครั้ง</li>
+        </ul>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          ลองสร้าง component แจ้งเตือนชื่อ <code>.alert</code> โดยใช้ตัวแปร
+          <code>$brand-color</code>, <code>$space-md</code> และ <code>$radius-md</code>
+          จากนั้นดูว่า CSS ที่คอมไพล์แล้วควรมีหน้าตาอย่างไร
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <pre><code>/* SCSS */
+$brand-color: #6f3cc3;
+$space-md: 1rem;
+$radius-md: 12px;
+
+.alert {
+  padding: $space-md;
+  border: 1px solid $brand-color;
+  border-radius: $radius-md;
+  color: $brand-color;
+}</code></pre>
+
+          <pre><code>/* CSS ที่คอมไพล์แล้ว */
+.alert {
+  padding: 1rem;
+  border: 1px solid #6f3cc3;
+  border-radius: 12px;
+  color: #6f3cc3;
+}</code></pre>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="02_installing_and_compiling_sass.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="04_nesting_and_parent_selector.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

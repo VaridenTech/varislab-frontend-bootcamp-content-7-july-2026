@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้การซ้อน selector ใน SCSS, การใช้ parent selector (&), BEM suffixes และ nested media queries อย่างพอดี"
+    />
+    <title>Nesting และ Parent Selector</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>Nesting และ Parent Selector</h1>
+
+        <p>
+          Nesting คือการเขียน selector ซ้อนกันเพื่อสื่อความสัมพันธ์ของ component กับส่วนย่อยหรือสถานะของมัน
+          ส่วน <code>&amp;</code> หรือ parent selector คือเครื่องมือที่อ้างถึง selector ปัจจุบัน
+          เพื่อสร้าง pseudo-class, modifier และชื่อแบบ BEM ได้สะดวกขึ้น
+        </p>
+
+        <h2>Nesting แบบตื้นคือเพื่อนที่ดีที่สุด</h2>
+        <p>
+          การซ้อนแบบพอดีช่วยให้อ่านง่าย เพราะเราเห็นทันทีว่า style นี้เป็นของใคร เช่น ชื่อเรื่องอยู่ใน card เดียวกัน
+          แต่ถ้าซ้อนลึกเกินไป โค้ดจะยาว อ่านยาก และผูกติดกับ HTML มากเกินจำเป็น
+        </p>
+
+        <pre><code>.card {
+  padding: 1rem;
+
+  .card__title {
+    margin: 0;
+  }
+}</code></pre>
+
+        <p>คอมไพล์แล้วจะได้:</p>
+        <pre><code>.card {
+  padding: 1rem;
+}
+
+.card .card__title {
+  margin: 0;
+}</code></pre>
+
+        <h2>ใช้กับ pseudo-classes ได้อย่างเป็นธรรมชาติ</h2>
+        <pre><code>.button {
+  background: #6f3cc3;
+  color: white;
+
+  &:hover {
+    background: #54279b;
+  }
+}</code></pre>
+
+        <p>ผลลัพธ์หลังคอมไพล์:</p>
+        <pre><code>.button {
+  background: #6f3cc3;
+  color: white;
+}
+
+.button:hover {
+  background: #54279b;
+}</code></pre>
+
+        <p>
+          สังเกตว่า <code>&amp;:hover</code> ไม่ได้หมายถึงลูกของ <code>.button</code>
+          แต่มันแปลว่า “เอา selector ปัจจุบันมาต่อกับ <code>:hover</code>”
+        </p>
+
+        <h2>Parent selector (&amp;) กับ BEM suffixes</h2>
+        <p>
+          ถ้าเขียนชื่อ class แบบ BEM เรามักใช้ <code>&amp;</code> เพื่อสร้าง element และ modifier
+          โดยไม่ต้องพิมพ์ชื่อ block ซ้ำหลายครั้ง
+        </p>
+
+        <pre><code>.card {
+  padding: 1rem;
+  border: 1px solid #d9c8f0;
+
+  &__title {
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+  }
+
+  &--featured {
+    border-color: #6f3cc3;
+    box-shadow: 0 0 0 3px rgb(111 60 195 / 15%);
+  }
+}</code></pre>
+
+        <p>คอมไพล์แล้วจะได้:</p>
+        <pre><code>.card {
+  padding: 1rem;
+  border: 1px solid #d9c8f0;
+}
+
+.card__title {
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.card--featured {
+  border-color: #6f3cc3;
+  box-shadow: 0 0 0 3px rgb(111 60 195 / 15%);
+}</code></pre>
+
+        <p>
+          ตรงนี้สำคัญมาก: <code>&amp;__title</code> กลายเป็น <code>.card__title</code>
+          ไม่ใช่ <code>.card .card__title</code> เพราะเราเอาชื่อ parent มาต่อคำโดยตรง
+        </p>
+
+        <h2>Nested media queries</h2>
+        <p>
+          อีกจุดที่สะดวกมากคือการเขียน media query ไว้ใกล้ component ที่เกี่ยวข้อง
+          ทำให้เราเห็น style ปกติและ style responsive อยู่ด้วยกัน
+        </p>
+
+        <pre><code>.card {
+  padding: 1.5rem;
+
+  @media (max-width: 640px) {
+    padding: 1rem;
+  }
+}</code></pre>
+
+        <p>คอมไพล์แล้วจะได้:</p>
+        <pre><code>.card {
+  padding: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 1rem;
+  }
+}</code></pre>
+
+        <h2>อย่าซ้อนตามต้นไม้ HTML ทั้งหมด</h2>
+        <p>
+          กับ SCSS มือใหม่มักเผลอ mirror โครงสร้าง HTML ลงมาแบบทุกชั้น เช่น
+          <code>.page .layout .sidebar .menu .item a</code>
+          ซึ่งทำให้ selector ยาว เปราะ และแก้ยาก
+        </p>
+
+        <blockquote>
+          แนวทางที่ปลอดภัยสำหรับบทเริ่มต้นคือพยายามไม่ให้เกินประมาณ
+          <strong>3 ระดับของ selector</strong>
+          ถ้าลึกกว่านี้ให้หยุดคิดก่อนว่าเราควรตั้ง class ที่ชัดขึ้นแทนหรือไม่
+        </blockquote>
+
+        <h2>ข้อควรระวังที่พบบ่อย</h2>
+        <ul>
+          <li>ใช้ nesting ลึกเกินไปจน CSS ที่คอมไพล์ออกมาซับซ้อนโดยไม่จำเป็น</li>
+          <li>สับสนระหว่าง <code>.card .card__title</code> กับ <code>.card__title</code> ที่เกิดจาก <code>&amp;__title</code></li>
+          <li>ใช้ <code>&amp;</code> ทุกที่โดยไม่จำเป็น ทั้งที่บางครั้งเขียน selector ธรรมดาอ่านง่ายกว่า</li>
+        </ul>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          ลองเขียน navigation block ที่มี class หลักเป็น <code>.nav</code> และต้องมี
+          <code>.nav__link</code>, สถานะ hover และ modifier <code>.nav__link--active</code>
+          จากนั้นดู CSS ที่ควรถูกคอมไพล์ออกมา
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <pre><code>/* SCSS */
+.nav {
+  &__link {
+    color: #54279b;
+    text-decoration: none;
+
+    &:hover {
+      color: #6f3cc3;
+    }
+
+    &--active {
+      font-weight: 700;
+      text-decoration: underline;
+    }
+  }
+}</code></pre>
+
+          <pre><code>/* CSS ที่คอมไพล์แล้ว */
+.nav__link {
+  color: #54279b;
+  text-decoration: none;
+}
+
+.nav__link:hover {
+  color: #6f3cc3;
+}
+
+.nav__link--active {
+  font-weight: 700;
+  text-decoration: underline;
+}</code></pre>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="03_variables.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="05_partials_and_use.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

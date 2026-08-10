@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้การติดตั้ง Sass, โครงสร้างไฟล์พื้นฐานของโปรเจกต์ SCSS และคำสั่ง compile/watch ที่ใช้จริง"
+    />
+    <title>ติดตั้งและคอมไพล์ Sass</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>ติดตั้งและคอมไพล์ Sass</h1>
+
+        <p>
+          หลังจากรู้แล้วว่า SCSS ต้องถูกแปลงเป็น CSS ก่อน ขั้นต่อไปคือเตรียมโปรเจกต์ให้มีทั้งไฟล์ต้นฉบับ
+          และไฟล์ผลลัพธ์อย่างชัดเจน เพื่อให้เรารู้ว่าไฟล์ไหนเขียนเอง และไฟล์ไหนถูกสร้างโดย compiler
+        </p>
+
+        <h2>โครงสร้างโปรเจกต์พื้นฐาน</h2>
+        <p>โครงสร้างเริ่มต้นที่เข้าใจง่ายสำหรับผู้เริ่มต้นมีหน้าตาแบบนี้:</p>
+
+        <div class="file-tree">scss-course/
+├── index.html
+├── package.json
+├── scss/main.scss
+└── css/main.css</div>
+
+        <ul>
+          <li><code>index.html</code> คือหน้าเว็บที่ link ไฟล์ CSS ที่คอมไพล์แล้ว</li>
+          <li><code>package.json</code> เก็บข้อมูลโปรเจกต์และ dependency</li>
+          <li><code>scss/main.scss</code> คือไฟล์ต้นฉบับที่เราแก้ไข</li>
+          <li><code>css/main.css</code> คือไฟล์ผลลัพธ์ที่เบราว์เซอร์โหลดไปใช้</li>
+        </ul>
+
+        <h2>ติดตั้ง Sass ด้วย npm</h2>
+        <p>ลำดับคำสั่งพื้นฐานมีดังนี้:</p>
+
+        <pre><code>npm init -y
+npm install --save-dev sass
+npx sass --version
+npx sass scss/main.scss css/main.css
+npx sass --watch scss/main.scss:css/main.css</code></pre>
+
+        <p>
+          คำสั่งแรกสร้าง <code>package.json</code> อัตโนมัติ คำสั่งที่สองติดตั้ง
+          Sass เป็น dev dependency ส่วน <code>npx sass --version</code>
+          ใช้เช็กว่า CLI พร้อมใช้งานแล้วจริง
+        </p>
+
+        <h2>คำสั่ง compile แบบครั้งเดียว</h2>
+        <pre><code>npx sass scss/main.scss css/main.css</code></pre>
+        <p>
+          คำสั่งนี้หมายถึง “อ่านไฟล์ต้นฉบับจาก <code>scss/main.scss</code> แล้วเขียนผลลัพธ์ไปที่
+          <code>css/main.css</code>”
+          เหมาะเวลาต้องการคอมไพล์เป็นรอบ ๆ เช่นก่อนเปิดไฟล์ HTML ในเบราว์เซอร์
+        </p>
+
+        <h2>คำสั่ง watch สำหรับทำงานต่อเนื่อง</h2>
+        <pre><code>npx sass --watch scss/main.scss:css/main.css</code></pre>
+        <p>
+          โหมด watch จะคอยเฝ้าดูการเปลี่ยนแปลงของไฟล์ SCSS และคอมไพล์ใหม่ให้อัตโนมัติทุกครั้งที่บันทึกไฟล์
+          ทำให้ workflow ระหว่างเรียนหรือพัฒนา UI เร็วขึ้นมาก
+        </p>
+
+        <h3>หยุด watch mode อย่างไร</h3>
+        <p>
+          ถ้ารันใน terminal ปกติ ให้กด <code>Ctrl + C</code>
+          เพื่อหยุด process ที่กำลังเฝ้าดูไฟล์อยู่
+        </p>
+
+        <h2>อย่าลืม link ไฟล์ CSS ที่ถูกสร้างแล้ว</h2>
+        <p>
+          แม้เราจะเขียน SCSS อยู่ในโฟลเดอร์ <code>scss/</code> แต่ใน HTML ต้อง link ไปที่ไฟล์ CSS
+          ที่ถูกคอมไพล์ออกมาเท่านั้น
+        </p>
+
+        <pre><code>&lt;link rel='stylesheet' href='css/main.css' /&gt;</code></pre>
+
+        <p>
+          ถ้าไป link <code>scss/main.scss</code> โดยตรง เบราว์เซอร์จะไม่เข้าใจและจะไม่แสดงผลสไตล์ตามที่คาดหวัง
+        </p>
+
+        <h2>ทำไมเบราว์เซอร์ถึงโหลด SCSS ไม่ได้</h2>
+        <p>
+          เบราว์เซอร์รู้จักมาตรฐาน CSS เท่านั้น มันไม่รู้ว่า <code>$variable</code>,
+          nesting หรือ feature อื่นของ Sass ควรถูกแปลงอย่างไร
+          งานของ compiler คือแปลง feature เหล่านี้ให้กลายเป็น CSS ที่เป็นมาตรฐานก่อน
+        </p>
+
+        <h2>ข้อผิดพลาดที่เจอบ่อย</h2>
+        <ul>
+          <li>
+            <strong>สั่งจาก directory ผิด</strong> — ถ้า terminal ไม่ได้อยู่ที่ root ของโปรเจกต์
+            path อย่าง <code>scss/main.scss</code> อาจหาไม่เจอ
+          </li>
+          <li>
+            <strong>ลืมสร้างโฟลเดอร์ปลายทาง</strong> — บางกรณีถ้าโฟลเดอร์ <code>css/</code>
+            ยังไม่มี คำสั่งอาจเขียนไฟล์ไม่ได้
+          </li>
+          <li>
+            <strong>แก้ไฟล์ผิดตัว</strong> — ผู้เริ่มต้นมักเผลอไปแก้ <code>css/main.css</code>
+            โดยตรง ทั้งที่ไฟล์นั้นควรถูก generate จาก SCSS
+          </li>
+        </ul>
+
+        <div class="callout">
+          ถ้าเจอ error ประเภท <code>no such file or directory</code> ให้เช็กสองอย่างก่อน:
+          ตอนนี้ terminal อยู่โฟลเดอร์ไหน และ path ต้นทาง/ปลายทางสะกดตรงกับโครงสร้างไฟล์จริงหรือไม่
+        </div>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          สมมติว่าคุณมีไฟล์ต้นฉบับอยู่ที่ <code>styles/app.scss</code> และต้องการได้ไฟล์ผลลัพธ์เป็น
+          <code>public/app.css</code> ให้เขียนทั้งคำสั่ง compile ครั้งเดียว และคำสั่ง watch
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <pre><code>npx sass styles/app.scss public/app.css
+npx sass --watch styles/app.scss:public/app.css</code></pre>
+          <p>
+            ถ้าต้องหยุด watch mode ให้กด <code>Ctrl + C</code> ใน terminal เดียวกัน
+          </p>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="01_what_is_scss.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="03_variables.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>
