@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เขียน integration test ระดับทั้งหน้าให้ Cart, Home, Category และ Checkout ด้วย renderRoute, MSW และ user-event โดยพิมพ์เคสแรกเองแล้วให้ Cursor เขียนที่เหลือ ปิดท้ายด้วยพีระมิดครบทุกชั้นและรูที่ยังเหลืออยู่" />
+    <title>Integration Tests | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 33 · การทดสอบ (Testing)</p>
+          <h1>Integration Tests: ทดสอบทั้งหน้าเหมือนผู้ใช้จริง</h1>
+          <p class="lesson-original-title" lang="en">Integration Tests</p>
+        </header>
+
+        <p>ถึงยอดพีระมิดแล้ว: <strong>integration test</strong> ระดับทั้งหน้า คราวนี้เราไม่เรียกฟังก์ชันหรือ hook ตรง ๆ อีกต่อไป — เราจะเปิดแอป<em>ทั้งแอป</em>ขึ้นมาด้วย <code>renderRoute</code> ที่สร้างไว้ในบทเรียน 30 (router จริง provider จริง component จริง มีแค่ network ที่เป็น MSW) แล้วทำแบบที่ผู้ใช้ทำ: อ่านข้อความบนจอ คลิกปุ่ม พิมพ์ฟอร์ม จากนั้น assert สิ่งที่ผู้ใช้ควรเห็น เทสต์ชั้นนี้แต่ละตัวจึงพิสูจน์การ<em>ประกอบร่าง</em>ของทุกอย่างที่เราสร้างมาตั้งแต่บทเรียน 09 — routing, queries, context, ฟอร์ม, component — ว่าต่อติดกันจริง</p>
+
+        <p>ก่อนลงมือ มีเครื่องมือสองเรื่องที่ต้องเข้าใจให้เคลียร์ เพราะเทสต์ทุกตัวในบทนี้ใช้:</p>
+
+        <h2>findBy กับ getBy — ต่างกันที่การรอ</h2>
+
+        <p>query ของ Testing Library มีสามตระกูล เลือกใช้ตามสถานการณ์:</p>
+
+        <ul>
+          <li><strong><code>getBy...</code></strong> — หา<em>เดี๋ยวนี้</em> ไม่เจอโยน error ทันที เหมาะกับ element ที่ต้องอยู่บนจอแล้วแน่ ๆ</li>
+          <li><strong><code>await findBy...</code></strong> — หาแบบ<em>รอได้</em> (retry จนเจอหรือครบ timeout ~1 วินาที) เหมาะกับ element ที่จะโผล่หลังงาน async — ซึ่งในแอปเราคือ "แทบทุกอย่าง" เพราะเปิดหน้ามาจะเจอ spinner ก่อนเสมอ ระหว่างที่ TanStack Query ยิง request ไป MSW ข้อมูลถึงจะมา</li>
+          <li><strong><code>queryBy...</code></strong> — หาแล้วคืน <code>null</code> ถ้าไม่เจอ (ไม่โยน error) มีไว้สำหรับ assert ว่าอะไร<em>ไม่</em>อยู่บนจอ</li>
+        </ul>
+
+        <p>กฎหัวแม่มือของบทนี้: หลัง render หรือหลัง action ที่ทำให้เกิดการยิง API — ใช้ <code>findBy</code> ตัวแรกเป็น "ประตูรอ" ให้หน้าโหลดเสร็จ หลังจากนั้นของที่อยู่บนจอแล้วใช้ <code>getBy</code> ได้เลย</p>
+
+        <p>สังเกตว่านี่คือปัญหาเดียวกับ <code>waitFor</code> ในบทที่แล้ว แค่เปลี่ยนรูป: <code>findBy</code> คือ <code>waitFor</code> ที่ผูกกับการค้นหา element และคำถามเดิมยังใช้ได้ทั้งดุ้น — <em>เรารออะไรอยู่</em> การรอ "ข้อความของสินค้าชิ้นแรก" กับการรอ "spinner หายไป" เป็นการรับประกันคนละอย่างกัน และอย่างหลังผ่านได้แม้ข้อมูลจะไม่มาเลย</p>
+
+        <h2>user-event ไม่ใช่ fireEvent</h2>
+
+        <p>Testing Library มี <code>fireEvent</code> ที่ยิง DOM event ดิบ ๆ ทีละลูก แต่เราจะใช้ <strong>user-event</strong> ทั้งบท เพราะมันจำลอง<em>พฤติกรรมผู้ใช้ทั้งลำดับ</em>: การคลิกหนึ่งครั้งของ user-event คือ pointer move → pointer down → focus → pointer up → click และการพิมพ์คือ keydown/keypress/keyup ทีละตัวอักษร ผลคือมันเจอ bug ที่ fireEvent มองข้าม เช่น ปุ่มที่ถูก <code>disabled</code> หรือ input ที่อ่านค่าจาก keyboard event — user-event จะคลิกปุ่ม disabled ไม่ได้เหมือนผู้ใช้จริงนั่นแหละ ท่าใช้มาตรฐานคือ <code>const user = userEvent.setup()</code> ต้นเทสต์ แล้ว <code>await</code> ทุกการกระทำ (ทุก method ของมันเป็น async)</p>
+
+        <p>ข้อที่ว่า "คลิกปุ่ม disabled ไม่ได้" มีน้ำหนักเป็นพิเศษในโปรเจกต์นี้ เพราะบทเรียน 24 ให้ปุ่มลดจำนวนมี <code>disabled={item.quantity &lt;= 1}</code> ติดอยู่ — ถ้าเราใช้ <code>fireEvent.click</code> เทสต์จะกดปุ่มนั้นได้ทั้งที่ผู้ใช้จริงกดไม่ได้ แล้วเราจะได้เทสต์ที่พิสูจน์พฤติกรรมที่ไม่มีทางเกิดขึ้นจริง</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <p>สี่ไฟล์ หนึ่งเคสพิมพ์เอง ที่เหลือให้ Agent เขียนในรอบเดียว:</p>
+
+        <pre><code class="language-bash">src/pages/
+├── Cart/
+│   └── Cart.test.tsx       # ✍️ imports + seedCart + เคส "updates quantity and total"
+│                           # 🤖 อีกสองเคสเติมเข้าไฟล์เดียวกัน
+├── Home/
+│   └── Home.test.tsx       # 🤖 smoke test หนึ่งเคส
+├── Category/
+│   └── Category.test.tsx   # 🤖 หนึ่งเคส เดินสามจังหวะ
+└── Checkout/
+    └── Checkout.test.tsx   # 🤖 หนึ่งเคส flow สั่งซื้อทั้งเส้น</code></pre>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>Cart.test.tsx</code></strong> — ต้องครบสามเคส: ตะกร้าว่าง, ปรับจำนวนแล้วยอดเปลี่ยน, ลบแล้วกลับไปว่าง ทุก element ต้องหาด้วย role หรือข้อความที่ผู้ใช้เห็น ต้องไม่ mock <code>useCart</code> และต้องไม่แตะไฟล์ในโฟลเดอร์ <code>src/features/cart</code></li>
+          <li><strong><code>Home.test.tsx</code></strong> — ต้องพิสูจน์ว่าข้อมูลจาก<em>สอง</em> endpoint คนละตัวขึ้นจอจริง ต้องรอด้วย <code>findByText</code> ไม่ใช่ assert ทันที และต้องไม่ assert เรื่อง spinner หรือสถานะ loading เลย</li>
+          <li><strong><code>Category.test.tsx</code></strong> — ต้องเดินครบสามจังหวะในเคสเดียว (เปิดหน้า → เปลี่ยนหมวด → เปลี่ยนหน้า) ต้องแก้ปัญหาข้อความซ้ำกับ Footer โดยไม่ใช้ test id และต้องไม่เพิ่ม handler ของ MSW</li>
+          <li><strong><code>Checkout.test.tsx</code></strong> — ต้องเดิน flow ทั้งเส้นเหมือนลูกค้าจริงตั้งแต่กรอกฟอร์มจนถึงหน้า Order Success ต้อง assert ทั้ง URL ปลายทางและข้อความบนจอ ต้องไม่อ่านตัวเลขยอดเงินใด ๆ และต้องไม่ import <code>consts.ts</code></li>
+        </ul>
+
+        <h2>✍️ ส่วนนี้พิมพ์เอง</h2>
+
+        <p>บทเรียน 31 บอกไว้แล้วว่าไฟล์เทสต์อยู่ปลายสายเสมอ ไม่มีอะไร import มัน — ข้อนั้นยังจริงในบทนี้ แต่คราวนี้มีสายการพึ่งพา<em>ในไฟล์เดียวกัน</em>โผล่มาแทน และมันชี้ไปทางเดียวกับกฎเดิมเป๊ะ: เคสที่ Agent จะเขียนต่อ ไม่ได้อยู่เดี่ยว ๆ มันเรียก <code>seedCart()</code> และใช้ <code>renderRoute</code> กับ <code>screen</code> ที่ import ไว้ด้านบนของไฟล์</p>
+
+        <p>ไล่ดูว่าใครพึ่งใครใน <code>Cart.test.tsx</code> ฉบับสมบูรณ์:</p>
+
+        <ul>
+          <li>บรรทัด import สี่บรรทัด และฟังก์ชัน <code>seedCart</code> — ไม่พึ่งอะไรในไฟล์เลย</li>
+          <li>เคส <code>"shows the empty state when there are no items"</code> — พึ่ง <code>renderRoute</code> และ <code>screen</code></li>
+          <li>เคส <code>"updates quantity and total"</code> — พึ่ง <code>seedCart</code>, <code>renderRoute</code>, <code>screen</code> และ <code>userEvent</code> ครบทุกตัว</li>
+          <li>เคส <code>"removes an item"</code> — พึ่ง <code>seedCart</code> เช่นกัน</li>
+        </ul>
+
+        <p>ทางเดียวที่จะให้เคสของ Agent มีของครบตอนที่มันเขียน คือ<strong>เราต้องพิมพ์หัวไฟล์กับ <code>seedCart</code> ให้เสร็จก่อน</strong> ถ้าเราให้มันสร้างทั้งไฟล์แล้วสั่งว่า "ห้ามเขียนเคสปรับจำนวน" สิ่งที่พังไม่ใช่เคสที่เราตัดออก (มันไม่มีอยู่ ก็ไม่มีอะไรให้พัง) แต่คือเคส <code>"removes an item"</code> ที่เรียก <code>seedCart()</code> ซึ่งไม่มีใครประกาศ — typecheck ตายที่บรรทัดนั้น นี่คือกฎเดิมจากบทเรียน 12 และ 22 ในรูปย่อส่วน: <em>สิ่งที่พังคือตัวที่พึ่งพา ไม่ใช่ตัวที่ถูกตัด</em></p>
+
+        <p>และเคสที่เลือกให้พิมพ์เองก็ไม่ได้เลือกเพราะมันอยู่ตรงกลาง แต่เพราะมันเป็นเคสเดียวในสามเคสที่<strong>พิสูจน์ตัวเลขที่ถูกคำนวณใหม่</strong> — กด <code>&gt;</code> หนึ่งครั้งแล้วยอดต้องขยับจาก <code>$10.00</code> เป็น <code>$20.00</code> ซึ่งต้องผ่าน reducer, context, <code>useMemo</code> และ <code>toFixed(2)</code> ครบทั้งสาย อีกสองเคสพิสูจน์แค่ว่าข้อความหนึ่งก้อนโผล่หรือหายไป ซึ่งเขียนให้ผ่านโดยไม่ได้พิสูจน์อะไรได้ง่ายกว่ามาก</p>
+
+        <blockquote class="lesson-manual">
+          <p>✍️ <strong>ส่วนนี้พิมพ์เอง</strong> — ทำตามลำดับนี้ ห้ามก๊อปวาง ห้ามให้ Agent ช่วยเติม (ถ้ามีปุ่ม autocomplete ของ Cursor เด้งขึ้นมาแล้วคุณกด Tab รับ นั่นก็คือการก๊อป):</p>
+          <ol>
+            <li>ยืนยันก่อนว่าบทเรียน 32 commit แล้ว — <code>git status</code> ต้องสะอาด ไม่งั้น diff ของ prompt ข้างล่างจะปนเคสที่คุณพิมพ์เองเข้ากับเคสของ Agent ซึ่งอยู่ใน<em>ไฟล์เดียวกัน</em> คราวนี้จึงแยกยากกว่าทุกครั้งที่ผ่านมา</li>
+            <li>เปิด <code>src/pages/Cart/Cart.tsx</code> กับ <code>src/features/cart/components/CartTable/CartTable.tsx</code> วางไว้ข้าง ๆ แล้วพิมพ์ <code>src/pages/Cart/Cart.test.tsx</code> ตามข้างล่างนี้ — ทุกครั้งที่พิมพ์ข้อความในเครื่องหมายคำพูด ให้หาข้อความนั้นในไฟล์ต้นทางด้วยตาก่อน ห้ามพิมพ์จากความจำ</li>
+            <li><code>npm run test</code> ต้องได้ 9 test files, 29 tests ผ่าน จากนั้น <code>npm run lint</code> และ <code>npm run typecheck</code> ให้ผ่านทั้งคู่ แล้ว <code>git commit</code></li>
+            <li>ทำขั้นตอน "ทำให้มันแดง" หนึ่งรอบก่อนไปต่อ — วิธีอยู่ในย่อหน้าใต้กล่องนี้ ข้อนี้ห้ามข้าม</li>
+          </ol>
+          <p><code>src/pages/Cart/Cart.test.tsx</code> (ยังไม่ครบไฟล์ — Agent จะเติมอีกสองเคส):</p>
+          <pre><code class="language-typescript">import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { CART_STORAGE_KEY } from "@/features/cart/store/cartStorage";
+import { renderRoute } from "@/test/renderRoute";
+
+function seedCart() {
+  localStorage.setItem(
+    CART_STORAGE_KEY,
+    JSON.stringify({
+      items: [
+        { id: 1, title: "Widget", price: 10, quantity: 1, image: "/w.png" },
+      ],
+    }),
+  );
+}
+
+describe("Cart page", () =&gt; {
+  it("updates quantity and total", async () =&gt; {
+    const user = userEvent.setup();
+    seedCart();
+    renderRoute("/cart");
+
+    expect(await screen.findByText("Widget")).toBeInTheDocument();
+    expect(screen.getByText("Total Price: $10.00")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "&gt;" }));
+    expect(screen.getByText("Total Price: $20.00")).toBeInTheDocument();
+  });
+});
+</code></pre>
+          <p><strong>เหตุผล:</strong> integration test คือที่ที่ AI เขียน "ผ่านแต่ไม่ได้พิสูจน์อะไร" ได้ง่ายที่สุด เพราะหน้าจอมีของเยอะ และ<em>อะไรก็ตามที่โผล่บนจอ</em>ใช้เป็น assertion ได้หมด เทสต์ที่เขียนว่า <code>expect(await screen.findByText("Cart")).toBeInTheDocument()</code> จะผ่านตลอดกาลเพราะคำว่า Cart อยู่ใน <code>CategoryBanner</code> ที่ render ทั้งสองกิ่งของหน้า — ทั้งตอนตะกร้ามีของและตอนตะกร้าว่าง เคสที่คุณเพิ่งพิมพ์ต่างออกไปตรงที่มันบังคับให้<strong>ค่าบนจอเปลี่ยน</strong>เพราะการกระทำของผู้ใช้ ซึ่งเป็นเงื่อนไขที่โกงไม่ได้ ห้าบรรทัดในตัวเคสมีการตัดสินใจของคนอยู่สี่จุดที่ Agent ไม่มีทางเดาถูกครบ: การเลือกใช้ <code>findByText</code> เป็นประตูรอแล้วสลับเป็น <code>getByText</code> หลังจากนั้น, การเลือกหาปุ่มด้วย <code>getByRole</code> แทน CSS selector, การเขียนยอดเงินเต็ม ๆ ทั้ง <code>$10.00</code> และ <code>$20.00</code> แทนที่จะเช็คแค่ว่ามีเลข 20 อยู่ที่ไหนสักที่บนจอ และการรู้ว่า <code>await user.click</code> คืนค่ามาแล้ว React ประมวลผลเสร็จแล้ว จึงไม่ต้อง <code>await</code> ซ้ำในบรรทัดถัดไป ถ้าคุณไม่เคยลากเส้นสี่เส้นนี้เอง คุณจะไม่มีอะไรในหัวไว้เทียบตอนอ่านเคสที่ Agent เขียนให้ในอีกไม่กี่นาที</p>
+        </blockquote>
+
+        <p>ตอนนี้ทำขั้นที่ 4: เปิด <code>src/pages/Cart/Cart.tsx</code> แล้วเปลี่ยนข้อความ <code>Total Price: $</code> เป็น <code>Grand Total: $</code> รันเทสต์ใหม่ ต้องเห็นเคสนี้แดงพร้อมข้อความว่าหา <code>Total Price: $10.00</code> ไม่เจอ แล้ว <code>git restore src/pages/Cart/Cart.tsx</code> คืนของเดิม</p>
+
+        <p>สามสิบวินาทีนั้นเพิ่งพิสูจน์สิ่งที่ checklist ของบทเรียน 24 เตือนไว้ล่วงหน้าว่า "ถ้า Agent ปรับถ้อยคำให้สวยขึ้น วันนี้ไม่มีอะไรพัง แต่บทเรียน 33 จะพัง" — วันนี้มาถึงแล้ว และคุณเพิ่งเห็นกับตาว่ามันพังจริง นั่นคือสิ่งที่ integration test ให้: มันเปลี่ยนข้อตกลงที่เคยอยู่ในหัวคนอย่างเดียว ให้กลายเป็นข้อตกลงที่มีเครื่องมือเฝ้า</p>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> แชทใหม่ โหมด Agent รอบนี้มีของที่ไม่เคยสั่งมาก่อน: ให้ Agent <em>เติมเคสเข้าไฟล์ที่คุณเพิ่งพิมพ์เอง</em> จึงต้องระบุตำแหน่งที่จะแทรกให้ชัดทั้งบนและล่าง ไม่งั้นลำดับใน describe จะไม่ตรงกับโค้ดอ้างอิง:</p>
+          <pre><code class="language-text">เขียน integration test ระดับทั้งหน้าให้ Cart, Home, Category และ Checkout
+
+บริบท: @src/pages/Cart/Cart.test.tsx @src/test/renderRoute.tsx @src/test/msw/handlers.ts @src/pages/Cart/Cart.tsx @src/pages/Home/Home.tsx @src/pages/Category/Category.tsx @src/pages/Checkout/Checkout.tsx @src/features/cart/components/CartTable/CartTable.tsx
+src/pages/Cart/Cart.test.tsx มีอยู่แล้ว มี import สี่บรรทัด ฟังก์ชัน seedCart
+  และ describe("Cart page") ที่มี it เดียวชื่อ "updates quantity and total"
+  ให้ใช้ helper กับสไตล์ของไฟล์นั้นต่อ ห้ามประกาศ seedCart ตัวที่สอง
+src/test/renderRoute.tsx export function renderRoute(initialPath: string)
+  ที่คืน { router, ...ผลของ render } โดย router คือ createMemoryRouter
+  ที่สร้างจาก routes ตัวจริงของแอป และห่อด้วย QueryClientProvider + CartProvider
+setup.ts ล้าง localStorage ให้ทุกเทสต์แล้ว เทสต์ที่ไม่ seed จึงเจอตะกร้าว่างเสมอ
+MSW handler ตั้งต้นมีอยู่แล้ว ไม่ต้องเพิ่มหรือแก้ handler ใด ๆ ในงานนี้
+  GET /products?limit=5 คืนสินค้าชื่อ "Product 1" ถึง "Product 5"
+  GET /products/category/:slug คืนสินค้าชื่อ "&lt;slug&gt; product &lt;ลำดับ&gt;"
+    โดยลำดับเริ่มจาก skip + 1 และ response มี total เป็น 100 เสมอ
+  GET /products/categories คืน slug สามตัว: beauty, fragrances, furniture
+  POST /carts/add ตอบ 201 เสมอ
+ข้อความบนจอที่ต้องใช้ค้นหา ทั้งหมดมีอยู่จริงในโค้ดแล้ว ห้ามแก้ไฟล์ต้นทาง
+  หน้า Cart ตอนว่าง: "Your Cart is Empty"
+  หน้า Cart ตอนมีของ: "Total Price: $" ตามด้วยยอดที่ toFixed(2)
+  ปุ่มใน CartTable มีเนื้อในเป็น × สำหรับลบ, &lt; สำหรับลด, &gt; สำหรับเพิ่ม
+  หน้า Checkout: ช่องกรอกมี placeholder "Enter Address", "Enter Email",
+    "Enter Phone Number" ปุ่มบันทึกที่อยู่ชื่อ "Submit" ปุ่มสั่งซื้อชื่อ "Place Order"
+  หน้า Order Success: "Order Placed Successfully!"
+CategoryMenu แสดงชื่อหมวดเป็น &lt;span&gt; ที่คลิกได้ ส่วน Footer มีคำว่า Fragrances
+  เป็น &lt;li&gt; ประดับที่คลิกไม่ได้ ทั้งสองอยู่บนจอพร้อมกันเพราะ render ทั้งแอป
+Pagination ของ react-paginate แสดงเลขหน้าเป็นข้อความ "1", "2", ...
+alias @/ ชี้ไปที่ src/ ส่วนไฟล์ในโฟลเดอร์เดียวกันให้ใช้ ./
+
+โครงสร้าง: แก้ไฟล์เดิมหนึ่งไฟล์และสร้างไฟล์ใหม่สามไฟล์ ไม่มากไม่น้อยกว่านี้
+- src/pages/Cart/Cart.test.tsx (แก้ไฟล์เดิม เติมสอง it)
+- src/pages/Home/Home.test.tsx (สร้างใหม่)
+- src/pages/Category/Category.test.tsx (สร้างใหม่)
+- src/pages/Checkout/Checkout.test.tsx (สร้างใหม่)
+
+ข้อกำหนดทางเทคนิค: ทุก element ต้องหาด้วยสิ่งที่ผู้ใช้รับรู้เท่านั้น
+  คือ role, ข้อความบนจอ หรือ placeholder ห้ามใช้ getByTestId, ห้ามใช้
+  container.querySelector, ห้ามค้นด้วยชื่อ class และห้ามอ้าง data-testid
+  แม้ในโค้ดต้นทางจะมี data-testid อยู่ก็ตาม:
+- Cart.test.tsx: เติมสอง it เข้าไปใน describe("Cart page") เดิม
+  ให้ลำดับใน describe หลังแก้เสร็จเป็นสามเคสเรียงแบบนี้พอดี
+    1) "shows the empty state when there are no items"  (แทรก *เหนือ* เคสเดิม)
+    2) "updates quantity and total"                     (เคสเดิม ห้ามแตะ)
+    3) "removes an item"                                (ต่อ *ใต้* เคสเดิม)
+  เคส 1: async แต่ไม่ต้อง userEvent.setup() และไม่ต้อง seedCart()
+    renderRoute("/cart");
+    expect(await screen.findByText("Your Cart is Empty")).toBeInTheDocument();
+  เคส 3: async เริ่มด้วย const user = userEvent.setup(); แล้ว seedCart();
+    แล้ว renderRoute("/cart");
+    await user.click(await screen.findByRole("button", { name: "×" }));
+    expect(await screen.findByText("Your Cart is Empty")).toBeInTheDocument();
+    (สังเกตว่าเคสนี้ใช้ findByRole ไม่ใช่ getByRole เพราะยังไม่มีประตูรอมาก่อน)
+  ห้ามแก้ import สี่บรรทัดเดิม ห้ามแก้ seedCart และห้ามแตะเคสที่ 2 แม้แต่ตัวอักษรเดียว
+- Home.test.tsx: import สองบรรทัด
+    import { screen } from "@testing-library/react";
+    import { renderRoute } from "@/test/renderRoute";
+  describe("Home page") มี it เดียวชื่อ
+    "renders deal products and category products from the API" แบบ async
+    renderRoute("/");
+    expect(await screen.findByText("Product 1")).toBeInTheDocument();
+    expect(await screen.findByText("beauty product 1")).toBeInTheDocument();
+  ห้าม import userEvent ในไฟล์นี้ ห้าม assert เรื่อง spinner หรือสถานะ loading
+- Category.test.tsx: import สามบรรทัด (screen, userEvent, renderRoute)
+  describe("Category page") มี it เดียวชื่อ
+    "switches category and pages through results" แบบ async
+    const user = userEvent.setup(); แล้ว renderRoute("/categories");
+    expect(await screen.findByText("beauty product 1")).toBeInTheDocument();
+    ใส่ comment สองบรรทัดเหนือการคลิกครั้งแรก ข้อความตามนี้พอดี
+      The Footer also lists "Fragrances" as a static (non-interactive) &lt;li&gt;;
+      scope to the clickable CategoryMenu &lt;span&gt; to avoid ambiguity.
+    await user.click(screen.getByText("Fragrances", { selector: "span" }));
+    expect(await screen.findByText("fragrances product 1")).toBeInTheDocument();
+    await user.click(screen.getByText("2"));
+    expect(await screen.findByText("fragrances product 21")).toBeInTheDocument();
+  ห้ามแก้ปัญหาข้อความซ้ำด้วย getAllByText แล้วเลือก index
+  ห้ามเพิ่ม handler ของ MSW และห้ามเรียก server.use(...)
+- Checkout.test.tsx: import สี่บรรทัด
+    import { screen, waitFor } from "@testing-library/react";
+    import userEvent from "@testing-library/user-event";
+    import { CART_STORAGE_KEY } from "@/features/cart/store/cartStorage";
+    import { renderRoute } from "@/test/renderRoute";
+  describe("Checkout page") มี it เดียวชื่อ
+    "places an order and navigates to the success page" แบบ async
+    const user = userEvent.setup();
+    เตรียมตะกร้าด้วย localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(
+      { items: [{ id: 1, title: "Widget", price: 10, quantity: 2,
+        image: "/w.png" }] }))
+      เขียนเต็ม ๆ ในไฟล์นี้ ห้าม import seedCart จาก Cart.test.tsx
+    const { router } = renderRoute("/checkout");
+    พิมพ์สามช่องด้วย user.type และ getByPlaceholderText ตามลำดับ
+      "Enter Address" -&gt; "1 Main St"
+      "Enter Email" -&gt; "jane@example.com"
+      "Enter Phone Number" -&gt; "0812345678"
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.click(screen.getByRole("button", { name: /place order/i }));
+      (ตัวหลังใช้ regex แบบ case-insensitive ตามนี้ ไม่ใช่ string)
+    await waitFor(() =&gt;
+      expect(router.state.location.pathname).toBe("/order/success"));
+    expect(screen.getByText("Order Placed Successfully!")).toBeInTheDocument();
+  ห้าม assert ตัวเลขยอดเงินใด ๆ ในไฟล์นี้
+  ห้าม import consts.ts และห้ามอ้าง deliveryOptions หรือ paymentOptions
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ไฟล์ต้นทางแม้แต่บรรทัดเดียว รวมทั้ง Cart.tsx, CartTable.tsx,
+  Home.tsx, Category.tsx, Checkout.tsx, OrderSuccess.tsx และ Footer.tsx
+- ห้ามแก้ไฟล์ใน src/test/ ทั้งโฟลเดอร์ และห้ามแก้เทสต์แปดไฟล์จากสองบทที่แล้ว
+- ห้ามเพิ่ม data-testid ให้ไฟล์ไหนทั้งสิ้น และห้ามใช้ data-testid ที่มีอยู่แล้ว
+- ห้ามใช้ fireEvent
+- ห้ามใช้ setTimeout, vi.useFakeTimers หรือ await new Promise(...) เพื่อรอ
+- ห้ามใส่ it.skip, it.todo, it.only หรือ describe.only แม้แต่ที่เดียว
+- ห้ามเขียนเทสต์ให้หน้า Product หรือ Header ในงานนี้
+- ห้ามสร้าง index.ts, ไฟล์ helper กลาง หรือไฟล์ barrel ใด ๆ</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน และรอบนี้ให้ดู <code>git diff src/pages/Cart/Cart.test.tsx</code> เป็นไฟล์แรก เพราะเป็นครั้งเดียวในคอร์สที่ Agent เขียนต่อในไฟล์ที่คุณพิมพ์เอง:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>ค้นหา element ด้วย test id หรือชื่อ class แทนที่จะค้นด้วย role หรือข้อความ</em> — ก้อนที่ต้องมองหาคือ <code>screen.getByTestId("loader")</code> และ <code>container.querySelector(".table-actions button")</code> และสิ่งที่ทำให้ข้อนี้อันตรายเป็นพิเศษในโปรเจกต์<em>นี้</em> คือ <code>data-testid="loader"</code> <strong>มีอยู่จริงในโค้ด</strong> ตั้งแต่บทเรียน 19, 20 และ 21 — Agent จะ grep เจอมันแล้วสรุปว่านี่คือธรรมเนียมของโปรเจกต์ ทั้งที่ไม่มีเทสต์ตัวไหนเคยใช้มันเลยสักตัว เทสต์ที่ออกมาจะหน้าตาแบบนี้: <code>renderRoute("/"); expect(screen.getAllByTestId("loader").length).toBeGreaterThan(0);</code> ซึ่งผ่านทันทีทุกครั้งและพิสูจน์แค่ว่า spinner ถูก render — ไม่ได้บอกเลยว่าข้อมูลมาถึงหรือเปล่า (นี่คือ <code>AI มักพลาดตรงนี้</code> ของบทที่แล้วในรูปของ DOM) ส่วน <code>querySelector</code> ด้วยชื่อ class ก็ผ่านได้แม้ปุ่มนั้นจะถูก CSS ซ่อนอยู่ ถูกวางทับ หรือกดด้วยคีย์บอร์ดไม่ได้ พูดให้ตรงคือ <strong>เทสต์แบบนี้ยืนยันว่า HTML ถูกสร้าง ไม่ได้ยืนยันว่าหน้าเว็บใช้งานได้</strong> ส่วน <code>getByRole("button", { name: "×" })</code> ยืนยันสองอย่างในตาเดียว: มันเป็นปุ่มจริงในสายตา accessibility tree และชื่อที่ screen reader อ่านออกมาคือ × วิธีตรวจคำสั่งเดียว: <code>grep -rn "getByTestId\|findByTestId\|querySelector\|container\." src/pages/</code> ต้อง<strong>ว่างเปล่า</strong></li>
+            <li><strong>ทำให้มันแดงด้วยมือ — สี่คู่ และคู่สุดท้ายเป็นคู่ที่ต้องยัง<em>เขียว</em></strong> สามคู่แรกทำแบบเดิม: แก้ไฟล์ต้นทางให้ผิดหนึ่งจุด รันเทสต์ ดูให้เห็นแดง แล้ว <code>git restore</code>
+              <ul>
+                <li><code>src/features/cart/components/CartTable/CartTable.tsx</code> — เปลี่ยนเนื้อในปุ่มเพิ่มจาก <code>&gt;</code> เป็น <code>+</code> → เคส <code>"updates quantity and total"</code> ต้องแดงที่บรรทัด <code>getByRole</code> พร้อมข้อความที่ลิสต์ปุ่มทั้งหมดที่มีบนจอให้ดู</li>
+                <li><code>src/pages/Home/Home.tsx</code> — ลบ <code>&lt;ProductsList /&gt;</code> ของแถว DEALS OF THE DAY ออกไปทั้งก้อน → เทสต์หน้า Home ต้องแดงที่ <code>findByText("Product 1")</code> ไม่ใช่ที่บรรทัดถัดไป</li>
+                <li><code>src/pages/Order/OrderSuccess.tsx</code> — เปลี่ยนข้อความเป็น <code>Thank you for your order</code> → เทสต์หน้า Checkout ต้องแดงที่บรรทัดสุดท้าย แต่<em>ไม่</em>แดงที่บรรทัด <code>router.state.location.pathname</code> ซึ่งบอกคุณว่าการ navigate ยังถูกและปัญหาอยู่ที่หน้าปลายทางเท่านั้น</li>
+                <li><strong>คู่ที่สี่ — ต้องยังเขียว:</strong> <code>src/pages/Category/Category.tsx</code> ลบ <code>setPage(1)</code> ออกจาก <code>onCategoryClick</code> → รันเทสต์ทั้งชุด <strong>ทุกอย่างต้องยังเขียวครบ 34 ตัว</strong> ถ้าคุณคาดว่ามันจะแดง แสดงว่าคุณกำลังเข้าใจตาข่ายนี้ผิดอยู่หนึ่งช่อง อ่านเหตุผลเต็ม ๆ ในกล่อง 💡 ท้ายหัวข้อ แล้วอย่าลืม <code>git restore</code></li>
+              </ul>
+            </li>
+            <li>ไฟล์ใหม่ <strong>3 ไฟล์</strong> และ modified <strong>1 ไฟล์</strong> เท่านั้น — <code>git status</code> ต้องไม่มีไฟล์ใน <code>src/features</code>, <code>src/shared</code>, <code>src/app</code> หรือ <code>src/test</code> ขึ้นสถานะ modified แม้แต่ไฟล์เดียว โดยเฉพาะ <code>src/test/msw/handlers.ts</code> ที่ Agent จะอยากเพิ่ม handler ให้ "ตรงกับเทสต์" แทนที่จะเขียนเทสต์ให้ตรงกับ handler ที่มี</li>
+            <li><code>git diff src/pages/Cart/Cart.test.tsx</code> ต้องมีบรรทัดที่<strong>เพิ่มเข้ามาอย่างเดียว</strong> ไม่มีบรรทัดที่ถูกลบเลย และเคส <code>"updates quantity and total"</code> ต้องไม่โผล่ใน diff — ถ้าโผล่ ให้อ่านว่ามันเปลี่ยนอะไร Agent ที่เห็นเคสของคุณใช้ <code>getByRole</code> ส่วนเคสของมันใช้ <code>findByRole</code> อาจ "จัดให้เหมือนกัน" โดยไม่บอกใคร</li>
+            <li>ลำดับ <code>it</code> ใน <code>describe("Cart page")</code> เป็น empty state → updates quantity → removes an item — ถ้า Agent ต่อท้ายทั้งสองเคสไปข้างล่าง ลำดับจะไม่ตรงกับโค้ดอ้างอิง ซึ่ง<em>ไม่มีผลกับผลการรัน</em>เลยแม้แต่นิดเดียว (แต่ละ <code>it</code> เป็นอิสระต่อกัน) แต่ทำให้ diff ของคุณเทียบกับบทนี้ไม่ได้ ให้จัดลำดับกลับด้วยมือ ไม่ต้องสั่ง Agent ใหม่</li>
+            <li><code>grep -c "seedCart" src/pages/Cart/Cart.test.tsx</code> ต้องได้ <strong>3</strong> — ประกาศหนึ่ง เรียกสอง ถ้าได้ 4 แปลว่าเคสแรก (empty state) เผลอ seed ด้วย ซึ่งจะทำให้มันทดสอบตรงข้ามกับชื่อของตัวเอง และจะแดงทันที ถ้าได้ 2 แปลว่ามีเคสไหนสักเคสไม่ได้ seed แล้วจะแดงเช่นกัน — ทั้งสองแบบเป็นบั๊กดัง</li>
+            <li>เคส <code>"removes an item"</code> ใช้ <code>await screen.findByRole(...)</code> ไม่ใช่ <code>getByRole</code> — ต่างจากเคสที่คุณพิมพ์เองซึ่งใช้ <code>getByRole</code> ได้เพราะผ่านประตูรอ <code>findByText("Widget")</code> มาก่อนแล้ว เคสนี้ไม่มีประตูรอ จึงต้องให้ตัวการค้นหาปุ่มทำหน้าที่รอเอง ถ้า Agent ใช้ <code>getByRole</code> เทสต์จะพังแบบไม่แน่นอน (flaky) คือผ่านบนเครื่องเร็วและพังบนเครื่องช้า</li>
+            <li><code>grep -rn "user-event" src/pages/Home/Home.test.tsx</code> ต้องว่างเปล่า — หน้า Home ไม่มี interaction ในเทสต์นี้ Agent ที่ import มาแล้วไม่ได้ใช้จะโดน lint จับ (<code>no-unused-vars</code>) ซึ่งดี แต่ที่แย่กว่าคือมันอาจ "หาอะไรให้คลิก" เพื่อให้ import นั้นมีเหตุผล แล้วเทสต์ smoke test ที่ควรสั้นที่สุดจะบวมขึ้นมาโดยไม่ได้พิสูจน์อะไรเพิ่ม</li>
+            <li>เทสต์หน้า Home รอด้วย <code>findByText</code> ทั้งสองบรรทัด ไม่ใช่ <code>getByText</code> — และข้อความสองก้อนต้องมาจากคนละ endpoint จริง ๆ (<code>Product 1</code> มาจาก <code>GET /products?limit=5</code> ส่วน <code>beauty product 1</code> มาจาก <code>GET /products/category/beauty</code>) ถ้า Agent เขียนสองบรรทัดที่ทั้งคู่หา <code>Product 1</code> โดยเปลี่ยนแค่ข้อความ เทสต์จะผ่านโดยพิสูจน์แค่ครึ่งเดียวของหน้า</li>
+            <li>เทสต์หน้า Category แก้ปัญหาข้อความซ้ำด้วย <code>{ selector: "span" }</code> ไม่ใช่ <code>getAllByText("Fragrances")[0]</code> — แบบหลังใช้งานได้วันนี้ แต่ผูกเทสต์เข้ากับ<em>ลำดับ</em>ของ element บนหน้า วันที่มีคนสลับ Footer กับ CategoryMenu หรือเพิ่มหมวดใหม่ เทสต์จะคลิกผิดตัวโดยไม่มีอะไรบอก และ comment สองบรรทัดเหนือบรรทัดนั้นต้องอยู่ครบ — <code>grep -c "Footer" src/pages/Category/Category.test.tsx</code> ต้องได้ 1 comment นี้อธิบาย<em>การตัดสินใจ</em> ไม่ได้แปลโค้ด จึงเป็น comment ประเภทที่คอร์สนี้รับตั้งแต่บทเรียน 22</li>
+            <li>เทสต์หน้า Checkout assert <strong>สองอย่าง</strong>ตอนจบ: <code>router.state.location.pathname</code> และข้อความบนจอ — ถ้าเหลืออย่างเดียว จะเกิดช่องโหว่คนละแบบ: assert แค่ URL แปลว่าหน้าปลายทางจะพังยับก็ยังเขียว ส่วน assert แค่ข้อความแปลว่าไม่รู้ว่ามาถึงด้วย route ไหน</li>
+            <li>ปุ่ม Place Order หาด้วย regex <code>/place order/i</code> ส่วนปุ่ม Submit หาด้วย string <code>"Submit"</code> เป๊ะ — สองแบบในไฟล์เดียว ซึ่งเป็นความไม่สม่ำเสมอที่มีอยู่จริงในต้นฉบับ ไม่ต้องไปทำให้เหมือนกัน แค่รู้ว่ามันต่าง</li>
+            <li><code>grep -rn "vi.mock\|fireEvent\|setTimeout" src/pages/</code> ต้องว่างเปล่า และ <code>grep -rn "\.only(\|\.skip(\|\.todo(" src/</code> ต้องว่างเปล่าทั้งโปรเจกต์</li>
+            <li>ไม่มี <code>any</code> และไม่มีไฟล์ helper กลางโผล่มา — <code>git status</code> ต้องไม่มี <code>src/pages/testUtils.ts</code> หรืออะไรทำนองนั้น <code>seedCart</code> ถูกเขียนซ้ำในหน้า Checkout ตามที่ prompt สั่ง เพราะข้อมูลตะกร้าของสองหน้านั้นไม่เหมือนกัน (จำนวน 1 กับ 2)</li>
+          </ul>
+        </blockquote>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <h4><code>src/pages/Home/Home.test.tsx</code> — เทสต์ควันไฟ</h4>
+
+        <pre><code class="language-typescript">import { screen } from "@testing-library/react";
+import { renderRoute } from "@/test/renderRoute";
+
+describe("Home page", () =&gt; {
+  it("renders deal products and category products from the API", async () =&gt; {
+    renderRoute("/");
+
+    expect(await screen.findByText("Product 1")).toBeInTheDocument();
+    expect(await screen.findByText("beauty product 1")).toBeInTheDocument();
+  });
+});
+</code></pre>
+
+        <p>สามบรรทัดในตัวเทสต์ แต่ดูสิ่งที่มันพิสูจน์: <code>renderRoute("/")</code> เปิดแอปที่หน้าแรก — route table จริงต้อง match, <code>MainLayout</code> กับ Header/Footer ต้อง render, หน้า Home ยิง<em>สาม</em> query (best products, categories, สินค้าตาม category) ผ่าน axios + interceptor ไปเจอ MSW แล้วสองบรรทัด <code>findByText</code> รอจนข้อมูลจากคนละ endpoint ขึ้นจอ: <code>Product 1</code> มาจากแถว DEALS OF THE DAY ที่ใช้ <code>productQueries.list({ limit: 5 })</code> (fixture ตั้งชื่อว่า <code>Product N</code>) ส่วน <code>beauty product 1</code> มาจาก section ล่างที่ query ตาม category แรกคือ beauty — ถ้าจุดไหนในสายนั้นหลุดสักจุดเดียว เทสต์นี้แดง มันคือ "smoke test" ที่บอกใน 1 เทสต์ว่าแกนกลางของแอปยังหายใจอยู่</p>
+
+        <h4><code>src/pages/Category/Category.test.tsx</code> — คลิกเปลี่ยนหมวด คลิกเปลี่ยนหน้า</h4>
+
+        <pre><code class="language-typescript">import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { renderRoute } from "@/test/renderRoute";
+
+describe("Category page", () =&gt; {
+  it("switches category and pages through results", async () =&gt; {
+    const user = userEvent.setup();
+    renderRoute("/categories");
+
+    expect(await screen.findByText("beauty product 1")).toBeInTheDocument();
+
+    // The Footer also lists "Fragrances" as a static (non-interactive) &lt;li&gt;;
+    // scope to the clickable CategoryMenu &lt;span&gt; to avoid ambiguity.
+    await user.click(screen.getByText("Fragrances", { selector: "span" }));
+    expect(await screen.findByText("fragrances product 1")).toBeInTheDocument();
+
+    await user.click(screen.getByText("2"));
+    expect(
+      await screen.findByText("fragrances product 21"),
+    ).toBeInTheDocument();
+  });
+});
+</code></pre>
+
+        <p>เทสต์เดียวเดินสามจังหวะ และแต่ละจังหวะมีบทเรียน:</p>
+
+        <ul>
+          <li><strong>จังหวะแรก</strong> — เปิด <code>/categories</code> รอ <code>beauty product 1</code> (หมวดแรกจาก fixture คือค่าเริ่มต้น)</li>
+          <li><strong>จังหวะสอง: ปัญหา element ซ้ำ</strong> — จะคลิกคำว่า "Fragrances" ใน CategoryMenu แต่เพราะเรา render ทั้งแอปผ่าน <code>MainLayout</code> — <em>Footer ก็มีคำว่า Fragrances อยู่ด้วย</em> (เป็น <code>&lt;li&gt;</code> ประดับเฉย ๆ) ถ้าใช้ <code>getByText("Fragrances")</code> ตรง ๆ Testing Library จะโยน error "found multiple elements" ทางแก้ในไฟล์นี้คือ option <code>selector: "span"</code> — จำกัดผลลัพธ์เฉพาะ <code>&lt;span&gt;</code> ซึ่งคือตัวที่คลิกได้ใน CategoryMenu นี่คือตัวอย่างจริงของราคาที่จ่ายให้ integration test: จอมีของเยอะ ต้องระบุเป้าให้แม่น</li>
+          <li><strong>จังหวะสาม: pagination</strong> — คลิกปุ่ม "2" ของ react-paginate แล้วรอ <code>fragrances product 21</code> — เลข 21 ไม่ใช่เลขสุ่ม: หน้า 2 × หน้าละ 20 → skip 20 → handler ตั้งชื่อสินค้าตัวแรกเป็นลำดับ 21 เท่ากับพิสูจน์ทั้ง derived pagination state ของหน้า Category, การส่ง <code>skip</code> ใน request และ UX ของ <code>placeholderData: keepPreviousData</code> (รายการเก่ายังคาอยู่ระหว่างโหลด — เหตุผลที่ต้องใช้ <code>findBy</code> รอรายการใหม่)</li>
+        </ul>
+
+        <p>สังเกตว่าทั้งสองการคลิกในไฟล์นี้ใช้ <code>getByText</code> ไม่ใช่ <code>getByRole</code> ต่างจากหน้า Cart ที่ใช้ role ได้ทั้งสองปุ่ม เหตุผลไม่ได้อยู่ที่คนเขียนเทสต์ แต่อยู่ที่ markup: หมวดหมู่ใน <code>CategoryMenu</code> เป็น <code>&lt;span onClick&gt;</code> ซึ่งไม่มี role ให้ค้น ส่วนปุ่มใน <code>CartTable</code> เป็น <code>&lt;button&gt;</code> จริง — <em>เทสต์อ่าน accessibility ของหน้าออกมาให้เราดูโดยที่ไม่มีใครขอ</em> ถ้าวันหนึ่ง CategoryMenu ถูกแก้ให้เป็น <code>&lt;button&gt;</code> ตามที่ตระกูล 6 ของบทเรียน 29 แนะนำ บรรทัดนี้จะเขียนเป็น <code>getByRole("button", { name: "Fragrances" })</code> ได้ทันทีและปัญหาชื่อซ้ำกับ Footer จะหายไปเองด้วย</p>
+
+        <h4><code>src/pages/Cart/Cart.test.tsx</code> — ฉบับสมบูรณ์</h4>
+
+        <p>หน้า Cart ไม่ยิง API เลย — state ทั้งหมดมาจาก CartProvider + localStorage นี่คือไฟล์เดียวกับที่คุณพิมพ์เองไปแล้วครึ่งหนึ่ง หลังจาก Agent เติมสองเคสแล้วต้องได้แบบนี้:</p>
+
+        <pre><code class="language-typescript">import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { CART_STORAGE_KEY } from "@/features/cart/store/cartStorage";
+import { renderRoute } from "@/test/renderRoute";
+
+function seedCart() {
+  localStorage.setItem(
+    CART_STORAGE_KEY,
+    JSON.stringify({
+      items: [
+        { id: 1, title: "Widget", price: 10, quantity: 1, image: "/w.png" },
+      ],
+    }),
+  );
+}
+
+describe("Cart page", () =&gt; {
+  it("shows the empty state when there are no items", async () =&gt; {
+    renderRoute("/cart");
+    expect(await screen.findByText("Your Cart is Empty")).toBeInTheDocument();
+  });
+
+  it("updates quantity and total", async () =&gt; {
+    const user = userEvent.setup();
+    seedCart();
+    renderRoute("/cart");
+
+    expect(await screen.findByText("Widget")).toBeInTheDocument();
+    expect(screen.getByText("Total Price: $10.00")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "&gt;" }));
+    expect(screen.getByText("Total Price: $20.00")).toBeInTheDocument();
+  });
+
+  it("removes an item", async () =&gt; {
+    const user = userEvent.setup();
+    seedCart();
+    renderRoute("/cart");
+
+    await user.click(await screen.findByRole("button", { name: "×" }));
+    expect(await screen.findByText("Your Cart is Empty")).toBeInTheDocument();
+  });
+});
+</code></pre>
+
+        <p>เทคนิคเด่นของไฟล์นี้:</p>
+
+        <ul>
+          <li><strong><code>seedCart()</code></strong> — ท่าเดิมจากบทที่แล้ว: เขียน localStorage ก่อน render ให้ CartProvider lazy init ไปเจอของ ประกาศเป็นฟังก์ชันเพราะใช้สองเทสต์ (เทสต์ empty state ไม่ seed — และมั่นใจได้ว่าตะกร้าว่างจริงเพราะ <code>afterEach</code> ล้าง storage ให้ทุกเทสต์)</li>
+          <li><strong>หา element ด้วย role</strong> — <code>getByRole("button", { name: "&gt;" })</code> คือปุ่มเพิ่มจำนวนใน CartTable (<code>name</code> ของปุ่มคือข้อความในปุ่ม) การหาแบบ role ตรงกับที่ screen reader มองเห็น จึงเป็น query ที่ Testing Library แนะนำสุด — ได้เทสต์ accessibility แถมโดยไม่ต้องพยายาม</li>
+          <li><strong>สังเกตจุดที่ใช้ <code>getBy</code> ได้</strong> — หลังผ่านประตู <code>findByText("Widget")</code> แล้ว การคลิกเพิ่มจำนวนเป็น state update ล้วน (ไม่มี network) React ประมวลผลเสร็จก่อน <code>await user.click</code> คืนค่า — ยอดเงิน <code>Total Price: $20.00</code> จึง assert ด้วย <code>getByText</code> ได้ทันที ตัวเลขนี้ยังพิสูจน์ <code>useMemo</code> ที่คำนวณยอดรวมและ <code>toFixed(2)</code> ในหน้า Cart ด้วย</li>
+          <li><strong>เทสต์ลบ</strong> — คลิกปุ่ม <code>×</code> แล้วหน้าต้องเด้งกลับไป empty state ครบวงจร: มีของ → ลบ → ว่าง สังเกตว่าเคสนี้ใช้ <code>await screen.findByRole</code> เพราะไม่มีประตูรอมาก่อนเลย ต่างจากเคสกลางที่รอไปแล้วหนึ่งครั้ง</li>
+        </ul>
+
+        <h4><code>src/pages/Checkout/Checkout.test.tsx</code> — happy path จากฟอร์มถึง Order Success</h4>
+
+        <p>เทสต์สุดท้ายคือเทสต์ที่ "จริง" ที่สุดในชุด: เดิน flow สั่งซื้อทั้งเส้นเหมือนลูกค้าคนหนึ่ง:</p>
+
+        <pre><code class="language-typescript">import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { CART_STORAGE_KEY } from "@/features/cart/store/cartStorage";
+import { renderRoute } from "@/test/renderRoute";
+
+describe("Checkout page", () =&gt; {
+  it("places an order and navigates to the success page", async () =&gt; {
+    const user = userEvent.setup();
+    localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify({
+        items: [
+          { id: 1, title: "Widget", price: 10, quantity: 2, image: "/w.png" },
+        ],
+      }),
+    );
+
+    const { router } = renderRoute("/checkout");
+
+    await user.type(screen.getByPlaceholderText("Enter Address"), "1 Main St");
+    await user.type(
+      screen.getByPlaceholderText("Enter Email"),
+      "jane@example.com",
+    );
+    await user.type(
+      screen.getByPlaceholderText("Enter Phone Number"),
+      "0812345678",
+    );
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    await user.click(screen.getByRole("button", { name: /place order/i }));
+
+    await waitFor(() =&gt;
+      expect(router.state.location.pathname).toBe("/order/success"),
+    );
+    expect(screen.getByText("Order Placed Successfully!")).toBeInTheDocument();
+  });
+});
+</code></pre>
+
+        <p>ไล่ตาม flow แล้วนับดูว่าเทสต์เดียวนี้แตะกี่ระบบ:</p>
+
+        <ul>
+          <li><strong>พิมพ์สามช่องด้วย <code>user.type</code></strong> — หา input จาก placeholder (ข้อความเดียวกับที่ผู้ใช้ใช้หาช่องกรอกนั่นแหละ) แล้วกด Submit — จังหวะนี้ react-hook-form + zodResolver ทำงานจริง: ถ้าข้อมูลไม่ผ่าน schema ฟอร์มจะไม่ submit และ <code>storeCheckoutAddress</code> ไม่ถูกเรียก (อยากเห็นกับตา ลองแก้อีเมลเป็น <code>"nope"</code> แล้วดูเทสต์พังตรง Place Order) และสังเกตว่าการพิมพ์ทีละตัวอักษรแบบนี้คือสิ่งที่จับบั๊ก <code>value={...}</code> ที่แถมมากับ <code>register</code> ในบทเรียน 26 ได้ — ช่องที่เป็น controlled แบบค่าไม่มีวันเปลี่ยนจะรับตัวอักษรไม่ได้เลย</li>
+          <li><strong>ปุ่ม Place Order หาแบบ regex</strong> — <code>{ name: /place order/i }</code> คือ case-insensitive match กันเหนียวเรื่องตัวพิมพ์/การจัดรูปข้อความในปุ่ม</li>
+          <li><strong>assert การ navigate ด้วย router ที่ <code>renderRoute</code> คืนมา</strong> — นี่คือเหตุผลที่บทเรียน 30 ให้ helper คืน <code>router</code> ออกมาด้วย: หลัง mutation สำเร็จ (MSW ตอบ 201 ที่ <code>POST /carts/add</code>) → <code>onSuccess</code> ล้างตะกร้าแล้ว <code>goToOrderSuccess()</code> — เราใช้ <code>waitFor</code> รอจน <code>router.state.location.pathname</code> เป็น <code>/order/success</code> แล้วปิดท้ายด้วยการเช็คว่าหน้า Order Success render ข้อความจริงบนจอ ไม่ใช่แค่ URL เปลี่ยน</li>
+        </ul>
+
+        <p>เทสต์ตัวเดียวนี้ครอบคลุม: routing, seed ตะกร้าจาก localStorage, ฟอร์ม + validation, cart context, mutation, axios + interceptor, MSW และการ navigate — ถ้ามันเขียว แปลว่า flow ที่สำคัญที่สุดของธุรกิจ (การจ่ายเงิน!) ต่อกันครบทั้งเส้น</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — สองข้อ และข้อที่สองคือรูที่ใหญ่ที่สุดในตาข่ายทั้งลูก:</strong> ข้อแรกคือ <code>data-testid="loader"</code> ที่แปะอยู่บน <code>ClipLoader</code> <strong>สี่จุด</strong>ในโค้ด (หน้า Home สองจุด, หน้า Category และหน้า Product อย่างละหนึ่ง) — <code>grep -rn "data-testid" src/</code> ยืนยันได้ในสองวินาที ทีนี้ลอง <code>grep -rn "TestId" src/</code> ดูบ้าง: <em>ว่างเปล่า</em> ไม่มีเทสต์ตัวไหนในสิบสองไฟล์ใช้มันเลยแม้แต่ตัวเดียว attribute พวกนี้จึงเป็นของที่ถูก ship ขึ้น production ทุกรอบ build เพื่อเทสต์ที่ไม่เคยถูกเขียน สังเกตว่าปุ่มใน <code>Button</code> จากบทเรียน 12 ใช้ <code>ClipLoader</code> ตัวเดียวกันแต่<em>ไม่มี</em> <code>data-testid</code> ซึ่งเป็นความไม่สม่ำเสมอที่บทเรียน 19 ชี้ไว้แล้ว วันนี้เรารู้สาเหตุ: มันไม่ได้ถูกใส่ตามธรรมเนียมอะไร มันแค่ถูกใส่แล้วไม่มีใครตามเก็บ ในรีวิวจริงมีสองทางเลือกและทั้งคู่ถูก — ลบทิ้งทั้งสี่จุด หรือเขียนเทสต์ที่ใช้มันจริงสักตัว (เช่น assert ว่า spinner หายไปหลังข้อมูลมา ซึ่งเป็นเทสต์ที่มีค่า ต่างจากการ assert ว่า spinner โผล่) ทางที่ผิดคือปล่อยไว้เฉย ๆ แบบวันนี้ <strong>ข้อสอง</strong> ต่อจากคู่ที่สี่ในกล่อง ✅: ลบ <code>setPage(1)</code> ออกจาก <code>onCategoryClick</code> แล้ว<em>ไม่มีเทสต์ตัวไหนแดงเลย</em> เหตุผลอยู่ที่ลำดับของเทสต์หน้า Category: มันเปิดหน้า → เปลี่ยนหมวด → <em>แล้วค่อย</em>ไปหน้า 2 ตอนที่กดเปลี่ยนหมวด <code>page</code> ยังเป็น 1 อยู่แล้ว การรีเซ็ตเป็น 1 จึงไม่มีอะไรให้เปลี่ยน อาการจริงที่บทเรียน 20 อธิบายไว้เกิดตอน<em>อยู่หน้า 2 แล้วเปลี่ยนหมวดที่มีหน้าเดียว</em> ซึ่งเป็นลำดับที่เทสต์นี้ไม่เคยเดิน ทางแก้คือเติมสองบรรทัดต่อท้ายเคสเดิม: คลิก "2" อีกครั้งหลังอยู่ที่ fragrances แล้วคลิกกลับไปที่ "Beauty" แล้ว assert ว่าเจอ <code>beauty product 1</code> (ไม่ใช่ <code>beauty product 21</code>) นี่เป็นข้อที่ต้องพูดให้ตรง เพราะบทเรียน 29 ยกตัวอย่างไว้สองข้อว่าสี่บทนี้จะทำให้บั๊กเงียบมีเสียง — <code>clearCart</code> ที่อยู่ผิดที่ กับ <code>setPage(1)</code> ที่หายไป ข้อแรกได้เสียงจริงในบทเรียน 32 (คุณกดทดลองมาแล้ว) ส่วนข้อที่สอง<strong>ยังไม่ได้</strong> ชุดเทสต์ที่ครบทั้งสามชั้นแล้วก็ยังมีรูอยู่ และรูจะไม่ประกาศตัวเอง — วิธีเดียวที่หาเจอคือทำสิ่งที่คุณเพิ่งทำในกล่อง ✅: แก้โค้ดให้ผิดแล้วดูว่าใครพูดบ้าง</blockquote>
+
+        <h2>มองย้อนพีระมิดทั้งลูก</h2>
+
+        <p>สามบทที่ผ่านมาเราสร้างเทสต์สามชั้น แต่ละชั้นจับ bug คนละแบบ — และนั่นคือเหตุผลที่ต้องมีครบทุกชั้น ไม่ใช่เลือกชั้นเดียว:</p>
+
+        <ul>
+          <li><strong>Unit (22 tests)</strong> — จับ bug ใน logic: สูตรคำนวณผิด, edge case ที่ลืมคิด, reducer ที่ merge จำนวนพลาด รันเร็วระดับมิลลิวินาที และพังทีไรชี้บรรทัดได้เลย</li>
+          <li><strong>Hook (6 tests)</strong> — จับ bug ใน<em>การเชื่อม</em>ชั้นข้อมูล: query key ที่ประกอบผิด, parameter ที่หล่นหายระหว่างทาง, mutation ที่ลืมล้างตะกร้า — สิ่งที่ unit test มองไม่เห็นเพราะมันอยู่<em>ระหว่าง</em>หน่วย</li>
+          <li><strong>Integration (6 tests)</strong> — จับ bug ในการประกอบร่างที่ผู้ใช้เจอจริง: route ที่หลุด, provider ที่ลืมห่อ, ปุ่มที่กดแล้วเงียบ, ข้อความที่ถูกเปลี่ยนถ้อยคำ แลกกับความช้ากว่าและเวลาพังต้องไล่หาต้นเหตุไกลกว่า</li>
+        </ul>
+
+        <p>รูปทรง "ฐานกว้าง ยอดแหลม" จึงไม่ใช่ความบังเอิญ: เทสต์ถูกและเร็วมีเยอะ ๆ ได้ เทสต์แพงมีพอประมาณให้ครอบ flow สำคัญ และเวลา integration test แดงขึ้นมา — ชั้น unit ข้างล่างนี่แหละที่จะบอกว่าต้นเหตุอยู่ฟังก์ชันไหน</p>
+
+        <p>แต่มีอีกเรื่องที่ต้องพูดปิดท้ายสี่บทนี้ และมันสำคัญกว่าตัวเลข 34 มาก บทเรียน 29 บอกว่างานที่เหลือของคุณคือฝั่ง<em>เงียบ</em>ทั้งก้อน สี่บทที่ผ่านมาเราย้ายฝั่งเงียบส่วนหนึ่งไปอยู่ฝั่งดังได้จริง — <code>clearCart</code> ที่อยู่ผิดที่, ข้อความบนปุ่มที่ถูกเปลี่ยน, สูตรคำนวณที่พลาด, ค่า <code>skip</code> ที่หล่นหาย ทั้งหมดนี้มีเสียงแล้ว แต่<strong>สิ่งที่ยังเงียบอยู่ก็ยังเงียบ</strong> และตอนนี้มันเงียบใต้ตัวเลขสีเขียวที่ดูน่าเชื่อถือ: <code>setPage(1)</code> ที่หายไป, <code>queryKey</code> ที่สะกดผิด, <code>placeholderData</code> ที่ลืมใส่, reducer ที่ mutate ของเดิม, <code>data-testid</code> สี่ตัวที่ไม่มีใครใช้ และสเกลคะแนนดาว 0–10 จากบทเรียน 21 ที่ยังหารสองอยู่ทุกวันนี้</p>
+
+        <p>นั่นแปลว่าสิ่งที่ชุดเทสต์เปลี่ยนไป ไม่ใช่ "ต่อไปนี้ไม่ต้องอ่านโค้ดแล้ว" แต่คือ "ของที่ต้องอ่านด้วยตาลดลงหนึ่งกอง" กติกาข้อเดียวของคอร์สนี้ยังไม่เปลี่ยน: อย่ากด Accept โค้ดที่คุณอธิบายไม่ได้ — และตั้งแต่วันนี้มันมีข้อที่สองต่อท้าย: <strong>อย่าเชื่อเทสต์ที่คุณไม่เคยเห็นมันแดง</strong></p>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>เปิด <code>src/pages/Cart/Cart.tsx</code> แล้วลบ <code>&lt;CartTable /&gt;</code> ออกจากกิ่งที่มีของ เหลือแต่ยอดเงินท้ายตาราง — รันเทสต์แล้วตอบว่าเคสไหนแดงบ้างและแดงที่บรรทัดไหน จากนั้นอธิบายว่าทำไมเคส <code>"shows the empty state when there are no items"</code> ถึงยังเขียว และตอบด้วยว่าถ้าเราแก้เคส <code>"updates quantity and total"</code> ให้ assert แค่ <code>findByText("Cart")</code> บรรทัดเดียว มันจะจับข้อนี้ได้ไหม (เสร็จแล้ว <code>git restore</code>)</li>
+          <li>ใน <code>Category.test.tsx</code> เปลี่ยนบรรทัดคลิกเป็น <code>screen.getAllByText("Fragrances")[0]</code> แล้วรัน — ตอบว่าเทสต์ผ่านหรือไม่ จากนั้นเปิด <code>MainLayout</code> แล้วสลับให้ <code>Footer</code> ขึ้นมา render ก่อน <code>Outlet</code> แล้วรันซ้ำ — ตอบว่าผลเปลี่ยนไหมและเพราะอะไร แล้วอธิบายว่า <code>{ selector: "span" }</code> ป้องกันอะไรที่ index ป้องกันไม่ได้ (เสร็จแล้วแก้กลับทั้งสองที่)</li>
+          <li>ในเทสต์หน้า Checkout ลบบรรทัด <code>await user.click(screen.getByRole("button", { name: "Submit" }));</code> ทิ้ง แล้วรัน — ตอบว่าเทสต์แดงที่บรรทัดไหน ข้อความว่าอะไร และอธิบายว่าค่า <code>checkoutAddress</code> ใน <code>useCheckout</code> ณ ตอนที่กด Place Order คืออะไร แล้วบอกให้ได้ว่าอาการที่เห็นในเทสต์นี้ ตรงกับเทสต์ตัวไหนในบทเรียน 32 (เสร็จแล้วเติมบรรทัดกลับ)</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint สุดท้ายของช่วง Testing:</strong> รัน <code>npm run test</code> — ทั้งชุดต้องเขียว: <strong>12 test files, 34 tests ผ่านทั้งหมด</strong> (unit 22 + hook 6 + integration 6 โดยชั้น integration แบ่งเป็น Home 1, Category 1, Cart 3, Checkout 1) จากนั้น <code>npm run lint</code> กับ <code>npm run typecheck</code> ให้ผ่านทั้งคู่แล้ว commit นี่คือตาข่ายนิรภัยของแอปทั้งแอป — ต่อจากนี้จะ refactor อะไรก็ตาม กติกามีข้อเดียว: แก้เสร็จ รันเทสต์ เขียวแล้วค่อยไปต่อ และก่อนปิดบท ให้ทวนว่าคุณทำขั้นตอน "ทำให้มันแดงด้วยมือ" ครบทั้งสี่คู่แล้ว รวมคู่ที่สี่ที่ต้องยังเขียวด้วย — เพราะเลข 34 บอกได้แค่ว่ามีเทสต์กี่ตัวที่รันผ่าน ไม่ได้บอกว่าตาข่ายนี้มีรูตรงไหน บทหน้าเราจะกลับมาที่คำถามเดียวกันนี้จากอีกด้าน คือให้ AI ตรวจงานของ AI แล้วดูว่ามันบอกอะไรได้และบอกอะไรไม่ได้ — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="32_hook_tests.html" rel="prev">ก่อนหน้า: การทดสอบ Hooks และ Queries</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="34_ai_code_review.html" rel="next">ถัดไป: ใช้ AI ตรวจงานตัวเอง</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

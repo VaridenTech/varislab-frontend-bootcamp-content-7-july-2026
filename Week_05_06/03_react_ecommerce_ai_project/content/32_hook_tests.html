@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ให้ Cursor เขียนเทสต์ให้ query factories และ useCheckout ด้วย renderHook, QueryClientProvider และ MSW พร้อมวิธีจับเทสต์ async ที่ผ่านก่อนงานจะเสร็จ และวิธีอ่าน error ของเทสต์ async ให้เป็น" />
+    <title>การทดสอบ Hooks และ Queries | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 32 · การทดสอบ (Testing)</p>
+          <h1>การทดสอบ Hooks และ Queries</h1>
+          <p class="lesson-original-title" lang="en">Hook Tests</p>
+        </header>
+
+        <p>ชั้นถัดไปของพีระมิด: <strong>hook</strong> ปัญหาแรกที่เจอทันทีคือกฎเหล็กของ React — hook เรียกได้เฉพาะข้างใน component เท่านั้น เราจะเรียก <code>useQuery(...)</code> ตรง ๆ ในไฟล์เทสต์ไม่ได้ ทางออกคือ <code>renderHook</code> จาก React Testing Library: มันสร้าง component จิ๋ว ๆ ที่มองไม่เห็นขึ้นมาหนึ่งตัว เรียก hook ของเราข้างในนั้น แล้วส่งผลลัพธ์ล่าสุดออกมาให้เราทาง <code>result.current</code> — อ่านค่าได้ทุกเมื่อ และมันอัปเดตเองทุกครั้งที่ hook re-render</p>
+
+        <p>ปัญหาที่สอง: hook ของเราไม่ได้ลอยอยู่เดี่ยว ๆ — <code>useQuery</code> ต้องการ <code>QueryClientProvider</code>, <code>useCart</code> ต้องการ <code>CartProvider</code>, <code>useNavigate</code> ต้องการ router ดังนั้นหัวใจของบทนี้คือการประกอบ <strong>wrapper</strong> ที่จัด provider ให้ครบเท่าที่ hook แต่ละตัวต้องใช้ — ไม่มากกว่านั้น ไม่น้อยกว่านั้น</p>
+
+        <p>และของใหม่ที่มากับชั้นนี้คือ <strong>เวลา</strong> unit test ในบทที่แล้วรับ input แล้วได้ output ทันทีในบรรทัดเดียว ส่วนบทนี้ทุกอย่างเป็น async: เรียก hook แล้วยังไม่มีข้อมูล ต้องรอ พอมีเวลาเข้ามาในสมการ คำถามที่บทที่แล้วถามว่า "assertion นี้แดงได้ไหม" จะมีรูปใหม่ที่ยากขึ้นหนึ่งชั้น — <em>assertion นี้ทำงาน<strong>ตอนไหน</strong></em> เพราะเทสต์ async ที่ assert เร็วเกินไปคือเทสต์ที่ผ่านโดยไม่ได้ดูของจริงเลยสักครั้ง นั่นคือจุดที่กล่อง ✅ ของบทนี้จะเน้นทั้งกล่อง</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <p>สองไฟล์ ทั้งคู่ให้ Agent เขียนในรอบเดียว บทนี้ไม่มีส่วนพิมพ์เอง เพราะมาตรฐานที่คุณต้องใช้ตรวจงานบทนี้ถูกวางไว้แล้วในบทที่ 31 — ของที่คุณพิมพ์เองไปแล้วคือเกณฑ์ที่เอามาใช้ต่อได้ทั้งดุ้น</p>
+
+        <pre><code class="language-bash">src/features/
+├── products/
+│   └── queries.test.tsx      # 🤖 renderHook + MSW ทดสอบ query factory ทั้งสี่จาน
+└── checkout/
+    └── useCheckout.test.tsx  # 🤖 renderHook + provider สามชั้น ทดสอบ hook ที่ยุ่งที่สุดของแอป</code></pre>
+
+        <p>ทั้งสองไฟล์นามสกุล <code>.tsx</code> เพราะข้างในมี JSX — <code>useCheckout.test.tsx</code> ประกาศ wrapper เป็น component เต็มตัว ส่วน <code>queries.test.tsx</code> ใช้ <code>.tsx</code> ตามธรรมเนียมของไฟล์เทสต์ฝั่ง React ในโปรเจกต์นี้แม้จะไม่มี JSX อยู่ในตัวมันเองก็ตาม</p>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>queries.test.tsx</code></strong> — ต้องทดสอบ query ครบทั้งสี่จาน (<code>list</code>, <code>byCategory</code>, <code>categories</code>, <code>detail</code>) โดยแต่ละเทสต์ต้อง<em>รอจน query สำเร็จ</em>ก่อน assert ข้อมูล และต้องใช้ <code>QueryClient</code> ก้อนใหม่ต่อหนึ่งเทสต์ ต้องไม่ mock <code>api.ts</code> และต้องไม่ import <code>apiClient</code> โดยตรง</li>
+          <li><strong><code>useCheckout.test.tsx</code></strong> — ต้องประกอบ provider ครบสามชั้นด้วยของจริงจากแอป (<code>MemoryRouter</code>, <code>QueryClientProvider</code>, <code>CartProvider</code>) ต้องเตรียมตะกร้าผ่าน <code>localStorage</code> ก่อน render ไม่ใช่ mock <code>useCart</code> ต้องมีทั้งเส้นทางสำเร็จและเส้นทางล้มเหลว ต้องไม่ import <code>consts.ts</code> และต้องไม่ mock <code>useNavigate</code></li>
+        </ul>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> แชทใหม่ โหมด Agent สังเกตว่า <code>บริบท:</code> บอกทั้ง<em>รูปแบบการ export</em> ของ <code>useCheckout</code> และ<em>กติกาการตั้งชื่อสินค้า</em>ของ MSW handler — สองข้อนี้เป็นข้อมูลที่ Agent เดาเองไม่ได้ และเป็นสองข้อที่ถ้าขาดไป เทสต์จะเขียนออกมาผิดทั้งไฟล์:</p>
+          <pre><code class="language-text">เขียนเทสต์ให้ query factories และ hook useCheckout ด้วย renderHook
+
+บริบท: @src/features/products/queries.ts @src/features/checkout/useCheckout.ts @src/features/cart/store/CartProvider.tsx @src/features/cart/useCart.ts @src/test/utils.tsx @src/test/msw/handlers.ts @src/shared/utils/price.utils.test.ts
+โปรเจกต์มีเทสต์อยู่แล้วหกไฟล์จากบทที่แล้ว ทั้งหมดเป็น unit test ของ pure function
+  ให้ยึดสไตล์เดิม: describe ชื่อเดียวกับสิ่งที่ทดสอบ, it ตั้งชื่อเป็นประโยคภาษาอังกฤษ,
+  ไม่ import describe/it/expect เพราะเปิด globals: true ไว้แล้ว
+src/features/products/queries.ts export productKeys และ productQueries
+  ที่มีสี่จาน: list(params), byCategory(params), categories(), detail(id)
+  ทุกจานคืนผลของ queryOptions() ไม่ใช่ custom hook
+src/features/checkout/useCheckout.ts เป็น default export (import แบบไม่มีปีกกา)
+  return object ที่มี checkoutAddress, deliveryOptions, paymentOptions,
+    selectedDeliveryOptionId, selectedPaymentOptionId, billingSummary,
+    isPlaceOrderLoading, storeCheckoutAddress, onSelectDeliveryOption,
+    onSelectPaymentOption, onPlaceOrder
+  ข้างในเรียก useCart (ต้องการ CartProvider), useMutation (ต้องการ
+    QueryClientProvider) และ useProductRoute ที่ห่อ useNavigate (ต้องการ router)
+  mutationFn จะ throw new Error("Delivery Address is Missing") ทันที
+    ถ้ายังไม่เคยเรียก storeCheckoutAddress
+  onSuccess ของ mutation เรียก clearCart() แล้ว goToOrderSuccess()
+src/test/utils.tsx export createTestQueryClient() และ createQueryWrapper()
+  ทั้งคู่สร้าง QueryClient ก้อนใหม่ทุกครั้งที่ถูกเรียก และตั้ง retry: false
+MSW handler ตั้งต้นมีอยู่แล้ว ไม่ต้องเพิ่มหรือแก้ handler ใด ๆ ในงานนี้
+  GET /products?limit=N คืนสินค้า N ชิ้น ชื่อ "Product 1" ถึง "Product N"
+  GET /products/category/:slug?limit=20&amp;skip=20 คืนสินค้าที่ชื่อขึ้นต้นด้วย slug
+    ตามด้วยคำว่า product แล้วตามด้วยลำดับที่เริ่มจาก skip + 1
+    เช่น slug beauty กับ skip 20 จะได้ชิ้นแรกชื่อ "beauty product 21"
+    และค่า skip ใน response จะเท่ากับ skip ที่ส่งไป
+  GET /products/categories คืน slug สามตัวเรียงว่า beauty, fragrances, furniture
+  GET /products/:id คืนสินค้าที่มี id ตามที่ขอ
+  POST /carts/add ตอบ 201 เสมอ
+setup.ts เปิด/ปิด MSW และล้าง localStorage ให้แล้วทุกเทสต์ ห้ามทำซ้ำในไฟล์เทสต์
+alias @/ ชี้ไปที่ src/ ส่วนไฟล์ในโฟลเดอร์เดียวกันให้ใช้ ./
+โปรเจกต์นี้ไม่ได้เปิด verbatimModuleSyntax ให้ใช้ import แบบธรรมดา ไม่ต้องใช้ import type
+
+โครงสร้าง: สร้างสองไฟล์นี้ ไม่มากไม่น้อยกว่านี้
+- src/features/products/queries.test.tsx
+- src/features/checkout/useCheckout.test.tsx
+ทั้งคู่นามสกุล .tsx จริงตามนี้
+
+ข้อกำหนดทางเทคนิค: ทุกเทสต์ต้องรอจนงาน async เสร็จก่อน assert ข้อมูล
+  ห้าม assert สถานะ loading หรือ pending เป็นข้อสรุปของเทสต์ตัวไหนทั้งสิ้น:
+- queries.test.tsx: import สี่บรรทัด ตามลำดับนี้
+    import { renderHook, waitFor } from "@testing-library/react";
+    import { useQuery } from "@tanstack/react-query";
+    import { productQueries } from "./queries";
+    import { createQueryWrapper } from "@/test/utils";
+  describe("productQueries") มีสี่ it ทั้งหมดเป็น async
+    ทุกตัวเรียก renderHook(() =&gt; useQuery(...), { wrapper: createQueryWrapper() })
+      โดยเรียก createQueryWrapper() ใหม่ในทุก it ห้ามสร้างครั้งเดียวไว้ข้างนอก
+    ทุกตัวเปิดด้วยบรรทัด
+      await waitFor(() =&gt; expect(result.current.isSuccess).toBe(true));
+      ต้องเป็น isSuccess เท่านั้น ห้ามใช้ isLoading, isPending หรือ isFetching
+      และห้ามลืม await หน้า waitFor
+    "list fetches products with the given limit"
+      -&gt; productQueries.list({ limit: 5 })
+      -&gt; expect(result.current.data?.products).toHaveLength(5)
+    "byCategory fetches products for a category and page"
+      -&gt; productQueries.byCategory({ category: "beauty", page: 2, limit: 20 })
+      -&gt; expect(result.current.data?.skip).toBe(20)
+      -&gt; expect(result.current.data?.products[0]?.title).toBe("beauty product 21")
+    "categories fetches the category list"
+      -&gt; productQueries.categories()
+      -&gt; expect(result.current.data?.map((c) =&gt; c.slug)).toEqual(
+           ["beauty", "fragrances", "furniture"])
+    "detail fetches a single product"
+      -&gt; productQueries.detail(7)  (ส่งเลขตรง ๆ ไม่ใช่ string)
+      -&gt; expect(result.current.data?.id).toBe(7)
+  ห้าม mock src/features/products/api.ts ห้าม import apiClient
+  ห้ามเรียก server.use(...) ในไฟล์นี้
+- useCheckout.test.tsx: import เก้าบรรทัด ตามลำดับนี้
+    import { ReactNode } from "react";
+    import { act, renderHook, waitFor } from "@testing-library/react";
+    import { QueryClientProvider } from "@tanstack/react-query";
+    import { MemoryRouter } from "react-router";
+    import useCheckout from "./useCheckout";
+    import { CartProvider } from "@/features/cart/store/CartProvider";
+    import { CART_STORAGE_KEY } from "@/features/cart/store/cartStorage";
+    import { useCart } from "@/features/cart/useCart";
+    import { createTestQueryClient } from "@/test/utils";
+  ประกาศ function wrapper({ children }: { children: ReactNode }) ก่อน describe
+    (เป็น function declaration ไม่ใช่ const arrow function)
+    คืน JSX ซ้อนสามชั้นตามลำดับนี้พอดี
+      MemoryRouter ที่ initialEntries={["/checkout"]}
+        ครอบ QueryClientProvider ที่ client={createTestQueryClient()}
+          ครอบ CartProvider ครอบ {children}
+  ทั้งสอง it เตรียมตะกร้าเหมือนกันด้วย localStorage.setItem ก่อน renderHook
+    key เป็น CART_STORAGE_KEY ค่าเป็น JSON.stringify ของ
+    { items: [{ id: 1, title: "Widget", price: 10, quantity: 2,
+      image: "/w.png" }] }
+    เขียนซ้ำเต็ม ๆ ในทั้งสอง it ห้ามแยกเป็นฟังก์ชัน helper และห้ามใช้ beforeEach
+  ทั้งสอง it เรียก renderHook(() =&gt; ({ checkout: useCheckout(), cart: useCart() }),
+    { wrapper }) เพื่อให้ hook สองตัวรันใน component เดียวกัน
+  describe("useCheckout") มีสอง it ทั้งคู่เป็น async
+    "clears the cart after a successful order"
+      assert ค่าตั้งต้นสองบรรทัดก่อน
+        expect(result.current.cart.cart.items).toHaveLength(1)
+        expect(result.current.checkout.billingSummary.subtotal).toBe(20)
+      act(...) เรียก storeCheckoutAddress({ address: "1 Main St",
+        email: "jane@example.com", phone: "0812345678" })
+      act(...) อีกก้อนแยกกัน เรียก onPlaceOrder()
+      ปิดท้ายด้วย
+        await waitFor(() =&gt;
+          expect(result.current.cart.cart.items).toHaveLength(0));
+    "errors and keeps the cart when no address is set"
+      act(...) เรียก onPlaceOrder() โดยไม่เรียก storeCheckoutAddress ก่อน
+      await waitFor(() =&gt;
+        expect(result.current.checkout.isPlaceOrderLoading).toBe(false));
+      แล้ว expect(result.current.cart.cart.items).toHaveLength(1)
+  ห้าม vi.mock useCart, useNavigate, useProductRoute หรือ api ใด ๆ
+  ห้าม import consts.ts และห้ามอ้าง deliveryOptions หรือ paymentOptions
+  ห้าม assert billingSummary.shipping หรือ billingSummary.total ในไฟล์นี้
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ไฟล์ต้นทางที่กำลังทดสอบ: queries.ts, api.ts, useCheckout.ts,
+  useCart.ts, CartProvider.tsx, useProductRoute.ts
+- ห้ามแก้ไฟล์ใน src/test/ ทั้งโฟลเดอร์ และห้ามแก้เทสต์หกไฟล์จากบทที่แล้ว
+- ห้ามเขียนเทสต์ให้หน้าเพจหรือ component ใด ๆ (บทหน้าจะทำ)
+- ห้ามใช้ fireEvent และห้าม import @testing-library/user-event ในบทนี้
+- ห้ามใส่ it.skip, it.todo, it.only หรือ describe.only แม้แต่ที่เดียว
+- ห้ามใช้ setTimeout, vi.useFakeTimers หรือ await new Promise(...) เพื่อรอ
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ ข้อแรกเป็นข้อที่ต้องดูก่อนข้ออื่นทั้งหมด และเป็นข้อที่ต่อยอดจากกติกาของบทที่แล้วโดยตรง:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>assert สถานะ loading แล้วจบ โดยไม่เคยรอข้อมูลจริง</em> — ก้อนที่ต้องระวังหน้าตาแบบนี้: <code>const { result } = renderHook(...); expect(result.current.isLoading).toBe(true);</code> จบเทสต์ตรงนั้น มันผ่านทันทีทุกครั้ง เร็วมาก ไม่เคยแดง — แต่สิ่งที่มันพิสูจน์คือ "TanStack Query คืน <code>isLoading: true</code> ตอน render แรก" ซึ่งเป็นพฤติกรรมของ<em>ไลบรารี</em> ไม่ใช่ของโค้ดเรา ต่อให้ <code>queryFn</code> ชี้ไป URL ที่ไม่มีอยู่จริง ต่อให้ <code>queryKey</code> สะกดผิด ต่อให้ MSW ไม่ได้สตาร์ท เทสต์นี้ก็ยังเขียว มีอีกรูปหนึ่งที่แนบเนียนกว่าและต้องดูให้ออก: <code>await waitFor(() =&gt; expect(result.current.isLoading).toBe(false))</code> — คราวนี้มีการรอจริง แต่<em>รอผิดสัญญาณ</em> เพราะ <code>isLoading</code> กลายเป็น <code>false</code> ทั้งตอนสำเร็จ<strong>และ</strong>ตอนล้มเหลว เท่ากับประตูนี้เปิดให้ query ที่พังผ่านเข้ามาได้ด้วย สิ่งที่ต้องรอคือ <code>isSuccess === true</code> ซึ่งเป็น <code>true</code> ทางเดียวเท่านั้น ญาติสุดท้ายของตระกูลนี้คือการ<em>ลืม <code>await</code></em> หน้า <code>waitFor</code> ซึ่งโชคดีที่ดัง (assertion บรรทัดถัดไปจะเจอ <code>undefined</code>) แต่จะทิ้ง unhandled rejection ไว้ในรายงานให้งงเล่น วิธีตรวจสองคำสั่ง: <code>grep -n "isLoading\|isPending\|isFetching" src/features/products/queries.test.tsx</code> ต้อง<strong>ว่างเปล่า</strong> และ <code>grep -c "await waitFor" src/features/products/queries.test.tsx</code> ต้องได้ <strong>4</strong> คือหนึ่งบรรทัดต่อหนึ่ง <code>it</code> พอดี</li>
+            <li><strong>ทำให้มันแดงด้วยมือ — กติกาเดิมจากบทที่ 31 ใช้ต่อได้ทั้งดุ้น</strong> สามคู่ที่ต้องทำในบทนี้ แก้ไฟล์ต้นทาง รันเทสต์ ดูให้เห็นแดง แล้ว <code>git restore</code>:
+              <ul>
+                <li><code>src/features/products/api.ts</code> — ในฟังก์ชันที่ดึงสินค้าตามหมวด ลบการส่ง <code>skip</code> ออกจาก params → <code>"byCategory fetches products for a category and page"</code> ต้องแดงสองบรรทัด (ทั้ง <code>skip</code> และชื่อ <code>beauty product 21</code>) ถ้าแดงบรรทัดเดียวหรือไม่แดงเลย ให้กลับไปอ่านว่าเทสต์นั้นรออะไรอยู่</li>
+                <li><code>src/features/checkout/useCheckout.ts</code> — ย้าย <code>clearCart()</code> ออกจาก <code>onSuccess</code> ไปไว้ในตัว <code>onPlaceOrder</code> ก่อนเรียก <code>placeOrderMutate()</code> → เทสต์ <code>"errors and keeps the cart when no address is set"</code> ต้องแดง นี่คือบั๊กเดียวกับที่บทเรียน 28 และตระกูล 3 ของบทเรียน 29 อธิบายไว้ว่ามองไม่เห็นในเครื่องตัวเองเพราะ dummyjson ตอบ 200 เสมอ — วันนี้มันมีเครื่องมือตะโกนบอกแล้ว และนั่นคือทั้งหมดที่บทเรียน 29 สัญญาว่าสี่บทนี้จะทำให้</li>
+                <li><code>src/features/checkout/useCheckout.ts</code> อีกรอบ — ลบ <code>* item.quantity</code> ออกจาก <code>reduce</code> ที่คำนวณ <code>subtotal</code> → เทสต์ <code>"clears the cart after a successful order"</code> ต้องแดงที่บรรทัด <code>toBe(20)</code> (จะได้ 10)</li>
+              </ul>
+            </li>
+            <li>ไฟล์ใหม่ <strong>2 ไฟล์พอดี</strong> และ <code>git status</code> ต้องไม่มีไฟล์เดิมไฟล์ไหนขึ้นสถานะ modified — โดยเฉพาะ <code>src/features/checkout/useCheckout.ts</code> ที่ Agent ที่เจอเทสต์แดงจะอยากแก้มากที่สุด และ <code>src/test/msw/handlers.ts</code> ที่มันจะอยากเพิ่ม handler ให้ "ตรงกับเทสต์" มากกว่าจะแก้เทสต์ให้ตรงกับ handler</li>
+            <li><code>grep -n "createQueryWrapper()" src/features/products/queries.test.tsx</code> ต้องเจอ <strong>4 บรรทัด</strong> — หนึ่งบรรทัดต่อหนึ่ง <code>it</code> ถ้าเจอบรรทัดเดียวที่อยู่บนสุดของไฟล์แล้วเก็บไว้ในตัวแปรใช้ร่วมกัน แปลว่าทั้งสี่เทสต์แชร์ cache ก้อนเดียว ผลคือเทสต์ที่รันทีหลังอาจได้ข้อมูลจาก cache ทันทีโดยไม่ยิง request เลย และผลของทั้งไฟล์จะเริ่มขึ้นกับ<em>ลำดับ</em>การรัน ซึ่งเป็นเทสต์ประเภทที่แย่ที่สุด: ผ่านบ้างพังบ้างโดยที่โค้ดไม่ได้เปลี่ยนอะไรเลย เหตุผลเต็ม ๆ อยู่ใต้โค้ดอ้างอิง</li>
+            <li><code>grep -rn "vi.mock\|vi.fn" src/</code> ต้องยังว่างเปล่าทั้งโปรเจกต์ — จุดที่เสี่ยงที่สุดในบทนี้คือ <code>useCheckout.test.tsx</code> ที่ Agent อยาก mock <code>useNavigate</code> เพราะกลัวว่ามันจะพัง ถ้ามันทำ สิ่งที่หายไปคือการพิสูจน์ว่า <code>useProductRoute</code> ต่อกับ router ได้จริง และเทสต์จะกลายเป็นการทดสอบ mock ที่มันเขียนเอง</li>
+            <li><code>grep -n "setTimeout\|useFakeTimers\|new Promise" src/features/</code> ต้องว่างเปล่า — การ "รอ" ด้วย <code>await new Promise((r) =&gt; setTimeout(r, 100))</code> คือทางลัดที่ทำให้เทสต์ผ่านในเครื่องคุณและพังบนเครื่องที่ช้ากว่า <code>waitFor</code> มีไว้เพื่อการนี้โดยเฉพาะ เพราะมันลองซ้ำจนสำเร็จแทนที่จะเดาเวลา</li>
+            <li><code>wrapper</code> ใน <code>useCheckout.test.tsx</code> ซ้อนครบสามชั้นและใช้ของ<em>จริง</em>ทั้งสามตัว — <code>grep -n "MemoryRouter\|QueryClientProvider\|CartProvider" src/features/checkout/useCheckout.test.tsx</code> ต้องเจอครบ ถ้าขาด <code>MemoryRouter</code> เทสต์จะพังด้วยข้อความทำนอง <em>useNavigate may be used only in the context of a Router</em> ซึ่งเป็นบั๊กดัง แก้ง่าย</li>
+            <li>ตะกร้าถูกเตรียมผ่าน <code>localStorage.setItem(CART_STORAGE_KEY, ...)</code> ไม่ใช่ผ่านการ mock <code>useCart</code> — <code>grep -n "CART_STORAGE_KEY" src/features/checkout/useCheckout.test.tsx</code> ต้องเจอสามบรรทัด (import หนึ่ง ใช้สอง) นี่คือค่าคงที่ที่ checklist ของบทเรียน 22 สั่งให้ export ออกมาโดยเฉพาะเพื่อวันนี้ และการเตรียมข้อมูลแบบนี้ทำให้เทสต์เดินผ่านโค้ด persistence จริงอีกรอบฟรี ๆ</li>
+            <li>เทสต์ทั้งสองตัวเขียนก้อน <code>localStorage.setItem</code> ซ้ำเต็ม ๆ ไม่ได้แยกเป็น helper — ตรงกับต้นฉบับ ซึ่งต่างจาก <code>Cart.test.tsx</code> ในบทหน้าที่แยกเป็น <code>seedCart()</code> ทั้งที่เป็นงานเดียวกัน ความไม่สม่ำเสมอนี้มีอยู่จริงในต้นฉบับ ไม่ต้องไปทำให้เหมือนกัน แค่รู้ว่ามันต่าง</li>
+            <li><code>act(...)</code> ถูกใช้ครอบทุกจุดที่เรียกฟังก์ชันของ hook ที่ทำให้ state เปลี่ยน และเป็น <code>act</code> <em>สองก้อนแยกกัน</em>ในเทสต์แรก ไม่ใช่ก้อนเดียวที่รวม <code>storeCheckoutAddress</code> กับ <code>onPlaceOrder</code> ไว้ด้วยกัน — ถ้ารวมเป็นก้อนเดียว <code>onPlaceOrder</code> จะอ่าน <code>checkoutAddress</code> ที่ยังเป็น <code>null</code> อยู่ เพราะ state ยังไม่ถูก commit ผลคือเทสต์แรกจะเดินเส้นทาง error โดยไม่มีใครรู้ แล้ว <code>waitFor</code> บรรทัดสุดท้ายจะ timeout พร้อมข้อความที่ชี้ไปที่ตะกร้า ไม่ใช่ที่ต้นเหตุ</li>
+            <li>ไฟล์ทั้งสองไม่ import <code>@testing-library/user-event</code> — <code>grep -n "user-event" src/features/</code> ต้องว่างเปล่า ชั้นนี้เราสั่งงาน hook ตรง ๆ ผ่าน <code>result.current</code> ไม่มีปุ่มให้กด การจำลองผู้ใช้เป็นงานของบทหน้า</li>
+            <li><code>grep -n "consts" src/features/checkout/useCheckout.test.tsx</code> ต้องว่างเปล่า และไม่มี assertion ตัวไหนแตะ <code>billingSummary.shipping</code> หรือ <code>billingSummary.total</code> — บทเรียน 25 อธิบายไว้แล้วว่าค่าส่งตั้งต้นมาจาก <code>deliveryOptions[0]</code> โดยที่เทสต์ไม่ต้องรู้จัก array นั้นเลย ซึ่งเป็นจริงเพราะเทสต์นี้ assert เฉพาะ <code>subtotal</code> ตัวเดียว (เรื่องนี้มีนัยที่ต้องพูดต่อ — อยู่ในกล่อง 💡 ท้ายหัวข้อ)</li>
+            <li>ไม่มี <code>any</code> ไม่มี <code>it.only</code> และไม่มี snapshot — <code>grep -rn "toMatchSnapshot\|\.only(" src/</code> ต้องว่างเปล่า</li>
+          </ul>
+        </blockquote>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <h4><code>src/features/products/queries.test.tsx</code></h4>
+
+        <p><code>productQueries</code> จากบทเรียน 17 คือประตูสู่ข้อมูลสินค้าทั้งหมดของแอป เทสต์ชุดนี้จะพิสูจน์ว่าทั้งสี่ query ประกอบ <code>queryKey</code>/<code>queryFn</code> ถูก, เรียก API ถูกเส้นทาง และส่ง parameter ครบทั้งสาย (สังเกตนามสกุล <code>.tsx</code> — ไฟล์เทสต์ฝั่ง React ของโปรเจกต์นี้ใช้ <code>.tsx</code> ทั้งหมด):</p>
+
+        <pre><code class="language-typescript">import { renderHook, waitFor } from "@testing-library/react";
+import { useQuery } from "@tanstack/react-query";
+import { productQueries } from "./queries";
+import { createQueryWrapper } from "@/test/utils";
+
+describe("productQueries", () =&gt; {
+  it("list fetches products with the given limit", async () =&gt; {
+    const { result } = renderHook(
+      () =&gt; useQuery(productQueries.list({ limit: 5 })),
+      { wrapper: createQueryWrapper() },
+    );
+
+    await waitFor(() =&gt; expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.products).toHaveLength(5);
+  });
+
+  it("byCategory fetches products for a category and page", async () =&gt; {
+    const { result } = renderHook(
+      () =&gt;
+        useQuery(
+          productQueries.byCategory({ category: "beauty", page: 2, limit: 20 }),
+        ),
+      { wrapper: createQueryWrapper() },
+    );
+
+    await waitFor(() =&gt; expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.skip).toBe(20);
+    expect(result.current.data?.products[0]?.title).toBe("beauty product 21");
+  });
+
+  it("categories fetches the category list", async () =&gt; {
+    const { result } = renderHook(() =&gt; useQuery(productQueries.categories()), {
+      wrapper: createQueryWrapper(),
+    });
+
+    await waitFor(() =&gt; expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.map((c) =&gt; c.slug)).toEqual([
+      "beauty",
+      "fragrances",
+      "furniture",
+    ]);
+  });
+
+  it("detail fetches a single product", async () =&gt; {
+    const { result } = renderHook(() =&gt; useQuery(productQueries.detail(7)), {
+      wrapper: createQueryWrapper(),
+    });
+
+    await waitFor(() =&gt; expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.id).toBe(7);
+  });
+});
+</code></pre>
+
+        <p>โครงของทุกเทสต์เหมือนกันเป๊ะ — เรียก <code>renderHook</code> พร้อม wrapper, รอให้ query สำเร็จ, แล้ว assert ข้อมูล มาแกะทีละชิ้น:</p>
+
+        <ul>
+          <li><strong><code>renderHook(() =&gt; useQuery(...), { wrapper })</code></strong> — argument แรกคือฟังก์ชันที่เรียก hook (จะถูกรันข้างใน component จิ๋วที่ว่า) ส่วน <code>wrapper</code> คือ component ที่จะห่อรอบมัน — เราส่ง <code>createQueryWrapper()</code> ที่สร้างไว้ในบทเรียน 30 ซึ่งก็คือ <code>QueryClientProvider</code> ดี ๆ นี่เอง</li>
+          <li><strong>ทำไมต้อง QueryClient ใหม่ทุกเทสต์?</strong> — สังเกตว่าเราเรียก <code>createQueryWrapper()</code> ใหม่ในทุก <code>it</code> ไม่ได้สร้างครั้งเดียวแชร์กัน เหตุผล: QueryClient คือที่อยู่ของ <em>cache</em> ถ้าแชร์กัน เทสต์ <code>detail(7)</code> ที่รันทีหลังอาจได้ข้อมูลจาก cache ของเทสต์ก่อนหน้าแบบทันทีโดยไม่ยิง request เลย — เทสต์จะ "ผ่าน" หรือ "พัง" ด้วยเหตุผลผิด ๆ ตามลำดับการรัน ซึ่งเป็นเทสต์ประเภทอันตรายที่สุด: flaky test ที่ผลเปลี่ยนไปมา cache สดใหม่ทุกเทสต์ = ทุกเทสต์เป็นอิสระต่อกัน 100% (แถม <code>retry: false</code> ที่ตั้งไว้ใน <code>createTestQueryClient</code> ยังทำให้กรณี fail ไม่ต้องรอ retry ให้เสียเวลา)</li>
+          <li><strong><code>waitFor</code></strong> — query เป็นงาน async: ตอน <code>renderHook</code> จบใหม่ ๆ <code>result.current.isLoading</code> ยังเป็น <code>true</code> อยู่ <code>waitFor</code> จะรัน callback ซ้ำ ๆ จนกว่า assertion ข้างในจะไม่โยน error (หรือครบ timeout ~1 วินาทีแล้วยอมแพ้) — อย่าลืม <code>await</code> เด็ดขาด ไม่งั้นเทสต์จะวิ่งเลยไป assert ข้อมูลทั้งที่ยังโหลดไม่เสร็จ</li>
+          <li><strong>ทำไมต้องรอ <code>isSuccess</code> ไม่ใช่ <code>!isLoading</code></strong> — สองอย่างนี้ต่างกันตรงกรณีที่ query <em>พัง</em>: เมื่อ request ล้มเหลว <code>isLoading</code> จะกลายเป็น <code>false</code> เหมือนกับตอนสำเร็จทุกประการ ส่วน <code>isSuccess</code> เป็น <code>true</code> ทางเดียวเท่านั้น การเลือกสัญญาณจึงเป็นการเลือกว่าเทสต์นี้รับประกัน "query หยุดทำงานแล้ว" หรือ "query สำเร็จแล้ว" — คนละเรื่องกันคนละขั้ว และเป็นเส้นแบ่งที่ตาคุณต้องหยุดทุกครั้งที่เห็น <code>waitFor</code> ในโค้ดที่ AI เขียน</li>
+          <li><strong>assertion แต่ละตัวพิสูจน์คนละเรื่อง</strong> — <code>list({ limit: 5 })</code> ได้ 5 ชิ้นพอดี แปลว่า <code>limit</code> เดินทางจาก parameter → <code>api.ts</code> → query string → MSW ครบสาย ส่วน <code>byCategory({ page: 2, limit: 20 })</code> เด็ดกว่านั้น: <code>skip</code> ต้องเป็น 20 และสินค้าตัวแรกต้องชื่อ <code>beauty product 21</code> — ชื่อนี้ handler ประกอบขึ้นจาก slug + ลำดับที่คำนวณจาก <code>skip</code> (บทเรียน 30) ดังนั้นถ้าเห็นชื่อนี้ แปลว่าทั้งชื่อ category และการคำนวณหน้า 2 → skip 20 ของ <code>calculateOffset</code> ทำงานถูกต้องจริงในบริบทจริง ไม่ใช่แค่ใน unit test</li>
+        </ul>
+
+        <h4><code>src/features/checkout/useCheckout.test.tsx</code></h4>
+
+        <p><code>useCheckout</code> จากบทเรียน 28 คือ hook ที่ยุ่งที่สุดของแอป: มันใช้ <code>useCart</code> (ต้องการ CartProvider), <code>useMutation</code> (ต้องการ QueryClientProvider) และ <code>useProductRoute</code> ซึ่งข้างในคือ <code>useNavigate</code> (ต้องการ router) เทสต์มันจึงต้องประกอบ provider ครบสามชั้น:</p>
+
+        <pre><code class="language-typescript">import { ReactNode } from "react";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router";
+import useCheckout from "./useCheckout";
+import { CartProvider } from "@/features/cart/store/CartProvider";
+import { CART_STORAGE_KEY } from "@/features/cart/store/cartStorage";
+import { useCart } from "@/features/cart/useCart";
+import { createTestQueryClient } from "@/test/utils";
+
+function wrapper({ children }: { children: ReactNode }) {
+  return (
+    &lt;MemoryRouter initialEntries={["/checkout"]}&gt;
+      &lt;QueryClientProvider client={createTestQueryClient()}&gt;
+        &lt;CartProvider&gt;{children}&lt;/CartProvider&gt;
+      &lt;/QueryClientProvider&gt;
+    &lt;/MemoryRouter&gt;
+  );
+}
+
+describe("useCheckout", () =&gt; {
+  it("clears the cart after a successful order", async () =&gt; {
+    localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify({
+        items: [
+          { id: 1, title: "Widget", price: 10, quantity: 2, image: "/w.png" },
+        ],
+      }),
+    );
+
+    const { result } = renderHook(
+      () =&gt; ({ checkout: useCheckout(), cart: useCart() }),
+      { wrapper },
+    );
+
+    expect(result.current.cart.cart.items).toHaveLength(1);
+    expect(result.current.checkout.billingSummary.subtotal).toBe(20);
+
+    act(() =&gt; {
+      result.current.checkout.storeCheckoutAddress({
+        address: "1 Main St",
+        email: "jane@example.com",
+        phone: "0812345678",
+      });
+    });
+
+    act(() =&gt; {
+      result.current.checkout.onPlaceOrder();
+    });
+
+    await waitFor(() =&gt; expect(result.current.cart.cart.items).toHaveLength(0));
+  });
+
+  it("errors and keeps the cart when no address is set", async () =&gt; {
+    localStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify({
+        items: [
+          { id: 1, title: "Widget", price: 10, quantity: 2, image: "/w.png" },
+        ],
+      }),
+    );
+
+    const { result } = renderHook(
+      () =&gt; ({ checkout: useCheckout(), cart: useCart() }),
+      { wrapper },
+    );
+
+    act(() =&gt; {
+      result.current.checkout.onPlaceOrder();
+    });
+
+    await waitFor(() =&gt;
+      expect(result.current.checkout.isPlaceOrderLoading).toBe(false),
+    );
+    expect(result.current.cart.cart.items).toHaveLength(1);
+  });
+});
+</code></pre>
+
+        <p>ไฟล์นี้มีเทคนิคใหม่หลายตัว ไล่ตามลำดับที่เจอ:</p>
+
+        <ul>
+          <li><strong>wrapper เขียนเองเต็ม ๆ</strong> — คราวนี้ <code>createQueryWrapper()</code> ไม่พอ เราประกาศ component <code>wrapper</code> ที่ซ้อนสามชั้น: <code>MemoryRouter</code> คือ router ที่เก็บ history ในหน่วยความจำ (แบบเบาของ <code>createMemoryRouter</code> — พอสำหรับกรณีที่ hook แค่<em>เรียก</em> navigate โดยไม่ต้อง render route ปลายทาง) ตามด้วย <code>QueryClientProvider</code> และ <code>CartProvider</code> <em>ตัวจริง</em>จากแอป — เราไม่ mock cart เลย เพราะพฤติกรรมที่อยากพิสูจน์คือ "checkout สั่ง cart ให้ล้างจริงไหม" ซึ่งต้องใช้ของจริงถึงจะพิสูจน์ได้</li>
+          <li><strong>สังเกตว่า navigation ก็ไม่ได้ mock</strong> — <code>goToOrderSuccess()</code> จะ navigate จริง ๆ ใน MemoryRouter แค่ไม่มีหน้าไหน render ออกมาให้ดู เทสต์นี้เลือก assert ผ่านตะกร้าแทน (การ assert ตัว URL ปลายทางเป็นหน้าที่ของ integration test บทหน้า)</li>
+          <li><strong>เตรียมตะกร้าผ่าน localStorage</strong> — เราเขียนตะกร้า (Widget ราคา 10 จำนวน 2) ลง <code>CART_STORAGE_KEY</code> <em>ก่อน</em> <code>renderHook</code> พอ <code>CartProvider</code> mount มันจะ lazy init จาก <code>loadCartState()</code> แล้วเจอของที่เราวางไว้ — ได้เทสต์ที่เดินผ่านโค้ด persistence จริงอีกรอบ ฟรี ๆ (และไม่ต้องเก็บกวาด เพราะ <code>afterEach</code> ใน setup ล้าง localStorage ให้แล้ว) นี่คือกลไกเดียวกับที่ <code>useReducer</code> แบบสามอาร์กิวเมนต์ในบทเรียน 22 ทำให้เป็นไปได้ — ถ้าตอนนั้นเขียนเป็นสองอาร์กิวเมนต์ กลไกนี้ก็ยังทำงาน แต่จะทำงานซ้ำทุก render</li>
+          <li><strong>เรียกสอง hook ในครั้งเดียว</strong> — callback ของ <code>renderHook</code> คืน object <code>{ checkout: useCheckout(), cart: useCart() }</code> สอง hook นี้จึงรันใน component เดียวกัน ใต้ <code>CartProvider</code> ตัวเดียวกัน — <code>cart</code> กลายเป็น "หน้าต่าง" ให้เราแอบดู state ของตะกร้าจากข้างนอก ระหว่างที่ <code>checkout</code> คือตัวที่เราสั่งงาน (นั่นคือที่มาของ <code>result.current.cart.cart.items</code> ที่อ่านแล้วสะดุดตา — <code>cart</code> ตัวแรกคือ key ที่เราตั้งเอง ตัวที่สองคือ field ที่ <code>useCart</code> คืนมา)</li>
+          <li><strong><code>act(...)</code></strong> — ทุกครั้งที่เราเรียกฟังก์ชันที่ทำให้ state เปลี่ยน (เช่น <code>storeCheckoutAddress</code> ที่ <code>setState</code> ข้างใน) ต้องห่อด้วย <code>act</code> เพื่อบอก React ว่า "ประมวลผล update ให้จบก่อน แล้วค่อยให้เทสต์ไปต่อ" — ไม่งั้นจะเจอ warning และ <code>result.current</code> อาจยังเป็นค่าเก่า และเหตุผลที่ต้องเป็น <code>act</code> <em>สองก้อน</em>คือ <code>onPlaceOrder</code> ต้องอ่าน <code>checkoutAddress</code> ที่ก้อนแรกเพิ่งเซ็ตไป ถ้ารวมเป็นก้อนเดียว state ยังไม่ทันถูก commit</li>
+          <li><strong>เส้นทางของเทสต์แรก (happy path)</strong> — assert ค่าตั้งต้นก่อน (ตะกร้ามี 1 รายการ, <code>billingSummary.subtotal</code> = 10 × 2 = 20 — ได้เทสต์ logic ใน <code>useMemo</code> แถมมาด้วย) จากนั้นบันทึกที่อยู่ → กดสั่งซื้อ → <code>placeOrder</code> ยิง <code>POST /carts/add</code> ซึ่ง MSW ตอบ 201 → <code>onSuccess</code> ของ mutation รัน <code>clearCart()</code> — เราพิสูจน์ทั้งหมดนั้นด้วย <code>waitFor</code> บรรทัดเดียว: รอจนตะกร้าว่าง</li>
+          <li><strong>เส้นทางของเทสต์ที่สอง (error path)</strong> — กดสั่งซื้อโดย<em>ไม่</em>บันทึกที่อยู่ <code>mutationFn</code> จะ <code>throw new Error("Delivery Address is Missing")</code> ทันที mutation กลายเป็นสถานะ error, <code>onSuccess</code> ไม่รัน เรารอให้ <code>isPlaceOrderLoading</code> กลับเป็น <code>false</code> แล้ว assert ว่าตะกร้า<em>ยังอยู่ครบ</em> — เทสต์ error path แบบนี้สำคัญไม่แพ้ happy path: ผู้ใช้ต้องไม่เสียตะกร้าเพราะการสั่งซื้อที่ล้มเหลว</li>
+        </ul>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — สองข้อ และข้อแรกอยู่ในบรรทัดที่กล่อง ✅ ข้างบนเพิ่งสั่งห้ามไปหมาด ๆ:</strong> เทสต์ที่สองของ <code>useCheckout.test.tsx</code> รอด้วย <code>await waitFor(() =&gt; expect(result.current.checkout.isPlaceOrderLoading).toBe(false))</code> ซึ่งเป็น<em>สัญญาณที่เป็น <code>false</code> อยู่แล้วตั้งแต่ก่อนเริ่ม</em> — <code>isPlaceOrderLoading</code> คือ <code>isPending</code> ของ mutation ที่เริ่มต้นเป็น <code>false</code> ขึ้นเป็น <code>true</code> ชั่วขณะ แล้วกลับมาเป็น <code>false</code> ดังนั้น <code>waitFor</code> ก้อนนี้อาจผ่านตั้งแต่รอบ poll แรกโดยที่ mutation ยังไม่ได้ล้มเหลวด้วยซ้ำ พูดให้ตรงคือ <strong>เทสต์นี้ไม่ได้ยืนยันเลยว่า mutation พังจริง</strong> มันยืนยันแค่ว่า "ตอนนี้ไม่ได้กำลังโหลด" แล้วเช็คว่าตะกร้ายังมีของ ซึ่งเป็นเงื่อนไขที่จะผ่านเหมือนกันเป๊ะถ้า <code>onPlaceOrder</code> ไม่ทำอะไรเลยสักอย่าง สาเหตุที่มันเขียนแบบนี้ก็เพราะ<em>ไม่มีสัญญาณที่ถูกต้องให้รอ</em>: <code>useCheckout</code> return <code>isPlaceOrderLoading</code> ออกมาตัวเดียว ไม่ได้ return <code>isPlaceOrderError</code> หรือ <code>error</code> เลย — เทสต์จึงถูกจำกัดด้วยรูปร่างของ public API ที่บทเรียน 28 ออกแบบไว้ ในรีวิวจริงข้อนี้ควรถูกทักที่ <em>hook</em> ไม่ใช่ที่เทสต์: เพิ่ม <code>isPlaceOrderError</code> เข้าไปใน return แล้วให้เทสต์รอ <code>toBe(true)</code> ซึ่งเป็นสัญญาณทางเดียว วิธีพิสูจน์ว่าปัญหานี้มีจริงใช้เวลาสามสิบวินาที: แก้ <code>onPlaceOrder</code> ใน <code>useCheckout.ts</code> ให้เป็นฟังก์ชันว่าง (ลบบรรทัด <code>placeOrderMutate();</code> ทิ้ง) แล้วรันไฟล์นี้ไฟล์เดียว — เทสต์ตัวที่<em>สอง</em>จะยัง<strong>เขียว</strong> ทั้งที่โค้ดไม่ได้ทำอะไรเลย (ส่วนตัวแรกจะแดง ซึ่งเป็นคนละเรื่อง — มันแดงเพราะตะกร้าไม่ถูกล้าง ไม่ใช่เพราะมันตรวจจับ error ได้) <strong>ข้อสอง</strong> อยู่ใน <code>queries.test.tsx</code>: ไม่มีเทสต์ตัวไหน assert <code>queryKey</code> เลยแม้แต่ตัวเดียว ทั้งสี่เทสต์ดูแต่ <em>ข้อมูลที่ได้กลับมา</em> ซึ่งไม่เปลี่ยนเลยไม่ว่า key จะสะกดอย่างไร แปลว่า <code>productKeys</code> — ไฟล์ที่บทเรียน 17 บังคับให้พิมพ์เองด้วยเหตุผลว่า "key ผิดคือบั๊กที่ไม่มีเครื่องมือไหนจับได้" — ยังคงไม่มีเครื่องมือไหนจับได้อยู่ดีหลังจบบทนี้ ในตระกูลเดียวกัน <code>placeholderData: keepPreviousData</code> ในจาน <code>byCategory</code> ก็ไม่มีเทสต์ตัวไหนแตะ ทั้งที่บทเรียน 29 ยกมันเป็นตัวอย่างเปิดของบั๊กเงียบทั้งบท ทางแก้คือเทสต์เพิ่มหนึ่งตัวที่ assert <code>productKeys.byCategory({...})</code> ตรง ๆ ว่าได้ array หน้าตาแบบไหน ซึ่งเป็น unit test ธรรมดาที่ไม่ต้อง render อะไรเลยด้วยซ้ำ — เราไม่เพิ่มเพราะยึดตามต้นฉบับ แต่ต้องรู้ว่าตอนนี้ตาข่ายมีรูตรงไหน</blockquote>
+
+        <h2>อ่าน error ของเทสต์ async ให้เป็น</h2>
+
+        <p>เทสต์ async พังแล้วอ่านยากกว่า unit test เยอะ เพราะสิ่งที่รายงานมักเป็น<em>ปลายเหตุ</em> สี่อาการที่จะเจอบ่อยและวิธีไล่:</p>
+
+        <ul>
+          <li><strong><code>waitFor</code> timeout</strong> — ข้อความจะเป็น assertion ล่าสุดที่ยังไม่ผ่าน เช่น <code>expected true, received false</code> ของ <code>isSuccess</code> อย่าเพิ่งงมที่ assertion — ถามก่อนว่า "ทำไม query ไม่สำเร็จ?" ลอง log <code>result.current.error</code> ดู มักเจอคำตอบทันที (URL ผิด, handler ไม่ match, provider ไม่ครบ)</li>
+          <li><strong>MSW ฟ้อง unhandled request</strong> — เพราะเราตั้ง <code>onUnhandledRequest: "error"</code> ไว้ ถ้า request หลุดไปโดยไม่มี handler จะเห็นข้อความบอก method + URL เต็ม ๆ เอา URL นั้นไปเทียบกับ <code>handlers.ts</code> ทีละตัวอักษร — เกือบทุกครั้งคือ path สะกดผิด, ลืมสร้าง handler หรือ <code>VITE_API_BASE_URL</code> ไม่ตรง</li>
+          <li><strong>warning "not wrapped in act(...)"</strong> — แปลว่ามี state update เกิดขึ้นนอก <code>act</code>/<code>waitFor</code> มักเพราะเรียกฟังก์ชันของ hook ตรง ๆ โดยไม่ห่อ <code>act</code> หรือเทสต์จบก่อนที่งาน async จะเสร็จ</li>
+          <li><strong>เทสต์ผ่านบ้างพังบ้าง (flaky)</strong> — เกือบทั้งหมดมาจากการลืม <code>await</code> หน้า <code>waitFor</code> (เทสต์วิ่งจบก่อนงานเสร็จ) หรือ state ที่รั่วข้ามเทสต์ เช่น แชร์ QueryClient หรือลืมว่ามีอะไรค้างใน localStorage — ถ้าเจอ ให้รันเทสต์ไฟล์นั้นเดี่ยว ๆ เทียบกับรันทั้งชุด ผลต่างกันเมื่อไหร่ แปลว่ามี state รั่วแน่นอน</li>
+        </ul>
+
+        <p>สังเกตว่าสามในสี่ข้อนี้เป็นอาการที่<em>ดัง</em> ตามนิยามของบทเรียน 29 — เทสต์แดง มีข้อความ มีเลขบรรทัด ข้อที่ต้องระวังจริง ๆ คือสิ่งที่ไม่อยู่ในรายการนี้เลย: เทสต์ async ที่<em>เขียว</em>เพราะมันไม่เคยรออะไร ซึ่งไม่มีอาการ ไม่มีข้อความ และไม่มีวันปรากฏในรายงาน — จับได้ทางเดียวคือการอ่านว่าแต่ละ <code>waitFor</code> รอสัญญาณอะไร</p>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>ใน <code>queries.test.tsx</code> เปลี่ยน <code>await waitFor(() =&gt; expect(result.current.isSuccess).toBe(true))</code> ของเทสต์ <code>detail</code> ให้เป็น <code>isLoading</code> เท่ากับ <code>false</code> แทน แล้วแก้ <code>productQueries.detail(7)</code> เป็น <code>detail(7)</code> ที่ชี้ไป endpoint ผิด (เช่นแก้ <code>getProduct</code> ใน <code>api.ts</code> ให้ยิง <code>/product/${id}</code> ขาด s) — ตอบว่าเทสต์แดงหรือเขียว แดงที่บรรทัดไหน และอธิบายว่าถ้าเทสต์นั้นไม่มี assertion บรรทัดสุดท้ายเลย ผลจะต่างไปอย่างไร (เสร็จแล้วแก้กลับทั้งสองที่)</li>
+          <li>เอา <code>act</code> สองก้อนในเทสต์แรกของ <code>useCheckout.test.tsx</code> มารวมเป็นก้อนเดียว แล้วรัน — ตอบว่าเทสต์แดงตรงไหน ข้อความว่าอะไร และอธิบายให้ได้ว่าค่า <code>checkoutAddress</code> ณ ตอนที่ <code>mutationFn</code> ทำงานคืออะไร แล้วบอกด้วยว่าเส้นทางที่เทสต์เดินจริง ๆ ในกรณีนั้นคือเส้นทางของเทสต์ตัวไหน (เสร็จแล้วแยกกลับ)</li>
+          <li>เปิด <code>src/features/products/queries.ts</code> แล้วแก้ <code>productKeys.detail</code> ให้ส่งคืน key ที่ผิด เช่นเปลี่ยน <code>"detail"</code> เป็น <code>"details"</code> — รันเทสต์ทั้งชุดแล้วตอบว่ามีกี่ตัวแดง จากนั้นอธิบายว่าทำไมผลถึงออกมาแบบนั้น และเขียน assertion หนึ่งบรรทัดที่จะจับข้อนี้ได้ พร้อมบอกว่ามันควรอยู่ในไฟล์ไหนและเป็นเทสต์ชั้นไหนของพีระมิด (เสร็จแล้วแก้กลับ)</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run test</code> — ต้องได้ <strong>8 test files ผ่านทั้งหมด รวม 28 tests</strong> (22 ตัวเดิมจากบทที่แล้ว + queries 4 + useCheckout 2) ถ้า useCheckout พังด้วย error ทำนอง "useNavigate may be used only in the context of a Router" ให้เช็คว่า wrapper ซ้อนครบสามชั้นและสะกด <code>MemoryRouter</code> ถูก และก่อน commit ให้ทวนว่าคุณทำขั้นตอน "ทำให้มันแดงด้วยมือ" ครบทั้งสามคู่แล้ว — โดยเฉพาะคู่ <code>clearCart</code> ที่ย้ายออกจาก <code>onSuccess</code> เพราะนั่นคือบั๊กที่บทเรียน 28 บอกว่าคุณจะไม่มีวันเห็นในเครื่องตัวเอง และวันนี้เป็นวันแรกที่มันมีเสียง — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="31_unit_tests.html" rel="prev">ก่อนหน้า: Unit Tests</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="33_integration_tests.html" rel="next">ถัดไป: Integration Tests</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

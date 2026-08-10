@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เขียน unit test ให้ logic ล้วน ๆ ของแอป โดยพิมพ์ไฟล์แรกเองแล้วให้ Cursor เขียนที่เหลือ พร้อมกติกาข้อเดียวที่แยกเทสต์จริงออกจากเทสต์ที่ผ่านเสมอ: ทุกเทสต์ต้องทำให้แดงได้" />
+    <title>Unit Tests | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 31 · การทดสอบ (Testing)</p>
+          <h1>Unit Tests: พิสูจน์ logic ทีละฟังก์ชัน</h1>
+          <p class="lesson-original-title" lang="en">Unit Tests</p>
+        </header>
+
+        <p>เราจะเริ่มจากฐานของพีระมิดการทดสอบ: <strong>unit test</strong> ของฟังก์ชันล้วน ๆ (pure function) — ฟังก์ชันที่รับ input เดิมแล้วคืน output เดิมเสมอ ไม่แตะ DOM ไม่ยิง network เทสต์กลุ่มนี้เขียนง่ายที่สุด รันเร็วที่สุด (หลักมิลลิวินาที) และเวลาพังมันชี้จุดแม่นที่สุด — บอกได้เลยว่าฟังก์ชันไหน กรณีไหน ค่าที่ได้กับค่าที่คาดต่างกันอย่างไร</p>
+
+        <p>ธรรมเนียมของโปรเจกต์นี้: ไฟล์เทสต์อยู่<em>ข้าง</em>ไฟล์ต้นทางเสมอ (co-located) โดยเติม <code>.test</code> เข้าไปในชื่อ เช่น <code>price.utils.ts</code> คู่กับ <code>price.utils.test.ts</code> — เปิดโฟลเดอร์ไหนก็เห็นทันทีว่าไฟล์ไหนมีเทสต์คุ้มกันอยู่ ระหว่างทำบทนี้แนะนำให้เปิด <code>npm run test:watch</code> ทิ้งไว้ จะได้เห็นเทสต์เขียวขึ้นทีละไฟล์</p>
+
+        <h2>ทำไมบทนี้ต้องอ่านต่างจากบทอื่น</h2>
+
+        <p>ยี่สิบสองบทที่ผ่านมา เราแบ่งงานกับ Agent ด้วยหลักเดียวกันตลอด: ให้มันเขียน แล้วเราตรวจ และสิ่งที่ทำให้การตรวจของเราเชื่อถือได้คือ<strong>มีชั้นที่อยู่เหนือโค้ดชั้นนั้นคอยยืนยันอีกที</strong> — <code>npm run typecheck</code> อยู่เหนือ type ที่มันเขียน, <code>npm run lint</code> อยู่เหนือสไตล์ที่มันเลือก, หน้าเว็บที่เปิดดูจริงอยู่เหนือ JSX ที่มันวาง และตั้งแต่วันนี้ เทสต์จะอยู่เหนือ logic ทั้งหมดที่เราเขียนมา</p>
+
+        <p>คำถามที่ตามมาทันทีคือ: <em>แล้วอะไรอยู่เหนือเทสต์</em></p>
+
+        <p>คำตอบคือ ไม่มี เทสต์เป็นชั้นบนสุด ถ้าเทสต์ผิด จะไม่มีเครื่องมือตัวไหนในโปรเจกต์นี้ตะโกนบอกคุณ — เพราะเครื่องมือทุกตัวที่เรามีจะบอกได้แค่ว่าเทสต์<em>รันผ่าน</em> ไม่ใช่ว่าเทสต์<em>ทดสอบอะไรอยู่</em> ในภาษาของบทเรียน 29 นี่คือฝั่ง<strong>เงียบ</strong>ที่เงียบที่สุดในคอร์สนี้ และมันเงียบในทิศทางที่แย่ที่สุด: มันไม่ได้เงียบเฉย ๆ แต่มันส่งเสียง<em>เขียว</em>ใส่คุณด้วย</p>
+
+        <blockquote>🚨 <strong>เทสต์เป็นที่เดียวที่ AI ทำให้คุณ "รู้สึกปลอดภัย" ได้โดยที่ไม่ได้ปลอดภัยจริง</strong> เทสต์ที่ assert ว่าฟังก์ชันคืนค่าเท่ากับสิ่งที่ฟังก์ชันคืน คือเทสต์ที่ผ่านเสมอและไม่ได้พิสูจน์อะไรเลย — และมันจะผ่านต่อไปในวันที่ฟังก์ชันนั้นถูกแก้ผิด ในวันที่สูตรถูกสลับ ในวันที่ guard ถูกลบทิ้ง โค้ดชุดนั้นจะยังมีตัวเลขบอกว่า "ผ่าน 22 tests" อยู่ที่เดิม ทุกอย่างอื่นในคอร์สนี้ที่ AI เขียนผิด อย่างน้อยก็ทำให้บางอย่างพัง แต่เทสต์ที่ AI เขียนผิดจะทำให้ทุกอย่าง<em>ดูเหมือนไม่พัง</em> ซึ่งแพงกว่ากันมาก</blockquote>
+
+        <p>ก้อนโค้ดข้างล่างนี้คือหน้าตาของสิ่งที่พูดถึง มันไม่ใช่โค้ดสมมติ — มันคือรูปแบบที่ Agent เขียนออกมาได้เป็นปกติเวลาถูกสั่งว่า "เขียนเทสต์ให้ฟังก์ชันนี้" โดยไม่มีใครบอกว่าค่าที่คาดหวังคืออะไร:</p>
+
+        <pre><code class="language-typescript">// เทสต์ที่ผ่านเสมอ — และจะผ่านต่อไปแม้สูตรใน price.utils.ts จะถูกแก้ผิด
+it("computes the pre-discount price", () =&gt; {
+  const price = 90;
+  const discount = 10;
+  expect(calculateOriginalPrice(price, discount)).toBeCloseTo(
+    price / (1 - discount / 100),
+  );
+});</code></pre>
+
+        <p>อ่านผ่าน ๆ มันดูดีกว่าของจริงด้วยซ้ำ — มีชื่อตัวแปรบอกความหมาย ไม่มีตัวเลขลอย ๆ ("magic number") ดูเป็นมืออาชีพ แต่ฝั่งขวาของ <code>toBeCloseTo</code> คือ<em>สูตรเดียวกับที่อยู่ในตัวฟังก์ชัน</em> เท่ากับเทสต์นี้ถามว่า "สูตรนี้เท่ากับสูตรนี้ไหม" ซึ่งคำตอบคือใช่เสมอ ไม่ว่าสูตรจะถูกหรือผิด ถ้าใครไปแก้ <code>price.utils.ts</code> เป็น <code>price * (1 - discountPercentage / 100)</code> เทสต์ตัวนี้จะยัง<strong>เขียว</strong> ตราบใดที่คนแก้แก้ทั้งสองที่ให้ตรงกัน — และคนที่แก้มักจะแก้ทั้งสองที่ให้ตรงกัน เพราะนั่นคือวิธีที่เร็วที่สุดที่จะทำให้เทสต์ผ่าน</p>
+
+        <p>ของจริงเขียนแบบนี้แทน:</p>
+
+        <pre><code class="language-typescript">// เทสต์ที่แดงได้ — ฝั่งขวาเป็นตัวเลขที่คนตัดสินใจ ไม่ใช่ผลของโค้ดที่กำลังทดสอบ
+it("computes the pre-discount price", () =&gt; {
+  expect(calculateOriginalPrice(90, 10)).toBeCloseTo(100);
+});</code></pre>
+
+        <p><code>100</code> คือคำตอบที่<em>คน</em>คำนวณเองแล้วเขียนลงไป ถ้าสูตรในฟังก์ชันเปลี่ยน เลขนี้ไม่ขยับตาม เทสต์ก็แดง นี่คือเส้นแบ่งทั้งหมดของบทนี้ในหนึ่งบรรทัด: <strong>ฝั่งขวาของ assertion ต้องมาจากหัวคุณ ไม่ใช่จากโค้ดที่กำลังถูกทดสอบ</strong></p>
+
+        <p>และนั่นคือเหตุผลที่บทนี้เป็นหนึ่งในสิบจุดที่คอร์สนี้บังคับให้พิมพ์เอง เกณฑ์ที่บทเรียน 29 วางไว้ว่า "โค้ดสั้นกว่าคำอธิบาย" ใช้ได้พอดีตรงนี้ — การอธิบายให้ Agent เข้าใจว่าเทสต์ที่ดีต่างจากเทสต์ที่ผ่านอย่างไร ยาวกว่าตัวเทสต์เองหลายเท่า</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <p>หกไฟล์ ไฟล์แรกพิมพ์เอง ที่เหลือให้ Agent เขียนในรอบเดียว:</p>
+
+        <pre><code class="language-bash">src/
+├── shared/
+│   ├── api/
+│   │   └── client.test.ts               # 🤖 ใช้ MSW
+│   └── utils/
+│       ├── price.utils.test.ts          # ✍️ พิมพ์เอง — ไฟล์แรก
+│       └── pagination.utils.test.ts     # 🤖
+└── features/
+    ├── cart/store/
+    │   ├── cartReducer.test.ts          # 🤖
+    │   └── cartStorage.test.ts          # 🤖
+    └── checkout/
+        └── schema.test.ts               # 🤖</code></pre>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>price.utils.test.ts</code></strong> — ต้องมีสอง <code>it</code>: ทางเดินปกติหนึ่งตัว และกรณีขอบสามค่ารวมกันอีกหนึ่งตัว ทุก assertion ต้องเทียบกับ<em>ตัวเลขที่เขียนตายตัว</em> ต้องไม่มีตัวแปรหรือนิพจน์คำนวณอยู่ฝั่งขวาของ matcher เลย</li>
+          <li><strong><code>pagination.utils.test.ts</code></strong> — ต้องแยกเป็นสอง <code>describe</code> ตามชื่อฟังก์ชัน ต้องครอบทั้งกรณีหารลงตัวและหารไม่ลงตัว ต้องไม่ import อะไรนอกจากไฟล์ที่มันทดสอบ</li>
+          <li><strong><code>cartReducer.test.ts</code></strong> — ต้องครอบ action ครบทั้งสี่ประเภท โดย <code>ADD_TO_CART</code> ต้องมีสองเคส (ของใหม่ กับ ของที่มีอยู่แล้ว) ต้องไม่ render อะไรทั้งสิ้น ต้องไม่แตะ localStorage และต้องไม่ import React</li>
+          <li><strong><code>cartStorage.test.ts</code></strong> — ต้องใช้ localStorage จริงของ jsdom ต้องไม่ <code>vi.mock</code> localStorage และต้องมีเคสข้อมูลพัง (JSON เสีย) กับเคสรูปร่างผิด (parse ได้แต่ <code>items</code> ไม่ใช่ array) แยกกันคนละ <code>it</code></li>
+          <li><strong><code>schema.test.ts</code></strong> — ต้อง assert ตัวข้อความ error ไม่ใช่แค่ <code>success === false</code> ต้องใช้ <code>safeParse</code> ไม่ใช่ <code>parse</code> และต้องพังทีละ field จาก object ที่ valid ก้อนเดียว ต้องไม่ import <code>consts.ts</code> หรือ react-hook-form</li>
+          <li><strong><code>client.test.ts</code></strong> — ต้องพิสูจน์ว่า error ที่หลุดออกมาเป็น <code>instanceof ApiError</code> จริง ต้องใช้ <code>server.use(...)</code> เพื่อจำลอง error ไม่ใช่ <code>vi.mock</code> axios และต้องไม่เรียก <code>server.resetHandlers()</code> เองในไฟล์</li>
+        </ul>
+
+        <h2>✍️ ส่วนนี้พิมพ์เอง</h2>
+
+        <p>ก่อนลงมือ มีเรื่องหนึ่งที่ต่างจากทุกครั้งที่ผ่านมา และมันเปลี่ยนลำดับงานของบทนี้ทั้งบท กฎที่เราใช้มาตั้งแต่บทเรียน 12 คือ <strong>สิ่งที่พังเมื่อคุณตัดไฟล์ X ออกจาก prompt คือไฟล์ที่ import X ไม่ใช่ตัว X เอง</strong> เอากฎนี้มาจับกับ <code>price.utils.test.ts</code> แล้วไล่หาว่า "ใคร import ไฟล์นี้":</p>
+
+        <pre><code class="language-bash">grep -rn "price.utils.test" src/</code></pre>
+
+        <p>ว่างเปล่า และมันจะว่างเปล่าสำหรับไฟล์ <code>.test.*</code> ทุกไฟล์ในโปรเจกต์ เพราะ<strong>ไม่มีอะไรในโค้ดที่ import ไฟล์เทสต์</strong> — Vitest เป็นคนหาไฟล์เหล่านี้เองจากรูปแบบชื่อ ไม่ได้ถูกใครเรียกใช้ผ่าน import สักที่ ผลคือไฟล์เทสต์ทุกไฟล์อยู่<em>ปลายสายเสมอ</em> ไม่มีวันอยู่ตรงกลางแบบ <code>cartReducer.ts</code> ในบทเรียน 22</p>
+
+        <p>แปลว่าคราวนี้เป็นครั้งแรกในคอร์สที่ <strong>การตัดไฟล์ออกจาก prompt ไม่มีต้นทุนทางโครงสร้างเลย</strong> ไม่มีไฟล์ไหนพัง ไม่มี typecheck ตก ไม่ต้องแบ่ง prompt เป็นสองรอบเพื่อเสียบมือเข้าไปตรงรอยตัด เราจึงเลือกลำดับที่ให้ประโยชน์มากที่สุดแทน: <strong>พิมพ์เองก่อน แล้วค่อยส่ง prompt</strong> ด้วยเหตุผลสองข้อ ข้อแรกคือกลไกเดียวกับรอบที่ 2 ของบทเรียน 22 — ไฟล์ที่คุณพิมพ์กลายเป็น<em>บริบท</em>ที่ <code>@</code>-mention ได้ Agent จะเห็นสไตล์จริงของเทสต์ในโปรเจกต์นี้ ไม่ใช่สไตล์ที่มันเดา ข้อที่สองสำคัญกว่า: คุณต้องมีมาตรฐานอยู่ในหัวก่อนที่ของห้าไฟล์จะเข้ามาให้ตรวจ</p>
+
+        <p>แต่ถึงไม่มีต้นทุนทางโครงสร้าง ก็มีต้นทุนอีกแบบมาแทนที่ และมันคือต้นทุนที่ทั้งบทนี้พูดถึง: <em>เพราะไม่มีใคร import ไฟล์เทสต์ จึงไม่มีอะไรในเครื่องมือชุดนี้ที่สังเกตได้ว่ามันผิด</em> ไฟล์ที่อยู่ตรงกลางสายอย่าง <code>cartReducer.ts</code> ถ้าเขียนผิด typecheck จะฟ้องจากฝั่ง <code>CartProvider</code> ทันที ส่วนไฟล์เทสต์ที่เขียนผิด ไม่มีฝั่งไหนให้ฟ้อง — ความปลอดภัยที่หายไปจากด้านโครงสร้าง ต้องเอาสายตาคนมาชดเชยทั้งหมด</p>
+
+        <blockquote class="lesson-manual">
+          <p>✍️ <strong>ส่วนนี้พิมพ์เอง</strong> — ทำตามลำดับนี้ ห้ามก๊อปวาง ห้ามให้ Agent ช่วยเติม (ถ้ามีปุ่ม autocomplete ของ Cursor เด้งขึ้นมาแล้วคุณกด Tab รับ นั่นก็คือการก๊อป):</p>
+          <ol>
+            <li>ยืนยันก่อนว่าบทเรียน 30 commit แล้ว — <code>git status</code> ต้องสะอาด ไม่งั้น diff ของ prompt ข้างล่างจะปนโค้ดที่คุณพิมพ์เองเข้ากับโค้ดของ Agent</li>
+            <li>เปิด <code>src/shared/utils/price.utils.ts</code> วางไว้ข้าง ๆ แล้วพิมพ์ <code>src/shared/utils/price.utils.test.ts</code> ทั้งไฟล์ — ระหว่างพิมพ์ ทุกครั้งที่คุณกำลังจะพิมพ์ตัวเลขฝั่งขวาของ matcher ให้หยุดคำนวณในหัวก่อนหนึ่งวินาที ห้ามลอกจากสูตรในไฟล์ต้นทาง</li>
+            <li><code>npm run test</code> ต้องได้ 1 test file, 2 tests ผ่าน จากนั้น <code>npm run lint</code> และ <code>npm run typecheck</code> ให้ผ่านทั้งคู่ แล้ว <code>git commit</code> — ไฟล์ต้องมีอยู่จริงและถูก commit ก่อน prompt ถึงจะ <code>@</code>-mention มันได้</li>
+            <li>ทำขั้นตอน "ทำให้มันแดง" หนึ่งรอบ ก่อนไปต่อ — วิธีอยู่ในย่อหน้าใต้กล่องนี้ ข้อนี้ห้ามข้าม</li>
+          </ol>
+          <p><code>src/shared/utils/price.utils.test.ts</code>:</p>
+          <pre><code class="language-typescript">import { calculateOriginalPrice } from "./price.utils";
+
+describe("calculateOriginalPrice", () =&gt; {
+  it("computes the pre-discount price", () =&gt; {
+    expect(calculateOriginalPrice(90, 10)).toBeCloseTo(100);
+  });
+
+  it("returns the price unchanged when there is no discount", () =&gt; {
+    expect(calculateOriginalPrice(50, undefined)).toBe(50);
+    expect(calculateOriginalPrice(50, 0)).toBe(50);
+    expect(calculateOriginalPrice(50, 100)).toBe(50);
+  });
+});
+</code></pre>
+          <p><strong>เหตุผล:</strong> ต้องเขียนเทสต์เองให้เป็นก่อน ถึงจะตรวจเทสต์ของ AI ออก สิบสามบรรทัดนี้มีการตัดสินใจของคนอยู่ห้าจุดที่ Agent ไม่มีทางเดาถูกครบ: เลข <code>100</code> ที่คำนวณจากหัว, การเลือก <code>toBeCloseTo</code> แทน <code>toBe</code> เพราะรู้ว่าเลขทศนิยมจะไม่ลงตัว, การรวมค่าขอบสามค่าไว้ใน <code>it</code> เดียวเพราะทั้งสามค่าพิสูจน์กติกาข้อเดียวกัน, การเลือกว่า <code>100</code> เป็นค่าขอบที่ต้องเทสต์ (ไม่ใช่ <code>99</code>) และการเลือกว่า<em>ไม่</em>เทสต์อะไร คุณจะไม่มีมาตรฐานในหัวไว้เทียบกับเทสต์ห้าไฟล์ที่กำลังจะเข้ามา ถ้าไม่เคยลากเส้นห้าเส้นนี้ด้วยมือตัวเองสักครั้ง</p>
+        </blockquote>
+
+        <p>ตอนนี้ทำขั้นที่ 4 ให้จบ เพราะมันคือกติกาที่จะใช้ซ้ำกับทุกไฟล์ในบทนี้: เปิด <code>src/shared/utils/price.utils.ts</code> แล้ว<strong>แก้ให้ผิดหนึ่งบรรทัด</strong> เปลี่ยน <code>return price / (1 - discountPercentage / 100);</code> เป็น <code>return price * (1 - discountPercentage / 100);</code> แล้วรันเทสต์ใหม่ ต้องเห็น <code>expected 81 to be close to 100</code> เป็นสีแดง จากนั้น <code>git restore src/shared/utils/price.utils.ts</code> คืนของเดิม แล้วรันซ้ำให้เขียว</p>
+
+        <p>สามสิบวินาทีนี้คือสิ่งเดียวที่พิสูจน์ว่าเทสต์ที่คุณเพิ่งพิมพ์ทดสอบสิ่งที่คุณคิดว่ามันทดสอบ มันคือสัญญาณอันตรายข้อที่สองจากบทเรียน 29 ในรูปของขั้นตอนที่ทำได้จริง และมันจะกลับมาอีกหกครั้งในกล่อง ✅ ข้างล่าง</p>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> แชทใหม่ โหมด Agent สังเกตว่า <code>บริบท:</code> ชี้ไปที่ไฟล์ที่คุณเพิ่งพิมพ์เองเป็นชิ้นแรก และสังเกตว่าส่วน <code>ข้อกำหนดทางเทคนิค:</code> ระบุ<em>ค่าที่คาดหวังทุกตัว</em> — นั่นคือส่วนที่ยาวที่สุดของ prompt ก้อนนี้ด้วยเหตุผลที่อธิบายไว้ต้นบท:</p>
+          <pre><code class="language-text">เขียน unit test ให้ logic ล้วน ๆ ของแอปห้าไฟล์
+
+บริบท: @src/shared/utils/price.utils.test.ts @src/shared/utils/pagination.utils.ts @src/features/cart/store/cartReducer.ts @src/features/cart/store/cartStorage.ts @src/features/checkout/schema.ts @src/shared/api/client.ts @src/test/msw/handlers.ts
+src/shared/utils/price.utils.test.ts คือไฟล์เทสต์ไฟล์เดียวที่มีอยู่ตอนนี้
+  ให้ยึดสไตล์ของไฟล์นั้นทั้งหมด: import ไฟล์ที่ทดสอบด้วย relative path,
+  describe ชื่อเดียวกับสิ่งที่ทดสอบ, it ตั้งชื่อเป็นประโยคภาษาอังกฤษต่อจากชื่อ describe
+ชุดทดสอบตั้งค่าไว้แล้วในบทที่แล้ว: vitest + jsdom + globals: true
+  ห้าม import describe, it, expect จาก "vitest" เพราะเป็น global อยู่แล้ว
+setup ที่รันก่อนทุกไฟล์เทสต์ทำสามอย่างให้แล้ว อย่าทำซ้ำในไฟล์เทสต์
+  1) เปิด MSW server ด้วย onUnhandledRequest: "error"
+  2) afterEach เรียก server.resetHandlers() และ localStorage.clear()
+  3) ลงทะเบียน matcher ของ jest-dom
+MSW handler ตั้งต้นตอบ GET https://dummyjson.com/products/1 ด้วยสินค้า id 1
+  อยู่แล้ว ไม่ต้องเพิ่ม handler สำหรับ happy path
+alias @/ ชี้ไปที่ src/ ส่วนไฟล์ในโฟลเดอร์เดียวกันให้ใช้ ./
+โปรเจกต์นี้ไม่ได้เปิด verbatimModuleSyntax ให้ใช้ import แบบธรรมดา ไม่ต้องใช้ import type
+
+โครงสร้าง: สร้างไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
+- src/shared/utils/pagination.utils.test.ts
+- src/features/cart/store/cartReducer.test.ts
+- src/features/cart/store/cartStorage.test.ts
+- src/features/checkout/schema.test.ts
+- src/shared/api/client.test.ts
+ห้ามแก้ src/shared/utils/price.utils.test.ts ที่มีอยู่แล้ว
+
+ข้อกำหนดทางเทคนิค: ค่าที่คาดหวังทุกตัวระบุไว้ให้แล้ว ห้ามคำนวณเอง
+  และห้ามเขียนนิพจน์ใด ๆ ไว้ฝั่งขวาของ matcher ต้องเป็นค่าตายตัวเท่านั้น:
+- pagination.utils.test.ts: import { calculateOffset, calculateTotalPages }
+    จาก "./pagination.utils" แล้วแยกเป็นสอง describe
+  describe("calculateOffset") มีสอง it
+    "returns 0 for the first page"          -&gt; calculateOffset(1, 20) toBe 0
+    "returns limit * (page - 1) for later pages" -&gt; calculateOffset(3, 20) toBe 40
+  describe("calculateTotalPages") มีสอง it
+    "rounds up partial pages"  -&gt; calculateTotalPages(101, 20) toBe 6
+    "handles exact division"   -&gt; calculateTotalPages(100, 20) toBe 5
+- cartReducer.test.ts: import { CartActionTypes, CartItem, CartState }
+    จาก "./CartContext" แล้ว import { cartReducer } จาก "./cartReducer"
+  ประกาศ helper สองตัวก่อน describe (ทั้งคู่เป็น const arrow function)
+    const item = (overrides: Partial&lt;CartItem&gt; = {}): CartItem =&gt; ({
+      id: 1, title: "Widget", price: 10, quantity: 1, image: "/widget.png",
+      ...overrides,
+    });
+    const stateWith = (...items: CartItem[]): CartState =&gt; ({ items });
+  describe("cartReducer") มีห้า it ตามลำดับนี้ ทุกตัวเก็บผลไว้ในตัวแปรชื่อ next
+    "adds a new item" — ยิง ADD_TO_CART payload item() ใส่ stateWith()
+      แล้ว expect(next.items).toEqual([item()])
+    "merges quantity when the item already exists" — state ตั้งต้น
+      stateWith(item({ quantity: 2 })) ยิง ADD_TO_CART payload item({ quantity: 3 })
+      แล้ว expect(next.items).toEqual([item({ quantity: 5 })])
+    "removes an item" — state ตั้งต้น stateWith(item(), item({ id: 2 }))
+      ยิง REMOVE_FROM_CART payload { id: 1 }
+      แล้ว expect(next.items).toEqual([item({ id: 2 })])
+    "updates quantity" — state ตั้งต้น stateWith(item())
+      ยิง UPDATE_QUANTITY payload { id: 1, quantity: 7 }
+      แล้ว expect(next.items[0]?.quantity).toBe(7)
+    "clears the cart" — state ตั้งต้น stateWith(item(), item({ id: 2 }))
+      ยิง CLEAR_CART (ไม่มี payload) แล้ว expect(next.items).toEqual([])
+  ใช้ toEqual ไม่ใช่ toBe ทุกจุดที่เทียบ array หรือ object
+  ไฟล์นี้ห้าม import อะไรจาก react, @testing-library หรือ msw
+- cartStorage.test.ts: import { CartState } จาก "./CartContext" แล้ว
+    import { CART_STORAGE_KEY, loadCartState, saveCartState } จาก "./cartStorage"
+  const sample: CartState = { items: [{ id: 1, title: "Widget", price: 10,
+    quantity: 2, image: "/w.png" }] };   (ใช้ /w.png ตามนี้ ไม่ใช่ /widget.png)
+  describe("cartStorage") มีสี่ it ตามลำดับนี้
+    "round-trips cart state" — saveCartState(sample)
+      แล้ว expect(loadCartState()).toEqual(sample)
+    "returns an empty cart when nothing is stored"
+      -&gt; expect(loadCartState()).toEqual({ items: [] })
+    "returns an empty cart when stored JSON is corrupt" — เขียน "{not json"
+      ลง localStorage ที่ CART_STORAGE_KEY ก่อน แล้ว expect เท่ากับ { items: [] }
+    "returns an empty cart when the stored shape is wrong" — เขียน
+      JSON.stringify({ items: "nope" }) ลงที่ key เดียวกัน แล้ว expect เท่ากับ
+      { items: [] }
+  ห้าม vi.mock localStorage ห้ามเขียน afterEach หรือ beforeEach ในไฟล์นี้
+- schema.test.ts: import { checkoutAddressSchema } จาก "./schema"
+  ใน describe("checkoutAddressSchema") ประกาศ const valid ก่อนทุก it
+    { address: "1 Main St", email: "jane@example.com", phone: "0812345678" }
+  มีสี่ it ตามลำดับนี้
+    "accepts valid data" -&gt; safeParse(valid).success toBe true
+    "requires address"   -&gt; safeParse({ ...valid, address: "" })
+      success toBe false และ result.error?.issues[0]?.message
+      toBe "Address is required"
+    "rejects an invalid email" -&gt; safeParse({ ...valid, email: "nope" })
+      success toBe false และข้อความ toBe "Enter a valid email address"
+    "requires phone" -&gt; safeParse({ ...valid, phone: "" })
+      success toBe false และข้อความ toBe "Phone number is required"
+  ใช้ safeParse เท่านั้น ห้ามใช้ parse และห้ามใช้ try/catch
+  ห้าม import consts.ts, react-hook-form หรือ @hookform/resolvers
+- client.test.ts: import สามบรรทัด โดยมีบรรทัดว่างหนึ่งบรรทัดหลังบรรทัดแรก
+    import { http, HttpResponse } from "msw";
+    (บรรทัดว่าง)
+    import { ApiError, apiClient } from "./client";
+    import { server } from "@/test/msw/server";
+  describe("apiClient") มีสาม it ทั้งหมดเป็น async
+    "returns response data on success" — ไม่ต้องเตรียม handler
+      const { data } = await apiClient.get("/products/1");
+      expect(data.id).toBe(1);
+    "normalizes server errors into ApiError with the server message"
+      server.use(http.get("https://dummyjson.com/products/1", () =&gt;
+        HttpResponse.json({ message: "Product not found" }, { status: 404 })))
+      const error = await apiClient.get("/products/1").catch((e) =&gt; e);
+      expect(error).toBeInstanceOf(ApiError)
+      expect(error.message).toBe("Product not found")
+      expect(error.status).toBe(404)
+    "falls back to a generic message when the server sends none"
+      server.use(... HttpResponse.json({}, { status: 500 }))
+      expect(error).toBeInstanceOf(ApiError)
+      expect(error.message).toBe("Something went wrong. Please try again.")
+  ใช้ท่า .catch((e) =&gt; e) เพื่อจับ error ออกมาเป็นค่า ห้ามใช้ rejects.toThrow
+  ห้าม vi.mock axios และห้ามเรียก server.resetHandlers() ในไฟล์นี้
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ไฟล์ต้นทางที่กำลังทดสอบแม้แต่บรรทัดเดียว: pagination.utils.ts,
+  cartReducer.ts, cartStorage.ts, CartContext.tsx, schema.ts, client.ts
+- ห้ามแก้ไฟล์ใน src/test/ ทั้งโฟลเดอร์ รวมทั้ง handlers.ts และ setup.ts
+- ห้ามเขียนเทสต์ให้ component, hook หรือหน้าเพจใด ๆ (สองบทถัดไปจะทำ)
+- ห้ามสร้างไฟล์ helper กลางสำหรับเทสต์ เช่น testUtils.ts หรือ factories.ts
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ห้ามเพิ่ม snapshot test และห้ามเรียก expect(...).toMatchSnapshot()
+- ห้ามใส่ it.skip, it.todo, it.only หรือ describe.only แม้แต่ที่เดียว</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ ข้อแรกกับข้อที่สองเป็นสองข้อที่ต้องทำก่อนข้ออื่นทั้งหมด และข้อที่สองเป็นข้อที่ไม่มีเครื่องมือตัวไหนทำแทนได้:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>เขียน assertion ที่คำนวณค่าที่คาดหวังด้วยสูตรเดียวกับโค้ดที่กำลังทดสอบ</em> — <code>expect(calculateTotalPages(101, 20)).toBe(Math.ceil(101 / 20))</code> แทน <code>toBe(6)</code>, <code>expect(calculateOffset(3, 20)).toBe((3 - 1) * 20)</code> แทน <code>toBe(40)</code> หรือแบบที่แนบเนียนกว่านั้นคือประกาศตัวแปรบนสุดของไฟล์แล้วใช้ทั้งสองฝั่ง โค้ดแบบนี้อ่านแล้ว<em>ดูดีกว่า</em>ของจริง เพราะมันไม่มี "magic number" ซึ่งเป็นสิ่งที่ทุกคู่มือสอนให้หลีกเลี่ยง — แต่ในไฟล์เทสต์ กฎนั้นกลับด้าน: ตัวเลขตายตัวคือ<em>ทั้งหมด</em>ของสิ่งที่เทสต์มี เพราะมันเป็นค่าเดียวในไฟล์ที่ไม่ได้มาจากโค้ดที่กำลังถูกทดสอบ วิธีตรวจ: อ่านทุกบรรทัดที่มี <code>toBe</code>, <code>toEqual</code> หรือ <code>toBeCloseTo</code> แล้วถามว่า<em>ฝั่งขวามีตัวดำเนินการทางคณิตศาสตร์หรือชื่อฟังก์ชันจากไฟล์ต้นทางอยู่ไหม</em> มีแม้แต่ตัวเดียวคือผิด สั่งแก้ให้เป็นค่าตายตัวได้เลยโดยไม่ต้องถอย เพราะรูปทรงของไฟล์ยังถูกอยู่ (เกณฑ์สามข้อของบทเรียน 29) และเน้นว่า<strong>ไม่มีเครื่องมือตัวไหนในโปรเจกต์นี้จับได้เลย</strong>: lint ผ่าน typecheck ผ่าน เทสต์เขียวครบทุกตัว</li>
+            <li><strong>ทำให้มันแดงด้วยมือ ทีละไฟล์ — ข้อนี้ห้ามข้าม</strong> ทำก่อนอ่าน checklist ที่เหลือ เพราะถ้าข้อนี้ไม่ผ่าน ข้ออื่นไม่มีความหมาย วิธีทำเหมือนกันทุกครั้ง: แก้<em>ไฟล์ต้นทาง</em> (ไม่ใช่ไฟล์เทสต์) ให้ผิดหนึ่งบรรทัด รันเทสต์ ดูให้เห็นสีแดง แล้ว <code>git restore</code> คืน ห้าคู่ที่ต้องทำให้ครบ:
+              <ul>
+                <li><code>pagination.utils.ts</code> — เปลี่ยน <code>Math.ceil</code> เป็น <code>Math.floor</code> → <code>"rounds up partial pages"</code> ต้องแดง (ได้ 5 แทน 6) ถ้าเทสต์ยังเขียว แปลว่าฝั่งขวาของมันคำนวณเองอยู่</li>
+                <li><code>cartReducer.ts</code> — ใน <code>ADD_TO_CART</code> เปลี่ยน <code>item.quantity + quantity</code> เป็น <code>quantity</code> เฉย ๆ → <code>"merges quantity when the item already exists"</code> ต้องแดง (ได้ 3 แทน 5)</li>
+                <li><code>cartStorage.ts</code> — ลบเงื่อนไข <code>Array.isArray((parsed as CartState).items)</code> ออกจาก <code>if</code> → <code>"returns an empty cart when the stored shape is wrong"</code> ต้องแดง</li>
+                <li><code>schema.ts</code> — เปลี่ยนข้อความ <code>"Address is required"</code> เป็น <code>"Address required"</code> → <code>"requires address"</code> ต้องแดง</li>
+                <li><code>client.ts</code> — ลบ <code>?? "Something went wrong. Please try again."</code> ออกจาก interceptor → <code>"falls back to a generic message when the server sends none"</code> ต้องแดง</li>
+              </ul>
+              ห้าครั้งนี้กินเวลารวมกันประมาณสามนาที และเป็นสามนาทีที่ตอบคำถามซึ่งการอ่านเทสต์เฉย ๆ ตอบไม่ได้ ถ้ามีคู่ไหนที่แก้แล้วเทสต์ยัง<em>เขียว</em> อย่าเพิ่งไปต่อ — ให้กลับไปอ่านเทสต์ตัวนั้นแล้วหาให้เจอว่ามันกำลังยืนยันอะไรอยู่กันแน่</li>
+            <li>ไฟล์ใหม่ <strong>5 ไฟล์พอดี</strong> และ <code>git status</code> ต้องไม่มีไฟล์เดิมไฟล์ไหนขึ้นสถานะ modified เลย — โดยเฉพาะไฟล์ต้นทางหกไฟล์ที่กำลังถูกทดสอบ Agent ที่เจอเทสต์แดงจะมีทางออกสองทางเสมอ คือแก้เทสต์ หรือแก้โค้ดให้เข้ากับเทสต์ และทางที่สองคือทางที่ไม่มีใครสั่ง</li>
+            <li><code>grep -rn "price.utils.test" src/</code> ต้องยังว่างเปล่า และ <code>git diff HEAD~1 --stat</code> ต้องไม่มี <code>price.utils.test.ts</code> — ไฟล์ที่คุณพิมพ์เองต้องไม่ถูกแตะ</li>
+            <li><code>grep -rn "it.only\|describe.only\|it.skip\|it.todo" src/</code> ต้องว่างเปล่า — <code>.only</code> หนึ่งตัวทำให้เทสต์ที่เหลือทั้งไฟล์ถูกข้ามไปเงียบ ๆ โดยรายงานยังขึ้นว่าผ่าน ส่วน <code>.skip</code> กับ <code>.todo</code> คือเทสต์ที่ Agent เขียนไม่จบแล้วปิดปากมันไว้</li>
+            <li><code>grep -rn "vi.mock" src/</code> ต้องว่างเปล่าทั้งโปรเจกต์ — โดยเฉพาะใน <code>client.test.ts</code> ที่ Agent อยาก mock axios มากที่สุด ถ้ามันทำ interceptor ที่บทเรียน 15 สั่งให้เขียนจะไม่ได้รันเลยสักบรรทัด แล้วเทสต์ทั้งสามตัวจะพิสูจน์แค่ว่า mock ที่มันเขียนเองทำงานถูก</li>
+            <li><code>grep -rn "toMatchSnapshot" src/</code> ต้องว่างเปล่า และต้องไม่มีโฟลเดอร์ <code>__snapshots__</code> โผล่มา — snapshot คือเทสต์ที่ assert ว่า "ผลลัพธ์เท่ากับผลลัพธ์ครั้งที่แล้ว" ซึ่งเป็นญาติสนิทที่สุดของปัญหาที่ทั้งบทนี้พูดถึง</li>
+            <li><code>cartReducer.test.ts</code> ใช้ <code>toEqual</code> ไม่ใช่ <code>toBe</code> ทุกจุดที่เทียบ array หรือ object — <code>toBe</code> เทียบ reference ซึ่งจะทำให้เทสต์แดงทั้งที่ reducer ถูก และ Agent มักแก้ปัญหานั้นด้วยการเปลี่ยนไปใช้ <code>toEqual</code> อยู่แล้ว จุดที่ต้องดูจึงเป็นอีกทิศ: ถ้ามันใช้ <code>toBe</code> กับ object แล้วเทสต์<em>ผ่าน</em> แปลว่า reducer คืน object เดิมกลับมา ซึ่งคือบั๊ก immutability ที่บทเรียน 22 พูดถึงทั้งบท (เหตุผลเต็ม ๆ อยู่ในกล่อง 💡 ท้ายบท)</li>
+            <li><code>cartStorage.test.ts</code> ไม่มี <code>beforeEach</code> หรือ <code>afterEach</code> ของตัวเอง — <code>grep -n "Each" src/features/cart/store/cartStorage.test.ts</code> ต้องว่างเปล่า การล้าง localStorage เป็นหน้าที่ของ <code>setup.ts</code> ที่เดียว ถ้า Agent เขียนซ้ำเข้ามาในไฟล์ วันที่มีคนแก้กติกาใน <code>setup.ts</code> จะมีไฟล์ที่ไม่ตามอยู่หนึ่งไฟล์</li>
+            <li><code>client.test.ts</code> ไม่เรียก <code>server.resetHandlers()</code> เอง — <code>grep -n "resetHandlers" src/</code> ต้องเจอ<strong>บรรทัดเดียว</strong>คือใน <code>setup.ts</code> ถ้าเจอสองบรรทัด แปลว่า handler ชั่วคราวถูกถอดสองรอบ ซึ่งวันนี้ยังไม่มีผล แต่เป็นการกระจายกติกาออกไปสองที่</li>
+            <li>ทุกเทสต์ที่ใช้ <code>server.use(...)</code> ตั้ง handler ด้วย URL <strong>เต็ม</strong> <code>"https://dummyjson.com/products/1"</code> ไม่ใช่ <code>"/products/1"</code> — path เปล่า ๆ จะไม่ match request ที่ axios ยิงออกไปด้วย <code>baseURL</code> เต็ม ผลคือ handler ตั้งต้นทำงานแทน เทสต์ error จะได้ 200 กลับมา แล้ว <code>expect(error).toBeInstanceOf(ApiError)</code> จะแดงพร้อมข้อความที่ชี้ไปคนละเรื่องกับต้นเหตุ</li>
+            <li><code>schema.test.ts</code> assert <em>ข้อความ</em> ของ error ไม่ใช่แค่ <code>success</code> — <code>grep -c "message" src/features/checkout/schema.test.ts</code> ต้องได้ <strong>3</strong> ข้อความสามก้อนนี้คือสิ่งที่ผู้ใช้เห็นใต้ช่องฟอร์มจริง และเป็นสามบรรทัดที่บทเรียน 25 สั่งให้คุณพิมพ์เองเพราะมันคือการตัดสินใจของ product ไม่ใช่ boilerplate</li>
+            <li>ทั้งห้าไฟล์ไม่มีบรรทัด <code>import { describe, it, expect } from "vitest"</code> — <code>globals: true</code> จากบทที่แล้วทำให้ไม่ต้อง import และไฟล์ที่คุณพิมพ์เองก็ไม่มี ถ้าห้าไฟล์นี้มี แปลว่า Agent ไม่ได้ยึดสไตล์จากไฟล์ที่เรา <code>@</code>-mention ให้</li>
+            <li>ไม่มี <code>any</code> และไม่มี comment ที่เขียนซ้ำสิ่งที่ชื่อ <code>it</code> บอกอยู่แล้ว — ชื่อ <code>it</code> คือ documentation ของเทสต์ ถ้ามี comment เหนือมันแปลว่าชื่อยังไม่ดีพอ</li>
+          </ul>
+        </blockquote>
+
+        <p>รัน <code>npm run lint</code> แล้ว <code>npm run typecheck</code> ให้ผ่านทั้งคู่ตามเดิม แล้วค่อยอ่านโค้ดอ้างอิงข้างล่างเทียบกับของที่ได้มาทีละไฟล์</p>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <h4><code>src/shared/utils/pagination.utils.test.ts</code></h4>
+
+        <pre><code class="language-typescript">import { calculateOffset, calculateTotalPages } from "./pagination.utils";
+
+describe("calculateOffset", () =&gt; {
+  it("returns 0 for the first page", () =&gt; {
+    expect(calculateOffset(1, 20)).toBe(0);
+  });
+
+  it("returns limit * (page - 1) for later pages", () =&gt; {
+    expect(calculateOffset(3, 20)).toBe(40);
+  });
+});
+
+describe("calculateTotalPages", () =&gt; {
+  it("rounds up partial pages", () =&gt; {
+    expect(calculateTotalPages(101, 20)).toBe(6);
+  });
+
+  it("handles exact division", () =&gt; {
+    expect(calculateTotalPages(100, 20)).toBe(5);
+  });
+});
+</code></pre>
+
+        <p>สองฟังก์ชัน สอง <code>describe</code> ในไฟล์เดียว เคสที่เลือกมาไม่ใช่เคสสุ่ม: <code>calculateOffset</code> เทสต์หน้าแรก (ต้องได้ 0 — off-by-one error ชอบเกิดตรงนี้) กับหน้ากลาง ๆ ส่วน <code>calculateTotalPages</code> เทสต์ทั้งกรณีหารไม่ลงตัว (101 ชิ้น หน้าละ 20 ต้องได้ 6 หน้า — สินค้าชิ้นที่ 101 ต้องมีที่อยู่!) และหารลงตัวพอดี (ต้องได้ 5 ไม่ใช่เผลอปัดขึ้นเป็น 6) ถ้าใครเผลอแก้ <code>Math.ceil</code> เป็น <code>Math.round</code> หรือ <code>Math.floor</code> เทสต์คู่นี้จับได้ทันที</p>
+
+        <p>สังเกตชื่อ <code>it</code> ตัวที่สอง: <code>"returns limit * (page - 1) for later pages"</code> — สูตรอยู่ใน<em>ชื่อ</em> ส่วนตัวเลข <code>40</code> อยู่ในโค้ด นี่คือที่ที่ถูกต้องของสูตร ชื่อเทสต์เป็นข้อความที่คนอ่าน ไม่ใช่นิพจน์ที่ JavaScript คำนวณ ถ้าย้ายสูตรจากชื่อลงมาอยู่ในโค้ดเมื่อไหร่ เทสต์ตัวนี้จะกลายเป็นเทสต์ที่ผ่านเสมอทันที</p>
+
+        <h4><code>src/features/cart/store/cartReducer.test.ts</code></h4>
+
+        <pre><code class="language-typescript">import { CartActionTypes, CartItem, CartState } from "./CartContext";
+import { cartReducer } from "./cartReducer";
+
+const item = (overrides: Partial&lt;CartItem&gt; = {}): CartItem =&gt; ({
+  id: 1,
+  title: "Widget",
+  price: 10,
+  quantity: 1,
+  image: "/widget.png",
+  ...overrides,
+});
+
+const stateWith = (...items: CartItem[]): CartState =&gt; ({ items });
+
+describe("cartReducer", () =&gt; {
+  it("adds a new item", () =&gt; {
+    const next = cartReducer(stateWith(), {
+      type: CartActionTypes.ADD_TO_CART,
+      payload: item(),
+    });
+    expect(next.items).toEqual([item()]);
+  });
+
+  it("merges quantity when the item already exists", () =&gt; {
+    const next = cartReducer(stateWith(item({ quantity: 2 })), {
+      type: CartActionTypes.ADD_TO_CART,
+      payload: item({ quantity: 3 }),
+    });
+    expect(next.items).toEqual([item({ quantity: 5 })]);
+  });
+
+  it("removes an item", () =&gt; {
+    const next = cartReducer(stateWith(item(), item({ id: 2 })), {
+      type: CartActionTypes.REMOVE_FROM_CART,
+      payload: { id: 1 },
+    });
+    expect(next.items).toEqual([item({ id: 2 })]);
+  });
+
+  it("updates quantity", () =&gt; {
+    const next = cartReducer(stateWith(item()), {
+      type: CartActionTypes.UPDATE_QUANTITY,
+      payload: { id: 1, quantity: 7 },
+    });
+    expect(next.items[0]?.quantity).toBe(7);
+  });
+
+  it("clears the cart", () =&gt; {
+    const next = cartReducer(stateWith(item(), item({ id: 2 })), {
+      type: CartActionTypes.CLEAR_CART,
+    });
+    expect(next.items).toEqual([]);
+  });
+});
+</code></pre>
+
+        <p>สังเกตว่าเราใช้เทคนิค factory เดียวกับ <code>makeProduct</code> ในบทที่แล้ว แต่ย่อส่วน: <code>item()</code> สร้าง <code>CartItem</code> มาตรฐานที่ override ได้ และ <code>stateWith(...)</code> ประกอบ state จากรายการสินค้ากี่ชิ้นก็ได้ (รวมถึงศูนย์ชิ้น — <code>stateWith()</code> คือตะกร้าว่าง) helper สองตัวนี้ทำให้ห้าเทสต์ที่เหลืออ่านเหมือนตาราง: state ตั้งต้นอะไร ยิง action อะไร คาดหวัง state ไหน</p>
+
+        <p>ห้าเทสต์นี้ครอบคลุม action ทั้งสี่ประเภทของ reducer โดย <code>ADD_TO_CART</code> ได้สองเทสต์เพราะมันมีสอง branch: เพิ่มของ<em>ใหม่</em> กับเพิ่มของ<em>ที่มีอยู่แล้ว</em> — อย่างหลังต้อง<em>รวมจำนวน</em> (2 + 3 = 5) ไม่ใช่แทรกแถวซ้ำ ซึ่งเป็น bug ที่เจอบ่อยมากในตะกร้าสินค้าจริง ๆ อีกสองรายละเอียดเล็ก ๆ ที่อยากชี้:</p>
+
+        <ul>
+          <li><strong><code>toEqual</code> ไม่ใช่ <code>toBe</code></strong> — <code>toBe</code> เทียบว่าเป็น object <em>ตัวเดียวกัน</em>ในหน่วยความจำ ส่วน <code>toEqual</code> เทียบ<em>เนื้อหา</em>ทีละ field ซึ่งคือสิ่งที่เราต้องการ เพราะ reducer ที่ดีต้องคืน object ใหม่เสมอ (immutability)</li>
+          <li><strong><code>next.items[0]?.quantity</code></strong> — ใส่ optional chaining กันไว้ เผื่อ reducer มี bug จน <code>items</code> ว่าง เทสต์จะ fail แบบสุภาพ (<code>undefined</code> ไม่เท่ากับ <code>7</code>) แทนที่จะ crash กลางทาง</li>
+        </ul>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — ช่องโหว่ที่ใหญ่ที่สุดในบทนี้ อยู่ในไฟล์ที่ดูสมบูรณ์ที่สุด:</strong> ห้าเทสต์ข้างบนครอบ action ครบทั้งสี่ประเภท แต่<strong>ไม่มีเทสต์ตัวไหนพิสูจน์ immutability เลยแม้แต่ตัวเดียว</strong> — ซึ่งเป็นสัญญาข้อเดียวที่ทำให้ <code>cartReducer.ts</code> ถูกจัดเป็นไฟล์พิมพ์เองในบทเรียน 22 ตั้งแต่แรก ลองคิดตาม: ถ้ามีคนเขียน reducer ใหม่เป็น <code>state.items.push(action.payload); return state;</code> ในเคส <code>ADD_TO_CART</code> เทสต์ <code>"adds a new item"</code> จะยัง<em>เขียว</em> เพราะ <code>toEqual</code> เทียบเนื้อหา ไม่ได้เทียบว่าเป็นคนละ object และเคส <code>"merges quantity"</code> ที่เขียนเป็น <code>existingItem.quantity += quantity; return state;</code> ก็เขียวเช่นกันด้วยเหตุผลเดียวกัน พูดอีกอย่างคือ <strong>reducer ที่ mutate state เดิมทั้งไฟล์จะผ่านเทสต์ชุดนี้ครบห้าตัว</strong> แล้วอาการจะไปโผล่ในบทเรียน 33 เป็นหน้า Cart ที่กดปุ่มแล้วตัวเลขไม่ขยับ ซึ่งเป็นบั๊กเดียวกับที่ตระกูล 6 ของบทเรียน 29 ระบุไว้ว่าเป็นเหตุผลที่ไฟล์นี้ต้องพิมพ์เอง สิ่งที่ขาดคือสองบรรทัดเท่านั้น — <code>expect(next.items).not.toBe(prev.items)</code> และ <code>expect(prev.items[0]?.quantity).toBe(2)</code> (ยืนยันว่า state ตั้งต้นไม่ถูกแก้) เราสั่งตามต้นฉบับเพื่อให้ diff ตรง แต่ในรีวิวจริงนี่คือข้อแรกที่ควรถูกทัก และเป็นตัวอย่างที่ตรงที่สุดของหัวข้อทั้งบท: <em>เทสต์ที่ครบทุก case ไม่ได้แปลว่าครบทุกสัญญา</em> จำนวนเทสต์เป็นตัวเลขที่วัดง่ายและวัดผิดที่สุดในงานนี้ <strong>ข้อพ่วงเล็ก ๆ ในไฟล์ข้าง ๆ:</strong> <code>cartReducer.test.ts</code> ใช้รูปสินค้า <code>/widget.png</code> ส่วน <code>cartStorage.test.ts</code> ใช้ <code>/w.png</code> ทั้งที่เป็นสินค้าสมมติตัวเดียวกันชื่อ <code>Widget</code> — ไม่มีผลอะไรทั้งสิ้น แต่เป็นความไม่สม่ำเสมอที่มีอยู่จริงในต้นฉบับ และเป็นรูปแบบเดิมที่คอร์สนี้เจอมาตลอด: สิ่งที่ไม่มีเครื่องมือบังคับจะเพี้ยนไปทีละไฟล์</blockquote>
+
+        <h4><code>src/features/cart/store/cartStorage.test.ts</code></h4>
+
+        <pre><code class="language-typescript">import { CartState } from "./CartContext";
+import { CART_STORAGE_KEY, loadCartState, saveCartState } from "./cartStorage";
+
+const sample: CartState = {
+  items: [{ id: 1, title: "Widget", price: 10, quantity: 2, image: "/w.png" }],
+};
+
+describe("cartStorage", () =&gt; {
+  it("round-trips cart state", () =&gt; {
+    saveCartState(sample);
+    expect(loadCartState()).toEqual(sample);
+  });
+
+  it("returns an empty cart when nothing is stored", () =&gt; {
+    expect(loadCartState()).toEqual({ items: [] });
+  });
+
+  it("returns an empty cart when stored JSON is corrupt", () =&gt; {
+    localStorage.setItem(CART_STORAGE_KEY, "{not json");
+    expect(loadCartState()).toEqual({ items: [] });
+  });
+
+  it("returns an empty cart when the stored shape is wrong", () =&gt; {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items: "nope" }));
+    expect(loadCartState()).toEqual({ items: [] });
+  });
+});
+</code></pre>
+
+        <p>คำถามแรกที่ควรถาม: แล้ว <code>localStorage</code> มาจากไหน? คำตอบคือ jsdom ให้มาฟรี — เพราะเราตั้ง <code>environment: "jsdom"</code> เทสต์จึงมี localStorage <em>จริง ๆ ที่ใช้งานได้</em> (แค่อยู่ในหน่วยความจำ) เราเลยไม่ต้อง mock อะไรเลย: <code>saveCartState</code> เขียนลง storage จริง <code>loadCartState</code> อ่านกลับมาจริง โค้ด production ทุกบรรทัดได้รันในเทสต์</p>
+
+        <p>แต่ storage ที่แชร์กันก็มีความเสี่ยง: ถ้าเทสต์แรก save ค้างไว้ เทสต์ที่สอง ("nothing is stored") จะเจอของเก่าแล้วพัง — นี่คือหน้าที่ของบรรทัด <code>localStorage.clear()</code> ใน <code>afterEach</code> ของ <code>setup.ts</code> ที่เราเขียนไว้บทที่แล้ว ทุกเทสต์จึงเริ่มจาก storage ว่างเสมอ และเป็นเหตุผลที่เทสต์เหล่านี้เซ็ตข้อมูลเองในตัวโดยไม่ต้องเก็บกวาดทีหลัง สังเกตว่าเทสต์ที่สองเป็นเทสต์ที่จะเปลี่ยนผลทันทีถ้าบรรทัดนั้นหายไป — นี่คือคู่ที่ควรจำ: <em>เทสต์หนึ่งตัวในไฟล์นี้ทำหน้าที่เฝ้าบรรทัดหนึ่งบรรทัดในอีกไฟล์หนึ่งอยู่โดยที่ไม่มีอะไรเขียนไว้</em></p>
+
+        <p>สองเทสต์สุดท้ายคือการเทสต์ "โลกจริงที่โหดร้าย": ผู้ใช้อาจมีข้อมูลเก่าจากเวอร์ชันก่อน หรือ extension บางตัวเขียนทับ key ของเรา — เทสต์ที่สามป้อน JSON พัง ๆ (<code>"{not json"</code>) เพื่อพิสูจน์ว่า <code>try/catch</code> ทำงาน ส่วนเทสต์ที่สี่ป้อน JSON ที่ parse ได้แต่<em>รูปร่างผิด</em> (<code>items</code> เป็น string) เพื่อพิสูจน์ guard <code>Array.isArray</code> — ทั้งสองกรณีต้อง fallback เป็นตะกร้าว่างเงียบ ๆ ไม่ใช่ทำแอปพังทั้งหน้า และสองเคสนี้คือเหตุผลที่บทเรียน 22 สั่งใน checklist ว่า <code>grep -c "catch"</code> ต้องได้ 2 — วันนี้ข้อนั้นมีเครื่องมือตรวจให้แล้ว</p>
+
+        <h4><code>src/features/checkout/schema.test.ts</code></h4>
+
+        <pre><code class="language-typescript">import { checkoutAddressSchema } from "./schema";
+
+describe("checkoutAddressSchema", () =&gt; {
+  const valid = {
+    address: "1 Main St",
+    email: "jane@example.com",
+    phone: "0812345678",
+  };
+
+  it("accepts valid data", () =&gt; {
+    expect(checkoutAddressSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("requires address", () =&gt; {
+    const result = checkoutAddressSchema.safeParse({ ...valid, address: "" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe("Address is required");
+  });
+
+  it("rejects an invalid email", () =&gt; {
+    const result = checkoutAddressSchema.safeParse({ ...valid, email: "nope" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe(
+      "Enter a valid email address",
+    );
+  });
+
+  it("requires phone", () =&gt; {
+    const result = checkoutAddressSchema.safeParse({ ...valid, phone: "" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe("Phone number is required");
+  });
+});
+</code></pre>
+
+        <p>รูปแบบที่ใช้ตรงนี้เป็นสูตรมาตรฐานของการเทสต์ schema และควรจำไปใช้ตลอดชีวิต:</p>
+
+        <ul>
+          <li><strong>เริ่มจาก object ที่ valid หนึ่งตัว</strong> แล้วแต่ละเทสต์ invalid ใช้ spread พังมัน<em>ทีละ field</em>: <code>{ ...valid, address: "" }</code> — ถ้าพังหลาย field พร้อมกันเราจะไม่รู้ว่า error มาจากกติกาข้อไหน (และ <code>issues[0]</code> จะชี้ไปที่ field ไหนก็ได้แล้วแต่ลำดับใน schema)</li>
+          <li><strong><code>safeParse</code> ไม่ใช่ <code>parse</code></strong> — <code>parse</code> โยน exception เมื่อไม่ผ่าน แต่ <code>safeParse</code> คืน result object ที่มี <code>success</code> กับ <code>error</code> ให้ assert ได้ตรง ๆ ไม่ต้องเล่นท่า try/catch ในเทสต์ นี่คือสิ่งที่บทเรียน 25 บอกไว้ล่วงหน้าว่าจะกลับมาใช้ในบทนี้</li>
+          <li><strong>assert ตัวข้อความ error ด้วย</strong> — ไม่ใช่แค่ <code>success === false</code> เพราะข้อความพวกนี้คือสิ่งที่ผู้ใช้เห็นใต้ช่องฟอร์มจริง ๆ (ผ่าน react-hook-form + zodResolver ในบทเรียน 26) ถ้าใครแก้ข้อความใน schema โดยไม่ตั้งใจ เทสต์จะเตือน</li>
+        </ul>
+
+        <p>เรื่องรูปแบบหนึ่งข้อ: บรรทัด <code>toBe(</code> ในเทสต์ที่สามถูกตัดเป็นสามบรรทัดขณะที่อีกสองเทสต์เขียนจบในบรรทัดเดียว นั่นคือฝีมือ Prettier ไม่ใช่ความไม่สม่ำเสมอของคนเขียน — ข้อความ <code>"Enter a valid email address"</code> ยาวกว่าอีกสองก้อนพอดีจนเลย 80 ตัวอักษร ถ้าโค้ดที่ Agent ส่งมาต่างจากนี้ ให้รัน <code>npm run format</code> แล้วเทียบใหม่ก่อนสรุปว่ามันเขียนต่าง</p>
+
+        <h4><code>src/shared/api/client.test.ts</code> — unit test ตัวแรกที่ใช้ MSW</h4>
+
+        <p>ปิดท้ายด้วยไฟล์ที่พิเศษหน่อย: <code>apiClient</code> ไม่ใช่ pure function — มันยิง HTTP — แต่เพราะ MSW ดักที่ชั้น network ให้ เราเทสต์มันได้เหมือน unit test ปกติ และนี่คือเทสต์ที่พิสูจน์ interceptor จากบทเรียน 15 ว่าแปลง error ได้ถูกจริง</p>
+
+        <pre><code class="language-typescript">import { http, HttpResponse } from "msw";
+
+import { ApiError, apiClient } from "./client";
+import { server } from "@/test/msw/server";
+
+describe("apiClient", () =&gt; {
+  it("returns response data on success", async () =&gt; {
+    const { data } = await apiClient.get("/products/1");
+    expect(data.id).toBe(1);
+  });
+
+  it("normalizes server errors into ApiError with the server message", async () =&gt; {
+    server.use(
+      http.get("https://dummyjson.com/products/1", () =&gt;
+        HttpResponse.json({ message: "Product not found" }, { status: 404 }),
+      ),
+    );
+
+    const error = await apiClient.get("/products/1").catch((e) =&gt; e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.message).toBe("Product not found");
+    expect(error.status).toBe(404);
+  });
+
+  it("falls back to a generic message when the server sends none", async () =&gt; {
+    server.use(
+      http.get("https://dummyjson.com/products/1", () =&gt;
+        HttpResponse.json({}, { status: 500 }),
+      ),
+    );
+
+    const error = await apiClient.get("/products/1").catch((e) =&gt; e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.message).toBe("Something went wrong. Please try again.");
+  });
+});
+</code></pre>
+
+        <p>ของใหม่ในไฟล์นี้มีสามอย่าง:</p>
+
+        <ul>
+          <li><strong>เทสต์แรกไม่ต้องเตรียมอะไรเลย</strong> — <code>GET /products/1</code> match handler ตั้งต้นใน <code>handlers.ts</code> อยู่แล้ว ซึ่งคืน <code>makeProduct({ id: 1 })</code> เทสต์นี้จึงพิสูจน์ happy path ของทั้ง <code>baseURL</code> (มาจาก env ที่เรา hardcode ไว้ใน vite.config) และการส่งข้อมูลผ่าน axios</li>
+          <li><strong><code>server.use(...)</code> คือการ override handler ชั่วคราว</strong> — วิธีจำลอง "เซิร์ฟเวอร์ตอบ error" สำหรับเทสต์นั้น ๆ โดยเฉพาะ: handler ที่ยัดเข้าไปด้วย <code>server.use</code> จะถูกลองก่อน handler ตั้งต้น และถูกถอดทิ้งโดย <code>server.resetHandlers()</code> ใน <code>afterEach</code> ของ setup — เทสต์ถัดไปกลับมาเจอเซิร์ฟเวอร์ปกติเสมอ ไม่มี error รั่วข้ามเทสต์</li>
+          <li><strong>ท่า <code>.catch((e) =&gt; e)</code></strong> — ปกติ promise ที่ reject จะโยน exception แต่ท่านี้ "จับ" error แล้วคืนมันออกมาเป็น<em>ค่า</em>ธรรมดา ทำให้เรา assert กับตัว error ได้หลายบรรทัดสบาย ๆ: เป็น instance ของ <code>ApiError</code> ไหม (พิสูจน์ว่า interceptor ห่อ error ให้จริง ไม่ใช่ AxiosError ดิบหลุดมา), <code>message</code> ตรงกับที่เซิร์ฟเวอร์ส่งไหม และ <code>status</code> ติดมาไหม เทสต์ที่สามกลับด้าน: เซิร์ฟเวอร์ตอบ 500 แบบ<em>ไม่มี</em> message — interceptor ต้อง fallback เป็นข้อความกลาง ๆ ที่เราเตรียมไว้</li>
+        </ul>
+
+        <p>บรรทัด <code>expect(error).toBeInstanceOf(ApiError)</code> คือบรรทัดที่บทเรียน 15 สั่งไว้ล่วงหน้าว่าต้องเขียน <code>class ApiError extends Error</code> ไม่ใช่ <code>interface</code> หรือ <code>type</code> — ถ้าตอนนั้นทำอีกแบบ บรรทัดนี้จะเขียนไม่ได้เลยและเทสต์ทั้งไฟล์จะเหลือแค่การเช็คข้อความ ซึ่งอ่อนกว่ากันมาก นี่คือตัวอย่างที่ชัดของ "การตัดสินใจในบทที่ 15 ไปเก็บดอกในบทที่ 31"</p>
+
+        <p>อีกเรื่องรูปแบบ: สังเกตบรรทัดว่างหลัง <code>import { http, HttpResponse } from "msw";</code> — ไฟล์นี้เป็นไฟล์เดียวในหกไฟล์ของบทนี้ที่แยกกลุ่ม import ด้วยบรรทัดว่าง อีกห้าไฟล์เขียนติดกันหมด ไม่มีกฎ lint ตัวไหนบังคับเรื่องนี้และ Prettier ก็ไม่ยุ่ง (มันเก็บบรรทัดว่างที่คุณเขียนไว้ตามเดิม) เราจึงต้องสั่งมันลงไปใน prompt ตรง ๆ ไม่งั้น diff จะต่างจากโค้ดอ้างอิงหนึ่งบรรทัดโดยที่ไม่มีใครผิด — ในรีวิวจริงข้อนี้คือ comment หนึ่งบรรทัดว่าให้เลือกสไตล์เดียวทั้งโปรเจกต์</p>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>เปิด <code>cartReducer.test.ts</code> แล้วแก้ <code>cartReducer.ts</code> ใน case <code>ADD_TO_CART</code> ให้ mutate ของเดิม: เปลี่ยนกิ่ง "มีอยู่แล้ว" เป็น <code>existingItem.quantity += quantity; return state;</code> — รันเทสต์แล้วตอบว่าได้กี่ตัวแดง จากนั้นอธิบายว่าทำไม <code>toEqual</code> ถึงไม่จับข้อนี้ และเขียน assertion เพิ่มหนึ่งบรรทัดที่จับได้ (เสร็จแล้ว <code>git restore</code> ทั้งสองไฟล์)</li>
+          <li>ใน <code>schema.test.ts</code> ลองแก้เทสต์ <code>"requires address"</code> ให้พังสอง field พร้อมกัน (<code>{ ...valid, address: "", phone: "" }</code>) แล้วรัน — ตอบว่าเทสต์ยังเขียวไหม และอธิบายว่า <code>issues[0]</code> ชี้ไปที่ field ไหน อะไรเป็นตัวกำหนดลำดับนั้น และทำไมการพังทีละ field ถึงไม่ใช่แค่เรื่องความสวยงามของโค้ด (เสร็จแล้วแก้กลับ)</li>
+          <li>ลบบรรทัด <code>localStorage.clear()</code> ออกจาก <code>afterEach</code> ใน <code>src/test/setup.ts</code> แล้วรัน <code>npm run test</code> ทั้งชุด — ตอบว่าเทสต์ตัวไหนแดง จากนั้นรัน<em>เฉพาะไฟล์นั้นไฟล์เดียว</em> ด้วย <code>npx vitest run src/features/cart/store/cartStorage.test.ts</code> แล้วตอบว่าผลต่างกันไหมและเพราะอะไร สุดท้ายบอกให้ได้ว่าถ้าสลับลำดับ <code>it</code> สองตัวแรกในไฟล์นั้น ผลจะเปลี่ยนไปอย่างไร (เสร็จแล้วเติมบรรทัดกลับ)</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run test</code> — ต้องได้ <strong>6 test files ผ่านทั้งหมด รวม 22 tests</strong> แบ่งเป็น price.utils 2, pagination.utils 4, cartReducer 5, cartStorage 4, schema 4 และ client 3 ถ้าไฟล์ไหนแดง อ่านรายงานของ Vitest ดี ๆ — มันบอกทั้งชื่อเทสต์ ค่า expected/received และบรรทัดที่พัง ซึ่งสำหรับ unit test มักพาไปเจอต้นเหตุใน 1 นาที และก่อน commit ให้ทวนอีกครั้งว่าคุณทำขั้นตอน "ทำให้มันแดงด้วยมือ" ครบทั้งหกคู่แล้วจริง — เลข 22 ไม่ได้แปลว่าอะไรเลยถ้าคุณยังไม่ได้เห็นเทสต์แต่ละตัวแดงมาก่อนสักครั้ง — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="30_test_setup.html" rel="prev">ก่อนหน้า: ติดตั้งชุดทดสอบ</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="32_hook_tests.html" rel="next">ถัดไป: การทดสอบ Hooks และ Queries</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
