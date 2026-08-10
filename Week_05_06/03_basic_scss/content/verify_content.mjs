@@ -21,6 +21,7 @@ export const LESSONS = [
 ];
 
 const localHrefPattern = /href="([^":#][^"#]*)"/g;
+const lessonIndexLinkPattern = /<a\b([^>]*)href="([^"]+\.html)"([^>]*)>([\s\S]*?)<\/a>/g;
 const semanticBlockPattern =
   /<(p|li|blockquote|summary|details|pre|td|th)[^>]*>[\s\S]*?<\/\1>/g;
 const negativeImportGuidancePhrases = [
@@ -51,6 +52,40 @@ function collectLocalHrefs(html) {
 
 function stripHtml(html) {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function normalizeText(text) {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function extractSingleTagText(html, tagName) {
+  const pattern = new RegExp(`<${tagName}\\b[^>]*>([\\s\\S]*?)<\\/${tagName}>`, "g");
+  const matches = Array.from(html.matchAll(pattern));
+
+  assert.equal(matches.length, 1, `Expected exactly one <${tagName}> element.`);
+
+  return normalizeText(stripHtml(matches[0][1]));
+}
+
+function lessonTitleMatchesExpected(actualTitle, expectedTitle) {
+  const normalizedActual = normalizeText(actualTitle);
+  const normalizedExpected = normalizeText(expectedTitle);
+  const suffixPattern = new RegExp(
+    `^${escapeRegExp(normalizedExpected)}(?:\\s*[-–—|·:]\\s*.+)?$`
+  );
+
+  return suffixPattern.test(normalizedActual);
+}
+
+function collectIndexLessonLinks(indexHtml) {
+  return Array.from(indexHtml.matchAll(lessonIndexLinkPattern), (match) => ({
+    href: match[2],
+    text: normalizeText(stripHtml(match[4])),
+  })).filter((link) => link.href !== "index.html");
 }
 
 function collectSemanticBlocks(html) {
@@ -115,6 +150,15 @@ function assertCommonLessonContract(html) {
   assertImportUsagePolicy(html);
 }
 
+function assertLessonTitle(html, lesson) {
+  const titleText = extractSingleTagText(html, "title");
+
+  assert.ok(
+    lessonTitleMatchesExpected(titleText, lesson.title),
+    `Lesson title mismatch for ${lesson.file}: expected "${lesson.title}" or that title with the standard suffix, got "${titleText}"`
+  );
+}
+
 function assertAdjacentNavigation(html, index) {
   const previousLesson = LESSONS[index - 1];
   const nextLesson = LESSONS[index + 1];
@@ -139,16 +183,18 @@ function assertAdjacentNavigation(html, index) {
 }
 
 function assertIndexLinks(indexHtml) {
-  const lessonLinks = Array.from(
-    indexHtml.matchAll(/<a[^>]+href="([^"]+\.html)"/g),
-    (match) => match[1]
-  ).filter((href) => href !== "index.html");
+  const lessonLinks = collectIndexLessonLinks(indexHtml);
 
   assert.equal(lessonLinks.length, LESSONS.length, "Index must link to each lesson exactly once.");
   assert.deepEqual(
-    lessonLinks,
+    lessonLinks.map((link) => link.href),
     LESSONS.map((lesson) => lesson.file),
-    "Index lesson links must match the ordered lesson list."
+    "Index lesson hrefs must match the ordered lesson list."
+  );
+  assert.deepEqual(
+    lessonLinks.map((link) => link.text),
+    LESSONS.map((lesson) => lesson.title),
+    "Index lesson labels must match the ordered lesson titles."
   );
   assert.equal((indexHtml.match(/<title>/g) ?? []).length, 1);
   assert.match(indexHtml, /<\/html>\s*$/);
@@ -164,6 +210,7 @@ async function main() {
     const html = await readLocalFile(lesson.file);
 
     assertCommonLessonContract(html);
+    assertLessonTitle(html, lesson);
     assertAdjacentNavigation(html, index);
     await assertLocalTargetsExist(lesson.file, html);
   }
