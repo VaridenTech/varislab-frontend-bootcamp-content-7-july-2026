@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้การสร้าง @mixin และเรียกใช้ด้วย @include พร้อมตัวอย่าง visually-hidden, mixins.flex-center และข้อควรระวังเรื่อง CSS ที่ถูกคัดลอกซ้ำ"
+    />
+    <title>Mixins และ @include</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>Mixins และ @include</h1>
+
+        <p>
+          พอเราเริ่มแยกไฟล์เป็น module แล้ว คำถามถัดไปคือ “ถ้ามีกลุ่ม declaration
+          เดิมที่ต้องใช้ซ้ำหลายจุด ควรเก็บยังไง” คำตอบที่ตรงที่สุดใน SCSS คือ
+          <code>@mixin</code> และ <code>@include</code>
+          ซึ่งให้เราตั้งชื่อชุด style แล้วเรียกใช้ซ้ำได้เหมือน helper ขนาดเล็ก
+        </p>
+
+        <h2><code>@mixin</code> คือชุด declaration ที่ตั้งชื่อไว้</h2>
+        <p>
+          ให้คิดว่า mixin คือ “สูตร” ของ CSS หลายบรรทัดที่เราตั้งชื่อไว้ก่อน
+          แล้วเวลาต้องใช้ก็สั่ง <code>@include</code> เพื่อให้ Sass
+          คัดลอก declaration เหล่านั้นไปวางในตำแหน่งที่เรียกใช้
+        </p>
+
+        <pre><code>@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-label {
+  @include visually-hidden;
+}</code></pre>
+
+        <p>CSS ที่คอมไพล์แล้วจะเป็น:</p>
+        <pre><code>.skip-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}</code></pre>
+
+        <p>
+          จุดสำคัญคือ mixin ไม่ได้สร้าง class ใหม่ให้อัตโนมัติ แต่จะ “ปล่อย declaration
+          ออกมา” ตรง selector ที่เรา include มันเข้าไป
+        </p>
+
+        <h2>ใช้ร่วมกับ module namespace ได้เหมือนบทก่อนหน้า</h2>
+        <p>
+          ถ้า helper นี้มีไว้ใช้ทั้งโปรเจกต์ เรามักเก็บไว้ในไฟล์เช่น
+          <code>abstracts/_mixins.scss</code> แล้วเรียกผ่าน namespace ของ module
+          เพื่อให้รู้ทันทีว่ามาจากไฟล์ไหน
+        </p>
+
+        <pre><code>/* abstracts/_mixins.scss */
+@mixin flex-center($gap: 0.75rem) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $gap;
+}
+
+/* components/_hero.scss */
+@use "../abstracts/mixins";
+
+.hero-actions {
+  @include mixins.flex-center(1rem);
+}</code></pre>
+
+        <p>เมื่อคอมไพล์แล้ว Sass จะเอา namespace ออกและเหลือ CSS ปกติ:</p>
+        <pre><code>.hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}</code></pre>
+
+        <blockquote>
+          อ่านโค้ดแบบนี้แล้วเรารู้ทั้งสองอย่างพร้อมกัน:
+          <code>flex-center</code> เป็น helper ที่ใช้ซ้ำได้ และมันถูกนำเข้ามาจาก module
+          <code>mixins</code> ไม่ใช่โค้ดลอย ๆ ในไฟล์ปัจจุบัน
+        </blockquote>
+
+        <h2>ตัวแปร, mixin และ CSS class ต่างกันยังไง</h2>
+        <p>
+          มือใหม่มักสับสนว่าของทั้งสามอย่างนี้ต่างกันตรงไหน
+          ลองมองว่ามันแก้คนละปัญหา:
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>เครื่องมือ</th>
+              <th>เก็บอะไร</th>
+              <th>เหมาะเมื่อไร</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ตัวแปร</td>
+              <td>ค่าเดียว เช่น สี, spacing หรือ radius</td>
+              <td>เมื่ออยากเปลี่ยนค่าจากจุดเดียวแล้วให้ที่อ้างถึงอัปเดตตาม</td>
+            </tr>
+            <tr>
+              <td>Mixin</td>
+              <td>หลาย declaration ที่จะถูกปล่อยออกมาตอนคอมไพล์</td>
+              <td>เมื่อ style ชุดหนึ่งต้องใช้ซ้ำในหลาย selector</td>
+            </tr>
+            <tr>
+              <td>CSS class</td>
+              <td>selector ที่มีอยู่จริงใน CSS ปลายทาง</td>
+              <td>เมื่อ HTML สามารถใส่ class เดิมเพื่อ reuse style ได้โดยตรง</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre><code>$card-radius: 18px;
+
+@mixin card-surface {
+  padding: 1.5rem;
+  border-radius: $card-radius;
+  background-color: #fff;
+}
+
+.card-surface {
+  padding: 1.5rem;
+  border-radius: $card-radius;
+  background-color: #fff;
+}</code></pre>
+
+        <p>
+          ในตัวอย่างนี้ ตัวแปรเก็บแค่ค่า <code>18px</code>, mixin เก็บ “สูตรหลายบรรทัด”
+          และ class <code>.card-surface</code> คือ selector ที่ถูกปล่อยออกไปให้ HTML
+          ใช้งานได้จริง
+        </p>
+
+        <h2>ข้อควรระวัง: include ซ้ำ = declaration ซ้ำ</h2>
+        <p>
+          นี่คือเรื่องสำคัญที่สุดของบทนี้ ทุกครั้งที่เรา
+          <code>@include</code> mixin Sass จะคัดลอก declaration
+          ไปวางตรงนั้นอีกครั้ง ไม่ได้ merge ให้เองอัตโนมัติ
+        </p>
+
+        <pre><code>@mixin card-surface {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background-color: #fff;
+  box-shadow: 0 12px 30px rgba(53, 18, 110, 0.12);
+}
+
+.profile-card {
+  @include card-surface;
+}
+
+.pricing-card {
+  @include card-surface;
+}</code></pre>
+
+        <p>CSS ที่คอมไพล์แล้วจะมี declaration เดิมซ้ำอยู่ทั้งสอง selector:</p>
+        <pre><code>.profile-card {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background-color: #fff;
+  box-shadow: 0 12px 30px rgba(53, 18, 110, 0.12);
+}
+
+.pricing-card {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background-color: #fff;
+  box-shadow: 0 12px 30px rgba(53, 18, 110, 0.12);
+}</code></pre>
+
+        <p>
+          ถ้า style ชุดนี้สั้นและอ่านง่าย การซ้ำอาจรับได้
+          แต่ถ้า include helper ใหญ่มากในหลายสิบจุด CSS ปลายทางจะยาวขึ้นทันที
+          เพราะ mixin ทำหน้าที่ “คัดลอก” ไม่ใช่ “อ้างอิง”
+        </p>
+
+        <h2>ข้อผิดพลาดที่พบบ่อย</h2>
+        <ul>
+          <li>ลืม <code>@include</code> แล้วเขียนแค่ชื่อ mixin ทำให้ Sass มองเป็นโค้ดผิดไวยากรณ์</li>
+          <li>ใช้ mixin เพื่อเก็บค่าเดียว ทั้งที่ตัวแปรเหมาะกว่าและอ่านง่ายกว่า</li>
+          <li>สร้าง mixin ขนาดใหญ่เกินไปจน include ซ้ำแล้วได้ CSS ซ้ำเป็นก้อนโต</li>
+          <li>ลืม namespace ของ module เช่นควรเขียน <code>mixins.flex-center</code> ไม่ใช่เรียกตรง ๆ</li>
+        </ul>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          ให้สมมติว่ามีไฟล์ <code>abstracts/_mixins.scss</code> และต้องการ helper ชื่อ
+          <code>card-surface</code> ที่มี <code>padding: 1.25rem;</code>,
+          <code>border-radius: 16px;</code>, <code>background-color: #fff;</code>
+          และ <code>border: 1px solid #e9defa;</code> ให้ include helper นี้ใน
+          <code>.profile-card</code> และ <code>.feature-card</code>
+          จากนั้นอธิบายว่า CSS ที่คอมไพล์แล้วจะซ้ำตรงไหน
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <pre><code>/* abstracts/_mixins.scss */
+@mixin card-surface {
+  padding: 1.25rem;
+  border-radius: 16px;
+  background-color: #fff;
+  border: 1px solid #e9defa;
+}
+
+/* components/_cards.scss */
+@use "../abstracts/mixins";
+
+.profile-card {
+  @include mixins.card-surface;
+}
+
+.feature-card {
+  @include mixins.card-surface;
+}</code></pre>
+
+          <pre><code>/* CSS ที่คอมไพล์แล้ว */
+.profile-card {
+  padding: 1.25rem;
+  border-radius: 16px;
+  background-color: #fff;
+  border: 1px solid #e9defa;
+}
+
+.feature-card {
+  padding: 1.25rem;
+  border-radius: 16px;
+  background-color: #fff;
+  border: 1px solid #e9defa;
+}</code></pre>
+
+          <p>
+            Declaration ทั้งสี่บรรทัดถูกคัดลอกออกมาซ้ำในทั้ง
+            <code>.profile-card</code> และ <code>.feature-card</code>
+            เพราะ mixin จะปล่อย CSS ใหม่ทุกครั้งที่ include
+          </p>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="06_organizing_files_and_modules.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="08_mixin_parameters_and_content.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

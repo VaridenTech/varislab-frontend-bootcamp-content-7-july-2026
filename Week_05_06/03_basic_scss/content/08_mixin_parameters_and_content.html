@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้พารามิเตอร์ของ mixin, positional และ named arguments, default values และการใช้ @content เพื่อครอบ nested rules แบบยืดหยุ่น"
+    />
+    <title>พารามิเตอร์ของ Mixin และ @content</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>พารามิเตอร์ของ Mixin และ @content</h1>
+
+        <p>
+          บทก่อนหน้าเราสร้าง mixin แบบค่าตายตัวไปแล้ว แต่ของจริงมักต้องยืดหยุ่นกว่านั้น
+          เช่น ปุ่มแต่ละแบบอาจใช้สีไม่เหมือนกัน หรือ media query
+          ควรรับขนาดหน้าจอที่เปลี่ยนได้ นี่คือจุดที่พารามิเตอร์ของ mixin และ
+          <code>@content</code> เข้ามาช่วย
+        </p>
+
+        <h2>Mixin รับค่าเข้าได้เหมือนฟังก์ชันตัวเล็ก ๆ</h2>
+        <p>
+          เราสามารถประกาศตัวแปรไว้ในวงเล็บของ mixin
+          แล้วส่งค่าตอน include ได้ทันที
+          ทำให้ helper เดิมนำไปใช้ได้หลายสถานการณ์โดยไม่ต้องคัดลอกโค้ดใหม่
+        </p>
+
+        <pre><code>/* abstracts/_mixins.scss */
+@mixin button-variant($background, $foreground: #fff) {
+  background-color: $background;
+  color: $foreground;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+}
+
+/* components/_button.scss */
+@use "../abstracts/mixins";
+
+.button-primary {
+  @include mixins.button-variant(#6f3cc3);
+}
+
+.button-secondary {
+  @include mixins.button-variant(#efe7fb, #2d114f);
+}</code></pre>
+
+        <p>CSS ที่คอมไพล์แล้วจะเป็น:</p>
+        <pre><code>.button-primary {
+  background-color: #6f3cc3;
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+}
+
+.button-secondary {
+  background-color: #efe7fb;
+  color: #2d114f;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+}</code></pre>
+
+        <p>
+          <code>$background</code> เป็นพารามิเตอร์ที่จำเป็น ส่วน
+          <code>$foreground: #fff</code> คือค่า default
+          ถ้าเราไม่ส่งค่าสีตัวอักษรเข้ามา Sass จะใช้ <code>#fff</code> ให้อัตโนมัติ
+        </p>
+
+        <h2>Positional arguments กับ named arguments</h2>
+        <p>
+          ตอน include เราส่งค่าได้สองแบบ แบบแรกคือ positional arguments
+          ที่อาศัยลำดับของค่า และอีกแบบคือ named arguments
+          ที่ระบุชื่อพารามิเตอร์ชัดเจน
+        </p>
+
+        <pre><code>.button-primary {
+  @include mixins.button-variant(#6f3cc3);
+}
+
+.button-soft {
+  @include mixins.button-variant(
+    $background: #f3ecff,
+    $foreground: #3d1766
+  );
+}</code></pre>
+
+        <ul>
+          <li>แบบ positional เขียนสั้น เหมาะเมื่อพารามิเตอร์มีน้อยและลำดับจำง่าย</li>
+          <li>แบบ named อ่านชัด เหมาะเมื่อมีค่า optional หรืออยากกันการสลับลำดับผิด</li>
+          <li>ถ้ามี default value เราส่งเฉพาะค่าที่ต้องเปลี่ยนก็พอ</li>
+        </ul>
+
+        <h2><code>@content</code> ใช้รับ block จากตอน include</h2>
+        <p>
+          บาง mixin ไม่ได้แค่คัดลอก declaration เดิม แต่ต้อง “ห่อ” โค้ดข้างในด้วย
+          wrapper บางอย่าง เช่น media query แบบนี้เราจะใช้ <code>@content</code>
+          เป็นตำแหน่งที่ Sass เอา block จากตอน include มาวาง
+        </p>
+
+        <pre><code>/* abstracts/_mixins.scss */
+@mixin respond-above($width) {
+  @media (min-width: $width) {
+    @content;
+  }
+}
+
+/* components/_feature-grid.scss */
+@use "../abstracts/mixins";
+
+.feature-grid {
+  display: grid;
+  gap: 1rem;
+
+  @include mixins.respond-above(48rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}</code></pre>
+
+        <p>เมื่อคอมไพล์แล้ว nested block จะถูกย้ายเข้า media query ปกติ:</p>
+        <pre><code>.feature-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 48rem) {
+  .feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}</code></pre>
+
+        <p>
+          มุมที่ควรจำคือ <code>@content</code> ไม่ได้คืนค่าเหมือน function
+          แต่มันเปิดช่องให้ selector ที่เรียกใช้ ส่ง block CSS เข้ามาแทรกในโครงสร้างที่ mixin กำหนดไว้
+        </p>
+
+        <h2>ค่า default ช่วยลดการส่งค่าซ้ำ</h2>
+        <p>
+          ถ้าหลาย variant ใช้กติกาเดิมแทบทั้งหมด
+          เราควรให้ mixin ตั้งค่าเริ่มต้นที่ปลอดภัยไว้ก่อน
+          แล้ว override เฉพาะกรณีที่ต่างจริง ๆ
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>สถานการณ์</th>
+              <th>สิ่งที่ควรใช้</th>
+              <th>เหตุผล</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ต้องเปลี่ยนค่าตามลำดับง่าย ๆ</td>
+              <td>Positional arguments</td>
+              <td>โค้ดสั้นและอ่านเร็ว</td>
+            </tr>
+            <tr>
+              <td>ต้องข้ามไปแก้แค่บางพารามิเตอร์</td>
+              <td>Named arguments</td>
+              <td>ลดความเสี่ยงจากการสลับลำดับผิด</td>
+            </tr>
+            <tr>
+              <td>ค่าส่วนใหญ่เหมือนเดิมเกือบตลอด</td>
+              <td>Default values</td>
+              <td>เขียน include ให้น้อยลงและสื่อค่าเริ่มต้นชัด</td>
+            </tr>
+            <tr>
+              <td>ต้องห่อ nested rules เช่น media query</td>
+              <td><code>@content</code></td>
+              <td>ยืดหยุ่นกว่า mixin ที่ปล่อย declaration ตายตัว</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>ข้อผิดพลาดที่พบบ่อย</h2>
+        <ul>
+          <li>ส่ง positional arguments สลับลำดับ ทำให้สีพื้นหลังและสีตัวอักษรผิดคู่กัน</li>
+          <li>คิดว่า default value ทำให้พารามิเตอร์แรกไม่จำเป็น ทั้งที่ <code>$background</code> ยังต้องส่งอยู่</li>
+          <li>ใช้ named arguments แต่สะกดชื่อพารามิเตอร์ไม่ตรงกับตอนประกาศ mixin</li>
+          <li>เขียน mixin ที่ใช้ <code>@content</code> แต่ส่ง block ที่ไม่เกี่ยวกับ wrapper นั้น ทำให้โค้ดอ่านยาก</li>
+        </ul>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          ให้สร้าง mixin ชื่อ <code>badge($background, $foreground: #fff)</code>
+          ในไฟล์ <code>abstracts/_mixins.scss</code> โดยกำหนด
+          <code>display: inline-flex;</code>, <code>align-items: center;</code>,
+          <code>gap: 0.35rem;</code>, <code>padding: 0.25rem 0.75rem;</code>,
+          <code>border-radius: 999px;</code>, <code>background-color</code>
+          และ <code>color</code> จากพารามิเตอร์
+          จากนั้นใช้กับ <code>.badge-success</code> และ <code>.badge-neutral</code>
+          โดยอย่างน้อยหนึ่งครั้งต้องใช้ named argument
+          แล้วดูว่า CSS ที่คอมไพล์แล้วเป็นอย่างไร
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <pre><code>/* abstracts/_mixins.scss */
+@mixin badge($background, $foreground: #fff) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background-color: $background;
+  color: $foreground;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+/* components/_badge.scss */
+@use "../abstracts/mixins";
+
+.badge-success {
+  @include mixins.badge(#1f9d55);
+}
+
+.badge-neutral {
+  @include mixins.badge(
+    $background: #eef2ff,
+    $foreground: #312e81
+  );
+}</code></pre>
+
+          <pre><code>/* CSS ที่คอมไพล์แล้ว */
+.badge-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background-color: #1f9d55;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.badge-neutral {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background-color: #eef2ff;
+  color: #312e81;
+  font-size: 0.875rem;
+  font-weight: 700;
+}</code></pre>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="07_mixins_and_include.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="09_functions_and_built_in_modules.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>
