@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ประกอบหน้า Home เต็มรูปแบบด้วย Cursor โดยแบ่ง prompt เป็นสองรอบ: โครงหน้ากับ Banner carousel ก่อน แล้วค่อยต่อโซนดีลพร้อม CountdownTimer และตรวจ loading/error ที่ AI ชอบทำหาย" />
+    <title>หน้า Home | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 19 · สร้างหน้าเพจ (Pages)</p>
+          <h1>หน้า Home: ประกอบทุกอย่างเป็นหน้าแรก</h1>
+          <p class="lesson-original-title" lang="en">Home Page</p>
+        </header>
+
+        <p>ถึงเวลาเก็บเกี่ยวผลงานแล้ว! ตั้งแต่บทเรียน 12 เป็นต้นมาเราสร้างคอมโพเนนต์เก็บไว้เต็มกล่อง — FeatureCard, CountdownTimer, ImageZoom จากบทเรียน 14, query factories จากบทเรียน 17, แล้วก็ ProductCard, ProductsList, CategoryMenu สด ๆ จากบทที่แล้ว บทนี้เราจะเอาทั้งหมดมาประกอบเป็นหน้า Home จริง แทนที่ stub เปล่า ๆ ที่ค้างมาตั้งแต่บทเรียน 09 พอจบบทนี้ เปิด <code>http://localhost:5173/</code> แล้วคุณจะเห็นหน้าแรกของเว็บ E-commerce เต็มรูปแบบ: แบนเนอร์เลื่อนอัตโนมัติ, ดีลประจำวันพร้อมตัวนับถอยหลัง, แถวรูปโปรโมชัน และรายการสินค้าตามหมวดหมู่ ทั้งหมดขับเคลื่อนด้วยข้อมูลจริงจาก dummyjson</p>
+
+        <p>และบทนี้มีอีกเรื่องที่ต้องเรียนไปพร้อมกัน ซึ่งไม่ใช่เรื่อง React เลย: <strong>prompt ของบทนี้ใหญ่เกินกว่าที่ควรส่งเป็นก้อนเดียว</strong> เราจะแบ่งมันเป็นสองรอบ และจะคุยกันตรง ๆ ว่าเส้นแบ่งอยู่ตรงไหนและทำไม</p>
+
+        <h2>ขั้นแรก: เตรียมรูปภาพประกอบ</h2>
+
+        <p>หน้า Home ใช้รูปภาพนิ่งอยู่ชุดหนึ่ง — แบนเนอร์ 3 รูปและรูปดีลโปรโมชัน 4 รูป — ซึ่งเป็นไฟล์ design ไม่ใช่ข้อมูลจาก API และไม่ใช่ของที่ Agent สร้างให้ได้ รูปชุดนี้อยู่ใน repo ต้นฉบับแล้ว เปิดสองโฟลเดอร์นี้บน GitHub:</p>
+
+        <ul>
+          <li><a href="https://github.com/manjarb/varis-lab-project-06-react-ecommerce-app/tree/main/public/images/banners">github.com/manjarb/varis-lab-project-06-react-ecommerce-app/tree/main/public/images/banners</a> — ไฟล์ <code>01.png</code>, <code>02.png</code>, <code>03.png</code></li>
+          <li><a href="https://github.com/manjarb/varis-lab-project-06-react-ecommerce-app/tree/main/public/images/deals">github.com/manjarb/varis-lab-project-06-react-ecommerce-app/tree/main/public/images/deals</a> — ไฟล์ <code>01.png</code> ถึง <code>04.png</code></li>
+        </ul>
+
+        <p>คลิกเข้าไปทีละไฟล์แล้วกดปุ่ม download (ไอคอนลูกศรชี้ลงมุมขวาบนของหน้าแสดงไฟล์) จากนั้นวางลงในโปรเจกต์ของคุณให้ได้โครงสร้างแบบนี้เป๊ะ ๆ:</p>
+
+        <pre><code class="language-bash">public/
+└── images/
+    ├── banners/
+    │   ├── 01.png
+    │   ├── 02.png
+    │   └── 03.png
+    └── deals/
+        ├── 01.png
+        ├── 02.png
+        ├── 03.png
+        └── 04.png
+</code></pre>
+
+        <p>ทวนความจำเรื่องโฟลเดอร์ <code>public</code> ของ Vite นิดหนึ่ง: ทุกไฟล์ในนั้นถูกเสิร์ฟจาก root ของเว็บตรง ๆ โดยไม่ผ่าน bundler ดังนั้น <code>public/images/banners/01.png</code> จะเรียกใช้ในโค้ดด้วย path <code>/images/banners/01.png</code> (ไม่มีคำว่า <code>public</code> นำหน้า) เหมาะกับรูปแบบนี้ที่เราอ้างถึงด้วย URL ตรง ๆ และไม่ต้องการให้ Vite แปลงชื่อไฟล์</p>
+
+        <p>วางไฟล์ครบแล้ว commit ก่อนเริ่มงาน AI — เหตุผลเดิมทุกครั้ง: ขั้นที่หนึ่งของวงจรตรวจงานคือการอ่าน <code>git diff</code> ถ้ามีรูป 7 ไฟล์ค้างอยู่ใน working tree diff ที่ได้จะปนกัน</p>
+
+        <pre><code class="language-bash">git add public/images
+git commit -m "chore: add banner and deal images"</code></pre>
+
+        <h2>ติดตั้ง Swiper</h2>
+
+        <p>แบนเนอร์ด้านบนสุดของหน้าเป็น carousel — รูปหลายรูปสลับกันเลื่อนอัตโนมัติ พร้อมปุ่มลูกศรและจุดบอกตำแหน่ง การเขียน carousel เองให้ครบทั้ง touch swipe, loop, autoplay และ accessibility เป็นงานใหญ่เกินตัวมาก นี่คือจังหวะที่ควรใช้ library ที่พิสูจน์แล้ว เราใช้ <a href="https://swiperjs.com">Swiper</a> ซึ่งเป็น carousel library ที่นิยมที่สุดตัวหนึ่งและมี React components ให้ในตัว ตามกติกาเดิม dependency เราติดตั้งเอง:</p>
+
+        <pre><code class="language-bash">npm install swiper
+git add -A &amp;&amp; git commit -m "chore: install swiper"</code></pre>
+
+        <h2>Banner: carousel ตัวแรกของเรา</h2>
+
+        <p>Banner เป็นของหน้า Home โดยเฉพาะ ไม่มีหน้าอื่นใช้ เราจึงไม่วางมันใน <code>shared</code> แต่วางเป็นคอมโพเนนต์ลูกของหน้า Home เอง — สังเกต pattern โฟลเดอร์ <code>components</code> ซ้อนอยู่ใต้หน้าเพจ ซึ่งเราจะใช้อีกกับหน้า Category และ Product</p>
+
+        <p>วิธีใช้ Swiper ฝั่ง React มีสามส่วน:</p>
+
+        <ul>
+          <li><strong>Components</strong> — <code>&lt;Swiper&gt;</code> คือกรอบ carousel และ <code>&lt;SwiperSlide&gt;</code> คือสไลด์แต่ละใบ เรา map จาก array <code>banners</code> ที่ประกาศไว้ในไฟล์ (ใช้แค่รูป 01 กับ 02 — ส่วนรูป 03 เก็บไว้เป็นแบนเนอร์ยาวท้ายหน้า เดี๋ยวเจอใน Home.tsx)</li>
+          <li><strong>Modules</strong> — Swiper แยกความสามารถเป็นโมดูลเพื่อไม่ให้ bundle บวม อยากได้อะไรต้องส่งเข้า prop <code>modules</code> เอง: <code>Navigation</code> ให้ปุ่มลูกศรซ้ายขวา, <code>Pagination</code> ให้จุดบอกตำแหน่งด้านล่าง (<code>clickable: true</code> = กดจุดเพื่อกระโดดข้ามสไลด์ได้), <code>Autoplay</code> เลื่อนเองทุก 3 วินาที (<code>delay: 3000</code> มีหน่วยเป็น millisecond) โดย <code>disableOnInteraction: false</code> แปลว่าถึงผู้ใช้จะปัดเอง autoplay ก็ยังทำงานต่อ ไม่หยุดถาวร ปิดท้ายด้วย <code>loop</code> ให้สไลด์สุดท้ายวนกลับไปสไลด์แรกแบบไร้รอยต่อ</li>
+          <li><strong>CSS</strong> — <code>swiper/swiper-bundle.css</code> คือ style ของปุ่ม จุด และ animation ทั้งหมด ไฟล์นี้ Banner import เองเพราะมีแค่คอมโพเนนต์นี้ที่ใช้ ต่างจาก <code>skeleton.css</code> ที่ import กลางใน <code>main.tsx</code> เมื่อบทที่แล้ว เพราะ skeleton โผล่ได้ทั่วแอป</li>
+          <li>ระวังชื่อชนกัน: <code>Pagination</code> ของ Swiper ในไฟล์นี้เป็นคนละตัวกับคอมโพเนนต์ <code>Pagination</code> ของเราจากบทเรียน 13 — อยู่กันคนละไฟล์เลยไม่มีปัญหา แต่ถ้าวันหนึ่งต้อง import ทั้งคู่ในไฟล์เดียว ใช้ <code>import { Pagination as SwiperPagination }</code> แก้ได้ นี่เป็นข้อที่ต้องเขียนไว้ในบริบทของ prompt ด้วย ไม่งั้น Agent ที่เห็นทั้งโปรเจกต์อาจ import ผิดตัว</li>
+        </ul>
+
+        <h2>แบ่ง prompt เป็นสองรอบ</h2>
+
+        <p>ถ้ารวมทุกอย่างของบทนี้เป็น prompt เดียว สิ่งที่คุณจะได้กลับมาคือ: ไฟล์ใหม่ 2 ไฟล์ + ไฟล์ที่ถูกเขียนทับทั้งไฟล์อีก 1 ไฟล์ รวมแล้วประมาณ 200 บรรทัด ในนั้นมี query สามตัว, hook สองแบบ, ternary ซ้อนสองชั้นสองชุด, คอมโพเนนต์ที่มาจากหกโฟลเดอร์ต่างกัน และรูปภาพเจ็ดไฟล์ที่ path ต้องตรงเป๊ะ ทั้งหมดมาถึงพร้อมกันในหน้าจอเดียว</p>
+
+        <p>ปัญหาไม่ใช่ว่า Agent ทำไม่ได้ — มันทำได้ ปัญหาคือ<strong>คุณจะรีวิวมันไม่ไหว</strong> และจะไม่ยอมรับกับตัวเองว่ารีวิวไม่ไหว diff 200 บรรทัดที่มีของไม่ซ้ำกันเลยสักบล็อก คือขนาดที่คนเริ่มเลื่อนผ่านแทนที่จะอ่าน แล้วสิ่งที่หลุดไปได้จะไม่ใช่ของที่มองเห็นบนจอ (พวกนั้นเดี๋ยวก็เจอตอนเปิดเบราว์เซอร์) แต่เป็นของที่<em>มองไม่เห็น</em> — สาขา error ที่หายไปหนึ่งสาขา, <code>enabled</code> ที่หลุด, <code>useMemo</code> ที่กลายเป็น <code>new Date()</code> เปล่า ๆ</p>
+
+        <p>เส้นแบ่งที่เราจะใช้ตัดคือ<em>ความเป็นอิสระ</em>: หน้า Home มีสองส่วนที่ยืนอยู่ได้ด้วยตัวเอง</p>
+
+        <ul>
+          <li><strong>รอบที่ 1 — โครงหน้า</strong>: Banner, แถว FeatureCard, section หมวดหมู่ (CategoryMenu + ProductsList) และแบนเนอร์ยาวปิดท้าย จบรอบนี้แล้ว <code>npm run dev</code> ต้องได้หน้า Home ที่<em>ใช้งานได้จริง</em> — กดสลับหมวดได้ คลิกการ์ดไปหน้าสินค้าได้ ไม่ใช่ครึ่งหน้าที่พังรอชิ้นส่วนอีกครึ่ง</li>
+          <li><strong>รอบที่ 2 — โซนดีล</strong>: หัวข้อ "DEALS OF THE DAY" พร้อม CountdownTimer, query สินค้าห้าตัวแรก และตารางรูปโปรโมชัน ทั้งก้อนนี้แทรกเข้าไประหว่างสอง section ที่มีอยู่แล้ว</li>
+        </ul>
+
+        <p>ผลที่ได้จากการตัดตรงนี้มีสามอย่างที่วัดได้จริง อย่างแรก: <code>git diff</code> ของรอบที่ 2 มีไฟล์<em>เดียว</em> คือ <code>Home.tsx</code> และเป็นการ<em>เพิ่ม</em>ล้วน ๆ ไม่ใช่การเขียนทับ — คุณอ่านทีละบรรทัดได้จริงในเวลาที่สมเหตุสมผล อย่างที่สอง: ระหว่างสองรอบมี <code>git commit</code> คั่นอยู่ ถ้ารอบที่ 2 ออกมาไม่เข้าท่า <code>git restore .</code> คืนคุณกลับไปที่หน้า Home ที่ทำงานได้ ไม่ใช่กลับไปที่หน้าว่าง อย่างที่สาม: บริบทของรอบที่ 2 แม่นกว่ารอบที่ 1 มาก เพราะคุณ <code>@</code>-mention <code>Home.tsx</code> ที่มีอยู่จริงแล้วได้ Agent จึงเห็นสไตล์การเขียน การจัด import และชื่อตัวแปรที่ใช้อยู่ แทนที่จะเดาเอง</p>
+
+        <p>เกณฑ์ที่ใช้ตัดสินใจได้ทั่วไป: <strong>ถ้า prompt เดียวจะทำให้เกิดของที่คุณต้องตรวจเกินหนึ่งหน้าจอ และของนั้นแบ่งเป็นก้อนที่ทดสอบแยกกันได้ ให้แบ่ง</strong> เกณฑ์ที่<em>ไม่</em>ควรใช้คือ "รู้สึกว่าเยอะ" — ของสี่คอมโพเนนต์ในบทเรียน 14 ก็ดูเยอะ แต่ทั้งสี่ตัวเป็นอิสระต่อกันสนิทและสั้นตัวละไม่ถึง 40 บรรทัด รอบเดียวจึงรับได้</p>
+
+        <h2>Home.tsx: เดินดูทีละส่วน</h2>
+
+        <p>ก่อนส่ง prompt ต้องเข้าใจของสี่อย่างที่จะอยู่ในไฟล์นี้ให้ขาด เพราะสามในสี่อย่างเป็นสิ่งที่ Agent เขียนผิดได้โดยที่ทั้ง lint และ typecheck ผ่านฉลุย</p>
+
+        <h3>ส่วนที่ 1: state และ queries</h3>
+
+        <p>หน้านี้ยิงสาม queries และทุกตัวใช้ factory จากบทเรียน 17 — ไม่มีการเขียน <code>queryKey</code> ด้วยมือแม้แต่ตัวเดียว:</p>
+
+        <ul>
+          <li><strong><code>productQueries.list({ limit: 5 })</code></strong> — สินค้าขายดี 5 ตัวแรกสำหรับแถว "DEALS OF THE DAY" สังเกตการ rename ตอน destructure: <code>data: bestProductsData</code>, <code>isLoading: isBestProductsLoading</code> — จำเป็นเพราะหน้านี้มีหลาย query ชื่อ <code>data</code> เฉย ๆ จะชนกัน</li>
+          <li><strong><code>productQueries.categories()</code></strong> — รายชื่อหมวดหมู่สำหรับ CategoryMenu จำได้ไหมว่า factory ตัวนี้ตั้ง <code>staleTime</code> 5 นาทีไว้ เพราะรายชื่อหมวดแทบไม่เปลี่ยน — หน้า Category ในบทเรียน 20 ที่เรียก query เดียวกันจะได้ข้อมูลจาก cache ทันทีโดยไม่ยิง API ซ้ำ</li>
+          <li><strong><code>productQueries.byCategory(…)</code></strong> — สินค้า 12 ตัวของหมวดที่กำลังเลือก ตัวนี้มีเงื่อนไขพิเศษ: <code>enabled: currentCategory !== null</code> แปลว่า "อย่าเพิ่งยิงจนกว่าจะรู้ว่าหมวดไหน" เพราะตอน mount แรกสุด รายชื่อหมวดยังโหลดไม่เสร็จ <code>currentCategory</code> ยังเป็น <code>null</code> — ถ้าไม่มี <code>enabled</code> เราจะยิง API ด้วย <code>category=""</code> ซึ่งไร้ความหมาย นี่คือ pattern "dependent query" ที่เจอใน Week 4: query หนึ่งรอผลของอีก query หนึ่ง</li>
+        </ul>
+
+        <p>บรรทัดที่สำคัญที่สุดของหน้านี้คือบรรทัดสั้น ๆ นี้:</p>
+
+        <pre><code class="language-typescript">const currentCategory = selectedCategory ?? categories?.[0] ?? null;
+</code></pre>
+
+        <p>โจทย์คือ: ตอนเปิดหน้ามาให้เลือกหมวดแรกโดยอัตโนมัติ แต่พอผู้ใช้คลิกหมวดอื่นก็ให้เปลี่ยนตาม มือใหม่จำนวนมากจะแก้โจทย์นี้ด้วย <code>useEffect</code> ที่คอยเฝ้า <code>categories</code> แล้ว <code>setSelectedCategory(categories[0])</code> เมื่อโหลดเสร็จ — ซึ่งเป็น anti-pattern ที่บทเรียน Effects ของ Week 4 เตือนไว้ตรง ๆ ว่า "อย่าใช้ effect เพื่อ sync state จาก props/data" เพราะได้ render เพิ่มฟรีหนึ่งรอบ แถมสร้างโอกาสที่ state สอง copy จะขัดแย้งกันเอง วิธีที่ถูกคือ<strong>คำนวณสด (derive) ระหว่าง render</strong>: <code>selectedCategory</code> เก็บเฉพาะ "สิ่งที่ผู้ใช้เลือกเอง" (เริ่มจาก <code>null</code> = ยังไม่เคยเลือก) แล้วค่าที่ใช้จริงคือ "ที่ผู้ใช้เลือก ถ้าไม่มีก็หมวดแรก ถ้ายังโหลดไม่เสร็จก็ <code>null</code>" — nullish coalescing ต่อกันสองชั้นอ่านเป็นภาษาคนได้เลย และไม่มีทาง desync เพราะมันไม่ได้ถูกเก็บไว้ที่ไหนเลย</p>
+
+        <p>นี่คือของชิ้นแรกที่ Agent มีสิทธิ์เขียนผิดแบบเงียบ ๆ: <code>useEffect</code> เวอร์ชันนั้นทำงานได้บนจอเหมือนกันทุกประการ</p>
+
+        <h3>ส่วนที่ 2: targetDate สำหรับตัวนับถอยหลัง</h3>
+
+        <p>แถวดีลประจำวันมี CountdownTimer จากบทเรียน 14 ซึ่งรับ prop <code>targetDate</code> เป็นเวลาเป้าหมาย เราตั้งไว้ที่ "พรุ่งนี้เวลานี้" ทำไมต้อง <code>useMemo</code> ด้วย dependency ว่าง? เพราะถ้าเขียน <code>new Date()</code> เปล่า ๆ ในตัวคอมโพเนนต์ ทุกครั้งที่ Home re-render (ซึ่งเกิดตลอด — ทุกการคลิกหมวด ทุกครั้งที่ query กลับมา) เป้าหมายจะถูกสร้างใหม่เลื่อนไปเรื่อย ๆ ตัวนับจะค้างที่ 24 ชั่วโมงตลอดกาล <code>useMemo(…, [])</code> ล็อกให้คำนวณครั้งเดียวตอน mount แล้วใช้ค่าเดิมไปตลอดชีวิตของหน้า</p>
+
+        <p>ของชิ้นที่สองที่ผิดแบบเงียบ ๆ ได้: ตัวเลขบนจอยังเดินทุกวินาทีเหมือนเดิม ต่างกันแค่มันจะไม่มีวันลดลงต่ำกว่า 23:59:5x</p>
+
+        <h3>ส่วนที่ 3: pattern แสดงผล error → loading → data</h3>
+
+        <p>ทั้งแถวดีลและรายการสินค้าตามหมวดใช้ pattern เดียวกันในการแสดงผล ดูตัวอย่างจากแถวดีล:</p>
+
+        <pre><code class="language-typescript">{isBestProductsError ? (
+  &lt;ErrorMessage /&gt;
+) : isBestProductsLoading ? (
+  &lt;div className="text-center"&gt;
+    &lt;ClipLoader
+      size={40}
+      aria-label="Loading Spinner"
+      data-testid="loader"
+    /&gt;
+  &lt;/div&gt;
+) : (
+  &lt;ProductsList
+    products={bestProductsData?.products}
+    onProductClick={onProductClick}
+  /&gt;
+)}
+</code></pre>
+
+        <p>ternary ซ้อนสองชั้นอ่านจากบนลงล่าง: พังไหม → แสดง <code>ErrorMessage</code>, ยังโหลดอยู่ไหม → แสดง <code>ClipLoader</code>, ปกติ → แสดงรายการสินค้า ลำดับนี้สำคัญ: <strong>เช็ค error ก่อน loading เสมอ</strong> เพราะถ้าเช็ค loading ก่อนแล้ว query fail ไปแล้ว (<code>isLoading</code> เป็น <code>false</code>, <code>isError</code> เป็น <code>true</code>) โค้ดที่เช็คสลับลำดับบางแบบจะหลุดไปพยายาม render ข้อมูลที่ไม่มี และที่สำคัญกว่านั้น — การมี error state ในทุกจุดที่ยิง API คือสิ่งที่แยกแอปมืออาชีพจากแอปฝึกหัด: เน็ตล่มแล้วผู้ใช้ต้องเห็นข้อความบอก ไม่ใช่ spinner หมุนค้างตลอดกาลโดยไม่มีวันมีอะไรมา</p>
+
+        <p>สังเกตด้วยว่า error ของแต่ละ section เป็น <em>inline</em> — ถ้าแถวดีลโหลดพลาด ผู้ใช้เห็นข้อความ error เฉพาะแถวนั้น แต่แบนเนอร์ รูปโปรโมชัน และรายการหมวดหมู่ยังทำงานปกติ หน้าไม่ล้มทั้งหน้าเพราะ API ตัวเดียวสะดุด</p>
+
+        <p>ของชิ้นที่สามที่ผิดแบบเงียบ ๆ ได้ และเป็นตัวที่อันตรายที่สุดในสามตัว — รายละเอียดอยู่ในบรรทัด <code>AI มักพลาดตรงนี้:</code></p>
+
+        <h3>ส่วนที่ 4: โครง JSX ของหน้า</h3>
+
+        <p>ที่เหลือของ JSX คือการวางคอมโพเนนต์ที่มีอยู่แล้วเรียงจากบนลงล่าง: <code>&lt;Banner /&gt;</code>, แถว <code>FeatureCard</code> สี่ใบ (Free Shipping / 24×7 / Festival offer / Online payment — ไอคอนจาก Font Awesome ที่ติดตั้งไว้บทเรียน 10), แถวดีลพร้อม <code>CountdownTimer</code>, ตาราง <code>ImageZoom</code> สามคอลัมน์จากรูป deals ที่เพิ่งดาวน์โหลด, section หมวดหมู่ที่ประกบ <code>CategoryMenu</code> กับ <code>ProductsList</code> และปิดท้ายด้วยแบนเนอร์ยาว (รูป <code>banners/03.png</code>) ใน <code>ImageZoom</code></p>
+
+        <p>จุดเชื่อมต่อที่ควรสังเกตมีสองจุด จุดแรกคือ CategoryMenu:</p>
+
+        <pre><code class="language-typescript">&lt;CategoryMenu
+  activeCategory={currentCategory?.slug}
+  categories={categories || []}
+  onCategoryClick={setSelectedCategory}
+/&gt;
+</code></pre>
+
+        <p>เพราะ contract ของ CategoryMenu ส่งทั้ง <code>Category</code> object กลับมา และ state ของเราก็เก็บ <code>CategoryType | null</code> พอดี เราจึงส่ง <code>setSelectedCategory</code> เป็น callback ได้ตรง ๆ ไม่ต้องห่อ arrow function เลย — คลิกปุ๊บ state เปลี่ยน, <code>currentCategory</code> ถูกคำนวณใหม่, query <code>byCategory</code> เห็น queryKey ใหม่แล้วยิงขอข้อมูลหมวดใหม่เอง ทั้ง chain นี้ไหลจากการ <code>setState</code> ครั้งเดียว (จำท่านี้ไว้ — บทหน้าหน้า Category จะ<em>ทำไม่ได้</em> และเหตุผลว่าทำไมคือเนื้อหาหลักส่วนหนึ่งของบทนั้น)</p>
+
+        <p>จุดที่สองคือการคลิกการ์ดสินค้า: <code>useProductRoute</code> จากบทเรียน 10 คือ hook รวมทางเดินของแอป — <code>goToProductDetails(id)</code> พาไป <code>/products/:id</code> ตอนนี้หน้านั้นยังเป็น stub อยู่ แต่บทเรียน 21 จะทำให้มันกลายเป็นหน้ารายละเอียดสินค้าเต็มตัว</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <pre><code class="language-bash">src/
+└── pages/
+    └── Home/
+        ├── components/
+        │   └── Banner/
+        │       └── Banner.tsx        # 🤖 รอบที่ 1 — ใหม่
+        ├── Home.module.scss          # 🤖 รอบที่ 1 — ใหม่
+        └── Home.tsx                  # 🤖 รอบที่ 1 — เขียนทับ stub
+                                      # 🤖 รอบที่ 2 — เพิ่มโซนดีล</code></pre>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>Banner.tsx</code></strong> — ต้องเป็นคอมโพเนนต์ที่ไม่รับ prop เลยสักตัว รายชื่อรูปอยู่ในไฟล์ ต้องไม่ยิง API และต้องเป็นไฟล์เดียวในโปรเจกต์ที่ import CSS ของ Swiper</li>
+          <li><strong><code>Home.module.scss</code></strong> — ต้องมีแต่ความกว้างของคอลัมน์ ต้องไม่มี spacing ไม่มี typography และไม่มีค่า hex สักค่า (ของพวกนั้นเป็นหน้าที่ของ utility class)</li>
+          <li><strong><code>Home.tsx</code></strong> — ต้องยิง query ผ่าน <code>productQueries</code> เท่านั้น ต้องไม่มี <code>useEffect</code> แม้แต่ตัวเดียว ต้องไม่มี <code>queryKey</code> เขียนสด ๆ ต้องไม่มี <code>fetch</code> หรือ <code>axios</code> และทุก section ที่ผูกกับ query ต้องมีทั้งสาขา error และสาขา loading</li>
+        </ul>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor — รอบที่ 1: โครงหน้า</strong> แชทใหม่ โหมด Agent จบรอบนี้ต้องได้หน้า Home ที่เปิดใช้งานได้จริง ยังไม่มีโซนดีล:</p>
+          <pre><code class="language-text">ประกอบหน้า Home เวอร์ชันโครงหน้า: แบนเนอร์ carousel แถวจุดขาย และรายการสินค้าตามหมวดหมู่
+
+บริบท: @src/pages/Home/Home.tsx @src/features/products/queries.ts @src/features/products/types.ts @src/features/products/components @src/shared/components @src/shared/hooks/useProductRoute.tsx @src/styles
+src/pages/Home/Home.tsx ตอนนี้เป็น stub ที่ return h1 อย่างเดียว ให้เขียนทับทั้งไฟล์
+src/features/products/queries.ts export productQueries ที่มีสี่จาน: list, byCategory,
+  categories, detail ทุกจานคืนผลของ queryOptions ใช้กับ useQuery ได้ตรง ๆ
+  byCategory รับ { category, page?, limit? } และมี placeholderData ตั้งไว้แล้ว
+src/features/products/types.ts export interface Category ที่มี slug, name, url
+src/features/products/components มี CategoryMenu กับ ProductsList จากบทที่แล้ว
+  CategoryMenu รับ categories: Category[], activeCategory: string | undefined,
+    onCategoryClick: (category: Category) =&gt; void
+  ProductsList รับ products: Product[] | undefined, onProductClick: (id: number) =&gt; void
+src/shared/components มี FeatureCard (icon: IconDefinition, title, description),
+  ImageZoom (src, alt, className?) และ ErrorMessage (message?)
+src/shared/hooks/useProductRoute.tsx เป็น default export คืน object ที่มี goToProductDetails(id: number)
+ติดตั้ง swiper, react-spinners, @tanstack/react-query และ Font Awesome ครบแล้ว
+รูปภาพอยู่ที่ public/images/banners/01.png ถึง 03.png และ public/images/deals/01.png ถึง 04.png
+  เรียกใช้ในโค้ดด้วย path ที่ขึ้นต้นด้วย /images/ ไม่มีคำว่า public นำหน้า
+utility class ที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว: container, flex, gap-25,
+  align-item-center, text-center, pt-35, pt-65, pt-60, pb-30, mb-20,
+  category-list-container, category-list-box
+alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่วนไฟล์ .scss ต้องอ้าง path แบบ relative
+
+โครงสร้าง: แตะสามไฟล์นี้เท่านั้น
+- src/pages/Home/components/Banner/Banner.tsx (สร้างใหม่)
+- src/pages/Home/Home.module.scss (สร้างใหม่)
+- src/pages/Home/Home.tsx (เขียนทับ stub ทั้งไฟล์)
+
+ข้อกำหนดทางเทคนิค:
+- Banner.tsx: import React, แล้ว { Swiper, SwiperSlide } from "swiper/react",
+    แล้ว { Navigation, Pagination, Autoplay } from "swiper/modules",
+    แล้วเว้นบรรทัดว่างหนึ่งบรรทัด แล้ว import "swiper/swiper-bundle.css";
+    Pagination ตัวนี้คือของ swiper ห้าม import Pagination ของเราจาก shared/components
+  ประกาศ const banners ข้างในคอมโพเนนต์ เป็น array สองสมาชิก แต่ละตัวมี
+    id (1 และ 2), image ("/images/banners/01.png" และ "/images/banners/02.png")
+    และ alt ("Banner 1" และ "Banner 2")
+  return div className="banner-container" ครอบ Swiper ที่ตั้ง props ตามนี้พอดี:
+    modules={[Navigation, Pagination, Autoplay]}, spaceBetween={30}, slidesPerView={1},
+    navigation, pagination={{ clickable: true }},
+    autoplay={{ delay: 3000, disableOnInteraction: false }}, loop
+  ข้างในวน banners.map render SwiperSlide key={banner.id} ที่มี img src และ alt
+  คอมโพเนนต์นี้ไม่รับ prop ใด ๆ และห้ามมี state
+- Home.module.scss: ไม่ต้อง @use variables มีห้า class ตามลำดับนี้
+    .featureCardBox -&gt; gap: 24px และ nested selector "&gt; div" ที่ตั้ง width: 25%
+    .mainDealBox -&gt; width: 42%
+    .secondDealBox -&gt; width: 33%
+    .thirdDealBox -&gt; width: 25%
+    .categoryMenu -&gt; width: 16%
+  สามตัวกลางจะยังไม่มีใครใช้ในรอบนี้ นั่นถูกแล้ว รอบถัดไปจะใช้
+- Home.tsx: บรรทัด import เรียงตามลำดับนี้พอดี
+    import React, { useState } from "react";
+    import { faTruck, faVolumeHigh } from "@fortawesome/free-solid-svg-icons";
+    import { faClock, faCreditCard } from "@fortawesome/free-regular-svg-icons";
+    import ClipLoader from "react-spinners/ClipLoader";
+    import { useQuery } from "@tanstack/react-query";
+    import styles from "./Home.module.scss";
+    import Banner from "./components/Banner/Banner";
+    import CategoryMenu from "@/features/products/components/CategoryMenu/CategoryMenu";
+    import ProductsList from "@/features/products/components/ProductsList/ProductsList";
+    import FeatureCard from "@/shared/components/FeatureCard/FeatureCard";
+    import ImageZoom from "@/shared/components/ImageZoom/ImageZoom";
+    import useProductRoute from "@/shared/hooks/useProductRoute";
+    import { productQueries } from "@/features/products/queries";
+    import { Category as CategoryType } from "@/features/products/types";
+    import ErrorMessage from "@/shared/components/ErrorMessage/ErrorMessage";
+  ประกาศ const PRODUCTS_LIST_LIMIT = 12; ไว้นอกคอมโพเนนต์
+  ในคอมโพเนนต์ Home: React.FC ตามลำดับนี้
+    useState&lt;CategoryType | null&gt;(null) ชื่อ selectedCategory / setSelectedCategory
+    const { goToProductDetails } = useProductRoute();
+    const { data: categories } = useQuery(productQueries.categories());
+    const currentCategory = selectedCategory ?? categories?.[0] ?? null;
+    useQuery ที่ spread ...productQueries.byCategory({ category: currentCategory?.slug ?? "",
+      limit: PRODUCTS_LIST_LIMIT }) แล้วเติม enabled: currentCategory !== null
+      destructure เป็น data: categoryProducts, isLoading: isCategoryProductsLoading,
+      isError: isCategoryProductsError
+    const onProductClick = (productId: number) =&gt; { goToProductDetails(productId); };
+  JSX: return fragment ว่าง ครอบ div className="container" ที่มีของเรียงตามนี้
+    &lt;Banner /&gt;
+    section className={`${styles.featureCardBox} pt-35 flex`} มี FeatureCard สี่ใบ
+      faTruck / "Free Shipping" / "Free Shipping World Wide"
+      faClock / "24 X 7 service" / "Online service for 24 X 7"
+      faVolumeHigh / "Festival offer" / "New online special festival offer"
+      faCreditCard / "Online payment" / "New online special festival offer"
+    section className="pt-65" ที่มี div className="flex gap-25" ครอบ
+      CategoryMenu activeCategory={currentCategory?.slug} categories={categories || []}
+        onCategoryClick={setSelectedCategory}
+      div className="category-list-container category-list-box" ที่ข้างในเป็น
+        ternary ซ้อนสองชั้นเรียงตามนี้เท่านั้น: isCategoryProductsError ? &lt;ErrorMessage /&gt;
+        : isCategoryProductsLoading ? div className="text-center" ครอบ ClipLoader
+          ที่มี size={40} aria-label="Loading Spinner" data-testid="loader"
+        : &lt;ProductsList products={categoryProducts?.products} onProductClick={onProductClick} /&gt;
+    section className="pt-60 pb-30" ที่มี ImageZoom src="/images/banners/03.png"
+      alt="banner long" className="mb-20 " (สังเกตช่องว่างท้ายค่า ให้คงไว้ตามนี้)
+  ห้ามใช้ useEffect ห้ามเขียน queryKey เอง ห้ามเรียก fetch หรือ axios
+  ห้ามใส่ retry, staleTime หรือ gcTime ที่ระดับ useQuery
+  ห้ามตัดสาขา error หรือสาขา loading ออกไม่ว่ากรณีใด
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ queries.ts, api.ts, types.ts, CategoryMenu, ProductsList, ProductCard
+  หรือคอมโพเนนต์ใด ๆ ใน shared/components
+- ห้ามแตะ src/pages/Category, src/pages/Product หรือหน้า stub อื่น
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ยังไม่ต้องทำโซนดีล ไม่ต้องมี CountdownTimer ไม่ต้องมี useMemo
+  และไม่ต้องยิง productQueries.list ในรอบนี้</code></pre>
+        </blockquote>
+
+        <p>ตรวจรอบที่ 1 ให้จบตาม checklist ข้างล่างก่อน ให้ <code>npm run lint</code> กับ <code>npm run typecheck</code> ผ่าน เปิดเบราว์เซอร์ดูให้เห็นหน้าจริง แล้ว <code>git commit</code> — จุด commit นี้คือสิ่งที่ทำให้รอบที่ 2 ปลอดภัย</p>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor — รอบที่ 2: โซนดีล</strong> แชทใหม่อีกครั้ง (ไม่ใช่ต่อจากแชทเดิม — เราอยากให้มันอ่านไฟล์ที่ commit แล้วจริง ๆ ไม่ใช่จำเวอร์ชันที่มันเพิ่งเขียน) รอบนี้แตะไฟล์เดียว:</p>
+          <pre><code class="language-text">เพิ่มโซนดีลประจำวันและตารางรูปโปรโมชันลงในหน้า Home ที่มีอยู่แล้ว
+
+บริบท: @src/pages/Home/Home.tsx @src/pages/Home/Home.module.scss @src/features/products/queries.ts @src/shared/components/CountdownTimer/CountdownTimer.tsx @src/shared/components/ImageZoom/ImageZoom.tsx
+src/pages/Home/Home.tsx เป็นหน้า Home ที่ทำงานได้แล้วและ commit ไปแล้ว
+  ตอนนี้มีสี่ส่วนเรียงกัน: Banner, section FeatureCard, section หมวดหมู่, section แบนเนอร์ยาว
+  มี query สองตัวคือ productQueries.categories() และ productQueries.byCategory(...)
+src/pages/Home/Home.module.scss มี class .mainDealBox, .secondDealBox, .thirdDealBox
+  ที่ยังไม่มีใครใช้ รอบนี้จะได้ใช้
+src/shared/components/CountdownTimer/CountdownTimer.tsx รับ prop เดียวคือ targetDate: string
+src/shared/components/ImageZoom/ImageZoom.tsx รับ src, alt และ className ที่ไม่บังคับ
+productQueries.list รับ { page?, limit? } และคืน queryOptions ที่ใช้กับ useQuery ได้ตรง ๆ
+รูปดีลอยู่ที่ public/images/deals/01.png ถึง 04.png เรียกใช้ด้วย path /images/deals/01.png
+utility class ที่เพิ่มใหม่รอบนี้มีอยู่จริงใน src/styles/ แล้ว: pt-55, mb-20, m-0, mr-15,
+  mr-5, fs-24, gap-25, flex, align-item-center, text-center
+
+โครงสร้าง: แก้ไฟล์เดียวคือ src/pages/Home/Home.tsx ห้ามสร้างไฟล์ใหม่แม้แต่ไฟล์เดียว
+และห้ามแก้ Home.module.scss
+
+ข้อกำหนดทางเทคนิค:
+- ขยาย import เดิมจาก "react" ให้เป็น import React, { useMemo, useState } from "react";
+- ขยาย import จาก "@fortawesome/free-solid-svg-icons" ให้มีสามชื่อเรียงตามนี้:
+  faTruck, faVolumeHigh, faBolt
+- เพิ่ม import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+  ไว้ต่อจากบรรทัด import ของ free-regular-svg-icons
+- เพิ่ม import CountdownTimer from "@/shared/components/CountdownTimer/CountdownTimer";
+  ไว้ต่อจากบรรทัด import Banner
+  (ImageZoom import ไว้แล้วในรอบก่อน ห้าม import ซ้ำ)
+- เพิ่ม useQuery ตัวที่สามไว้ก่อนบรรทัด const { data: categories }
+  useQuery(productQueries.list({ limit: 5 })) destructure เป็น
+  data: bestProductsData, isLoading: isBestProductsLoading, isError: isBestProductsError
+- เพิ่ม const targetDate = useMemo(...) ไว้หลัง useQuery ตัวสุดท้ายและก่อน onProductClick
+  ข้างใน: const date = new Date(); แล้ว date.setDate(date.getDate() + 1);
+  พร้อม comment ท้ายบรรทัดนั้นว่า // Add 1 days
+  แล้วเว้นบรรทัดว่าง แล้ว return date.toISOString();
+  dependency array ต้องเป็น [] ห้ามเรียก new Date() นอก useMemo
+- แทรก section ใหม่สองอันไว้ระหว่าง section ของ FeatureCard กับ section ของหมวดหมู่
+  section แรก className="pt-55":
+    div className="flex align-item-center mb-20" ที่มี
+      h2 className="fs-24 m-0 mr-15" ข้างในเป็น FontAwesomeIcon icon={faBolt}
+        className="mr-5" ตามด้วยข้อความ DEALS OF THE DAY
+      CountdownTimer targetDate={targetDate}
+    div className="flex gap-25" ที่ข้างในเป็น ternary ซ้อนสองชั้นเรียงตามนี้เท่านั้น:
+      isBestProductsError ? &lt;ErrorMessage /&gt;
+      : isBestProductsLoading ? div className="text-center" ครอบ ClipLoader
+        ที่มี size={40} aria-label="Loading Spinner" data-testid="loader"
+      : &lt;ProductsList products={bestProductsData?.products} onProductClick={onProductClick} /&gt;
+  section ที่สอง className="pt-65":
+    div className="flex gap-25" ที่มีสามคอลัมน์
+      div className={styles.mainDealBox} ครอบ ImageZoom src="/images/deals/01.png" alt="deal 1"
+      div className={styles.secondDealBox} ครอบ ImageZoom src="/images/deals/02.png"
+        alt="deal 2" className="mb-20" แล้วตามด้วย ImageZoom src="/images/deals/03.png" alt="deal 3"
+      div className={styles.thirdDealBox} ครอบ ImageZoom src="/images/deals/04.png" alt="deal 4"
+- ห้ามแก้ของเดิมในไฟล์นี้นอกจากบรรทัด import ที่ระบุไว้ข้างบน
+  โดยเฉพาะห้ามแตะ currentCategory, enabled, CategoryMenu, ternary ของ section หมวดหมู่
+  และ section แบนเนอร์ยาวท้ายไฟล์
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ไฟล์อื่นนอกจาก src/pages/Home/Home.tsx
+- ห้ามแยก section ใหม่ออกเป็นคอมโพเนนต์ย่อยหรือไฟล์ใหม่
+- ห้ามใช้ useEffect และห้ามใช้ setInterval ในไฟล์นี้ (นาฬิกาเป็นงานของ CountdownTimer)
+- ห้ามตัดสาขา error หรือสาขา loading ของ section ใดออก</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อนทุกรอบ ข้อแรกใช้กับทั้งสองรอบและเป็นข้อที่ต้องอ่านก่อนเปิด diff ด้วยซ้ำ:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>ตัดสาขา <code>isLoading</code> กับ <code>isError</code> ทิ้งเงียบ ๆ</em> แล้วเขียนแค่ <code>&lt;ProductsList products={data?.products} … /&gt;</code> ตัวเปล่า เหตุผลที่มันทำคือโค้ดแบบนั้น "ถูก" ในสายตาของ TypeScript ทุกประการ: <code>ProductsList</code> รับ <code>undefined</code> ได้อยู่แล้ว (เราออกแบบไว้แบบนั้นเองในบทที่แล้ว) และมันสั้นกว่าถึงสิบบรรทัดต่อหนึ่ง section อาการคือสิ่งที่ทำให้ข้อนี้อันตราย: <strong>บนเครื่องคุณที่เน็ตดีและ API ตอบใน 200ms คุณจะไม่เห็นความต่างเลยแม้แต่นิดเดียว</strong> ทั้งสองแบบให้หน้าตาเดียวกัน <code>npm run lint</code> ผ่าน <code>npm run typecheck</code> ผ่าน แต่วันที่ dummyjson ล่มหรือผู้ใช้อยู่บนมือถือสัญญาณอ่อน สิ่งที่เขาเห็นคือ<em>ช่องว่างเปล่า</em>ตรงที่ควรมีสินค้า ไม่มี spinner ไม่มีข้อความ ไม่มีอะไรบอกว่าเกิดอะไรขึ้น วิธีตรวจมีสองชั้น ชั้นแรกนับด้วย <code>grep</code>: <code>grep -c "ErrorMessage" src/pages/Home/Home.tsx</code> ต้องได้ <strong>3</strong> (บรรทัด import หนึ่ง + สอง section) และ <code>grep -c "ClipLoader" src/pages/Home/Home.tsx</code> ต้องได้ <strong>3</strong> เช่นกัน ชั้นที่สองคือการทดลองจริง ซึ่งเป็นชั้นที่คุณต้องทำทุกครั้งที่หน้าไหนมี query: เปิด DevTools แท็บ Network ตั้ง throttling เป็น <strong>Offline</strong> แล้ว reload — ทั้งสอง section ต้องขึ้นข้อความจาก <code>ErrorMessage</code> ไม่ใช่ที่ว่าง จากนั้นตั้งเป็น <strong>Slow 3G</strong> แล้ว reload อีกครั้ง — ต้องเห็น spinner ทั้งสองจุดชัด ๆ ก่อนสินค้าโผล่</li>
+          </ul>
+          <p><strong>รอบที่ 1:</strong></p>
+          <ul>
+            <li>ไฟล์ใหม่ <strong>2 ไฟล์</strong> (<code>Banner.tsx</code>, <code>Home.module.scss</code>) และไฟล์ที่ modified <strong>1 ไฟล์</strong> (<code>Home.tsx</code>) — ไม่มี <code>Banner.module.scss</code>, ไม่มี <code>Home.test.tsx</code>, ไม่มีไฟล์ใน <code>pages/Category</code> หรือ <code>pages/Product</code> ขึ้นมาด้วย</li>
+            <li><code>grep -n "useEffect" src/pages/Home/Home.tsx</code> ต้อง<strong>ว่างเปล่า</strong> — ถ้าเจอ ให้ดูว่ามันเอาไป sync <code>selectedCategory</code> จาก <code>categories</code> หรือเปล่า ถ้าใช่ ให้แทนที่ effect ทั้งก้อนด้วยบรรทัด <code>const currentCategory = selectedCategory ?? categories?.[0] ?? null;</code> บรรทัดเดียว หน้าจอจะเหมือนเดิมเป๊ะ นั่นแหละคือประเด็น</li>
+            <li><code>enabled: currentCategory !== null</code> อยู่ครบ — ถ้าหาย เปิด DevTools แท็บ Network ตอน reload จะเห็น request ไปที่ <code>/products/category/</code> (ลงท้ายด้วย slash เปล่า ๆ) โผล่มาหนึ่งครั้งก่อน request จริง นั่นคือ request ที่ยิงตอน <code>slug</code> ยังเป็น <code>""</code></li>
+            <li><code>onCategoryClick={setSelectedCategory}</code> ส่งฟังก์ชันตรง ๆ ไม่ใช่ <code>{(cat) =&gt; setSelectedCategory(cat)}</code> — ผลเหมือนกัน แต่ diff กับโค้ดอ้างอิงจะไม่ตรง</li>
+            <li>ternary ของ section หมวดหมู่เรียง <strong>error → loading → data</strong> ตามลำดับนั้นเท่านั้น ไม่ใช่ loading ก่อน</li>
+            <li><code>Banner.tsx</code> import <code>Pagination</code> จาก <code>"swiper/modules"</code> — ถ้าเผลอไป import จาก <code>@/shared/components/Pagination/Pagination</code> โค้ดจะพังทันทีตอนรัน (คนละของกันคนละเรื่อง) ข้อนี้ typecheck จับได้ แต่รู้ไว้ก่อนจะได้อ่าน error ออก</li>
+            <li><code>import "swiper/swiper-bundle.css";</code> อยู่ใน <code>Banner.tsx</code> ที่เดียว ไม่ได้ถูกย้ายไป <code>main.tsx</code> — <code>git diff src/main.tsx</code> ต้องว่าง</li>
+            <li>ค้นชื่อ class ทุกตัวใน <code>className</code> ว่ามีจริงใน <code>src/styles/</code> — จะมีอยู่ตัวหนึ่งที่หาไม่เจอ อ่านกล่อง 💡 ใต้ <code>Banner.tsx</code> ก่อนแตะมัน</li>
+            <li><code>Home.module.scss</code> ไม่มีค่า hex ไม่มี <code>margin</code> ไม่มี <code>padding</code> และไม่มี <code>font-size</code> — มีแต่ <code>width</code> กับ <code>gap</code></li>
+          </ul>
+          <p><strong>รอบที่ 2:</strong></p>
+          <ul>
+            <li><code>git status</code> ต้องเห็นไฟล์ modified <strong>ไฟล์เดียว</strong> คือ <code>Home.tsx</code> ถ้ามีไฟล์ที่สองโผล่มา หยุดแล้วอ่านว่าทำไม — ข้อนี้คือทั้งหมดของเหตุผลที่เราแบ่งสองรอบ</li>
+            <li><code>git diff src/pages/Home/Home.tsx</code> ต้องมีบรรทัด<strong>สีแดงเฉพาะบรรทัด import</strong> ที่ถูกขยาย ที่เหลือเป็นสีเขียวล้วน ถ้าเห็นสีแดงในส่วน JSX ของ section หมวดหมู่หรือใน <code>currentCategory</code> แปลว่า Agent "ปรับปรุง" ของเดิมด้วย ให้ย้อนเฉพาะส่วนนั้นกลับ</li>
+            <li><code>targetDate</code> อยู่ใน <code>useMemo</code> ที่มี dependency array เป็น <code>[]</code> — <code>grep -n "new Date()" src/pages/Home/Home.tsx</code> ต้องเจอ<strong>บรรทัดเดียว</strong> และบรรทัดนั้นต้องอยู่ข้างใน <code>useMemo</code> ถ้ามันหลุดออกมาอยู่ระดับ component body นาฬิกาจะเดินสวยงามบนจอแต่ไม่มีวันนับลงต่ำกว่า 23 ชั่วโมง 59 นาที — อาการที่ไม่มีทางเห็นได้ในหนึ่งนาทีที่คุณนั่งดู</li>
+            <li>สอง section ใหม่แทรกอยู่<em>ระหว่าง</em> section FeatureCard กับ section หมวดหมู่ ไม่ใช่ต่อท้ายไฟล์ — เรียงบนลงล่างต้องเป็น Banner → FeatureCard → ดีล → รูปโปรโมชัน → หมวดหมู่ → แบนเนอร์ยาว</li>
+            <li><code>productQueries.list({ limit: 5 })</code> ส่ง <code>limit</code> ไม่ใช่ <code>page</code> และไม่ใช่ <code>{ limit: 5, page: 1 }</code> — <code>params</code> ก้อนนี้ฝังอยู่ใน queryKey ถ้าใส่ฟิลด์เกินมา cache จะกลายเป็นคนละก้อนกับที่บทอื่นใช้</li>
+            <li>ไม่มี <code>setInterval</code> หรือ <code>useEffect</code> โผล่ใน <code>Home.tsx</code> — การนับเวลาเป็นงานของ <code>CountdownTimer</code> ที่มี cleanup ของตัวเองแล้วตั้งแต่บทเรียน 14</li>
+            <li><code>ClipLoader</code> ทั้งสองจุดมี props ครบสามตัวเหมือนกันเป๊ะ: <code>size={40}</code>, <code>aria-label="Loading Spinner"</code> และ <code>data-testid="loader"</code> — เทียบกับ <code>Button</code> จากบทเรียน 12 ที่ใช้ <code>ClipLoader</code> ตัวเดียวกันแต่เป็น <code>size={20}</code> และ<em>ไม่มี</em> <code>data-testid</code> ความไม่สม่ำเสมอนี้มีอยู่ในต้นฉบับจริง ๆ ไม่ต้องไปทำให้เหมือนกัน แค่รู้ว่ามันต่างกันตรงไหนตอนอ่าน diff</li>
+          </ul>
+        </blockquote>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/pages/Home/components/Banner/Banner.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+
+import "swiper/swiper-bundle.css";
+
+const Banner: React.FC = () =&gt; {
+  const banners = [
+    {
+      id: 1,
+      image: "/images/banners/01.png",
+      alt: "Banner 1",
+    },
+    {
+      id: 2,
+      image: "/images/banners/02.png",
+      alt: "Banner 2",
+    },
+  ];
+
+  return (
+    &lt;div className="banner-container"&gt;
+      &lt;Swiper
+        modules={[Navigation, Pagination, Autoplay]}
+        spaceBetween={30}
+        slidesPerView={1}
+        navigation
+        pagination={{ clickable: true }}
+        autoplay={{ delay: 3000, disableOnInteraction: false }}
+        loop
+      &gt;
+        {banners.map((banner) =&gt; (
+          &lt;SwiperSlide key={banner.id}&gt;
+            &lt;img src={banner.image} alt={banner.alt} /&gt;
+          &lt;/SwiperSlide&gt;
+        ))}
+      &lt;/Swiper&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default Banner;
+</code></pre>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> <code>className="banner-container"</code> — <code>grep -rn "banner-container" src/styles/</code> ไม่เจออะไรเลย เป็นตัวที่สองของบทติดกันหลังจาก <code>image-container</code> ใน <code>ProductCard</code> เมื่อบทที่แล้ว ทั้งคู่มาจากนิสัยเดียวกัน: เขียน <code>className</code> ที่<em>ตั้งใจจะเขียน CSS ให้ทีหลัง</em> แล้วไม่ได้เขียน ถ้าคุณลบสองบรรทัดนี้ทิ้งวันนี้ หน้าเว็บจะเหมือนเดิมทุกพิกเซล — นั่นคือหลักฐานว่ามันไม่ทำอะไรเลย ที่น่าสนใจกว่าคือคำถามว่า<em>ทำไมเราถึงยังสั่งให้ Agent เขียนมัน</em>: เพราะโค้ดอ้างอิงของคอร์สนี้คือแอปจริง และเพราะการฝึกมองของแบบนี้ออกในโค้ดที่ "ดูปกติดี" คือทักษะที่ทั้ง lint และ typecheck แทนคุณไม่ได้ ในงานจริงนี่คือหนึ่งบรรทัดใน pull request review และเป็นการลบทิ้งที่ปลอดภัยที่สุดเท่าที่จะเป็นไปได้</blockquote>
+
+        <p><code>src/pages/Home/Home.tsx</code> ฉบับเต็มหลังจบทั้งสองรอบ:</p>
+
+        <pre><code class="language-typescript">import React, { useMemo, useState } from "react";
+import {
+  faTruck,
+  faVolumeHigh,
+  faBolt,
+} from "@fortawesome/free-solid-svg-icons";
+import { faClock, faCreditCard } from "@fortawesome/free-regular-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import ClipLoader from "react-spinners/ClipLoader";
+import { useQuery } from "@tanstack/react-query";
+import styles from "./Home.module.scss";
+import Banner from "./components/Banner/Banner";
+import CountdownTimer from "@/shared/components/CountdownTimer/CountdownTimer";
+import ImageZoom from "@/shared/components/ImageZoom/ImageZoom";
+import CategoryMenu from "@/features/products/components/CategoryMenu/CategoryMenu";
+import ProductsList from "@/features/products/components/ProductsList/ProductsList";
+import FeatureCard from "@/shared/components/FeatureCard/FeatureCard";
+import useProductRoute from "@/shared/hooks/useProductRoute";
+import { productQueries } from "@/features/products/queries";
+import { Category as CategoryType } from "@/features/products/types";
+import ErrorMessage from "@/shared/components/ErrorMessage/ErrorMessage";
+
+const PRODUCTS_LIST_LIMIT = 12;
+
+const Home: React.FC = () =&gt; {
+  const [selectedCategory, setSelectedCategory] = useState&lt;CategoryType | null&gt;(
+    null,
+  );
+  const { goToProductDetails } = useProductRoute();
+
+  const {
+    data: bestProductsData,
+    isLoading: isBestProductsLoading,
+    isError: isBestProductsError,
+  } = useQuery(productQueries.list({ limit: 5 }));
+  const { data: categories } = useQuery(productQueries.categories());
+
+  const currentCategory = selectedCategory ?? categories?.[0] ?? null;
+
+  const {
+    data: categoryProducts,
+    isLoading: isCategoryProductsLoading,
+    isError: isCategoryProductsError,
+  } = useQuery({
+    ...productQueries.byCategory({
+      category: currentCategory?.slug ?? "",
+      limit: PRODUCTS_LIST_LIMIT,
+    }),
+    enabled: currentCategory !== null,
+  });
+
+  const targetDate = useMemo(() =&gt; {
+    const date = new Date();
+    date.setDate(date.getDate() + 1); // Add 1 days
+
+    return date.toISOString();
+  }, []);
+
+  const onProductClick = (productId: number) =&gt; {
+    goToProductDetails(productId);
+  };
+
+  return (
+    &lt;&gt;
+      &lt;div className="container"&gt;
+        &lt;Banner /&gt;
+        &lt;section className={`${styles.featureCardBox} pt-35 flex`}&gt;
+          &lt;FeatureCard
+            icon={faTruck}
+            title="Free Shipping"
+            description="Free Shipping World Wide"
+          /&gt;
+          &lt;FeatureCard
+            icon={faClock}
+            title="24 X 7 service"
+            description="Online service for 24 X 7"
+          /&gt;
+          &lt;FeatureCard
+            icon={faVolumeHigh}
+            title="Festival offer"
+            description="New online special festival offer"
+          /&gt;
+          &lt;FeatureCard
+            icon={faCreditCard}
+            title="Online payment"
+            description="New online special festival offer"
+          /&gt;
+        &lt;/section&gt;
+
+        &lt;section className="pt-55"&gt;
+          &lt;div className="flex align-item-center mb-20"&gt;
+            &lt;h2 className="fs-24 m-0 mr-15"&gt;
+              &lt;FontAwesomeIcon icon={faBolt} className="mr-5" /&gt; DEALS OF THE
+              DAY
+            &lt;/h2&gt;
+            &lt;CountdownTimer targetDate={targetDate} /&gt;
+          &lt;/div&gt;
+          &lt;div className="flex gap-25"&gt;
+            {isBestProductsError ? (
+              &lt;ErrorMessage /&gt;
+            ) : isBestProductsLoading ? (
+              &lt;div className="text-center"&gt;
+                &lt;ClipLoader
+                  size={40}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                /&gt;
+              &lt;/div&gt;
+            ) : (
+              &lt;ProductsList
+                products={bestProductsData?.products}
+                onProductClick={onProductClick}
+              /&gt;
+            )}
+          &lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;section className="pt-65"&gt;
+          &lt;div className="flex gap-25"&gt;
+            &lt;div className={styles.mainDealBox}&gt;
+              &lt;ImageZoom src="/images/deals/01.png" alt="deal 1" /&gt;
+            &lt;/div&gt;
+            &lt;div className={styles.secondDealBox}&gt;
+              &lt;ImageZoom
+                src="/images/deals/02.png"
+                alt="deal 2"
+                className="mb-20"
+              /&gt;
+              &lt;ImageZoom src="/images/deals/03.png" alt="deal 3" /&gt;
+            &lt;/div&gt;
+            &lt;div className={styles.thirdDealBox}&gt;
+              &lt;ImageZoom src="/images/deals/04.png" alt="deal 4" /&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;section className="pt-65"&gt;
+          &lt;div className="flex gap-25"&gt;
+            &lt;CategoryMenu
+              activeCategory={currentCategory?.slug}
+              categories={categories || []}
+              onCategoryClick={setSelectedCategory}
+            /&gt;
+            &lt;div className="category-list-container category-list-box"&gt;
+              {isCategoryProductsError ? (
+                &lt;ErrorMessage /&gt;
+              ) : isCategoryProductsLoading ? (
+                &lt;div className="text-center"&gt;
+                  &lt;ClipLoader
+                    size={40}
+                    aria-label="Loading Spinner"
+                    data-testid="loader"
+                  /&gt;
+                &lt;/div&gt;
+              ) : (
+                &lt;ProductsList
+                  products={categoryProducts?.products}
+                  onProductClick={onProductClick}
+                /&gt;
+              )}
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;section className="pt-60 pb-30"&gt;
+          &lt;ImageZoom
+            src="/images/banners/03.png"
+            alt="banner long"
+            className="mb-20 "
+          /&gt;
+        &lt;/section&gt;
+      &lt;/div&gt;
+    &lt;/&gt;
+  );
+};
+
+export default Home;
+</code></pre>
+
+        <p>สามอย่างในไฟล์นี้ที่ prompt ต้องสั่งไว้ตรง ๆ ไม่งั้นคุณจะไม่ได้มันคืนมาเหมือนเดิม และทั้งสามอย่างเป็นเรื่องรูปแบบล้วน ๆ ไม่ใช่ความถูกผิด:</p>
+
+        <ul>
+          <li><strong>fragment ว่างที่ครอบ <code>&lt;div className="container"&gt;</code> ตัวเดียว</strong> — fragment มีประโยชน์เมื่อต้อง return หลาย element พี่น้องกัน แต่ที่นี่มีลูกตัวเดียว ลบ <code>&lt;&gt;…&lt;/&gt;</code> ทิ้งได้เลยโดยไม่มีอะไรเปลี่ยน มันเป็นร่องรอยของเวอร์ชันก่อนที่เคยมีของนอก container (หน้า Category ในบทหน้าเก็บ fragment ไว้ด้วยเหตุผลเดียวกัน แต่<em>ที่นั่นมันจำเป็นจริง</em> เพราะมี <code>CategoryBanner</code> อยู่นอก container — ลองเทียบสองไฟล์ดู)</li>
+          <li><strong><code>className="mb-20 "</code> ที่มีช่องว่างต่อท้าย</strong> — บนแบนเนอร์ยาวท้ายหน้า ช่องว่างนั้นไม่มีผลอะไรเลยกับ CSS และ Prettier ไม่ยุ่งกับข้างในสตริง ถ้าไม่สั่งไว้ Agent จะตัดมันทิ้งให้แบบสมเหตุสมผล แล้ว diff กับโค้ดอ้างอิงจะไม่ตรงหนึ่งบรรทัดโดยไม่มีใครทำผิด</li>
+          <li><strong>comment <code>// Add 1 days</code></strong> — บอกสิ่งที่ <code>date.getDate() + 1</code> บอกอยู่แล้ว (แถมเขียนผิดหลักไวยากรณ์) ตามไฟล์ rules ของเราแล้วมันไม่ควรมี แต่ต้นฉบับมี ถ้า Agent ไม่ใส่มาให้ก็ไม่ผิด — เป็นข้อที่ตรงกับกติกาของเรามากกว่าตรงกับต้นฉบับ</li>
+        </ul>
+
+        <p>และไฟล์คู่ของมัน <code>src/pages/Home/Home.module.scss</code> สำหรับสัดส่วนความกว้างของ layout:</p>
+
+        <pre><code class="language-scss">.featureCardBox {
+  gap: 24px;
+  &gt; div {
+    width: 25%;
+  }
+}
+
+.mainDealBox {
+  width: 42%;
+}
+
+.secondDealBox {
+  width: 33%;
+}
+
+.thirdDealBox {
+  width: 25%;
+}
+
+.categoryMenu {
+  width: 16%;
+}
+</code></pre>
+
+        <p>SCSS module นี้ทำหน้าที่เดียว: กำหนดสัดส่วนคอลัมน์ — FeatureCard สี่ใบใบละ 25% (selector <code>&gt; div</code> คือ direct child ของกล่อง), รูปดีลสามคอลัมน์ 42/33/25 ส่วน spacing และ typography ทั้งหมดยังเป็นหน้าที่ของ utility classes เหมือนเดิม</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> <code>.categoryMenu</code> ในไฟล์นี้<em>ไม่มีใครใช้</em> — <code>grep -n "styles.categoryMenu" src/pages/Home/Home.tsx</code> ว่างเปล่า เพราะเมนูหมวดหมู่พกความกว้าง 16% ของตัวเองมาแล้วใน <code>CategoryMenu.module.scss</code> จากบทที่แล้ว (คลาสชื่อเดียวกัน ค่าเดียวกัน คนละไฟล์) นี่ไม่ใช่ class ที่ไม่มีนิยามแบบ <code>banner-container</code> แต่เป็นตรงกันข้าม: <strong>นิยามที่ไม่มีคนใช้</strong> ซึ่งเงียบพอกัน SCSS ไม่มีทางรู้ว่าใครนำเข้าไปใช้บ้าง <code>global.d.ts</code> ของเราประกาศ type ของ <code>.scss</code> ไว้เป็น <code>{ [className: string]: string }</code> ทุก key จึงผ่านหมด และการที่มันซ้ำกับของจริงเป๊ะ ๆ ทำให้เดาที่มาได้ไม่ยาก: มีคนเคยเขียน width ไว้ที่หน้า Home ก่อน แล้วย้ายไปอยู่กับตัวคอมโพเนนต์ทีหลังโดยลืมลบของเก่า ผลเสียของมันไม่ใช่ CSS ที่หนักขึ้น 3 บรรทัด แต่คือคนอ่านคนถัดไปที่เห็น <code>.categoryMenu</code> อยู่สองที่แล้วต้องเสียเวลาหาว่าอันไหนคือของจริง</blockquote>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>ลบ <code>enabled: currentCategory !== null</code> ออกหนึ่งบรรทัด แล้ว reload หน้าโดยเปิด DevTools แท็บ Network ไว้ — บอกให้ได้ว่ามี request กี่ครั้งที่ไปที่ endpoint ของหมวดหมู่ URL ของ request แรกหน้าตาเป็นอย่างไร และ dummyjson ตอบอะไรกลับมา (เสร็จแล้วเติมกลับ)</li>
+          <li>ย้าย <code>const date = new Date();</code> ออกมาไว้นอก <code>useMemo</code> โดยเก็บที่เหลือไว้เหมือนเดิม — <code>npm run lint</code> จะเตือนหรือไม่เตือน? แล้วบอกวิธีพิสูจน์ด้วยตาภายในหนึ่งนาทีว่าตัวนับพัง ทั้งที่ตัวเลขบนจอยังเดินทุกวินาที (คำใบ้: คุณควบคุมนาฬิกาของเครื่องตัวเองได้)</li>
+          <li>หน้า Home ส่ง <code>onCategoryClick={setSelectedCategory}</code> ตรง ๆ ได้ แต่บทหน้าหน้า Category จะส่งฟังก์ชันของตัวเองแทน — เปิด contract ของ <code>CategoryMenu</code> อ่านอีกรอบแล้วเดาให้ได้ว่าหน้า Category ต้องทำอะไรเพิ่มอีกอย่างหนึ่งตอนผู้ใช้เปลี่ยนหมวด และถ้าไม่ทำ ผู้ใช้จะเจออะไร</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run dev</code> แล้วเปิด <code>http://localhost:5173/</code> — คุณควรเห็นหน้า Home เต็มรูปแบบ: แบนเนอร์เลื่อนเองทุก 3 วินาทีพร้อมปุ่มลูกศรและจุดที่กดได้, แถวไอคอนบริการ 4 ช่อง, "DEALS OF THE DAY" พร้อมตัวเลขนับถอยหลังที่เดินทุกวินาทีและการ์ดสินค้า 5 ใบจาก dummyjson (รูปแต่ละใบขึ้นเป็น skeleton สีเทาแวบหนึ่งก่อนรูปจริงโหลดเสร็จ), ตารางรูปโปรโมชัน, เมนูหมวดหมู่ที่หมวดแรกถูกไฮไลต์อัตโนมัติและคลิกสลับหมวดได้ทันที และแบนเนอร์ยาวปิดท้าย เปิด TanStack Query Devtools ดูจะเห็นสาม queries: <code>["products","list",…]</code>, <code>["products","categories"]</code> และ <code>["products","list","category",…]</code> จากนั้นทำสองอย่างที่เป็นการบ้านของบทนี้จริง ๆ: (1) ทดสอบ error state ตามที่ checklist บอก — ตั้ง Network เป็น Offline แล้ว reload ทั้งสอง section ต้องขึ้นข้อความ ไม่ใช่ที่ว่าง (2) กด <strong>Groceries</strong> ในเมนูหมวดหมู่ แล้วมองใต้ชื่อสินค้าทั้ง 12 ใบ — ช่องว่างที่คุณเห็นคือ <code>brand</code> ที่ dummyjson ไม่ได้ส่งมา ซึ่งบทเรียน 16 ทำนายไว้และบทเรียน 18 ชี้บรรทัดให้แล้ว ตอนนี้คุณเห็นมันกับตาแล้ว ปิดท้ายด้วย commit — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <blockquote>🚨 ถ้ารูปแบนเนอร์หรือรูปดีลไม่ขึ้น (กล่องรูปแตก) ให้เช็ค path ของไฟล์ใน <code>public/images</code> ว่าตรงกับโครงสร้างข้างบนเป๊ะ รวมถึงชื่อไฟล์ต้องเป็นเลขศูนย์นำหน้า (<code>01.png</code> ไม่ใช่ <code>1.png</code>) — ข้อนี้ Agent ช่วยอะไรไม่ได้เลยเพราะมันสร้างไฟล์รูปให้ไม่ได้ และมันจะไม่บอกคุณด้วยว่าไฟล์ไม่มีอยู่จริง</blockquote>
+
+        <p>หน้าแรกเสร็จแล้ว! แต่รายการสินค้าในหน้านี้จำกัดที่ 12 ตัวและไม่มีการแบ่งหน้า บทถัดไปเราจะสร้างหน้า Category สำหรับการไล่ดูสินค้าจริงจัง — ครบทั้ง pagination และเทคนิค <code>keepPreviousData</code> ที่ทำให้เปลี่ยนหน้าได้ลื่นไม่กะพริบ</p>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="18_product_list_components.html" rel="prev">ก่อนหน้า: คอมโพเนนต์รายการสินค้า</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="20_category_page.html" rel="next">ถัดไป: หน้า Category</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
