@@ -60,9 +60,9 @@
           <li><strong><code>onIconClick</code> เป็น prop</strong> — component นี้ไม่ตัดสินใจเองว่าคลิกแล้วไปไหน คนใช้ (Header) เป็นคนบอก การแยกแบบนี้ทำให้ CartSummary ไม่ต้องรู้จัก router เลย ท่าเดียวกับ <code>onButtonClick</code> ของ <code>ProductDetailInfo</code> เป๊ะ</li>
         </ul>
 
-        <h2>สามจุดที่หายไปจาก Product.tsx</h2>
+        <h2>สี่จุดที่หายไปจาก Product.tsx</h2>
 
-        <p>ย้อนไปบทเรียน 21 เราจงใจปล่อยให้ <code>onAddToCart</code> เป็นฟังก์ชันว่างที่มีแต่ comment <code>TODO</code> เพราะตอนนั้นยังไม่มี store ให้เรียก และกล่อง 🚨 ท้ายบทนั้นระบุไว้ล่วงหน้าเลยว่าไฟล์นี้ต่างจากต้นฉบับอยู่<strong>สามจุด</strong> วันนี้เราจะเติมสามจุดนั้นให้ครบ และ diff ของบทนี้ต้องมีแค่นั้นพอดี:</p>
+        <p>ย้อนไปบทเรียน 21 เราจงใจปล่อยให้ <code>onAddToCart</code> เป็นฟังก์ชันว่างที่มีแต่ comment <code>TODO</code> เพราะตอนนั้นยังไม่มี store ให้เรียก และกล่อง 🚨 ท้ายบทนั้นระบุไว้ล่วงหน้าเลยว่าไฟล์นี้ต่างจากต้นฉบับอยู่<strong>สี่จุด</strong> ซึ่งเขียนรวมไว้เป็นสามข้อ วันนี้เราจะเติมให้ครบ และ diff ของบทนี้ต้องมีแค่นั้นพอดี:</p>
 
         <ol>
           <li><strong>บรรทัด import</strong> — <code>import React from "react";</code> กลายเป็น <code>import React, { useState } from "react";</code> และมี import ใหม่<em>สองบรรทัด</em>แทรกเข้ามาระหว่างบรรทัดของ <code>ProductDetailInfo</code> กับบรรทัดของ <code>productQueries</code>: ตัว modal และ hook <code>useCart</code></li>
@@ -70,7 +70,7 @@
           <li><strong>ไส้ในของ <code>onAddToCart</code></strong> — comment <code>TODO</code> ถูกแทนที่ด้วยการแปลงข้อมูลสินค้าเป็น <code>CartItem</code> แล้วส่งเข้า store ก่อนเปิด modal</li>
         </ol>
 
-        <p>แล้วมีอีก<strong>หนึ่งบรรทัด</strong>ที่กล่อง 🚨 ของบทเรียน 21 ไม่ได้เอ่ยชื่อตรง ๆ แต่ต้องมีเพื่อให้ข้อ 3 ทำงานได้: <code>const { addToCart } = useCart();</code> ซึ่งวางต่อท้ายบล็อก <code>useQuery</code> พอดี รวมแล้ว<em>บรรทัดโค้ด</em>ที่เพิ่มเข้ามานอกตัวฟังก์ชัน <code>onAddToCart</code> มีเจ็ดบรรทัดพอดี (บวกบรรทัดว่างอีกสองบรรทัด ซึ่ง <code>git diff</code> นับด้วย) แล้วที่เหลือคือการแก้บรรทัด <code>import React</code> กับการเขียนไส้ในของฟังก์ชันเดียว ถ้า <code>git diff</code> ของคุณยาวกว่านี้ แปลว่ามีของแถมมาด้วย</p>
+        <p>จุดที่สี่คือ<strong>หนึ่งบรรทัด</strong>ที่กล่อง 🚨 ของบทเรียน 21 พ่วงไว้ท้ายข้อ (3) เพราะมันคือสิ่งที่ทำให้ข้อ 3 ทำงานได้: <code>const { addToCart } = useCart();</code> ซึ่งวางต่อท้ายบล็อก <code>useQuery</code> พอดี — ที่มัน<em>ไม่</em>ได้อยู่คือแถวบรรทัดแรก ๆ ของคอมโพเนนต์คู่กับ <code>useState</code> ซึ่งเป็นที่ที่หลายคน (และ Agent) เดาว่ามันควรอยู่ รวมแล้ว<em>บรรทัดโค้ด</em>ที่เพิ่มเข้ามานอกตัวฟังก์ชัน <code>onAddToCart</code> มีเจ็ดบรรทัดพอดี (บวกบรรทัดว่างอีกสองบรรทัด ซึ่ง <code>git diff</code> นับด้วย) แล้วที่เหลือคือการแก้บรรทัด <code>import React</code> กับการเขียนไส้ในของฟังก์ชันเดียว ถ้า <code>git diff</code> ของคุณยาวกว่านี้ แปลว่ามีของแถมมาด้วย</p>
 
         <p>เรื่องที่ควรหยุดคิดสักนิดใน handler ตัวใหม่:</p>
 
@@ -119,7 +119,7 @@
         <ul>
           <li><strong><code>AddToCartModalContent</code></strong> — ต้องเป็น presentational ล้วน: ไม่มี state ไม่เรียก <code>useCart</code> และไม่รู้ว่าสินค้าชิ้นไหนถูกเพิ่ม ต้องไม่ import react-modal ตรง ๆ</li>
           <li><strong><code>CartSummary</code></strong> — ต้องนับจาก <code>quantity</code> รวมทุกแถว ไม่ใช่นับจำนวนแถว ต้องไม่รู้จัก router และต้องไม่มี URL string อยู่ในไฟล์</li>
-          <li><strong><code>Product.tsx</code></strong> — ต้องเปลี่ยน<em>เฉพาะ</em>สามจุดที่บทเรียน 21 ระบุไว้ ต้องไม่แตะ JSX ส่วนอื่น ไม่แตะ early return และไม่แตะการ destructure</li>
+          <li><strong><code>Product.tsx</code></strong> — ต้องเปลี่ยน<em>เฉพาะ</em>สี่จุดที่บทเรียน 21 ระบุไว้ ต้องไม่แตะ JSX ส่วนอื่น ไม่แตะ early return และไม่แตะการ destructure</li>
           <li><strong><code>Header.tsx</code></strong> — ต้อง navigate ผ่าน <code>useProductRoute</code> เท่านั้น ต้องไม่มี <code>useNavigate</code> และไม่มี string <code>"/cart"</code> อยู่ในไฟล์ และต้องไม่แตะเมนูสองรายการเดิม</li>
         </ul>
 
@@ -179,8 +179,11 @@ AddToCartModalContent ต้องไม่มีไฟล์ .module.scss
     import { useCart } from "@/features/cart/useCart";
   interface CartSummaryProps: onIconClick: () =&gt; void  (prop เดียว)
   ในคอมโพเนนต์: const { cart } = useCart();  แล้ว
-    const totalItems = useMemo(...) ที่ reduce บวก item.quantity ของทุกแถว
-      เริ่มจาก 0 และมี dependency array เป็น [cart.items]
+    const totalItems = useMemo(...) ที่ callback เขียนเป็น arrow แบบย่อบรรทัดเดียว
+      (ไม่มีปีกกา ไม่มีคำว่า return) ตามนี้ทุกตัวอักษร
+      () =&gt; cart.items.reduce((sum, item) =&gt; sum + item.quantity, 0)
+      ตั้งชื่อตัวสะสมว่า sum (ไม่ใช่ total หรือ acc) ค่าเริ่มต้นเป็น 0
+      และมี dependency array เป็น [cart.items]
       ห้ามใช้ cart.items.length และห้ามนับจำนวนแถว
   JSX: div className="relative" onClick={onIconClick} ที่มี
     FontAwesomeIcon className="pointer fs-20" icon={faCartShopping}
@@ -227,7 +230,7 @@ Product.tsx ตอนนี้มี onAddToCart เป็นฟังก์ช�
 Header.tsx ตอนนี้มีโลโก้กับเมนูสองรายการ ยังไม่มีอะไรที่มุมขวาและยังไม่เรียก hook ใด ๆ
 
 โครงสร้าง: แก้เฉพาะสองไฟล์นี้ ห้ามสร้างไฟล์ใหม่แม้แต่ไฟล์เดียว
-- src/pages/Product/Product.tsx (แก้สามจุดตามข้างล่าง นอกนั้นห้ามแตะ)
+- src/pages/Product/Product.tsx (แก้สามกลุ่มตามข้างล่าง นอกนั้นห้ามแตะ)
 - src/shared/components/Header/Header.tsx (แก้สามจุดตามข้างล่าง นอกนั้นห้ามแตะ)
 
 ข้อกำหนดทางเทคนิค:

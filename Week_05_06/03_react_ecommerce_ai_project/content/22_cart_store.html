@@ -28,7 +28,7 @@
 
         <p>ทำไมไม่ใช้ <code>useState</code> เฉย ๆ? เพราะตะกร้ามีการแก้ไขหลายแบบที่เล่นกับข้อมูลก้อนเดียวกัน — เพิ่มสินค้า (ซึ่งต้องเช็คว่ามีอยู่แล้วหรือยัง), ลบสินค้า, ปรับจำนวน, ล้างตะกร้า ถ้ากระจาย logic พวกนี้ไปตาม event handler ของแต่ละ component กติกาจะซ้ำซ้อนและหลุดง่าย <code>useReducer</code> บังคับให้กติกาทั้งหมดรวมอยู่ในฟังก์ชันเดียวที่ทดสอบได้ ส่วน Context ทำให้ทุก component — ตั้งแต่ Header ยันหน้า Checkout — เห็นตะกร้าใบเดียวกันโดยไม่ต้องส่ง props ทะลุลงไปหลายชั้น</p>
 
-        <p>เก็บย่อหน้าข้างบนนี้ไว้ให้ดี เพราะมันคือเส้นแบ่งที่ตอบคำถามได้ทั้งชีวิตการทำงาน: <em>ข้อมูลก้อนนี้มีเจ้าของอยู่ที่ไหน</em> ถ้าเจ้าของอยู่ที่ server ให้ query library ดูแล ถ้าเจ้าของอยู่ในเบราว์เซอร์ ให้ React ดูแลเอง คำถามข้อนี้ตอบผิดเมื่อไหร่ คุณจะได้ cache ที่ไม่มีอะไรให้ cache หรือ state ที่ล้าสมัยโดยไม่มีใครไป refetch ให้</p>
+        <p>เก็บสามย่อหน้าข้างบนไว้ให้ดี เพราะมันคือเส้นแบ่งที่ตอบคำถามได้ทั้งชีวิตการทำงาน: <em>ข้อมูลก้อนนี้มีเจ้าของอยู่ที่ไหน</em> ถ้าเจ้าของอยู่ที่ server ให้ query library ดูแล ถ้าเจ้าของอยู่ในเบราว์เซอร์ ให้ React ดูแลเอง คำถามข้อนี้ตอบผิดเมื่อไหร่ คุณจะได้ cache ที่ไม่มีอะไรให้ cache หรือ state ที่ล้าสมัยโดยไม่มีใครไป refetch ให้</p>
 
         <h2>โครงสร้างไฟล์ของ feature cart</h2>
 
@@ -102,7 +102,7 @@
         <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
 
         <blockquote class="lesson-ai-prompt">
-          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor — รอบที่ 1: type และที่เก็บของ</strong> แชทใหม่ โหมด Agent สองไฟล์ต้นสายที่ไม่มีใครในบทนี้พึ่งพามันไปมากกว่าหนึ่งทิศทาง:</p>
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor — รอบที่ 1: type และที่เก็บของ</strong> แชทใหม่ โหมด Agent สองไฟล์ต้นสายที่ไม่ต้องพึ่งไฟล์อื่นในบทนี้เลย:</p>
           <pre><code class="language-text">สร้างสองไฟล์แรกของ feature ตะกร้าสินค้า: type กับ context และตัวอ่าน/เขียน localStorage
 
 บริบท: @src/features/cart @src/features/products/types.ts @src/app/providers.tsx
@@ -371,13 +371,15 @@ alias @/ ชี้ไปที่ src/ ส่วนไฟล์ในโฟล�
             <li><code>useCart</code> <strong>throw</strong> จริงเมื่อ context เป็น <code>undefined</code> — <code>grep -n "throw" src/features/cart/useCart.ts</code> ต้องเจอหนึ่งบรรทัด ถ้า Agent เลือกท่า "ปลอดภัยไว้ก่อน" ด้วยการ <code>return context ?? defaultValue</code> หรือใส่ <code>?.</code> ให้ทุกจุดที่เรียกใช้ นั่นคือการเปลี่ยนบั๊กที่ดังให้กลายเป็นบั๊กที่เงียบ ให้แก้กลับ</li>
             <li>ไฟล์ <code>useCart.ts</code> อยู่ที่ <code>src/features/cart/useCart.ts</code> ไม่ใช่ <code>src/features/cart/store/useCart.ts</code> และนามสกุลเป็น <code>.ts</code> — ถ้าวางผิดที่ import ในบทเรียน 23 และ 24 จะพังทั้งหมด</li>
             <li><code>CartProvider</code> เป็น <strong>named export</strong> (<code>export const CartProvider</code>) ไม่ใช่ <code>export default</code> — เพราะบรรทัด import ใน <code>providers.tsx</code> ที่โค้ดอ้างอิงเขียนไว้เป็นแบบมีปีกกา</li>
-            <li>ฟังก์ชันสี่ตัวในprovider ทำแค่ <code>dispatch</code> อย่างเดียว ไม่มีตัวไหนแอบคำนวณอะไรเพิ่ม เช่นเช็คว่าสินค้าซ้ำไหมก่อน dispatch — กติกาทุกข้ออยู่ใน reducer ที่คุณพิมพ์เอง ที่นี่ต้องบาง</li>
+            <li>ฟังก์ชันสี่ตัวใน <code>CartProvider</code> ทำแค่ <code>dispatch</code> อย่างเดียว ไม่มีตัวไหนแอบคำนวณอะไรเพิ่ม เช่นเช็คว่าสินค้าซ้ำไหมก่อน dispatch — กติกาทุกข้ออยู่ใน reducer ที่คุณพิมพ์เอง ที่นี่ต้องบาง</li>
             <li>ไฟล์ที่คุณพิมพ์เองต้องไม่ถูกแตะ: <code>git diff HEAD~1 --stat</code> ต้องไม่มี <code>cartReducer.ts</code> และรันคำสั่งนี้ยืนยันอีกชั้น — <code>grep -nE "\.push\(|\+=|-=|\+\+" src/features/cart/store/cartReducer.ts</code> ต้องว่างเปล่า ทุก <code>case</code> ต้องขึ้นต้นการ return ด้วย <code>{ ...state</code></li>
             <li>ไม่มี <code>index.ts</code> ไม่มีไฟล์เทสต์ (บทเรียน 31) และไม่มี <code>any</code> ในทั้งสองไฟล์ใหม่</li>
           </ul>
         </blockquote>
 
         <p>เหมือนบทก่อน ๆ: <code>npm run lint</code> อาจตกเรื่อง <code>import-x/order</code> ก่อน แก้ด้วย <code>npx eslint . --fix</code> แล้วรันซ้ำให้ผ่านเงียบ ๆ จากนั้นค่อย <code>npm run typecheck</code></p>
+
+        <p>แต่รอบที่ 2 มีลำดับที่ต้องระวังเป็นพิเศษ และมันกระทบข้อ "<code>providers.tsx</code> ต้องเปลี่ยนสองจุดพอดี" โดยตรง: <strong>ให้อ่านและนับ <code>git diff</code> ก่อนรัน <code>--fix</code> เสมอ</strong> เพราะ <code>import-x/order</code> มองบรรทัด import แบบ <code>./queryClient</code> กับแบบ <code>@/features/…</code> คนละกลุ่มกัน ถ้า <code>--fix</code> ตัดสินใจสลับตำแหน่งบรรทัด import ที่เพิ่งเพิ่มเข้าไป diff จะกลายเป็นสามจุดทันทีทั้งที่ Agent ทำถูกทุกอย่าง — นั่นคือฝีมือเครื่องมือ ไม่ใช่ความผิดของ Agent และไม่ใช่เหตุผลที่จะสั่งใหม่ ให้ยอมรับผลของ <code>--fix</code> (lint ต้องผ่าน) แล้วอ่าน diff อีกรอบเพื่อยืนยันว่าไม่มีอะไรอื่นแอบเปลี่ยนไปด้วย เรื่องเดียวกันนี้ใช้กับ <code>CartProvider.tsx</code> ที่มีทั้ง import แบบ <code>react</code>, แบบ <code>./</code> ปนกันสี่บรรทัด</p>
 
         <h3>โค้ดอ้างอิง</h3>
 
