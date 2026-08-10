@@ -444,7 +444,7 @@ export default RadioInput;
 
         <ul>
           <li><strong>controlled radio เต็มรูปแบบ</strong> — เหมือน radio ในบท Hooks ของ Week 4 เป๊ะ: ตัวคอมโพเนนต์ไม่เก็บ state เอง คนเรียกส่ง <code>checked</code> มาบอกว่าติ๊กอยู่ไหม และส่ง <code>onChange</code> มารับเหตุการณ์ตอนผู้ใช้เลือก — state จริงอยู่ที่หน้า Checkout ที่เป็นเจ้าของข้อมูล</li>
-          <li><strong><code>label: React.ReactNode</code></strong> — ไม่ใช่ <code>string</code>! แปลว่า label ยัด JSX ได้ทั้งก้อน บทเรียน 27 เราจะใช้ประโยชน์เต็ม ๆ: ตัวเลือกวิธีจัดส่งมี label เป็นชื่อ + ราคา + คำอธิบาย จัดรูปแบบสวย ๆ ในก้อนเดียว</li>
+          <li><strong><code>label: React.ReactNode</code></strong> — ไม่ใช่ <code>string</code>! แปลว่า label ยัด JSX ได้ทั้งก้อน บทเรียน 27 เราจะใช้ประโยชน์เต็ม ๆ: ตัวเลือกวิธีจัดส่งมี label เป็นชื่อ + คำอธิบาย ที่คั่นด้วยขีดตั้ง ส่วนตัวเลือกวิธีจ่ายเงินเป็นชื่อตัวหนาขึ้นบรรทัดใหม่แล้วตามด้วยคำอธิบายสีจาง — สอง markup คนละทรงในก้อนเดียว</li>
           <li><strong><code>id</code> + <code>htmlFor</code></strong> — ผูก label กับ input เข้าด้วยกัน ผู้ใช้กดที่ข้อความ (ซึ่งพื้นที่ใหญ่กว่าวงกลมเยอะ) แล้ว radio ติ๊กให้ ส่วน <code>name</code> ทำให้ radio หลายตัวรู้ว่าอยู่กลุ่มเดียวกัน — เลือกได้ทีละตัว</li>
         </ul>
 

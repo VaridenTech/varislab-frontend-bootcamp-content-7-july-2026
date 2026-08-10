@@ -16,7 +16,7 @@
           <p class="lesson-original-title" lang="en">Delivery, Payment &amp; Order Summary</p>
         </header>
 
-        <p>บทนี้เป็นบทสายผลิต: เราจะสร้างคอมโพเนนต์ที่เหลือทั้งหมดของหน้า Checkout รวดเดียว <strong>เจ็ดตัว</strong> พร้อมไฟล์ <code>.module.scss</code> อีกห้าไฟล์ รวมสิบสองไฟล์ในบทเดียว มากกว่าบทเรียน 21 ที่เคยหนักที่สุดในคอร์สด้วยสิบไฟล์ — และเป็นบทที่การแบ่งงานให้ Agent ให้ผลตอบแทนสูงที่สุดเท่าที่คอร์สนี้จะแสดงให้ดูได้</p>
+        <p>บทนี้เป็นบทสายผลิต: เราจะสร้างคอมโพเนนต์ที่เหลือทั้งหมดของหน้า Checkout รวดเดียว <strong>เจ็ดตัว</strong> พร้อมไฟล์ <code>.module.scss</code> อีกห้าไฟล์ รวมสิบสองไฟล์ในบทเดียว มากกว่าบทเรียน 21 ที่เคยหนักที่สุดในคอร์สด้วยเก้าไฟล์ — และเป็นบทที่การแบ่งงานให้ Agent ให้ผลตอบแทนสูงที่สุดเท่าที่คอร์สนี้จะแสดงให้ดูได้</p>
 
         <p>เหตุผลที่มันคุ้มไม่ใช่เพราะ "โค้ดเยอะ" เฉย ๆ แต่เพราะโค้ดเจ็ดชิ้นนี้<em>ซ้ำแบบกันเอง</em>: <code>PaymentOption</code> คือ <code>DeliveryOption</code> ที่เปลี่ยน label, <code>CheckoutPaymentBox</code> คือ <code>CheckoutDeliveryBox</code> ที่เปลี่ยนชื่อ prop งานประเภท "ทำตามแบบนี้อีกครั้ง แต่เปลี่ยนสามจุด" คือสิ่งที่โมเดลทำได้เร็วและแม่นกว่ามนุษย์ที่ต้องพิมพ์ซ้ำจนตาลาย</p>
 
@@ -39,7 +39,7 @@
 
         <h2>ทำไมบทนี้ต้องแบ่งเป็นสองรอบ</h2>
 
-        <p>เกณฑ์จากบทเรียน 19 บอกให้แบ่ง prompt เมื่อของที่ต้องตรวจเกินหนึ่งหน้าจอ หรือเมื่อของนั้นแยกเป็นก้อนที่ทดสอบแยกกันได้ บทนี้เข้า<strong>ทั้งสองข้อ</strong> ซึ่งไม่เคยเกิดมาก่อนในคอร์ส:</p>
+        <p>เกณฑ์จากบทเรียน 19 บอกให้แบ่ง prompt เมื่อของที่ต้องตรวจเกินหนึ่งหน้าจอ <em>และ</em>ของนั้นแยกเป็นก้อนที่ทดสอบแยกกันได้ — ต้องเข้าทั้งสองข้อถึงจะแบ่ง บทนี้เข้าครบทั้งคู่ นับเป็นครั้งที่สองต่อจากบทเรียน 19 เองที่เป็นคนตั้งเกณฑ์ (ส่วนบทเรียน 21 เข้าแค่ข้อแรก จึงแบ่งด้วยเหตุผลคนละแบบ):</p>
 
         <ul>
           <li>สิบสองไฟล์ในรอบเดียวคือ diff ที่ยาวกว่าหน้าจอหลายเท่า ไม่มีใครอ่านจบด้วยความตั้งใจเท่ากันตั้งแต่ไฟล์แรกถึงไฟล์สุดท้าย</li>
@@ -94,7 +94,7 @@
           <p>🤖 <strong>Prompt ที่ส่งให้ Cursor — รอบที่ 1: ตัวเลือกจัดส่งและชำระเงิน</strong> แชทใหม่ โหมด Agent สังเกตว่า prompt นี้ต้องเขียน "ที่ต่างกัน" ของคู่แฝดออกมาเป็นข้อ ๆ ให้ครบ ไม่ใช่เขียนว่า "ทำแบบเดียวกับตัวบน" — เพราะประโยคหลังคือคำเชิญให้ copy ทั้งก้อน:</p>
           <pre><code class="language-text">สร้างคอมโพเนนต์ตัวเลือกจัดส่งและตัวเลือกชำระเงิน พร้อมกล่องที่วนลูปแสดงมัน
 
-บริบท: @src/shared/components/RadioInput/RadioInput.tsx @src/features/checkout/types.ts @src/features/checkout/consts.ts @src/features/checkout/components/CheckoutAddressBox/CheckoutAddressBox.tsx @src/styles/_utilities.scss
+บริบท: @src/shared/components/RadioInput/RadioInput.tsx @src/features/checkout/types.ts @src/features/checkout/consts.ts @src/features/checkout/components/CheckoutAddressBox/CheckoutAddressBox.tsx @src/styles/_utilities.scss @src/styles/_variables.scss
 src/shared/components/RadioInput/RadioInput.tsx เป็น default export รับ props
   id: string, name: string, checked: boolean, onChange: () =&gt; void,
   label: React.ReactNode และ className?: string
@@ -124,7 +124,8 @@ DeliveryOption กับ PaymentOption ไม่มีไฟล์ .module.scss
     import RadioInput from "@/shared/components/RadioInput/RadioInput";
   interface DeliveryOptionProps: id (number), name (string), description (string),
     selected (boolean), onSelect: (id: number) =&gt; void
-  ประกาศเป็น React.FC&lt;DeliveryOptionProps&gt; ที่ destructure props ทั้งห้าตัว
+  ประกาศเป็น React.FC&lt;DeliveryOptionProps&gt; ที่ destructure props ทั้งห้าตัวตามลำดับ
+    ที่ประกาศไว้ใน interface พอดี คือ id, name, description, selected, onSelect
   return RadioInput ตัวเดียวไม่มี div ครอบ โดยส่ง props ตามลำดับนี้
     id={`delivery-option-${id}`}  (template literal ตามนี้)
     name="deliveryOption"
@@ -143,7 +144,8 @@ DeliveryOption กับ PaymentOption ไม่มีไฟล์ .module.scss
          span className="fw-medium" แสดง {name}
          br
          span className="text-muted" แสดง {description}
-  นอกจากสี่ข้อนี้ ต้องเหมือนกันทุกตัวอักษร รวมถึงชื่อ prop และลำดับ prop
+  นอกจากสี่ข้อนี้ ต้องเหมือนกันทุกตัวอักษร รวมถึงชื่อ prop, ลำดับ prop ที่ส่งให้ RadioInput
+  และลำดับตอน destructure ซึ่งเป็น id, name, description, selected, onSelect เหมือนกัน
 - CheckoutDeliveryBox.tsx: ไฟล์นี้ไม่มีบรรทัด import React (ตามต้นฉบับจริง)
   บรรทัด import สามบรรทัดตามลำดับนี้
     import styles from "./CheckoutDeliveryBox.module.scss";
@@ -232,6 +234,7 @@ src/styles/_variables.scss มีตัวแปร $grey05 อยู่แล�
 - SummaryOrderItem.tsx: import React, แล้ว styles จาก ./SummaryOrderItem.module.scss,
   แล้ว import { CartItem } from "@/features/cart/store/CartContext";
   interface SummaryOrderItemProps มี field เดียวคือ item: CartItem
+  ประกาศเป็น React.FC&lt;SummaryOrderItemProps&gt; ที่ destructure props เป็น ({ item })
   บรรทัดแรกในคอมโพเนนต์คือ
     const { title, price, quantity, id, image } = item;   (ลำดับตามนี้พอดี)
   JSX: div className={`flex align-item-center`} ที่มี key={id} ด้วย
@@ -331,7 +334,7 @@ src/styles/_variables.scss มีตัวแปร $grey05 อยู่แล�
           <p><strong>รอบที่ 2:</strong></p>
           <ul>
             <li>ไฟล์ใหม่ <strong>6 ไฟล์พอดี</strong> และไม่มีไฟล์ของรอบที่ 1 ขึ้นสถานะ modified — Agent ที่เห็นสี่ไฟล์เดิมในบริบทชอบ "ปรับให้เข้าชุดกัน" โดยเฉพาะการเติม <code>import React</code> ที่หายไปในสองกล่อง หรือเติมคำว่า <code>Props</code> ให้ interface ที่ขาด</li>
-            <li><code>SummaryOrder</code> ไม่มี props เลยสักตัว และเรียก <code>useCart()</code> เอง ส่วน <code>SummaryOrderItem</code> ต้อง<em>ไม่</em>เรียก <code>useCart</code> — <code>grep -rn "useCart" src/features/checkout/components/</code> ต้องเจอ<strong>บรรทัดเดียว</strong>ในทั้งฟีเจอร์ คือใน <code>SummaryOrder.tsx</code> ถ้าเจอสองบรรทัด ให้ดูว่าบรรทัดที่สองอยู่ไฟล์ไหน แล้วกลับไปอ่านข้อ AI มักพลาดตรงนี้ ข้างบน</li>
+            <li><code>SummaryOrder</code> ไม่มี props เลยสักตัว และเรียก <code>useCart()</code> เอง ส่วน <code>SummaryOrderItem</code> ต้อง<em>ไม่</em>เรียก <code>useCart</code> — <code>grep -rn "useCart" src/features/checkout/components/</code> ต้องเจอ<strong>บรรทัดเดียว</strong>ในโฟลเดอร์ <code>components</code> คือใน <code>SummaryOrder.tsx</code> ถ้าเจอสองบรรทัด ให้ดูว่าบรรทัดที่สองอยู่ไฟล์ไหน แล้วกลับไปอ่านข้อ AI มักพลาดตรงนี้ ข้างบน</li>
             <li>ตัวเลขทั้งสามใน <code>BillingSummary</code> ถูกฟอร์แมตด้วย <code>.toFixed(2)</code> ทุกตัวและมี <code>$</code> นำหน้าติดกันไม่เว้นวรรค — สูตรเดียวกับที่หน้า Cart ใช้ในบทเรียน 24 ทั้งแอปแสดงเงินท่าเดียวกันหมด</li>
             <li>ข้อความบนจอตรงทุกตัวอักษร: <code>Summary Order</code>, <code>Billing Summary</code>, <code>Sub Total</code>, <code>Shipping</code>, <code>Total</code> และ <code>Place Order</code> — ข้อสุดท้ายสำคัญที่สุดเพราะ integration test ในบทเรียน 33 หาปุ่มด้วย <code>getByRole("button", { name: /place order/i })</code> ถ้า Agent เปลี่ยนเป็น <code>Confirm Order</code> วันนี้ไม่มีอะไรพัง แต่บทเรียน 33 จะพังโดยไม่มีอะไรชี้กลับมาที่บรรทัดนี้</li>
             <li><code>SummaryOrderItem</code> รับ <code>item: CartItem</code> ทั้งก้อน ไม่ใช่แตกเป็นห้า prop — และ type ต้อง import มาจาก <code>@/features/cart/store/CartContext</code> ไม่ใช่ประกาศ interface ใหม่ในไฟล์ (เหตุผลอยู่ใต้โค้ดอ้างอิง)</li>
