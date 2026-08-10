@@ -61,7 +61,7 @@
 
         <p>ไฟล์ที่สามคือ <code>MainLayout.module.scss</code> ที่บทที่แล้วเว้นไว้ ในนั้นมีสองกฎที่รวมกันเป็นสูตรคลาสสิกชื่อ <strong>sticky footer</strong>: ตัว container เป็น flex column ที่สูงอย่างน้อยเต็มจอ (<code>min-height: 100vh</code>) และส่วนเนื้อหากลางถูกสั่งให้ <code>flex-grow: 1</code> คือยืดกินพื้นที่ที่เหลือทั้งหมด ผลคือหน้าที่เนื้อหาสั้น ๆ Footer ก็ยังถูกดันไปอยู่ขอบล่างของจอเสมอ ไม่ลอยขึ้นมากลางหน้า</p>
 
-        <p>และนี่คือไฟล์ SCSS Module ตัวแรกของโปรเจกต์ สังเกต pattern ให้ดีเพราะเราจะใช้ซ้ำตลอดทั้งคอร์ส: ตั้งชื่อไฟล์ลงท้าย <code>.module.scss</code>, import เข้ามาเป็น object ชื่อ <code>styles</code>, แล้วอ้าง class ผ่าน <code>styles.container</code> — ตอน build ชื่อ class จะถูกแปลงเป็นชื่อไม่ซ้ำใคร (เช่น <code>_container_x7f2k</code>) ดังนั้นต่อให้ไฟล์อื่นมี class ชื่อ <code>.container</code> เหมือนกันก็ไม่มีทางชนกัน</p>
+        <p>สองไฟล์นี้คือไฟล์ SCSS Module ชุดแรกของโปรเจกต์ สังเกต pattern ให้ดีเพราะเราจะใช้ซ้ำตลอดทั้งคอร์ส: ตั้งชื่อไฟล์ลงท้าย <code>.module.scss</code>, import เข้ามาเป็น object ชื่อ <code>styles</code>, แล้วอ้าง class ผ่าน <code>styles.container</code> — ตอน build ชื่อ class จะถูกแปลงเป็นชื่อไม่ซ้ำใคร (เช่น <code>_container_x7f2k</code>) ดังนั้นต่อให้ไฟล์อื่นมี class ชื่อ <code>.container</code> เหมือนกันก็ไม่มีทางชนกัน</p>
 
         <h2>เป้าหมายของบทนี้</h2>
 
@@ -83,7 +83,7 @@
         <p>สัญญาของแต่ละไฟล์:</p>
 
         <ul>
-          <li><strong><code>useProductRoute.tsx</code></strong> — ต้องคืนฟังก์ชันสี่ตัวที่ครอบ <code>useNavigate</code> และต้องเป็นที่<em>เดียว</em>ในโปรเจกต์ที่มี URL string ของการ navigate ต้องไม่มีใครเรียกใช้มันในบทนี้</li>
+          <li><strong><code>useProductRoute.tsx</code></strong> — ต้องคืนฟังก์ชันสี่ตัวที่ครอบ <code>useNavigate</code> และต้องเป็นที่<em>เดียว</em>ในโปรเจกต์ที่มี URL string ของการ navigate ต้องไม่มีใครเรียกใช้มันในบทนี้ สังเกตนามสกุลไว้ด้วย: ไฟล์นี้เป็น <code>.tsx</code> ทั้งที่ข้างในไม่มี JSX เลยสักบรรทัด (ตามหลักแล้วควรเป็น <code>.ts</code> — บทเรียน 11 จะบังคับข้อนี้กับ <code>queryClient.ts</code>) เราคงตามโค้ดต้นฉบับไว้ เพราะนี่คือสิ่งที่เกิดขึ้นจริงในโปรเจกต์ที่โตขึ้นเรื่อย ๆ: ธรรมเนียมที่ไม่มีเครื่องมือบังคับ จะค่อย ๆ เพี้ยนไปทีละไฟล์ และไม่มีใครสังเกตจนกว่าจะมีคนมาไล่อ่านทั้งโฟลเดอร์</li>
           <li><strong><code>Header.tsx</code></strong> — ต้องมีโลโก้และเมนูสองรายการที่เป็น <code>Link</code> ทั้งหมด ต้องไม่มีไอคอนตะกร้า ไม่มี badge จำนวนสินค้า และไม่มีไฟล์ <code>.module.scss</code></li>
           <li><strong><code>Footer.tsx</code> + <code>Footer.module.scss</code></strong> — ต้องใช้สีจาก <code>_variables.scss</code> ผ่าน <code>@use</code> ต้องไม่ hardcode ค่าสีเป็น hex ในไฟล์ใด ๆ</li>
           <li><strong><code>MainLayout</code></strong> — ต้องกลายเป็นเวอร์ชันสมบูรณ์: Header ข้างบน <code>&lt;Outlet /&gt;</code> ตรงกลาง Footer ข้างล่าง และ Footer ต้องติดขอบล่างจอแม้เนื้อหาสั้น ต้องไม่แตะ <code>router.tsx</code> หรือหน้าใด ๆ ใน <code>pages/</code></li>
@@ -110,7 +110,7 @@ MainLayout ตอนนี้ render แค่ Outlet ในแท็ก main �
 src/shared/hooks/ ยังเป็นโฟลเดอร์ว่าง ส่วน src/shared/components/ มีแค่ ErrorMessage จากบทที่แล้ว
 utility class ทุกตัวที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว: container, flex, space-between,
 align-item-center, gap-20, list-none, nav-link, m-0, p-0, mr-10, mb-10, mb-20, mb-25,
-text-white, fw-bold, fs-14, fs-24, fs-32, pt-25, pb-25, pt-60, pb-60
+fw-bold, fs-14, fs-24, fs-32, pt-25, pb-25, pt-60, pb-60
 ตัวแปรสีอยู่ใน src/styles/_variables.scss เช่น $black02 และ $white
 alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่วนไฟล์ .scss ต้องอ้าง path แบบ relative
 
@@ -177,7 +177,7 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่
         <blockquote class="lesson-ai-review">
           <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git diff</code> ก่อน แล้วไล่ทีละข้อ:</p>
           <ul>
-            <li><strong>AI มักพลาดตรงนี้:</strong> การนำทาง — สองอาการที่เจอบ่อยคือเขียนลิงก์เป็น <code>&lt;a href="/categories"&gt;</code> หรือ <code>&lt;div onClick={() =&gt; navigate("/cart")}&gt;</code> แทนที่จะใช้ <code>&lt;Link to&gt;</code> และ hardcode URL string ไว้ที่จุดเรียกใช้แทนที่จะให้เส้นทางทั้งหมดอยู่รวมกันใน <code>useProductRoute</code> ที่เพิ่งสร้าง ค้นในไฟล์ที่ได้มาด้วยคำว่า <code>href=</code> และ <code>onClick</code> เป็นอย่างแรก — ทั้งสองแบบดูเหมือนใช้ได้บนจอ แต่แบบ <code>&lt;a&gt;</code> โหลดหน้าใหม่ทั้งแอปทุกครั้งที่กด และแบบ <code>&lt;div&gt;</code> กดด้วยคีย์บอร์ดไม่ได้เลย</li>
+            <li><strong>AI มักพลาดตรงนี้:</strong> การนำทาง — สองอาการที่เจอบ่อยคือเขียนลิงก์เป็น <code>&lt;a href="/categories"&gt;</code> หรือ <code>&lt;div onClick={() =&gt; navigate("/cart")}&gt;</code> แทนที่จะใช้ <code>&lt;Link to&gt;</code> ค้นในไฟล์ที่ได้มาด้วยคำว่า <code>href=</code> และ <code>onClick</code> เป็นอย่างแรก — ทั้งสองคำนี้ไม่ควรเจอเลยสักจุดในบทนี้ เพราะ <code>Link</code> ใช้ prop ชื่อ <code>to</code> — ทั้งสองแบบดูเหมือนใช้ได้บนจอ แต่แบบ <code>&lt;a&gt;</code> โหลดหน้าใหม่ทั้งแอปทุกครั้งที่กด และแบบ <code>&lt;div&gt;</code> กดด้วยคีย์บอร์ดไม่ได้เลย</li>
             <li>ไฟล์ใหม่ 5 ไฟล์ ไฟล์ที่ถูกแก้ 1 ไฟล์ (<code>MainLayout.tsx</code>) — ไม่มีอย่างอื่นใน <code>git status</code></li>
             <li>ไม่มี <code>Header.module.scss</code> เกิดขึ้น (กติกาในไฟล์ rules บอกให้สร้าง แต่ prompt ยกเว้นไว้)</li>
             <li>Header ไม่มีไอคอนตะกร้า ไม่มี badge และไม่มีบรรทัด <code>useProductRoute()</code> ค้างอยู่</li>
@@ -185,6 +185,8 @@ alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่
             <li>ไม่มีค่าสีแบบ hex โผล่ในไฟล์ <code>.tsx</code> หรือ <code>.module.scss</code> ที่สร้างใหม่เลยสักจุด</li>
             <li>Footer import ไอคอนเป็นราย ๆ ตัวจาก <code>@fortawesome/free-solid-svg-icons</code> ไม่ใช่ import ทั้งชุด</li>
             <li>ข้อความใน Footer ตรงกับ prompt ทุกตัวอักษร — เบอร์โทร อีเมล ที่อยู่ และรายชื่อหมวดหมู่ห้ารายการ</li>
+            <li>ไม่มี comment แบบ <code>{/* Company Info Section */}</code> คั่นแต่ละคอลัมน์ใน Footer — comment ที่บอกสิ่งที่โค้ดบอกอยู่แล้วผิดกติกาในไฟล์ rules ตั้งแต่บทเรียน 07 นี่ไม่ใช่เรื่องรสนิยม แต่เป็นข้อที่เขียนห้ามไว้แล้ว</li>
+            <li>ค้นทุกชื่อ class ที่โผล่ใน <code>className</code> ของไฟล์ใหม่ ว่ามีอยู่จริงใน <code>src/styles/</code> ครบทุกตัวไหม (<code>grep -rn "ชื่อ-class" src/styles/</code>) — class ที่ไม่มีนิยามอยู่ที่ไหนเลยจะเงียบสนิท ไม่ error ไม่ warn และไม่ทำอะไรทั้งนั้น</li>
             <li><code>MainLayout.tsx</code> เรียงเป็น Header → <code>&lt;main&gt;</code> ที่มี Outlet → Footer และ <code>&lt;Outlet /&gt;</code> ยังอยู่ในแท็ก <code>main</code> ไม่ได้ถูกย้ายออกมา</li>
             <li><code>MainLayout.module.scss</code> มีทั้ง <code>.container</code> และ <code>.main</code> และ <code>.main</code> มี <code>flex-grow: 1</code> จริง (ถ้าขาดข้อนี้ Footer จะลอยขึ้นมากลางจอในหน้าที่เนื้อหาสั้น)</li>
             <li>import ข้ามโฟลเดอร์ในไฟล์ <code>.tsx</code> ใช้ <code>@/</code> แต่ <code>@use</code> ในไฟล์ <code>.scss</code> เป็น path แบบ relative — สองระบบนี้คนละเรื่องกัน</li>
@@ -282,6 +284,13 @@ export default Header;
 </code></pre>
 
         <p>บรรทัด <code>@use</code> ดึงไฟล์ <code>_variables.scss</code> จากบทเรียน 04 เข้ามาภายใต้ namespace ชื่อ <code>variables</code> เราจึงอ้างสีกลางของแอปได้ด้วย <code>variables.$black02</code> แทนการ hardcode <code>#212121</code> ซ้ำอีกรอบ — สีหลักของแบรนด์เปลี่ยนเมื่อไหร่ Footer ก็เปลี่ยนตามเองโดยไม่ต้องแตะไฟล์นี้</p>
+
+        <p>ไฟล์เล็ก ๆ ไฟล์นี้มีของแถมสองอย่างที่คุ้มกับการหยุดดู เพราะทั้งสองอย่างคือหน้าตาของโค้ดจริงที่คุณจะต้องตรวจในงาน:</p>
+
+        <ul>
+          <li><strong><code>p { line-height: 2; }</code> ตอนนี้ยังไม่มีผลกับอะไรเลย</strong> — เปิด <code>Footer.tsx</code> ดูจะพบว่ามันไม่ได้ render แท็ก <code>p</code> สักตัว (ข้อความทุกก้อนอยู่ใน <code>div</code> กับ <code>li</code>) กฎนี้มีอยู่ในโค้ดต้นฉบับของโปรเจกต์จริง เราคงไว้ตรง ๆ ไม่ตัดออก แต่ต้องรู้ว่ามันเป็นกฎที่รออยู่เฉย ๆ ไม่ใช่กฎที่ทำงานอยู่</li>
+          <li><strong><code>text-white</code> ใน <code>Footer.tsx</code> ไม่มีนิยามอยู่ที่ไหนเลย</strong> — ลอง <code>grep -rn "text-white" src/styles/</code> ดู จะไม่เจออะไร ตัวอักษรใน Footer เป็นสีขาวเพราะบรรทัด <code>color: variables.$white;</code> ใน <code>.footer</code> ต่างหาก ไม่ใช่เพราะ class นั้น นี่คือ class ที่หลงเหลือมาจากโค้ดเดิม และมันคือพฤติกรรมที่ต้องจำ: <strong>class ที่ไม่มีนิยามจะไม่ทำอะไรเลยแบบเงียบสนิท</strong> ไม่มี error ไม่มี warning ไม่มีเส้นแดง — ต่างจากตัวแปรที่พิมพ์ผิดซึ่งพังทันที นี่คือเหตุผลที่ checklist ข้างบนบังคับให้ค้นชื่อ class ทุกตัวใน <code>src/styles/</code> ด้วยตาตัวเอง</li>
+        </ul>
 
         <p><code>src/shared/components/Footer/Footer.tsx</code>:</p>
 

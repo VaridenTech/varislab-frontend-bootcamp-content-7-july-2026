@@ -20,7 +20,7 @@
 
         <h2>ทำไมต้อง react-router</h2>
 
-        <p>ใน Week 4 คุณใช้ TanStack Router มาแล้ว ดังนั้นแนวคิดทั้งหมดของบทนี้คุณรู้จักอยู่แล้ว: แอปมี route หลายเส้น แต่ละเส้นจับคู่ URL กับ component, มี layout ที่ครอบทุกหน้า และมี <code>&lt;Outlet /&gt;</code> เป็นช่องว่างที่หน้าปัจจุบันจะถูกเสียบเข้าไป คราวนี้เราจะใช้ <strong>react-router</strong> ซึ่งเป็น router ที่แพร่หลายที่สุดในโลก React — โอกาสสูงมากที่โปรเจกต์แรกในงานจริงของคุณจะใช้ตัวนี้ การได้ลองทั้งสองตัวจะทำให้คุณเห็นชัดว่าสิ่งที่คุณเข้าใจคือ<em>แนวคิดของ routing</em> ไม่ใช่แค่ API ของ library ใดตัวหนึ่ง</p>
+        <p>ใน Week 4 คุณใช้ TanStack Router มาแล้ว ดังนั้นแนวคิดทั้งหมดของบทนี้คุณรู้จักอยู่แล้ว: แอปมี route หลายเส้น แต่ละเส้นจับคู่ URL กับ component, มี layout ที่ครอบทุกหน้า และมี <code>&lt;Outlet /&gt;</code> เป็นช่องว่างที่หน้าปัจจุบันจะถูกเสียบเข้าไป คราวนี้เราจะใช้ <strong>react-router</strong> ซึ่งเป็น router ที่ใช้กันแพร่หลายที่สุดตัวหนึ่งในโลก React — โอกาสสูงมากที่โปรเจกต์แรกในงานจริงของคุณจะใช้ตัวนี้ การได้ลองทั้งสองตัวจะทำให้คุณเห็นชัดว่าสิ่งที่คุณเข้าใจคือ<em>แนวคิดของ routing</em> ไม่ใช่แค่ API ของ library ใดตัวหนึ่ง</p>
 
         <p>เทียบของที่คุณรู้จักจาก TanStack Router กับของที่กำลังจะเจอ:</p>
 
@@ -81,6 +81,8 @@
     └── components/
         └── ErrorMessage/ErrorMessage.tsx</code></pre>
 
+        <p>สังเกตว่า <code>App.tsx</code> ย้ายบ้าน: ตามสถาปัตยกรรมที่วางไว้ในบทเรียน 05 ของที่เป็น "ระดับแอป" ทั้งหมด — ตัวแอป, router, layout, providers — ต้องอยู่ใน <code>src/app/</code> แต่ตอนนี้ <code>App.tsx</code> ของเรายังนอนอยู่ที่ <code>src/App.tsx</code> จากตอน scaffold ในบทเรียน 02 prompt จึงสั่งทั้งสร้างตัวใหม่ที่ <code>src/app/App.tsx</code> และลบตัวเก่าทิ้ง</p>
+
         <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
 
         <ul>
@@ -105,7 +107,7 @@ git add -A &amp;&amp; git commit -m "chore: install react-router"</code></pre>
 
         <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
 
-        <p>นี่คือบทแรกที่ใช้โครงเต็มของคอร์ส — 🤖 prompt, ✅ ตรวจ, ✍️ พิมพ์เอง, 🤔 อธิบายให้ได้ — และอีก 24 บทหลังจากนี้จะหน้าตาเหมือนบทนี้ทุกประการ</p>
+        <p>นี่คือบทแรกที่ใช้โครงเต็มของคอร์ส — 🤖 prompt, ✅ ตรวจ, ✍️ พิมพ์เอง, 🤔 อธิบายให้ได้ — และอีก 23 บทหลังจากนี้จะหน้าตาเหมือนบทนี้ทุกประการ</p>
 
         <blockquote class="lesson-ai-prompt">
           <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> — เปิดแชทใหม่ เลือกโหมด <strong>Agent</strong> แล้วส่งทั้งก้อนนี้ในข้อความเดียว นี่คือ prompt ตัวเดียวกับที่คุณอ่านทีละบรรทัดไปแล้วในบทเรียน 08 ไม่ได้แก้แม้แต่ตัวอักษรเดียว:</p>
@@ -316,7 +318,7 @@ export const router = createBrowserRouter(routes);
           <li><strong>Layout route</strong> — route ตัวนอกสุดมี <code>element</code> เป็น <code>&lt;MainLayout /&gt;</code> แต่<em>ไม่มี <code>path</code></em> แปลว่ามันไม่จับคู่กับ URL ไหนเป็นพิเศษ แต่ครอบทุก route ที่อยู่ใน <code>children</code> — ทุกหน้าจะถูก render แทนที่ <code>&lt;Outlet /&gt;</code> ข้างใน MainLayout เสมอ</li>
           <li><strong><code>errorElement</code></strong> — วางไว้ที่ route นอกสุด error จากทุกหน้าจึงลอยขึ้นมาถึงตัวนี้ รวมถึงกรณี URL ไม่ match route ไหนเลย (ได้ 404) ด้วย</li>
           <li><strong><code>/products/:id</code></strong> — <code>:id</code> คือ dynamic segment: <code>/products/1</code>, <code>/products/42</code> หรือ <code>/products/อะไรก็ตาม</code> จะเข้า route นี้ทั้งหมด โดยค่าที่อยู่ตรงตำแหน่งนั้นจะถูกเก็บเป็น param ชื่อ <code>id</code> ซึ่งหน้า Product จะอ่านผ่าน hook <code>useParams()</code> ในบทเรียน 21 (ฝั่ง TanStack Router คุณเคยเขียนสิ่งเดียวกันนี้ว่า <code>$id</code>)</li>
-          <li><strong>ทำไม export <code>routes</code> แยกจาก <code>router</code></strong> — ตัวแอปจริงใช้ <code>router</code> ที่สร้างจาก <code>createBrowserRouter</code> (ผูกกับ History API ของเบราว์เซอร์) แต่ตอนเขียน integration test ในบทเรียน 33 เราจะเอา array <code>routes</code> ตัวเดียวกันนี้ไปสร้าง router แบบ in-memory ด้วย <code>createMemoryRouter</code> แทน — ประกาศผังเว็บครั้งเดียว ใช้ได้ทั้งแอปจริงและเทสต์</li>
+          <li><strong>ทำไม export <code>routes</code> แยกจาก <code>router</code></strong> — ตัวแอปจริงใช้ <code>router</code> ที่สร้างจาก <code>createBrowserRouter</code> (ผูกกับ History API ของเบราว์เซอร์) แต่ตอนวางชุดทดสอบในบทเรียน 30 เราจะเอา array <code>routes</code> ตัวเดียวกันนี้ไปสร้าง router แบบ in-memory ด้วย <code>createMemoryRouter</code> แทน — ประกาศผังเว็บครั้งเดียว ใช้ได้ทั้งแอปจริงและเทสต์</li>
         </ul>
 
         <p><code>src/app/App.tsx</code> เวอร์ชันแรก:</p>
@@ -351,7 +353,7 @@ createRoot(document.getElementById("root")!).render(
 
         <h2>✍️ ส่วนนี้พิมพ์เอง</h2>
 
-        <p>prompt ข้างบนสร้าง <code>router.tsx</code> มาให้ด้วย และเราจงใจไม่ตัดมันออกจาก prompt — คำสั่งที่บอกว่า "สร้างทุกไฟล์ยกเว้นไฟล์นี้" จะได้ router ที่ import ของที่ยังไม่มีจริง typecheck ไม่ผ่าน และตรวจอะไรไม่ได้เลย เราจึงให้มันสร้างครบ แล้วค่อยเอา<em>ส่วนที่สำคัญที่สุดของไฟล์</em>กลับมาเป็นของเราเอง</p>
+        <p>prompt ข้างบนสร้าง <code>router.tsx</code> มาให้ด้วย และเราจงใจไม่ตัดมันออกจาก prompt — คำสั่งที่บอกว่า "สร้างทุกไฟล์ยกเว้นไฟล์นี้" จะได้ <code>App.tsx</code> ที่ import <code>./router</code> ที่ยังไม่มีอยู่จริง typecheck ไม่ผ่าน และตรวจอะไรไม่ได้เลย เราจึงให้มันสร้างครบ แล้วค่อยเอา<em>ส่วนที่สำคัญที่สุดของไฟล์</em>กลับมาเป็นของเราเอง</p>
 
         <blockquote class="lesson-manual">
           <p>✍️ <strong>ส่วนนี้พิมพ์เอง</strong> — เมื่อวงจรตรวจงานถึงขั้นที่สามและ <code>npm run lint</code> กับ <code>npm run typecheck</code> ผ่านแล้ว ให้ทำตามนี้ตามลำดับ:</p>
@@ -375,7 +377,7 @@ createRoot(document.getElementById("root")!).render(
     ],
   },
 ];</code></pre>
-          <p><strong>เหตุผล:</strong> แผนที่ของแอปทั้งใบ ต้องอยู่ในหัวคุณ — สิบเจ็ดบรรทัดนี้บอกว่าเว็บนี้มีกี่หน้า หน้าไหนอยู่ URL อะไร อะไรครอบอะไร และ error ตกที่ไหน ทุกบทหลังจากนี้จะอ้างถึงมันตลอด และตอนที่ AI สร้าง route ผิดที่ในบทหลัง ๆ สิ่งเดียวที่ทำให้คุณจับได้คือคุณรู้ว่าผังที่ถูกต้องหน้าตาอย่างไรโดยไม่ต้องเปิดไฟล์ดู</p>
+          <p><strong>เหตุผล:</strong> แผนที่ของแอปทั้งใบ ต้องอยู่ในหัวคุณ — สิบสี่บรรทัดนี้บอกว่าเว็บนี้มีกี่หน้า หน้าไหนอยู่ URL อะไร อะไรครอบอะไร และ error ตกที่ไหน ทุกบทหลังจากนี้จะอ้างถึงมันตลอด และตอนที่ AI สร้าง route ผิดที่ในบทหลัง ๆ สิ่งเดียวที่ทำให้คุณจับได้คือคุณรู้ว่าผังที่ถูกต้องหน้าตาอย่างไรโดยไม่ต้องเปิดไฟล์ดู</p>
         </blockquote>
 
         <p>ถ้าพิมพ์แล้วผลลัพธ์ออกมาเหมือนของ Agent ทุกตัวอักษร นั่นคือผลที่ควรได้ ประเด็นไม่ได้อยู่ที่ diff แต่อยู่ที่ผังชุดนี้ผ่านมือคุณไปแล้วหนึ่งรอบ</p>
