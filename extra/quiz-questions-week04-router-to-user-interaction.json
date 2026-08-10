@@ -24,7 +24,6 @@
     },
     {
       "prompt": "การใช้ `createLazyFileRoute(\"/order\")` ให้ผลและมีข้อควรระวังใดตามบทเรียน",
-      "body": "<pre><code class=\"language-typescript\">export const Route = createLazyFileRoute(\"/order\")({\n  component: Order,\n});</code></pre>",
       "choices": [
         "มัน prefetch ข้อมูล API ให้ route โดยอัตโนมัติก่อน render",
         "มันแยก code และ lazy-load route ซึ่งช่วยในแอปใหญ่ได้ แต่ request เพิ่มอาจทำให้แอปเล็กช้าลง จึงควรวัดผล",
