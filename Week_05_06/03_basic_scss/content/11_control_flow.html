@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้ @if, @else, @each และ @for เพื่อควบคุมเงื่อนไขและการสร้าง utility classes อย่างพอดี พร้อมข้อควรระวังเรื่องการ generate CSS เกินจำเป็น"
+    />
+    <title>Control Flow</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>Control Flow</h1>
+
+        <p>
+          SCSS ไม่ได้มีแค่ตัวแปรกับ helper เท่านั้น แต่ยังมี control flow
+          สำหรับตัดสินใจและวนซ้ำด้วย เครื่องมือชุดนี้ช่วยลดงานซ้ำ
+          เวลากฎหลายตัวมีรูปแบบเดิม แต่ต่างกันแค่ค่าไม่กี่จุด
+        </p>
+
+        <h2><code>@if</code> และ <code>@else</code> ใช้เลือกกฎตามเงื่อนไข</h2>
+        <p>
+          ถ้า style บางอย่างมีสองสามกรณีที่ชัดเจน
+          เราสามารถใช้เงื่อนไขเพื่อเลือกค่าที่เหมาะสมได้
+          แต่ควรให้ logic อ่านง่ายและจำนวน branch ไม่มากเกินไป
+        </p>
+
+        <pre><code>@mixin surface($tone) {
+  @if $tone == "soft" {
+    background-color: #f6f0ff;
+    color: #3d1766;
+  } @else {
+    background-color: #3d1766;
+    color: #ffffff;
+  }
+}
+
+.panel-soft {
+  @include surface("soft");
+}
+
+.panel-strong {
+  @include surface("strong");
+}</code></pre>
+
+        <p>CSS ที่คอมไพล์แล้วจะเป็น:</p>
+        <pre><code>.panel-soft {
+  background-color: #f6f0ff;
+  color: #3d1766;
+}
+
+.panel-strong {
+  background-color: #3d1766;
+  color: #ffffff;
+}</code></pre>
+
+        <h2><code>@each</code> เหมาะกับการวนชุดข้อมูลที่มีชื่อกำกับ</h2>
+        <p>
+          เมื่อเรามี map ของสีสถานะหลายตัว <code>@each</code>
+          ช่วยสร้าง selector ที่เป็นรูปแบบเดียวกันได้
+          โดยไม่ต้องคัดลอกโค้ดทีละก้อน
+        </p>
+
+        <pre><code>$alert-colors: (
+  success: #1f9d55,
+  warning: #d97706,
+  danger: #dc2626,
+);
+
+@each $name, $value in $alert-colors {
+  .alert-#{$name} {
+    border-left: 4px solid $value;
+    background-color: rgba($value, 0.12);
+    color: $value;
+    padding: 1rem;
+  }
+}</code></pre>
+
+        <p>CSS ที่คอมไพล์แล้วจะมี selector ตามสมาชิกใน map:</p>
+        <pre><code>.alert-success {
+  border-left: 4px solid #1f9d55;
+  background-color: rgba(31, 157, 85, 0.12);
+  color: #1f9d55;
+  padding: 1rem;
+}
+
+.alert-warning {
+  border-left: 4px solid #d97706;
+  background-color: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+  padding: 1rem;
+}
+
+.alert-danger {
+  border-left: 4px solid #dc2626;
+  background-color: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+  padding: 1rem;
+}</code></pre>
+
+        <h2><code>@for ... through</code> เหมาะกับช่วงตัวเลขที่รู้ขอบเขตแน่ชัด</h2>
+        <p>
+          ถ้าเราต้องสร้าง utility ตามลำดับตัวเลข เช่น spacing scale,
+          radius scale หรือ column count การวนแบบ <code>@for</code>
+          จะตรงกว่าการเขียนมือ แต่ควรใช้กับช่วงที่สั้นและมีเหตุผลจริง ๆ
+        </p>
+
+        <pre><code>@for $step from 1 through 4 {
+  .mt-#{$step} {
+    margin-top: $step * 0.25rem;
+  }
+}</code></pre>
+
+        <p>CSS ที่คอมไพล์แล้วจะเป็น:</p>
+        <pre><code>.mt-1 {
+  margin-top: 0.25rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-3 {
+  margin-top: 0.75rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}</code></pre>
+
+        <p>
+          คำว่า <code>through</code> หมายถึง “รวมค่าปลายทางด้วย”
+          ถ้าเขียน <code>from 1 through 4</code> เราจะได้ทั้ง 1, 2, 3 และ 4
+        </p>
+
+        <h2>ใช้ control flow เท่าที่จำเป็น</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>เครื่องมือ</th>
+              <th>เหมาะเมื่อไร</th>
+              <th>ข้อควรระวัง</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>@if</code> / <code>@else</code></td>
+              <td>มีไม่กี่กรณีที่ logic ชัดเจน</td>
+              <td>อย่าซ้อนเงื่อนไขลึกจนไล่อ่านยาก</td>
+            </tr>
+            <tr>
+              <td><code>@each</code></td>
+              <td>ต้องวนข้อมูลที่มีชื่อกำกับ เช่น map ของ variants</td>
+              <td>อย่าสร้าง selector เยอะเกินความต้องการจริง</td>
+            </tr>
+            <tr>
+              <td><code>@for</code></td>
+              <td>ต้องวนช่วงตัวเลขที่รู้ขอบเขตแน่ชัด</td>
+              <td>กำหนดช่วงให้เล็กและสื่อความหมาย</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          บทนี้ไม่ได้ชวนให้ generate utility ทุกอย่างอัตโนมัติ
+          เพราะยิ่งลูปกว้างและชื่อคลาสยิ่งมาก CSS ปลายทางก็ยิ่งโต
+          และทีมจะต้องจำระบบที่ซับซ้อนขึ้นด้วย
+        </p>
+
+        <h2>ข้อผิดพลาดที่พบบ่อย</h2>
+        <ul>
+          <li>ใส่เงื่อนไขหลายชั้นจนหาไม่เจอว่าคลาสหนึ่งได้ค่ามาจาก branch ไหน</li>
+          <li>ใช้ <code>@each</code> สร้างคลาสทั้งชุด ทั้งที่โปรเจกต์ใช้จริงแค่ไม่กี่ตัว</li>
+          <li>ลืมว่า <code>through</code> รวมค่าปลายทาง ทำให้ generate เกินที่ตั้งใจ</li>
+          <li>ตั้งชื่อคลาสจากการวนแบบไม่สื่อความหมาย จนคนอ่านไม่รู้ว่าเลขแต่ละตัวแทนอะไร</li>
+        </ul>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          ให้ใช้ <code>@for</code> เพื่อสร้างคลาส
+          <code>.radius-1</code> ถึง <code>.radius-3</code>
+          โดยให้แต่ละคลาสมี <code>border-radius</code> เป็น
+          <code>0.25rem</code>, <code>0.5rem</code> และ
+          <code>0.75rem</code> ตามลำดับ
+          จากนั้นดูว่า CSS ที่คอมไพล์แล้วได้ selector ครบทั้งสามตัวหรือไม่
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <pre><code>@for $step from 1 through 3 {
+  .radius-#{$step} {
+    border-radius: $step * 0.25rem;
+  }
+}</code></pre>
+
+          <pre><code>/* CSS ที่คอมไพล์แล้ว */
+.radius-1 {
+  border-radius: 0.25rem;
+}
+
+.radius-2 {
+  border-radius: 0.5rem;
+}
+
+.radius-3 {
+  border-radius: 0.75rem;
+}</code></pre>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="10_lists_and_maps.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="12_css_output_source_maps_and_best_practices.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

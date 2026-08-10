@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้การสร้าง @function, คืนค่าด้วย @return, ใช้ sass:math และ sass:color แบบ namespaced พร้อมแยกบทบาทของ function กับ mixin ให้ชัด"
+    />
+    <title>Functions และ Built-in Modules</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>Functions และ Built-in Modules</h1>
+
+        <p>
+          หลังจากรู้จัก mixin แล้ว คำถามถัดมาคือ “ถ้าเราไม่ได้อยากปล่อย CSS
+          หลายบรรทัด แต่แค่อยากคำนวณค่าเดียวแล้วส่งกลับมาใช้ใน property ล่ะ?”
+          เครื่องมือที่เหมาะกว่าคือ <code>@function</code> เพราะมัน “คืนค่า”
+          ไม่ได้ “ปล่อย declaration” แบบ mixin
+        </p>
+
+        <h2>Function คืนค่า ส่วน mixin ปล่อยกฎ CSS</h2>
+        <p>
+          ให้จำภาพง่าย ๆ ว่า function อยู่ฝั่ง “คำนวณค่า” เช่น spacing, width,
+          หรือสีที่ปรับแล้ว ส่วน mixin อยู่ฝั่ง “คัดลอกชุด declaration”
+          ไปใส่ใน selector ที่เรียกใช้
+        </p>
+
+        <pre><code>@function spacing($step) {
+  @return $step * 0.25rem;
+}
+
+@mixin card-surface {
+  padding: spacing(6);
+  border-radius: 1rem;
+  background-color: #fff;
+}
+
+.card {
+  @include card-surface;
+  gap: spacing(4);
+}</code></pre>
+
+        <p>CSS ที่คอมไพล์แล้วจะเป็น:</p>
+        <pre><code>.card {
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background-color: #fff;
+  gap: 1rem;
+}</code></pre>
+
+        <p>
+          จุดต่างที่ควรจำคือ <code>spacing(4)</code> ถูกแทนด้วยค่า
+          <code>1rem</code> ก่อน แล้ว property อย่าง <code>gap</code>
+          จึงรับค่านั้นไปใช้อีกที
+        </p>
+
+        <h2>ประกาศ <code>@function</code> และคืนค่าด้วย <code>@return</code></h2>
+        <p>
+          function ของ Sass ต้องมี <code>@return</code> เสมอ
+          เพื่อบอกว่าค่าที่จะส่งกลับคืออะไร ถ้าไม่มี Sass
+          จะไม่รู้ว่าจะเอาค่าไหนไปแทนตอนคอมไพล์
+        </p>
+
+        <pre><code>@function column-width($columns) {
+  @return math.div(100%, $columns);
+}
+
+.feature-grid {
+  grid-template-columns: repeat(3, column-width(3));
+}</code></pre>
+
+        <p>
+          ตัวอย่างนี้ใช้ <code>math.div()</code> จาก built-in module
+          <code>sass:math</code> เพื่อหลีกเลี่ยง slash division แบบเก่า
+          ที่เลิกแนะนำใน Dart Sass แล้ว
+        </p>
+
+        <pre><code>@use "sass:math";
+
+@function column-width($columns) {
+  @return math.div(100%, $columns);
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, column-width(3));
+  gap: 1rem;
+}</code></pre>
+
+        <p>เมื่อคอมไพล์แล้วจะได้ CSS ปกติ:</p>
+        <pre><code>.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 33.3333333333%);
+  gap: 1rem;
+}</code></pre>
+
+        <blockquote>
+          ถ้าเห็นโค้ดเก่าประมาณ <code>width: 100% / 3;</code>
+          หรือ helper ที่หารค่าด้วยเครื่องหมาย <code>/</code>
+          ให้ถือว่าเป็น syntax รุ่นเก่าที่ควรแทนด้วย
+          <code>math.div()</code> ในโค้ดใหม่
+        </blockquote>
+
+        <h2>Built-in modules คือ helper ที่ Sass เตรียมไว้ให้แล้ว</h2>
+        <p>
+          นอกจาก <code>sass:math</code> ยังมีโมดูลอื่นอีกหลายตัว เช่น
+          <code>sass:color</code>, <code>sass:list</code> และ
+          <code>sass:map</code> เรานำเข้าด้วย <code>@use</code>
+          แล้วเรียกผ่าน namespace เพื่อให้รู้ชัดว่าฟังก์ชันนั้นมาจากโมดูลไหน
+        </p>
+
+        <pre><code>@use "sass:color";
+
+$brand: #6f3cc3;
+
+.button-primary {
+  background-color: $brand;
+  border: 1px solid color.adjust($brand, $lightness: -10%);
+  box-shadow: 0 10px 24px color.adjust($brand, $alpha: -0.7);
+}</code></pre>
+
+        <p>CSS ที่คอมไพล์แล้วจะเป็น:</p>
+        <pre><code>.button-primary {
+  background-color: #6f3cc3;
+  border: 1px solid #592ca4;
+  box-shadow: 0 10px 24px rgba(111, 60, 195, 0.3);
+}</code></pre>
+
+        <p>
+          การใช้ <code>color.adjust()</code> แบบ namespaced
+          อ่านชัดกว่า helper global รุ่นเก่า และสื่อเจตนาว่าเรากำลังปรับ channel
+          ของสี ไม่ได้สร้างสีใหม่แบบลอย ๆ
+        </p>
+
+        <h2>เลือก function หรือ mixin ดี?</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>สถานการณ์</th>
+              <th>เครื่องมือที่เหมาะกว่า</th>
+              <th>เหตุผล</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ต้องคำนวณค่าเดียวเพื่อใช้ใน property</td>
+              <td>Function</td>
+              <td>คืนค่าไปแทนใน declaration ได้ตรง ๆ</td>
+            </tr>
+            <tr>
+              <td>ต้องปล่อย declaration หลายบรรทัดพร้อมกัน</td>
+              <td>Mixin</td>
+              <td>เหมาะกับการ reuse ชุดกฎ CSS</td>
+            </tr>
+            <tr>
+              <td>ต้องใช้ helper มาตรฐานของ Sass</td>
+              <td>Built-in modules</td>
+              <td>ลดการเขียน utility ซ้ำและใช้ syntax ปัจจุบันของ Dart Sass</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>ข้อผิดพลาดที่พบบ่อย</h2>
+        <ul>
+          <li>สับสนระหว่าง function กับ mixin แล้วพยายาม <code>@include</code> function</li>
+          <li>ลืม <code>@return</code> ทำให้ function ไม่คืนค่า</li>
+          <li>เขียนการหารแบบ <code>/</code> ในโค้ดใหม่ แทนที่จะใช้ <code>math.div()</code></li>
+          <li>เรียก helper สีแบบ global รุ่นเก่า ทั้งที่ควรใช้ <code>@use "sass:color"</code> และ namespace</li>
+        </ul>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          ให้สร้าง function ชื่อ <code>spacing($step)</code>
+          ที่คืนค่า <code>$step * 0.25rem</code> แล้วใช้กับการ์ดหนึ่งใบดังนี้:
+          <code>padding: spacing(6);</code> และ <code>gap: spacing(3);</code>
+          จากนั้นกำหนด <code>background-color: #ffffff;</code> และ
+          <code>border-radius: 1rem;</code>
+          แล้วดูว่า CSS ที่คอมไพล์แล้วได้ค่า spacing ออกมาเท่าไร
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <pre><code>@function spacing($step) {
+  @return $step * 0.25rem;
+}
+
+.card {
+  display: grid;
+  padding: spacing(6);
+  gap: spacing(3);
+  border-radius: 1rem;
+  background-color: #ffffff;
+}</code></pre>
+
+          <pre><code>/* CSS ที่คอมไพล์แล้ว */
+.card {
+  display: grid;
+  padding: 1.5rem;
+  gap: 0.75rem;
+  border-radius: 1rem;
+  background-color: #ffffff;
+}</code></pre>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="08_mixin_parameters_and_content.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="10_lists_and_maps.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

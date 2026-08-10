@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้ lists, maps, การใช้ sass:list และ sass:map, การอ่านค่าด้วย list.nth() และ map.get() รวมถึงการจัดการกรณี key ไม่มีอยู่จริง"
+    />
+    <title>Lists และ Maps</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>Lists และ Maps</h1>
+
+        <p>
+          พอโปรเจกต์เริ่มมีค่าที่เกี่ยวข้องกันหลายตัว เรามักไม่อยากประกาศตัวแปรแยกทีละชื่อ
+          ตลอดเวลา เช่นระดับ spacing หลายขนาด หรือชุดสีของสถานะต่าง ๆ
+          SCSS จึงมีโครงสร้างข้อมูลพื้นฐานอย่าง list และ map
+          ให้เก็บค่าที่สัมพันธ์กันไว้ด้วยกัน
+        </p>
+
+        <h2>List คือค่าหลายตัวที่เรียงตามลำดับ</h2>
+        <p>
+          list เหมาะเมื่อ “ตำแหน่ง” ของข้อมูลสำคัญ เช่น ชุดค่าของ shadow,
+          font stack หรือรายการขนาดที่ต้องอ้างตามลำดับ
+          เราเรียกสมาชิกออกมาด้วย helper จาก <code>sass:list</code>
+        </p>
+
+        <pre><code>@use "sass:list";
+
+$card-shadow: 0 12px 30px rgba(53, 18, 110, 0.14);
+
+.card {
+  box-shadow:
+    list.nth($card-shadow, 1)
+    list.nth($card-shadow, 2)
+    list.nth($card-shadow, 3)
+    list.nth($card-shadow, 4);
+}</code></pre>
+
+        <p>
+          สิ่งที่ต้องจำคือ index ของ Sass เริ่มที่ <code>1</code> ไม่ใช่
+          <code>0</code> แบบหลายภาษาโปรแกรม
+        </p>
+
+        <pre><code>.card {
+  box-shadow: 0 12px 30px rgba(53, 18, 110, 0.14);
+}</code></pre>
+
+        <h2>Map คือคู่ key-value ที่อ่านความหมายได้ชัดกว่า</h2>
+        <p>
+          ถ้าข้อมูลไม่ได้เด่นที่ลำดับ แต่เด่นที่ “ชื่อ” เช่น <code>sm</code>,
+          <code>md</code>, <code>lg</code> หรือ <code>success</code>,
+          <code>warning</code>, <code>danger</code>
+          map จะอ่านง่ายกว่า list มาก เพราะเราอ้างค่าด้วย key ที่มีความหมาย
+        </p>
+
+        <pre><code>@use "sass:map";
+
+$spacing: (
+  sm: 0.5rem,
+  md: 1rem,
+  lg: 1.5rem,
+);
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: map.get($spacing, md);
+}</code></pre>
+
+        <p>CSS ที่คอมไพล์แล้วจะเป็น:</p>
+        <pre><code>.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}</code></pre>
+
+        <p>
+          ในงานจริง map ช่วยลดการเดาว่า “สมาชิกตัวที่ 2 หมายถึงอะไร”
+          เพราะชื่อ key บอกความหมายไว้อยู่แล้ว
+        </p>
+
+        <h2>ถ้า key ไม่มีอยู่จริง <code>map.get()</code> จะคืนค่า <code>null</code></h2>
+        <p>
+          จุดนี้สำคัญมาก เพราะ Sass ไม่ได้ throw error ให้อัตโนมัติทุกครั้ง
+          ถ้าเราเขียน <code>map.get($spacing, xl)</code> แล้วไม่มี key
+          <code>xl</code> ผลลัพธ์จะเป็น <code>null</code>
+          และถ้า <code>null</code> ถูกใช้เป็นค่าของ property
+          Sass มักจะตัด declaration นั้นทิ้งจาก CSS ปลายทาง
+        </p>
+
+        <pre><code>@use "sass:map";
+
+$spacing: (
+  sm: 0.5rem,
+  md: 1rem,
+  lg: 1.5rem,
+);
+
+.stack-loose {
+  gap: map.get($spacing, xl);
+  padding: map.get($spacing, lg);
+}</code></pre>
+
+        <p>CSS ที่คอมไพล์แล้วจะเป็น:</p>
+        <pre><code>.stack-loose {
+  padding: 1.5rem;
+}</code></pre>
+
+        <blockquote>
+          นี่คือเหตุผลที่ควรตั้งชื่อ key ให้สื่อความหมายและใช้ชุดชื่อเดิมซ้ำทั้งโปรเจกต์
+          เพราะ key สะกดผิดหรือคนละมาตรฐานอาจทำให้ declaration
+          หายไปแบบเงียบ ๆ ได้
+        </blockquote>
+
+        <h2>เลือก list หรือ map ดี?</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>สถานการณ์</th>
+              <th>เครื่องมือที่เหมาะกว่า</th>
+              <th>เหตุผล</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ข้อมูลขึ้นกับลำดับ เช่น offset ของ shadow</td>
+              <td>List</td>
+              <td>เรียกตำแหน่งตาม index ได้ตรงไปตรงมา</td>
+            </tr>
+            <tr>
+              <td>ข้อมูลมีชื่อบอกบทบาท เช่น spacing scale</td>
+              <td>Map</td>
+              <td>อ่านโค้ดแล้วรู้ทันทีว่ากำลังเลือกค่าระดับไหน</td>
+            </tr>
+            <tr>
+              <td>ต้องให้ทีมใช้ token ชุดเดียวกันซ้ำ ๆ</td>
+              <td>Map</td>
+              <td>กำหนด key มาตรฐานได้ชัดกว่า list</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>ข้อผิดพลาดที่พบบ่อย</h2>
+        <ul>
+          <li>ลืมว่า <code>list.nth()</code> เริ่มนับจาก 1 ทำให้ดึงสมาชิกผิดตัว</li>
+          <li>ใช้ list กับข้อมูลที่ควรมีชื่อกำกับ จนสุดท้ายจำไม่ได้ว่าสมาชิกแต่ละตำแหน่งคืออะไร</li>
+          <li>สะกด key ของ map ไม่ตรงกัน แล้วได้ <code>null</code> กลับมาโดยไม่ทันสังเกต</li>
+          <li>เก็บข้อมูลหลายแบบปนกันใน map เดียว จนชื่อ key และความหมายเริ่มสับสน</li>
+        </ul>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          ให้สร้าง map ชื่อ <code>$spacing</code> ที่มีค่า
+          <code>sm: 0.5rem</code>, <code>md: 1rem</code> และ
+          <code>lg: 1.5rem</code> จากนั้นใช้กับคลาส <code>.stack</code>
+          โดยกำหนด <code>display: flex;</code>,
+          <code>flex-direction: column;</code>, <code>gap: map.get($spacing, md);</code>
+          และ <code>padding: map.get($spacing, lg);</code>
+          แล้วดูว่า CSS ที่คอมไพล์แล้วเป็นอย่างไร
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <pre><code>@use "sass:map";
+
+$spacing: (
+  sm: 0.5rem,
+  md: 1rem,
+  lg: 1.5rem,
+);
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: map.get($spacing, md);
+  padding: map.get($spacing, lg);
+}</code></pre>
+
+          <pre><code>/* CSS ที่คอมไพล์แล้ว */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+}</code></pre>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="09_functions_and_built_in_modules.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="11_control_flow.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>
