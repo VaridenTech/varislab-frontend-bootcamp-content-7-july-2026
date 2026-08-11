@@ -54,7 +54,7 @@ useQuery({
 
         <p>บทนี้สลับลำดับกลับไปเป็นแบบบทเรียน 12: กล่อง ✍️ มาก่อนกล่อง 🤖 และคราวนี้เหตุผลไม่ใช่เรื่อง "ให้ไฟล์ตัวอย่างเป็นบริบท" อย่างเดียว แต่เป็นเรื่องทิศทางการพึ่งพาล้วน ๆ</p>
 
-        <p>ทวนกฎจากบทเรียน 09 อีกครั้ง: <strong>สิ่งที่พังเมื่อคุณตัดของออกจาก prompt คือสิ่งที่<em>อ้างถึง</em>ของชิ้นนั้น ไม่ใช่ตัวมันเอง</strong> บทที่แล้วเราเจอกรณีที่ลูกศรชี้ทางเดียว: บล็อก interceptor อ้างถึง <code>apiClient</code> เราจึงต้องให้ Agent สร้าง <code>apiClient</code> ก่อน บทนี้ลูกศรชี้กลับด้าน</p>
+        <p>ทวนกฎจากบทเรียน 12 อีกครั้ง: <strong>สิ่งที่พังเมื่อคุณตัดของออกจาก prompt คือสิ่งที่<em>อ้างถึง</em>ของชิ้นนั้น ไม่ใช่ตัวมันเอง</strong> บทที่แล้วเราเจอกรณีที่ลูกศรชี้ทางเดียว: บล็อก interceptor อ้างถึง <code>apiClient</code> เราจึงต้องให้ Agent สร้าง <code>apiClient</code> ก่อน บทนี้ลูกศรชี้กลับด้าน</p>
 
         <p>เปิดดูโครงของ <code>queries.ts</code> ที่เรากำลังจะได้: ครึ่งบนคือ <code>productKeys</code> ครึ่งล่างคือ <code>productQueries</code> และครึ่งล่างอ้างถึงครึ่งบน<em>ทุกจาน</em> — <code>productKeys.list(params)</code>, <code>productKeys.byCategory(params)</code>, <code>productKeys.categories()</code>, <code>productKeys.detail(id)</code> ถ้าเราสั่งว่า "สร้าง <code>productQueries</code> แต่ห้ามแตะ <code>productKeys</code>" โดยที่ <code>productKeys</code> ยังไม่มีตัวตน สิ่งที่พังไม่ใช่ <code>productKeys</code> แต่คือ <code>productQueries</code> ทั้งก้อน: typecheck ตายที่บรรทัดแรกของทุกจาน แล้วคุณจะเดินวงจรตรวจงานขั้นที่สามไม่ได้เลย</p>
 
