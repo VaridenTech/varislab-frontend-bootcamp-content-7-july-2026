@@ -220,6 +220,24 @@ SUFFIX = "| สร้างเว็บ E-commerce ด้วย React + Cursor A
 BUILD = set(range(9, 29)) | set(range(30, 34))  # lessons using the full anatomy
 MANUAL = {5, 9, 12, 15, 17, 22, 25, 28, 31, 33}
 
+FILES = [
+    "01_intro.html", "02_project_scaffold.html", "03_tooling.html",
+    "04_scss_foundation.html", "05_architecture.html", "06_cursor_setup.html",
+    "07_cursor_rules.html", "08_prompt_and_review.html", "09_react_router.html",
+    "10_header_footer.html", "11_providers_query_client.html",
+    "12_button_input_radio.html", "13_modal_pagination.html",
+    "14_display_components.html", "15_api_client.html",
+    "16_product_types_api.html", "17_query_factories.html",
+    "18_product_list_components.html", "19_home_page.html",
+    "20_category_page.html", "21_product_page.html", "22_cart_store.html",
+    "23_add_to_cart.html", "24_cart_page.html", "25_checkout_schema.html",
+    "26_address_form.html", "27_delivery_payment_summary.html",
+    "28_place_order.html", "29_when_ai_gets_it_wrong.html",
+    "30_test_setup.html", "31_unit_tests.html", "32_hook_tests.html",
+    "33_integration_tests.html", "34_ai_code_review.html", "35_wrap_up.html",
+]
+FINAL = "--final" in sys.argv
+
 errors = []
 
 
@@ -252,6 +270,10 @@ for path in files:
         check(int(eyebrow.group(1)) == n,
               f"{tag} eyebrow says {eyebrow.group(1)}, file says {n:02d}")
 
+    if 1 <= n <= len(FILES):
+        check(path.name == FILES[n - 1],
+              f"{tag} unexpected filename for lesson {n:02d}, expected {FILES[n - 1]}")
+
     nav = re.search(r'<nav class="lesson-navigation".*?</nav>', html, re.S)
     check(bool(nav), f"{tag} no lesson-navigation")
     if nav:
@@ -262,13 +284,13 @@ for path in files:
         if n == 1:
             check(prev is None, f"{tag} lesson 01 must not have a prev link")
         else:
-            want = next((p.name for p in files if int(p.name[:2]) == n - 1), None)
+            want = FILES[n - 2]
             check(prev is not None and prev.group(1) == want,
                   f"{tag} prev should be {want}, got {prev and prev.group(1)}")
         if n == 35:
             check(nxt is None, f"{tag} lesson 35 must not have a next link")
         else:
-            want = next((p.name for p in files if int(p.name[:2]) == n + 1), None)
+            want = FILES[n]
             check(nxt is not None and nxt.group(1) == want,
                   f"{tag} next should be {want}, got {nxt and nxt.group(1)}")
 
@@ -286,10 +308,12 @@ for path in files:
         check('class="lesson-manual"' in html and "✍️" in html,
               f"{tag} missing ✍️ blockquote.lesson-manual (no-AI zone)")
 
-if files:
+if FINAL:
     check(len(files) == 35, f"expected 35 lessons, found {len(files)}")
     check(present == set(range(1, 36)),
           f"missing lesson numbers: {sorted(set(range(1, 36)) - present)}")
+else:
+    print(f"note: {len(files)}/35 lessons written")
 
 index = DIR / "index.html"
 if index.exists():
@@ -310,7 +334,7 @@ sys.exit(1 if errors else 0)
 python3 <SCRATCH>/check_lessons.py
 ```
 
-Expected: `checked 0 lesson file(s)` then `OK`, exit 0. (The 35-file assertion is skipped while the directory is empty, so the checker is usable from the first lesson onward.)
+Expected: `note: 0/35 lessons written`, `checked 0 lesson file(s)`, then `OK`, exit 0. (The 35-file assertion only runs with `--final`, so the checker is usable from the first lesson onward without failing on lessons that haven't been written yet.)
 
 - [ ] **Step 8: Commit**
 
@@ -593,7 +617,7 @@ Sections:
 - วงจรตรวจงาน 5 ขั้น, as an `<ol>`:
   1. อ่าน diff ทั้งหมดก่อน — `git diff` ไม่ใช่แค่ดูว่าหน้าเว็บขึ้นไหม
   2. ไล่ checklist ของบทนั้น
-  3. `npm run lint` และ `npx tsc --noEmit`
+  3. `npm run lint` และ `npm run typecheck` (โปรเจกต์ใช้ tsconfig แบบ solution-style — root config เป็น `{"files": [], "references": [...]}` ดังนั้น `npx tsc --noEmit` ตรง ๆ จะไม่ตรวจไฟล์ไหนเลยและ exit 0 ต้องใช้สคริปต์ `typecheck` ซึ่งคือ `tsc -b`)
   4. รันจริงแล้วทำตาม checkpoint
   5. ถามตัวเองว่า "ถ้ามีคนถามว่าบรรทัดนี้ทำอะไร ตอบได้ไหม" — ตอบไม่ได้ ให้เปิด Ask mode ถามจนเข้าใจ ก่อนไปต่อ
 - แก้ต่อ หรือ ถอยแล้วสั่งใหม่ — refine when the shape is right and details are wrong; `git restore .` and rewrite the prompt when the shape itself is wrong. Chasing a wrong shape with follow-up prompts is how a 20-line file becomes 200.
@@ -1108,7 +1132,7 @@ git commit -m "content: add AI e-commerce lessons 34-35 wrap up"
 - [ ] **Step 1: Run the structural checker on the complete set**
 
 ```bash
-python3 <SCRATCH>/check_lessons.py
+python3 <SCRATCH>/check_lessons.py --final
 ```
 
 Expected: `checked 35 lesson file(s)` then `OK`, exit 0. Fix any failure and re-run until clean.

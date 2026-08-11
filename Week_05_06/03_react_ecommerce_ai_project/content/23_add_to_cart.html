@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ต่อปุ่ม Add to Cart เข้ากับ Cart Store ด้วย modal ยืนยันและ badge นับจำนวนบน Header พร้อมฝึกคุมขอบเขตของ prompt ที่สั่งแก้ไฟล์เดิมสองไฟล์" />
+    <title>Add to Cart และ Mini Cart | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 23 · ตะกร้าสินค้า (Cart)</p>
+          <h1>ปุ่ม Add to Cart และ Mini Cart</h1>
+          <p class="lesson-original-title" lang="en">Add to Cart &amp; Mini Cart</p>
+        </header>
+
+        <p>บทที่แล้วเราสร้างเครื่องยนต์ของตะกร้าเสร็จแล้ว แต่ยังไม่มีใครได้ใช้มันเลย บทนี้เราจะต่อสายให้ครบวงจรแรก: กดปุ่ม Add To Cart บนหน้า Product → สินค้าเข้า store → modal เด้งยืนยัน → ตัวเลขบนไอคอนตะกร้าที่ Header ขยับตาม งานแบ่งเป็นสามชิ้น: modal ยืนยัน, การอัปเดตหน้า Product และ mini cart (badge) บน Header</p>
+
+        <p>และบทนี้ต่างจากทุกบทที่ผ่านมาในข้อเดียวที่สำคัญมาก: <strong>เป็นบทแรกที่ prompt ต้องสั่งให้ Agent แก้ไฟล์ที่มีเนื้อหาอยู่แล้ว</strong> ตั้งแต่บทเรียน 09 มาถึงตอนนี้ เราสั่งสร้างไฟล์ใหม่แทบทั้งหมด (มีแค่ <code>providers.tsx</code> บทที่แล้วที่แก้ของเดิม และเป็นการแก้แค่สองบรรทัด) วันนี้เรามีไฟล์เดิมสองไฟล์ที่ต้องแก้ ไฟล์ละหลายจุด — และการคุมขอบเขตของ prompt แบบนั้นมีท่าเฉพาะของมัน</p>
+
+        <h2>ทำไม prompt ที่แก้ไฟล์เดิมถึงอันตรายกว่า prompt ที่สร้างไฟล์ใหม่</h2>
+
+        <p>ตอนสั่งสร้างไฟล์ใหม่ การตรวจงานง่ายมาก: <code>git status</code> บอกชื่อไฟล์ที่โผล่มา ถ้าจำนวนไม่ตรงกับที่สั่ง คุณเห็นทันทีในหนึ่งวินาที และถ้าเนื้อในผิดก็ลบทั้งโฟลเดอร์แล้วสั่งใหม่ ไม่มีอะไรเสียหาย</p>
+
+        <p>แต่พอสั่งแก้ไฟล์เดิม โจทย์กลับด้าน: ไฟล์ที่ขึ้นสถานะ <code>modified</code> อาจถูกแก้หนึ่งบรรทัดหรือถูกเขียนใหม่ทั้งไฟล์ก็ได้ <code>git status</code> บอกเหมือนกันเป๊ะ คุณต้องอ่าน <code>git diff</code> จริง ๆ เท่านั้นถึงจะรู้ และสิ่งที่ Agent ชอบทำที่สุดเวลาเปิดไฟล์เดิมขึ้นมาแก้คือ<strong>"จัดระเบียบ" ของที่มันไม่ได้ถูกสั่งให้แตะ</strong> — เรียงลำดับ import ใหม่ เปลี่ยน <code>React.FC</code> เป็น function declaration แตกฟังก์ชันเป็นตัวย่อย หรือ "ปรับปรุง" ชื่อตัวแปรให้สื่อความหมายกว่าเดิม ทุกข้อนี้อาจถูกในสุญญากาศ แต่มันทำให้ diff ที่ควรอ่านจบใน 20 วินาทีกลายเป็น 200 บรรทัดที่คุณจะอ่านไม่ไหวแล้วกด accept ทิ้ง</p>
+
+        <p>เครื่องมือสามอย่างที่เราจะใช้คุมมันในบทนี้ และจะใช้ซ้ำในทุกบทที่แก้ไฟล์เดิมหลังจากนี้:</p>
+
+        <ul>
+          <li><strong><code>@</code>-mention ไฟล์ที่จะแก้ตรง ๆ</strong> — ให้ Agent อ่านของเดิมก่อนแก้ ไม่ใช่เดาว่าไฟล์เดิมหน้าตาอย่างไรแล้วเขียนใหม่ทั้งก้อน นี่คือเหตุผลเดียวกับบทเรียน 12 แค่คนละทิศ: คราวนั้นไฟล์ที่ mention เป็น<em>แม่แบบ</em> คราวนี้มันคือ<em>ของเดิมที่ห้ามเสียหาย</em></li>
+          <li><strong>สั่งจำนวนจุดที่แก้ให้ชัดเป็นตัวเลข</strong> — ไม่ใช่ "อัปเดตหน้า Product ให้เพิ่มของลงตะกร้าได้" แต่เป็น "แก้สามจุดตามนี้ นอกนั้นห้ามแตะแม้แต่บรรทัดเดียว" ตัวเลขนั้นกลายเป็นสิ่งที่คุณเอาไปนับใน <code>git diff</code> ได้ตอนตรวจ</li>
+          <li><strong>ระบุชื่อไฟล์ที่แก้ได้ในบรรทัด <code>โครงสร้าง:</code> แล้วปิดที่เหลือทั้งหมดใน <code>ขอบเขต:</code></strong> — โดยเฉพาะไฟล์ที่<em>เกี่ยวข้องแต่ห้ามแตะ</em> เช่น <code>ProductDetailInfo</code> ที่เป็นเจ้าของปุ่มจริง ๆ</li>
+        </ul>
+
+        <p>ข้อสุดท้ายนั้นมีเรื่องน่าสนใจซ่อนอยู่ ลองคิดดู: ปุ่ม Add To Cart อยู่ใน <code>ProductDetailInfo</code> แต่บทนี้เราไม่แตะไฟล์นั้นเลยแม้แต่ตัวอักษรเดียว เพราะบทเรียน 21 ออกแบบมันเป็น <code>onButtonClick: () =&gt; void</code> ไว้แล้ว — component ที่วาดปุ่มไม่รู้และไม่ต้องรู้ว่ากดแล้วเกิดอะไร นี่คือคำทำนายจากบทเรียน 21 ที่ถึงกำหนดวันนี้พอดี และเป็นเหตุผลว่าทำไม callback prop ถึงคุ้มค่าที่จะออกแบบตั้งแต่แรก</p>
+
+        <h2>AddToCartModalContent — modal ยืนยันการเพิ่มสินค้า</h2>
+
+        <p>เวลาผู้ใช้กดเพิ่มสินค้า ต้องมี feedback ทันทีว่า "สำเร็จแล้วนะ" ไม่อย่างนั้นเขาจะกดซ้ำอีกสามรอบเพราะไม่แน่ใจ (แล้วได้ของ 4 ชิ้นโดยไม่ตั้งใจ) เราจะทำ modal ยืนยันโดย<em>ไม่เขียน modal ใหม่</em> — component <code>Modal</code> กลางที่สร้างไว้ตั้งแต่บทเรียน 13 กับ <code>Button</code> จากบทเรียน 12 รอเราหยิบมาประกอบอยู่แล้ว</p>
+
+        <p>จุดที่น่าสังเกตของไฟล์นี้มีสามข้อ:</p>
+
+        <ul>
+          <li><strong>เป็นการ compose ล้วน ๆ</strong> — ไฟล์นี้ไม่รู้จัก react-modal เลยด้วยซ้ำ มันรับ <code>isOpen</code>/<code>onClose</code> แล้วส่งต่อให้ <code>Modal</code> กลาง (prop ฝั่ง Modal ชื่อ <code>onRequestClose</code> ตามธรรมเนียมของ react-modal) — เนื้อในเป็นแค่ข้อความกับปุ่ม Close นี่คือผลตอบแทนของการลงทุนสร้าง shared components ไว้ก่อนในบทเรียน 12–13: feature ใหม่ประกอบเสร็จใน 20 กว่าบรรทัด</li>
+          <li><strong>ไม่มี logic ตะกร้าอยู่ในนี้</strong> — component นี้ไม่เรียก <code>useCart</code> ไม่รู้ว่าสินค้าอะไรถูกเพิ่ม มันเป็น "หน้าตา" เพียว ๆ ที่ถูกควบคุมจากพ่อ (หน้า Product) ผ่าน props สองตัว ทำให้ทดสอบง่ายและเอาไปใช้ที่อื่นได้ถ้าต้องการ</li>
+          <li><strong>class ที่ใช้คือ utility กลางทั้งหมด</strong> — <code>text-center</code>, <code>fs-20</code>, <code>mb-20</code> จาก <code>_utilities.scss</code> และ <code>_typography.scss</code> บทเรียน 04 ไม่ต้องมี <code>.module.scss</code> ของตัวเอง</li>
+        </ul>
+
+        <h2>CartSummary — mini cart บน Header</h2>
+
+        <p>ผู้ใช้เพิ่มของแล้วก็จริง แต่พอปิด modal ไปก็ไม่เหลือร่องรอยอะไรบนจอว่าตะกร้ามีของ ธรรมเนียมของเว็บขายของคือไอคอนตะกร้ามุมขวาบนพร้อมตัวเลขจำนวนชิ้น ตัวนี้เป็น component ตัวแรกของคอร์สที่<em>อ่าน</em>จาก store จริง ๆ:</p>
+
+        <ul>
+          <li><strong>นับ "จำนวนชิ้น" ไม่ใช่ "จำนวนแถว"</strong> — <code>reduce</code> บวก <code>quantity</code> ของทุกแถวรวมกัน ถ้าตะกร้ามีสินค้าตัวเดียวจำนวน 3 ชิ้น badge ต้องโชว์ 3 ไม่ใช่ 1 (<code>cart.items.length</code> จะให้คำตอบผิดทันทีที่มีการกดซ้ำ)</li>
+          <li><strong><code>useMemo</code> กับ dependency <code>[cart.items]</code></strong> — คำนวณผลรวมใหม่เฉพาะตอน items เปลี่ยนจริง และเพราะ reducer ของเรา immutable ทุกการแก้ไขจะได้ array reference ใหม่เสมอ <code>useMemo</code> จึงจับการเปลี่ยนแปลงได้แม่นยำ — วินัยจากบทที่แล้วมาส่งผลตรงนี้</li>
+          <li><strong>badge โผล่เฉพาะตอนมีของ</strong> — <code>{totalItems &gt; 0 &amp;&amp; ...}</code> ตะกร้าว่าง = ไอคอนเกลี้ยง ๆ ไม่มีเลข 0 แปะให้รก</li>
+          <li><strong>การจัดตำแหน่ง badge</strong> — ตัวเลขใช้ <code>position: absolute</code> เกาะมุมขวาบนของกล่องที่มี class <code>relative</code> (utility จากบทเรียน 04) ดันขึ้น-ออกไป 12px ให้ลอยเหนือไอคอน สีพื้นดึงจาก <code>variables.$red01</code> ผ่าน <code>@use</code> ตามแพตเทิร์น SCSS module ที่ใช้กันมาทั้งโปรเจกต์</li>
+          <li><strong><code>onIconClick</code> เป็น prop</strong> — component นี้ไม่ตัดสินใจเองว่าคลิกแล้วไปไหน คนใช้ (Header) เป็นคนบอก การแยกแบบนี้ทำให้ CartSummary ไม่ต้องรู้จัก router เลย ท่าเดียวกับ <code>onButtonClick</code> ของ <code>ProductDetailInfo</code> เป๊ะ</li>
+        </ul>
+
+        <h2>สี่จุดที่หายไปจาก Product.tsx</h2>
+
+        <p>ย้อนไปบทเรียน 21 เราจงใจปล่อยให้ <code>onAddToCart</code> เป็นฟังก์ชันว่างที่มีแต่ comment <code>TODO</code> เพราะตอนนั้นยังไม่มี store ให้เรียก และกล่อง 🚨 ท้ายบทนั้นระบุไว้ล่วงหน้าเลยว่าไฟล์นี้ต่างจากต้นฉบับอยู่<strong>สี่จุด</strong> ซึ่งเขียนรวมไว้เป็นสามข้อ วันนี้เราจะเติมให้ครบ และ diff ของบทนี้ต้องมีแค่นั้นพอดี:</p>
+
+        <ol>
+          <li><strong>บรรทัด import</strong> — <code>import React from "react";</code> กลายเป็น <code>import React, { useState } from "react";</code> และมี import ใหม่<em>สองบรรทัด</em>แทรกเข้ามาระหว่างบรรทัดของ <code>ProductDetailInfo</code> กับบรรทัดของ <code>productQueries</code>: ตัว modal และ hook <code>useCart</code></li>
+          <li><strong>state ของ modal และฟังก์ชันเปิด/ปิด</strong> — <code>const [isModalOpen, setIsModalOpen] = useState(false);</code> กลายเป็นบรรทัด<em>แรกสุด</em>ในตัว component (เหนือ <code>useParams</code>) ตามด้วย <code>onOpenModal</code>/<code>onCloseModal</code> แบบบรรทัดเดียวสองตัว และ JSX <code>&lt;AddToCartModalContent /&gt;</code> ต่อท้ายก่อนปิด <code>&lt;/div&gt;</code> นอกสุด</li>
+          <li><strong>ไส้ในของ <code>onAddToCart</code></strong> — comment <code>TODO</code> ถูกแทนที่ด้วยการแปลงข้อมูลสินค้าเป็น <code>CartItem</code> แล้วส่งเข้า store ก่อนเปิด modal</li>
+        </ol>
+
+        <p>จุดที่สี่คือ<strong>หนึ่งบรรทัด</strong>ที่กล่อง 🚨 ของบทเรียน 21 พ่วงไว้ท้ายข้อ (3) เพราะมันคือสิ่งที่ทำให้ข้อ 3 ทำงานได้: <code>const { addToCart } = useCart();</code> ซึ่งวางต่อท้ายบล็อก <code>useQuery</code> พอดี — ที่มัน<em>ไม่</em>ได้อยู่คือแถวบรรทัดแรก ๆ ของคอมโพเนนต์คู่กับ <code>useState</code> ซึ่งเป็นที่ที่หลายคน (และ Agent) เดาว่ามันควรอยู่ รวมแล้ว<em>บรรทัดโค้ด</em>ที่เพิ่มเข้ามานอกตัวฟังก์ชัน <code>onAddToCart</code> มีเจ็ดบรรทัดพอดี (บวกบรรทัดว่างอีกสองบรรทัด ซึ่ง <code>git diff</code> นับด้วย) แล้วที่เหลือคือการแก้บรรทัด <code>import React</code> กับการเขียนไส้ในของฟังก์ชันเดียว ถ้า <code>git diff</code> ของคุณยาวกว่านี้ แปลว่ามีของแถมมาด้วย</p>
+
+        <p>เรื่องที่ควรหยุดคิดสักนิดใน handler ตัวใหม่:</p>
+
+        <ul>
+          <li><strong>การแปลงร่างข้อมูลเกิดที่นี่</strong> — API ให้ <code>Product</code> ก้อนใหญ่ แต่ store ต้องการ <code>CartItem</code> ที่เราออกแบบไว้บทที่แล้ว หน้า Product คือคนแปลง: <code>thumbnail</code> กลายเป็น <code>image</code>, <code>quantity</code> ตั้งเป็น <code>1</code> เสมอ (กดหนึ่งครั้ง = หนึ่งชิ้น และถ้ากดซ้ำ reducer จะรวมเข้าแถวเดิมให้เอง — เราจ่ายค่ากติกานี้ไว้แล้วใน <code>ADD_TO_CART</code>)</li>
+          <li><strong><code>originalPrice</code> คำนวณแล้วเก็บติดไปเลย</strong> — เราใช้ <code>calculateOriginalPrice</code> ตัวเดียวกับที่หน้านี้ใช้แสดงราคาก่อนลดอยู่แล้ว (import อยู่ในไฟล์ตั้งแต่บทเรียน 21 ไม่ต้องเพิ่มบรรทัดใหม่) เก็บผลลัพธ์ลงตะกร้าไปด้วย เพื่อให้หน้า Cart โชว์ราคาเต็มกับยอด "You Save" ได้ในบทหน้าโดยไม่ต้องยิง API ถามราคาสินค้าซ้ำทีละตัว</li>
+          <li><strong>ลำดับใน handler สื่อความหมาย</strong> — <code>addToCart(...)</code> ก่อน แล้วค่อย <code>onOpenModal()</code>: ยืนยันหลังจากของเข้าตะกร้าแล้วจริง ๆ ส่วน <code>if (productDetail)</code> กันกรณีที่ type บอกว่า data อาจยังไม่มา (ในทางปฏิบัติปุ่มยังไม่ render ถ้าข้อมูลไม่มา เพราะ early return สองก้อนกันไว้แล้ว แต่ TypeScript ไม่รู้เรื่องนั้น — closure ตัวนี้ถูกประกาศ<em>ก่อน</em> early return จึงยังเห็น <code>productDetail</code> เป็น <code>Product | undefined</code> อยู่)</li>
+          <li><strong><code>useCart</code> ใช้ได้เพราะบทที่แล้วเราเสียบ provider ไว้แล้ว</strong> — หน้า Product render อยู่ใต้ <code>AppProviders</code> ผ่าน router ดังนั้น <code>CartContext</code> หาเจอแน่นอน ถ้าคุณลืมแก้ <code>providers.tsx</code> ในบทเรียน 22 บรรทัดนี้จะโยน error "useCart must be used within a CartProvider" ใส่หน้าคุณทันที — ยามที่เราตั้งไว้ทำงานแล้ว</li>
+        </ul>
+
+        <h2>Header — เติมของที่ค้างไว้ตั้งแต่บทเรียน 10</h2>
+
+        <p>Header เวอร์ชันบทเรียน 10 ของเรามีโลโก้กับเมนู แต่มุมขวายังโล่ง และบทนั้นบอกเหตุผลไว้ตรง ๆ ว่าทำไมถึงไม่เขียนบรรทัด <code>useProductRoute()</code> ค้างไว้ล่วงหน้า: ตัวแปรที่ประกาศแล้วไม่ได้ใช้จะโดน ESLint ฟ้องทันที ตอนนี้ได้เวลาเติมของที่ค้างไว้แล้ว จุดที่เพิ่มมีสามจุด — import <code>CartSummary</code>, import <code>useProductRoute</code>, ดึง <code>goToCartSummary</code> ออกมา แล้ววาง <code>&lt;CartSummary /&gt;</code> ปิดท้ายแถว flex</p>
+
+        <p>และตรงนี้คือจุดที่<strong>การตัดสินใจเชิงสถาปัตยกรรมของบทเรียน 10 เก็บดอกครั้งแรก</strong> บทนั้นเราสร้าง <code>useProductRoute</code> ขึ้นมาเพื่อรวม URL ของทั้งแอปไว้ที่เดียว แล้วจบบทโดยที่<em>ไม่มีใครเรียกใช้มันเลยสักที่</em> — เพราะในบทนั้นไม่มีจุดไหนที่ต้อง navigate จริง ๆ hook ที่ไม่มีคนใช้คือ hook ที่ยังพิสูจน์อะไรไม่ได้ วันนี้ <code>Header</code> เป็นคนแรกที่เรียกมัน และนั่นแปลว่าวันนี้เป็นวันแรกที่ Agent มีโอกาส<em>ไม่</em>ใช้มันด้วย</p>
+
+        <p>ลองคิดแบบ Agent ดู: มันได้โจทย์ว่า "คลิกไอคอนตะกร้าแล้วไปหน้า <code>/cart</code>" ทางที่สั้นที่สุดและพบบ่อยที่สุดในโค้ดทั่วโลกคือ <code>const navigate = useNavigate();</code> แล้ว <code>onClick={() =&gt; navigate("/cart")}</code> จบในสองบรรทัด ใช้งานได้ถูกต้อง 100% lint ผ่าน typecheck ผ่าน หน้าเว็บทำงานเป๊ะ — และมันทำลายเหตุผลทั้งหมดที่ <code>useProductRoute</code> มีอยู่ เพราะ URL string <code>"/cart"</code> เพิ่งหลุดออกจากที่รวมของมันไปนั่งอยู่ในไฟล์ที่สอง วันที่เปลี่ยน URL scheme คุณจะแก้ hook แล้วคิดว่าจบ ทั้งที่ยังมีอีกที่ที่ตกหล่น</p>
+
+        <p>นี่คือรูปแบบของข้อผิดพลาดที่<em>ไม่มีเครื่องมือตัวไหนจับได้</em> และเป็นข้อที่ต้องอยู่ใน checklist เป็นข้อต้น ๆ ของบทนี้ — วิธีจับใช้เวลาสองวินาที: <code>grep -rn "useNavigate\|navigate(" src/shared/components/Header/</code> ต้องว่างเปล่า</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <p>สามไฟล์ใหม่ สองไฟล์เดิมที่ต้องแก้ แบ่งเป็นสองรอบตามทิศทางการพึ่งพาแบบเดียวกับบทเรียน 21 และ 22:</p>
+
+        <pre><code class="language-bash">src/
+├── features/
+│   └── cart/
+│       └── components/
+│           ├── AddToCartModalContent/
+│           │   └── AddToCartModalContent.tsx    # 🤖 รอบที่ 1 — ไม่มี .module.scss
+│           └── CartSummary/
+│               ├── CartSummary.module.scss      # 🤖 รอบที่ 1
+│               └── CartSummary.tsx              # 🤖 รอบที่ 1
+├── pages/
+│   └── Product/
+│       └── Product.tsx                          # 🤖 รอบที่ 2 — แก้ไฟล์เดิม
+└── shared/
+    └── components/
+        └── Header/
+            └── Header.tsx                       # 🤖 รอบที่ 2 — แก้ไฟล์เดิม</code></pre>
+
+        <p>รอบที่ 1 สร้างของที่รอบที่ 2 ต้องใช้ ถ้ากลับลำดับ Agent จะต้องเดา props signature ของ <code>CartSummary</code> เอาเองแล้วเขียน <code>Header</code> ตามที่เดา — พอไฟล์จริงมาถึง signature ไม่ตรงก็ต้องกลับไปแก้อีกไฟล์ นี่เป็นเหตุผลเดียวกับที่บทเรียน 21 ใช้แบ่งสองรอบ</p>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>AddToCartModalContent</code></strong> — ต้องเป็น presentational ล้วน: ไม่มี state ไม่เรียก <code>useCart</code> และไม่รู้ว่าสินค้าชิ้นไหนถูกเพิ่ม ต้องไม่ import react-modal ตรง ๆ</li>
+          <li><strong><code>CartSummary</code></strong> — ต้องนับจาก <code>quantity</code> รวมทุกแถว ไม่ใช่นับจำนวนแถว ต้องไม่รู้จัก router และต้องไม่มี URL string อยู่ในไฟล์</li>
+          <li><strong><code>Product.tsx</code></strong> — ต้องเปลี่ยน<em>เฉพาะ</em>สี่จุดที่บทเรียน 21 ระบุไว้ ต้องไม่แตะ JSX ส่วนอื่น ไม่แตะ early return และไม่แตะการ destructure</li>
+          <li><strong><code>Header.tsx</code></strong> — ต้อง navigate ผ่าน <code>useProductRoute</code> เท่านั้น ต้องไม่มี <code>useNavigate</code> และไม่มี string <code>"/cart"</code> อยู่ในไฟล์ และต้องไม่แตะเมนูสองรายการเดิม</li>
+        </ul>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor — รอบที่ 1: สองคอมโพเนนต์ของ feature ตะกร้า</strong> แชทใหม่ โหมด Agent สามไฟล์ใหม่ ยังไม่แตะไฟล์เดิมสักตัว:</p>
+          <pre><code class="language-text">สร้างสองคอมโพเนนต์ของฟีเจอร์ตะกร้า: modal ยืนยันการเพิ่มสินค้า และไอคอนตะกร้าพร้อมตัวเลขจำนวน
+
+บริบท: @src/features/cart/useCart.ts @src/features/cart/store/CartContext.tsx @src/shared/components/Modal/Modal.tsx @src/shared/components/Button/Button.tsx @src/features/products/components/ProductCard/ProductCard.tsx @src/styles
+ใช้ ProductCard เป็นแม่แบบของรูปทรงไฟล์: React.FC + interface props + default export
+src/features/cart/useCart.ts export named useCart ที่คืน
+  { cart, addToCart, removeFromCart, updateQuantity, clearCart }
+  โดย cart มีรูปร่าง { items: CartItem[] } และ CartItem มี id, title, price,
+  quantity, image และ originalPrice ที่เป็น optional
+src/shared/components/Modal/Modal.tsx เป็น default export รับสาม props เท่านั้น:
+  isOpen (boolean), onRequestClose (() =&gt; void) และ children
+src/shared/components/Button/Button.tsx เป็น default export รับ children
+  เป็น React.ReactNode และรับ onClick?: () =&gt; void
+ติดตั้ง Font Awesome ครบทั้งห้า package ไว้แล้วตั้งแต่บทเรียน 10
+ตัวแปรอยู่ใน src/styles/_variables.scss: $red01, $white
+utility class ทุกตัวที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว: relative, pointer,
+  inline-block, text-center, fw-bold, fs-12, fs-20, mb-10, mb-20
+alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่วนไฟล์ .scss ต้องอ้าง path แบบ relative
+  ไฟล์ .scss ในโฟลเดอร์นี้ลึกสี่ชั้นจาก src ให้เขียน @use "../../../../styles/variables";
+
+โครงสร้าง: สร้างไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
+- src/features/cart/components/AddToCartModalContent/AddToCartModalContent.tsx
+- src/features/cart/components/CartSummary/CartSummary.module.scss
+- src/features/cart/components/CartSummary/CartSummary.tsx
+AddToCartModalContent ต้องไม่มีไฟล์ .module.scss
+
+ข้อกำหนดทางเทคนิค:
+- AddToCartModalContent.tsx: import React แล้ว Button แล้ว Modal ตามลำดับนี้
+  interface AddToCartModalContentProps: isOpen: boolean, onClose: () =&gt; void
+  ตัวคอมโพเนนต์ประกาศเป็น React.FC ที่ destructure ({ isOpen, onClose })
+    แล้วเขียนเป็น arrow function ที่ return ทันทีด้วยวงเล็บ คือลงท้ายว่า }) =&gt; (
+    ห้ามมีปีกกา ห้ามมีคำว่า return ในไฟล์นี้
+  JSX: Modal isOpen={isOpen} onRequestClose={onClose} ครอบ
+    div className="text-center" ที่มี
+      h3 className="fs-20 fw-bold mb-10" ข้อความ Product Added to Cart
+      p className="mb-20" ข้อความ The product has been successfully added to your cart!
+      div className="inline-block" ครอบ Button onClick={onClose} children ข้อความ Close
+  ห้ามเรียก useCart ห้ามมี state ห้าม import react-modal ตรง ๆ
+  ห้ามรับ prop ที่บอกว่าสินค้าชิ้นไหนถูกเพิ่ม
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย
+- CartSummary.module.scss: @use "../../../../styles/variables";
+  .cartCount -&gt; position: absolute, top: -12px, right: -12px,
+    background-color: variables.$red01, color: variables.$white,
+    border-radius: 50%, padding: 3px 6px, min-width: 18px
+  ไฟล์นี้มี class เดียว
+- CartSummary.tsx: บรรทัด import ห้าบรรทัด ตามลำดับนี้พอดี
+    import React, { useMemo } from "react";
+    import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+    import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
+    import styles from "./CartSummary.module.scss";
+    import { useCart } from "@/features/cart/useCart";
+  interface CartSummaryProps: onIconClick: () =&gt; void  (prop เดียว)
+  ในคอมโพเนนต์: const { cart } = useCart();  แล้ว
+    const totalItems = useMemo(...) ที่ callback เขียนเป็น arrow แบบย่อบรรทัดเดียว
+      (ไม่มีปีกกา ไม่มีคำว่า return) ตามนี้ทุกตัวอักษร
+      () =&gt; cart.items.reduce((sum, item) =&gt; sum + item.quantity, 0)
+      ตั้งชื่อตัวสะสมว่า sum (ไม่ใช่ total หรือ acc) ค่าเริ่มต้นเป็น 0
+      และมี dependency array เป็น [cart.items]
+      ห้ามใช้ cart.items.length และห้ามนับจำนวนแถว
+  JSX: div className="relative" onClick={onIconClick} ที่มี
+    FontAwesomeIcon className="pointer fs-20" icon={faCartShopping}
+    {totalItems &gt; 0 &amp;&amp; ...} span ที่ className ต่อ styles.cartCount กับ
+      "fs-12 fw-bold text-center" และมี aria-label="Cart item count"
+      แสดงค่า totalItems
+  ห้ามใช้ useNavigate ห้าม import useProductRoute และห้ามมี URL string ในไฟล์นี้
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ไฟล์เดิมแม้แต่ไฟล์เดียว โดยเฉพาะ Header.tsx, Product.tsx,
+  ProductDetailInfo.tsx, Modal.tsx และ Button.tsx
+- ห้ามแก้ไฟล์ใด ๆ ใน src/features/cart/store/ หรือ useCart.ts
+- ห้ามสร้าง CartTable หรือหน้า Cart (เป็นงานของบทถัดไป)
+- ห้ามสร้าง AddToCartModalContent.module.scss
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ห้ามเขียนเทสต์
+- ยังไม่ต้องเอาสองตัวนี้ไปใช้ในหน้าไหน</code></pre>
+        </blockquote>
+
+        <p>ตรวจรอบที่ 1 ให้จบ ให้ <code>npm run lint</code> กับ <code>npm run typecheck</code> ผ่าน แล้ว <code>git commit</code> ก่อนส่งรอบที่ 2 — รอบหน้าเป็นรอบที่แก้ไฟล์เดิม ถ้า working tree ไม่สะอาด คุณจะแยกไม่ออกว่าบรรทัดไหนเป็นของใคร</p>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor — รอบที่ 2: แก้ไฟล์เดิมสองไฟล์</strong> แชทใหม่อีกครั้ง รอบนี้สังเกตสองอย่าง: บรรทัดแรกของ <code>บริบท:</code> <code>@</code>-mention ไฟล์ที่จะถูกแก้ทั้งสองไฟล์ตรง ๆ และบรรทัด <code>โครงสร้าง:</code> เขียนคำว่า "แก้เฉพาะสองไฟล์นี้" ไว้เป็นบรรทัดแรก:</p>
+          <pre><code class="language-text">ต่อปุ่ม Add To Cart เข้ากับตะกร้า และเติมไอคอนตะกร้าบน Header
+
+บริบท: @src/pages/Product/Product.tsx @src/shared/components/Header/Header.tsx @src/features/cart/components/AddToCartModalContent/AddToCartModalContent.tsx @src/features/cart/components/CartSummary/CartSummary.tsx @src/features/cart/useCart.ts @src/shared/hooks/useProductRoute.tsx @src/shared/utils/price.utils.ts
+สองไฟล์แรกคือไฟล์ที่ต้องแก้ อ่านของเดิมให้ครบก่อนแก้ ห้ามเขียนใหม่ทั้งไฟล์
+src/features/cart/useCart.ts export named useCart คืน
+  { cart, addToCart, removeFromCart, updateQuantity, clearCart }
+  addToCart รับ CartItem หนึ่งตัวที่มีฟิลด์ id, title, price, quantity, image
+  และ originalPrice (optional)
+src/features/cart/components/CartSummary/CartSummary.tsx เป็น default export
+  รับ prop เดียวคือ onIconClick: () =&gt; void
+src/features/cart/components/AddToCartModalContent/AddToCartModalContent.tsx
+  เป็น default export รับ isOpen: boolean และ onClose: () =&gt; void
+src/shared/hooks/useProductRoute.tsx เป็น default export (นามสกุล .tsx จริงตามนี้)
+  คืนฟังก์ชันสี่ตัว: goToProductDetails, goToCartSummary, goToCheckout, goToOrderSuccess
+  ไฟล์นี้เป็นที่เดียวในโปรเจกต์ที่ได้รับอนุญาตให้มี URL string ของการ navigate
+src/shared/utils/price.utils.ts export calculateOriginalPrice(price, discountPercentage?)
+  คืน number — Product.tsx import มันไว้แล้วตั้งแต่เดิม ไม่ต้องเพิ่มบรรทัด import
+Product.tsx ตอนนี้มี onAddToCart เป็นฟังก์ชันว่างที่มีแต่ comment TODO บรรทัดเดียว
+Header.tsx ตอนนี้มีโลโก้กับเมนูสองรายการ ยังไม่มีอะไรที่มุมขวาและยังไม่เรียก hook ใด ๆ
+
+โครงสร้าง: แก้เฉพาะสองไฟล์นี้ ห้ามสร้างไฟล์ใหม่แม้แต่ไฟล์เดียว
+- src/pages/Product/Product.tsx (แก้สามกลุ่มตามข้างล่าง นอกนั้นห้ามแตะ)
+- src/shared/components/Header/Header.tsx (แก้สามจุดตามข้างล่าง นอกนั้นห้ามแตะ)
+
+ข้อกำหนดทางเทคนิค:
+- Product.tsx จุดที่ 1 (import): เปลี่ยนบรรทัดแรกเป็น
+    import React, { useState } from "react";
+  แล้วแทรกสองบรรทัดนี้ต่อจากบรรทัด import ของ ProductDetailInfo
+  และก่อนบรรทัด import ของ productQueries ตามลำดับนี้
+    import AddToCartModalContent from "@/features/cart/components/AddToCartModalContent/AddToCartModalContent";
+    import { useCart } from "@/features/cart/useCart";
+  ห้ามเรียงบรรทัด import เดิมใหม่ ห้ามย้าย ห้ามลบ
+- Product.tsx จุดที่ 2 (state และ hook):
+    เพิ่ม const [isModalOpen, setIsModalOpen] = useState(false); เป็นบรรทัดแรกสุด
+      ในตัวคอมโพเนนต์ เหนือบรรทัด useParams
+    เพิ่ม const { addToCart } = useCart(); ต่อท้ายบล็อก useQuery ทันที
+      โดยไม่มีบรรทัดว่างคั่นระหว่างสองบรรทัดนั้น
+    เว้นบรรทัดว่างหนึ่งบรรทัด แล้วประกาศสองบรรทัดนี้ติดกัน
+      const onOpenModal = () =&gt; setIsModalOpen(true);
+      const onCloseModal = () =&gt; setIsModalOpen(false);
+      ทั้งคู่เขียนเป็น arrow แบบย่อบรรทัดเดียว ห้ามใส่ปีกกา
+    ใน JSX ก่อนแท็กปิด div นอกสุด ให้เว้นบรรทัดว่างหนึ่งบรรทัดหลัง /section
+      แล้วใส่ AddToCartModalContent isOpen={isModalOpen} onClose={onCloseModal}
+      บรรทัดว่างบรรทัดนี้เป็นบรรทัดว่างเดียวที่อนุญาตใน JSX ของไฟล์นี้
+- Product.tsx จุดที่ 3 (ไส้ใน onAddToCart): ลบ comment TODO ทิ้ง แล้วเขียนเป็น
+    if (productDetail) { ... } ที่ข้างในเรียก addToCart({ ... }) ด้วยฟิลด์ตามลำดับนี้
+      id: productDetail.id
+      title: productDetail.title
+      price: productDetail.price
+      quantity: 1
+      image: productDetail.thumbnail
+      originalPrice: calculateOriginalPrice(productDetail.price,
+        productDetail.discountPercentage)
+    แล้วเรียก onOpenModal(); เป็นบรรทัดสุดท้ายใน if
+  ห้ามแตะส่วนอื่นของ Product.tsx เลย: ห้ามแก้ useQuery, ห้ามแก้ early return
+  สองก้อน, ห้ามแก้การ destructure productDetail, ห้ามแก้ props ที่ส่งให้
+  ProductDetailInfo และห้ามแก้ ReviewSection
+- Header.tsx จุดที่ 1 (import): เพิ่มสองบรรทัดต่อจาก import ของ react-router
+    import CartSummary from "@/features/cart/components/CartSummary/CartSummary";
+    import useProductRoute from "@/shared/hooks/useProductRoute";
+- Header.tsx จุดที่ 2: บรรทัดแรกในตัวคอมโพเนนต์เป็น
+    const { goToCartSummary } = useProductRoute();
+  แล้วเว้นบรรทัดว่างหนึ่งบรรทัดก่อน return
+- Header.tsx จุดที่ 3 (JSX): หลังแท็กปิด /nav ให้เว้นบรรทัดว่างหนึ่งบรรทัด
+    แล้วใส่ CartSummary onIconClick={goToCartSummary} เป็น element สุดท้าย
+    ในกล่อง flex space-between align-item-center
+    ส่ง goToCartSummary เข้าไปตรง ๆ ห้ามห่อด้วย arrow function
+  ห้ามแตะโลโก้ ห้ามแตะ ul ของเมนู ห้ามเปลี่ยน className ใด ๆ ที่มีอยู่
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามสร้างไฟล์ใหม่ ห้ามสร้าง Header.module.scss หรือ Product.module.scss
+- ห้ามสร้าง context, provider, reducer หรือ hook ของตะกร้าเพิ่ม
+  ต้อง import useCart ตัวที่มีอยู่แล้วเท่านั้น
+- ห้ามใช้ useNavigate หรือ Link ในการไปหน้า /cart และห้ามเขียน string "/cart"
+  ในไฟล์ใดก็ตาม การนำทางทุกเส้นต้องผ่าน useProductRoute
+- ห้ามแก้ ProductDetailInfo, CartSummary, AddToCartModalContent, Modal, Button,
+  useCart, useProductRoute, router.tsx หรือ providers.tsx
+- ห้ามเขียนเทสต์</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อนทุกรอบ สองข้อแรกเป็นข้อของรอบที่ 2 และเป็นสองข้อที่ต้องดูก่อนอย่างอื่นทั้งหมด:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>สร้างระบบตะกร้าขึ้นมาใหม่อีกชุดแทนที่จะ import ของที่มีอยู่</em> อาการหนักคือมันสร้าง <code>createContext</code> ตัวที่สองขึ้นมาในไฟล์ที่กำลังแก้ (หรือใน <code>src/context/CartContext.tsx</code> ที่มันตั้งชื่อเอง) แล้ววาง provider ซ้อนเข้าไปอีกชั้น อาการเบากว่าแต่เจอบ่อยกว่าคือมันเขียน <code>const [cart, setCart] = useState&lt;CartItem[]&gt;([])</code> ไว้ในตัวหน้า Product เอง แล้วเพิ่มของลง state ตัวนั้น ผลลัพธ์บนจอ<strong>ดูถูกต้องทุกประการ</strong>ในหน้าเดียว: กด Add To Cart แล้ว modal เด้ง กดซ้ำก็ยังเด้ง ไม่มี error สักบรรทัด แต่ badge บน Header จะไม่ขยับตลอดกาล เพราะมันอ่านจากตะกร้าคนละใบ และของจะหายเกลี้ยงทันทีที่เปลี่ยนหน้า วิธีตรวจมีสองคำสั่ง: <code>grep -rn "createContext" src/</code> ต้องเจอ<strong>ที่เดียว</strong>คือ <code>src/features/cart/store/CartContext.tsx</code> และ <code>grep -n "useState" src/pages/Product/Product.tsx</code> ต้องเจอ<strong>บรรทัดเดียว</strong>คือ <code>isModalOpen</code> ถ้าเจอมากกว่านั้น ให้ <code>git restore .</code> แล้วสั่งใหม่ อย่าไล่ลบทีละบรรทัด — เพราะสิ่งที่ต้องแก้คือ prompt ไม่ใช่โค้ด</li>
+            <li><strong>URL ต้องไม่หลุดออกจาก <code>useProductRoute</code></strong> — <code>grep -rn "useNavigate\|navigate(" src/shared/components/Header/</code> ต้องว่างเปล่า และ <code>grep -rn '"/cart"' src/</code> ทั้งโปรเจกต์ต้องเจอที่เดียวคือ <code>src/shared/hooks/useProductRoute.tsx</code> (บวก <code>router.tsx</code> ที่ประกาศ path ไว้ ซึ่งเป็นคนละหน้าที่กัน) ถ้า Header เรียก <code>useNavigate</code> เองแล้วเขียน <code>navigate("/cart")</code> โค้ดจะทำงานถูกต้องทุกอย่าง lint ผ่าน typecheck ผ่าน หน้าเว็บพาไปหน้าตะกร้าได้จริง — แต่ hook ที่บทเรียน 10 สร้างไว้จะไม่มีความหมายอีกต่อไป และ URL ก็เริ่มกระจายเป็นสองที่ในวันแรกที่มีคนใช้มัน นี่เป็นข้อที่ต้องดูด้วยตาล้วน ๆ เพราะทั้งสองแบบใช้งานได้เหมือนกันเป๊ะ เช็คต่ออีกจุด: <code>onIconClick={goToCartSummary}</code> ต้องส่งฟังก์ชันเข้าไปตรง ๆ ไม่ใช่ <code>onIconClick={() =&gt; goToCartSummary()}</code> ที่ห่อไว้เปล่า ๆ</li>
+          </ul>
+          <p><strong>รอบที่ 1:</strong></p>
+          <ul>
+            <li>ไฟล์ใหม่ <strong>3 ไฟล์พอดี</strong> ไม่มี <code>AddToCartModalContent.module.scss</code> ไม่มี <code>index.ts</code> และ <code>git status</code> ต้องไม่มีไฟล์เดิมไฟล์ไหนขึ้นสถานะ modified เลย — โดยเฉพาะ <code>Header.tsx</code> และ <code>Product.tsx</code> ที่ยังไม่ถึงคิว</li>
+            <li><code>CartSummary</code> คำนวณ <code>totalItems</code> ด้วย <code>reduce</code> บวก <code>item.quantity</code> ไม่ใช่ <code>cart.items.length</code> — <code>grep -n "length" src/features/cart/components/CartSummary/CartSummary.tsx</code> ต้องว่างเปล่า ข้อนี้เห็นผลก็ต่อเมื่อกด Add To Cart สินค้าเดิมสองครั้งแล้ว badge ยังขึ้นเลข 1 อยู่</li>
+            <li><code>useMemo</code> มี dependency array เป็น <code>[cart.items]</code> — ไม่ใช่ <code>[cart]</code> และไม่ใช่ <code>[]</code> (<code>[]</code> จะทำให้ badge ค้างที่ค่าแรกตลอดชีวิตแอป ซึ่งเป็นบั๊กที่คุณจะเห็นตอนทดสอบท้ายบท ไม่ใช่ตอน typecheck)</li>
+            <li><code>AddToCartModalContent</code> ไม่มี <code>useState</code> ไม่เรียก <code>useCart</code> และไม่ import <code>react-modal</code> ตรง ๆ — <code>grep -n "react-modal\|useCart\|useState" src/features/cart/components/AddToCartModalContent/AddToCartModalContent.tsx</code> ต้องว่างเปล่า ทั้งสามคำนี้ไม่ควรอยู่ในไฟล์ที่เป็นแค่เนื้อใน modal</li>
+            <li><code>CartSummary.module.scss</code> ขึ้นต้นด้วย <code>@use "../../../../styles/variables";</code> — <strong>สี่ชั้น</strong> เหมือนไฟล์ใน <code>features/products/components/</code> ของบทเรียน 21 ไม่ใช่สามชั้นแบบไฟล์ใน <code>shared/components/</code> ถ้านับผิด SCSS จะ compile ไม่ผ่านและ <code>npm run dev</code> จะแดงทันที</li>
+            <li>ไม่มี hex สีโผล่ใน <code>CartSummary.module.scss</code> — ทั้ง <code>$red01</code> และ <code>$white</code> ต้องมาจากตัวแปร</li>
+            <li>ค้นทุกชื่อ class ที่โผล่ใน <code>className</code> ของสองไฟล์ <code>.tsx</code> ว่ามีจริงใน <code>src/styles/</code> ครบไหม (<code>grep -rn "ชื่อ-class" src/styles/</code>) — บทเรียน 21 มีตัวที่หลุดมาแล้วสองตัว งานนี้ใช้เวลาสองนาทีและไม่มีเครื่องมือไหนทำแทนได้</li>
+          </ul>
+          <p><strong>รอบที่ 2:</strong></p>
+          <ul>
+            <li>ไฟล์ที่ modified มี <strong>2 ไฟล์พอดี</strong> และไฟล์ใหม่ <strong>0 ไฟล์</strong> — <code>git status --short</code> ต้องมีสองบรรทัดเท่านั้น ถ้ามี <code>ProductDetailInfo.tsx</code>, <code>MainLayout.tsx</code> หรืออะไรก็ตามโผล่มาด้วย แปลว่า Agent ตัดสินใจอะไรบางอย่างแทนคุณ</li>
+            <li><code>git diff src/pages/Product/Product.tsx</code> ต้องมี<em>บรรทัดโค้ด</em>ที่เพิ่มเข้ามานอกตัวฟังก์ชัน <code>onAddToCart</code> <strong>เจ็ดบรรทัดพอดี</strong> ได้แก่ สอง import, <code>useState</code>, <code>useCart</code>, <code>onOpenModal</code>, <code>onCloseModal</code> และบรรทัด <code>AddToCartModalContent</code> ใน JSX (บวกบรรทัดว่างอีกสองบรรทัดที่ <code>git diff</code> นับด้วย) ที่เหลือคือการแก้บรรทัด <code>import React</code> กับไส้ในของ <code>onAddToCart</code> ถ้าเห็นบรรทัดที่ถูก<em>ลบ</em>นอกเหนือจาก comment <code>TODO</code> กับบรรทัด <code>import React</code> เดิม ให้อ่านทีละบรรทัดว่ามันลบอะไรไป</li>
+            <li>บรรทัด import เดิมทั้งสิบเอ็ดบรรทัดของ <code>Product.tsx</code> ยังเรียงลำดับเดิม — Agent ที่ "ช่วย" จัดกลุ่ม import ใหม่ให้เป็นระเบียบ (react ก่อน, ไลบรารีนอก, ของในโปรเจกต์) จะทำให้ diff บวมขึ้นสิบบรรทัดโดยไม่ได้ประโยชน์อะไร และผิดกติกาข้อ "นอกนั้นห้ามแตะ"</li>
+            <li>ใน <code>onAddToCart</code> ค่า <code>image</code> มาจาก <code>productDetail.thumbnail</code> ไม่ใช่ <code>productDetail.images[0]</code> และ <code>quantity</code> เป็น <code>1</code> ตายตัว ไม่ใช่ตัวแปรหรือ state — ทั้งสองข้อนี้ typecheck ผ่านทั้งคู่ ต้องดูด้วยตา</li>
+            <li><code>originalPrice</code> เรียก <code>calculateOriginalPrice</code> จริง ไม่ใช่คำนวณสูตรเองซ้ำในไฟล์นี้ — <code>grep -n "discountPercentage / 100\|1 -" src/pages/Product/Product.tsx</code> ต้องว่างเปล่า สูตรมีที่อยู่ของมันแล้วตั้งแต่บทเรียน 18</li>
+            <li>ใน JSX ของ <code>Product.tsx</code> มีบรรทัดว่าง<strong>หนึ่งบรรทัดเดียว</strong> คือบรรทัดระหว่าง <code>&lt;/section&gt;</code> กับ <code>&lt;AddToCartModalContent /&gt;</code> — บทเรียน 21 สั่งไว้ว่าไฟล์นี้ห้ามมีบรรทัดว่างใน JSX เลย วันนี้เราเพิ่มมาหนึ่งบรรทัดโดยตั้งใจเพื่อให้ตรงกับต้นฉบับ Prettier ไม่เติมและไม่ลบบรรทัดว่างใน JSX ให้ ดังนั้นถ้ามันหายไปหรือมีเกิน แปลว่า Agent วางเอง</li>
+            <li><code>&lt;AddToCartModalContent /&gt;</code> อยู่<em>นอก</em> <code>&lt;section&gt;</code> แต่<em>ใน</em> <code>&lt;div&gt;</code> นอกสุด — ถ้ามันไปนั่งข้างในปุ่มหรือข้างใน <code>ProductDetailInfo</code> แปลว่า Agent แก้ไฟล์ที่ห้ามแตะ</li>
+            <li><code>Header.tsx</code> ยังมีเมนูสองรายการเดิมครบ ยังเป็น <code>&lt;Link to&gt;</code> ทั้งคู่ และ <code>&lt;CartSummary /&gt;</code> เป็น element สุดท้ายในกล่อง <code>flex space-between align-item-center</code> — ไม่ใช่ถูกยัดเข้าไปใน <code>&lt;ul&gt;</code> เป็น <code>&lt;li&gt;</code> ตัวที่สาม</li>
+            <li><code>grep -rn "useCart\|CartContext" src/shared/components/Header/Header.tsx</code> ต้องว่างเปล่า — Header ไม่ควรรู้จักตะกร้าเลย มันแค่วาง <code>CartSummary</code> ไว้ ส่วนตัวที่รู้จัก store คือ <code>CartSummary</code> เอง</li>
+            <li><code>npm run dev</code> แล้วทดสอบด้วยมือ: กด Add To Cart บนสินค้าตัวหนึ่ง <em>สองครั้ง</em> — badge ต้องขึ้นเลข <strong>2</strong> ไม่ใช่ 1 (ถ้าขึ้น 1 แปลว่านับแถวไม่ได้นับชิ้น) จากนั้น refresh หน้า — badge ต้องยังเป็น 2 (ถ้าหาย แปลว่า write-through effect ของบทเรียน 22 ไม่ทำงาน)</li>
+          </ul>
+        </blockquote>
+
+        <p>เหมือนบทก่อน ๆ: <code>npm run lint</code> อาจตกเรื่อง <code>import-x/order</code> ก่อน แต่รอบที่ 2 ให้ระวังเป็นพิเศษ — ถ้า <code>npx eslint . --fix</code> ไปเรียงบรรทัด import ของ <code>Product.tsx</code> ใหม่ทั้งไฟล์ diff จะบวมขึ้นทันที ให้รัน <code>git diff</code> ซ้ำหลัง <code>--fix</code> ทุกครั้งก่อน commit</p>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/features/cart/components/AddToCartModalContent/AddToCartModalContent.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import Button from "@/shared/components/Button/Button";
+import Modal from "@/shared/components/Modal/Modal";
+
+interface AddToCartModalContentProps {
+  isOpen: boolean;
+  onClose: () =&gt; void;
+}
+
+const AddToCartModalContent: React.FC&lt;AddToCartModalContentProps&gt; = ({
+  isOpen,
+  onClose,
+}) =&gt; (
+  &lt;Modal isOpen={isOpen} onRequestClose={onClose}&gt;
+    &lt;div className="text-center"&gt;
+      &lt;h3 className="fs-20 fw-bold mb-10"&gt;Product Added to Cart&lt;/h3&gt;
+      &lt;p className="mb-20"&gt;
+        The product has been successfully added to your cart!
+      &lt;/p&gt;
+      &lt;div className="inline-block"&gt;
+        &lt;Button onClick={onClose}&gt;Close&lt;/Button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/Modal&gt;
+);
+
+export default AddToCartModalContent;
+</code></pre>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> ไฟล์นี้เป็นคอมโพเนนต์เดียวในโปรเจกต์ที่เขียนเป็น arrow function แบบ<em>return ทันที</em> (<code>}) =&gt; (</code>) ส่วนอีกสิบกว่าตัวที่เราสร้างมาตั้งแต่บทเรียน 12 ใช้ปีกกากับ <code>return</code> ทั้งหมด สองแบบให้ผลเหมือนกันเป๊ะ และ Prettier ไม่แปลงให้ฝั่งไหน — แต่ความไม่สม่ำเสมอแบบนี้คือสิ่งที่ทำให้คนอ่าน codebase สะดุดโดยไม่รู้ตัวว่าสะดุดเพราะอะไร เราสั่งตามต้นฉบับเพื่อให้ diff ตรง ถ้าไม่สั่ง Agent จะเขียนแบบมีปีกกาให้ตามที่มันเห็นในไฟล์อื่น ซึ่งก็ไม่ผิด ข้อที่สองในไฟล์เดียวกัน: modal ตัวนี้ไม่รับข้อมูลอะไรเลยเกี่ยวกับสินค้าที่เพิ่งถูกเพิ่ม มันจึงพูดได้แค่ "The product" แบบลอย ๆ ทั้งที่หน้า Product รู้ <code>title</code> อยู่ในมือ การเพิ่ม prop <code>productTitle?: string</code> เข้าไปคือการแก้สามบรรทัดที่ทำให้ข้อความมีความหมายขึ้นทันที — เป็นข้อเสนอในรีวิว ไม่ใช่บั๊ก</blockquote>
+
+        <p><code>src/features/cart/components/CartSummary/CartSummary.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.cartCount {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background-color: variables.$red01;
+  color: variables.$white;
+  border-radius: 50%;
+  padding: 3px 6px;
+  min-width: 18px;
+}
+</code></pre>
+
+        <p><code>src/features/cart/components/CartSummary/CartSummary.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React, { useMemo } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
+import styles from "./CartSummary.module.scss";
+import { useCart } from "@/features/cart/useCart";
+
+interface CartSummaryProps {
+  onIconClick: () =&gt; void;
+}
+
+const CartSummary: React.FC&lt;CartSummaryProps&gt; = ({ onIconClick }) =&gt; {
+  const { cart } = useCart();
+
+  const totalItems = useMemo(
+    () =&gt; cart.items.reduce((sum, item) =&gt; sum + item.quantity, 0),
+    [cart.items],
+  );
+
+  return (
+    &lt;div className="relative" onClick={onIconClick}&gt;
+      &lt;FontAwesomeIcon className="pointer fs-20" icon={faCartShopping} /&gt;
+      {totalItems &gt; 0 &amp;&amp; (
+        &lt;span
+          className={`${styles.cartCount} fs-12 fw-bold text-center`}
+          aria-label="Cart item count"
+        &gt;
+          {totalItems}
+        &lt;/span&gt;
+      )}
+    &lt;/div&gt;
+  );
+};
+
+export default CartSummary;
+</code></pre>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> ตัวที่รับคลิกในไฟล์นี้คือ <code>&lt;div onClick={onIconClick}&gt;</code> — ไม่ใช่ <code>&lt;button&gt;</code> ไม่มี <code>role</code> ไม่มี <code>tabIndex</code> และไม่มี handler ของคีย์บอร์ด ผลคือผู้ใช้ที่กด Tab ไล่ไปตาม Header จะข้ามไอคอนตะกร้าไปเลย และกด Enter ตรงนั้นไม่ได้ ที่น่าสังเกตเป็นพิเศษคือ<strong>บทเรียน 10 เขียนเตือนเรื่องนี้ไว้เองด้วยคำเกือบตรงตัว</strong>: บรรทัด <code>AI มักพลาดตรงนี้</code> ของบทนั้นบอกว่าอย่าใช้ <code>&lt;div onClick={() =&gt; navigate("/cart")}&gt;</code> เพราะกดด้วยคีย์บอร์ดไม่ได้ — แล้วต้นฉบับก็ทำแบบนั้นพอดีในบทนี้ ทางแก้คือเปลี่ยน <code>&lt;div&gt;</code> เป็น <code>&lt;button type="button"&gt;</code> แล้วย้าย <code>relative</code> ไปไว้บนปุ่ม ซึ่งเป็นการแก้บรรทัดเดียว เราสั่งตามต้นฉบับเพราะโค้ดอ้างอิงของคอร์สนี้คือแอปจริง แต่ในรีวิวจริงข้อนี้ควรถูกทัก และข้อพ่วงที่ควรถกด้วยคือ <code>aria-label="Cart item count"</code> ที่แปะบน <code>&lt;span&gt;</code> ซึ่ง<em>มีตัวเลขอยู่ข้างในอยู่แล้ว</em> — ชื่อที่เราตั้งเองจะไปทับข้อความจริง แทนที่จะเสริมมัน สิ่งที่ต้องการจริง ๆ คือให้ผู้ใช้ได้ยินทั้งจำนวนและความหมาย</blockquote>
+
+        <p><code>src/pages/Product/Product.tsx</code> — <strong>เวอร์ชันสมบูรณ์</strong> ไฟล์นี้จะไม่เปลี่ยนอีกแล้วตลอดคอร์ส:</p>
+
+        <pre><code class="language-typescript">import React, { useState } from "react";
+import ClipLoader from "react-spinners/ClipLoader";
+import { useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+import ReviewSection from "./components/ReviewSection";
+import CategoryBanner from "@/pages/Category/components/CategoryBanner/CategoryBanner";
+import ProductImageGallery from "@/features/products/components/ProductImageGallery/ProductImageGallery";
+import { calculateOriginalPrice } from "@/shared/utils/price.utils";
+import ProductDetailInfo from "@/features/products/components/ProductDetailInfo/ProductDetailInfo";
+import AddToCartModalContent from "@/features/cart/components/AddToCartModalContent/AddToCartModalContent";
+import { useCart } from "@/features/cart/useCart";
+import { productQueries } from "@/features/products/queries";
+import ErrorMessage from "@/shared/components/ErrorMessage/ErrorMessage";
+
+const Product: React.FC = () =&gt; {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { id } = useParams&lt;{ id: string }&gt;();
+  const {
+    data: productDetail,
+    isLoading,
+    isError,
+  } = useQuery({
+    ...productQueries.detail(id ?? ""),
+    enabled: !!id,
+  });
+  const { addToCart } = useCart();
+
+  const onOpenModal = () =&gt; setIsModalOpen(true);
+  const onCloseModal = () =&gt; setIsModalOpen(false);
+
+  const onAddToCart = () =&gt; {
+    if (productDetail) {
+      addToCart({
+        id: productDetail.id,
+        title: productDetail.title,
+        price: productDetail.price,
+        quantity: 1,
+        image: productDetail.thumbnail,
+        originalPrice: calculateOriginalPrice(
+          productDetail.price,
+          productDetail.discountPercentage,
+        ),
+      });
+      onOpenModal();
+    }
+  };
+
+  if (isLoading) {
+    return (
+      &lt;div className="text-center mb-30"&gt;
+        &lt;ClipLoader
+          size={40}
+          aria-label="Loading Spinner"
+          data-testid="loader"
+        /&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  if (isError || !productDetail) {
+    return (
+      &lt;div className="container"&gt;
+        &lt;ErrorMessage message="We couldn't load this product. Please try again." /&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  const {
+    title,
+    images,
+    description,
+    brand,
+    reviews,
+    rating,
+    price,
+    discountPercentage,
+    sku,
+    stock,
+    availabilityStatus,
+    shippingInformation,
+    warrantyInformation,
+  } = productDetail;
+  const originalPrice = calculateOriginalPrice(price, discountPercentage);
+
+  return (
+    &lt;div&gt;
+      &lt;CategoryBanner name={title} /&gt;
+      &lt;section className="pt-60"&gt;
+        &lt;div className="container"&gt;
+          &lt;div className="flex mb-35"&gt;
+            &lt;div className="width-50"&gt;
+              &lt;div className="pr-10"&gt;
+                &lt;ProductImageGallery images={images} /&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div className="width-50"&gt;
+              &lt;div className="pl-10"&gt;
+                &lt;ProductDetailInfo
+                  title={title}
+                  brand={brand}
+                  rating={rating}
+                  reviewsCount={reviews.length}
+                  price={price}
+                  originalPrice={originalPrice}
+                  discountPercentage={discountPercentage}
+                  description={description}
+                  sku={sku}
+                  stock={stock}
+                  availabilityStatus={availabilityStatus}
+                  shippingInfo={shippingInformation}
+                  warrantyInfo={warrantyInformation}
+                  onButtonClick={onAddToCart}
+                /&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div className="pb-30"&gt;
+            &lt;h3 className="fs-24"&gt;Reviews&lt;/h3&gt;
+            &lt;ReviewSection rating={rating} reviews={reviews} /&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+
+      &lt;AddToCartModalContent isOpen={isModalOpen} onClose={onCloseModal} /&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default Product;
+</code></pre>
+
+        <p>เอาไฟล์นี้วางคู่กับเวอร์ชันในบทเรียน 21 แล้วไล่ดูสิ่งที่<em>ไม่</em>เปลี่ยน จะเห็นภาพชัดกว่าดูสิ่งที่เปลี่ยน: <code>useQuery</code> เหมือนเดิมทุกตัวอักษร, early return สองก้อนเหมือนเดิม, การ destructure สิบสามฟิลด์เหมือนเดิม, props สิบสี่ตัวที่ส่งให้ <code>ProductDetailInfo</code> เหมือนเดิม และ <code>ProductDetailInfo.tsx</code> เองไม่ถูกแตะเลยแม้แต่ตัวอักษรเดียว ทั้งที่ปุ่มที่พฤติกรรมเปลี่ยนไปทั้งหมดอยู่ในไฟล์นั้น — <strong>นี่คือของจริงที่ callback prop ซื้อให้เรา</strong> และเป็นคำตอบว่าทำไมบทเรียน 21 ถึงยอมออกแบบ <code>onButtonClick</code> ทั้งที่วันนั้นมันยังไม่ทำอะไรเลย</p>
+
+        <p><code>src/shared/components/Header/Header.tsx</code> — <strong>เวอร์ชันสมบูรณ์</strong>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { Link } from "react-router";
+import CartSummary from "@/features/cart/components/CartSummary/CartSummary";
+import useProductRoute from "@/shared/hooks/useProductRoute";
+
+const Header: React.FC = () =&gt; {
+  const { goToCartSummary } = useProductRoute();
+
+  return (
+    &lt;header className="pt-25 pb-25"&gt;
+      &lt;div className="container"&gt;
+        &lt;div className="flex space-between align-item-center"&gt;
+          &lt;Link className="nav-link fw-bold fs-24" to="/"&gt;
+            My Store
+          &lt;/Link&gt;
+
+          &lt;nav&gt;
+            &lt;ul className="flex gap-20 m-0 p-0 list-none"&gt;
+              &lt;li&gt;
+                &lt;Link to="/" className="nav-link"&gt;
+                  Home
+                &lt;/Link&gt;
+              &lt;/li&gt;
+              &lt;li&gt;
+                &lt;Link to="/categories" className="nav-link"&gt;
+                  Products
+                &lt;/Link&gt;
+              &lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/nav&gt;
+
+          &lt;CartSummary onIconClick={goToCartSummary} /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/header&gt;
+  );
+};
+
+export default Header;
+</code></pre>
+
+        <p>สังเกตว่าเมนูสองรายการยังใช้ <code>&lt;Link to&gt;</code> ส่วนไอคอนตะกร้าใช้ <code>useProductRoute</code> — สองท่าในไฟล์เดียวกัน และทั้งคู่ถูกด้วยเหตุผลคนละข้อ: <code>&lt;Link&gt;</code> เหมาะกับ "ลิงก์" ที่ผู้ใช้ควรคลิกขวาเปิดแท็บใหม่ได้ ส่วน <code>navigate</code> ผ่าน hook เหมาะกับ "การกระทำ" ที่เกิดหลังเหตุการณ์บางอย่าง เส้นแบ่งนี้จะกลับมาอีกครั้งในบทเรียน 28 ตอนที่การสั่งซื้อสำเร็จแล้วต้องพาผู้ใช้ไปหน้า order success เอง</p>
+
+        <p>อีกจุดคือ Header render อยู่ใน <code>MainLayout</code> ซึ่งอยู่ใต้ <code>AppProviders</code> — ดังนั้น <code>useCart</code> ใน CartSummary ทำงานได้จากทุกหน้า และเพราะทุกคนอ่านจาก context ใบเดียวกัน การกดปุ่มบนหน้า Product จะทำให้ badge บน Header ขยับ<em>ทันที</em>โดยที่สอง component นี้ไม่รู้จักกันเลย — นี่แหละพลังของการยก state ขึ้นไปไว้บน Context</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> <code>Header</code> อยู่ใน <code>src/shared/components/</code> แต่ import ของจาก <code>src/features/cart/</code> — ซึ่งเป็นการชี้ทวนทิศทางที่บทเรียน 05 วางไว้ (<code>shared</code> คือของที่ทุก feature ใช้ได้ จึงไม่ควรรู้จัก feature ไหนเป็นพิเศษ) เหตุผลที่ต้นฉบับยอมรับได้คือ Header เป็นจุด<em>ประกอบ</em>ของทั้งแอปอยู่แล้ว ส่วน <code>CartSummary</code> เองอยู่ใน <code>features/cart/components</code> ถูกที่แล้วเพราะมันรู้จัก <code>useCart</code> แต่การอ่านแบบเข้มกว่านั้นบอกว่าจุดประกอบตัวจริงคือ <code>MainLayout</code> ใน <code>src/app/</code> ต่างหาก — ถ้าย้าย <code>&lt;CartSummary /&gt;</code> ไปไว้ที่นั่นหรือให้ <code>Header</code> รับเป็น <code>children</code>/prop ทิศทางการพึ่งพาจะสะอาดทันทีโดยหน้าจอไม่เปลี่ยนเลย ในโปรเจกต์ขนาดนี้เรื่องนี้ไม่ทำให้อะไรพัง แต่ในโปรเจกต์ที่มีสิบ feature มันคือจุดเริ่มของ <code>shared</code> ที่ค่อย ๆ รู้จักทุกอย่างในแอปจนย้ายไปใช้ที่อื่นไม่ได้อีก</blockquote>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>เปิด <code>ProductDetailInfo.tsx</code> ขึ้นมาดู แล้วตอบว่าไฟล์นี้ต้องแก้กี่บรรทัดในบทนี้ และ<em>ทำไม</em> จากนั้นสมมติว่าบทเรียน 21 เขียนมันเป็น <code>onButtonClick</code> ที่รับ <code>productId: number</code> แล้วเรียก <code>useCart</code> เองข้างใน — บอกให้ได้ว่าวันนี้จะต้องแก้กี่ไฟล์แทน</li>
+          <li>ลองแก้ <code>Header.tsx</code> ให้ใช้ <code>useNavigate</code> กับ <code>navigate("/cart")</code> ตรง ๆ แทน <code>useProductRoute</code> — รัน <code>npm run lint</code> และ <code>npm run typecheck</code> ทั้งคู่ผ่าน หน้าเว็บทำงานเหมือนเดิมทุกประการ อธิบายว่าอะไรที่แย่ลง และบอกให้ได้ว่าคุณจะรู้ตัวเมื่อไหร่ถ้าไม่มีใครทักในรีวิว (เสร็จแล้วแก้กลับ)</li>
+          <li>เปลี่ยน dependency array ของ <code>useMemo</code> ใน <code>CartSummary</code> จาก <code>[cart.items]</code> เป็น <code>[]</code> แล้วกด Add To Cart — อธิบายว่าทำไม badge ถึงไม่ขยับ ทั้งที่ <code>cart.items</code> เปลี่ยนไปแล้วจริง ๆ และตอบว่าถ้า reducer ของบทเรียน 22 เขียนแบบ mutate อาการจะเหมือนหรือต่างจากนี้ (เสร็จแล้วแก้กลับ)</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> รัน <code>npm run dev</code> แล้วไล่ตาม flow นี้: เปิดสินค้าสักตัว → กด Add To Cart → modal "Product Added to Cart" เด้งขึ้น → กด Close → มุมขวาบนมี badge สีแดงเลข 1 บนไอคอนตะกร้า → กด Add To Cart ซ้ำอีกครั้ง → badge กลายเป็น 2 (สินค้าเดิมถูก<em>รวมจำนวน</em> ไม่ใช่เพิ่มแถวใหม่ — ฝีมือ reducer ที่คุณพิมพ์เองบทที่แล้ว) → refresh หน้า → badge ยังอยู่ครบ เพราะ localStorage จากบทเรียน 22 ทำงานเงียบ ๆ ให้ตลอด → เปิดสินค้าอีกตัวแล้วกดเพิ่ม → badge เป็น 3 → คลิกไอคอนตะกร้า → ไปโผล่หน้า <code>/cart</code> ที่ยังเป็น stub ว่าง ๆ อยู่ ถูกต้องแล้ว — หน้านั้นคืองานของบทถัดไป ปิดท้ายด้วยการอ่าน <code>git diff</code> ของรอบที่ 2 อีกรอบก่อน commit แล้วนับบรรทัดโค้ดที่เพิ่มใน <code>Product.tsx</code> นอกตัวฟังก์ชัน <code>onAddToCart</code> ให้ได้เจ็ดบรรทัดพอดี เมื่อ <code>npm run lint</code> และ <code>npm run typecheck</code> ผ่านแล้ว commit ได้ — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="22_cart_store.html" rel="prev">ก่อนหน้า: Cart Store</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="24_cart_page.html" rel="next">ถัดไป: หน้า Cart</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

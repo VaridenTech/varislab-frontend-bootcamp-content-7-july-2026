@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สั่ง Cursor สร้างคอมโพเนนต์ที่เหลือของหน้า Checkout เจ็ดตัวในสองรอบ — ตัวเลือกจัดส่ง ชำระเงิน ใบสรุปคำสั่งซื้อ และ Billing Summary พร้อมวิธีอ่าน diff ของคอมโพเนนต์ฝาแฝดไม่ให้พลาด" />
+    <title>จัดส่ง ชำระเงิน และสรุปรายการ | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 27 · ชำระเงิน (Checkout)</p>
+          <h1>เจ็ดคอมโพเนนต์ในบทเดียว: จัดส่ง ชำระเงิน และสรุปรายการ</h1>
+          <p class="lesson-original-title" lang="en">Delivery, Payment &amp; Order Summary</p>
+        </header>
+
+        <p>บทนี้เป็นบทสายผลิต: เราจะสร้างคอมโพเนนต์ที่เหลือทั้งหมดของหน้า Checkout รวดเดียว <strong>เจ็ดตัว</strong> พร้อมไฟล์ <code>.module.scss</code> อีกห้าไฟล์ รวมสิบสองไฟล์ในบทเดียว มากกว่าบทเรียน 21 ที่เคยหนักที่สุดในคอร์สด้วยเก้าไฟล์ — และเป็นบทที่การแบ่งงานให้ Agent ให้ผลตอบแทนสูงที่สุดเท่าที่คอร์สนี้จะแสดงให้ดูได้</p>
+
+        <p>เหตุผลที่มันคุ้มไม่ใช่เพราะ "โค้ดเยอะ" เฉย ๆ แต่เพราะโค้ดเจ็ดชิ้นนี้<em>ซ้ำแบบกันเอง</em>: <code>PaymentOption</code> คือ <code>DeliveryOption</code> ที่เปลี่ยน label, <code>CheckoutPaymentBox</code> คือ <code>CheckoutDeliveryBox</code> ที่เปลี่ยนชื่อ prop งานประเภท "ทำตามแบบนี้อีกครั้ง แต่เปลี่ยนสามจุด" คือสิ่งที่โมเดลทำได้เร็วและแม่นกว่ามนุษย์ที่ต้องพิมพ์ซ้ำจนตาลาย</p>
+
+        <p>แต่ความซ้ำแบบเดียวกันนี้เองที่ทำให้บทนี้เป็นบทที่<strong>ความผิดพลาดซ่อนตัวได้ดีที่สุด</strong> — เวลาคุณอ่าน diff ของไฟล์ที่หน้าตาเหมือนไฟล์ก่อนหน้า 90% สายตาจะข้ามส่วนที่เหมือนโดยอัตโนมัติ แล้วส่วนที่ควรต่างแต่ดันเหมือน (เช่น <code>name="deliveryOption"</code> ที่ถูก copy มาไว้ในกล่อง payment) จะไหลผ่านไปเงียบ ๆ อาการของบั๊กแบบนั้นคือ radio สองกลุ่มบนหน้าจอกลายเป็นกลุ่มเดียวกัน — เลือก Bank Transfer แล้ว Express Delivery หลุดติ๊ก ซึ่งเป็นอาการที่คุณจะเจอตอนบทเรียน 28 ประกอบหน้าเสร็จ ห่างจากบรรทัดที่ผิดไปหนึ่งบท</p>
+
+        <p>สรุปเป็นประโยคเดียวที่ควรติดไว้ในหัวตลอดบทนี้: <em>บทที่ Agent ทำงานคุ้มที่สุด กับบทที่คุณต้องอ่าน diff ละเอียดที่สุด เป็นบทเดียวกัน</em></p>
+
+        <h2>พิมพ์เขียวของทั้งเจ็ดตัว</h2>
+
+        <p>ก่อนลงมือ มาดูพิมพ์เขียวกันก่อน เพราะทั้งเจ็ดตัวถูกออกแบบเป็น<strong>ชั้น ๆ ตามหน้าที่</strong> และการเห็นภาพนี้สำคัญกว่าโค้ดของตัวใดตัวหนึ่ง:</p>
+
+        <ul>
+          <li><strong>ชั้นล่างสุด — option components:</strong> <code>DeliveryOption</code>, <code>PaymentOption</code> เป็นคอมโพเนนต์ "โง่" (dumb/presentational) สุด ๆ — รับ props มา render เป็น radio หนึ่งแถว ไม่มี state ไม่รู้ด้วยซ้ำว่ามีตัวเลือกอื่นกี่ตัว</li>
+          <li><strong>ชั้นกลาง — box components:</strong> <code>CheckoutDeliveryBox</code>, <code>CheckoutPaymentBox</code> วนลูปรายการจาก <code>consts.ts</code> มาสร้าง option หลาย ๆ แถว และรับ "id ที่ถูกเลือก" กับ callback มาเป็น props — <em>ตัวมันก็ยังไม่ own state การเลือก</em> แค่ส่งต่อ</li>
+          <li><strong>ฝั่งขวาของหน้า:</strong> <code>SummaryOrder</code> + <code>SummaryOrderItem</code> แสดงรายการสินค้าจากตะกร้า และ <code>BillingSummary</code> แสดงยอดรวมพร้อมปุ่ม Place Order</li>
+          <li><strong>เจ้าของ state ตัวจริง:</strong> hook <code>useCheckout</code> ในบทเรียน 28 — มันจะถือทั้งที่อยู่ ทั้ง id จัดส่ง/ชำระเงินที่เลือก ทั้งยอดเงินที่คำนวณแล้ว แล้วแจกลงมาให้ทุกกล่องผ่านหน้าเพจ</li>
+        </ul>
+
+        <p>ท่านี้คือท่าเดียวกับ <code>CheckoutAddressBox</code> เมื่อบทที่แล้ว: <em>คอมโพเนนต์เล็กโง่ที่สุดเท่าที่จะโง่ได้ state ลอยขึ้นไปรวมที่จุดเดียวข้างบน</em> ผลตอบแทนคือทุกตัวในบทนี้ทดสอบง่าย ใช้ซ้ำได้ และอ่านจบใน 30 วินาที — ซึ่งข้อสุดท้ายจะสำคัญมากตอนคุณต้องอ่าน diff เจ็ดก้อนติดกัน</p>
+
+        <h2>ทำไมบทนี้ต้องแบ่งเป็นสองรอบ</h2>
+
+        <p>เกณฑ์จากบทเรียน 19 บอกให้แบ่ง prompt เมื่อของที่ต้องตรวจเกินหนึ่งหน้าจอ <em>และ</em>ของนั้นแยกเป็นก้อนที่ทดสอบแยกกันได้ — ต้องเข้าทั้งสองข้อถึงจะแบ่ง บทนี้เข้าครบทั้งคู่ นับเป็นครั้งที่สองต่อจากบทเรียน 19 เองที่เป็นคนตั้งเกณฑ์ (ส่วนบทเรียน 21 เข้าแค่ข้อแรก จึงแบ่งด้วยเหตุผลคนละแบบ):</p>
+
+        <ul>
+          <li>สิบสองไฟล์ในรอบเดียวคือ diff ที่ยาวกว่าหน้าจอหลายเท่า ไม่มีใครอ่านจบด้วยความตั้งใจเท่ากันตั้งแต่ไฟล์แรกถึงไฟล์สุดท้าย</li>
+          <li>และมันแยกเป็นสองก้อนที่ไม่รู้จักกันเลยจริง ๆ: ก้อน "ตัวเลือก" (option + box สี่ไฟล์) ไม่ import อะไรจากก้อน "ใบสรุป" (summary + billing สามไฟล์) เลยแม้แต่บรรทัดเดียว ตรวจก้อนแรกจบแล้ว commit ได้โดยที่ก้อนที่สองยังไม่มีตัวตน</li>
+        </ul>
+
+        <p>เราจึงแบ่งตามรอยที่มันแยกกันอยู่แล้ว:</p>
+
+        <ol>
+          <li><strong>รอบที่ 1 — ฝั่งซ้ายของหน้า:</strong> <code>DeliveryOption</code>, <code>PaymentOption</code>, <code>CheckoutDeliveryBox</code>, <code>CheckoutPaymentBox</code> (+ scss สองไฟล์) ทั้งสี่ตัวพึ่งของเก่าอย่างเดียว: <code>RadioInput</code> จากบทเรียน 12 และ <code>types.ts</code> จากบทเรียน 25</li>
+          <li><strong>รอบที่ 2 — ฝั่งขวาของหน้า:</strong> <code>SummaryOrderItem</code>, <code>SummaryOrder</code>, <code>BillingSummary</code> (+ scss สามไฟล์) ก้อนนี้แตะของจากฟีเจอร์ cart คือ <code>CartItem</code> และ <code>useCart</code></li>
+        </ol>
+
+        <p>ข้อดีที่ไม่ได้ตั้งใจแต่ได้มาฟรีคือ: การแบ่งแบบนี้ทำให้ <em>คู่แฝดอยู่ในรอบเดียวกัน</em> — คุณจะได้ <code>DeliveryOption</code> กับ <code>PaymentOption</code> มาพร้อมกันในหน้าจอเดียว เปิดเทียบกันได้ทันทีโดยไม่ต้องเลื่อนหา ซึ่งเป็นวิธีเดียวที่จะจับ copy-paste ที่ผิดได้จริง</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <pre><code class="language-bash">src/features/checkout/components/
+├── DeliveryOption/
+│   └── DeliveryOption.tsx                   # 🤖 รอบที่ 1 — ไม่มี .module.scss
+├── PaymentOption/
+│   └── PaymentOption.tsx                    # 🤖 รอบที่ 1 — ไม่มี .module.scss
+├── CheckoutDeliveryBox/
+│   ├── CheckoutDeliveryBox.tsx              # 🤖 รอบที่ 1
+│   └── CheckoutDeliveryBox.module.scss      # 🤖 รอบที่ 1
+├── CheckoutPaymentBox/
+│   ├── CheckoutPaymentBox.tsx               # 🤖 รอบที่ 1
+│   └── CheckoutPaymentBox.module.scss       # 🤖 รอบที่ 1
+├── SummaryOrderItem/
+│   ├── SummaryOrderItem.tsx                 # 🤖 รอบที่ 2
+│   └── SummaryOrderItem.module.scss         # 🤖 รอบที่ 2
+├── SummaryOrder/
+│   ├── SummaryOrder.tsx                     # 🤖 รอบที่ 2
+│   └── SummaryOrder.module.scss             # 🤖 รอบที่ 2
+└── BillingSummary/
+    ├── BillingSummary.tsx                   # 🤖 รอบที่ 2
+    └── BillingSummary.module.scss           # 🤖 รอบที่ 2</code></pre>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>DeliveryOption</code> / <code>PaymentOption</code></strong> — ต้องแปลงข้อมูลตัวเลือกหนึ่งตัวให้กลายเป็น <code>RadioInput</code> หนึ่งแถว ต้องไม่มี state ต้องไม่รู้ว่าตัวเองถูกเลือกหรือไม่ (รับมาเป็น prop) และต้องไม่ import <code>consts.ts</code></li>
+          <li><strong><code>CheckoutDeliveryBox</code> / <code>CheckoutPaymentBox</code></strong> — ต้องรับ<em>รายการ</em>ตัวเลือกเป็น prop แล้ววนลูป ต้องแปลง "id ที่เลือก" เป็น boolean รายตัว ต้องไม่ import <code>consts.ts</code> เอง และต้องไม่มี state</li>
+          <li><strong><code>SummaryOrderItem</code></strong> — ต้องรับ <code>CartItem</code> หนึ่งชิ้นมาแสดง ต้องคำนวณยอดของแถวตัวเองได้ แต่ต้องไม่รู้จักตะกร้าทั้งใบ</li>
+          <li><strong><code>SummaryOrder</code></strong> — ต้องอ่านตะกร้าจาก <code>useCart</code> เอง ต้องไม่รับ props เลยสักตัว และต้องไม่คำนวณยอดรวมใด ๆ</li>
+          <li><strong><code>BillingSummary</code></strong> — ต้องรับตัวเลขสามตัวมาแสดงอย่างเดียว ต้องไม่เรียก <code>useCart</code> ไม่คำนวณยอดเอง และต้องไม่รู้ว่า "สั่งซื้อ" แปลว่าอะไร</li>
+        </ul>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor — รอบที่ 1: ตัวเลือกจัดส่งและชำระเงิน</strong> แชทใหม่ โหมด Agent สังเกตว่า prompt นี้ต้องเขียน "ที่ต่างกัน" ของคู่แฝดออกมาเป็นข้อ ๆ ให้ครบ ไม่ใช่เขียนว่า "ทำแบบเดียวกับตัวบน" — เพราะประโยคหลังคือคำเชิญให้ copy ทั้งก้อน:</p>
+          <pre><code class="language-text">สร้างคอมโพเนนต์ตัวเลือกจัดส่งและตัวเลือกชำระเงิน พร้อมกล่องที่วนลูปแสดงมัน
+
+บริบท: @src/shared/components/RadioInput/RadioInput.tsx @src/features/checkout/types.ts @src/features/checkout/consts.ts @src/features/checkout/components/CheckoutAddressBox/CheckoutAddressBox.tsx @src/styles/_utilities.scss @src/styles/_variables.scss
+src/shared/components/RadioInput/RadioInput.tsx เป็น default export รับ props
+  id: string, name: string, checked: boolean, onChange: () =&gt; void,
+  label: React.ReactNode และ className?: string
+  onChange ไม่รับพารามิเตอร์ใด ๆ และ label รับ JSX ได้ทั้งก้อน
+src/features/checkout/types.ts export interface DeliveryOption
+  (id, name, description, price, estimatedTime) และ interface PaymentOption
+  (id, name, description) — ชื่อ type ทั้งสองตัวชนกับชื่อคอมโพเนนต์ที่จะสร้างในงานนี้พอดี
+src/features/checkout/consts.ts export deliveryOptions และ paymentOptions
+  งานนี้ห้าม import สองตัวนั้น รายการจะถูกส่งเข้ามาเป็น prop จากหน้าเพจในบทถัดไป
+CheckoutAddressBox.tsx คือกล่องใบแรกของหน้า Checkout ที่สร้างไปแล้ว
+  ให้ทำตามรูปทรงเดียวกัน: div ที่มี styles.container กับ p-20, h3, hr แล้วเนื้อใน
+utility class ที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว ห้ามสร้างใหม่และห้ามแก้ไฟล์ในนั้น:
+  p-20, pb-10, mb-20, mb-10, mr-5, ml-5, fs-20, fw-medium, text-muted
+src/styles/_variables.scss มีตัวแปร $grey05 อยู่แล้ว
+
+โครงสร้าง: สร้างหกไฟล์นี้ ไม่มากไม่น้อยกว่านี้
+- src/features/checkout/components/DeliveryOption/DeliveryOption.tsx
+- src/features/checkout/components/PaymentOption/PaymentOption.tsx
+- src/features/checkout/components/CheckoutDeliveryBox/CheckoutDeliveryBox.tsx
+- src/features/checkout/components/CheckoutDeliveryBox/CheckoutDeliveryBox.module.scss
+- src/features/checkout/components/CheckoutPaymentBox/CheckoutPaymentBox.tsx
+- src/features/checkout/components/CheckoutPaymentBox/CheckoutPaymentBox.module.scss
+DeliveryOption กับ PaymentOption ไม่มีไฟล์ .module.scss
+
+ข้อกำหนดทางเทคนิค:
+- DeliveryOption.tsx: import React from "react"; แล้ว
+    import RadioInput from "@/shared/components/RadioInput/RadioInput";
+  interface DeliveryOptionProps: id (number), name (string), description (string),
+    selected (boolean), onSelect: (id: number) =&gt; void
+  ประกาศเป็น React.FC&lt;DeliveryOptionProps&gt; ที่ destructure props ทั้งห้าตัวตามลำดับ
+    ที่ประกาศไว้ใน interface พอดี คือ id, name, description, selected, onSelect
+  return RadioInput ตัวเดียวไม่มี div ครอบ โดยส่ง props ตามลำดับนี้
+    id={`delivery-option-${id}`}  (template literal ตามนี้)
+    name="deliveryOption"
+    checked={selected}
+    onChange={() =&gt; onSelect(id)}
+    label={ ... } ที่เป็น fragment ว่างครอบสองอย่าง
+      span className="mr-5" แสดง {name} แล้วตามด้วยอักขระ | ติดท้าย span นั้นทันที
+        ในบรรทัดเดียวกัน
+      span className="ml-5" แสดง {description}
+  ห้ามส่ง className ให้ RadioInput ห้ามแสดง price ในไฟล์นี้
+- PaymentOption.tsx: โครงเดียวกับ DeliveryOption ทุกประการ ต่างกันสี่จุดนี้เท่านั้น
+    1) ชื่อคอมโพเนนต์และ interface เป็น PaymentOption / PaymentOptionProps
+    2) id={`payment-option-${id}`}
+    3) name="paymentOption"
+    4) label เป็น fragment ว่างที่มีสามอย่างเรียงกัน
+         span className="fw-medium" แสดง {name}
+         br
+         span className="text-muted" แสดง {description}
+  นอกจากสี่ข้อนี้ ต้องเหมือนกันทุกตัวอักษร รวมถึงชื่อ prop, ลำดับ prop ที่ส่งให้ RadioInput
+  และลำดับตอน destructure ซึ่งเป็น id, name, description, selected, onSelect เหมือนกัน
+- CheckoutDeliveryBox.tsx: ไฟล์นี้ไม่มีบรรทัด import React (ตามต้นฉบับจริง)
+  บรรทัด import สามบรรทัดตามลำดับนี้
+    import styles from "./CheckoutDeliveryBox.module.scss";
+    import { DeliveryOption as TDeliveryOption } from "@/features/checkout/types";
+    import DeliveryOption from
+      "@/features/checkout/components/DeliveryOption/DeliveryOption";
+  interface ของไฟล์นี้ชื่อ CheckoutDeliveryBox เฉย ๆ ไม่มีคำว่า Props ต่อท้าย
+    (ตามต้นฉบับจริง อย่าแก้ให้)
+    มีสี่ field: title (string), selectedDeliveryId (number),
+    deliveryOptions (TDeliveryOption[]), onSelectOption: (id: number) =&gt; void
+  ประกาศเป็น React.FC&lt;CheckoutDeliveryBox&gt; ที่ destructure ตามลำดับนี้
+    title, deliveryOptions, selectedDeliveryId, onSelectOption
+    (ลำดับตอน destructure ไม่ตรงกับลำดับใน interface จริงตามนี้)
+  JSX: div className={`${styles.container} p-20`} ที่มี
+    h3 className="fs-20 pb-10" แสดง {title}
+    hr className="mb-20"
+    บรรทัดว่างหนึ่งบรรทัด
+    {deliveryOptions.map(({ id, name, description }) =&gt; ( ... ))} ที่ destructure
+      สามตัวนี้ในพารามิเตอร์ ไม่ใช่รับ option ทั้งก้อน
+      ข้างในเป็น div key={id} className="mb-10" ครอบ DeliveryOption ที่ส่ง
+        id={id} name={name} description={description}
+        selected={id === selectedDeliveryId}
+        onSelect={onSelectOption}   (ส่งฟังก์ชันตรง ๆ ห้ามห่อด้วย arrow function)
+  ห้าม import consts.ts ห้ามมี state ห้ามคำนวณราคาใด ๆ
+- CheckoutPaymentBox.tsx: โครงเดียวกับ CheckoutDeliveryBox ต่างกันสี่จุดนี้เท่านั้น
+    1) ชื่อคอมโพเนนต์เป็น CheckoutPaymentBox และ interface ชื่อ CheckoutPaymentBoxProps
+       (ตัวนี้มีคำว่า Props ต่อท้ายจริงตามนี้ ต่างจากไฟล์ delivery)
+    2) import type เป็น { PaymentOption as TPaymentOption } และ import คอมโพเนนต์
+       PaymentOption
+    3) ชื่อ prop เป็น selectedPaymentId และ paymentOptions
+    4) styles มาจาก ./CheckoutPaymentBox.module.scss
+  ลำดับ destructure คือ title, paymentOptions, selectedPaymentId, onSelectOption
+- ไฟล์ .module.scss ทั้งสองไฟล์มีเนื้อเหมือนกันทุกตัวอักษร
+    @use "../../../../styles/variables";
+    .container { background-color: variables.$grey05; }
+  ห้ามใส่กฎอื่นเพิ่ม
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ RadioInput.tsx หรือไฟล์ใด ๆ ใน src/shared
+- ห้ามแก้ types.ts, consts.ts, schema.ts หรือคอมโพเนนต์ที่อยู่ของบทที่แล้ว
+- ห้ามแก้ src/styles/ แม้แต่บรรทัดเดียว
+- ห้ามแตะ src/pages ทั้งโฟลเดอร์ โดยเฉพาะ Checkout.tsx ที่ยังเป็น stub
+- ห้ามสร้าง SummaryOrder, SummaryOrderItem หรือ BillingSummary ในรอบนี้
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ห้ามเขียนเทสต์
+- ยังไม่ต้องเอาคอมโพเนนต์พวกนี้ไป render ที่ไหน</code></pre>
+        </blockquote>
+
+        <p>เดินวงจรตรวจงานให้จบรอบที่ 1 ก่อน (checklist ของทั้งบทอยู่ในกล่อง ✅ ด้านล่าง — ข้อที่ขึ้นต้นว่า <strong>รอบที่ 1</strong>) แล้ว <code>npm run lint</code>, <code>npm run typecheck</code> และ <code>git commit</code> ให้เรียบร้อยก่อนเปิดแชทรอบที่สอง ไม่ใช่เพราะรอบที่ 2 ต้องการไฟล์จากรอบที่ 1 (มันไม่ต้องการเลยสักไฟล์) แต่เพราะถ้าคุณปล่อยให้สิบสองไฟล์มากองรวมกันใน <code>git diff</code> เดียว คุณจะกลับไปแยกไม่ออกว่าอะไรมาจากคำสั่งไหน</p>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor — รอบที่ 2: ใบสรุปคำสั่งซื้อและยอดเงิน</strong> แชทใหม่อีกครั้ง รอบนี้ข้ามฝั่งไปหยิบของจากฟีเจอร์ cart มาใช้ ซึ่งเป็นการข้ามฟีเจอร์ครั้งแรกของ chapter นี้:</p>
+          <pre><code class="language-text">สร้างใบสรุปคำสั่งซื้อฝั่งขวาของหน้า Checkout: รายการสินค้าและกล่องยอดเงิน
+
+บริบท: @src/features/cart/store/CartContext.tsx @src/features/cart/useCart.ts @src/shared/components/Button/Button.tsx @src/features/checkout/components/CheckoutDeliveryBox/CheckoutDeliveryBox.tsx @src/styles/_utilities.scss
+src/features/cart/store/CartContext.tsx export interface CartItem ที่มี
+  id (number), title (string), price (number), quantity (number), image (string)
+  และ originalPrice ที่เป็น optional
+src/features/cart/useCart.ts export named useCart คืน
+  { cart, addToCart, removeFromCart, updateQuantity, clearCart }
+  โดย cart มีรูปร่าง { items: CartItem[] }
+src/shared/components/Button/Button.tsx เป็น default export รับ children,
+  className?: string, onClick?: () =&gt; void, isLoading?: boolean, disabled?: boolean
+  ตอน isLoading เป็น true ปุ่มจะแสดง spinner แทน children ให้เอง
+CheckoutDeliveryBox.tsx ที่เพิ่งสร้างคือรูปทรงมาตรฐานของกล่องบนหน้านี้
+ยอดเงินทั้งหมดของหน้า Checkout ถูกคำนวณที่เดียวใน hook useCheckout ซึ่งจะเขียนใน
+  บทถัดไป งานนี้ห้ามคำนวณยอดรวมของทั้งตะกร้าที่ไหนทั้งสิ้น
+utility class ที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว ห้ามสร้างใหม่และห้ามแก้ไฟล์ในนั้น:
+  p-20, mb-5, mb-10, mb-15, mb-20, mr-10, flex, align-item-center, flex-grow,
+  justify-between, width-full, fs-14, fs-16, fs-18, fs-20, fs-24, fw-bold,
+  fw-medium, text-muted, text-primary
+src/styles/_variables.scss มีตัวแปร $grey05 อยู่แล้ว
+
+โครงสร้าง: สร้างหกไฟล์นี้ ไม่มากไม่น้อยกว่านี้
+- src/features/checkout/components/SummaryOrderItem/SummaryOrderItem.tsx
+- src/features/checkout/components/SummaryOrderItem/SummaryOrderItem.module.scss
+- src/features/checkout/components/SummaryOrder/SummaryOrder.tsx
+- src/features/checkout/components/SummaryOrder/SummaryOrder.module.scss
+- src/features/checkout/components/BillingSummary/BillingSummary.tsx
+- src/features/checkout/components/BillingSummary/BillingSummary.module.scss
+
+ข้อกำหนดทางเทคนิค:
+- ทั้งสามไฟล์ .tsx ขึ้นต้นด้วย import React from "react"; ประกาศคอมโพเนนต์เป็น React.FC
+  และปิดท้ายด้วย export default
+- SummaryOrderItem.tsx: import React, แล้ว styles จาก ./SummaryOrderItem.module.scss,
+  แล้ว import { CartItem } from "@/features/cart/store/CartContext";
+  interface SummaryOrderItemProps มี field เดียวคือ item: CartItem
+  ประกาศเป็น React.FC&lt;SummaryOrderItemProps&gt; ที่ destructure props เป็น ({ item })
+  บรรทัดแรกในคอมโพเนนต์คือ
+    const { title, price, quantity, id, image } = item;   (ลำดับตามนี้พอดี)
+  JSX: div className={`flex align-item-center`} ที่มี key={id} ด้วย
+    (เขียน className เป็น template literal และใส่ key ตามต้นฉบับจริง)
+    img className={`${styles.image} mr-10`} src={image} alt={title}
+    div className="flex-grow" ที่มี
+      p className="fs-16 fw-medium mb-5" แสดง {title}
+      p className="fs-14 text-muted" แสดง $ ติดกับ {price.toFixed(2)} แล้วเว้นวรรค
+        ตามด้วยตัวอักษร X ตัวใหญ่ เว้นวรรค แล้ว {quantity}
+    div className="fs-16 fw-bold text-primary" แสดง $ ติดกับ
+      {(price * quantity).toFixed(2)}
+  ห้ามเรียก useCart ในไฟล์นี้
+- SummaryOrderItem.module.scss: มีแค่ .image { width: 60px; } ไม่มี @use ไม่มีอย่างอื่น
+- SummaryOrder.tsx: import React, styles จาก ./SummaryOrder.module.scss,
+  import { useCart } from "@/features/cart/useCart"; แล้ว SummaryOrderItem
+  คอมโพเนนต์นี้ไม่มี props เลย ประกาศเป็น React.FC เปล่า ๆ ไม่ต้องมี interface
+  บรรทัดแรกในคอมโพเนนต์คือ const { cart } = useCart();
+  JSX: div className={`${styles.container} p-20`} ที่มี
+    h3 className="fs-20 mb-5" ข้อความ Summary Order
+    p className="fs-14 text-muted mb-15" ข้อความ
+      For a better experience, verify your goods and choose your shipping option.
+    hr className="mb-15"
+    {cart.items.map((item) =&gt; ( ... ))} ที่ข้างในเป็น
+      div className="mb-15" key={item.id} ครอบ SummaryOrderItem item={item}
+      (ลำดับ attribute คือ className ก่อน key ตามนี้)
+  ห้ามคำนวณยอดรวม ห้ามมี empty state ห้ามรับ props
+- BillingSummary.tsx: import React, styles จาก ./BillingSummary.module.scss,
+  แล้ว Button จาก "@/shared/components/Button/Button"
+  interface BillingSummaryProps หกตัวตามลำดับนี้ ทุกตัวบังคับ ไม่มีตัวไหนเป็น optional
+    subTotal: number, shipping: number, total: number,
+    isLoading: boolean, isDisabled: boolean, onPlaceOrder: () =&gt; void
+    (ชื่อ subTotal ใช้ T ตัวใหญ่ตามนี้)
+  ตอน destructure props ให้ใส่ค่า default ให้สองตัวตามต้นฉบับจริง คือ
+    isLoading = false และ isDisabled = false
+  JSX: div className={`${styles.container} p-20`} ที่มี
+    h3 className="fs-20 fw-bold mb-20" ข้อความ Billing Summary
+    hr className="mb-20"
+    div className="flex justify-between mb-10" ที่มี
+      span className="fs-18 text-muted" ข้อความ Sub Total
+      span className="fs-18 text-primary" แสดง $ ติดกับ {subTotal.toFixed(2)}
+    div className="flex justify-between mb-10" ที่มี
+      span className="fs-18 text-muted" ข้อความ Shipping
+      span className="fs-18 fw-medium text-primary" แสดง $ ติดกับ
+        {shipping.toFixed(2)}
+    hr className="mb-20"
+    div className="flex justify-between mb-20" ที่มี
+      span className="fs-24 fw-bold" ข้อความ Total
+      span className="fs-24 fw-bold text-primary" แสดง $ ติดกับ {total.toFixed(2)}
+    บรรทัดว่างหนึ่งบรรทัด
+    Button className="width-full" onClick={onPlaceOrder} isLoading={isLoading}
+      disabled={isDisabled} ที่มี children เป็นข้อความ Place Order
+  ห้าม import useCart ห้าม import consts.ts ห้ามคำนวณ subTotal, shipping หรือ total
+    ในไฟล์นี้ ตัวเลขทั้งสามมาจาก props เท่านั้น
+  ห้ามใส่ ?? หรือ || ให้ตัวเลขทั้งสาม และห้ามเช็คว่ามันเป็น undefined
+- SummaryOrder.module.scss และ BillingSummary.module.scss มีเนื้อเหมือนกันทุกตัวอักษร
+    @use "../../../../styles/variables";
+    .container { background-color: variables.$grey05; }
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ไฟล์ใด ๆ ใน src/features/cart
+- ห้ามแก้สี่คอมโพเนนต์ที่สร้างไปในรอบที่แล้ว
+- ห้ามแก้ src/styles/ แม้แต่บรรทัดเดียว
+- ห้ามแตะ src/pages ทั้งโฟลเดอร์
+- ห้ามสร้าง useCheckout.ts หรือ api.ts
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ห้ามเขียนเทสต์
+- ยังไม่ต้องเอาคอมโพเนนต์พวกนี้ไป render ที่ไหน</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อนทุกรอบ ข้อแรกเป็นข้อของรอบที่ 2 และข้อที่สองคือวิธีอ่าน diff ของบทนี้ ซึ่งสำคัญกว่าข้อไหนทั้งหมด:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em><code>BillingSummary</code> คำนวณยอดเอง แทนที่จะรับตัวเลขมาแสดง</em> — สิ่งที่ได้กลับมาคือไฟล์ที่ขึ้นต้นด้วย <code>const { cart } = useCart();</code> แล้ว <code>reduce</code> หา subtotal เองในบรรทัดถัดมา และเหตุผลที่มันพลาดข้อนี้บ่อยมาก<em>ไม่ใช่</em>เพราะมันโง่ แต่เพราะไฟล์ที่มันเพิ่งเขียนเสร็จเมื่อครู่ (<code>SummaryOrder</code>) ทำแบบนั้นพอดี — เรียก <code>useCart()</code> อ่านตะกร้าเองโดยไม่รับ props สักตัว โมเดลที่เห็นแพตเทิร์นนั้นในบริบทของตัวเองจะสรุปว่านี่คือธรรมเนียมของกล่องบนหน้านี้ แล้วทำตาม ผลที่ตามมา: <code>subTotal</code> จะถูกทุกบาทเพราะข้อมูลอยู่ในตะกร้าจริง แต่ <code>shipping</code> <strong>ไม่ได้อยู่ในตะกร้า</strong> — มันคือราคาของ delivery option ที่ผู้ใช้เพิ่งเลือก ซึ่งเป็น state ที่ยังไม่มีตัวตนจนกว่าจะถึงบทหน้า Agent จึงต้องเดา และสิ่งที่มันเดาคือ hardcode <code>5.99</code> ไว้เฉย ๆ หรือใส่ <code>0</code> อาการที่ผู้ใช้เห็นหลังบทเรียน 28: กด Express Delivery แล้ว Shipping ฝั่งขวาไม่ขยับ ยอด Total ผิดไป $10 ทุกออร์เดอร์ วิธีตรวจสองคำสั่ง: <code>grep -n "useCart" src/features/checkout/components/BillingSummary/BillingSummary.tsx</code> ต้อง<strong>ว่างเปล่า</strong> และ <code>grep -n "reduce\|5.99" .../BillingSummary.tsx</code> ต้องว่างเปล่าเช่นกัน ตัวเลขทั้งสามต้องมาจาก props เท่านั้น — กล่องนี้เป็นแค่จอแสดงผล</li>
+            <li><strong>วิธีอ่าน diff ของบทนี้ — อ่านให้ครบทั้งเจ็ดไฟล์ อย่าหยุดที่ไฟล์ที่สอง:</strong> ธรรมชาติของการอ่าน diff ที่ซ้ำแบบกันคือพออ่านสองไฟล์แรกจบแล้วเห็นว่า "อ๋อ แบบนี้เอง" สมองจะเปลี่ยนโหมดจากอ่านเป็นสแกน แล้วไฟล์ที่ 3–7 จะผ่านตาไปโดยไม่ถูกอ่านจริง ทางแก้ไม่ใช่การตั้งใจให้มากขึ้น แต่คือการ<em>เปลี่ยนวิธีอ่าน</em>: เปิดคู่แฝดวางข้างกันแล้วไล่หา "จุดที่ต่าง" ให้ครบตามรายการนี้ ไม่ใช่ไล่อ่านทีละไฟล์จากบนลงล่าง
+              <ul>
+                <li><code>DeliveryOption</code> เทียบ <code>PaymentOption</code> ต้องต่างกัน<strong>สี่จุดพอดี</strong>: ชื่อคอมโพเนนต์/interface, <code>delivery-option-</code> เทียบ <code>payment-option-</code> ใน template literal ของ <code>id</code>, <code>name="deliveryOption"</code> เทียบ <code>name="paymentOption"</code> และหน้าตาของ <code>label</code> — <strong>ที่เหลือต้องเหมือนกันทุกตัวอักษร</strong> ถ้าเจอจุดที่ห้า ให้อ่านว่ามันคืออะไรก่อนกด accept</li>
+                <li>จุดที่ผิดแล้วเงียบที่สุดคือ <code>name</code>: ถ้าทั้งสองไฟล์ได้ <code>name="deliveryOption"</code> เหมือนกัน เบราว์เซอร์จะถือว่า radio ทั้งสี่ตัวบนหน้าอยู่กลุ่มเดียวกัน — เลือกวิธีจ่ายเงินแล้ววิธีจัดส่งจะหลุดติ๊กทันที <code>grep -rn 'name="' src/features/checkout/components/DeliveryOption src/features/checkout/components/PaymentOption</code> ต้องได้สองบรรทัดที่มีค่าต่างกัน</li>
+                <li><code>CheckoutDeliveryBox</code> เทียบ <code>CheckoutPaymentBox</code> ต้องต่างกัน<strong>สี่จุดพอดี</strong>เช่นกัน: ชื่อคอมโพเนนต์/interface, type ที่ import มา rename (<code>TDeliveryOption</code> / <code>TPaymentOption</code>), ชื่อ prop คู่ <code>deliveryOptions</code> + <code>selectedDeliveryId</code> เทียบ <code>paymentOptions</code> + <code>selectedPaymentId</code> และ path ของ <code>.module.scss</code> กับคอมโพเนนต์ลูก</li>
+                <li>สังเกตจุดที่ <em>ควร</em>ต่างแต่ต้องปล่อยให้ต่าง: ชื่อ interface ของกล่อง delivery ไม่มีคำว่า <code>Props</code> ส่วนของกล่อง payment มี — อ่านกล่อง 💡 ใต้โค้ดอ้างอิงก่อนตัดสินใจว่าจะแก้หรือไม่แก้</li>
+                <li>ไฟล์ <code>.module.scss</code> ทั้งสี่ไฟล์ในบทนี้ต้องมีเนื้อเหมือนกันทุกตัวอักษร (ยกเว้น <code>SummaryOrderItem.module.scss</code> ที่ต่างโดยสิ้นเชิง) — <code>cat</code> ทั้งสี่ไฟล์ต่อกันแล้วดูด้วยตาเปล่าได้เลย ใช้เวลาสิบวินาที</li>
+              </ul>
+            </li>
+          </ul>
+          <p><strong>รอบที่ 1:</strong></p>
+          <ul>
+            <li>ไฟล์ใหม่ <strong>6 ไฟล์พอดี</strong> ไม่มี <code>DeliveryOption.module.scss</code> หรือ <code>PaymentOption.module.scss</code> โผล่มา (สองตัวนี้ไม่มี style ของตัวเองเลย เหมือน <code>RadioInput</code> ในบทเรียน 12) และไม่มีไฟล์ของรอบที่ 2 มาก่อนกำหนด</li>
+            <li><code>grep -rn "consts" src/features/checkout/components/</code> ต้อง<strong>ว่างเปล่า</strong> — ทั้งสี่ไฟล์ต้องไม่รู้จัก <code>deliveryOptions</code> หรือ <code>paymentOptions</code> เลย รายการจะถูกส่งเข้ามาเป็น prop จากหน้าเพจในบทหน้า ถ้ากล่องไหน import <code>consts.ts</code> เองมันจะทำงานได้ทันทีวันนี้ (แถมดูสะดวกกว่าด้วย) แต่จะเทสต์ด้วยข้อมูลปลอมไม่ได้เลย และหน้าเพจจะสั่งอะไรมันไม่ได้อีก</li>
+            <li><code>onSelect={onSelectOption}</code> ส่งฟังก์ชันเข้าไปตรง ๆ ไม่ใช่ <code>onSelect={(id) =&gt; onSelectOption(id)}</code> ที่ห่อไว้เปล่า ๆ — signature ตรงกันอยู่แล้ว เป็นข้อเดียวกับที่ checklist บทเรียน 24 ปฏิเสธไปแล้วรอบหนึ่ง</li>
+            <li><code>selected={id === selectedDeliveryId}</code> เปรียบเทียบด้วย <code>===</code> ไม่ใช่ <code>==</code> และเทียบ id กับ id ไม่ใช่เทียบ object — ถ้า Agent เขียน <code>selected={option === selectedOption}</code> ขึ้นมา แปลว่ามันเปลี่ยนสัญญาของ prop ทั้งเส้น</li>
+            <li>ในทั้งสี่ไฟล์ไม่มี <code>useState</code> เลยสักตัว — <code>grep -rn "useState" src/features/checkout/components/</code> ต้องว่างเปล่า ถ้ากล่องเก็บ "ตัวที่เลือก" ไว้เองหน้าเว็บจะดูทำงานปกติทุกประการวันนี้ แล้วพังในบทหน้าตอนที่ <code>useCheckout</code> เป็นคนถือค่านั้น — คุณจะได้แหล่งความจริงสองแหล่งที่ค่อย ๆ เพี้ยนจากกัน</li>
+            <li>ทั้งสองกล่องเป็น <code>React.FC</code> ที่<strong>ไม่มีบรรทัด <code>import React</code></strong> ในไฟล์ — ข้อนี้แปลกและถูกต้องตามต้นฉบับ อ่านเหตุผล (และเหตุผลที่มันคอมไพล์ผ่าน) ในกล่อง 💡 ใต้โค้ดอ้างอิงของกล่อง delivery ถ้า Agent เติม <code>import React from "react";</code> ให้ทั้งสองไฟล์ โค้ดจะ<em>ดีขึ้น</em>แต่ diff จะไม่ตรงกับบทนี้ ตัดสินใจเองได้ แต่ต้องรู้ตัวว่ากำลังตัดสินใจอะไร</li>
+            <li>อักขระคั่นใน label ของ <code>DeliveryOption</code> เป็นขีดตั้ง <code>|</code> ตัวเดียวที่ติดท้าย <code>&lt;/span&gt;</code> ในบรรทัดเดียวกัน ไม่ใช่ <code>&amp;bull;</code> ไม่ใช่ <code>-</code> และไม่ใช่ <code>&amp;#124;</code> — ตัวคั่นแบบนี้เป็นสิ่งที่โมเดลชอบ "ปรับให้อ่านง่ายขึ้น" เป็นอันดับต้น ๆ</li>
+          </ul>
+          <p><strong>รอบที่ 2:</strong></p>
+          <ul>
+            <li>ไฟล์ใหม่ <strong>6 ไฟล์พอดี</strong> และไม่มีไฟล์ของรอบที่ 1 ขึ้นสถานะ modified — Agent ที่เห็นสี่ไฟล์เดิมในบริบทชอบ "ปรับให้เข้าชุดกัน" โดยเฉพาะการเติม <code>import React</code> ที่หายไปในสองกล่อง หรือเติมคำว่า <code>Props</code> ให้ interface ที่ขาด</li>
+            <li><code>SummaryOrder</code> ไม่มี props เลยสักตัว และเรียก <code>useCart()</code> เอง ส่วน <code>SummaryOrderItem</code> ต้อง<em>ไม่</em>เรียก <code>useCart</code> — <code>grep -rn "useCart" src/features/checkout/components/</code> ต้องเจอ<strong>บรรทัดเดียว</strong>ในโฟลเดอร์ <code>components</code> คือใน <code>SummaryOrder.tsx</code> ถ้าเจอสองบรรทัด ให้ดูว่าบรรทัดที่สองอยู่ไฟล์ไหน แล้วกลับไปอ่านข้อ AI มักพลาดตรงนี้ ข้างบน</li>
+            <li>ตัวเลขทั้งสามใน <code>BillingSummary</code> ถูกฟอร์แมตด้วย <code>.toFixed(2)</code> ทุกตัวและมี <code>$</code> นำหน้าติดกันไม่เว้นวรรค — สูตรเดียวกับที่หน้า Cart ใช้ในบทเรียน 24 ทั้งแอปแสดงเงินท่าเดียวกันหมด</li>
+            <li>ข้อความบนจอตรงทุกตัวอักษร: <code>Summary Order</code>, <code>Billing Summary</code>, <code>Sub Total</code>, <code>Shipping</code>, <code>Total</code> และ <code>Place Order</code> — ข้อสุดท้ายสำคัญที่สุดเพราะ integration test ในบทเรียน 33 หาปุ่มด้วย <code>getByRole("button", { name: /place order/i })</code> ถ้า Agent เปลี่ยนเป็น <code>Confirm Order</code> วันนี้ไม่มีอะไรพัง แต่บทเรียน 33 จะพังโดยไม่มีอะไรชี้กลับมาที่บรรทัดนี้</li>
+            <li><code>SummaryOrderItem</code> รับ <code>item: CartItem</code> ทั้งก้อน ไม่ใช่แตกเป็นห้า prop — และ type ต้อง import มาจาก <code>@/features/cart/store/CartContext</code> ไม่ใช่ประกาศ interface ใหม่ในไฟล์ (เหตุผลอยู่ใต้โค้ดอ้างอิง)</li>
+            <li><code>grep -n "reduce" src/features/checkout/components/ -r</code> ต้องว่างเปล่าทั้งโฟลเดอร์ — ยอดรวมของทั้งตะกร้าไม่ได้อยู่ในบทนี้เลยสักที่ ส่วน <code>price * quantity</code> ใน <code>SummaryOrderItem</code> ไม่ใช่ยอดรวม มันคือยอดของแถวตัวเอง คนละเรื่องกัน</li>
+            <li>ปุ่มใน <code>BillingSummary</code> ได้ทั้ง <code>isLoading</code> และ <code>disabled</code> ส่งต่อไปจาก props จริง ไม่ใช่ถูก hardcode เป็น <code>false</code> — สองตัวนี้จะมีค่าจริงในบทหน้า (spinner ระหว่างยิง API และปุ่มที่กดไม่ได้เมื่อยังไม่กรอกที่อยู่)</li>
+            <li><code>SummaryOrderItem.module.scss</code> มีแค่ <code>.image { width: 60px; }</code> ไม่มี <code>@use</code> — ต่างจากอีกสี่ไฟล์เพราะมันไม่ได้ใช้ตัวแปรสีเลย ถ้า Agent ใส่ <code>@use</code> มาด้วยความเคยชิน sass จะเตือนว่า import แล้วไม่ได้ใช้หรือไม่ก็เงียบไปเฉย ๆ แล้วแต่เวอร์ชัน — เอาออก</li>
+            <li>ไม่มี <code>any</code> ไม่มี comment ที่เขียนซ้ำสิ่งที่โค้ดบอกอยู่แล้ว ไม่มี <code>index.ts</code> และไม่มีไฟล์เทสต์ในทั้งสองรอบ</li>
+          </ul>
+        </blockquote>
+
+        <p>เหมือนบทก่อน ๆ: <code>npm run lint</code> อาจตกเรื่อง <code>import-x/order</code> ก่อน แก้ด้วย <code>npx eslint . --fix</code> แล้วรันซ้ำให้ผ่านเงียบ ๆ จากนั้นค่อย <code>npm run typecheck</code> — บทนี้มีจุดที่ <code>--fix</code> ชอบขยับเป็นพิเศษคือสองกล่อง delivery/payment ที่บรรทัดแรกเป็น <code>import styles from "./..."</code> แล้วตามด้วย <code>@/features/...</code> ซึ่ง <code>import-x/order</code> มองว่าผิดกลุ่ม ถ้ามันสลับให้ต่างจากโค้ดอ้างอิง ให้ยอมรับผลของเครื่องมือ (lint ต้องผ่าน) แล้วอ่าน diff อีกรอบเพื่อยืนยันว่าไม่มีอะไรอื่นเปลี่ยนไปด้วย</p>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/features/checkout/components/DeliveryOption/DeliveryOption.tsx</code> — radio หนึ่งแถวของวิธีจัดส่ง:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import RadioInput from "@/shared/components/RadioInput/RadioInput";
+
+interface DeliveryOptionProps {
+  id: number;
+  name: string;
+  description: string;
+  selected: boolean;
+  onSelect: (id: number) =&gt; void;
+}
+
+const DeliveryOption: React.FC&lt;DeliveryOptionProps&gt; = ({
+  id,
+  name,
+  description,
+  selected,
+  onSelect,
+}) =&gt; {
+  return (
+    &lt;RadioInput
+      id={`delivery-option-${id}`}
+      name="deliveryOption"
+      checked={selected}
+      onChange={() =&gt; onSelect(id)}
+      label={
+        &lt;&gt;
+          &lt;span className="mr-5"&gt;{name}&lt;/span&gt;|
+          &lt;span className="ml-5"&gt;{description}&lt;/span&gt;
+        &lt;/&gt;
+      }
+    /&gt;
+  );
+};
+
+export default DeliveryOption;
+</code></pre>
+
+        <p>นี่คือผลตอบแทนของแรงที่ลงไปในบทเรียน 12 — <code>RadioInput</code> ที่เราสร้างไว้จัดการเรื่อง input + label + การจับคู่ <code>htmlFor</code> ให้หมดแล้ว คอมโพเนนต์นี้เลยเหลือแค่งานแปลงร่าง: รับข้อมูล delivery หนึ่งตัว มาประกอบเป็น props ให้ <code>RadioInput</code></p>
+
+        <ul>
+          <li><code>id={`delivery-option-${id}`}</code> — DOM id ต้องไม่ซ้ำกันทั้งหน้า เราเลยผูกกับ id ของตัวเลือก จะได้ <code>delivery-option-1</code>, <code>delivery-option-2</code> คลิกที่ label แล้ว radio ติดเพราะ id นี้แหละ</li>
+          <li><code>name="deliveryOption"</code> — radio ที่ <code>name</code> เดียวกันเป็นกลุ่มเดียวกันในสายตาเบราว์เซอร์ เลือกได้ทีละตัว ค่านี้คือจุดที่ copy-paste ผิดแล้วเงียบที่สุดของบท ตามที่ checklist เตือนไว้</li>
+          <li><code>checked={selected}</code> กับ <code>onChange={() =&gt; onSelect(id)}</code> — ตัวมันไม่ตัดสินใจอะไรเอง ข้างบนบอกว่าถูกเลือกก็แสดงว่าถูกเลือก ผู้ใช้คลิกก็แค่ตะโกน id ของตัวเองขึ้นไป สังเกตว่า <code>onChange</code> ของ <code>RadioInput</code> ไม่รับพารามิเตอร์ (เราออกแบบไว้แบบนั้นตั้งแต่บทเรียน 12) การห่อด้วย arrow function ตรงนี้จึงไม่ใช่ wrapper เปล่า ๆ แต่เป็นการ<em>เติม id เข้าไป</em> ซึ่งเป็นคนละเรื่องกับ wrapper ที่ checklist ปฏิเสธ</li>
+          <li><code>label</code> รับ JSX ได้ — จำได้ไหมว่าเราประกาศ prop นี้เป็น <code>React.ReactNode</code> ไว้ ทำให้ยัด markup อย่าง ชื่อ + เส้นคั่น + คำอธิบาย ลงไปได้เลย ไม่ใช่แค่ string</li>
+        </ul>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> ตัวเลือกจัดส่งมี <code>price</code> อยู่ในข้อมูล (Standard $5.99 / Express $15.99 จาก <code>consts.ts</code>) แต่<strong>แถวของมันไม่แสดงราคาเลย</strong> — <code>DeliveryOptionProps</code> ไม่มี field <code>price</code> ด้วยซ้ำ ผู้ใช้จึงเห็นแค่ "Express Delivery | Approx 1 - 2 Days" แล้วต้องกดเลือกดูเองว่ายอดฝั่งขวาขยับขึ้นเท่าไร นี่คือช่องว่างของ UX ที่มองไม่เห็นวันนี้ (เพราะยังไม่มีหน้าให้ดู) และจะเห็นชัดมากในบทเรียน 28 ตอนที่คุณกด Express แล้วต้องกวาดตาไปหาคำตอบอีกฝั่งของจอ ในรีวิวจริงข้อนี้คือ comment ที่ควรทักคู่กับ <code>estimatedTime</code> ที่ไม่มีใครใช้จากบทเรียน 25: เรามีข้อมูลสองก้อนที่ควรแสดงตรงนี้พอดี ก้อนหนึ่งถูกทิ้ง อีกก้อนถูกเก็บไว้เฉย ๆ การเพิ่ม prop <code>price</code> แล้วต่อท้าย label เป็นงานสามบรรทัดที่กระทบไฟล์เดียว (<code>CheckoutDeliveryBox</code> มี <code>price</code> อยู่ในมืออยู่แล้วเพราะมันรับ <code>TDeliveryOption[]</code> เต็ม ๆ) เราคงตามต้นฉบับเพื่อให้ diff ตรง แต่จดไว้เป็นข้อแรกของบันทึกรีวิวได้เลย</blockquote>
+
+        <p><code>src/features/checkout/components/PaymentOption/PaymentOption.tsx</code> — สูตรเดียวกัน หน้าตาต่างกัน:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import RadioInput from "@/shared/components/RadioInput/RadioInput";
+
+interface PaymentOptionProps {
+  id: number;
+  name: string;
+  description: string;
+  selected: boolean;
+  onSelect: (id: number) =&gt; void;
+}
+
+const PaymentOption: React.FC&lt;PaymentOptionProps&gt; = ({
+  id,
+  name,
+  description,
+  selected,
+  onSelect,
+}) =&gt; {
+  return (
+    &lt;RadioInput
+      id={`payment-option-${id}`}
+      name="paymentOption"
+      checked={selected}
+      onChange={() =&gt; onSelect(id)}
+      label={
+        &lt;&gt;
+          &lt;span className="fw-medium"&gt;{name}&lt;/span&gt;
+          &lt;br /&gt;
+          &lt;span className="text-muted"&gt;{description}&lt;/span&gt;
+        &lt;/&gt;
+      }
+    /&gt;
+  );
+};
+
+export default PaymentOption;
+</code></pre>
+
+        <p>โครงเหมือน <code>DeliveryOption</code> ทั้งดุ้น ต่างกันแค่ <code>name</code> ของกลุ่ม radio, <code>id</code> prefix และหน้าตาของ label — ฝั่ง payment ใช้สองบรรทัด: ชื่อวิธีจ่ายตัวหนา คำอธิบายสีจางข้างใต้ คุณอาจสงสัยว่าทำไมไม่ยุบสองตัวนี้เป็นคอมโพเนนต์เดียวแล้วส่ง label เข้ามา — ทำได้ แต่สองตัวนี้เป็นคนละ concept ทางธุรกิจที่บังเอิญหน้าตาคล้ายกัน<em>วันนี้</em> วันที่ payment ต้องโชว์ไอคอนบัตรเครดิตหรือ delivery ต้องโชว์ราคา (ซึ่งควรเกิดตั้งแต่วันนี้แล้วตามกล่องข้างบน) การแยกไว้แต่แรกทำให้ต่างคนต่างโตได้โดยไม่พันกัน</p>
+
+        <p>และนี่คือจุดที่ต้องพูดกันตรง ๆ เรื่องการใช้ Agent: ความซ้ำระดับนี้คือเหตุผลที่บทนี้ delegate แล้วคุ้มที่สุดในคอร์ส คุณเขียนข้อกำหนดของตัวแรกให้ละเอียด แล้วบอกว่าตัวที่สองต่างสี่จุด — ได้ไฟล์ที่สองกลับมาในไม่กี่วินาที ไม่มีการพิมพ์ผิด ไม่มีการเผลอ copy บรรทัดที่ไม่ควร copy <em>ถ้า</em>คุณเขียนสี่จุดนั้นออกมาครบ ถ้าคุณเขียนแค่ "ทำแบบเดียวกับ DeliveryOption แต่เป็น payment" สิ่งที่คุณเพิ่งทำคือมอบการตัดสินใจว่า "อะไรควรต่าง" ให้โมเดล ซึ่งเป็นการตัดสินใจที่คุณเท่านั้นที่รู้คำตอบ</p>
+
+        <p><code>src/features/checkout/components/CheckoutDeliveryBox/CheckoutDeliveryBox.tsx</code> — ขยับขึ้นชั้นกลาง:</p>
+
+        <pre><code class="language-typescript">import styles from "./CheckoutDeliveryBox.module.scss";
+import { DeliveryOption as TDeliveryOption } from "@/features/checkout/types";
+import DeliveryOption from "@/features/checkout/components/DeliveryOption/DeliveryOption";
+
+interface CheckoutDeliveryBox {
+  title: string;
+  selectedDeliveryId: number;
+  deliveryOptions: TDeliveryOption[];
+  onSelectOption: (id: number) =&gt; void;
+}
+
+const CheckoutDeliveryBox: React.FC&lt;CheckoutDeliveryBox&gt; = ({
+  title,
+  deliveryOptions,
+  selectedDeliveryId,
+  onSelectOption,
+}) =&gt; {
+  return (
+    &lt;div className={`${styles.container} p-20`}&gt;
+      &lt;h3 className="fs-20 pb-10"&gt;{title}&lt;/h3&gt;
+      &lt;hr className="mb-20" /&gt;
+
+      {deliveryOptions.map(({ id, name, description }) =&gt; (
+        &lt;div key={id} className="mb-10"&gt;
+          &lt;DeliveryOption
+            id={id}
+            name={name}
+            description={description}
+            selected={id === selectedDeliveryId}
+            onSelect={onSelectOption}
+          /&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+
+export default CheckoutDeliveryBox;
+</code></pre>
+
+        <p>คู่กับ style ของมัน <code>CheckoutDeliveryBox.module.scss</code>:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.container {
+  background-color: variables.$grey05;
+}
+</code></pre>
+
+        <p>สามจุดที่น่าหยุดดู:</p>
+
+        <ul>
+          <li><strong><code>import { DeliveryOption as TDeliveryOption }</code></strong> — ไฟล์นี้อยากใช้ชื่อ <code>DeliveryOption</code> สองความหมาย: เป็น <em>type</em> จาก <code>types.ts</code> และเป็น <em>component</em> จากบนหัวบทนี้ ชื่อชนกันตรง ๆ เราเลย rename ฝั่ง type ตอน import เป็น <code>TDeliveryOption</code> (T นำหน้า = type) — ท่ามาตรฐานเวลา type กับ component ชื่อพ้องกัน และเป็นหนี้ก้อนที่บทเรียน 25 เตือนไว้ว่าจะมาเก็บเงินในบทนี้พอดี</li>
+          <li><strong>บรรทัดสำคัญที่สุดคือ <code>selected={id === selectedDeliveryId}</code></strong> — กล่องแปลง "id ที่ถูกเลือก" (ข้อมูลชิ้นเดียว) ให้กลายเป็น boolean รายตัว: ตัวที่ id ตรงได้ <code>true</code> ที่เหลือได้ <code>false</code> การเลือกทีละตัวเลยเกิดขึ้นเองโดยไม่ต้องมี logic ยกเลิกตัวเก่า</li>
+          <li><strong><code>onSelect={onSelectOption}</code></strong> — callback ถูกส่งผ่านลงไปเฉย ๆ พอผู้ใช้คลิก Express Delivery ข้อความ "เลือก id 2 แล้วนะ" จะวิ่งจาก <code>RadioInput</code> → <code>DeliveryOption</code> → กล่องนี้ → หน้าเพจ → <code>useCheckout</code> แล้วค่าที่อัปเดตก็ไหลย้อนกลับลงมาเป็น <code>selectedDeliveryId</code> ตัวใหม่ — วงจร one-way data flow ครบรอบ</li>
+        </ul>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — สองข้อที่ขัดกับ checklist ของบทนี้เอง:</strong> ข้อแรกคือชื่อ <code>interface CheckoutDeliveryBox</code> ที่<em>ไม่มี</em>คำว่า <code>Props</code> ต่อท้าย ทั้งที่ฝาแฝดของมันในไฟล์ถัดไปชื่อ <code>CheckoutPaymentBoxProps</code> เต็มยศ และทั้งโปรเจกต์ตั้งแต่บทเรียน 12 ก็ลงท้ายด้วย <code>Props</code> กันหมดทุกตัว มันคอมไพล์ผ่านเพราะ TypeScript เก็บ type กับค่า (value) ไว้คนละ namespace กัน — <code>CheckoutDeliveryBox</code> ที่เป็น interface กับที่เป็น const คนละตัวกันโดยสมบูรณ์ ไม่ชนกัน แต่คนอ่านต้องหยุดคิดหนึ่งจังหวะทุกครั้งที่เจอ <code>React.FC&lt;CheckoutDeliveryBox&gt;</code> ว่าตกลงมันรับตัวเองเป็น props เหรอ นี่คือ<strong>ตัวอย่างสมบูรณ์แบบของสิ่งที่ checklist ข้อ "คู่แฝดต้องต่างกันสี่จุดพอดี" ในบทนี้ควรจะจับได้</strong> — และมันจับได้จริง แต่คำตอบคือ "ปล่อยไว้" เพราะเราสั่งตามต้นฉบับเพื่อให้ diff ตรง สังเกตความอึดอัดตรงนี้ให้ดี: กติกาที่เราเพิ่งตั้งเองบอกว่านี่คือ copy-paste drift ส่วนโค้ดอ้างอิงบอกว่ามันคือของจริงที่ merge เข้า main ไปแล้ว ทั้งสองอย่างถูก และในงานจริงคุณจะเจอสถานการณ์นี้บ่อยกว่าที่คิด — สิ่งที่ผิดคือการเห็นแล้วไม่พูดถึงมัน ข้อสองอยู่บรรทัดแรกของไฟล์: <strong>ไม่มี <code>import React from "react"</code> เลย</strong> ทั้งที่บรรทัดที่ 12 เขียนว่า <code>React.FC</code> ซึ่งต่างจากอีกห้าไฟล์ในบทนี้ที่ import ครบ มันคอมไพล์ผ่านเพราะ <code>@types/react</code> ประกาศ <code>React</code> ไว้เป็น UMD global namespace ด้วย และ TypeScript ยอมให้อ้างถึง global แบบนั้นได้ถ้าใช้ใน<em>ตำแหน่งของ type</em> (ถ้าเอา <code>React.createElement</code> มาเรียกเป็นค่าในไฟล์นี้ จะได้ error ทันที) ESLint ของเราไม่มีกฎเรื่องนี้เพราะเราไม่ได้ลง <code>eslint-plugin-react</code> ผลคือไฟล์นี้พึ่งพา global ที่ไม่มี import ไหนประกาศ — ทำงานได้ แต่เป็นความไม่สม่ำเสมอที่ไม่มีเครื่องมือไหนในโปรเจกต์นี้จะบอกคุณ ต้องอ่านเอาเอง</blockquote>
+
+        <p><code>src/features/checkout/components/CheckoutPaymentBox/CheckoutPaymentBox.tsx</code> — ฝาแฝดฝั่งชำระเงิน:</p>
+
+        <pre><code class="language-typescript">import styles from "./CheckoutPaymentBox.module.scss";
+import { PaymentOption as TPaymentOption } from "@/features/checkout/types";
+import PaymentOption from "@/features/checkout/components/PaymentOption/PaymentOption";
+
+interface CheckoutPaymentBoxProps {
+  title: string;
+  selectedPaymentId: number;
+  paymentOptions: TPaymentOption[];
+  onSelectOption: (id: number) =&gt; void;
+}
+
+const CheckoutPaymentBox: React.FC&lt;CheckoutPaymentBoxProps&gt; = ({
+  title,
+  paymentOptions,
+  selectedPaymentId,
+  onSelectOption,
+}) =&gt; {
+  return (
+    &lt;div className={`${styles.container} p-20`}&gt;
+      &lt;h3 className="fs-20 pb-10"&gt;{title}&lt;/h3&gt;
+      &lt;hr className="mb-20" /&gt;
+
+      {paymentOptions.map(({ id, name, description }) =&gt; (
+        &lt;div key={id} className="mb-10"&gt;
+          &lt;PaymentOption
+            id={id}
+            name={name}
+            description={description}
+            selected={id === selectedPaymentId}
+            onSelect={onSelectOption}
+          /&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+
+export default CheckoutPaymentBox;
+</code></pre>
+
+        <p>โครงสร้างล้อกับกล่อง delivery ทุกประการ — รับรายการ, รับ id ที่เลือก, map เป็น option, ส่ง callback ต่อ สังเกตว่า<em>ทั้งสองกล่องไม่ hardcode รายการตัวเลือกเอง</em> แต่รับผ่าน props: คนที่ import <code>deliveryOptions</code> / <code>paymentOptions</code> จาก <code>consts.ts</code> ตัวจริงคือ <code>useCheckout</code> ในบทหน้า นี่คือเหตุผลที่บทเรียน 25 เราย้ำว่าข้อมูลต้องอยู่นอกคอมโพเนนต์ และเป็นสิ่งที่ checklist ข้อ <code>grep -rn "consts"</code> ของบทนี้เฝ้าอยู่</p>
+
+        <p>ไฟล์ <code>CheckoutPaymentBox.module.scss</code> ก็เหมือนกับของกล่อง delivery ทุกตัวอักษร:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.container {
+  background-color: variables.$grey05;
+}
+</code></pre>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> นี่คือไฟล์ <code>.module.scss</code> ใบที่<strong>สาม</strong>ที่มีเนื้อในเหมือนกันเป๊ะ ต่อจาก <code>CheckoutAddressBox</code> เมื่อบทที่แล้วและกล่อง delivery เมื่อครู่นี้ และจะมีใบที่สี่กับห้าตามมาในรอบที่ 2 กล่อง 💡 ของบทเรียน 26 เตือนไว้แล้วว่า class <code>bg-grey05</code> มีอยู่ใน <code>_utilities.scss</code> ตั้งแต่บทเรียน 04 และให้ผลเหมือนกันทุกประการ — ตอนนี้คุณเห็นราคาของการไม่ทักในวันนั้นแล้ว: ห้าไฟล์ ห้าที่ให้ลืมแก้ ลองนึกภาพ pull request ที่ขอเปลี่ยนพื้นกล่องจาก <code>$grey05</code> เป็น <code>$grey01</code> — reviewer ต้องนับให้ครบว่าห้าไฟล์เปลี่ยนครบไหม ทั้งที่ถ้าใช้ utility class ตั้งแต่แรก diff จะมีศูนย์ไฟล์ (เปลี่ยนที่ตัวแปรที่เดียว) นี่ไม่ใช่เรื่องของความสวยงามของโค้ด แต่เป็นเรื่องของ<em>จำนวนที่ที่ผิดได้</em>ซึ่งเป็นหน่วยวัดที่ตรงกว่ามาก</blockquote>
+
+        <p><code>src/features/checkout/components/SummaryOrderItem/SummaryOrderItem.tsx</code> — ข้ามมาฝั่งขวาของหน้า เริ่มจากหน่วยเล็กสุด:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./SummaryOrderItem.module.scss";
+import { CartItem } from "@/features/cart/store/CartContext";
+
+interface SummaryOrderItemProps {
+  item: CartItem;
+}
+
+const SummaryOrderItem: React.FC&lt;SummaryOrderItemProps&gt; = ({ item }) =&gt; {
+  const { title, price, quantity, id, image } = item;
+
+  return (
+    &lt;div key={id} className={`flex align-item-center`}&gt;
+      &lt;img className={`${styles.image} mr-10`} src={image} alt={title} /&gt;
+      &lt;div className="flex-grow"&gt;
+        &lt;p className="fs-16 fw-medium mb-5"&gt;{title}&lt;/p&gt;
+        &lt;p className="fs-14 text-muted"&gt;
+          ${price.toFixed(2)} X {quantity}
+        &lt;/p&gt;
+      &lt;/div&gt;
+      &lt;div className="fs-16 fw-bold text-primary"&gt;
+        ${(price * quantity).toFixed(2)}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default SummaryOrderItem;
+</code></pre>
+
+        <p>กับ <code>SummaryOrderItem.module.scss</code> ที่สั้นที่สุดในคอร์ส:</p>
+
+        <pre><code class="language-scss">.image {
+  width: 60px;
+}
+</code></pre>
+
+        <p>จุดที่น่าสนใจที่สุดของไฟล์นี้คือบรรทัด import: <code>import { CartItem } from "@/features/cart/store/CartContext";</code> — คอมโพเนนต์ของ feature <em>checkout</em> ไป import type จาก feature <em>cart</em> นี่ไม่ใช่การละเมิดสถาปัตยกรรม แต่เป็นการ<strong>ยอมรับความจริงของ domain</strong>: ใบสรุปคำสั่งซื้อแสดง "ของในตะกร้า" โดยนิยาม ข้อมูลนั้นเป็นของ cart และ cart เป็นคนนิยามรูปร่างมัน การประกาศ type ใหม่ฝั่ง checkout ให้หน้าตาเหมือนกันจะสร้าง drift แบบเดียวกับที่เราหนีมาตั้งแต่บทเรียน 22 — feature หนึ่งพึ่ง <em>type สาธารณะ</em> ของอีก feature ได้ ตราบใดที่พึ่งในทิศทางที่ make sense ตาม flow ของธุรกิจ (checkout เกิดหลัง cart เสมอ)</p>
+
+        <p>ที่เหลือคืองานแสดงผลตรง ๆ: รูปเล็ก 60px, ชื่อสินค้า, <code>${price.toFixed(2)} X {quantity}</code> บรรทัดจาง ๆ และราคารวมต่อรายการ (<code>price * quantity</code>) ตัวหนาสีแบรนด์ชิดขวาด้วย <code>flex-grow</code> ตรงกลางที่ดันมันออกไป</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — สองข้อในหกบรรทัดแรกของ JSX:</strong> ข้อแรกคือ <code>key={id}</code> บน <code>&lt;div&gt;</code> ตัวนอกสุด ซึ่ง<em>ไม่มีผลอะไรเลย</em> — <code>key</code> เป็นของที่ React ใช้ตอนจับคู่สมาชิกใน<em>รายการ</em> เท่านั้น และรายการที่แท้จริงอยู่ที่ <code>SummaryOrder</code> ซึ่งใส่ <code>key={item.id}</code> ให้ <code>&lt;div className="mb-15"&gt;</code> ที่ครอบคอมโพเนนต์นี้ไว้เรียบร้อยแล้ว (ถูกต้องแล้วด้วย) ส่วน <code>key</code> ที่นี่คือ prop ที่ React รับไปแล้วทิ้ง ไม่ error ไม่เตือน ไม่ทำอะไรทั้งนั้น อาการนี้เกิดจากการย้ายโค้ดออกมาเป็นคอมโพเนนต์ใหม่แล้วยก <code>key</code> ติดมาด้วย ซึ่งเป็นร่องรอยที่พบบ่อยมากในโค้ดจริง ข้อสองอยู่บรรทัดเดียวกัน: <code>className={`flex align-item-center`}</code> เป็น template literal ที่ไม่มีตัวแปรอยู่ข้างในเลยสักตัว — <code>className="flex align-item-center"</code> เป็น string ธรรมดาให้ผลเหมือนกันทุกประการและอ่านง่ายกว่า ร่องรอยเดียวกันอีกแบบ: เคยมี <code>${styles.something}</code> อยู่ข้างในแล้วถูกลบออกภายหลัง ทั้งสองข้อไม่มีผลต่อผู้ใช้แม้แต่นิดเดียว แต่ทั้งสองข้อคือ comment หนึ่งบรรทัดในรีวิวจริง และเป็นตัวอย่างที่ดีของสิ่งที่ <em>lint จับไม่ได้แต่คนอ่านจับได้ทันที</em></blockquote>
+
+        <p><code>src/features/checkout/components/SummaryOrder/SummaryOrder.tsx</code> — ใบสรุปที่อ่านตะกร้าเอง:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./SummaryOrder.module.scss";
+import { useCart } from "@/features/cart/useCart";
+import SummaryOrderItem from "@/features/checkout/components/SummaryOrderItem/SummaryOrderItem";
+
+const SummaryOrder: React.FC = () =&gt; {
+  const { cart } = useCart();
+
+  return (
+    &lt;div className={`${styles.container} p-20`}&gt;
+      &lt;h3 className="fs-20 mb-5"&gt;Summary Order&lt;/h3&gt;
+      &lt;p className="fs-14 text-muted mb-15"&gt;
+        For a better experience, verify your goods and choose your shipping
+        option.
+      &lt;/p&gt;
+      &lt;hr className="mb-15" /&gt;
+      {cart.items.map((item) =&gt; (
+        &lt;div className="mb-15" key={item.id}&gt;
+          &lt;SummaryOrderItem item={item} /&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+
+export default SummaryOrder;
+</code></pre>
+
+        <p>ตัวนี้แหวกแนวจากเพื่อนร่วมบทนิดหนึ่ง: มัน<em>ไม่รับ props เลย</em> แต่เรียก <code>useCart()</code> ดึงข้อมูลตะกร้าจาก context ตรง ๆ (hook จากบทเรียน 22) ทำไมไม่ส่ง <code>cart.items</code> ลงมาเป็น prop เหมือนตัวอื่น? เพราะข้อมูลตะกร้า<em>มีเจ้าของอยู่แล้ว</em>ใน <code>CartProvider</code> ระดับแอป การให้หน้าเพจอ่านจาก context แล้วส่งต่อลงมาอีกทอดเป็นแค่การเพิ่ม prop-drilling โดยไม่ได้อะไรเพิ่ม ต่างจาก "id ที่เลือก" ของ delivery/payment ซึ่งเป็น state ที่<em>เกิดในหน้า Checkout เอง</em>จึงต้องไหลผ่าน props — เกณฑ์การตัดสินใจคือ <strong>state เป็นของใคร</strong> ไม่ใช่ความเคยชิน</p>
+
+        <p>และนี่คือไฟล์ที่ทำให้ข้อ <strong>AI มักพลาดตรงนี้</strong> ของบทนี้เกิดขึ้นได้ง่ายมาก: มันคือหลักฐานในบริบทของ Agent เองว่า "กล่องบนหน้านี้เรียก <code>useCart</code> เองได้" ซึ่งจริงสำหรับกล่องนี้ และผิดสำหรับ <code>BillingSummary</code> ด้วยเหตุผลที่ต้องอ่านสองไฟล์พร้อมกันถึงจะเห็น — เกณฑ์ไม่ใช่ "กล่องไหนเรียกได้บ้าง" แต่คือ "ข้อมูลที่กล่องนี้ต้องใช้ อยู่ในตะกร้าครบไหม" ของ <code>SummaryOrder</code> อยู่ครบ ของ <code>BillingSummary</code> ขาดค่าส่งไปหนึ่งตัว</p>
+
+        <p><code>src/features/checkout/components/BillingSummary/BillingSummary.tsx</code> — ยอดเงินและปุ่มชี้ชะตา ชิ้นสุดท้ายของบท:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./BillingSummary.module.scss";
+import Button from "@/shared/components/Button/Button";
+
+interface BillingSummaryProps {
+  subTotal: number;
+  shipping: number;
+  total: number;
+  isLoading: boolean;
+  isDisabled: boolean;
+  onPlaceOrder: () =&gt; void;
+}
+
+const BillingSummary: React.FC&lt;BillingSummaryProps&gt; = ({
+  subTotal,
+  shipping,
+  total,
+  isLoading = false,
+  isDisabled = false,
+  onPlaceOrder,
+}) =&gt; {
+  return (
+    &lt;div className={`${styles.container} p-20`}&gt;
+      &lt;h3 className="fs-20 fw-bold mb-20"&gt;Billing Summary&lt;/h3&gt;
+      &lt;hr className="mb-20" /&gt;
+      &lt;div className="flex justify-between mb-10"&gt;
+        &lt;span className="fs-18 text-muted"&gt;Sub Total&lt;/span&gt;
+        &lt;span className="fs-18 text-primary"&gt;${subTotal.toFixed(2)}&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div className="flex justify-between mb-10"&gt;
+        &lt;span className="fs-18 text-muted"&gt;Shipping&lt;/span&gt;
+        &lt;span className="fs-18 fw-medium text-primary"&gt;
+          ${shipping.toFixed(2)}
+        &lt;/span&gt;
+      &lt;/div&gt;
+      &lt;hr className="mb-20" /&gt;
+      &lt;div className="flex justify-between mb-20"&gt;
+        &lt;span className="fs-24 fw-bold"&gt;Total&lt;/span&gt;
+        &lt;span className="fs-24 fw-bold text-primary"&gt;${total.toFixed(2)}&lt;/span&gt;
+      &lt;/div&gt;
+
+      &lt;Button
+        className="width-full"
+        onClick={onPlaceOrder}
+        isLoading={isLoading}
+        disabled={isDisabled}
+      &gt;
+        Place Order
+      &lt;/Button&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default BillingSummary;
+</code></pre>
+
+        <p><code>BillingSummary</code> เป็น presentational แท้ ๆ อีกตัว: รับตัวเลขสามตัว (<code>subTotal</code>, <code>shipping</code>, <code>total</code>) มาแสดง ไม่คำนวณอะไรเองเลยสักบาท — การคำนวณทั้งหมดจะอยู่ใน <code>useCheckout</code> ซึ่งเป็นที่เดียวที่รู้ทั้งของในตะกร้าและค่าส่งของ delivery ที่ถูกเลือก การแยกแบบนี้ทำให้ "คำนวณถูกไหม" กับ "แสดงผลถูกไหม" เป็นคนละเรื่องกันอย่างสะอาด — บทเรียน 32 จะ assert ฝั่งคำนวณจาก hook ได้ตรง ๆ โดยไม่ต้อง render กล่องนี้เลย</p>
+
+        <p>ส่วนปุ่ม Place Order ใช้ของเก่าจากบทเรียน 12 คุ้มมาก:</p>
+
+        <ul>
+          <li><code>isLoading</code> — ตอนบทหน้าเรายิงคำสั่งซื้อขึ้น API ปุ่มจะเปลี่ยนเป็น <code>ClipLoader</code> หมุน ๆ อัตโนมัติ เพราะ <code>Button</code> ของเรารองรับ prop นี้อยู่แล้ว</li>
+          <li><code>disabled={isDisabled}</code> — บทหน้าเราจะส่งเงื่อนไข "ยังไม่ได้กรอกที่อยู่" เข้ามาทางนี้ กันผู้ใช้กดสั่งซื้อทั้งที่ข้อมูลไม่ครบ</li>
+          <li><code>onClick={onPlaceOrder}</code> — เช่นเคย ตัวปุ่มไม่รู้ว่า "สั่งซื้อ" แปลว่าอะไร แค่ส่งสัญญาณขึ้นไป</li>
+        </ul>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> บรรทัด <code>isLoading = false,</code> และ <code>isDisabled = false,</code> ตอน destructure props คือ<strong>ค่า default ที่ไม่มีวันถูกใช้</strong> — เพราะ <code>BillingSummaryProps</code> ประกาศทั้งสองตัวเป็น <code>boolean</code> ที่<em>บังคับ</em> ไม่มี <code>?</code> แปลว่าคนเรียกต้องส่งมาเสมอ ไม่มีทางเป็น <code>undefined</code> ให้ default ทำงานได้เลย โค้ดสองบรรทัดนี้จึงเป็นการป้องกันเหตุการณ์ที่ type system กันไปแล้ว และที่แย่กว่าคือมันทำให้คนอ่านเข้าใจผิดว่า prop สองตัวนี้ optional (แล้วอาจไปเขียน <code>&lt;BillingSummary subTotal={x} ... /&gt;</code> โดยไม่ส่งสองตัวนี้ แล้วงงว่าทำไม TypeScript ฟ้อง) วิธีแก้มีสองทางและต้องเลือกให้ตรงกับเจตนา: ถ้าอยากให้มันไม่บังคับจริง ให้เติม <code>?</code> ใน interface แล้วเก็บ default ไว้ ถ้าอยากให้บังคับตามที่ interface เขียนไว้ ให้ลบ <code>= false</code> ทั้งสองที่ทิ้ง สิ่งที่ผิดคือสภาพปัจจุบันที่บอกสองอย่างขัดกันในไฟล์เดียว เทียบกับ <code>Button</code> ในบทเรียน 12 ได้เลย: ที่นั่น <code>isLoading?: boolean</code> มี <code>?</code> จริงและ <code>isLoading = false</code> ทำงานจริง — สองไฟล์ในโปรเจกต์เดียวกัน ท่าเดียวกัน แต่ที่หนึ่งถูกอีกที่หนึ่งเปล่าประโยชน์ นี่คือรูปแบบที่คอร์สนี้เจอซ้ำแล้วซ้ำเล่า: โค้ดที่ถูก copy มาโดยไม่ได้ copy เงื่อนไขที่ทำให้มันถูกมาด้วย</blockquote>
+
+        <p>ปิดท้ายด้วย <code>BillingSummary.module.scss</code> ซึ่งเป็นไฟล์ใบที่ห้าที่หน้าตาเหมือนกัน:</p>
+
+        <pre><code class="language-scss">@use "../../../../styles/variables";
+
+.container {
+  background-color: variables.$grey05;
+}
+</code></pre>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>เปิด <code>DeliveryOption.tsx</code> กับ <code>PaymentOption.tsx</code> วางคู่กัน แล้วเขียนรายการ "จุดที่ต่าง" ออกมาให้ครบด้วยตาตัวเอง (ห้ามเปิด checklist ในบทนี้ดู) จากนั้นแก้ <code>name</code> ของฝั่ง payment ให้เป็น <code>"deliveryOption"</code> ชั่วคราว แล้วอธิบายให้ได้ว่าเบราว์เซอร์จะทำอะไรกับ radio สี่ตัวที่ชื่อกลุ่มเดียวกัน — และตอบด้วยว่ามีเครื่องมือไหนในโปรเจกต์นี้บ้าง (lint, typecheck, เทสต์ในบทเรียน 33) ที่จับความผิดพลาดนี้ได้ (เสร็จแล้วแก้กลับ)</li>
+          <li><code>SummaryOrder</code> เรียก <code>useCart()</code> เองแต่ <code>BillingSummary</code> รับตัวเลขมาเป็น props — เขียนเกณฑ์ที่ใช้ตัดสินสองกรณีนี้ออกมาเป็นประโยคเดียว แล้วตอบว่าถ้า <code>BillingSummary</code> จะเรียก <code>useCart()</code> เองบ้าง มันจะยังขาดข้อมูลอะไรอยู่ ต้องไปเอามาจากไหน และทำไมข้อมูลชิ้นนั้นถึงไม่มีทางอยู่ในตะกร้าได้</li>
+          <li>ลบ <code>key={id}</code> ออกจาก <code>&lt;div&gt;</code> ตัวนอกสุดของ <code>SummaryOrderItem</code> แล้วรัน <code>npm run lint</code> และ <code>npm run typecheck</code> — ตอบว่าเกิดอะไรขึ้นบ้าง จากนั้นลบ <code>key={item.id}</code> ใน <code>SummaryOrder</code> ออกแทน (แล้วเอา <code>key</code> ตัวแรกกลับไป) แล้วตอบว่าคราวนี้เกิดอะไรขึ้น — อธิบายให้ได้ว่าทำไมสองการทดลองนี้ผลไม่เหมือนกันทั้งที่โค้ดที่ลบหน้าตาเหมือนกันเป๊ะ (เสร็จแล้วคืนสภาพเดิม)</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> จบบทนี้ feature checkout ของคุณควรมีคอมโพเนนต์ครบ 9 ตัว — <code>CheckoutAddressForm</code>, <code>CheckoutAddressBox</code> (บทที่แล้ว), <code>DeliveryOption</code>, <code>PaymentOption</code>, <code>CheckoutDeliveryBox</code>, <code>CheckoutPaymentBox</code>, <code>SummaryOrder</code>, <code>SummaryOrderItem</code> และ <code>BillingSummary</code> โดยกล่องที่มี <code>.module.scss</code> คือกล่องพื้นเทาทั้งห้า (Address/Delivery/Payment/Summary/Billing) กับรูปสินค้าใน <code>SummaryOrderItem</code> ทั้งหมด compile ผ่าน ไม่มีเส้นแดง <code>npm run lint</code> และ <code>npm run typecheck</code> ผ่านทั้งคู่ — หน้าจอยังไม่มีอะไรเปลี่ยนเหมือนเดิม เพราะชิ้นส่วนทุกชิ้นกำลังรอบทเรียน 28 บทเดียวที่จะประกอบร่างทั้งหมดแล้วกดสั่งซื้อจริง ก่อนปิดเครื่อง ทำการบ้านสองข้อของบทนี้ให้จบ: (1) รัน <code>grep -rn "useCart" src/features/checkout/</code> แล้วยืนยันว่าเจอบรรทัดเดียว (2) เปิดไฟล์ <code>.module.scss</code> ทั้งห้าไฟล์ของหน้า Checkout พร้อมกัน แล้วนับว่ามีกี่ไฟล์ที่มีเนื้อในเหมือนกันทุกตัวอักษร — ตัวเลขที่ได้คือจำนวนที่ที่ต้องแก้ในวันที่ดีไซเนอร์เปลี่ยนใจเรื่องสีพื้นกล่อง จดตัวเลขนั้นไว้ — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="26_address_form.html" rel="prev">ก่อนหน้า: ฟอร์มที่อยู่</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="28_place_order.html" rel="next">ถัดไป: สั่งซื้อ</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

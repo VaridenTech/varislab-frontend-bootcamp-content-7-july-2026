@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ปิดจ๊อบทั้งแอป: ให้ Cursor สร้าง api.ts และหน้า Order Success แล้วพิมพ์ useCheckout เองตรงกลาง เพราะลำดับ mutation → clearCart → navigate ผิดลำดับเดียว ตะกร้าหายก่อนสั่งซื้อสำเร็จ" />
+    <title>สั่งซื้อ | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 28 · ชำระเงิน (Checkout)</p>
+          <h1>สั่งซื้อ: useCheckout และการปิดวงจรทั้งแอป</h1>
+          <p class="lesson-original-title" lang="en">Place Order</p>
+        </header>
+
+        <p>ถึงบทประกอบร่างแล้ว สามบทที่ผ่านมาเราเตรียมชิ้นส่วนไว้ครบมือ: schema กับข้อมูลตัวเลือก (บทเรียน 25), กล่องที่อยู่ (บทเรียน 26), กล่องจัดส่ง/ชำระเงิน/ใบสรุป/ยอดเงิน (บทเรียน 27) — แต่ยังไม่มีใคร render และยังไม่มี "สมอง" ที่ถือ state กับ logic การสั่งซื้อ บทนี้เราจะเติมสองอย่างสุดท้าย: ชั้น API + hook <code>useCheckout</code> แล้วแทนที่ stub ของหน้า Checkout และ OrderSuccess ที่ค้างมาตั้งแต่บทเรียน 09 ให้กลายเป็นหน้าจริง จบบทนี้ผู้ใช้จะช้อปครบ loop ตั้งแต่หยิบของใส่ตะกร้าจนเห็นหน้ายืนยันคำสั่งซื้อ — และแอปของคุณจะทำงานได้ครบทุกเส้นทางเป็นครั้งแรก</p>
+
+        <p>บทนี้เป็นบทที่<strong>กลับมาพิมพ์เอง</strong>เป็นครั้งสุดท้ายก่อน chapter การทดสอบ และไฟล์ที่จะพิมพ์คือ <code>useCheckout.ts</code> ซึ่งมีที่ทางในลำดับงานแบบเดียวกับ <code>cartReducer.ts</code> เมื่อบทเรียน 22 เป๊ะ — เดี๋ยวเราจะพิสูจน์ให้ดูว่าเป๊ะจริงด้วยการไล่ลูกศรอีกครั้ง</p>
+
+        <h2>useMutation — ทำไมไม่ใช่ query</h2>
+
+        <p>ตั้งแต่บทเรียน 17 เราใช้ <code>useQuery</code> (ผ่าน query factories) มาตลอด แต่ query คือเครื่องมือของ "การ<em>อ่าน</em>": TanStack Query จะ cache ผลลัพธ์, ยิงซ้ำให้ตอน mount, refetch ตอนกลับมาโฟกัสหน้าต่าง — พฤติกรรมพวกนี้เหมาะกับ GET ทั้งนั้น แต่ลองนึกภาพมันเกิดกับ "การสั่งซื้อ" สิ: เปิดหน้าแล้วสั่งซื้อเองอัตโนมัติ? สลับแท็บกลับมาแล้วสั่งซ้ำอีกรอบ? หายนะชัด ๆ</p>
+
+        <p>การ<em>เขียน</em> (สร้าง/แก้/ลบข้อมูลฝั่งเซิร์ฟเวอร์) ต้องใช้ <strong><code>useMutation</code></strong> ซึ่งนิสัยตรงข้ามทุกข้อ: ไม่ cache, ไม่ยิงเอง, ทำงาน<em>เฉพาะเมื่อเราสั่ง</em>ผ่าน <code>mutate()</code> เท่านั้น สิ่งที่มันให้เราคือ state ของรอบการยิงนั้น — ที่เราใช้คือ <code>isPending</code> (rename เป็น <code>isPlaceOrderLoading</code>) ซึ่งจะไหลไปเป็น prop <code>isLoading</code> ของปุ่ม Place Order ให้กลายเป็น spinner ระหว่างรอเซิร์ฟเวอร์ตอบ</p>
+
+        <p>ข้อแตกต่างอีกข้อที่สำคัญกับบทนี้เป็นพิเศษ: mutation มี <code>onSuccess</code> ซึ่งเป็น<em>ที่เดียว</em>ในโค้ดที่รับประกันว่าเซิร์ฟเวอร์ตอบสำเร็จแล้วจริง ๆ ทุก side effect ที่ต้องเกิด "หลังสั่งซื้อสำเร็จ" — ล้างตะกร้า, พาไปหน้าขอบคุณ — ต้องอยู่ในนั้น ไม่ใช่ที่อื่น และนั่นคือเหตุผลทั้งหมดที่ไฟล์นี้ต้องพิมพ์เอง</p>
+
+        <h2>ทำไม ✍️ ต้องอยู่ตรงกลาง (อีกครั้ง)</h2>
+
+        <p>กฎเดิมจากบทเรียน 12: <strong>สิ่งที่พังเมื่อคุณตัดไฟล์ X ออกจาก prompt คือไฟล์ที่ import X ไม่ใช่ตัว X เอง</strong> ไล่สายการพึ่งพาของห้าไฟล์ในบทนี้:</p>
+
+        <ul>
+          <li><code>api.ts</code> — import <code>apiClient</code> (บทเรียน 15) และ type <code>CheckoutAddressFormData</code> (บทเรียน 25) ไม่รู้จัก <code>useCheckout</code></li>
+          <li><code>OrderSuccess.tsx</code> — import แค่ Font Awesome ไม่รู้จักใครในบทนี้เลยสักคน</li>
+          <li><code>useCheckout.ts</code> — import <em>ห้าอย่าง</em>: schema, consts, <code>useCart</code>, <code>useProductRoute</code> และ <code>placeOrder</code> จาก <code>api.ts</code></li>
+          <li><code>Checkout.tsx</code> — import <code>useCheckout</code> บวกคอมโพเนนต์ห้าตัวจากสองบทที่แล้ว บวก <code>CategoryBanner</code></li>
+          <li><code>Checkout.module.scss</code> — ไม่ import อะไร</li>
+        </ul>
+
+        <p>รูปแบบที่ได้เหมือนบทเรียน 22 ทุกประการ: ไฟล์ที่เราจะพิมพ์เองอยู่<em>ตรงกลาง</em>สาย มีของที่มันต้องพึ่งอยู่ข้างล่าง และมีคนที่พึ่งมันอยู่ข้างบน ผลคือทั้งสองท่าที่เคยใช้ใช้ไม่ได้สักท่า</p>
+
+        <ul>
+          <li><strong>พิมพ์ก่อนแล้วค่อยส่ง prompt (ท่าบทเรียน 12) — ทำไม่ได้</strong> เพราะ <code>useCheckout.ts</code> import <code>placeOrder</code> จาก <code>api.ts</code> ที่ยังไม่มีตัวตน typecheck ตายตั้งแต่บรรทัด import ของไฟล์ที่คุณเพิ่งพิมพ์</li>
+          <li><strong>ส่ง prompt ก้อนเดียวแล้วสั่งว่า "ห้ามสร้าง useCheckout.ts" — ทำไม่ได้</strong> เพราะสิ่งที่พังไม่ใช่ <code>useCheckout.ts</code> (มันไม่มีอยู่ ก็ไม่มีอะไรให้พัง) แต่คือ <code>Checkout.tsx</code> ที่ import แล้ว destructure ของออกมาจากมันสิบเอ็ดชื่อรวด — Agent จะได้หน้าเพจที่ import ของที่ไม่มีจริง แล้ววงจรตรวจงานขั้นที่สามเดินไม่ได้ทั้งรอบ</li>
+        </ul>
+
+        <p>ทางออกคือตัด prompt ตาม<strong>ทิศทางการพึ่งพา</strong> แล้วเสียบมือของเราเข้าไปตรงรอยตัดพอดี เหมือนที่ทำกับ cart store:</p>
+
+        <ol>
+          <li><strong>รอบที่ 1 — Agent สร้าง <code>api.ts</code> และ <code>OrderSuccess.tsx</code></strong> คือทุกอย่างที่<em>ไม่ต้องการ</em> hook ตัวแรกอยู่ต้นสาย ตัวที่สองไม่อยู่ในสายเลยด้วยซ้ำ จบรอบนี้ lint และ typecheck ผ่านสะอาด และหน้า <code>/order/success</code> เปิดดูได้จริงทันที</li>
+          <li><strong>✍️ คุณพิมพ์ <code>useCheckout.ts</code> เอง</strong> ตอนนี้ <code>placeOrder</code> มีอยู่จริงแล้ว ไฟล์ที่พิมพ์จึง typecheck ผ่านทันที commit ให้ working tree สะอาด</li>
+          <li><strong>รอบที่ 2 — Agent สร้าง <code>Checkout.tsx</code> และ <code>Checkout.module.scss</code></strong> รอบนี้ทุกอย่างที่ปลายสายต้องใช้มีอยู่จริงหมดแล้ว และ prompt <code>@</code>-mention <code>useCheckout.ts</code> ที่คุณเพิ่งพิมพ์ได้เลย</li>
+        </ol>
+
+        <p>ผลพลอยได้ของขั้นที่ 3 คราวนี้ชัดกว่าบทเรียน 22 อีก เพราะ <code>useCheckout</code> คืน object ที่มีสิบเอ็ดคีย์ และมีคีย์หนึ่งที่<em>สะกดต่างจากที่ทุกคนคาด</em>: มันคืน <code>billingSummary.subtotal</code> (t เล็ก) ในขณะที่ <code>BillingSummary</code> จากบทที่แล้วรับ prop ชื่อ <code>subTotal</code> (T ใหญ่) ถ้า Agent ต้องเดา signature ของ hook มันจะเดาว่าชื่อตรงกันทั้งคู่ แล้วหน้าเพจจะพังทันทีที่ typecheck — แต่พอไฟล์จริงอยู่ในบริบท มันจะเห็นความไม่ตรงกันนี้และเขียน <code>subTotal={subtotal}</code> ให้ถูกตั้งแต่รอบแรก</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <pre><code class="language-bash">src/
+├── features/
+│   └── checkout/
+│       ├── api.ts               # 🤖 รอบที่ 1
+│       └── useCheckout.ts       # ✍️ พิมพ์เอง — ระหว่างสองรอบ
+└── pages/
+    ├── Checkout/
+    │   ├── Checkout.tsx         # 🤖 รอบที่ 2 — เขียนทับ stub ทั้งไฟล์
+    │   └── Checkout.module.scss # 🤖 รอบที่ 2
+    └── Order/
+        └── OrderSuccess.tsx     # 🤖 รอบที่ 1 — เขียนทับ stub ทั้งไฟล์</code></pre>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>api.ts</code></strong> — ต้องเป็นฟังก์ชัน async บาง ๆ ที่ยิง POST แล้วคืน <code>data</code> ที่ type แล้ว ต้องไม่มี <code>try/catch</code> ไม่แปลง error เอง และต้องไม่รู้จัก React หรือ TanStack Query</li>
+          <li><strong><code>useCheckout.ts</code></strong> — ต้องเป็นที่<em>เดียว</em>ที่ถือ state ของหน้า Checkout และเป็นที่เดียวที่คำนวณยอดเงิน ต้องล้างตะกร้าและ navigate เฉพาะเมื่อ mutation สำเร็จเท่านั้น และต้องไม่ return <code>mutate</code> ดิบ ๆ ออกไป</li>
+          <li><strong><code>Checkout.tsx</code></strong> — ต้องเป็น wiring diagram ล้วน ๆ ต้องไม่มี state ไม่มีการคำนวณ ไม่เรียก <code>useCart</code> และไม่ยิง API เอง</li>
+          <li><strong><code>OrderSuccess.tsx</code></strong> — ต้องแสดงข้อความยืนยันอย่างเดียว ต้องไม่ล้างตะกร้า ไม่ยิง API และไม่รับ state จากที่ไหน</li>
+        </ul>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor — รอบที่ 1: ชั้น API และหน้าขอบคุณ</strong> แชทใหม่ โหมด Agent สองไฟล์ที่ไม่ต้องการ hook ของบทนี้เลย:</p>
+          <pre><code class="language-text">สร้างฟังก์ชันยิงคำสั่งซื้อขึ้น API แล้วเขียนหน้า Order Success ทับ stub เดิม
+
+บริบท: @src/shared/api/client.ts @src/features/products/api.ts @src/features/checkout/schema.ts @src/pages/Order/OrderSuccess.tsx
+src/shared/api/client.ts export apiClient ที่เป็น axios instance และ class ApiError
+  โดยมี response interceptor แปลงทุกความล้มเหลวเป็น ApiError ให้แล้วตั้งแต่บทเรียน 15
+  ชั้น api จึงไม่ต้องมี try/catch เอง
+src/features/products/api.ts คือรูปทรงมาตรฐานของไฟล์ api ในโปรเจกต์นี้ ให้ทำตามนั้น
+  ต่างกันตรงที่งานนี้เป็น POST ครั้งแรกของโปรเจกต์
+src/features/checkout/schema.ts export type CheckoutAddressFormData
+src/pages/Order/OrderSuccess.tsx ตอนนี้เป็น stub ที่ return h1 อย่างเดียว
+  route /order/success ชี้มาที่ไฟล์นี้อยู่แล้วตั้งแต่บทเรียน 09
+Font Awesome ติดตั้งไว้แล้วตั้งแต่บทเรียน 10 ใช้ @fortawesome/react-fontawesome
+  และ @fortawesome/free-solid-svg-icons ได้เลย
+utility class ที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว ห้ามสร้างใหม่:
+  bg-grey01, pt-45, pb-45, text-center, text-uppercase, fw-bold, mb-15, mb-20,
+  fs-18, fs-28, fs-72, text-muted, text-primary
+
+โครงสร้าง: สร้างไฟล์ใหม่หนึ่งไฟล์และเขียนทับไฟล์เดิมหนึ่งไฟล์ ไม่มากไม่น้อยกว่านี้
+- src/features/checkout/api.ts (สร้างใหม่)
+- src/pages/Order/OrderSuccess.tsx (เขียนทับ stub ทั้งไฟล์)
+
+ข้อกำหนดทางเทคนิค:
+- api.ts: บรรทัด import สองบรรทัดตามลำดับนี้
+    import { apiClient } from "@/shared/api/client";
+    import { CheckoutAddressFormData } from "@/features/checkout/schema";
+  export interface PlaceOrderPayload สามตัวตามลำดับนี้
+    userId: number
+    products: { id: number; quantity: number }[]
+    address: CheckoutAddressFormData
+  export interface PlaceOrderResponse ที่มี field เดียวคือ id: number
+    ห้ามประกาศ field อื่นแม้ dummyjson จะตอบกลับมามากกว่านี้
+  export async function placeOrder(payload: PlaceOrderPayload):
+    Promise&lt;PlaceOrderResponse&gt;
+    ข้างในเรียก apiClient.post&lt;PlaceOrderResponse&gt;("/carts/add", payload)
+    แล้ว destructure { data } ออกมา return data
+    ต้องใส่ generic ให้ .post ตามนี้ และต้องเป็น function declaration ไม่ใช่ arrow function
+  ห้ามมี try/catch ห้ามมี console.log ห้าม import อะไรจาก react หรือ @tanstack/react-query
+  ห้ามใส่ baseURL หรือ header เพิ่ม (client.ts จัดการแล้ว)
+- OrderSuccess.tsx: บรรทัด import สองบรรทัดตามลำดับนี้ และไม่มีบรรทัด import React
+    import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+    import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
+  ประกาศเป็น const OrderSuccess: React.FC = () =&gt; { ... } แล้ว export default
+  JSX: div ตัวนอกสุด (ไม่ใช่ fragment) ที่มี div ตัวเดียวข้างในคือ
+    div className="bg-grey01 pt-45 pb-45 text-center" ที่มีสามอย่างเรียงกัน
+      FontAwesomeIcon icon={faCircleCheck} className="fs-72 text-primary mb-20"
+      h2 className="fs-28 mb-15 text-uppercase fw-bold" ข้อความ
+        Order Placed Successfully!
+      p className="fs-18 text-muted" ข้อความ
+        Your order has been successfully placed and is on its way.
+  ห้ามเรียก useCart ห้ามล้างตะกร้าในหน้านี้ ห้ามยิง API ห้ามมี state
+  ห้ามใส่ปุ่มกลับหน้าแรกหรือลิงก์ใด ๆ
+  ห้ามสร้าง OrderSuccess.module.scss
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามสร้าง useCheckout.ts, Checkout.tsx หรือ Checkout.module.scss ในรอบนี้
+- ห้ามแก้ src/app/router.tsx (route ทั้งสองเส้นมีอยู่แล้ว)
+- ห้ามแก้ไฟล์ใด ๆ ใน src/features/cart หรือ src/features/checkout/components
+- ห้ามแก้ src/styles/ แม้แต่บรรทัดเดียว
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ห้ามเขียนเทสต์ (api ตัวนี้จะถูก mock ในบทเรียน 32 และ 33)
+- ยังไม่ต้องเรียก placeOrder จากที่ไหน</code></pre>
+        </blockquote>
+
+        <p>เดินวงจรตรวจงานให้จบรอบที่ 1 (checklist อยู่ในกล่อง ✅ ด้านล่าง — ข้อที่ขึ้นต้นว่า <strong>รอบที่ 1</strong>) แล้ว <code>npm run lint</code>, <code>npm run typecheck</code> และ <code>git commit</code> ให้เรียบร้อย ระหว่างนี้เปิด <code>/order/success</code> ดูเล่นได้เลย — เป็นหน้าจริงหน้าแรกของบทนี้ที่เห็นผลทันที ตอนนี้เท่านั้นที่มือของคุณจะเสียบเข้ารอยตัดได้พอดี</p>
+
+        <h2>✍️ ส่วนนี้พิมพ์เอง</h2>
+
+        <blockquote class="lesson-manual">
+          <p>✍️ <strong>ส่วนนี้พิมพ์เอง</strong> — ทำตามลำดับนี้ ห้ามก๊อปวาง ห้ามให้ Agent ช่วยเติม (ปุ่ม autocomplete ที่เด้งขึ้นมาแล้วคุณกด Tab รับ ก็คือการก๊อป):</p>
+          <ol>
+            <li>ยืนยันก่อนว่ารอบที่ 1 ผ่านและ commit แล้ว — <code>git status</code> ต้องสะอาด ไม่งั้น diff ของรอบที่ 2 จะปนโค้ดที่คุณพิมพ์เองเข้ากับโค้ดของ Agent</li>
+            <li>พิมพ์ <code>src/features/checkout/useCheckout.ts</code> ทั้งไฟล์ — ตอนถึงบล็อก <code>useMutation</code> ให้หยุดหนึ่งจังหวะแล้วถามตัวเองว่า <em>ถ้าเซิร์ฟเวอร์ตอบ 500 บรรทัดไหนบ้างจะทำงาน</em></li>
+            <li><code>npm run lint</code> และ <code>npm run typecheck</code> ให้ผ่านทั้งคู่ แล้ว <code>git commit</code> — ไฟล์ต้องมีอยู่จริงและถูก commit ก่อน prompt รอบที่ 2 ถึงจะ <code>@</code>-mention มันได้</li>
+          </ol>
+          <p><code>src/features/checkout/useCheckout.ts</code>:</p>
+          <pre><code class="language-typescript">import { useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { CheckoutAddressFormData } from "@/features/checkout/schema";
+import { deliveryOptions, paymentOptions } from "@/features/checkout/consts";
+import { useCart } from "@/features/cart/useCart";
+import useProductRoute from "@/shared/hooks/useProductRoute";
+import { placeOrder } from "@/features/checkout/api";
+
+const useCheckout = () =&gt; {
+  const [checkoutAddress, setCheckoutAddress] =
+    useState&lt;CheckoutAddressFormData | null&gt;(null);
+  const [selectedDeliveryOptionId, setSelectedDeliveryOptionId] =
+    useState&lt;number&gt;(deliveryOptions[0].id);
+  const [selectedPaymentOptionId, setSelectedPaymentOptionId] =
+    useState&lt;number&gt;(paymentOptions[0].id);
+  const { goToOrderSuccess } = useProductRoute();
+  const { cart, clearCart } = useCart();
+
+  // Helper to get selected delivery option
+  const selectedDeliveryOption = useMemo(
+    () =&gt;
+      deliveryOptions.find((option) =&gt; option.id === selectedDeliveryOptionId),
+    [selectedDeliveryOptionId],
+  );
+
+  // Compute billing summary data
+  const billingSummary = useMemo(() =&gt; {
+    const subtotal = cart.items.reduce(
+      (sum, item) =&gt; sum + item.price * item.quantity,
+      0,
+    );
+
+    const shipping = selectedDeliveryOption?.price || 0; // Get price of the selected delivery option
+    const total = subtotal + shipping;
+
+    return { subtotal, shipping, total };
+  }, [cart, selectedDeliveryOption]);
+
+  const storeCheckoutAddress = (addressData: CheckoutAddressFormData) =&gt; {
+    setCheckoutAddress(addressData);
+  };
+
+  const onSelectDeliveryOption = (optionId: number) =&gt; {
+    setSelectedDeliveryOptionId(optionId);
+  };
+
+  const onSelectPaymentOption = (optionId: number) =&gt; {
+    setSelectedPaymentOptionId(optionId);
+  };
+
+  const { mutate: placeOrderMutate, isPending: isPlaceOrderLoading } =
+    useMutation({
+      mutationFn: () =&gt; {
+        if (!checkoutAddress) {
+          throw new Error("Delivery Address is Missing");
+        }
+
+        return placeOrder({
+          userId: 1,
+          products: cart.items.map((item) =&gt; ({
+            id: item.id,
+            quantity: item.quantity,
+          })),
+          address: checkoutAddress,
+        });
+      },
+      onSuccess: () =&gt; {
+        clearCart();
+        goToOrderSuccess();
+      },
+    });
+
+  const onPlaceOrder = () =&gt; {
+    placeOrderMutate();
+  };
+
+  return {
+    checkoutAddress,
+    deliveryOptions,
+    paymentOptions,
+    selectedDeliveryOptionId,
+    selectedPaymentOptionId,
+    billingSummary,
+    isPlaceOrderLoading,
+    storeCheckoutAddress,
+    onSelectDeliveryOption,
+    onSelectPaymentOption,
+    onPlaceOrder,
+  };
+};
+
+export default useCheckout;
+</code></pre>
+          <p><strong>เหตุผล:</strong> ลำดับของ side effect ผิดลำดับเดียว ตะกร้าหายก่อนสั่งซื้อสำเร็จ — สามบรรทัดที่ชี้ชะตาคือ <code>onSuccess</code> ที่เรียก <code>clearCart()</code> แล้ว <code>goToOrderSuccess()</code> ทั้งคู่อยู่ใน callback ที่ทำงาน<em>หลัง</em>เซิร์ฟเวอร์ตอบสำเร็จเท่านั้น ย้ายสองบรรทัดนี้ออกไปไว้ใน <code>onPlaceOrder</code> (ก่อน <code>placeOrderMutate()</code> หรือหลังก็ตาม) โค้ดจะยัง lint ผ่าน typecheck ผ่าน และ<em>ทำงานถูกต้องทุกครั้งที่เน็ตดี</em> — ความผิดจะโผล่เฉพาะวันที่ API ล้มเหลว ซึ่งเป็นวันที่ผู้ใช้เสียของทั้งตะกร้าโดยไม่ได้อะไรกลับมาเลย บั๊กประเภทที่ไม่มีวันเกิดในเครื่องคุณแต่เกิดกับลูกค้าคือบั๊กที่คุณต้องเคยพิมพ์โค้ดที่ถูกด้วยมือตัวเองมาก่อน ถึงจะมองออกตอนอ่านของคนอื่น</p>
+        </blockquote>
+
+        <p>ไฟล์ยาวหน่อยแต่แบ่งเป็นห้าท่อนชัด ๆ ค่อย ๆ ไล่กัน</p>
+
+        <h3>ท่อนที่ 1: state สามก้อนของหน้า Checkout</h3>
+
+        <p>นี่คือ state ที่สามบทก่อนหน้า "ลอยขึ้นมารอ" — ในที่สุดก็ได้บ้านอยู่:</p>
+
+        <ul>
+          <li><code>checkoutAddress</code> — เริ่มเป็น <code>null</code> (ยังไม่ได้กรอก) พอฟอร์มบทเรียน 26 submit ผ่าน validation ค่าจะมาลงที่นี่ผ่าน <code>storeCheckoutAddress</code></li>
+          <li><code>selectedDeliveryOptionId</code> — ค่าเริ่มต้นคือ <code>deliveryOptions[0].id</code> แปลว่าหน้าเปิดมาพร้อม Standard Delivery ติ๊กอยู่แล้ว ไม่มีจังหวะไหนที่ radio ทั้งกลุ่มว่างเปล่า — UX ที่ดีของ radio คือ "มีตัวเลือกเสมอ" และการอ้าง <code>[0].id</code> จาก consts แปลว่าถ้าวันหน้าเราสลับลำดับ array ค่า default ก็ขยับตามเองโดยไม่ต้องแก้โค้ดตรงนี้</li>
+          <li><code>selectedPaymentOptionId</code> — ตรรกะเดียวกัน default เป็น Cash on Delivery (ซึ่งมี id เป็น 3 ตามที่กล่อง 💡 ของบทเรียน 25 เตือนไว้ — ค่านี้ไม่ได้มาจากการนับ 1 ใหม่)</li>
+        </ul>
+
+        <p>ถัดมา hook หยิบเครื่องมือเก่าสองชิ้น: <code>goToOrderSuccess</code> จาก <code>useProductRoute</code> (บทเรียน 10) ไว้พาไปหน้าสำเร็จ และ <code>cart</code> + <code>clearCart</code> จาก <code>useCart</code> (บทเรียน 22) — checkout อ่านตะกร้าเพื่อสร้าง order และล้างตะกร้าเมื่อสำเร็จ นี่คือครั้งแรกที่ <code>clearCart</code> ถูกใช้จริง หลังจากนั่งรออยู่ใน <code>CartContextProps</code> มาหกบทเต็ม ๆ</p>
+
+        <h3>ท่อนที่ 2–3: ค่าที่คำนวณจาก state ด้วย useMemo</h3>
+
+        <p><code>selectedDeliveryOption</code> แปลง id ที่เลือกกลับเป็น object เต็ม ๆ (เพราะเราต้องใช้ <code>price</code> ของมัน) ส่วน <code>billingSummary</code> คือเลขสามตัวที่ <code>BillingSummary</code> บทที่แล้วนั่งรออยู่:</p>
+
+        <ul>
+          <li><code>subtotal</code> — <code>reduce</code> รวม <code>price × quantity</code> ของทุกชิ้นในตะกร้า สูตรเดียวกับหน้า Cart บทเรียน 24</li>
+          <li><code>shipping</code> — ราคาของ delivery ที่เลือก (<code>?.price || 0</code> กันกรณี <code>find</code> ไม่เจอ ซึ่งตามโครงข้อมูลจริงไม่ควรเกิด แต่ TypeScript บังคับให้เราคิดถึงมัน — ดีแล้ว)</li>
+          <li><code>total</code> — บวกกันตรง ๆ</li>
+        </ul>
+
+        <p>ทั้งสองก้อนเป็น <em>derived state</em>: คำนวณได้จาก state อื่นเสมอ จึง<strong>ห้ามเก็บเป็น <code>useState</code> แยก</strong> (เดี๋ยวลืม sync) ใช้ <code>useMemo</code> ให้คำนวณใหม่เฉพาะเมื่อ dependencies เปลี่ยน — เลือก Express ปุ๊บ <code>selectedDeliveryOption</code> เปลี่ยน → <code>billingSummary</code> คำนวณใหม่ → ค่าส่งกับยอดรวมบนจอเด้งตามทันทีโดยไม่มีใครสั่ง</p>
+
+        <h3>ท่อนที่ 4: mutation และ callback ที่ชี้ชะตา</h3>
+
+        <p>ใน <code>mutationFn</code> มีด่านกันพลาดอยู่บรรทัดแรก: ถ้า <code>checkoutAddress</code> ยังเป็น <code>null</code> ให้ throw ทันที ตามจริงปุ่มถูก disable ไว้อยู่แล้วถ้ายังไม่กรอกที่อยู่ (เดี๋ยวเห็นในหน้าเพจ) แต่การเช็คซ้ำในชั้น logic เป็น defensive programming ที่ถูกต้อง — UI เปลี่ยนได้เสมอ และการเช็คนี้ยังทำให้ TypeScript รู้ว่าหลังบรรทัดนั้น <code>checkoutAddress</code> ไม่ใช่ <code>null</code> แน่ ๆ (type narrowing) เราจึงส่งมันเข้า payload ได้โดยไม่ต้อง <code>!</code> จากนั้นก็ map ของในตะกร้าให้เหลือ <code>{ id, quantity }</code> ตามรูปแบบที่ <code>PlaceOrderPayload</code> กำหนด</p>
+
+        <p>แล้วก็ถึง callback ที่เป็นหัวใจของ flow ทั้งบท:</p>
+
+        <pre><code class="language-typescript">onSuccess: () =&gt; {
+  clearCart();
+  goToOrderSuccess();
+},
+</code></pre>
+
+        <p><code>onSuccess</code> ทำงาน<em>เฉพาะเมื่อเซิร์ฟเวอร์ตอบสำเร็จ</em>: ล้างตะกร้า (dispatch <code>CLEAR_CART</code> → reducer คืน <code>items: []</code> → write-through ของ <code>CartProvider</code> เขียนทับ localStorage ให้ด้วย — กลไกจากบทเรียน 22 ทำงานให้ฟรี ๆ) แล้วพาผู้ใช้ไป <code>/order/success</code> ลำดับนี้สำคัญนะ: ถ้าเราล้างตะกร้า<em>ก่อน</em>ยิง API แล้ว API พัง ของในตะกร้าผู้ใช้หายเกลี้ยงทั้งที่ยังไม่ได้ซื้อ — side effect ต้องเกิด<em>หลัง</em>ความสำเร็จได้รับการยืนยันเท่านั้น</p>
+
+        <p>และนี่คือจุดที่ต้องเน้นเป็นพิเศษเพราะมันคือแก่นของบท: <code>onPlaceOrder</code> เรียก <code>placeOrderMutate()</code> เฉย ๆ แล้ว<em>จบ</em> — มันไม่ <code>await</code> อะไรทั้งนั้น เพราะ <code>mutate</code> ของ TanStack Query เป็นแบบ fire-and-forget ฟังก์ชันคืนค่ากลับมาทันทีก่อนที่ request จะออกจากเครื่องด้วยซ้ำ แปลว่าโค้ดบรรทัดใดก็ตามที่คุณเขียนต่อท้าย <code>placeOrderMutate()</code> จะทำงาน<strong>ก่อน</strong>ผลลัพธ์กลับมาเสมอ ไม่ใช่หลัง ถ้าคุณเผลอเขียนว่า</p>
+
+        <pre><code class="language-typescript">// ผิด — อย่าเขียนแบบนี้
+const onPlaceOrder = () =&gt; {
+  placeOrderMutate();
+  clearCart();
+};
+</code></pre>
+
+        <p>ตะกร้าจะถูกล้างทันทีที่กดปุ่ม ไม่ว่าคำสั่งซื้อจะสำเร็จหรือไม่ และในเครื่องคุณที่ dummyjson ตอบ 200 ทุกครั้ง คุณจะไม่มีวันเห็นความต่าง นี่คือเหตุผลที่ <code>clearCart</code> ต้องอยู่ใน <code>onSuccess</code> เท่านั้น และเป็นเหตุผลที่บทเรียน 32 จะเขียนเทสต์สองตัวจับข้อนี้โดยเฉพาะ: ตัวหนึ่งยืนยันว่าสั่งสำเร็จแล้วตะกร้าว่าง อีกตัวยืนยันว่า<em>สั่งไม่สำเร็จแล้วตะกร้าต้องยังอยู่ครบ</em></p>
+
+        <p>ข้อสังเกตเรื่อง error: ถ้า API ล้มเหลว <code>onSuccess</code> ไม่ทำงาน ตะกร้ายังอยู่ครบ ปุ่มหยุดหมุนแล้วกลับมากดใหม่ได้ — ปลอดภัย แต่เวอร์ชันนี้ยัง<em>ไม่ได้แสดงข้อความ error ให้ผู้ใช้เห็น</em> (<code>useMutation</code> มี <code>error</code> ให้หยิบอยู่แล้ว แค่ hook เรายังไม่ return ออกไป) ถือเป็นแบบฝึกหัดต่อยอดที่ดีมาก: ลอง return <code>error</code> ออกไปแล้วแสดง <code>ErrorMessage</code> เหนือปุ่มดูเมื่อจบคอร์ส</p>
+
+        <h3>ท่อนที่ 5: return — สัญญาของ hook</h3>
+
+        <p>ก้อน return คือ "API ของหน้า Checkout" ทั้งหมดในที่เดียว: ข้อมูล (ที่อยู่, รายการตัวเลือก, id ที่เลือก, ยอดเงิน, สถานะ loading) กับ handlers (เก็บที่อยู่, เลือกจัดส่ง/จ่ายเงิน, สั่งซื้อ) สังเกตว่า hook ส่งต่อ <code>deliveryOptions</code> / <code>paymentOptions</code> จาก consts ออกไปด้วย — หน้าเพจเลยไม่ต้อง import consts เอง ทุกอย่างเกี่ยวกับ checkout ไหลผ่านประตูบานเดียว ซึ่งจะทำให้ทดสอบง่ายมากในบทเรียน 32 (<code>renderHook</code> ตัวเดียว เห็นทุกอย่าง) และสังเกตด้วยว่าสิ่งที่<em>ไม่ได้</em>ถูก return คือ <code>placeOrderMutate</code> ตัวจริง — คนนอกได้แค่ <code>onPlaceOrder</code> ที่ไม่รับพารามิเตอร์ ปิดโอกาสที่ใครจะยิง mutation ด้วย payload ของตัวเอง</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — สามข้อในไฟล์ที่คุณเพิ่งพิมพ์เอง:</strong> ข้อแรกคือ comment สามบรรทัดที่คุณเพิ่งพิมพ์ตามไปด้วย — <code>// Helper to get selected delivery option</code>, <code>// Compute billing summary data</code> และ <code>// Get price of the selected delivery option</code> ทั้งสามอันเขียนซ้ำสิ่งที่ชื่อตัวแปรบรรทัดถัดไปบอกอยู่แล้วทุกตัวอักษร (<code>selectedDeliveryOption</code>, <code>billingSummary</code>, <code>shipping = selectedDeliveryOption?.price</code>) ซึ่งเป็น comment ประเภทที่ checklist ของบทเรียน 22 ปฏิเสธไว้ตรง ๆ ว่า "ไม่มี comment ที่เขียนซ้ำสิ่งที่โค้ดบอกอยู่แล้ว" — เราให้คุณพิมพ์ตามเพื่อให้ diff ตรงกับโค้ดอ้างอิง แต่ในรีวิวจริงสามบรรทัดนี้ควรถูกลบ (comment ที่ควรอยู่คือ comment ที่อธิบาย<em>การตัดสินใจ</em> แบบใน <code>catch</code> ของ <code>saveCartState</code> ไม่ใช่ comment ที่แปลโค้ดเป็นภาษาอังกฤษ) ข้อสองคือ <code>selectedDeliveryOption?.price || 0</code> ที่ควรเป็น <code>?? 0</code> — วันนี้ผลลัพธ์เหมือนกันเพราะไม่มีตัวเลือกไหนราคา 0 แต่วันที่ธุรกิจเพิ่ม "Free Shipping" ราคา <code>0</code> เข้ามา <code>||</code> จะมองว่า 0 เป็นค่าเท็จแล้วแทนที่ด้วย 0 (บังเอิญได้ผลถูก) — และวันที่ค่านั้นเป็นส่วนลดติดลบหรือค่าที่ 0 มีความหมายต่างจาก "ไม่มีค่า" มันจะไม่บังเอิญถูกอีกต่อไป <code>??</code> ถามว่า "เป็น null/undefined ไหม" ซึ่งตรงกับเจตนาจริงของบรรทัดนี้ ข้อสามคือชื่อ: hook คืน <code>billingSummary.subtotal</code> ตัว t เล็ก ส่วน <code>BillingSummary</code> ที่เพิ่งสร้างเมื่อบทที่แล้วรับ prop ชื่อ <code>subTotal</code> ตัว T ใหญ่ ผลคือหน้าเพจต้องเขียน <code>subTotal={subtotal}</code> ซึ่งเป็นบรรทัดที่อ่านแล้วสะดุดทุกครั้ง สองไฟล์ในฟีเจอร์เดียวกัน สองธรรมเนียมการสะกดคำเดียวกัน — เป็นรูปแบบเดิมที่คอร์สนี้เจอมาตลอด: สิ่งที่ไม่มีเครื่องมือบังคับจะเพี้ยนไปทีละไฟล์ และคราวนี้มันมีราคาจริงเพิ่มอีกชั้น เพราะเทสต์ในบทเรียน 32 จะ assert <code>result.current.checkout.billingSummary.subtotal</code> ตามชื่อฝั่ง hook ส่วนชื่อ prop ฝั่ง <code>BillingSummary</code> ไม่มีเทสต์ตัวไหนยึดไว้เลย มีแต่ typecheck ที่จับได้ — ใครแก้ชื่อฝั่ง hook ให้ตรงกับ prop ทีหลัง จะทำเทสต์บทเรียน 32 พังโดยไม่รู้ตัว</blockquote>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor — รอบที่ 2: ประกอบหน้า Checkout</strong> แชทใหม่อีกครั้ง รอบนี้บรรทัด <code>บริบท:</code> ชี้ไปที่ไฟล์ที่คุณเพิ่งพิมพ์เอง — Agent จะได้เห็นชื่อคีย์จริงทั้งสิบเอ็ดตัวที่ hook คืนมา ไม่ใช่ชื่อที่มันเดา:</p>
+          <pre><code class="language-text">เขียนหน้า Checkout ทับ stub เดิม โดยประกอบคอมโพเนนต์ที่มีอยู่แล้วเข้ากับ hook useCheckout
+
+บริบท: @src/features/checkout/useCheckout.ts @src/features/checkout/components/CheckoutAddressBox/CheckoutAddressBox.tsx @src/features/checkout/components/CheckoutDeliveryBox/CheckoutDeliveryBox.tsx @src/features/checkout/components/CheckoutPaymentBox/CheckoutPaymentBox.tsx @src/features/checkout/components/SummaryOrder/SummaryOrder.tsx @src/features/checkout/components/BillingSummary/BillingSummary.tsx @src/pages/Category/components/CategoryBanner/CategoryBanner.tsx @src/pages/Cart/Cart.tsx
+src/pages/Checkout/Checkout.tsx ตอนนี้เป็น stub ที่ return h1 อย่างเดียว ให้เขียนทับทั้งไฟล์
+src/features/checkout/useCheckout.ts เป็น default export คืน object ที่มีสิบเอ็ดคีย์
+  ให้อ่านชื่อคีย์จากไฟล์จริง อย่าเดา โดยเฉพาะ billingSummary ที่เป็น object
+  { subtotal, shipping, total } — subtotal ใช้ t ตัวเล็ก
+  ในขณะที่ BillingSummary รับ prop ชื่อ subTotal ใช้ T ตัวใหญ่ ทั้งสองชื่อถูกต้องตามไฟล์จริง
+  ห้ามแก้ไฟล์ทั้งสองให้ชื่อตรงกัน
+useCheckout จัดการทั้ง state, การคำนวณยอดเงิน, การยิง API และการล้างตะกร้าไว้ครบแล้ว
+  หน้าเพจนี้จึงห้ามมี logic ใด ๆ ทั้งสิ้น
+CategoryBanner เป็น default export รับ prop name?: string | null
+  ใช้เป็นแถบหัวเพจแบบเดียวกับหน้า Cart ในบทเรียน 24
+utility class ที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว: container, flex, gap-20,
+  pt-50, mb-20, mb-30
+
+โครงสร้าง: เขียนทับไฟล์เดิมหนึ่งไฟล์และสร้างไฟล์ใหม่หนึ่งไฟล์ ไม่มากไม่น้อยกว่านี้
+- src/pages/Checkout/Checkout.tsx (เขียนทับ stub ทั้งไฟล์)
+- src/pages/Checkout/Checkout.module.scss (สร้างใหม่)
+
+ข้อกำหนดทางเทคนิค:
+- Checkout.tsx: บรรทัด import เรียงตามลำดับนี้พอดี
+    import React from "react";
+    import styles from "./Checkout.module.scss";
+    import useCheckout from "@/features/checkout/useCheckout";
+    import CategoryBanner from
+      "@/pages/Category/components/CategoryBanner/CategoryBanner";
+    import CheckoutAddressBox from "@/features/checkout/components/CheckoutAddressBox/CheckoutAddressBox";
+    import CheckoutDeliveryBox from "@/features/checkout/components/CheckoutDeliveryBox/CheckoutDeliveryBox";
+    import CheckoutPaymentBox from "@/features/checkout/components/CheckoutPaymentBox/CheckoutPaymentBox";
+    import SummaryOrder from "@/features/checkout/components/SummaryOrder/SummaryOrder";
+    import BillingSummary from "@/features/checkout/components/BillingSummary/BillingSummary";
+  ประกาศเป็น const Checkout: React.FC = () =&gt; { ... } แล้ว export default
+  บรรทัดแรกในคอมโพเนนต์คือการ destructure จาก useCheckout() ตามลำดับนี้พอดี
+    storeCheckoutAddress, checkoutAddress, deliveryOptions, paymentOptions,
+    selectedPaymentOptionId, onSelectDeliveryOption, onSelectPaymentOption,
+    onPlaceOrder, selectedDeliveryOptionId,
+    billingSummary: { subtotal, shipping, total },
+    isPlaceOrderLoading
+    (ลำดับนี้ไม่เรียงสวยตามต้นฉบับจริง ให้ตามนี้ ห้ามจัดเรียงใหม่)
+  JSX: fragment ว่างตัวนอกสุด ที่มีสองอย่าง
+    CategoryBanner name="Checkout"
+    div className="container pt-50 mb-30" ครอบ div className="flex gap-20" ที่มีสองคอลัมน์
+      คอลัมน์ซ้าย: div className={styles.addressBox} ที่มี
+        div className="mb-20" ครอบ CheckoutAddressBox ที่ส่ง
+          title="Shipping Address" checkoutAddress={checkoutAddress}
+          onUpdateAddress={storeCheckoutAddress}
+        div className="mb-20" ครอบ CheckoutDeliveryBox ที่ส่ง
+          title="Delivery Options" deliveryOptions={deliveryOptions}
+          onSelectOption={onSelectDeliveryOption}
+          selectedDeliveryId={selectedDeliveryOptionId}
+        CheckoutPaymentBox (ไม่มี div ครอบ ไม่มี mb-20) ที่ส่ง
+          title="Payment Options" paymentOptions={paymentOptions}
+          onSelectOption={onSelectPaymentOption}
+          selectedPaymentId={selectedPaymentOptionId}
+      คอลัมน์ขวา: div className={styles.summaryBox} ที่มี
+        div className="mb-20" ครอบ SummaryOrder (ไม่มี prop ใด ๆ)
+        บรรทัดว่างหนึ่งบรรทัด
+        BillingSummary ที่ส่ง subTotal={subtotal} shipping={shipping}
+          total={total} isLoading={isPlaceOrderLoading}
+          isDisabled={!checkoutAddress} onPlaceOrder={onPlaceOrder}
+  ห้ามใช้ useState ห้ามใช้ useEffect ห้ามใช้ useMemo ในไฟล์นี้
+  ห้าม import useCart หรือเรียก clearCart ที่นี่ ห้าม import consts.ts
+  ห้ามยิง API เอง ห้ามใช้ useMutation หรือ useQuery
+  ห้ามใส่ guard กรณีตะกร้าว่าง และห้าม redirect ไปหน้าไหน
+  ห้ามใส่ข้อความยืนยันก่อนกด Place Order
+- Checkout.module.scss: สอง class เท่านั้น ไม่มี @use
+    .addressBox { width: 60%; }
+    .summaryBox { width: 40%; }
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ useCheckout.ts, api.ts, schema.ts, types.ts หรือ consts.ts แม้แต่บรรทัดเดียว
+- ห้ามแก้คอมโพเนนต์ห้าตัวใน src/features/checkout/components
+- ห้ามแก้ไฟล์ใด ๆ ใน src/features/cart, src/shared หรือ src/styles
+- ห้ามแก้ router.tsx, Header.tsx, Cart.tsx หรือ OrderSuccess.tsx
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ห้ามเขียนเทสต์ (หน้านี้จะมี integration test ในบทเรียน 33)</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อนทุกรอบ ข้อแรกเป็นข้อของรอบที่ 2 และเป็นข้อที่ต้องดูก่อนข้ออื่นทั้งหมด:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>Agent เติม <code>clearCart()</code> ลงในหน้าเพจ ที่จุดที่กดปุ่ม</em> — สิ่งที่ได้กลับมาคือ <code>Checkout.tsx</code> ที่มี <code>const { clearCart } = useCart();</code> เพิ่มเข้ามาเงียบ ๆ แล้ว <code>onPlaceOrder={() =&gt; { onPlaceOrder(); clearCart(); }}</code> หรือไม่ก็ <code>handlePlaceOrder</code> ที่ทำสองอย่างนี้ต่อกัน เหตุผลที่มันทำคือมันเห็นว่า "สั่งซื้อแล้วตะกร้าควรว่าง" ซึ่งถูกต้องในเชิงพฤติกรรม แต่<strong>ผิดตำแหน่งอย่างสิ้นเชิง</strong>: <code>onPlaceOrder</code> เรียก <code>mutate()</code> ซึ่งเป็น fire-and-forget — มันคืนค่ากลับมาทันทีก่อน request ออกจากเครื่องด้วยซ้ำ ดังนั้น <code>clearCart()</code> บรรทัดถัดมาจะทำงาน<em>ก่อน</em>เซิร์ฟเวอร์ตอบเสมอ ผลคือกดปุ่มปุ๊บตะกร้าว่างปั๊บ ไม่ว่าคำสั่งซื้อจะสำเร็จหรือไม่ และคุณจะไม่มีวันเห็นอาการในเครื่องตัวเอง เพราะ dummyjson ตอบ 200 ทุกครั้ง — มันจะไปโผล่ตอนลูกค้าเน็ตหลุดกลางคัน แล้วเสียของทั้งตะกร้าโดยไม่ได้ออร์เดอร์ วิธีตรวจสองคำสั่ง: <code>grep -n "useCart\|clearCart" src/pages/Checkout/Checkout.tsx</code> ต้อง<strong>ว่างเปล่า</strong> และ <code>grep -n "clearCart" src/features/checkout/useCheckout.ts</code> ต้องเจอ<strong>บรรทัดเดียว</strong> คือบรรทัดที่อยู่ใน <code>onSuccess</code> ที่คุณพิมพ์เอง ญาติสนิทของอาการนี้ที่เจอบ่อยไม่แพ้กันคือ Agent ใส่ <code>navigate("/order/success")</code> ไว้ในหน้าเพจด้วยเหตุผลเดียวกัน — ผลเหมือนกันเป๊ะ คือเด้งไปหน้าขอบคุณตั้งแต่ยังไม่รู้ผล</li>
+          </ul>
+          <p><strong>รอบที่ 1:</strong></p>
+          <ul>
+            <li>ไฟล์ใหม่ <strong>1 ไฟล์</strong> (<code>api.ts</code>) และ modified <strong>1 ไฟล์</strong> (<code>OrderSuccess.tsx</code>) เท่านั้น — ไม่มี <code>useCheckout.ts</code> หรือ <code>Checkout.tsx</code> มาก่อนกำหนด และ <code>router.tsx</code> ต้องไม่ขึ้นสถานะ modified (route มีอยู่แล้วตั้งแต่บทเรียน 09 ถ้ามันไปแก้ แปลว่ามันไม่เชื่อบรรทัดในบริบท)</li>
+            <li><code>grep -n "catch" src/features/checkout/api.ts</code> ต้องว่างเปล่า — เหตุผลเดียวกับ <code>features/products/api.ts</code> ในบทเรียน 16: interceptor ใน <code>client.ts</code> แปลงทุกความล้มเหลวเป็น <code>ApiError</code> ให้แล้ว ชั้นนี้มีหน้าที่เดียวคือปล่อยให้ reject ไหลขึ้นไป ถ้า Agent ใส่ <code>try/catch</code> ที่คืน <code>null</code> เวลาพัง <code>useMutation</code> จะคิดว่าสำเร็จ แล้ว <code>onSuccess</code> จะล้างตะกร้าทั้งที่ออร์เดอร์ไม่เคยเกิด</li>
+            <li><code>apiClient.post&lt;PlaceOrderResponse&gt;(...)</code> มี generic จริง และปลายทางเป็น <code>"/carts/add"</code> ไม่ใช่ <code>"/orders"</code> หรือ <code>"/carts"</code> เฉย ๆ — dummyjson ไม่มี endpoint order จริง (เหตุผลเต็มอยู่ใต้โค้ดอ้างอิง) Agent ที่ "รู้จัก REST" จะเดาเป็น <code>/orders</code> ให้อัตโนมัติแล้วคุณจะได้ 404 ตอนกดปุ่มจริง</li>
+            <li><code>PlaceOrderResponse</code> มี field เดียวคือ <code>id</code> — ถ้า Agent ประกาศครบทุก field ที่ dummyjson ตอบ (products, total, discountedTotal, …) แปลว่ามัน type สิ่งที่เราไม่ได้ใช้ ซึ่งกลายเป็นสัญญาที่เราต้องรักษาโดยไม่มีเหตุผล</li>
+            <li><code>products</code> ใน payload มีแค่ <code>id</code> กับ <code>quantity</code> ไม่มี <code>price</code> — <code>grep -n "price" src/features/checkout/api.ts</code> ต้องว่างเปล่า ราคาเป็นเรื่องของเซิร์ฟเวอร์เสมอ ไม่ใช่ของที่ client ส่งไปบอก</li>
+            <li><code>OrderSuccess.tsx</code> ต้องไม่มี <code>useCart</code>, ไม่มี <code>useEffect</code>, ไม่มีการล้างตะกร้า — <code>grep -n "useCart\|useEffect" src/pages/Order/OrderSuccess.tsx</code> ต้องว่างเปล่า Agent ที่เห็นชื่อไฟล์ว่า OrderSuccess ชอบเติม "ล้างตะกร้าตอน mount" ให้ ซึ่งจะทำให้ตะกร้าถูกล้างทุกครั้งที่ใครเปิด URL นี้ตรง ๆ ไม่ว่าจะเคยสั่งซื้อหรือไม่</li>
+            <li>ข้อความ <code>Order Placed Successfully!</code> ต้องตรงทุกตัวอักษรรวมเครื่องหมายอัศเจรีย์ — integration test ในบทเรียน 33 ตรวจว่าหลังกด Place Order แล้วเจอข้อความนี้บนหน้าจอ ถ้า Agent แต่งใหม่เป็น <code>Thank you for your order</code> เทสต์บทนั้นจะพังโดยไม่มีอะไรชี้กลับมาที่นี่</li>
+            <li><code>npm run dev</code> แล้วเปิด <code>/order/success</code> ตรง ๆ — ต้องเห็นไอคอนติ๊กถูกเขียวตัวโตกับข้อความสองบรรทัดบนพื้นเทาอ่อน ไม่ใช่หน้าขาวหรือข้อความ stub เดิม</li>
+          </ul>
+          <p><strong>รอบที่ 2:</strong></p>
+          <ul>
+            <li>ไฟล์ใหม่ <strong>1 ไฟล์</strong> (<code>Checkout.module.scss</code>) และ modified <strong>1 ไฟล์</strong> (<code>Checkout.tsx</code>) เท่านั้น — <code>git status</code> ต้องไม่มีคอมโพเนนต์ใน <code>src/features/checkout/components/</code> ขึ้นสถานะ modified แม้แต่ไฟล์เดียว โดยเฉพาะ <code>BillingSummary.tsx</code> (Agent ที่เจอ <code>subtotal</code> เทียบ <code>subTotal</code> จะอยาก "แก้ให้ตรงกัน" มาก และการแก้นั้นจะทำให้เทสต์บทเรียน 32 พังทันที)</li>
+            <li>ไฟล์ที่คุณพิมพ์เองต้องไม่ถูกแตะ — <code>git diff HEAD~1 --stat</code> ต้องไม่มี <code>useCheckout.ts</code> และยืนยันอีกชั้นด้วย <code>grep -n "onSuccess" src/features/checkout/useCheckout.ts</code> ที่ต้องยังเจอบรรทัดเดิม</li>
+            <li><code>grep -n "useState\|useEffect\|useMemo" src/pages/Checkout/Checkout.tsx</code> ต้องว่างเปล่า — หน้านี้ไม่มี state ของตัวเองเลยสักตัว ทุกอย่างมาจาก hook ก้อนเดียว ถ้ามันประกาศ <code>const [address, setAddress] = useState(...)</code> เพื่อ "จัดการ local" คุณจะได้แหล่งความจริงสองแหล่งทันที</li>
+            <li><code>&lt;BillingSummary subTotal={subtotal} ... /&gt;</code> — prop ชื่อ <code>subTotal</code> (T ใหญ่) รับค่าจากตัวแปร <code>subtotal</code> (t เล็ก) บรรทัดนี้ต้องอ่านแล้วสะดุดตา ถ้ามันดูเรียบร้อยเกินไป (เช่น <code>subTotal={subTotal}</code>) แปลว่ามีไฟล์ใดไฟล์หนึ่งถูกแก้ชื่อไปแล้ว กลับไปดู <code>git status</code> อีกรอบ</li>
+            <li><code>isDisabled={!checkoutAddress}</code> ใช้ <code>!</code> บน object ตรง ๆ ไม่ใช่ <code>checkoutAddress === null</code> หรือ <code>!checkoutAddress?.address</code> — ทั้งสามแบบให้ผลเหมือนกันวันนี้ ให้ตามโค้ดอ้างอิงเพื่อให้ diff ตรง</li>
+            <li><code>&lt;SummaryOrder /&gt;</code> ไม่มี prop สักตัว — ถ้า Agent ส่ง <code>items={cart.items}</code> เข้าไป แปลว่ามันไป import <code>useCart</code> ในหน้าเพจแล้ว ซึ่งจะโดนข้อ <strong>AI มักพลาดตรงนี้</strong> ข้างบนจับได้พอดี</li>
+            <li>ลำดับ destructure ตรงตามที่ prompt สั่ง รวมถึงตำแหน่งที่ดู "ไม่เรียง" ของ <code>selectedDeliveryOptionId</code> ที่มาทีหลัง <code>onPlaceOrder</code> — เหตุผลอยู่ใต้โค้ดอ้างอิง ถ้า Agent จัดเรียงใหม่ให้สวย โค้ดจะดีขึ้นแต่ diff จะไม่ตรงกับบทนี้</li>
+            <li><code>Checkout.module.scss</code> มีสอง class ที่เป็นเปอร์เซ็นต์ ไม่มี <code>@use</code> และไม่มี media query — ตรงกับต้นฉบับ ถ้า Agent ใส่ breakpoint มาให้ด้วยความหวังดี diff จะไม่ตรง (ผลของการไม่มีมันอยู่ในกล่อง 💡 ใต้โค้ดอ้างอิงของหน้านี้)</li>
+            <li>ไม่มี <code>any</code> ไม่มี <code>index.ts</code> และไม่มีไฟล์เทสต์ในทั้งสองรอบ</li>
+          </ul>
+        </blockquote>
+
+        <p>เหมือนบทก่อน ๆ: <code>npm run lint</code> อาจตกเรื่อง <code>import-x/order</code> ก่อน แก้ด้วย <code>npx eslint . --fix</code> แล้วรันซ้ำให้ผ่านเงียบ ๆ จากนั้นค่อย <code>npm run typecheck</code> — <code>Checkout.tsx</code> มีบรรทัด import เก้าบรรทัดที่ปน <code>react</code>, <code>./</code> และ <code>@/</code> กันอยู่ ถ้า <code>--fix</code> สลับลำดับให้ต่างจากโค้ดอ้างอิง นั่นคือฝีมือเครื่องมือ ไม่ใช่ความผิดของ Agent ให้ยอมรับผลของมัน (lint ต้องผ่าน) แล้วอ่าน <code>git diff</code> อีกรอบเพื่อยืนยันว่าไม่มีอะไรอื่นเปลี่ยนไปด้วย</p>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/features/checkout/api.ts</code> — ยิงคำสั่งซื้อขึ้นเซิร์ฟเวอร์:</p>
+
+        <pre><code class="language-typescript">import { apiClient } from "@/shared/api/client";
+import { CheckoutAddressFormData } from "@/features/checkout/schema";
+
+export interface PlaceOrderPayload {
+  userId: number;
+  products: { id: number; quantity: number }[];
+  address: CheckoutAddressFormData;
+}
+
+export interface PlaceOrderResponse {
+  id: number;
+}
+
+export async function placeOrder(
+  payload: PlaceOrderPayload,
+): Promise&lt;PlaceOrderResponse&gt; {
+  const { data } = await apiClient.post&lt;PlaceOrderResponse&gt;(
+    "/carts/add",
+    payload,
+  );
+  return data;
+}
+</code></pre>
+
+        <p>โครงเหมือน <code>features/products/api.ts</code> จากบทเรียน 16 เป๊ะ — ฟังก์ชัน async บาง ๆ ที่เรียก <code>apiClient</code> (axios instance จากบทเรียน 15) แล้วคืน <code>data</code> ที่ type แล้ว จุดที่ต่างคือคราวนี้เป็น <code>.post()</code> ครั้งแรกของคอร์ส: เรา<em>ส่งข้อมูลขึ้นไป</em> ไม่ใช่ดึงลงมา และนี่คือไฟล์ที่บทเรียน 15 ทำนายไว้ว่าจะเป็นผู้ใช้รายที่สองของ <code>client.ts</code> ต่อจาก products</p>
+
+        <ul>
+          <li><strong><code>PlaceOrderPayload</code></strong> — รวมสามส่วน: <code>userId</code> (hardcode เป็น 1 เพราะเราไม่มีระบบ login), รายการสินค้าแบบย่อ (เอาแค่ <code>id</code> + <code>quantity</code> พอ เซิร์ฟเวอร์รู้ราคาเองอยู่แล้ว — อย่าเชื่อราคาที่ client ส่งมา!) และ <code>address</code> ที่ reuse type <code>CheckoutAddressFormData</code> จาก schema ตรง ๆ — schema เดียว ไหลตั้งแต่ฟอร์มยัน payload ซึ่งเป็นเหตุผลทั้งหมดที่บทเรียน 25 ให้คุณพิมพ์ schema เองแทนที่จะปล่อยให้ Agent ประกาศ interface ซ้ำ</li>
+          <li><strong><code>PlaceOrderResponse</code></strong> — dummyjson ตอบกลับ cart ก้อนใหญ่ แต่เราประกาศ type เฉพาะ field ที่ใช้จริงคือ <code>id</code> การ type ให้แคบที่สุดเท่าที่ใช้เป็นนิสัยที่ดี: response เปลี่ยนโครงเมื่อไร โค้ดเราพังเฉพาะจุดที่พึ่งมันจริง ๆ</li>
+          <li><strong>error ไม่ต้องจัดการที่นี่</strong> — interceptor ใน <code>client.ts</code> แปลงทุกความล้มเหลวเป็น <code>ApiError</code> ให้แล้วตั้งแต่บทเรียน 15 ชั้นนี้แค่ปล่อยให้ reject ไหลขึ้นไป</li>
+        </ul>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> <code>POST /carts/add</code> ของ dummyjson เป็น <strong>mock endpoint</strong> — มันรับ payload, ตอบกลับมาเป็น cart จำลองพร้อม <code>id</code> ที่ปั้นขึ้นมา แต่<em>ไม่ได้บันทึกอะไรลงฐานข้อมูลจริง</em> (echo back) dummyjson ไม่มีระบบ order ให้เราใช้ ซึ่งสำหรับการเรียนแบบนี้คือข้อดี: กดสั่งซื้อกี่รอบก็ได้โดยไม่ทิ้งขยะไว้ที่ไหน แต่ในเชิงรีวิวมีสองข้อที่ต้องพูด ข้อแรก: ชื่อฟังก์ชันคือ <code>placeOrder</code> แต่ URL คือ <code>/carts/add</code> — คนที่มาอ่านโค้ดนี้ในอีกหกเดือนจะสับสนว่าตกลงมันสร้าง order หรือสร้าง cart กันแน่ comment หนึ่งบรรทัดว่า "dummyjson ไม่มี endpoint order ใช้ /carts/add แทน" คือ comment ประเภทที่<em>ควร</em>มี (อธิบายการตัดสินใจ ไม่ใช่แปลโค้ด) และไฟล์นี้ไม่มี ข้อสอง: field <code>address</code> ใน payload เป็นของที่ dummyjson ไม่รู้จักด้วยซ้ำ มันรับแล้วเมิน เราใส่ไว้เพราะโค้ดฝั่งเราควรเขียนเหมือน API จริง — วันที่ย้ายไป backend จริง สิ่งที่เปลี่ยนคือ URL ไม่ใช่โครงโค้ด นั่นเป็นการตัดสินใจที่ถูก แต่ก็เป็นการตัดสินใจที่ไม่มีใครนอกจากคนเขียนรู้ ถ้าไม่เขียนไว้</blockquote>
+
+        <p><code>src/pages/Order/OrderSuccess.tsx</code> — ชิ้นสุดท้ายของ flow route <code>/order/success</code> มีอยู่แล้วตั้งแต่บทเรียน 09 เหลือแค่ทำหน้าให้สมศักดิ์ศรี:</p>
+
+        <pre><code class="language-typescript">import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
+
+const OrderSuccess: React.FC = () =&gt; {
+  return (
+    &lt;div&gt;
+      &lt;div className="bg-grey01 pt-45 pb-45 text-center"&gt;
+        &lt;FontAwesomeIcon
+          icon={faCircleCheck}
+          className="fs-72 text-primary mb-20"
+        /&gt;
+        &lt;h2 className="fs-28 mb-15 text-uppercase fw-bold"&gt;
+          Order Placed Successfully!
+        &lt;/h2&gt;
+        &lt;p className="fs-18 text-muted"&gt;
+          Your order has been successfully placed and is on its way.
+        &lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default OrderSuccess;
+</code></pre>
+
+        <p>หน้าเรียบ ๆ ตั้งใจ: ไอคอน <code>faCircleCheck</code> ตัวโต (Font Awesome ติดตั้งไว้ตั้งแต่บทเรียน 10) + หัวข้อ + ข้อความยืนยัน บนพื้นเทาอ่อน จัดทุกอย่างด้วย utility classes ล้วน ๆ ไม่ต้องมี SCSS module สังเกตว่าหน้านี้<em>ไม่ต้องล้างตะกร้าเอง</em> — งานนั้น <code>onSuccess</code> ของ mutation ทำจบไปแล้วก่อนจะ navigate มาถึง แบ่งหน้าที่ชัด: hook จัดการผลลัพธ์ หน้าเพจแค่แสดงความยินดี</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — สองข้อเล็ก ๆ ในยี่สิบสามบรรทัด:</strong> ข้อแรกคือ <code>&lt;div&gt;</code> ตัวนอกสุดที่ห่อ <code>&lt;div&gt;</code> ตัวเดียวไว้เฉย ๆ โดยไม่มี className ไม่มีพี่น้อง — ลบทิ้งได้ทันทีโดยไม่กระทบอะไรเลย เทียบกับหน้า Cart ในบทเรียน 24 ที่ใช้ fragment เพราะมีสองพี่น้องจริง ๆ (banner กับ container) ที่นี่ไม่มีอะไรให้ห่อ ข้อสองคือไฟล์นี้เขียน <code>React.FC</code> โดย<strong>ไม่มีบรรทัด <code>import React</code></strong> — รูปแบบเดียวกับสองกล่องในบทเรียน 27 เป๊ะ และเหตุผลที่มันคอมไพล์ผ่านก็ข้อเดียวกัน (<code>@types/react</code> ประกาศ <code>React</code> เป็น UMD global และ TypeScript ยอมให้อ้างในตำแหน่งของ type ได้) ตอนนี้เรามีสามไฟล์ในโปรเจกต์ที่เขียนแบบนี้ กับอีกเกือบสี่สิบไฟล์ที่ import ครบ — สัดส่วนแบบนี้แหละที่บอกว่าไม่มีใครตั้งใจเลือก มันแค่<em>เกิดขึ้น</em> ทีละไฟล์ ตามคนที่เขียนวันนั้น</blockquote>
+
+        <p><code>src/pages/Checkout/Checkout.tsx</code> — เขียนทับ stub ที่นั่งรอมาตั้งแต่บทเรียน 09:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./Checkout.module.scss";
+import useCheckout from "@/features/checkout/useCheckout";
+import CategoryBanner from "@/pages/Category/components/CategoryBanner/CategoryBanner";
+import CheckoutAddressBox from "@/features/checkout/components/CheckoutAddressBox/CheckoutAddressBox";
+import CheckoutDeliveryBox from "@/features/checkout/components/CheckoutDeliveryBox/CheckoutDeliveryBox";
+import CheckoutPaymentBox from "@/features/checkout/components/CheckoutPaymentBox/CheckoutPaymentBox";
+import SummaryOrder from "@/features/checkout/components/SummaryOrder/SummaryOrder";
+import BillingSummary from "@/features/checkout/components/BillingSummary/BillingSummary";
+
+const Checkout: React.FC = () =&gt; {
+  const {
+    storeCheckoutAddress,
+    checkoutAddress,
+    deliveryOptions,
+    paymentOptions,
+    selectedPaymentOptionId,
+    onSelectDeliveryOption,
+    onSelectPaymentOption,
+    onPlaceOrder,
+    selectedDeliveryOptionId,
+    billingSummary: { subtotal, shipping, total },
+    isPlaceOrderLoading,
+  } = useCheckout();
+
+  return (
+    &lt;&gt;
+      &lt;CategoryBanner name="Checkout" /&gt;
+      &lt;div className="container pt-50 mb-30"&gt;
+        &lt;div className="flex gap-20"&gt;
+          &lt;div className={styles.addressBox}&gt;
+            &lt;div className="mb-20"&gt;
+              &lt;CheckoutAddressBox
+                title="Shipping Address"
+                checkoutAddress={checkoutAddress}
+                onUpdateAddress={storeCheckoutAddress}
+              /&gt;
+            &lt;/div&gt;
+            &lt;div className="mb-20"&gt;
+              &lt;CheckoutDeliveryBox
+                title="Delivery Options"
+                deliveryOptions={deliveryOptions}
+                onSelectOption={onSelectDeliveryOption}
+                selectedDeliveryId={selectedDeliveryOptionId}
+              /&gt;
+            &lt;/div&gt;
+            &lt;CheckoutPaymentBox
+              title="Payment Options"
+              paymentOptions={paymentOptions}
+              onSelectOption={onSelectPaymentOption}
+              selectedPaymentId={selectedPaymentOptionId}
+            /&gt;
+          &lt;/div&gt;
+          &lt;div className={styles.summaryBox}&gt;
+            &lt;div className="mb-20"&gt;
+              &lt;SummaryOrder /&gt;
+            &lt;/div&gt;
+
+            &lt;BillingSummary
+              subTotal={subtotal}
+              shipping={shipping}
+              total={total}
+              isLoading={isPlaceOrderLoading}
+              isDisabled={!checkoutAddress}
+              onPlaceOrder={onPlaceOrder}
+            /&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/&gt;
+  );
+};
+
+export default Checkout;
+</code></pre>
+
+        <p>และ <code>src/pages/Checkout/Checkout.module.scss</code> คู่กัน:</p>
+
+        <pre><code class="language-scss">.addressBox {
+  width: 60%;
+}
+
+.summaryBox {
+  width: 40%;
+}
+</code></pre>
+
+        <p>หน้านี้แทบไม่มี logic เลย — และนั่นแหละคือความสำเร็จ มันคือ "wiring diagram" ล้วน ๆ:</p>
+
+        <ul>
+          <li><strong><code>CategoryBanner name="Checkout"</code></strong> — และนี่คือการ reuse <strong>ครั้งที่สามในสามครั้ง</strong>ที่บทเรียน 20 ทำนายไว้ตอนสร้างมัน (หน้า Product บทเรียน 21, หน้า Cart บทเรียน 24 และหน้านี้) คอมโพเนนต์ที่ถูกออกแบบให้รับแค่ <code>name?: string | null</code> ตัวเดียวจึงย้ายบ้านไปไหนก็ได้ — ถ้าวันนั้นมันรับ <code>Category</code> ทั้งก้อนตามที่ Agent เสนอ วันนี้หน้า Checkout จะไม่มีอะไรส่งให้มันเลย</li>
+          <li><strong>layout สองคอลัมน์</strong> — <code>flex gap-20</code> แบ่งซ้าย 60% (<code>addressBox</code>: กล่องที่อยู่ → จัดส่ง → ชำระเงิน เรียงลงมา) ขวา 40% (<code>summaryBox</code>: ใบสรุป + ยอดเงิน) ตาม SCSS module สองบรรทัดข้างบน</li>
+          <li><strong>ทุก prop มาจาก <code>useCheckout</code> ก้อนเดียว</strong> — destructure ทีเดียวแล้วแจกจ่าย รวมถึงท่า destructure ซ้อน <code>billingSummary: { subtotal, shipping, total }</code> ที่แกะเลขสามตัวออกมาในบรรทัดเดียว</li>
+          <li><strong><code>isDisabled={!checkoutAddress}</code></strong> — ด่านกันพลาดฝั่ง UI ที่สัญญาไว้: ตราบใดที่ยังไม่ submit ที่อยู่ ปุ่ม Place Order จะกดไม่ได้ พอที่อยู่มาปุ๊บปุ่มติดเอง เพราะ prop คำนวณใหม่ทุก render</li>
+          <li><strong><code>SummaryOrder</code> ไม่รับ prop อะไรเลย</strong> — ตามที่ออกแบบไว้บทที่แล้ว มันอ่านตะกร้าจาก context เอง</li>
+        </ul>
+
+        <p>สังเกตว่าหน้านี้<em>ไม่มี guard กรณีตะกร้าว่าง</em> — เข้าตรง ๆ ที่ <code>/checkout</code> ทั้งที่ตะกร้าโล่งก็จะเห็นใบสรุปว่าง ๆ กับยอด $5.99 (ค่าส่งอย่างเดียว) ซึ่งใช้งานได้แต่ไม่สวยนัก โปรเจกต์ต้นฉบับเลือกเก็บหน้าให้เรียบง่ายไว้ก่อน ถ้าอยากฝึกเพิ่ม ลอง redirect ไปหน้า Cart เมื่อ <code>cart.items.length === 0</code> เป็นการบ้านหลังจบคอร์สได้ — แต่ให้ทำ<em>หลัง</em>บทเรียน 33 เพราะ integration test ของหน้านี้เตรียมตะกร้าไว้ล่วงหน้าแล้วค่อยเปิดหน้า การใส่ redirect โดยไม่แก้เทสต์จะทำให้มันพัง</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> ลำดับของชื่อในก้อน destructure สิบเอ็ดตัวไม่ได้เรียงตามอะไรเลย — <code>storeCheckoutAddress</code> (handler) มาก่อน <code>checkoutAddress</code> (ค่า), แล้ว <code>selectedPaymentOptionId</code> โผล่ก่อน <code>selectedDeliveryOptionId</code> ถึงห้าบรรทัด ทั้งที่ทั้งคู่เป็นของคู่กัน และ <code>onPlaceOrder</code> ไปแทรกอยู่ตรงกลางระหว่างสอง id ที่ควรอยู่ติดกัน ผลคือเวลาอ่านหา prop สักตัวต้องกวาดตาทั้งก้อน แทนที่จะกระโดดไปกลุ่มที่ใช่ — เทียบกับก้อน <code>return</code> ใน <code>useCheckout</code> ที่<em>เรียงเป็นระเบียบ</em> (ค่าทั้งหมดก่อน แล้วค่อย handlers) จะเห็นว่าปลายทางทำหายไปเอง ทางแก้คือ copy ลำดับจากก้อน return ของ hook มาใช้ตรง ๆ ซึ่งได้ผลพลอยได้ว่าเวลามีคนเพิ่มคีย์ใหม่ใน hook คุณจะรู้ทันทีว่าต้องเติมตรงไหนในหน้าเพจ เราสั่งตามต้นฉบับใน prompt เพื่อให้ diff ตรง แต่นี่คือ comment หนึ่งบรรทัดที่แก้ง่ายที่สุดในบทนี้ <strong>ข้อพ่วง:</strong> บรรทัดว่างระหว่าง <code>&lt;/div&gt;</code> ของ SummaryOrder กับ <code>&lt;BillingSummary&gt;</code> เป็นบรรทัดว่างเดียวใน JSX ทั้งไฟล์ ทั้งที่คู่กล่องฝั่งซ้ายสามใบไม่มีคั่นเลย — Prettier ไม่ยุ่งกับบรรทัดว่างใน JSX (มันเก็บไว้ตามที่คนเขียนใส่) ดังนั้นความไม่สม่ำเสมอนี้จะอยู่ตรงนั้นตลอดไปจนกว่าจะมีคนสังเกต ซึ่งเป็นเหตุผลที่ prompt ของเราต้องสั่งเรื่องบรรทัดว่างไว้ด้วย ไม่งั้น diff จะไม่มีวันตรง <strong>ข้อที่ใหญ่กว่าสองข้อบนรวมกัน:</strong> <code>Checkout.module.scss</code> กำหนดสองคอลัมน์เป็น 60% กับ 40% ตายตัว ไม่มี media query สักบรรทัด แปลว่าบนจอมือถือ กล่องที่อยู่จะถูกบีบเหลือ 60% ของ 375px คือประมาณ 225px แล้วช่อง Email กับ Phone ที่แบ่งกันคนละ <code>width-50</code> ข้างในจะเหลือช่องละร้อยกว่าพิกเซล — กรอกที่อยู่จริงแทบไม่ได้ ทั้งที่นี่คือหน้าที่ผู้ใช้ต้องพิมพ์มากที่สุดในแอป และเป็นหน้าสุดท้ายก่อนจ่ายเงิน ทั้งโปรเจกต์นี้ไม่มี breakpoint เลยสักที่ตั้งแต่บทเรียน 04 ดังนั้นนี่ไม่ใช่ความผิดของไฟล์นี้ไฟล์เดียว แต่หน้า Checkout คือหน้าที่ราคาของการไม่มีมันแพงที่สุด ในรีวิวจริงข้อนี้ไม่ใช่ comment แต่เป็น ticket ใบใหม่</blockquote>
+
+        <h2>ทดสอบ happy path ทั้งเส้น</h2>
+
+        <p>นี่คือช่วงเวลาที่รอมาตั้งแต่บทเรียน 01 — flow ช้อปปิ้งครบ loop ครั้งแรกของแอป รัน <code>npm run dev</code> แล้วไล่ตามนี้ทีละข้อ:</p>
+
+        <ol>
+          <li>เปิดหน้า Product ของสินค้าสักชิ้น กด Add to Cart (จะเพิ่มหลายชิ้นก็ยิ่งดี)</li>
+          <li>เข้าหน้า Cart ตรวจของ แล้วกดปุ่ม Checkout</li>
+          <li>เห็นหน้าใหม่เอี่ยม: แบนเนอร์ Checkout, กล่องซ้ายสามใบ, ใบสรุปขวาที่มีสินค้าของเราครบ และปุ่ม Place Order ที่<strong>ยังกดไม่ได้</strong></li>
+          <li>ลองกด Submit ฟอร์มทั้งที่ว่าง → ข้อความแดง "Address is required" ฯลฯ โผล่ครบสามช่อง — schema ที่คุณพิมพ์เองในบทเรียน 25 ทำงานแล้ว ลองพิมพ์ email มั่ว ๆ ดูด้วยว่าได้ "Enter a valid email address"</li>
+          <li>กรอกให้ครบแล้ว Submit → ที่อยู่ขึ้นไปแสดงในกล่อง และปุ่ม Place Order ติดสว่างพร้อมกด</li>
+          <li>สลับ delivery เป็น Express → Shipping ฝั่งขวาเด้งเป็น $15.99 และ Total ขยับตามทันที เลือก payment ตามใจ แล้วสังเกตว่า radio สองกลุ่ม<em>ไม่รบกวนกัน</em> (นี่คือข้อพิสูจน์ว่า <code>name</code> ของสองกลุ่มต่างกันจริงตามที่ checklist บทเรียน 27 ให้ตรวจ)</li>
+          <li>กด Place Order → ปุ่มกลายเป็น spinner แวบหนึ่ง → เด้งไปหน้า Order Success ไอคอนติ๊กถูกเขียว</li>
+          <li>ดู Header: ตัวเลขบนไอคอนตะกร้าเป็น 0 แล้ว — <code>CLEAR_CART</code> ที่คุณเขียนไว้ใน reducer เมื่อบทเรียน 22 เพิ่งถูกใช้จริงเป็นครั้งแรก</li>
+        </ol>
+
+        <p>แล้วลองเส้นทางที่ไม่มีใครอยากให้เกิดดูสักครั้ง เพราะมันคือทั้งเหตุผลที่บทนี้ให้คุณพิมพ์ hook เอง: เปิด DevTools แท็บ Network เลือก throttling เป็น <strong>Offline</strong> แล้วกด Place Order — ปุ่มจะหมุนแล้วหยุด ไม่มีอะไรเกิดขึ้น ไม่เด้งไปไหน และ<strong>ของในตะกร้าต้องยังอยู่ครบทุกชิ้น</strong> (เช็คที่ badge บน Header) นั่นคือ <code>onSuccess</code> ที่ไม่ถูกเรียกทำงานถูกต้อง ถ้าตะกร้าว่างเปล่าหลังการทดลองนี้ แปลว่ามี <code>clearCart</code> อยู่ผิดที่ กลับไปอ่านข้อ AI มักพลาดตรงนี้ อีกรอบ</p>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>ย้าย <code>clearCart()</code> จาก <code>onSuccess</code> ออกมาไว้ใน <code>onPlaceOrder</code> ต่อจาก <code>placeOrderMutate()</code> แล้วทำสองการทดลอง: (ก) กดสั่งซื้อตามปกติ (ข) เปิด Network เป็น Offline แล้วกดสั่งซื้อ — ตอบว่าผู้ใช้เห็นอะไรในแต่ละกรณี แล้วอธิบายว่าทำไมการทดลอง (ก) ถึงดูเหมือนทุกอย่างปกติดี และบอกด้วยว่าถ้าคุณเป็นคนรีวิว pull request นี้โดยไม่ได้รันโค้ด คุณจะจับมันได้จากบรรทัดไหน (เสร็จแล้วย้ายกลับ)</li>
+          <li><code>useCheckout</code> return <code>onPlaceOrder</code> ออกไปแทนที่จะ return <code>placeOrderMutate</code> ตรง ๆ ทั้งที่สองตัวนี้ทำงานเหมือนกันเมื่อเรียกโดยไม่มีอาร์กิวเมนต์ — อธิบายว่าเราได้อะไรจากการห่ออีกชั้น แล้วตอบต่อว่าถ้าหน้าเพจได้ <code>placeOrderMutate</code> ไปตรง ๆ มันจะทำอะไรได้บ้างที่เราไม่อยากให้ทำ (เปิดเอกสารของ <code>useMutation</code> ดูว่า <code>mutate</code> รับพารามิเตอร์อะไรได้บ้าง)</li>
+          <li>ไล่เส้นทางของตัวเลข "ค่าส่ง $15.99" ให้ครบตั้งแต่ผู้ใช้คลิก radio จนตัวเลขเปลี่ยนบนจอ — ผ่านกี่ไฟล์ ไฟล์อะไรบ้าง ใครถือ state ใครคำนวณ ใครแค่แสดง จากนั้นตอบคำถามที่ยากกว่า: ถ้าเราอยากให้ราคาค่าส่งไปโผล่ที่<em>แถวของตัวเลือก</em>ด้วย (ตามที่กล่อง 💡 ในบทเรียน 27 ทักไว้) ต้องแก้กี่ไฟล์ ไฟล์ไหนบ้าง และมีไฟล์ไหนที่<em>ไม่</em>ต้องแก้เลยทั้งที่เกี่ยวข้องกับราคา</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> แอปของคุณ<strong>ขายของได้แล้ว</strong> — ครบ loop ตั้งแต่เลือกของยันยืนยันคำสั่งซื้อ เดินตามข้อ "ทดสอบ happy path ทั้งเส้น" ให้ครบทั้งแปดข้อบวกการทดลอง Offline อีกหนึ่งครั้ง แล้วปิดท้ายด้วยหลักฐานสามชิ้น: (1) DevTools → Application → Local Storage → key <code>ecommerce-cart:v1</code> ต้องกลายเป็น <code>{"items":[]}</code> หลังสั่งซื้อสำเร็จ — write-through จากบทเรียน 22 เขียนทับตะกร้าที่ล้างแล้วให้เรียบร้อย refresh กี่ครั้งตะกร้าก็ยังว่าง (2) แท็บ Network ระหว่างกด Place Order ต้องเห็น <code>POST https://dummyjson.com/carts/add</code> หนึ่งรายการ<em>เท่านั้น</em> พร้อม response จำลองที่มี <code>id</code> กลับมา — ถ้าเห็นสองรายการ แปลว่ามีใครเรียก mutate ซ้ำ (3) <code>npm run lint</code> และ <code>npm run typecheck</code> ผ่านทั้งคู่ แล้ว commit chapter ชำระเงินจบบริบูรณ์ และ<em>ฟีเจอร์ทั้งหมดของแอปจบแล้ว</em> — จากนี้ไปเราจะไม่เพิ่มหน้าใหม่อีกเลย บทหน้าเป็นบทที่ต่างจากทุกบทที่ผ่านมา: เราจะจงใจให้ Agent เขียนผิด แล้วฝึกอ่านให้ออกว่าผิดตรงไหน ก่อนจะเข้า chapter การทดสอบที่จะทำให้ทุกอย่างที่คุณสร้างมา 28 บท<em>พิสูจน์ได้</em>ว่าทำงานถูกต้อง โดยเริ่มจาก schema ที่คุณพิมพ์เองในบทเรียน 25 และ hook ที่คุณพิมพ์เองวันนี้ — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="27_delivery_payment_summary.html" rel="prev">ก่อนหน้า: จัดส่ง ชำระเงิน และสรุปรายการ</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="29_when_ai_gets_it_wrong.html" rel="next">ถัดไป: เมื่อ AI เขียนผิด</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

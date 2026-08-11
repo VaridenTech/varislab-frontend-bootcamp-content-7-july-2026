@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เปิด chapter Checkout ด้วยแนวคิด schema-first: พิมพ์ zod schema เองกับมือ แล้วให้ Cursor สร้าง types และ consts ที่เหลือ พร้อมกันไม่ให้มันประกาศ type ซ้ำกับ z.infer" />
+    <title>Zod Schema | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 25 · ชำระเงิน (Checkout)</p>
+          <h1>Zod Schema และโครงข้อมูล Checkout</h1>
+          <p class="lesson-original-title" lang="en">Checkout Schema</p>
+        </header>
+
+        <p>ตะกร้าสินค้าของเราสมบูรณ์แล้วจากบทเรียน 24 — เพิ่มของได้ ลบได้ ปรับจำนวนได้ และจำของไว้ใน localStorage ได้ ตอนนี้เหลือด่านสุดท้ายของขาช้อป: <strong>Checkout</strong> ซึ่งเราจะใช้เวลา 4 บท (บทนี้ถึงบทเรียน 28) สร้างตั้งแต่ฐานข้อมูลของฟีเจอร์ ฟอร์มที่อยู่ ตัวเลือกจัดส่ง/ชำระเงิน สรุปยอด ไปจนถึงการยิงคำสั่งซื้อจริงและหน้า Order Success</p>
+
+        <p>แผนของทั้ง chapter เป็นแบบนี้:</p>
+
+        <ol>
+          <li><strong>บทนี้</strong> — วางรากฐานข้อมูล: zod schema สำหรับ validate ที่อยู่, types และรายการตัวเลือกจัดส่ง/ชำระเงิน</li>
+          <li><strong>บทเรียน 26</strong> — ฟอร์มที่อยู่ด้วย react-hook-form</li>
+          <li><strong>บทเรียน 27</strong> — คอมโพเนนต์ตัวเลือกจัดส่ง ชำระเงิน และสรุปคำสั่งซื้อ เจ็ดตัวรวด</li>
+          <li><strong>บทเรียน 28</strong> — hook <code>useCheckout</code>, ประกอบหน้า Checkout ทั้งหน้า และสั่งซื้อจริง</li>
+        </ol>
+
+        <p>และบทนี้เป็นบทที่<strong>กลับมาพิมพ์เอง</strong>อีกครั้ง ห่างจากครั้งก่อน (<code>cartReducer.ts</code> ในบทเรียน 22) มาสามบท ไฟล์ที่จะพิมพ์คือ <code>schema.ts</code> — สั้นกว่า reducer มาก แต่มีที่ทางในลำดับงานที่ต่างจากทุกครั้งที่ผ่านมา เดี๋ยวเราจะไล่เหตุผลกันหลังจากคุยเรื่องแนวคิดจบ</p>
+
+        <h2>คิดจาก "ข้อมูล" ก่อน "หน้าตา"</h2>
+
+        <p>สังเกตว่าเราไม่ได้เริ่ม chapter นี้ด้วยการเขียน JSX ของฟอร์ม แต่เริ่มด้วยคำถามว่า<em>ข้อมูลของการ checkout หน้าตาเป็นอย่างไร</em> — ที่อยู่จัดส่งต้องมี field อะไรบ้าง แต่ละ field มีเงื่อนไขอะไร ตัวเลือกจัดส่งมีกี่แบบ ราคาเท่าไร วิธีนี้เรียกกันว่า <strong>schema-first</strong>: นิยามรูปร่างและกติกาของข้อมูลให้ชัดก่อน แล้วค่อยให้ UI มาเกาะกับมันทีหลัง</p>
+
+        <p>เครื่องมือหลักของเราคือ <a href="https://zod.dev">zod</a> — library สำหรับประกาศ schema ของข้อมูลใน TypeScript จุดที่ทำให้ zod เป็นที่นิยมมากคือ schema เดียวให้ของสองอย่างพร้อมกัน:</p>
+
+        <ul>
+          <li><strong>Runtime validation</strong> — ตอนผู้ใช้กด submit เราเอาข้อมูลจริงมาตรวจกับ schema ได้ พร้อมข้อความ error ของแต่ละ field</li>
+          <li><strong>TypeScript type</strong> — ใช้ <code>z.infer</code> สกัด type ออกมาจาก schema ได้เลย ไม่ต้องประกาศ interface ซ้ำอีกรอบ</li>
+        </ul>
+
+        <p>ลองนึกภาพทางเลือกอีกทาง: เขียน interface <code>CheckoutAddressFormData</code> ด้วยมือหนึ่งชุด แล้วเขียนฟังก์ชัน validate ด้วยมืออีกชุด — วันหนึ่งมีคนเพิ่ม field ใหม่ใน interface แต่ลืมแก้ตัว validate (หรือกลับกัน) สองที่นี้ก็จะ<em>เหลื่อมกัน (drift)</em> โดยไม่มีใครเตือน กับ zod ปัญหานี้หายไปทั้งก้อน เพราะทั้ง type และ validation งอกจากแหล่งเดียวกัน แก้ schema ที่เดียว ทุกอย่างขยับตามอัตโนมัติ</p>
+
+        <p>จำย่อหน้าข้างบนไว้ให้แม่น เพราะมันคือสิ่งที่ Agent พลาดบ่อยที่สุดในบทนี้ และเป็นเหตุผลที่กล่อง ✅ ท้ายบทมีข้อ grep รออยู่</p>
+
+        <h2>ติดตั้งแพ็กเกจด้วยมือ</h2>
+
+        <p>ตามกติกาเดิมตั้งแต่บทเรียน 08: dependency เราติดตั้งเอง แล้ว commit ให้ working tree สะอาดก่อนเปิดแชท คราวนี้มีสามตัวและลงพร้อมกันได้เลย:</p>
+
+        <pre><code class="language-bash">npm install zod react-hook-form @hookform/resolvers
+git add -A &amp;&amp; git commit -m "chore: install zod and react-hook-form"</code></pre>
+
+        <ul>
+          <li><strong>zod</strong> — ตัวประกาศ schema และ validate ที่เพิ่งเล่าไป (เราใช้ zod 4)</li>
+          <li><strong>react-hook-form</strong> — library จัดการฟอร์มที่เราจะใช้เต็ม ๆ ในบทหน้า</li>
+          <li><strong>@hookform/resolvers</strong> — สะพานเชื่อมระหว่างสองตัวแรก ทำให้ react-hook-form เรียก zod schema มา validate ให้อัตโนมัติ</li>
+        </ul>
+
+        <p>ทั้งสามตัวถูกออกแบบมาทำงานด้วยกันจนแทบเป็นชุดมาตรฐานของฟอร์มในโปรเจกต์ React ปัจจุบัน — เจอ combo นี้ที่ไหนให้รู้ว่าคือ "ฟอร์มที่ validate จริงจัง"</p>
+
+        <p>เปิด <code>package.json</code> ดูสักครู่ก่อนไปต่อ แล้วยืนยันว่าเลขเวอร์ชันของ <code>zod</code> ขึ้นต้นด้วย <strong>4</strong> — ทั้งบทนี้และเอกสารที่เราจะอ้างถึงใช้ API ของ zod 4 ถ้าวันที่คุณเรียน npm ให้ zod 5 มา ให้อ่าน changelog ก่อนแล้วเทียบกับโค้ดในบทนี้ อย่าเพิ่งพิมพ์ตาม</p>
+
+        <h2>ทำไมบทนี้ ✍️ ถึงมาก่อน 🤖</h2>
+
+        <p>กฎที่เราได้จากบทเรียน 12 คือ: <strong>สิ่งที่พังเมื่อคุณตัดไฟล์ X ออกจาก prompt คือไฟล์ที่ import X ไม่ใช่ตัว X เอง</strong> เอากฎนี้มาจับกับสามไฟล์ของบทนี้ แล้วไล่สายการพึ่งพาดู:</p>
+
+        <ul>
+          <li><code>schema.ts</code> — import แค่ <code>zod</code> ไม่ import ไฟล์ไหนในโปรเจกต์เลย</li>
+          <li><code>types.ts</code> — ไม่มีบรรทัด import เลยสักบรรทัด</li>
+          <li><code>consts.ts</code> — import สอง interface จาก <code>./types</code></li>
+        </ul>
+
+        <p>ผลที่ได้ต่างจากทุกบทที่ผ่านมา: <strong>ไม่มีไฟล์ไหนในบทนี้ import ไฟล์ที่เราจะพิมพ์เอง</strong> <code>schema.ts</code> เป็นเกาะกลางบท ตัดออกจาก prompt กี่รอบก็ไม่มีอะไรพัง และพิมพ์ก่อนหรือหลังก็ typecheck ผ่านทั้งคู่ (ขอแค่ <code>zod</code> ถูกติดตั้งแล้ว ซึ่งเราเพิ่งทำไปเมื่อครู่) เทียบกับสามครั้งก่อน: บทเรียน 12 ลูกศรบังคับให้พิมพ์ก่อน, บทเรียน 15 ลูกศรชี้กลับด้านจึงต้อง 🤖 ก่อน, บทเรียน 22 ไฟล์อยู่<em>กลาง</em>สายจนต้องผ่า prompt เป็นสองรอบแล้วเสียบมือเข้าตรงรอยตัด คราวนี้ลูกศรไม่ได้บอกอะไรเราเลย</p>
+
+        <p>เมื่อการคอมไพล์ไม่ตัดสินให้ ก็ต้องหาเกณฑ์อื่น และเกณฑ์นั้นคือ <em>Agent จะได้เห็นอะไรตอนมันทำงาน</em>:</p>
+
+        <ul>
+          <li><strong>ถ้าพิมพ์ทีหลัง</strong> — ตอน Agent สร้าง <code>types.ts</code> ไฟล์ <code>schema.ts</code> ยังไม่มีตัวตน สิ่งที่มันเห็นคือโฟลเดอร์ <code>features/checkout/</code> ที่ว่างเปล่ากับคำสั่งว่า "ประกาศ type ของฟีเจอร์ checkout" — โมเดลที่เจอโจทย์แบบนี้จะเติม type ของที่อยู่ให้ด้วยความหวังดี เพราะฟีเจอร์ checkout ก็ต้องมีที่อยู่สิ ผลคือได้ interface ที่ซ้ำกับ schema แบบเป๊ะ ๆ หนึ่งชุด</li>
+          <li><strong>ถ้าพิมพ์ก่อน</strong> — <code>schema.ts</code> มีอยู่จริงและ commit แล้ว บรรทัด <code>บริบท:</code> จึง <code>@</code>-mention มันได้ Agent เห็นกับตาว่า <code>CheckoutAddressFormData</code> มีอยู่แล้วและมาจาก <code>z.infer</code> และเราสั่งห้ามประกาศซ้ำได้อย่างมีน้ำหนัก</li>
+        </ul>
+
+        <p>สรุปคือลำดับของบทนี้ถูกตัดสินด้วย<strong>บริบทที่ Agent มองเห็น</strong> ไม่ใช่ด้วยลำดับการคอมไพล์ — เป็นเกณฑ์ที่สี่ที่คอร์สนี้ใช้ ต่อจากลูกศรที่ชี้ไปข้างหน้า (บทเรียน 12 และ 17), ลูกศรที่ชี้กลับด้าน (บทเรียน 15) และไฟล์ที่อยู่กลางสาย (บทเรียน 22) และเป็นเกณฑ์ที่คุณจะต้องหยิบมาใช้เองบ่อย เพราะไฟล์จำนวนมากในโปรเจกต์จริงไม่ได้ผูกกันแน่นพอที่การคอมไพล์จะตัดสินลำดับให้</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <p>สามไฟล์ทั้งหมดลงในโฟลเดอร์ <code>src/features/checkout/</code> ที่เรา <code>mkdir</code> ทิ้งไว้ตั้งแต่บทเรียน 05 แล้วปล่อยให้ว่างเปล่ามายี่สิบบท — วันนี้เป็นวันที่มันได้ผู้อาศัยรายแรก:</p>
+
+        <pre><code class="language-bash">src/
+└── features/
+    └── checkout/
+        ├── schema.ts    # ✍️ พิมพ์เอง — ก่อนเปิดแชท
+        ├── types.ts     # 🤖
+        └── consts.ts    # 🤖</code></pre>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>schema.ts</code></strong> — ต้องเป็นแหล่งเดียวของกติกาที่อยู่จัดส่ง ทั้งข้อความ error และ type ต้องออกมาจากไฟล์นี้ ต้องไม่ import อะไรนอกจาก <code>zod</code> และต้องไม่มีการประกาศ interface ด้วยมือ</li>
+          <li><strong><code>types.ts</code></strong> — ต้องประกาศรูปร่างของตัวเลือกจัดส่งและตัวเลือกชำระเงินเท่านั้น ต้องไม่รู้จักที่อยู่ ไม่รู้จัก zod และต้องไม่มีบรรทัด import เลย</li>
+          <li><strong><code>consts.ts</code></strong> — ต้องเป็นที่เดียวที่รายการตัวเลือกจริงถูกเขียนไว้ ต้องผูก type จาก <code>types.ts</code> และต้องไม่มีตัวเลือกไหนถูก hardcode ซ้ำในคอมโพเนนต์ภายหลัง</li>
+        </ul>
+
+        <h2>✍️ ส่วนนี้พิมพ์เอง</h2>
+
+        <blockquote class="lesson-manual">
+          <p>✍️ <strong>ส่วนนี้พิมพ์เอง</strong> — ทำตามลำดับนี้ ห้ามก๊อปวาง ห้ามให้ Agent ช่วยเติม (autocomplete ของ Cursor ที่เด้งขึ้นมาแล้วคุณกด Tab รับ ก็คือการก๊อป):</p>
+          <ol>
+            <li>ยืนยันว่า commit ของการติดตั้งแพ็กเกจผ่านไปแล้ว — <code>git status</code> ต้องสะอาด</li>
+            <li>พิมพ์ <code>src/features/checkout/schema.ts</code> ทั้งไฟล์ ระหว่างพิมพ์ให้หยุดถามตัวเองทุกครั้งที่เจอข้อความใน <code>""</code> ว่า <em>ผู้ใช้จะเห็นข้อความนี้ตอนไหน</em></li>
+            <li><code>npm run lint</code> และ <code>npm run typecheck</code> ให้ผ่านทั้งคู่ แล้ว <code>git commit</code> — ไฟล์ต้องมีอยู่จริงและถูก commit ก่อน ถึงจะ <code>@</code>-mention มันใน prompt ได้</li>
+          </ol>
+          <p><code>src/features/checkout/schema.ts</code>:</p>
+          <pre><code class="language-typescript">import { z } from "zod";
+
+export const checkoutAddressSchema = z.object({
+  address: z.string().min(1, "Address is required"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .pipe(z.email("Enter a valid email address")),
+  phone: z.string().min(1, "Phone number is required"),
+});
+
+export type CheckoutAddressFormData = z.infer&lt;typeof checkoutAddressSchema&gt;;
+</code></pre>
+          <p><strong>เหตุผล:</strong> schema คือกติกาทางธุรกิจ ไม่ใช่ boilerplate — สิบสองบรรทัดนี้ตอบคำถามที่ไม่มีใครตอบแทนคุณได้: ที่อยู่ต้องกรอกอะไรบ้าง, เบอร์โทรต้องตรวจรูปแบบไหม, ผู้ใช้ที่ปล่อยช่อง email ว่างควรเห็นข้อความว่าอะไร ทุกข้อคือการตัดสินใจของ product ที่มีคนได้-เสียจริง Agent ตอบข้อพวกนี้ให้คุณได้เสมอและตอบได้อย่างมั่นใจมากด้วย — แต่มันจะตอบจากค่าเฉลี่ยของฟอร์มทั้งอินเทอร์เน็ต ไม่ใช่จากแอปของคุณ และข้อความสามข้อในไฟล์นี้จะถูก assert ตรง ๆ ในเทสต์บทเรียน 31 อีกด้วย</p>
+        </blockquote>
+
+        <p>ไล่ดูทีละ field:</p>
+
+        <ul>
+          <li><strong><code>address</code></strong> — <code>z.string().min(1, "Address is required")</code> คือ "ต้องเป็น string และยาวอย่างน้อย 1 ตัวอักษร" พูดง่าย ๆ คือห้ามเว้นว่าง argument ตัวที่สองคือข้อความ error ที่จะโผล่ใต้ input ถ้าไม่ผ่าน</li>
+          <li><strong><code>email</code></strong> — ตัวนี้มีสองด่านต่อกัน เดี๋ยวขยายความด้านล่าง</li>
+          <li><strong><code>phone</code></strong> — เช็คแค่ห้ามว่างเหมือน address เราตั้งใจไม่เช็ครูปแบบเบอร์โทร เพราะรูปแบบเบอร์แต่ละประเทศต่างกันมาก และนี่คือ checkout จำลอง — กติกาแค่ไหนถึงพอดี เป็นการตัดสินใจของ product ไม่ใช่ของ library</li>
+        </ul>
+
+        <h3>สองด่านของ email: <code>.min(1)</code> แล้ว <code>.pipe(z.email())</code></h3>
+
+        <p><code>.pipe()</code> คือการต่อท่อ schema สองตัวเข้าด้วยกัน: ข้อมูลต้องผ่านด่านแรกก่อน แล้วผลลัพธ์ถึงจะไหลเข้าด่านถัดไป เหตุผลที่เราไม่เขียน <code>z.email()</code> เดี่ยว ๆ คือ<em>คุณภาพของข้อความ error</em> — ถ้าผู้ใช้ปล่อย email ว่างไว้ การบอกว่า "Enter a valid email address" มันแปลก ๆ (เขายังไม่ได้กรอกอะไรเลย!) เราอยากได้ "Email is required" ต่างหาก การต่อท่อทำให้แต่ละกรณีได้ข้อความที่ตรง:</p>
+
+        <ul>
+          <li>ปล่อยว่าง → ตกด่าน <code>.min(1)</code> → <strong>"Email is required"</strong></li>
+          <li>กรอกแต่ไม่ใช่รูปแบบ email เช่น <code>hi</code> → ผ่านด่านแรก ตกด่าน <code>z.email()</code> → <strong>"Enter a valid email address"</strong></li>
+        </ul>
+
+        <blockquote>⚠️ สังเกตว่าเราเขียน <code>z.email()</code> เป็นฟังก์ชันระดับบนสุด — นี่คือ API ของ <strong>zod 4</strong> ถ้าคุณไปเจอบทความหรือโค้ดเก่าที่เขียน <code>z.string().email()</code> นั่นคือท่าของ zod 3 ซึ่งใน zod 4 ถูก deprecated แล้ว อ่านเอกสารหรือตัวอย่างจากที่ไหนก็ตาม เช็คเวอร์ชันก่อนเสมอ — และข้อนี้ใช้กับคำตอบของ Agent ด้วย: ข้อมูลที่โมเดลเห็นตอนเทรนมี zod 3 มากกว่า zod 4 หลายเท่า ถ้าคุณเผลอให้มันเขียนไฟล์นี้ ท่า <code>z.string().email()</code> คือสิ่งที่คุณมีโอกาสได้กลับมาสูงที่สุด</blockquote>
+
+        <h3><code>z.infer</code> — type ที่งอกจาก schema</h3>
+
+        <p>บรรทัดสุดท้ายคือหัวใจของ schema-first:</p>
+
+        <pre><code class="language-typescript">export type CheckoutAddressFormData = z.infer&lt;typeof checkoutAddressSchema&gt;;
+</code></pre>
+
+        <p><code>z.infer</code> อ่าน schema แล้วสกัด TypeScript type ออกมาให้ ผลลัพธ์ของบรรทัดนี้เทียบเท่ากับการเขียน <code>{ address: string; email: string; phone: string }</code> ด้วยมือ แต่ต่างกันตรงที่มัน<em>คำนวณมาจาก schema</em> — พรุ่งนี้ถ้าเราเพิ่ม field <code>postcode</code> เข้าไปใน <code>z.object({...})</code> type นี้จะมี <code>postcode</code> ทันที และ TypeScript จะไล่ฟ้องทุกไฟล์ที่ใช้ type นี้แล้วยังไม่รองรับ field ใหม่ให้เราเอง type นี้จะถูกใช้ทั่วทั้ง chapter: เป็น type ของฟอร์มในบทหน้า, เป็น state ใน <code>useCheckout</code>, และเป็นส่วนหนึ่งของ payload ตอนสั่งซื้อในบทเรียน 28</p>
+
+        <p>อยากเห็น validation ทำงานตอนนี้เลย ลองนึกภาพ (หรือทดลองใน scratch file ก็ได้ ไม่ต้องเก็บไว้ในโปรเจกต์):</p>
+
+        <pre><code class="language-typescript">// ตัวอย่างประกอบ — ไม่ต้องสร้างเป็นไฟล์ในโปรเจกต์
+const result = checkoutAddressSchema.safeParse({
+  address: "",
+  email: "hi",
+  phone: "",
+});
+// result.success === false และใน result.error จะพบว่า
+// address → "Address is required"
+// email   → "Enter a valid email address"
+// phone   → "Phone number is required"
+</code></pre>
+
+        <p><code>safeParse</code> คืนผลเป็น object ที่มี <code>success</code> บอกผ่าน/ไม่ผ่าน โดยไม่ throw — ในบทหน้าเราไม่ต้องเรียกมันเองด้วยซ้ำ เพราะ <code>zodResolver</code> จะจัดการรอบ validate ทั้งหมดให้ แล้วส่งข้อความ error ไปโผล่ใต้ input ที่ถูกต้องเอง ส่วนตัว <code>safeParse</code> เองจะกลับมาอีกครั้งในบทเรียน 31 ตอนที่เราเขียน unit test ให้ schema ตัวนี้โดยตรง — เทสต์ที่ไม่ต้อง render อะไรเลย เพราะไฟล์นี้ไม่รู้จัก React</p>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> — แชทใหม่ โหมด Agent สังเกตบรรทัดที่สองของ <code>บริบท:</code> ให้ดี มันคือทั้งเหตุผลที่เราพิมพ์ <code>schema.ts</code> ก่อน:</p>
+          <pre><code class="language-text">สร้างชั้นข้อมูลที่เหลือของ feature checkout: type ของตัวเลือกจัดส่ง/ชำระเงิน และรายการตัวเลือกจริง
+
+บริบท: @src/features/checkout/schema.ts @src/features/products/types.ts @src/features/cart/store/CartContext.tsx
+src/features/checkout/schema.ts เพิ่งถูกเขียนด้วยมือและ commit แล้ว ข้างในมี
+  checkoutAddressSchema และ type CheckoutAddressFormData ที่มาจาก z.infer ของ schema นั้น
+  type ของ "ที่อยู่จัดส่ง" จึงมีอยู่ครบแล้ว ห้ามประกาศซ้ำที่ไหนอีก
+โฟลเดอร์ src/features/checkout/ ตอนนี้มีไฟล์เดียวคือ schema.ts
+zod, react-hook-form และ @hookform/resolvers ถูกติดตั้งแล้วก่อนเปิดแชทนี้ (zod เป็นเวอร์ชัน 4)
+alias @/ ชี้ไปที่ src/ ตั้งค่าไว้แล้วทั้งใน vite.config.ts และ tsconfig.app.json
+โปรเจกต์นี้ไม่ได้เปิด verbatimModuleSyntax ให้ใช้ import แบบธรรมดา ไม่ต้องใช้ import type
+รายการตัวเลือกจัดส่งและชำระเงินเป็นค่าคงที่ที่เราเขียนเองในโค้ด ไม่ได้มาจาก API
+ราคาเป็น USD เหมือนราคาสินค้าจาก dummyjson
+
+โครงสร้าง: สร้างสองไฟล์นี้ ไม่มากไม่น้อยกว่านี้
+- src/features/checkout/types.ts
+- src/features/checkout/consts.ts
+
+ข้อกำหนดทางเทคนิค:
+- types.ts: ห้ามมีบรรทัด import เลยแม้แต่บรรทัดเดียว export interface สองตัวตามลำดับนี้
+  interface DeliveryOption: id (number), name (string), description (string),
+    price (number), estimatedTime (string)
+    เรียง field ตามลำดับนี้พอดี และห้ามมี field ไหนเป็น optional
+  interface PaymentOption: id (number), name (string), description (string)
+    ห้ามมี price ห้ามมี estimatedTime
+  ห้ามประกาศ type ของที่อยู่ ห้าม import หรือ re-export อะไรจาก schema.ts
+- consts.ts: บรรทัดแรกของไฟล์คือ
+    import { DeliveryOption, PaymentOption } from "./types";
+    ใช้ path แบบ ./types ไม่ใช่ @/features/checkout/types
+  export const deliveryOptions: DeliveryOption[] มีสองสมาชิกเรียงตามนี้
+    id: 1, name: "Standard Delivery", description: "Approx 5 to 7 Days",
+      estimatedTime: "5-7 Days", price: 5.99
+    id: 2, name: "Express Delivery", description: "Approx 1 - 2 Days",
+      estimatedTime: "1-2 Days", price: 15.99
+    ลำดับ field ในแต่ละ object คือ id, name, description, estimatedTime, price
+      (สลับกับลำดับใน interface จริงตามนี้)
+  export const paymentOptions: PaymentOption[] มีสองสมาชิกเรียงตามนี้
+    id: 3, name: "Cash on Delivery",
+      description: "Pay cash when your order is delivered."
+    id: 4, name: "Bank Transfer",
+      description: "Pay directly from your bank account."
+    ค่า id ของ paymentOptions เริ่มที่ 3 จริงตามนี้ ห้ามเริ่มใหม่ที่ 1
+  ข้อความทุกก้อนสะกดตามนี้เป๊ะ รวมถึงเว้นวรรครอบขีดใน "Approx 1 - 2 Days"
+    และจุดท้ายประโยคของ description ฝั่ง payment ทั้งสองตัว
+  ราคาเป็น number ไม่ใช่ string และไม่ต้องมีสัญลักษณ์สกุลเงิน
+  ห้ามใส่ as const ห้ามใช้ enum ห้าม export ค่าคงที่อื่นเพิ่ม
+- ทั้งสองไฟล์ห้ามมี comment แม้แต่บรรทัดเดียว
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่ สามตัวที่ต้องใช้ติดตั้งไปแล้ว
+- ห้ามแก้ src/features/checkout/schema.ts แม้แต่บรรทัดเดียว
+- ห้ามสร้าง api.ts, useCheckout.ts, คอมโพเนนต์ หรือไฟล์ .module.scss ใด ๆ
+- ห้ามแตะ src/pages, src/shared, src/app หรือ src/features/cart
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ห้ามเขียนเทสต์ (schema.ts จะมีเทสต์ในบทเรียน 31)
+- ยังไม่ต้องเอาสองไฟล์นี้ไปใช้ที่ไหน</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ ข้อแรกคือข้อที่ทั้งบทนี้ถูกจัดลำดับมาเพื่อกันมันโดยเฉพาะ:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>ประกาศ interface ของที่อยู่ซ้ำใน <code>types.ts</code></em> — โจทย์ว่า "ประกาศ type ของฟีเจอร์ checkout" กับไฟล์ชื่อ <code>types.ts</code> เป็นคู่ที่ชวนให้ Agent เติมของให้ครบชุด สิ่งที่ได้กลับมาคือ <code>export interface CheckoutAddressFormData { address: string; email: string; phone: string; }</code> (หรือชื่อใกล้ ๆ อย่าง <code>CheckoutAddress</code>) นั่งอยู่ใต้สอง interface ที่เราสั่ง — <strong>ถูกทุกตัวอักษรและอันตรายที่สุดในบทนี้</strong> เพราะวันที่เราเพิ่ม <code>postcode</code> ลง schema type ที่ <code>z.infer</code> ให้จะขยับเอง ส่วนสำเนาที่เขียนมือจะค้างอยู่ที่เดิม แล้วโค้ดครึ่งแอปที่ import ผิดตัวจะเชื่อว่าที่อยู่ไม่มี postcode ต่อไปโดย lint และ typecheck ไม่ปริปากสักคำ วิธีตรวจ: <code>grep -n "address\|email\|phone" src/features/checkout/types.ts</code> ต้อง<strong>ว่างเปล่า</strong> และ <code>grep -rn "CheckoutAddressFormData" src/features/checkout/</code> ต้องเจอ<strong>บรรทัดเดียว</strong> คือบรรทัด <code>z.infer</code> ใน <code>schema.ts</code> ที่คุณพิมพ์เอง อาการญาติที่เจอรองลงมาคือ Agent เขียน <code>export type { CheckoutAddressFormData } from "./schema";</code> ใน <code>types.ts</code> เพื่อ "รวม type ไว้ที่เดียว" — ไม่ drift ก็จริง แต่สร้างทางเข้าที่สองให้ของชิ้นเดียว แล้วบทถัดไปจะมีสองไฟล์ให้เลือก import ซึ่งคนละครึ่งทีมจะเลือกคนละทาง</li>
+            <li>ไฟล์ใหม่ <strong>2 ไฟล์พอดี</strong> และ <code>git status</code> ต้องไม่มีไฟล์เดิมไฟล์ไหนขึ้นสถานะ modified — โดยเฉพาะ <code>schema.ts</code> ที่คุณเพิ่งพิมพ์ และ <code>package.json</code> (ถ้า <code>package.json</code> หรือ <code>package-lock.json</code> เปลี่ยน แปลว่า Agent ลงแพ็กเกจอะไรบางอย่างโดยไม่ได้บอก — อ่านให้ออกว่าอะไรก่อนกด accept)</li>
+            <li><code>grep -c "import" src/features/checkout/types.ts</code> ต้องได้ <strong>0</strong> — ไฟล์นี้ต้องเป็นเกาะที่ไม่พึ่งใครเลย ถ้ามันไป import <code>Product</code> จาก <code>features/products/types.ts</code> มาใช้ต่อ (Agent ที่เห็นไฟล์นั้นในบริบทชอบทำ) ให้เอาออก — ตัวเลือกจัดส่งไม่ใช่สินค้า</li>
+            <li>ไม่มี <code>?</code> ในทั้งสอง interface — ทุก field บังคับกรอก เพราะเราเขียนค่าเองในไฟล์ถัดไปอยู่แล้ว ไม่มีเหตุผลที่ field ไหนจะหายได้</li>
+            <li>บรรทัด import ใน <code>consts.ts</code> เป็น <code>from "./types"</code> ไม่ใช่ <code>from "@/features/checkout/types"</code> — สองแบบทำงานเหมือนกันเป๊ะ เราเลือกแบบสัมพัทธ์ตามที่ไฟล์ในโฟลเดอร์เดียวกันทำกันมาตั้งแต่ <code>features/cart/store/</code> บทเรียน 22 ข้อนี้ไม่มีอะไรพังถ้าผิด แต่ diff ของคุณจะไม่ตรงกับโค้ดอ้างอิง</li>
+            <li>ค่า <code>id</code> เป็น <strong>1, 2, 3, 4</strong> ตามลำดับจริง ไม่ใช่ 1, 2 แล้วขึ้น 1, 2 ใหม่ฝั่ง payment — Agent เกือบทุกตัวจะ "แก้ให้" ตรงนี้เพราะมันดูเหมือนความผิดพลาด (เหตุผลที่ต้นฉบับเป็นแบบนี้อยู่ในกล่อง 💡 ใต้ <code>consts.ts</code>) ถ้ามันเริ่มใหม่ที่ 1 วันนี้ไม่มีอะไรพัง แต่ค่า default ใน <code>useCheckout</code> บทเรียน 28 จะชี้ไปคนละตัวกับที่บทนั้นอธิบายไว้</li>
+            <li>ราคาเป็น <code>5.99</code> และ <code>15.99</code> แบบ number เปล่า ๆ ไม่ใช่ <code>"$5.99"</code> และไม่ใช่ <code>599</code> (สตางค์) — ทั้งแอปคิดเงินเป็นหน่วยดอลลาร์ทศนิยมสองตำแหน่งมาตั้งแต่ <code>CartItem.price</code> บทเรียน 22 ปนหน่วยเมื่อไหร่ยอดรวมใน <code>BillingSummary</code> จะเพี้ยนแบบไม่มีใครสังเกต</li>
+            <li>ข้อความทั้งหกก้อนตรงตัวอักษร โดยเฉพาะ <code>"Approx 1 - 2 Days"</code> ที่มีเว้นวรรคคร่อมขีด ต่างจาก <code>"Approx 5 to 7 Days"</code> ที่ใช้คำว่า to — ไม่สม่ำเสมอตั้งแต่ต้นฉบับ และ Agent จะจัดให้เข้าชุดกันโดยอัตโนมัติถ้าเราไม่ห้าม ไม่มีเทสต์ตัวไหนแตะข้อความพวกนี้ เหตุผลเดียวที่ต้องตรงคือให้ diff ของคุณเทียบกับโค้ดอ้างอิงได้</li>
+            <li>ไม่มี <code>as const</code> ไม่มี <code>enum</code> และไม่มี comment สักบรรทัดในทั้งสองไฟล์ — <code>grep -n "//" src/features/checkout/consts.ts</code> ต้องว่างเปล่า</li>
+            <li><code>npm run lint</code> และ <code>npm run typecheck</code> ผ่านทั้งคู่ บทนี้มีบรรทัด import แค่บรรทัดเดียวในทั้งสองไฟล์ <code>import-x/order</code> จึงไม่มีอะไรให้จัดเรียง ถ้า lint ตกในบทนี้ ให้อ่าน error จริง ๆ อย่าเพิ่งรีบ <code>--fix</code></li>
+            <li>เปิดหน้าเว็บดูก็ได้ แต่ต้องไม่มีอะไรเปลี่ยน — บทนี้ไม่มีใคร import สามไฟล์นี้เลยสักคน <code>grep -rn "features/checkout" src/pages src/shared src/app</code> ต้องว่างเปล่า</li>
+          </ul>
+        </blockquote>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/features/checkout/types.ts</code> — รูปร่างของตัวเลือกจัดส่งและการชำระเงิน:</p>
+
+        <pre><code class="language-typescript">export interface DeliveryOption {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  estimatedTime: string;
+}
+
+export interface PaymentOption {
+  id: number;
+  name: string;
+  description: string;
+}
+</code></pre>
+
+        <p>คำถามที่ควรถาม: ทำไมสองตัวนี้เป็น interface ธรรมดา ไม่เป็น zod schema เหมือนที่อยู่? เพราะ zod มีไว้ validate ข้อมูลที่<em>ไหลเข้ามาจากภายนอก</em>ซึ่งเราการันตีอะไรไม่ได้ — ข้อมูลที่ผู้ใช้พิมพ์, ข้อมูลจาก API แต่รายการตัวเลือกจัดส่ง/ชำระเงินคือค่าคงที่ที่<em>เราเขียนเองกับมือ</em>ในไฟล์ถัดไป TypeScript ตรวจมันตอน compile ได้ครบถ้วนอยู่แล้ว การเอา zod มาตรวจค่าที่เราพิมพ์เองอีกรอบตอน runtime ไม่ได้เพิ่มความปลอดภัยอะไร ใช้เครื่องมือให้ตรงงาน: <strong>zod สำหรับข้อมูลเชื่อถือไม่ได้ interface สำหรับข้อมูลที่เราควบคุมเอง</strong></p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — สองข้อในไฟล์สิบสามบรรทัด:</strong> ข้อแรกคือ <code>estimatedTime</code> ซึ่งเป็น field <em>บังคับ</em>ที่ไม่มีใครอ่านเลยสักคนตลอดทั้งแอป ลอง <code>grep -rn "estimatedTime" src/</code> หลังจบบทเรียน 28 ดู — จะเจอสองที่คือบรรทัดที่ประกาศมันใน <code>types.ts</code> กับค่าที่กรอกไว้ใน <code>consts.ts</code> ไม่มีคอมโพเนนต์ไหนแตะ (<code>CheckoutDeliveryBox</code> ในบทเรียน 27 destructure แค่ <code>{ id, name, description }</code> ส่วน <code>useCheckout</code> ในบทเรียน 28 อ่านแค่ <code>price</code>) ซ้ำร้ายค่าของมันยัง<em>ซ้ำกับ</em> <code>description</code> อยู่แล้ว — <code>"5-7 Days"</code> กับ <code>"Approx 5 to 7 Days"</code> คือข้อมูลเดียวกันสองสำนวน วันที่ธุรกิจเปลี่ยนเวลาจัดส่ง คนแก้จะแก้ที่เดียวแล้วอีกที่ค้างไว้ตลอดกาลโดยไม่มีใครรู้เพราะไม่มีใครแสดงมัน field ที่ไม่มีใครใช้คือของที่ควรถูกลบในรีวิว ไม่ใช่ของที่ควรลอกตาม เราสั่งให้ Agent สร้างตามต้นฉบับเพื่อให้ diff ตรง แต่ในรีวิวจริงนี่คือ comment บรรทัดเดียว ข้อสองมองไม่เห็นวันนี้แต่จะมาเจ็บในบทเรียน 27: ชื่อ <code>DeliveryOption</code> กับ <code>PaymentOption</code> ที่เราตั้งให้ type จะไป<em>ชนกับชื่อคอมโพเนนต์</em>ที่ต้องสร้างในบทนั้นพอดี ผลคือ <code>CheckoutDeliveryBox</code> ต้องเขียน <code>import { DeliveryOption as TDeliveryOption }</code> เพื่อเลี่ยงชื่อชนกันเอง ถ้าเราตั้งชื่อ type ว่า <code>DeliveryOptionData</code> ตั้งแต่วันนี้ ปัญหานั้นจะไม่เกิดเลย — การตั้งชื่อในไฟล์ที่ยังไม่มีใครใช้ คือหนี้ที่ออกใบแจ้งหนี้ในอีกสองบทข้างหน้าเสมอ</blockquote>
+
+        <p><code>src/features/checkout/consts.ts</code> — แล้วก็ตัวรายการจริง:</p>
+
+        <pre><code class="language-typescript">import { DeliveryOption, PaymentOption } from "./types";
+
+export const deliveryOptions: DeliveryOption[] = [
+  {
+    id: 1,
+    name: "Standard Delivery",
+    description: "Approx 5 to 7 Days",
+    estimatedTime: "5-7 Days",
+    price: 5.99,
+  },
+  {
+    id: 2,
+    name: "Express Delivery",
+    description: "Approx 1 - 2 Days",
+    estimatedTime: "1-2 Days",
+    price: 15.99,
+  },
+];
+
+export const paymentOptions: PaymentOption[] = [
+  {
+    id: 3,
+    name: "Cash on Delivery",
+    description: "Pay cash when your order is delivered.",
+  },
+  {
+    id: 4,
+    name: "Bank Transfer",
+    description: "Pay directly from your bank account.",
+  },
+];
+</code></pre>
+
+        <p>ราคาเป็น USD เช่นเดียวกับราคาสินค้าจาก dummyjson — ค่าส่ง Standard $5.99 และ Express $15.99 จะถูกบวกเข้ายอดรวมใน Billing Summary บทเรียน 27–28</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> <code>paymentOptions</code> เริ่มนับ id ที่ <strong>3</strong> ไล่ต่อจาก <code>deliveryOptions</code> ที่จบไว้ที่ 2 — สอง array นี้ไม่มีความเกี่ยวข้องกันเลย ไม่เคยถูกรวมร่าง ไม่เคยถูกเทียบ id ข้ามฝั่ง แต่ละอันมี <code>useState</code> ของตัวเองใน <code>useCheckout</code> บทเรียน 28 การใช้เลขต่อกันแบบนี้จึงสื่อความเป็นเจ้าของที่ไม่มีอยู่จริง (หน้าตาเหมือนเคยเป็น array เดียวกันแล้วถูกผ่าออกภายหลัง) และมันมีราคาจริงตอนแก้: วันที่ธุรกิจขอเพิ่ม "Same Day Delivery" คนเขียนจะต้อง<em>จำได้</em>ว่าห้ามใช้ 3 ทั้งที่ไม่มีอะไรในโค้ดบอกเขาเลย — ไม่มี type ไหนกัน ไม่มีเทสต์ไหนฟ้อง เจอตอนกด radio แล้วติดผิดกล่องเท่านั้น ทางแก้ในรีวิวจริงคือให้แต่ละ array เริ่มที่ 1 ของตัวเอง (id มันแยก namespace กันอยู่แล้วโดยธรรมชาติ) หรือถ้าอยากได้ความชัดจริง ๆ ก็เปลี่ยน id เป็น string อย่าง <code>"standard"</code> / <code>"cod"</code> ซึ่งอ่านออกทันทีตอน debug เราคงเลขตามต้นฉบับเพื่อให้ diff ตรงกับโค้ดอ้างอิงและกับบทเรียน 28</blockquote>
+
+        <h3>ทำไมตัวเลือกอยู่ใน consts ไม่ฝังในคอมโพเนนต์</h3>
+
+        <p>มือใหม่จำนวนมากจะเขียนรายการพวกนี้ hardcode ไว้ใน JSX ของคอมโพเนนต์ที่แสดงมันเลย ซึ่งดูเร็วดี แต่ใน chapter นี้ข้อมูลชุดเดียวกันถูกใช้จาก<em>หลายที่มาก</em>:</p>
+
+        <ul>
+          <li><code>CheckoutDeliveryBox</code> และ <code>CheckoutPaymentBox</code> (บทเรียน 27) — วนลูปแสดงเป็น radio ให้เลือก</li>
+          <li><code>useCheckout</code> (บทเรียน 28) — ใช้ <code>deliveryOptions[0].id</code> เป็นค่าที่เลือกเริ่มต้น และค้นหา <code>price</code> ของตัวที่เลือกมาคำนวณค่าส่งใน billing summary</li>
+          <li>เทสต์ (บทเรียน 32) — เรียก <code>useCheckout</code> ผ่าน <code>renderHook</code> แล้ว assert ยอดใน <code>billingSummary</code> ซึ่งค่าเริ่มต้นของค่าส่งมาจาก <code>deliveryOptions[0]</code> โดยที่ตัวเทสต์เองไม่ต้อง import array นี้เลย</li>
+        </ul>
+
+        <p>ถ้าข้อมูลฝังอยู่ใน JSX ของคอมโพเนนต์ใดคอมโพเนนต์หนึ่ง ที่อื่นจะเข้าถึงไม่ได้เลย (หรือต้อง copy ไปแปะ ซึ่งคือการเปิดประตูให้ข้อมูล drift อีกแล้ว) การแยก <em>data</em> ออกจาก <em>presentation</em> แบบนี้ทำให้วันที่ธุรกิจอยากเพิ่ม "Same Day Delivery" เราแก้ array เดียวใน <code>consts.ts</code> แล้วทั้ง UI ตัวเลือก ทั้งการคำนวณราคา ทั้งเทสต์ ขยับตามพร้อมกันหมด และในอนาคตถ้าตัวเลือกพวกนี้ย้ายไปอยู่บน API จริง จุดที่ต้องแก้ก็มีจุดเดียวเช่นกัน — วันนั้น <code>types.ts</code> จะกลายเป็น type ของ response และ <code>consts.ts</code> จะกลายเป็น <code>api.ts</code> ซึ่งเป็นการเปลี่ยนที่กระทบคอมโพเนนต์ศูนย์ตัว</p>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>เพิ่ม field <code>postcode: z.string().min(1, "Postcode is required")</code> เข้าไปใน <code>checkoutAddressSchema</code> แล้วรัน <code>npm run typecheck</code> — ตอบว่าทำไมวันนี้ไม่มีไฟล์ไหนฟ้องเลยสักไฟล์ จากนั้นเปิดบทเรียน 26 กับ 28 อ่านผ่าน ๆ แล้วระบุล่วงหน้าให้ได้ว่าหลังสองบทนั้นจบ การเพิ่มบรรทัดเดียวนี้จะทำให้ TypeScript ฟ้องที่ไฟล์ไหนบ้าง และไฟล์ไหนที่<em>ไม่</em>ฟ้องแม้จะเกี่ยวข้องกับที่อยู่ (เสร็จแล้วเอา field ออก)</li>
+          <li>เปลี่ยน <code>email</code> ใน schema ให้เหลือ <code>z.email("Enter a valid email address")</code> เฉย ๆ (ตัด <code>.min(1).pipe(...)</code> ทิ้ง) แล้วเรียก <code>safeParse</code> ด้วย <code>email: ""</code> ในไฟล์ scratch — ตอบว่าผู้ใช้จะเห็นข้อความอะไร และอธิบายว่าทำไมลำดับของสองด่านถึงสลับกันไม่ได้ (ลอง <code>.pipe()</code> สลับข้างดูแล้วตอบว่าเกิดอะไรขึ้น) เสร็จแล้วเติมกลับ</li>
+          <li>สมมติว่ามีคนย้าย <code>deliveryOptions</code> ไปประกาศไว้ในตัว <code>CheckoutDeliveryBox</code> ตรง ๆ ตอนบทเรียน 27 — ไล่ให้ครบว่ามีใครอีกบ้างในบทเรียน 28 และ 32 ที่ต้องการ array ตัวนี้ และแต่ละคนจะทำอย่างไรแทน ตอบด้วยว่าอาการที่ผู้ใช้เห็นจะเป็นอย่างไรถ้าคนที่สองเลือกวิธี copy array ไปแปะแล้วแก้ราคาผิดไปหนึ่งตัว</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> บทนี้ยังไม่มีอะไรให้ดูบนหน้าจอ — เราสร้างเฉพาะชั้นข้อมูลของฟีเจอร์ checkout สามไฟล์: <code>schema.ts</code> (พิมพ์เอง), <code>types.ts</code> และ <code>consts.ts</code> จุดตรวจสอบคือ editor ต้องไม่มีเส้นแดงเลยสักไฟล์ และ <code>npm run lint</code> กับ <code>npm run typecheck</code> ต้องผ่านทั้งคู่ ถ้า TypeScript ฟ้องที่ <code>z.email</code> ให้เช็คว่า zod ที่ติดตั้งเป็นเวอร์ชัน 4 (ดูใน <code>package.json</code>) ปิดท้ายด้วยการตรวจสองบรรทัดที่กันหนี้ก้อนใหญ่ที่สุดของบท: <code>grep -rn "CheckoutAddressFormData" src/</code> ต้องเจอบรรทัดเดียว และ <code>grep -c "import" src/features/checkout/types.ts</code> ต้องได้ 0 เมื่อผ่านแล้ว commit ได้ บทหน้าเราจะเอา schema นี้ไปต่อกับ react-hook-form ให้กลายเป็นฟอร์มจริง และคุณจะได้เห็นว่า <code>forwardRef</code> ที่เราลงแรงใส่ <code>Input</code> ไว้ตั้งแต่บทเรียน 12 มีไว้ทำอะไร — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="24_cart_page.html" rel="prev">ก่อนหน้า: หน้า Cart</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="26_address_form.html" rel="next">ถัดไป: ฟอร์มที่อยู่</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

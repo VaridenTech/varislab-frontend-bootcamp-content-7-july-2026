@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="รวมจุดพลาดจริงทั้งหมดจากบทเรียน 09–28 จัดเป็นหกตระกูล แยกบั๊กที่เครื่องมือจับได้ออกจากบั๊กที่มีแต่คนจับได้ พร้อมโค้ดผิดของจริงวางคู่กับโค้ดถูก และเกณฑ์ตัดสินสามทาง แก้ต่อ / ถอยแล้วสั่งใหม่ / เขียนเอง" />
+    <title>เมื่อ AI เขียนผิด | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 29 · เมื่อ AI เขียนผิด (When AI Gets It Wrong)</p>
+          <h1>เมื่อ AI เขียนผิด</h1>
+          <p class="lesson-original-title" lang="en">When the AI Gets It Wrong</p>
+        </header>
+
+        <p>ยี่สิบบทที่ผ่านมา ทุกกล่อง <strong>ตรวจโค้ดที่ AI สร้าง</strong> มีข้อหนึ่งที่ขึ้นต้นด้วยคำเดียวกันเสมอ: <strong><code>AI มักพลาดตรงนี้:</code></strong> ตอนอ่านทีละบท มันเป็นแค่คำเตือนประจำบท — เปิดไฟล์นั้น ดูจุดนั้น ผ่านแล้วไปต่อ บทนี้เราเอาทั้งยี่สิบบรรทัดมากองรวมกันแล้วถามคำถามที่ตอบได้เฉพาะตอนมองพร้อมกันทั้งกอง: <em>มันซ้ำกันตรงไหน</em></p>
+
+        <p>คำตอบคือมันไม่ได้กระจัดกระจายอย่างที่เห็นตอนเจอทีละตัว จุดพลาดทั้งหมดในโปรเจกต์นี้ลงเอยที่<strong>หกตระกูล</strong> และแต่ละตระกูลมีวิธีจับกับวิธีรับมือของตัวเองที่ใช้ซ้ำได้กับทุกตัวในตระกูลนั้น ที่สำคัญกว่านั้นคือมันแบ่งได้อีกแกนหนึ่งซึ่งเป็นแกนที่ตัดสินว่าคุณจะเสียเวลากับมันมากแค่ไหน: <strong>บั๊กที่เครื่องมือจับได้</strong> กับ <strong>บั๊กที่มีแต่คนจับได้</strong></p>
+
+        <p>บทนี้ไม่มี prompt ให้ส่งและไม่มีไฟล์ให้สร้าง ของที่จะได้กลับไปคือสามอย่าง: ตารางอาการที่เปิดกลับมาดูได้เวลาเจอของแปลก ๆ, เกณฑ์ตัดสินว่าจะแก้ต่อ ถอย หรือพิมพ์เอง และสัญญาณสามข้อที่บอกว่าคุณกำลังจะกด Accept ของที่ไม่ควรกด</p>
+
+        <h2>เส้นแบ่งที่ต้องขีดก่อนอย่างอื่น: ดัง กับ เงียบ</h2>
+
+        <p><strong>บั๊กดัง</strong> คือบั๊กที่มีเครื่องมือตะโกนบอกคุณ — <code>npm run typecheck</code> ตก, <code>npm run lint</code> แดง, หรือหน้าเว็บขาวทั้งหน้า บั๊กประเภทนี้ไม่น่ากลัวเลยแม้จะดูน่าตกใจ เพราะมันบอกชื่อไฟล์ บอกเลขบรรทัด และบอกว่าต้องแก้อะไรมาให้พร้อม เวลาที่เสียไปกับมันคือหน่วยนาที</p>
+
+        <p><strong>บั๊กเงียบ</strong> คือบั๊กที่ lint ผ่าน typecheck ผ่าน หน้าเว็บขึ้นสวยงาม และคุณกด Accept ไปด้วยความสบายใจ มันจะไปโผล่ในอีกห้าบทข้างหน้า หรือไม่ก็ไปโผล่กับผู้ใช้ที่เน็ตหลุดกลางคัน เวลาที่เสียไปกับมันคือหน่วยชั่วโมง เพราะตอนที่อาการปรากฏ คุณจะไม่มีทางเดาได้เลยว่าต้นเหตุอยู่ที่บรรทัดที่คุณอนุมัติผ่านไปเมื่อสัปดาห์ที่แล้ว</p>
+
+        <p>ตัวอย่างที่ชัดที่สุดของเส้นแบ่งนี้อยู่ในไฟล์เดียวกัน บรรทัดเดียวกัน ที่คุณเขียนเองไปแล้วในบทเรียน 17 — จาน <code>byCategory</code> ของ query factory เริ่มจากแบบที่ผิดแล้ว<em>ดัง</em>ก่อน:</p>
+
+        <pre><code class="language-tsx">// ผิดแบบดัง — เขียน option ของ TanStack Query v4 ที่ v5 ถอดออกไปแล้ว
+byCategory: (params: CategoryProductsParams) =&gt;
+  queryOptions({
+    queryKey: productKeys.byCategory(params),
+    queryFn: () =&gt; getProductsByCategory(params),
+    keepPreviousData: true,
+  }),</code></pre>
+
+        <p>คุณไม่มีวันพลาดตัวนี้ เพราะ <code>npm run typecheck</code> จะพ่นข้อความใส่หน้าทันที ของจริงยาวกว่านี้ — <code>useQuery</code> มีสาม overload และ tsc รายงานทั้งสามอันด้วยใจความเดียวกัน ตรงนี้เก็บอันสุดท้ายไว้อันเดียว:</p>
+
+        <pre><code class="language-text">error TS2769: No overload matches this call.
+  (ตัดรายงานของ overload 1 และ 2 ออก — ข้อความเหมือนกัน ต่างแค่ชื่อ type)
+  Overload 3 of 3, '(options: UndefinedInitialDataOptions&lt;...&gt;): ...', gave the following error.
+    Object literal may only specify known properties, and 'keepPreviousData'
+    does not exist in type 'UndefinedInitialDataOptions&lt;...&gt;'.</code></pre>
+
+        <p>เหตุผลที่มันดังคือ <code>queryOptions</code> รับ object literal ตรง ๆ TypeScript จึงตรวจ excess property ให้ครบทุก overload ทีนี้ดูตัวที่<em>เงียบ</em> — จุดพลาดในเรื่องเดียวกันเป๊ะ ต่างกันแค่มันไม่ได้เขียนอะไรผิด มันแค่<strong>ไม่เขียน</strong>:</p>
+
+        <pre><code class="language-tsx">// ผิดแบบเงียบ — ไม่มี property แปลกปลอมให้ compiler ตรวจ เพราะไม่มีบรรทัดนั้นเลย
+byCategory: (params: CategoryProductsParams) =&gt;
+  queryOptions({
+    queryKey: productKeys.byCategory(params),
+    queryFn: () =&gt; getProductsByCategory(params),
+  }),</code></pre>
+
+        <p>ก้อนนี้ lint ผ่าน typecheck ผ่าน และในวันที่คุณเขียนมันเสร็จก็ยังไม่มีหน้าไหนเรียกใช้ให้เห็นผลด้วยซ้ำ อาการของมันไปโผล่ตอนบทเรียน 20 ในรูปของกริดสินค้าทั้งกริดที่หายวับกลายเป็น spinner ทุกครั้งที่ผู้ใช้กดเปลี่ยนหน้า ของที่ถูกคือบรรทัดนี้:</p>
+
+        <pre><code class="language-tsx">import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+
+// ...
+
+byCategory: (params: CategoryProductsParams) =&gt;
+  queryOptions({
+    queryKey: productKeys.byCategory(params),
+    queryFn: () =&gt; getProductsByCategory(params),
+    placeholderData: keepPreviousData,
+  }),</code></pre>
+
+        <p>สองอาการนี้มาจากความเข้าใจผิดเรื่องเดียวกัน อยู่ในไฟล์เดียวกัน และตัวหนึ่งกินเวลาคุณสามสิบวินาที ส่วนอีกตัวรอดไปได้สามบทเรียน นั่นคือเหตุผลที่แกนดัง/เงียบสำคัญกว่าการจำรายชื่ออาการ: <strong>เครื่องมือดูแลฝั่งดังให้คุณหมดแล้ว งานที่เหลือของคุณคือฝั่งเงียบทั้งหมด</strong> และตารางหกตระกูลข้างล่างนี้ ส่วนใหญ่ของมันอยู่ฝั่งเงียบ</p>
+
+        <h2>หกตระกูลของความผิด</h2>
+
+        <p>ทุกแถวต่อจากนี้มาจากบทเรียน 08–28 — ส่วนใหญ่มาจากบรรทัด <code>AI มักพลาดตรงนี้:</code> ที่เหลือมาจากกล่อง 💡 <code>ของที่ควรถูกทักในรีวิว</code> และ checklist ของบทนั้น ไม่มีข้อไหนที่คิดขึ้นมาใหม่ ตัวเลขในวงเล็บคือเลขบทที่เจอมันครั้งแรก เปิดกลับไปอ่านของเต็ม ๆ ในบทนั้นได้เสมอ</p>
+
+        <h3>ตระกูล 1 — เดาความจริงที่มันมองไม่เห็น</h3>
+
+        <p>Agent อ่านโค้ดในโปรเจกต์ได้ แต่มันไม่เคยเห็น JSON ที่ API ส่งกลับมาจริง ไม่เคยเห็นหน้าเว็บที่ render ออกมา และไม่ได้เปิดไฟล์ SCSS ทุกไฟล์มาไล่ดูว่ามี class ชื่ออะไรบ้าง ทุกอย่างที่มันมองไม่เห็น มันจะ<em>เดา</em> และมันเดาด้วยชื่อที่ "ฟังดูสมเหตุสมผล" ซึ่งเป็นการเดาที่แนบเนียนที่สุด เพราะโค้ดที่ได้อ่านแล้วดูถูกทุกบรรทัด</p>
+
+        <table>
+          <thead>
+            <tr><th>อาการ</th><th>ทำไมเกิด</th><th>วิธีจับ</th><th>วิธีแก้</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>แต่งฟิลด์ที่ dummyjson ไม่ได้ส่งมา — <code>discountPrice</code>, <code>originalPrice</code>, <code>imageUrl</code>, <code>inStock</code> หรือเปลี่ยน <code>title</code> เป็น <code>name</code> (16)</td>
+              <td>ชื่อพวกนี้คือชื่อที่เว็บขายของ "ควรจะมี" โมเดลเลือกจากความน่าจะเป็น ไม่ใช่จาก payload</td>
+              <td><strong>เงียบ</strong> — TypeScript เชื่อ type ที่เราประกาศ มันไม่เคยเห็น JSON จริง ต้องเปิด <code>https://dummyjson.com/products?limit=5&amp;skip=15</code> วางคู่กับ <code>types.ts</code> แล้วไล่ชื่อทีละตัวด้วยตา</td>
+              <td>แนบตัวอย่าง response จริงลงใน prompt แล้วสั่งว่าห้ามเพิ่มฟิลด์นอกเหนือจากนี้</td>
+            </tr>
+            <tr>
+              <td>ประกาศ required/optional สลับกับความจริง — <code>brand: string</code> บังคับ ทั้งที่หายไป 92 ชิ้นจาก 194 (16, 18)</td>
+              <td>ตัวอย่างสินค้าชิ้นต้น ๆ ของ dummyjson ครบฟิลด์เกินไป ใครดูแค่ห้าชิ้นแรกจะสรุปแบบนี้ทุกคน</td>
+              <td><strong>เงียบ</strong> — ผลคือย่อหน้าว่างที่กินความสูงจริงใต้ชื่อสินค้าเกือบครึ่งร้าน โดย TypeScript รับประกันตลอดทางว่ามันเป็น <code>string</code></td>
+              <td>เลือก sample ให้กว้างพอ (<code>skip=15</code> ไม่ใช่ห้าชิ้นแรก) แล้วแก้ที่ต้นทาง <code>brand?: string</code> ไม่ใช่ใส่ <code>?? ""</code> ที่ปลายทาง</td>
+            </tr>
+            <tr>
+              <td>สมมติฐานเรื่องสเกลข้อมูล — <code>StarReview</code> และ <code>RatingBreakdown</code> หารคะแนนด้วยสองเพราะเชื่อว่าเป็นสเกล 0–10 (14, 21)</td>
+              <td>comment <code>// Score between 0 and 10</code> ในบทเรียน 14 คือสมมติฐานที่ไม่เคยมีใครไปตรวจกับข้อมูลจริง แล้วมันเดินทางข้ามสี่คอมโพเนนต์</td>
+              <td><strong>เงียบ</strong> — dummyjson ให้มาเป็นสเกล 0–5 (ต่ำสุด 2.51 สูงสุด 4.99) ผลคือไม่มีสินค้าชิ้นไหนในร้านที่ดาวทึบเกินสองดวง และแถบ 5★ กับ 4★ เป็นศูนย์เสมอ</td>
+              <td>ตรวจสมมติฐานเรื่องหน่วยและช่วงค่ากับ payload จริงตั้งแต่วันที่เขียน type ไม่ใช่วันที่ render</td>
+            </tr>
+            <tr>
+              <td>ชื่อ class ที่ไม่มีนิยาม (<code>image-container</code>, <code>banner-container</code>) หรือเกือบถูก (<code>font-bold</code> แทน <code>fw-bold</code>) (18, 19, 21)</td>
+              <td>ชื่อที่คุ้นจากเฟรมเวิร์กอื่น โดยเฉพาะ Tailwind ซึ่งชื่อ class หน้าตาคล้ายกับ utility ของบทเรียน 04 มาก</td>
+              <td><strong>เงียบ</strong> — ไม่มี TypeScript ไม่มี lint ตัวไหนตรวจว่า string ใน <code>className</code> มีอยู่จริงในไฟล์ CSS ต้อง <code>grep -rn "ชื่อ-class" src/styles/</code> ทีละตัว</td>
+              <td>ระบุชื่อ class ที่ต้องใช้ลงใน prompt ตรง ๆ แล้วไล่ grep ทุกชื่อที่โผล่ใน diff — สองนาทีที่ไม่มีเครื่องมือทำแทนได้</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>ตระกูล 2 — เขียนด้วยเวอร์ชันที่โลกมีโค้ดเยอะกว่า</h3>
+
+        <p>โมเดลเห็นโค้ด react-router v6 และ TanStack Query v4 มามากกว่าของใหม่หลายเท่า เวลาไม่มีอะไรบังคับ มันจะเขียนแบบที่มันเห็นบ่อยกว่า ตระกูลนี้น่าสนใจตรงที่มันมีทั้งฝั่งดังและฝั่งเงียบอยู่ในตระกูลเดียวกัน และเส้นแบ่งไม่ได้อยู่ที่ว่าอันไหนผิดหนักกว่า แต่อยู่ที่ว่ามันเขียน<em>ของแปลกปลอมเพิ่ม</em>เข้ามา (compiler เห็น) หรือมันแค่<em>เลือกโครงคนละแบบ</em> (compiler ไม่มีอะไรให้เทียบ)</p>
+
+        <table>
+          <thead>
+            <tr><th>อาการ</th><th>ทำไมเกิด</th><th>วิธีจับ</th><th>วิธีแก้</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>router.tsx</code> ออกมาเป็น <code>&lt;BrowserRouter&gt;</code> ครอบ <code>&lt;Routes&gt;</code> ครอบ <code>&lt;Route&gt;</code> แทน <code>createBrowserRouter</code> + <code>RouterProvider</code> (09)</td>
+              <td>โค้ด v6 ในโลกยังมีมากกว่า data mode มาก</td>
+              <td><strong>เงียบ</strong> — ทั้งสองแบบทำให้หน้าเว็บขึ้นเหมือนกันเป๊ะ lint และ typecheck ผ่านทั้งคู่ เปิดไฟล์แล้วค้นคำว่า <code>&lt;Route</code> ถ้าเจอแม้แต่ตัวเดียวคือรูปทรงผิด</td>
+              <td><strong>ถอยแล้วสั่งใหม่</strong> — เติมบรรทัดที่ระบุ data mode ลงใน prompt ไม่ใช่ไล่แก้ทีละแท็ก</td>
+            </tr>
+            <tr>
+              <td>ทิ้ง <code>queryOptions</code> แล้วเขียนเป็น custom hook ที่เรียก <code>useQuery(key, fn)</code> แบบสองอาร์กิวเมนต์ (17)</td>
+              <td>ไวยากรณ์ v4 ที่ v5 เปลี่ยนไปรับ options object ก้อนเดียว</td>
+              <td><strong>ดัง</strong> — <code>npm run typecheck</code> ฟ้อง TS2769 ว่า <code>Property 'queryKey' is missing in type 'string[]'</code></td>
+              <td><strong>ถอยแล้วสั่งใหม่</strong> — ถึงจะดัง แต่สิ่งที่ผิดคือรูปทรงทั้งก้อน ไม่ใช่บรรทัดเดียว</td>
+            </tr>
+            <tr>
+              <td><code>keepPreviousData: true</code> แทน <code>placeholderData: keepPreviousData</code> (17)</td>
+              <td>option ของ v4 ที่ถูกถอดออกไปแล้ว</td>
+              <td><strong>ดัง</strong> — TS2769 พร้อมชื่อ property ที่ผิดในข้อความ error</td>
+              <td><strong>แก้ต่อ</strong> — เปลี่ยนชื่อ option ให้ถูก จบในบรรทัดเดียว</td>
+            </tr>
+            <tr>
+              <td>ลืมบรรทัด <code>placeholderData</code> ไปทั้งบรรทัด (17)</td>
+              <td>เป็นการ<em>ไม่ทำ</em> ไม่ใช่การทำผิด จึงไม่มีอะไรให้ compiler จับ</td>
+              <td><strong>เงียบ</strong> — ไปโผล่ตอนบทเรียน 20 เป็นกริดที่กะพริบเป็น spinner ทุกครั้งที่เปลี่ยนหน้า นับบรรทัดในจาน <code>byCategory</code> ด้วยตา</td>
+              <td><strong>แก้ต่อ</strong> — และเพิ่มข้อกำหนดข้อนี้ลง prompt รอบหน้าให้ชัด</td>
+            </tr>
+            <tr>
+              <td>เขียนปุ่มเลขหน้าเองด้วย <code>map</code> แทนที่จะห่อ <code>react-paginate</code> (13)</td>
+              <td>pagination เขียนมือเป็นแบบฝึกหัดยอดนิยม โค้ดตัวอย่างมีเยอะกว่าการห่อ library</td>
+              <td><strong>เงียบ</strong> — เปิด <code>Pagination.tsx</code> แล้วค้นคำว่า <code>map</code> เป็นอย่างแรก</td>
+              <td><strong>ถอยแล้วสั่งใหม่</strong> — ของที่ได้จะไม่มีอะไรตรงกับ contract สามบรรทัดที่ออกแบบไว้เลย</td>
+            </tr>
+            <tr>
+              <td>ผูก input เป็น controlled ด้วย <code>useState</code> แล้วเรียก <code>safeParse</code> เอง แทนที่จะใช้ <code>register</code> ของ react-hook-form (26)</td>
+              <td>ฟอร์มแบบ controlled คือท่ามาตรฐานของ React ที่มีโค้ดในโลกมากกว่า</td>
+              <td><strong>เงียบสนิท</strong> — กรอกได้ error ขึ้นครบ submit ได้ แยกไม่ออกจากภาพหน้าจอ ต้อง <code>grep -n "useState"</code> ในไฟล์ฟอร์ม ซึ่งต้องว่างเปล่า</td>
+              <td><strong>ถอยแล้วสั่งใหม่</strong> — ระบุชื่อ API ที่ต้องใช้ (<code>register</code>, <code>handleSubmit</code>, <code>zodResolver</code>) ลงใน prompt</td>
+            </tr>
+            <tr>
+              <td>ใช้ <code>register</code> ถูกทุกช่อง แต่ใส่ <code>value={...}</code> เพิ่มมาให้ด้วย "เพื่อความชัวร์" (26)</td>
+              <td>อาการครึ่งทางของข้อบน — มันรู้ว่าต้องใช้ <code>register</code> แต่นิสัย controlled ยังติดมือ</td>
+              <td><strong>จอบอกทันที</strong> — ช่องนั้นกลายเป็น controlled ที่ค่าไม่มีวันเปลี่ยน คือพิมพ์ไม่ได้เลย เจอตั้งแต่ครั้งแรกที่คลิกเข้าไปในช่อง</td>
+              <td><strong>แก้ต่อ</strong> — ลบ <code>value</code> ทิ้ง จบในบรรทัดเดียว</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>แถวสุดท้ายเป็นข้อที่ควรสังเกตเป็นพิเศษ เพราะมันไม่ได้อยู่ทั้งฝั่งดังและฝั่งเงียบ — มันเป็นตำแหน่งที่สามที่ใจดีที่สุดในสามตำแหน่ง: <strong>บั๊กที่หน้าจอบอกคุณเองทันทีที่ลองใช้</strong> ไม่มีเครื่องมือตัวไหนพูดสักคำ แต่ก็ไม่ต้องมี เพราะแค่คลิกเข้าไปพิมพ์ก็รู้แล้ว ที่มันน่าสนใจคือมันนั่งอยู่ในไฟล์เดียวกับข้อเหนือมันพอดี ซึ่งเป็นข้อที่มองไม่เห็นด้วยตาเลยแม้แต่นิดเดียว — ฟอร์มเดียว สองอาการ คนละสุดขั้วของแกน นั่นคือเหตุผลที่ "ลองกดใช้จริง" กับ "อ่าน diff" แทนกันไม่ได้ ต้องทำทั้งคู่</p>
+
+        <h3>ตระกูล 3 — วางของถูกไว้ผิดที่</h3>
+
+        <p>ตระกูลนี้อันตรายที่สุดในหกตระกูล เพราะโค้ดทุกบรรทัด<em>ถูก</em> ฟังก์ชันที่เรียกก็ถูกตัว ค่าที่ส่งก็ถูกค่า สิ่งเดียวที่ผิดคือมันอยู่ผิดไฟล์หรือผิดจังหวะเวลา — ซึ่งเป็นสิ่งที่ไม่มีเครื่องมือไหนมีความเห็น</p>
+
+        <table>
+          <thead>
+            <tr><th>อาการ</th><th>ทำไมเกิด</th><th>วิธีจับ</th><th>วิธีแก้</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>สร้าง <code>QueryClient</code> ไว้ในตัว component แทนที่จะอยู่ระดับบนสุดของ <code>queryClient.ts</code> (11)</td>
+              <td>ตัวอย่าง quick start ของ TanStack Query ส่วนมากเขียนไว้ในไฟล์เดียวกับ provider</td>
+              <td><strong>เงียบตอนบทเรียน 11 ดังตั้งแต่บทเรียน 17</strong> — <code>@tanstack/eslint-plugin-query</code> เพิ่งถูกต่อเข้า config ในบทเรียน 17 และรูปแบบ <code>useState(() =&gt; new QueryClient())</code> ลอดกฎนั้นไปได้อยู่ดี ต้อง <code>grep -rn "new QueryClient" src/</code> ซึ่งต้องเจอที่เดียว</td>
+              <td><strong>แก้ต่อ</strong> — ย้ายไปไฟล์ของมัน แล้วให้ provider import เข้ามา</td>
+            </tr>
+            <tr>
+              <td><code>useReducer(cartReducer, loadCartState())</code> แบบสองอาร์กิวเมนต์ (22)</td>
+              <td>รูปสองอาร์กิวเมนต์คือรูปที่พบทั่วไป ส่วน lazy init สามอาร์กิวเมนต์เจอน้อยกว่ามาก</td>
+              <td><strong>เงียบสนิท</strong> — lint ผ่าน typecheck ผ่าน หน้าเว็บทำงานถูกต้องทุกประการ พิสูจน์ได้ทางเดียวคือวาง <code>console.log</code> ใน <code>loadCartState</code> แล้วนับจำนวนบรรทัด</td>
+              <td><strong>แก้ต่อ</strong> — ชี้บรรทัด บอกว่าต้องเป็น <code>undefined, loadCartState</code></td>
+            </tr>
+            <tr>
+              <td><code>clearCart()</code> หรือ <code>navigate("/order/success")</code> อยู่ในหน้าเพจ ที่จุดที่กดปุ่ม แทนที่จะอยู่ใน <code>onSuccess</code> (28)</td>
+              <td>"สั่งซื้อแล้วตะกร้าควรว่าง" เป็นข้อสรุปที่ถูกในเชิงพฤติกรรม โมเดลจึงวางมันไว้จุดที่ใกล้ปุ่มที่สุด</td>
+              <td><strong>เงียบ</strong> — dummyjson ตอบ 200 ทุกครั้ง คุณจะไม่มีวันเห็นอาการในเครื่องตัวเอง ต้องตั้ง DevTools เป็น Offline แล้วกดปุ่ม</td>
+              <td><strong>แก้ต่อ</strong> — <code>grep -n "useCart\|clearCart" src/pages/Checkout/Checkout.tsx</code> ต้องว่างเปล่า</td>
+            </tr>
+            <tr>
+              <td><code>BillingSummary</code> เรียก <code>useCart()</code> แล้ว <code>reduce</code> หายอดเอง แทนที่จะรับตัวเลขมาแสดง (27)</td>
+              <td>ไฟล์ที่มันเพิ่งเขียนเสร็จเมื่อครู่ (<code>SummaryOrder</code>) ทำแบบนั้นพอดี มันจึงสรุปว่านี่คือธรรมเนียมของกล่องบนหน้านี้</td>
+              <td><strong>เงียบครึ่งเดียว</strong> — <code>subTotal</code> จะถูกทุกบาท แต่ <code>shipping</code> ไม่ได้อยู่ในตะกร้า มันจึง hardcode <code>5.99</code> อาการคือกด Express แล้วยอดฝั่งขวาไม่ขยับ</td>
+              <td><strong>แก้ต่อ</strong> — เกณฑ์ที่ต้องเขียนใน prompt ไม่ใช่ "กล่องไหนเรียก hook ได้" แต่คือ "ข้อมูลที่กล่องนี้ต้องใช้ อยู่ในตะกร้าครบไหม"</td>
+            </tr>
+            <tr>
+              <td><code>onCategoryClick</code> ลืม <code>setPage(1)</code> หรือส่ง <code>setSelectedCategory</code> ไปตรง ๆ (20)</td>
+              <td>เรา <code>@</code>-mention <code>Home.tsx</code> เป็นแม่แบบไปเอง และใน <code>Home.tsx</code> ส่งตรงแบบนั้นถูกต้องจริง ๆ เพราะไม่มีเลขหน้า</td>
+              <td><strong>เงียบ</strong> — ที่ <code>PAGE_LIMIT = 20</code> หมวดส่วนใหญ่มีหน้าเดียว ต้องเลือก Kitchen Accessories (2 หน้า) ไปหน้า 2 แล้วสลับไป Beauty (หน้าเดียว) ถึงจะเห็นกริดเปล่า</td>
+              <td><strong>แก้ต่อ</strong> — <code>grep -n "setPage(1)"</code> ต้องเจอหนึ่งบรรทัด และต้องอยู่ใน <code>onCategoryClick</code> ไม่ใช่ใน <code>useEffect</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>ตระกูล 4 — สร้างของซ้ำ และทำเกินที่สั่ง</h3>
+
+        <p>Agent ไม่ชอบส่งงานที่ดู "ไม่ครบ" ถ้ามันเห็นช่องว่างมันจะเติม และถ้ามันไม่รู้ว่ามีของอยู่แล้ว มันจะสร้างใหม่ ทั้งสองอย่างมาจากรากเดียวกันคือ<strong>บริบทที่ขาดไปหนึ่งชิ้น</strong> ซึ่งแปลว่าทางแก้ของทั้งตระกูลนี้อยู่ที่ prompt ไม่ใช่ที่โค้ด</p>
+
+        <table>
+          <thead>
+            <tr><th>อาการ</th><th>ทำไมเกิด</th><th>วิธีจับ</th><th>วิธีแก้</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>สร้างระบบตะกร้าขึ้นใหม่อีกชุด — <code>createContext</code> ตัวที่สอง หรือ <code>useState&lt;CartItem[]&gt;([])</code> ในหน้า Product (23)</td>
+              <td>prompt บอกว่า "ให้กดแล้วของเข้าตะกร้า" แต่ไม่ได้บอกว่าตะกร้าที่มีอยู่แล้วอยู่ไฟล์ไหน</td>
+              <td><strong>เงียบ</strong> — กดแล้ว modal เด้ง ไม่มี error สักบรรทัด แต่ badge บน Header ไม่ขยับตลอดกาล <code>grep -rn "createContext" src/</code> ต้องเจอที่เดียว</td>
+              <td><strong>ถอยแล้วสั่งใหม่</strong> — <code>@</code>-mention <code>CartContext.tsx</code> กับ <code>useCart.ts</code> ลงใน prompt ตั้งแต่รอบแรก</td>
+            </tr>
+            <tr>
+              <td>ประกาศ <code>interface</code> ของที่อยู่ซ้ำใน <code>types.ts</code> ทั้งที่ <code>z.infer</code> ให้อยู่แล้ว (25)</td>
+              <td>โจทย์ว่า "ประกาศ type ของฟีเจอร์ checkout" กับไฟล์ชื่อ <code>types.ts</code> เป็นคู่ที่ชวนให้เติมของให้ครบชุด</td>
+              <td><strong>เงียบ</strong> — ถูกทุกตัวอักษรวันนี้ แล้วสำเนาที่เขียนมือจะค้างอยู่ที่เดิมในวันที่ schema เพิ่ม field</td>
+              <td><strong>แก้ต่อ</strong> — ลบทิ้ง แล้วเขียนใน <code>ขอบเขต:</code> ว่า type ของฟอร์มมาจาก <code>z.infer</code> ที่เดียว</td>
+            </tr>
+            <tr>
+              <td>เติม response interceptor ให้เองทั้งที่สั่งห้าม (15)</td>
+              <td>axios กับ interceptor เป็นคู่ที่มาด้วยกันในโค้ดตัวอย่างแทบทุกที่</td>
+              <td><strong>เงียบ</strong> — และตัวที่มันเติมมามักกลืน error ทิ้ง ดูรายละเอียดในตระกูล 5</td>
+              <td><strong>แก้ต่อ</strong> — ลบทั้งบล็อก ไม่ต้องไล่แก้ข้างใน</td>
+            </tr>
+            <tr>
+              <td>เติม <code>ReactModal.setAppElement("#root")</code> มาให้เอง (13)</td>
+              <td>เป็นทางแก้มาตรฐานของ warning ที่มันรู้ว่าจะเกิด</td>
+              <td><strong>เงียบจนกว่าจะรันเทสต์</strong> — selector ต้องชี้ไปที่ element ที่มีอยู่จริง ณ เวลาที่โค้ดทำงาน ซึ่งไม่จริงตอน render ในชุดทดสอบที่ไม่มี <code>&lt;div id="root"&gt;</code></td>
+              <td><strong>แก้ต่อ</strong> — ลบทิ้งแล้วใช้ <code>ariaHideApp={false}</code> ตามที่ prompt สั่ง</td>
+            </tr>
+            <tr>
+              <td>แถมไฟล์ที่ไม่ได้สั่ง (<code>index.ts</code> ที่ re-export ทุกอย่าง) หรือแก้ไฟล์ที่ไม่ได้สั่งให้แก้ (08, 09)</td>
+              <td>พฤติกรรมปกติของ Agent คือเติมของที่มัน "คิดว่าน่าจะต้องมี"</td>
+              <td><strong>ดัง ถ้าคุณดู</strong> — <code>git diff --stat</code> กับ <code>git status</code> บอกทันที แต่ต้องมี working tree สะอาดก่อนส่ง prompt ถึงจะอ่านออก</td>
+              <td>เขียนส่วน <code>โครงสร้าง:</code> ให้จบด้วยคำว่า "ไม่มากไม่น้อยกว่านี้" และระบุไฟล์ห้ามแตะใน <code>ขอบเขต:</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>ตระกูล 5 — ตัดของที่ไม่มีใครเห็นทิ้ง</h3>
+
+        <p>ตระกูลนี้คือสิ่งที่เกิดขึ้นเมื่อโมเดลเลือกเส้นทางที่<em>สั้นกว่า</em>และไม่มีอะไรในโปรเจกต์ค้าน โค้ดที่ได้สะอาด อ่านง่าย และขาดของที่จะสำคัญก็ต่อเมื่อบางอย่างไม่เป็นไปตามแผน — ซึ่งไม่เคยเกิดบนเครื่องคุณ</p>
+
+        <table>
+          <thead>
+            <tr><th>อาการ</th><th>ทำไมเกิด</th><th>วิธีจับ</th><th>วิธีแก้</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ตัดสาขา <code>isLoading</code> กับ <code>isError</code> ทิ้ง เหลือแค่ <code>&lt;ProductsList products={data?.products} /&gt;</code> (19)</td>
+              <td><code>ProductsList</code> รับ <code>undefined</code> ได้อยู่แล้ว โค้ดแบบนั้นจึง "ถูก" ในสายตา TypeScript ทุกประการ และสั้นกว่าสิบบรรทัดต่อหนึ่ง section</td>
+              <td><strong>เงียบ</strong> — บนเน็ตดีที่ API ตอบใน 200ms ทั้งสองแบบให้หน้าตาเดียวกัน ตั้ง DevTools เป็น Offline แล้ว reload ต้องเห็นข้อความ ไม่ใช่ที่ว่าง</td>
+              <td><strong>แก้ต่อ</strong> — <code>grep -c "ErrorMessage" src/pages/Home/Home.tsx</code> ต้องได้ 3 และ <code>ClipLoader</code> ต้องได้ 3</td>
+            </tr>
+            <tr>
+              <td>interceptor ที่จบขาล้มเหลวด้วย <code>console.error</code> แล้ว <code>return null</code> หรือโยน <code>new Error("Request failed")</code> ก้อนเดียวทุกกรณี (15)</td>
+              <td>axios กับ interceptor เป็นคู่ที่มาด้วยกันในโค้ดตัวอย่างทั้งอินเทอร์เน็ต และท่าที่ติดมาด้วยคือท่าที่ทำให้โค้ด "ไม่พัง"</td>
+              <td><strong>เงียบ</strong> — promise resolve สำเร็จพร้อมค่า <code>undefined</code> TanStack Query จะไม่มีวันรู้ว่า request พัง หน้าค้างที่ loading หรือขึ้นกริดเปล่า</td>
+              <td><strong>แก้ต่อ</strong> — ลบทั้งบล็อก แล้วปล่อยให้ error เดินทางขึ้นไปถึง query ตามเดิม</td>
+            </tr>
+            <tr>
+              <td><code>setInterval</code> ใน <code>CountdownTimer</code> ที่ไม่มี <code>return () =&gt; clearInterval(timer);</code> (14)</td>
+              <td>cleanup คือบรรทัดที่ไม่มีผลกับสิ่งที่เห็นบนจอ จึงเป็นบรรทัดแรกที่หายเวลาเขียนเร็ว ๆ</td>
+              <td><strong>เงียบ</strong> — นาฬิกาเดินสวยงาม lint ผ่าน (<code>react-hooks/exhaustive-deps</code> ตรวจ dependency array ไม่ได้ตรวจว่ามี cleanup) เข้าออกหน้า Home ยี่สิบรอบก็ได้ยี่สิบ interval</td>
+              <td><strong>แก้ต่อ</strong> — เลื่อนไปท้าย <code>useEffect</code> เป็นจุดแรกทุกครั้งที่เจอ effect ที่ subscribe อะไรสักอย่าง</td>
+            </tr>
+            <tr>
+              <td><code>{...props}</code> หายจากแท็ก <code>&lt;input&gt;</code> หรือ <code>type={type}</code> หลุดจากแท็ก <code>&lt;button&gt;</code> (12)</td>
+              <td>มักมาคู่กับการประกาศ <code>placeholder</code>, <code>type</code>, <code>value</code>, <code>onChange</code> เองทีละตัวใน interface ซึ่งดูขยันแต่ผิดโจทย์</td>
+              <td><strong>เงียบต่อเครื่องมือ</strong> — lint และ typecheck ผ่านทั้งคู่ อาการไปโผล่ตอนบทเรียน 26 เป็นช่องที่พิมพ์แล้วไม่มีอะไรเกิดขึ้น ส่วนปุ่มจะกลับไปใช้ค่า default ของ HTML คือ <code>submit</code></td>
+              <td><strong>แก้ต่อ</strong> — เปิดสองไฟล์นี้ดูจุดนั้นเป็นจุดแรกเสมอ</td>
+            </tr>
+            <tr>
+              <td>ลืม <code>disabled={item.quantity &lt;= 1}</code> บนปุ่มลดจำนวน (24)</td>
+              <td>reducer เขียนทับค่าที่ส่งมาตรง ๆ ไม่มีกติกาขั้นต่ำอยู่ในนั้น กติกาทั้งหมดอยู่บนปุ่ม ซึ่งเป็นข้อมูลที่ต้องอ่านสองไฟล์พร้อมกันถึงจะรู้</td>
+              <td><strong>เงียบจนกว่าจะกดจริง</strong> — กด <code>&lt;</code> รัว ๆ แล้วจำนวนลงเป็น 0 แล้วติดลบ ช่อง Total กลายเป็นเลขติดลบทั้งแถวและทั้งบิล</td>
+              <td><strong>แก้ต่อ</strong> — <code>grep -n "disabled"</code> ต้องเจอหนึ่งบรรทัดที่เป็น <code>item.quantity &lt;= 1</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>ตระกูล 6 — เลือกทางที่ "ผ่าน" แทนทางที่ถูก</h3>
+
+        <p>ตระกูลสุดท้ายเป็นตระกูลที่ต้องเข้าใจแรงจูงใจถึงจะจับได้: เป้าหมายของ Agent คือส่งงานที่<em>ผ่าน</em> ไม่ใช่งานที่ถูก ถ้ามีสองทางที่ทำให้ typecheck เขียว มันจะเลือกทางที่สั้นกว่าเสมอ แม้ทางนั้นจะเป็นการปิดปากเครื่องมือมากกว่าการแก้ปัญหา</p>
+
+        <table>
+          <thead>
+            <tr><th>อาการ</th><th>ทำไมเกิด</th><th>วิธีจับ</th><th>วิธีแก้</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>as any</code> หรือ <code>as unknown as Product</code> เพื่อดับ type error (08)</td>
+              <td>เป็นทางที่ทำให้ "ผ่าน" ด้วยการพิมพ์น้อยที่สุด</td>
+              <td><strong>ดังกับเงียบอยู่ในนิสัยเดียวกัน</strong> — <code>as any</code> โดน <code>npm run lint</code> จับ (<code>@typescript-eslint/no-explicit-any</code>) ส่วน <code>as unknown as Product</code> ผ่านทั้ง lint และ typecheck สบาย ๆ ต้องอ่านเอง</td>
+              <td>สั่งห้ามใน rules แล้วถามกลับว่า <em>type จริงของค่านี้คืออะไร</em> — คำถามนี้บังคับให้มันไปแก้ที่ต้นทาง</td>
+            </tr>
+            <tr>
+              <td>reducer ที่ <code>push</code> เข้า array เดิม หรือ <code>+=</code> ใส่ field เดิม (22)</td>
+              <td>การเขียนแบบ imperative สั้นกว่าและติดมือมากกว่าการ spread</td>
+              <td><strong>เงียบ</strong> — ค้นคำว่า <code>push</code> และ <code>+=</code> ใน diff ของ <code>cartReducer.ts</code> ต้องไม่เจอสักที่ นี่คือเหตุผลที่ไฟล์นี้อยู่ในรายการพิมพ์เอง</td>
+              <td><strong>แก้ต่อ</strong> — ชี้บรรทัดแล้วสั่งให้คืน state ใหม่ ไม่ใช่แก้ของเดิม</td>
+            </tr>
+            <tr>
+              <td><code>&lt;a href="/categories"&gt;</code> หรือ <code>&lt;div onClick={() =&gt; navigate("/cart")}&gt;</code> แทน <code>&lt;Link to&gt;</code> (10, 23)</td>
+              <td>ทั้งสองแบบทำให้ "กดแล้วไป" ได้จริง ซึ่งตรงตามที่ prompt ขอทุกตัวอักษร</td>
+              <td><strong>เงียบ</strong> — ค้นคำว่า <code>href=</code> และ <code>onClick</code> ในไฟล์นำทาง ทั้งสองคำไม่ควรเจอเลย เพราะ <code>Link</code> ใช้ prop ชื่อ <code>to</code></td>
+              <td><strong>แก้ต่อ</strong> — แบบ <code>&lt;a&gt;</code> โหลดหน้าใหม่ทั้งแอปทุกครั้งที่กด ส่วนแบบ <code>&lt;div&gt;</code> กดด้วยคีย์บอร์ดไม่ได้เลย</td>
+            </tr>
+            <tr>
+              <td>ปัดเศษเงินไว้ใน <code>price.utils.ts</code> — <code>Number(x.toFixed(2))</code> หรือคืน string ไปเลย (18)</td>
+              <td>JSDoc ในต้นฉบับเขียนว่า <code>@returns {string}</code> ขัดกับ signature <code>: number</code> และเมื่อคำสั่งสองอันขัดกัน โมเดลจะเลือกอันที่เป็นภาษาคน</td>
+              <td><strong>เงียบ</strong> — บนหน้าจอทั้งสองแบบให้ตัวเลขเท่ากันถึงหลักสตางค์ เพราะปลายทางมี <code>.toFixed(2)</code> ปัดซ้ำอยู่แล้ว ต้องเทียบที่ตัวฟังก์ชัน ไม่ใช่ที่หน้าจอ</td>
+              <td>เมื่อ comment ขัดกับโค้ด ให้เขียนใน prompt ว่าอันไหนคือของจริง — comment ที่โกหกคือบริบทที่ Agent อ่านเป็นคำสั่ง</td>
+            </tr>
+            <tr>
+              <td>เปลี่ยนกติกาให้ "ใจดีขึ้น" เอง เช่นลบแถวทิ้งอัตโนมัติเมื่อจำนวนจะเหลือ 0 (24)</td>
+              <td>เว็บจริงหลายเจ้าทำแบบนั้น มันจึงเป็นการเดาที่มีหลักฐานรองรับเยอะมาก</td>
+              <td><strong>เงียบ</strong> — และดูดีกว่าของจริงด้วยซ้ำ <code>grep -n "onRemoveItem"</code> ต้องเจอบรรทัดเดียวคือในปุ่ม ×</td>
+              <td>เขียนพฤติกรรมที่ตัดสินใจไว้แล้วลง prompt ให้ชัด — Agent ไม่มีทางรู้ว่าอะไรคือการตัดสินใจ อะไรคือของที่ยังไม่ได้คิด</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>ของจริงสามก้อน</h2>
+
+        <p>ตารางบอกได้ว่าต้องมองหาอะไร แต่ของที่ต้องจำหน้าให้ได้จริง ๆ คือโค้ด สามก้อนต่อจากนี้คือของที่บทก่อน ๆ ชี้ไว้ชัดที่สุด วางคู่กับของที่ถูกจากโค้ดอ้างอิง อ่านให้ออกว่าตาคุณต้องหยุดตรงไหน</p>
+
+        <h3>1. QueryClient ที่อยู่ผิดชั้น — และเหตุผลที่มันเงียบอยู่หกบท</h3>
+
+        <p>แบบแรกคือแบบที่ <code>npm run lint</code> จับได้ — <em>ตั้งแต่บทเรียน 17 เป็นต้นไป</em>:</p>
+
+        <pre><code class="language-tsx">// src/app/providers.tsx — ผิด และดัง
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  const queryClient = new QueryClient();
+
+  return (
+    &lt;QueryClientProvider client={queryClient}&gt;{children}&lt;/QueryClientProvider&gt;
+  );
+}</code></pre>
+
+        <p>เหตุผลที่มันดังคือ <code>eslint.config.js</code> ของเราเปิด <code>flat/recommended</code> ของ <code>@tanstack/eslint-plugin-query</code> ซึ่งมีกฎ <code>stable-query-client</code> อยู่ในชุด ผลที่ได้:</p>
+
+        <pre><code class="language-text">src/app/providers.tsx
+  5:9  error  QueryClient is not stable. It should be either extracted from the component or wrapped in React.useState.
+See https://tkdodo.eu/blog/react-query-fa-qs#2-the-queryclient-is-not-stable  @tanstack/query/stable-query-client
+
+✖ 1 problem (1 error, 0 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.</code></pre>
+
+        <p>แต่จุดที่ควรสังเกตคือ<em>วันที่</em>: ไฟล์นี้ถูกเขียนในบทเรียน 11 ส่วน <code>@tanstack/eslint-plugin-query</code> เพิ่งถูกติดตั้งและต่อเข้า config ในบทเรียน 17 แปลว่าถ้าอาการนี้เกิดตอนบทเรียน 11 มันจะ<strong>เงียบสนิท</strong> — lint ผ่าน typecheck ผ่าน และตอนนั้นยังไม่มี query สักตัวในแอปให้เห็นผลด้วยซ้ำ กว่ากฎจะมาถึงก็ผ่านไปหกบทแล้ว นี่คือของที่ควรจำไว้ให้ดี: <strong>ชุดกฎของโปรเจกต์โตขึ้นตามเวลา และโค้ดที่ผ่านมาก่อนกฎจะมา ไม่เคยถูกใครตรวจด้วยกฎนั้นเลย</strong> ถ้าคุณเพิ่ม plugin ใหม่เข้า config วันไหน ให้รัน lint ทั้งโปรเจกต์ในวันนั้นทันที ไม่ใช่รอให้มันไปโผล่ในไฟล์ถัดไปที่คุณบังเอิญแก้</p>
+
+        <p>ทีนี้ประโยคสุดท้ายของ error นั้นน่าสนใจ เพราะมันเปิดทางที่สองไว้ให้ และถ้า Agent อ่าน error แล้วแก้ตามคำแนะนำตรง ๆ คุณจะได้ก้อนนี้:</p>
+
+        <pre><code class="language-tsx">// ผ่าน lint แล้ว แต่ยังไม่ใช่ของที่โปรเจกต์นี้ตกลงกันไว้
+const [queryClient] = useState(() =&gt; new QueryClient());</code></pre>
+
+        <p>ก้อนนี้เงียบสนิททั้ง lint และ typecheck และในแง่ของ cache มันก็ไม่ได้พังด้วย — <code>useState</code> เรียก initializer ครั้งเดียวตอน mount สิ่งที่ผิดคือคนละเรื่อง: โปรเจกต์เราตกลงกันตั้งแต่บทเรียน 11 ว่า client มีตัวเดียวและอยู่ใน <code>src/app/queryClient.ts</code> เพราะไฟล์นั้นเป็นที่ตั้งค่า <code>staleTime</code> กับ <code>retry</code> ของทั้งแอป และเพราะเทสต์ในบทเรียน 30 ต้องสร้าง client ของตัวเองต่างหากโดยไม่ไปยุ่งกับตัวนี้ ของที่ถูกจึงเป็นสองไฟล์:</p>
+
+        <pre><code class="language-ts">// src/app/queryClient.ts — ระดับบนสุดของไฟล์ ไม่มี indent ข้างหน้า
+import { QueryClient } from "@tanstack/react-query";
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      retry: 1,
+    },
+  },
+});</code></pre>
+
+        <pre><code class="language-tsx">// src/app/providers.tsx — import เข้ามาใช้ ไม่สร้างเอง
+import { queryClient } from "./queryClient";
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  return (
+    &lt;QueryClientProvider client={queryClient}&gt;
+      &lt;CartProvider&gt;{children}&lt;/CartProvider&gt;
+      {import.meta.env.DEV &amp;&amp; &lt;ReactQueryDevtools initialIsOpen={false} /&gt;}
+    &lt;/QueryClientProvider&gt;
+  );
+}</code></pre>
+
+        <p>บทเรียนของก้อนนี้ไม่ใช่ท่าเขียน QueryClient แต่คือ: <strong>การที่ lint เขียวหลังการแก้ ไม่ได้แปลว่าแก้ถูก</strong> มันแปลว่ากฎที่เขียนไว้ไม่มีอะไรจะพูดกับโค้ดชุดนี้แล้วเท่านั้น กติกาของโปรเจกต์มีมากกว่าที่กฎจะเขียนได้เสมอ</p>
+
+        <h3>2. clearCart ที่อยู่ก่อนเวลา</h3>
+
+        <p>ก้อนนี้คือของที่คุณจะไม่มีวันเห็นอาการในเครื่องตัวเอง เพราะ dummyjson ตอบ 200 ทุกครั้ง:</p>
+
+        <pre><code class="language-tsx">// src/pages/Checkout/Checkout.tsx — ผิด
+const { clearCart } = useCart();
+const { onPlaceOrder, /* ... */ } = useCheckout();
+
+// ...
+
+&lt;BillingSummary
+  onPlaceOrder={() =&gt; {
+    onPlaceOrder();
+    clearCart();
+  }}
+/&gt;</code></pre>
+
+        <p><code>onPlaceOrder</code> เรียก <code>mutate()</code> ซึ่งเป็น fire-and-forget — มันคืนค่ากลับมาทันที ก่อน request ออกจากเครื่องด้วยซ้ำ ดังนั้น <code>clearCart()</code> บรรทัดถัดมาจะทำงานก่อนเซิร์ฟเวอร์ตอบเสมอ ผลคือกดปุ่มปุ๊บตะกร้าว่างปั๊บ ไม่ว่าคำสั่งซื้อจะสำเร็จหรือไม่ อาการจะไปโผล่กับลูกค้าที่เน็ตหลุดกลางคัน แล้วเสียของทั้งตะกร้าโดยไม่ได้ออร์เดอร์ ที่ถูกคือมันต้องอยู่ในที่ที่ React Query รับประกันว่าจะถูกเรียกก็ต่อเมื่อ request สำเร็จ:</p>
+
+        <pre><code class="language-ts">// src/features/checkout/useCheckout.ts — ถูก
+const { mutate: placeOrderMutate, isPending: isPlaceOrderLoading } =
+  useMutation({
+    mutationFn: () =&gt; {
+      if (!checkoutAddress) {
+        throw new Error("Delivery Address is Missing");
+      }
+
+      return placeOrder({
+        userId: 1,
+        products: cart.items.map((item) =&gt; ({
+          id: item.id,
+          quantity: item.quantity,
+        })),
+        address: checkoutAddress,
+      });
+    },
+    onSuccess: () =&gt; {
+      clearCart();
+      goToOrderSuccess();
+    },
+  });</code></pre>
+
+        <p>วิธีตรวจสองคำสั่ง: <code>grep -n "useCart\|clearCart" src/pages/Checkout/Checkout.tsx</code> ต้องว่างเปล่า และ <code>grep -n "clearCart" src/features/checkout/useCheckout.ts</code> ต้องเจอบรรทัดเดียว คือบรรทัดที่อยู่ใน <code>onSuccess</code> ญาติสนิทของอาการนี้คือ <code>navigate("/order/success")</code> ที่ถูกวางไว้จุดเดียวกันด้วยเหตุผลเดียวกัน ผลเหมือนกันเป๊ะ คือเด้งไปหน้าขอบคุณตั้งแต่ยังไม่รู้ผล</p>
+
+        <h3>3. สาขาที่หายไปสองสาขา</h3>
+
+        <p>ก้อนนี้คือตัวอย่างที่ตรงที่สุดของ "โค้ดที่สั้นกว่าและถูกในสายตา TypeScript ทุกประการ":</p>
+
+        <pre><code class="language-tsx">// src/pages/Home/Home.tsx — ผิด
+&lt;div className="flex gap-25"&gt;
+  &lt;ProductsList
+    products={bestProductsData?.products}
+    onProductClick={onProductClick}
+  /&gt;
+&lt;/div&gt;</code></pre>
+
+        <p><code>ProductsList</code> รับ <code>undefined</code> ได้อยู่แล้ว เพราะเราออกแบบไว้แบบนั้นเองในบทเรียน 18 โค้ดก้อนนี้จึงไม่มีอะไรผิดเลยสำหรับ compiler และสั้นกว่าตัวจริงถึงสิบบรรทัดต่อหนึ่ง section ตัวจริงเป็นแบบนี้:</p>
+
+        <pre><code class="language-tsx">// src/pages/Home/Home.tsx — ถูก
+&lt;div className="flex gap-25"&gt;
+  {isBestProductsError ? (
+    &lt;ErrorMessage /&gt;
+  ) : isBestProductsLoading ? (
+    &lt;div className="text-center"&gt;
+      &lt;ClipLoader
+        size={40}
+        aria-label="Loading Spinner"
+        data-testid="loader"
+      /&gt;
+    &lt;/div&gt;
+  ) : (
+    &lt;ProductsList
+      products={bestProductsData?.products}
+      onProductClick={onProductClick}
+    /&gt;
+  )}
+&lt;/div&gt;</code></pre>
+
+        <p>บนเครื่องคุณที่เน็ตดีและ API ตอบใน 200ms สองก้อนนี้ให้หน้าตาเดียวกันทุกพิกเซล วันที่ dummyjson ล่มหรือผู้ใช้อยู่บนมือถือสัญญาณอ่อน ก้อนแรกให้ช่องว่างเปล่าตรงที่ควรมีสินค้า ไม่มี spinner ไม่มีข้อความ ไม่มีอะไรบอกว่าเกิดอะไรขึ้น</p>
+
+        <p>สังเกตว่าทั้งสามก้อนมีอะไรเหมือนกัน: <strong>ไม่มีก้อนไหนเลยที่จับได้ด้วยการเปิดหน้าเว็บดู</strong> ทุกก้อนต้องจับด้วยการอ่านโค้ด หรือด้วยการจงใจสร้างสถานการณ์ที่ไม่มีใครอยากให้เกิด (ตั้ง throttling เป็น Offline, กดปุ่มลดจนถึงศูนย์, เข้าออกหน้าเดิมยี่สิบรอบ) นั่นคือรูปร่างของงานตรวจโค้ดที่ AI เขียน</p>
+
+        <h2>ตัดสินใจสามทาง</h2>
+
+        <p>บทเรียน 08 แนะนำสามทางเลือกนี้ไว้แล้ว: <strong>แก้ต่อ</strong> / <strong>ถอยแล้วสั่งใหม่</strong> / <strong>เขียนเอง</strong> ตอนนั้นเรายังไม่มีตัวอย่างพอจะบอกว่าจะรู้ได้อย่างไรว่าตอนนี้อยู่ในสถานการณ์ไหน ตอนนี้มีแล้ว</p>
+
+        <p>คำถามที่ต้องตอบไม่ใช่ "ผิดมากหรือผิดน้อย" แต่คือ <strong>"รูปทรงถูกไหม"</strong> — และคำว่ารูปทรงในโปรเจกต์นี้มีความหมายที่ชี้ได้ ไล่สามคำถามนี้ตามลำดับ หยุดที่ข้อแรกที่ตอบว่า "ไม่":</p>
+
+        <ol>
+          <li><strong>ไฟล์ที่ได้มา อยู่ path ที่คุณสั่ง และมีเท่าที่สั่งไหม</strong> — <code>git status</code> กับ <code>git diff --stat</code> ตอบข้อนี้ได้ในสิบวินาที ไฟล์เกิน ไฟล์ขาด หรือไฟล์อยู่ผิดโฟลเดอร์ = รูปทรงผิด</li>
+          <li><strong>ชื่อ export, signature ของ props และทิศทางการไหลของข้อมูล ตรงกับที่สั่งไหม</strong> — <code>RatingBreakdown</code> ที่เปลี่ยนมารับ <code>rating: number</code> เอง, <code>BillingSummary</code> ที่เรียก <code>useCart()</code> แทนรับ props, custom hook ที่โผล่มาแทน <code>queryOptions</code> ทั้งสามอันนี้คือรูปทรงผิด ไม่ใช่รายละเอียดผิด</li>
+          <li><strong>สิ่งที่ผิด คุณชี้เป็นบรรทัดได้ไหม</strong> — ถ้าชี้ได้ว่า "บรรทัด 14 ขาด <code>setPage(1)</code>" นั่นคือรายละเอียด ถ้าตอบได้แค่ "มันไม่ค่อยถูก" นั่นคือคุณยังอ่านไม่ครบ หรือมันผิดรูปทรง</li>
+        </ol>
+
+        <h3>แก้ต่อ — เมื่อรูปทรงถูก รายละเอียดผิด</h3>
+
+        <p>เงื่อนไขคือผ่านทั้งสามข้อข้างบน แล้วสิ่งที่ผิดชี้เป็นบรรทัดได้ วิธีสั่งมีรูปแบบเดียว: <em>ชี้ไฟล์ ชี้ฟังก์ชัน บอกสิ่งที่ต้องการ ปิดขอบเขต</em></p>
+
+        <pre><code class="language-text">ใน src/pages/Category/Category.tsx ฟังก์ชัน onCategoryClick เรียกแค่
+setSelectedCategory ให้เพิ่ม setPage(1) ต่อท้ายในฟังก์ชันเดียวกัน
+ห้ามแก้ไฟล์อื่น และห้ามย้าย logic นี้ไปไว้ใน useEffect</code></pre>
+
+        <p>คำสั่งที่ใช้ไม่ได้คือ "ยังไม่ถูก แก้ให้หน่อย" หรือ "ทำให้มันทำงานถูกที" — ไม่ใช่เพราะมันสุภาพเกินไป แต่เพราะมันไม่มีข้อมูลใหม่อยู่ในนั้นเลย Agent ที่ได้คำสั่งแบบนี้จะเดาว่าอะไรผิด และการเดารอบที่สองมักออกมาไกลกว่ารอบแรก บรรทัดสุดท้ายที่ปิดขอบเขตก็สำคัญไม่แพ้กัน เพราะ "แก้ตรงนี้" กับ "จัดระเบียบไฟล์นี้ใหม่ทั้งไฟล์" เป็นสองงานที่ Agent แยกให้เองไม่ได้ถ้าคุณไม่บอก</p>
+
+        <p>กติกาที่ต้องมีคู่กันเสมอ: <strong>สั่งแก้ได้สองรอบ</strong> ถ้ารอบที่สองยังไม่เข้าที่ ให้ถอย ไม่ต้องลองรอบที่สาม</p>
+
+        <h3>ถอยแล้วสั่งใหม่ — เมื่อรูปทรงผิดตั้งแต่ต้น</h3>
+
+        <p>ทางนี้ถูกข้ามบ่อยเพราะมันรู้สึกเหมือนทิ้งงานที่ทำมาแล้ว ทั้งที่งานที่ทิ้งคืองานที่ Agent ทำ ไม่ใช่งานที่คุณทำ ตัวอย่างที่ชัดที่สุดคือ router ในบทเรียน 09 ของที่ได้มาหน้าตาแบบนี้:</p>
+
+        <pre><code class="language-tsx">// src/app/router.tsx — รูปทรงผิดทั้งไฟล์
+export default function AppRouter() {
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;Routes&gt;
+        &lt;Route element={&lt;MainLayout /&gt;}&gt;
+          &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+          &lt;Route path="/categories" element={&lt;Category /&gt;} /&gt;
+          &lt;Route path="/products/:id" element={&lt;Product /&gt;} /&gt;
+        &lt;/Route&gt;
+      &lt;/Routes&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}</code></pre>
+
+        <p>ก้อนนี้ทำให้หน้าเว็บขึ้นได้ทุกหน้า lint ผ่าน typecheck ผ่าน และถ้าคุณเลือก "แก้ต่อ" คุณจะได้เดินเข้าไปในกับดักที่ยาวที่สุดของคอร์สนี้ — สั่งให้เปลี่ยนเป็น <code>createBrowserRouter</code> แล้วมันจะเก็บ <code>&lt;Routes&gt;</code> ไว้ข้างใน สั่งให้ลบอีกทีมันจะเปลี่ยน export ตัวเดียว สั่งอีกทีมันจะสร้างไฟล์ที่สอง สามรอบผ่านไปคุณจะได้ไฟล์ที่ไม่มีใครอธิบายได้ว่าทำไมต้องมีบรรทัดไหนบ้าง ของที่ถูกคือของที่ต่างจากข้างบนตั้งแต่บรรทัดแรกยันบรรทัดสุดท้าย:</p>
+
+        <pre><code class="language-tsx">// src/app/router.tsx — ถูก
+export const routes: RouteObject[] = [
+  {
+    element: &lt;MainLayout /&gt;,
+    errorElement: &lt;RouteErrorFallback /&gt;,
+    children: [
+      { path: "/", element: &lt;Home /&gt; },
+      { path: "/categories", element: &lt;Category /&gt; },
+      { path: "/products/:id", element: &lt;Product /&gt; },
+      // ...
+    ],
+  },
+];
+
+export const router = createBrowserRouter(routes);</code></pre>
+
+        <p>ขั้นตอนของการถอยมีสามข้อ และข้อที่สองคือข้อที่คนลืม:</p>
+
+        <ol>
+          <li><code>git restore .</code> — คืนไฟล์ที่ถูกแก้กลับไปเป็นของ commit ล่าสุด</li>
+          <li><strong>ลบไฟล์ใหม่ทิ้งด้วย</strong> — <code>git restore</code> ไม่แตะไฟล์ที่ยังไม่ถูก track ดู <code>git status</code> ว่ามีอะไรค้างอยู่บ้าง แล้วลบให้หมด (<code>git clean -fd</code> ทำให้ในคำสั่งเดียว แต่รู้ตัวไว้ว่ามันลบไฟล์ที่ไม่ได้ track ทุกตัว ไม่ใช่เฉพาะของที่ Agent สร้าง)</li>
+          <li><strong>กลับไปแก้ที่ prompt ไม่ใช่ที่โค้ด</strong> — ของที่ออกมาผิดรูป แปลว่าคำสั่งขาดข้อมูลไปหนึ่งชิ้น หาให้เจอว่าชิ้นไหน สำหรับ router ชิ้นนั้นคือบรรทัดนี้ใน <code>ข้อกำหนดทางเทคนิค:</code> — <code>ใช้ createBrowserRouter + RouterProvider ของ data mode ห้ามใช้ &lt;BrowserRouter&gt;, &lt;Routes&gt; หรือ &lt;Route&gt; ใน JSX</code></li>
+        </ol>
+
+        <p>ถ้าพลาดข้อเดิมสองครั้งกับ prompt คนละอัน แปลว่ามันไม่ใช่ปัญหาของ prompt แต่เป็นปัญหาของกติกา — ที่ที่ควรไปแก้คือ <code>.cursor/rules/project.mdc</code> จากบทเรียน 07 เพราะกติกาในไฟล์นั้นถูกอ่านทุกครั้งโดยที่คุณไม่ต้องพิมพ์ซ้ำ</p>
+
+        <h3>เขียนเอง — เมื่อการอธิบายแพงกว่าการพิมพ์</h3>
+
+        <p>สองเกณฑ์ ใช้อันไหนก่อนถึงก็ได้:</p>
+
+        <ul>
+          <li><strong>อธิบายไปสามครั้งแล้วยังไม่ได้</strong> — สองครั้งแรกคือโควตาของ "แก้ต่อ" ครั้งที่สามคือหลังถอยแล้วสั่งใหม่หนึ่งรอบ ถ้าถึงตรงนี้แล้วยังไม่เข้าที่ แปลว่าสิ่งที่คุณต้องการมีรายละเอียดที่อธิบายเป็นภาษาคนได้ยากกว่าเขียนเป็นโค้ด</li>
+          <li><strong>โค้ดสั้นกว่าคำอธิบาย</strong> — วัดตรง ๆ ได้เลย ถ้าย่อหน้าที่คุณกำลังจะพิมพ์ใส่แชทยาวกว่าโค้ดที่คุณต้องการ ให้พิมพ์โค้ด <code>cartReducer</code> เป็นตัวอย่างที่ชัดที่สุด: อธิบายกติกาทั้งสี่ action ให้ครบพอที่จะไม่มีอะไรถูกเดา ใช้ที่ว่างมากกว่าตัว reducer เอง</li>
+        </ul>
+
+        <p>สิบจุดที่คอร์สนี้บังคับให้พิมพ์เองตลอดทั้งคอร์สถูกเลือกด้วยเกณฑ์เดียวกันนี้บวกอีกข้อหนึ่ง: ถ้าคุณไม่เคยพิมพ์ <code>cartReducer</code> เอง คุณจะไม่มีมาตรฐานในหัวไว้เทียบตอนตรวจ reducer ที่ AI เขียนให้ในโปรเจกต์หน้า</p>
+
+        <p>ที่ต้องพูดให้ชัดคือ <strong>"เขียนเอง" ไม่ใช่การยอมแพ้ และไม่ใช่การถอยไปเป็นค่าเริ่มต้น</strong> มันคือการอ่านตัวเลขให้ออกว่าตอนนี้ทางไหนถูกกว่า คนที่ไม่เคยเลือกทางนี้เลย กับคนที่เลือกทางนี้ตลอด เสียเวลาไปพอ ๆ กันด้วยเหตุผลคนละข้อ</p>
+
+        <h2>สัญญาณอันตรายสามข้อ</h2>
+
+        <p>สามข้อนี้ต่างจากตารางข้างบน ตรงที่มันไม่ใช่อาการของโค้ด แต่เป็นอาการของ<em>คนตรวจ</em> และมันมาก่อนบั๊กเสมอ</p>
+
+        <h3>1. diff ยาวเกินกว่าจะอ่านไหว</h3>
+
+        <p>เกณฑ์ไม่ใช่จำนวนบรรทัด แต่คือคำถามนี้: <em>อ่านจบแล้วชี้ได้ทุกไฟล์ไหมว่าทำไมมันถึงอยู่ใน diff นี้</em> ถ้ามีแม้แต่ไฟล์เดียวที่ตอบไม่ได้ diff นั้นยาวเกินไปแล้ว ไม่ว่ามันจะมีกี่บรรทัด</p>
+
+        <p><strong>ทำอะไรแทน:</strong> อย่าเริ่มด้วย <code>git diff</code> ให้เริ่มด้วย <code>git diff --stat</code> ซึ่งเป็นรายชื่อไฟล์ล้วน ๆ เทียบกับรายการใน <code>โครงสร้าง:</code> ของ prompt ก่อน ถ้ารายชื่อไม่ตรง ถอยเลยโดยยังไม่ต้องอ่านเนื้อในสักบรรทัด ส่วนวิธีป้องกันคือสองอย่างที่ต้องทำ<em>ก่อน</em>ส่ง prompt: commit ให้ working tree สะอาด และเขียนส่วน <code>ขอบเขต:</code> ให้ครบ — diff ที่อ่านไหวเป็นผลของ prompt ที่ดี ไม่ใช่ของความอดทนในการอ่าน</p>
+
+        <h3>2. เทสต์ผ่านแต่คุณอธิบายไม่ได้ว่าทำไม</h3>
+
+        <p>ข้อนี้จะมีความหมายเต็มที่ตอนบทเรียน 30–33 แต่ต้องรู้ไว้ตั้งแต่ตอนนี้ เพราะมันเป็นกับดักที่ทำให้คนเชื่อโค้ดผิดชุด เทสต์ที่ AI เขียนมีแนวโน้มจะ assert <em>สิ่งที่โค้ดทำอยู่</em> ไม่ใช่ <em>สิ่งที่โค้ดควรทำ</em> — ซึ่งแปลว่าถ้าโค้ดผิด เทสต์จะยืนยันความผิดนั้นให้เป็นสีเขียว</p>
+
+        <p><strong>ทำอะไรแทน:</strong> ทำให้มันแดงด้วยมือ เปิดโค้ดจริง (ไม่ใช่เทสต์) แล้วแก้ให้ผิดหนึ่งบรรทัด — ลบ <code>setPage(1)</code> ทิ้ง, เปลี่ยน <code>&lt;= 1</code> เป็น <code>&lt;= 0</code>, ย้าย <code>clearCart()</code> ออกจาก <code>onSuccess</code> — แล้วรันเทสต์ใหม่ ถ้ามันยังเขียว เทสต์นั้นไม่ได้ทดสอบสิ่งที่คุณคิดว่ามันทดสอบ จากนั้น <code>git restore</code> คืนของเดิม การทดลองนี้ใช้เวลาสามสิบวินาทีและตอบคำถามที่การอ่านเทสต์เฉย ๆ ตอบไม่ได้</p>
+
+        <h3>3. ยอมรับโค้ดเพราะ "มันก็รันได้"</h3>
+
+        <p>อ่านตารางทั้งหกตระกูลข้างบนอีกรอบแล้วนับดู: อาการเกือบทั้งหมดในนั้น<strong>รันได้</strong> หน้าเว็บขึ้น ปุ่มกดได้ ข้อมูลมาครบ "มันก็รันได้" จึงไม่ใช่หลักฐานว่าโค้ดถูก มันเป็นแค่หลักฐานว่าโค้ดไม่ crash ซึ่งเป็นเกณฑ์ที่ต่ำกว่าที่คุณต้องการมาก</p>
+
+        <p><strong>ทำอะไรแทน:</strong> ใช้ขั้นที่ห้าของวงจรตรวจงานจากบทเรียน 08 ตรง ๆ — ไล่ดูโค้ดที่เพิ่งได้มาแล้วถามตัวเองอย่างซื่อสัตย์ว่า "ถ้ามีคนถามว่าบรรทัดนี้ทำอะไร ตอบได้ไหม" ตอบไม่ได้แม้แต่บรรทัดเดียว ให้เปิดโหมด Ask <code>@</code> ไฟล์นั้นแล้วถามจนเข้าใจก่อนไปต่อ นี่คือกติกาข้อเดียวของคอร์สนี้ในรูปของขั้นตอนที่ทำได้จริง และเป็นด่านสุดท้ายที่เหลืออยู่หลังจากเครื่องมือทุกตัวบอกว่าผ่านแล้ว</p>
+
+        <h2>ก่อนไปต่อ</h2>
+
+        <p>สิ่งที่บทนี้ทำคือรวบยี่สิบบรรทัดกระจัดกระจายให้เป็นของที่ใช้ซ้ำได้: หกตระกูล หนึ่งเส้นแบ่ง (ดัง/เงียบ) สามทางเลือก และสามสัญญาณ ถ้าจะจำอะไรกลับไปข้อเดียว ให้จำเส้นแบ่งดังกับเงียบ เพราะมันเปลี่ยนวิธีจัดสรรเวลาตรวจงานของคุณทั้งหมด — เครื่องมือดูแลฝั่งดังให้ครบแล้ว เวลาของคุณควรไปอยู่ฝั่งเงียบทั้งก้อน</p>
+
+        <p>สี่บทถัดไปคือการเอาฝั่งเงียบส่วนหนึ่งไปทำให้ดัง: บทเรียน 30–33 เราจะติดตั้งชุดทดสอบแล้วเขียนเทสต์ครบทุกชั้น เพื่อให้อาการอย่าง "<code>clearCart</code> อยู่ผิดที่" มีเครื่องมือมาตะโกนบอกแทนที่จะรอให้คนสังเกต — และเพื่อให้เห็นด้วยว่าบางอาการ เช่น "ลืม <code>setPage(1)</code>" ยัง<em>เงียบ</em>อยู่แม้ชุดเทสต์จะครบสามชั้นแล้ว (บทเรียน 33 จะพิสูจน์ให้ดูด้วยมือ) ส่วนบทเรียน 34 จะกลับมาที่เรื่องเดียวกันนี้จากอีกด้าน คือการใช้ AI ตรวจงานของ AI แล้วดูว่ามันทำอะไรได้และทำอะไรไม่ได้</p>
+
+        <blockquote>🚨 <strong>ทักษะที่แยกคนใช้ AI เป็นกับไม่เป็น ไม่ใช่การเขียน prompt ที่เก่งกว่า</strong> แต่คือการรู้ว่าเมื่อไหร่ควรเลิกใช้มันแล้วลงมือเอง prompt ที่ดีขึ้นช่วยได้จนถึงจุดหนึ่ง หลังจุดนั้นสิ่งที่ประหยัดเวลาคือการปิดแชทแล้วพิมพ์โค้ดสิบบรรทัดที่คุณรู้อยู่แล้วว่าต้องเป็นอะไร</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="28_place_order.html" rel="prev">ก่อนหน้า: สั่งซื้อ</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="30_test_setup.html" rel="next">ถัดไป: ติดตั้งชุดทดสอบ</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

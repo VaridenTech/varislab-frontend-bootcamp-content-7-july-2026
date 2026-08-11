@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สั่ง Cursor สร้างคอมโพเนนต์รายการสินค้า price.utils, ProductCard, ProductsList และ CategoryMenu พร้อมติดตั้ง react-loading-skeleton และตรวจการปัดเศษเงินกับฟิลด์ brand ที่ API ไม่ได้ส่งมาจริง" />
+    <title>คอมโพเนนต์รายการสินค้า | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 18 · สร้างหน้าเพจ (Pages)</p>
+          <h1>คอมโพเนนต์รายการสินค้า</h1>
+          <p class="lesson-original-title" lang="en">Product List Components</p>
+        </header>
+
+        <p>ยินดีด้วย — คุณมาถึงช่วงที่สนุกที่สุดของคอร์สแล้ว ตอนนี้เรามีครบทุกอย่างที่หน้าเพจต้องใช้: โครงแอปกับ router, คอมโพเนนต์กลางอย่าง Button และ Pagination และชั้นข้อมูลสินค้าที่จบด้วย query factory ในบทที่แล้ว จากบทนี้ไปอีกสี่บท เราจะเอาทั้งหมดนั้นมาประกอบเป็นหน้าเพจจริง: Home, Category และ Product detail</p>
+
+        <p>แต่ก่อนจะสร้างหน้า Home ในบทถัดไป สังเกตว่าทั้งหน้า Home และหน้า Category ต่างต้องแสดง<em>รายการสินค้าเป็นการ์ด</em>และ<em>เมนูหมวดหมู่</em>เหมือนกันเป๊ะ ถ้าเราเขียน markup ชุดนั้นซ้ำในทั้งสองหน้า วันที่ต้องแก้ดีไซน์การ์ดเราจะต้องแก้สองที่ (แล้วก็จะลืมแก้สักที่หนึ่งแน่นอน) บทนี้เราเลยจะสร้างชิ้นส่วนที่ใช้ร่วมกันเหล่านี้ก่อนหนึ่งบทเต็ม: utility คำนวณราคา, ProductCard, ProductsList และ CategoryMenu</p>
+
+        <blockquote>💡 บทนี้จะยังไม่มีอะไรใหม่ปรากฏบนหน้าจอ เพราะคอมโพเนนต์ที่สร้างยังไม่ถูกเรียกใช้จากหน้าไหนเลย — เราจะได้เห็นมันพร้อมกันทั้งหมดตอนประกอบหน้า Home ในบทถัดไป ระหว่างทางใช้ <code>npm run dev</code> กับ <code>npm run typecheck</code> เป็นตัวยืนยันว่าไม่มีอะไรพังก็พอ</blockquote>
+
+        <h2>price.utils: คำนวณราคาก่อนลด</h2>
+
+        <p>เปิดข้อมูลสินค้าจาก dummyjson ดูอีกครั้ง (เช่น <code>https://dummyjson.com/products/1</code>) จะเห็นว่า API ให้ราคามาสองส่วน: <code>price</code> ซึ่งเป็น<strong>ราคาหลังหักส่วนลดแล้ว</strong> และ <code>discountPercentage</code> เป็นเปอร์เซ็นต์ส่วนลด แต่หน้าร้านออนไลน์ทั่วไปชอบแสดง "ราคาเต็มขีดฆ่า" คู่กับราคาจริงเพื่อให้เห็นว่าลดไปเท่าไร ปัญหาคือ API ไม่ได้ให้ราคาเต็มมา — เราต้องคำนวณย้อนกลับเอง</p>
+
+        <p>คณิตศาสตร์ไม่ยาก: ถ้าราคาเต็มคือ <code>X</code> แล้วลด <code>d</code> เปอร์เซ็นต์ ราคาหลังลดคือ <code>X × (1 - d/100)</code> ดังนั้นย้อนกลับ ราคาเต็มคือ <code>price ÷ (1 - d/100)</code> ลองแทนตัวเลขดู: สินค้าราคา 90 บาทหลังลด 10% → <code>90 ÷ 0.9 = 100</code> บาท ตรงตามคาด</p>
+
+        <p>การคำนวณแบบนี้เป็น pure function ที่ไม่เกี่ยวกับ React เลย เราจึงเก็บไว้ใน <code>shared/utils</code> ข้าง ๆ <code>pagination.utils.ts</code> จากบทเรียน 16 และเพราะมันเป็น pure function เดี่ยว ๆ ในบทเรียน 31 เราจะเขียน unit test ให้มันได้ง่ายมาก</p>
+
+        <p>สิ่งที่ต้องตัดสินใจให้ขาด<em>ก่อน</em>ส่ง prompt คือคำถามเดียว: ฟังก์ชันนี้คืน "ตัวเลข" หรือ "ข้อความราคาที่จัดรูปแบบแล้ว"? คำตอบของโปรเจกต์นี้คือ<strong>ตัวเลขดิบ</strong> — ผลหารตรง ๆ ไม่ปัดเศษ ไม่ใส่สัญลักษณ์สกุลเงิน การจัดรูปแบบเป็นงานของ<em>จุดที่แสดงผล</em> ซึ่งใน ProductCard คือ <code>${originalPrice.toFixed(2)}</code> เหตุผลไม่ใช่ความสวยงามเชิงทฤษฎี: ค่าที่ยังไม่ปัดจะถูกเอาไปคำนวณต่อจริง ๆ ในบทเรียน 24 (บรรทัด <code>You Save: ${(item.originalPrice - item.price).toFixed(2)}</code> ในตะกร้า) ถ้าปัดตั้งแต่ต้นทาง เราจะปัดสองรอบโดยไม่รู้ตัว จำย่อหน้านี้ไว้ให้ดี — มันคือข้อแรกของ checklist</p>
+
+        <h2>Skeleton screen ด้วย react-loading-skeleton</h2>
+
+        <p>ตอนนี้เรามี spinner (<code>ClipLoader</code> จาก react-spinners ที่ติดตั้งไปในบทเรียน 12) ไว้ใช้ตอนรอ<em>ข้อมูล</em>จาก API แล้ว แต่รูปภาพสินค้าเป็นการรอคนละแบบ: ข้อมูล query มาถึงแล้ว การ์ดวาดเสร็จแล้ว แต่ไฟล์รูปยังโหลดไม่เสร็จ ถ้าไม่ทำอะไรเลย การ์ดจะโผล่มาแบบไม่มีรูป แล้วรูปค่อยเด้งตามมาทีหลัง — layout กระตุกไปมาไม่น่าดู</p>
+
+        <p>วิธีที่เว็บสมัยใหม่นิยมคือ <strong>skeleton screen</strong>: วาดกล่องสีเทาวิบวับขนาดเท่าของจริงค้างไว้ก่อน พอของจริงพร้อมค่อยสลับเข้ามาแทนที่ ต่างจาก spinner ตรงที่ skeleton <em>จองพื้นที่</em>ไว้ให้เลย layout จึงไม่ขยับ และผู้ใช้เดาได้ทันทีว่ากำลังรออะไรอยู่ตรงไหน — spinner เหมาะกับ "รอทั้งก้อนใหญ่" ส่วน skeleton เหมาะกับ "รอชิ้นส่วนย่อยที่รู้ขนาดล่วงหน้า" เราจะได้ใช้ทั้งคู่ในโปรเจกต์นี้</p>
+
+        <p>ตามกติกาเดิมของคอร์ส dependency เราติดตั้งเอง ส่วนการ<em>ต่อสาย</em>เข้าโค้ดเป็นงานของ Agent:</p>
+
+        <pre><code class="language-bash">npm install react-loading-skeleton
+git add -A &amp;&amp; git commit -m "chore: install react-loading-skeleton"</code></pre>
+
+        <p>react-loading-skeleton ต้องการ CSS ของตัวเองหนึ่งไฟล์ (สีพื้น สีวิบวับ และ animation) ซึ่งควร import ครั้งเดียวที่จุดเริ่มต้นของแอป — <code>src/main.tsx</code> จึงต้องถูกแก้เพิ่มหนึ่งบรรทัด และนั่นคือไฟล์ที่สองที่ prompt ของบทนี้จะสั่งแก้</p>
+
+        <blockquote>💡 ตอนจบบทเรียน 09 เราทิ้งท้ายไว้ว่า <code>main.tsx</code> จะนิ่งไปอีกนาน และจะมีของมาเพิ่มอีกครั้งเดียวคือบรรทัด import CSS ของ react-loading-skeleton ในบทเรียน 18 — นี่คือบทนั้น หลังบทนี้ไฟล์นั้นจะไม่ถูกแตะอีกเลยตลอดคอร์ส</blockquote>
+
+        <h2>สามคอมโพเนนต์ สามระดับของการรู้จักข้อมูล</h2>
+
+        <p>ก่อนไปดูโค้ด ทำความเข้าใจการแบ่งงานของสามตัวนี้ให้ขาดก่อน เพราะมันคือเหตุผลที่เราสร้างสามไฟล์แทนที่จะเป็นไฟล์เดียว:</p>
+
+        <ul>
+          <li><strong><code>ProductCard</code></strong> — รับ props เป็น<em>ชิ้น ๆ</em> (<code>image</code>, <code>title</code>, <code>price</code>, …) ไม่รู้จัก type <code>Product</code> ของ dummyjson เลย และไม่รู้จัก router ด้วย ตอนถูกคลิกมันแค่เรียก callback <code>onProductClick(productId)</code> แล้วให้คนที่ใช้มันตัดสินใจเองว่าจะพาไปไหน — แบบเดียวกับที่ <code>&lt;button onClick={…}&gt;</code> ไม่รู้ว่า onClick ทำอะไร คอมโพเนนต์ยิ่งรู้น้อย ยิ่งเอาไปใช้ซ้ำได้กว้าง</li>
+          <li><strong><code>ProductsList</code></strong> — ตัวกลางที่รู้จัก <code>Product</code> เต็ม ๆ หน้าที่เดียวของมันคือ<em>แปลง</em>ข้อมูลจาก query ให้เป็น props ของการ์ด: หยิบ <code>thumbnail</code> ไปเป็น <code>image</code>, นับ <code>reviews.length</code> เป็น <code>reviewsCount</code>, เรียก <code>calculateOriginalPrice</code> ตรงนี้ที่เดียว การแปลงทั้งหมดกระจุกอยู่ในไฟล์เดียวแบบนี้ วันที่ dummyjson เปลี่ยนชื่อฟิลด์ เราแก้ไฟล์เดียวจบ</li>
+          <li><strong><code>CategoryMenu</code></strong> — เมนูที่<em>ไม่มี state ของตัวเองเลยสักตัว</em> มันไม่จำว่าหมวดไหนถูกเลือก หน้าเพจเป็นคนจำ แล้วส่งกลับลงมาผ่าน prop <code>activeCategory</code> คอมโพเนนต์แบบนี้เรียกกันว่า controlled component (แนวคิดเดียวกับ controlled input จาก Week 4 แค่ขยับมาอยู่ระดับคอมโพเนนต์) ข้อดีคือหน้า Home กับหน้า Category ใช้เมนูตัวเดียวกันได้ทั้งที่พฤติกรรมหลังคลิกไม่เหมือนกันเลย — เดี๋ยวคุณจะได้เห็นในบทเรียน 19 กับ 20</li>
+        </ul>
+
+        <p>สัญญาขาออกของ CategoryMenu มีจุดที่ต้องอ่านช้า ๆ: <code>onCategoryClick</code> ส่ง<em>ทั้ง object</em> <code>Category</code> กลับไป ไม่ใช่แค่ <code>slug</code> ทำไม? เพราะหน้าเพจที่รับ event ไปต้องใช้มากกว่านั้น — ใช้ <code>slug</code> ยิง query และใช้ <code>name</code> แสดงหัวหน้า การส่ง object เต็มทำให้ผู้ใช้เมนูไม่ต้องไปไล่หา object จาก slug อีกรอบ ส่วนขาเข้า <code>activeCategory</code> รับแค่ <em>slug</em> เพราะสิ่งเดียวที่เมนูต้องรู้คือ "ตัวไหนต้องไฮไลต์"</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <pre><code class="language-bash">src/
+├── main.tsx                                 # 🤖 Agent แก้ — เพิ่มหนึ่งบรรทัด
+├── shared/
+│   └── utils/
+│       └── price.utils.ts                   # 🤖 ใหม่ — คำนวณราคาก่อนลด
+└── features/
+    └── products/
+        └── components/
+            ├── ProductCard/
+            │   └── ProductCard.tsx          # 🤖 ใหม่ — ไม่มีไฟล์ .module.scss
+            ├── ProductsList/
+            │   └── ProductsList.tsx         # 🤖 ใหม่ — ไม่มีไฟล์ .module.scss
+            └── CategoryMenu/
+                ├── CategoryMenu.module.scss # 🤖 ใหม่ — มี class เดียว
+                └── CategoryMenu.tsx         # 🤖 ใหม่</code></pre>
+
+        <p>โฟลเดอร์ <code>src/features/products/components/</code> ยังไม่มีอยู่ — Agent ต้องสร้างขึ้นใหม่ ส่วน <code>src/shared/utils/</code> มี <code>pagination.utils.ts</code> จากบทเรียน 16 อยู่แล้ว</p>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>price.utils.ts</code></strong> — ต้องเป็น pure function ตัวเดียวที่รับ number คืน <code>number</code> และผลลัพธ์ต้องเป็นผลหารดิบ ต้องไม่ปัดเศษ ไม่จัดรูปแบบ ไม่แตะ <code>Intl</code> ไม่รู้จัก React และต้องไม่ import อะไรเลยสักบรรทัด</li>
+          <li><strong><code>ProductCard.tsx</code></strong> — ต้องรับ props เป็นค่าพร้อมแสดงทีละตัว ต้องไม่ import <code>Product</code>, ไม่ import <code>useNavigate</code> และต้องไม่มีไฟล์ <code>.module.scss</code> ของตัวเอง</li>
+          <li><strong><code>ProductsList.tsx</code></strong> — ต้องรับ <code>products</code> ที่เป็น <code>undefined</code> ได้ และเป็นที่<em>เดียว</em>ในบทนี้ที่เรียก <code>calculateOriginalPrice</code> ต้องไม่ยิง query เอง ต้องไม่รู้จัก <code>useQuery</code></li>
+          <li><strong><code>CategoryMenu.tsx</code></strong> — ต้องไม่มี <code>useState</code> แม้แต่ตัวเดียว หมวดที่เลือกอยู่มาจาก prop เท่านั้น และ callback ต้องส่ง <code>Category</code> ทั้ง object กลับ ไม่ใช่ string</li>
+          <li><strong><code>main.tsx</code></strong> — ต้องเพิ่มบรรทัด import CSS หนึ่งบรรทัด ต้องไม่แตะบรรทัดอื่นสักบรรทัด</li>
+        </ul>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> — แชทใหม่ โหมด Agent สังเกตว่างานนี้มีทั้ง "สร้างไฟล์ใหม่" และ "แก้ไฟล์เดิม" ปนกัน ส่วนที่แก้ไฟล์เดิมต้องระบุขอบเขตให้แน่นเป็นพิเศษเหมือนบทที่แล้ว:</p>
+          <pre><code class="language-text">สร้างคอมโพเนนต์รายการสินค้าและ utility คำนวณราคาก่อนลด แล้วต่อ CSS ของ react-loading-skeleton
+
+บริบท: @src/features/products/types.ts @src/shared/components/StarReview/StarReview.tsx @src/shared/utils/pagination.utils.ts @src/main.tsx @src/styles
+src/features/products/types.ts export interface Product และ Category
+  Product มีฟิลด์ที่งานนี้ใช้: id (number), title (string), brand (string),
+  thumbnail (string), price (number), discountPercentage (number ที่เป็น optional),
+  rating (number), reviews (array ของ ProductReview)
+  Category มีสามฟิลด์: slug, name, url เป็น string ทั้งหมด
+src/shared/components/StarReview/StarReview.tsx เป็น default export รับ prop เดียวคือ
+  score: number ที่เป็นคะแนนสเกล 0 ถึง 10
+src/shared/utils/pagination.utils.ts มีอยู่แล้ว ห้ามแตะ ไฟล์ใหม่ของงานนี้อยู่โฟลเดอร์เดียวกัน
+ติดตั้ง react-loading-skeleton ไว้แล้ว ยังไม่ได้ import CSS ของมันที่ไหนเลย
+โฟลเดอร์ src/features/products/components/ ยังไม่มี ให้สร้างขึ้นใหม่
+utility class ทุกตัวที่งานนี้ใช้มีอยู่จริงใน src/styles/ แล้ว: flex, flex-column,
+  align-item-center, block, pointer, text-right, text-muted, text-primary,
+  text-line-through, fw-bold, fw-medium, fs-12, fs-14, fs-18, fs-20,
+  nav-link, mt-0, mb-5, mb-10, mb-15, mb-20, ml-5, ml-10, pt-15, pb-15
+alias @/ ใช้ได้เฉพาะไฟล์ .ts และ .tsx ส่วนไฟล์ .scss ต้องอ้าง path แบบ relative
+โปรเจกต์นี้ไม่ได้เปิด verbatimModuleSyntax ให้ใช้ import แบบธรรมดา ไม่ต้องใช้ import type
+
+โครงสร้าง: สร้างไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
+- src/shared/utils/price.utils.ts
+- src/features/products/components/ProductCard/ProductCard.tsx
+- src/features/products/components/ProductsList/ProductsList.tsx
+- src/features/products/components/CategoryMenu/CategoryMenu.module.scss
+- src/features/products/components/CategoryMenu/CategoryMenu.tsx
+และแก้ src/main.tsx หนึ่งบรรทัด
+ProductCard และ ProductsList ต้องไม่มีไฟล์ .module.scss
+
+ข้อกำหนดทางเทคนิค:
+- price.utils.ts: ไม่มี import เลย มี export เดียวคือ arrow function ชื่อ
+  calculateOriginalPrice ที่รับ (price: number, discountPercentage?: number)
+  และประกาศ return type เป็น number
+  ขึ้นต้นไฟล์ด้วย JSDoc สี่บรรทัดนี้ ลอกตามนี้ทุกตัวอักษร:
+    Calculate the original price before the discount.
+    @param {number} price - The discounted price of the product.
+    @param {number | undefined} discountPercentage - The discount percentage (optional).
+    @returns {string} - The original price as a formatted string.
+  ไส้ในมีสองคำสั่งเท่านั้น:
+    guard clause: ถ้า !discountPercentage หรือ discountPercentage &lt;= 0
+      หรือ discountPercentage &gt;= 100 ให้ return price
+      พร้อม comment ท้ายบรรทัดว่า // If no discount or invalid discount, return the current price
+    บรรทัดสุดท้าย: return price / (1 - discountPercentage / 100)
+  ห้ามปัดเศษ ห้ามใช้ toFixed, Math.round, Number(), parseFloat หรือ Intl.NumberFormat
+  ห้ามคืน string ไม่ว่ากรณีใด แม้ JSDoc จะเขียนไว้แบบนั้น (บรรทัดนั้นลอกตามต้นฉบับ)
+- ProductCard.tsx: import React, { useState } from "react"
+    import Skeleton from "react-loading-skeleton"
+    import StarReview จาก "@/shared/components/StarReview/StarReview"
+  interface ProductCardProps เรียงตามนี้พอดี: productId: number, image: string,
+    title: string, description: string, price: number, originalPrice?: number,
+    discount?: number, rating: number, reviewsCount: number,
+    skeletonHeight?: number, onProductClick: (id: number) =&gt; void
+    ใส่ comment ท้ายบรรทัด rating ว่า // Rating out of 10
+  destructure props ตามลำดับนี้ (ต่างจากลำดับใน interface โดยตั้งใจ): image, title,
+    description, price, originalPrice, discount, rating, reviewsCount,
+    skeletonHeight = 240, productId, onProductClick
+  state เดียว: const [isImageLoaded, setIsImageLoaded] = useState(false)
+  โครง JSX:
+    div นอกสุด className={`flex flex-column`} (เขียนเป็น template literal ตามนี้)
+      และ onClick={() =&gt; onProductClick(productId)}
+    &gt; div className="image-container" ที่มี
+        {!isImageLoaded &amp;&amp; &lt;Skeleton height={skeletonHeight} /&gt;}
+        img src={image} alt={title} style={{ display: isImageLoaded ? "block" : "none" }}
+          onLoad ที่เรียก setIsImageLoaded(true)
+    &gt; div className={`pt-15 pb-15`} (template literal เช่นกัน) ที่มี
+        h4 className="fs-18 mb-5 mt-0" แสดง title
+        p className="fs-14 text-muted mb-10 mt-0" แสดง description
+        div className="flex align-item-center mb-15" ที่มี StarReview score={rating}
+          และ span className="fs-12 text-muted ml-5" แสดง ({reviewsCount}) ในวงเล็บ
+        p className="fs-20 mb-5" แสดง ${price.toFixed(2)} โดย $ เป็นตัวอักษรธรรมดา
+        div className="flex align-item-center" ที่มีสองบล็อกแบบมีเงื่อนไข:
+          {originalPrice &amp;&amp; ...} span className="fs-14 text-muted text-line-through"
+            แสดง $ ตามด้วย originalPrice.toFixed(2)
+          {discount &amp;&amp; ...} span className="fs-14 fw-medium ml-10 text-primary"
+            แสดง {discount}% Off
+  เว้นบรรทัดว่างหนึ่งบรรทัดคั่นระหว่าง div ของรูปกับ div ที่ครอบข้อความ
+    ที่อื่นใน JSX ห้ามมีบรรทัดว่าง
+  ห้าม import Product, ห้าม import useNavigate และห้ามสร้างไฟล์ .module.scss ให้ไฟล์นี้
+- ProductsList.tsx: import React, Product จาก "@/features/products/types",
+    ProductCard จาก "@/features/products/components/ProductCard/ProductCard"
+    และ calculateOriginalPrice จาก "@/shared/utils/price.utils"
+  interface ProductsListProps: products: Product[] | undefined
+    และ onProductClick: (id: number) =&gt; void
+  return fragment ว่าง แล้วข้างในเป็น products?.map(...) ที่ destructure ใน parameter
+    ของ map ตามลำดับนี้: thumbnail, id, title, brand, price, discountPercentage,
+    rating, reviews
+  แต่ละรอบ render div key={id} className="mb-15 pointer" ครอบ ProductCard ที่ส่ง props
+    productId={id}, image={thumbnail}, title={title}, description={brand},
+    price={price}, originalPrice={calculateOriginalPrice(price, discountPercentage)},
+    discount={discountPercentage}, rating={rating},
+    reviewsCount={reviews.length}, onProductClick={onProductClick}
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย
+  ห้ามส่ง skeletonHeight และห้ามใส่ fallback ให้ brand ไม่ว่าจะเป็น "" หรือ "-"
+- CategoryMenu.module.scss: มี class เดียวคือ .categoryMenu ที่ตั้ง width: 16%
+    ไม่ต้อง @use variables เพราะไม่ได้ใช้ตัวแปรเลย
+- CategoryMenu.tsx: import React, styles จาก "./CategoryMenu.module.scss"
+    และ Category จาก "@/features/products/types" เรียงสามบรรทัดตามลำดับนี้
+  interface CategoryMenuProps: categories: Category[],
+    activeCategory: string | undefined, onCategoryClick: (category: Category) =&gt; void
+  return div className={`${styles.categoryMenu} text-right`}
+    ข้างในวน categories.map((cat) =&gt; ...) render span key={cat.slug}
+    className เป็น template literal ว่า `nav-link block mb-20 pointer ` ต่อด้วย
+      activeCategory === cat.slug ? "fw-bold text-primary" : ""
+    onClick={() =&gt; onCategoryClick(cat)} และแสดง {cat.name}
+  JSX ของไฟล์นี้ห้ามมีบรรทัดว่างคั่นเลย
+  ห้ามมี useState, useEffect หรือ state ภายในใด ๆ
+- main.tsx: เพิ่มบรรทัด import "react-loading-skeleton/dist/skeleton.css";
+    ไว้ใต้บรรทัด import "./styles/main.scss"; พอดี และเหนือบรรทัด import App
+  ห้ามแก้บรรทัดอื่นในไฟล์นี้แม้แต่ตัวอักษรเดียว
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ types.ts, api.ts, queries.ts, StarReview หรือคอมโพเนนต์ใน shared/components
+- ห้ามแก้ pagination.utils.ts
+- ห้ามสร้าง index.ts หรือไฟล์ barrel ใด ๆ
+- ห้ามสร้างไฟล์ .module.scss ให้ ProductCard หรือ ProductsList
+- ห้ามเรียก useQuery หรือ productQueries ในไฟล์ไหนของงานนี้
+- ยังไม่ต้องเอาคอมโพเนนต์เหล่านี้ไปใช้ในหน้าไหน</code></pre>
+        </blockquote>
+
+        <p>บรรทัด "ห้ามใส่ fallback ให้ <code>brand</code>" มีที่มาที่เราจะเฉลยตอนท้ายบท และเป็นบรรทัดที่ถ้าไม่เขียนไว้ Agent มีสิทธิ์ทำ "ให้" โดยไม่บอก</p>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>ปัดเศษเงินไว้ใน <code>price.utils.ts</code> เอง</em> — คืน <code>Number(x.toFixed(2))</code>, <code>Math.round(x * 100) / 100</code> หรือหนักกว่านั้นคือคืน string ที่ <code>toFixed</code> ให้มาตรง ๆ ต้นตอไม่ใช่ความมั่วของโมเดล แต่คือ JSDoc ที่เราเพิ่งสั่งให้มันลอกลงไปเอง: บรรทัด <code>@returns {string} - The original price as a formatted string.</code> ขัดกับ signature <code>: number</code> ตรง ๆ และเมื่อคำสั่งสองอันขัดกัน โมเดลจะเลือกอันที่เป็นภาษาคน สิ่งที่ทำให้ข้อนี้อันตรายคือ<strong>การตรวจด้วยตาบนหน้าจอจะไม่จับ</strong>: ถ้าคุณเทียบราคาบนหน้าจอ ทั้งสองแบบให้ตัวเลขเท่ากันถึงหลักสตางค์แทบทุกกรณี เพราะปลายทางมี <code>.toFixed(2)</code> ปัดซ้ำอยู่แล้ว (สินค้า id 1: <code>price 9.99</code>, <code>discountPercentage 10.48</code> — ค่าดิบคือ <code>11.159517426273458</code> ค่าที่ปัดในฟังก์ชันคือ <code>11.16</code> ทั้งคู่แสดงผลเป็น <code>$11.16</code> เหมือนกันเป๊ะ) ให้เทียบที่<em>ตัวฟังก์ชัน</em>แทน ไม่ใช่ที่หน้าจอ: <code>grep -nE "toFixed|Math\.round|Number\(|parseFloat|Intl" src/shared/utils/price.utils.ts</code> ต้องไม่คืนอะไรเลยสักบรรทัด และ <code>grep -rn "toFixed" src/</code> ทั้งโปรเจกต์ต้องเจอแค่<strong>สองจุด</strong> ทั้งคู่อยู่ใน <code>ProductCard.tsx</code> — การจัดรูปแบบเงินอยู่ที่จุดแสดงผลเท่านั้น ถ้าปล่อยให้ค่าถูกปัดตั้งแต่ต้นทาง อาการจะไปโผล่ตอนบทเรียน 24 ที่ตะกร้าเอา <code>originalPrice</code> ไปลบกับ <code>price</code> แล้วปัดอีกรอบ</li>
+            <li>ไฟล์ใหม่ <strong>5 ไฟล์พอดี</strong> และไฟล์เดิมที่ขึ้นสถานะ modified มี <strong><code>main.tsx</code> ไฟล์เดียว</strong> ไม่มี <code>ProductCard.module.scss</code>, <code>ProductsList.module.scss</code>, <code>index.ts</code> หรือ hook แถมมา</li>
+            <li><code>git diff src/main.tsx</code> ต้องมีบรรทัดสีเขียว<strong>บรรทัดเดียว</strong> และไม่มีสีแดงเลย — ถ้า Agent เขียนไฟล์นี้ใหม่ทั้งไฟล์ (แม้ผลลัพธ์จะเหมือนกัน) diff จะโตขึ้นทันทีและคุณจะรีวิวไม่ออกว่ามันเปลี่ยนอะไรบ้าง</li>
+            <li><code>price.utils.ts</code> มีคำสั่งในตัวฟังก์ชัน<strong>สองคำสั่ง</strong> คือ guard clause กับ <code>return</code> ไม่มี <code>try/catch</code> ไม่มีการ validate เพิ่ม และไม่มีการเช็ค <code>price</code> ว่าติดลบหรือเป็นศูนย์ — ข้อหลังนี้ต้นฉบับไม่ได้ทำ ถ้า Agent "ช่วย" เพิ่มให้ ให้เอาออก</li>
+            <li>เงื่อนไข guard ครบ<strong>สามข้อ</strong>: <code>!discountPercentage</code>, <code>&lt;= 0</code> และ <code>&gt;= 100</code> ข้อที่ AI ตัดทิ้งบ่อยที่สุดคือ <code>&gt;= 100</code> เพราะดู "เป็นไปไม่ได้" — ลบทิ้งแล้วส่วนลด 100% จะทำให้ตัวหารเป็นศูนย์ ได้ราคา <code>Infinity</code> โผล่บนการ์ด ส่วนลดเกิน 100% ได้ราคาติดลบ</li>
+            <li><code>ProductCard</code> ซ่อนรูปด้วย <code>display: "none"</code> ไม่ใช่ <code>{isImageLoaded &amp;&amp; &lt;img … /&gt;}</code> — ข้อนี้ต่างกันสองบรรทัดแต่ผลตรงข้ามกัน อ่านเหตุผลใต้โค้ดอ้างอิง ถ้าเจอแบบหลังให้แก้เดี๋ยวนั้น เพราะอาการคือ skeleton ค้างตลอดกาลซึ่งดูเหมือนเน็ตช้า ไม่เหมือนบั๊ก</li>
+            <li><code>skeletonHeight = 240</code> เป็น default parameter ตอน destructure ไม่ใช่ค่า default ที่เขียนไว้ใน interface (TypeScript ไม่มีที่ให้เขียนตรงนั้นอยู่แล้ว) และ <code>ProductsList</code> ต้อง<em>ไม่</em>ส่ง prop นี้</li>
+            <li><code>ProductsList</code> เรียก <code>calculateOriginalPrice</code> <strong>ครั้งเดียว</strong> และ <code>ProductCard</code> ต้องไม่ import มันเลย — <code>grep -n "calculateOriginalPrice" src/features/products/components/ProductCard/ProductCard.tsx</code> ต้องว่าง ถ้าเจอ แปลว่าการ์ดเริ่มรู้เรื่องส่วนลด ซึ่งเป็นความรู้ของชั้นบน</li>
+            <li><code>products?.map</code> มีเครื่องหมาย <code>?</code> จริง — ถ้า Agent เปลี่ยน type เป็น <code>Product[]</code> เฉย ๆ แล้วตัด <code>?</code> ออก มันจะ "สะอาดกว่า" ในไฟล์นี้ แต่ผลักภาระไปให้ทุกหน้าเพจต้องเช็คก่อนส่ง <code>data?.products</code> เข้ามา (ซึ่งเป็น <code>undefined</code> ได้เสมอระหว่างรอโหลด)</li>
+            <li><code>key={id}</code> ใช้ id จริงของสินค้า ไม่ใช่ index — รายการนี้เปลี่ยนชุดได้ทั้งชุดเวลาสลับหมวดหมู่หรือเปลี่ยนหน้า ส่วน <code>CategoryMenu</code> ใช้ <code>key={cat.slug}</code></li>
+            <li><code>CategoryMenu</code> ไม่มี <code>useState</code> — <code>grep -n "useState" src/features/products/components/CategoryMenu/CategoryMenu.tsx</code> ต้องว่าง ถ้าเจอ แปลว่ามันทำเมนูให้จำหมวดที่เลือกเอง ซึ่งจะแตกทันทีที่หน้า Category ต้องรีเซ็ตเลขหน้าพร้อมกัน (บทเรียน 20)</li>
+            <li><code>onCategoryClick</code> ส่ง <code>cat</code> ทั้ง object ไม่ใช่ <code>cat.slug</code> — ถ้าเป็นอย่างหลัง หน้า Category จะต้องไล่หา object จาก slug อีกรอบเพื่อเอา <code>name</code> ไปขึ้นหัวหน้า</li>
+            <li><code>ProductCard.tsx</code> และ <code>ProductsList.tsx</code> ต้อง<strong>ไม่มี</strong> <code>import styles from …</code> เลย — ทั้งสองตัวแต่งตัวด้วย utility class ล้วน</li>
+            <li>ค้นชื่อ class ทุกตัวใน <code>className</code> ว่ามีจริงใน <code>src/styles/</code> (<code>grep -rn "ชื่อ-class" src/styles/</code>) — จะมีอยู่<em>ตัวหนึ่ง</em>ที่หาไม่เจอ นั่นไม่ใช่ความผิดพลาดของ Agent อ่านกล่อง 💡 ใต้ <code>ProductCard.tsx</code> ก่อนแตะมัน</li>
+            <li>ไม่มี <code>any</code>, ไม่มี <code>as</code> กลบ type และไม่มี comment อธิบายสิ่งที่โค้ดบอกอยู่แล้ว — ยกเว้นสอง comment ที่ prompt สั่งไว้ตรง ๆ</li>
+          </ul>
+        </blockquote>
+
+        <p>เหมือนบทก่อน ๆ: <code>npm run lint</code> อาจตกเรื่อง <code>import-x/order</code> ก่อน แก้ด้วย <code>npx eslint . --fix</code> แล้วรันซ้ำให้ผ่านเงียบ ๆ จากนั้นค่อย <code>npm run typecheck</code></p>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/shared/utils/price.utils.ts</code>:</p>
+
+        <pre><code class="language-typescript">/**
+ * Calculate the original price before the discount.
+ * @param {number} price - The discounted price of the product.
+ * @param {number | undefined} discountPercentage - The discount percentage (optional).
+ * @returns {string} - The original price as a formatted string.
+ */
+export const calculateOriginalPrice = (
+  price: number,
+  discountPercentage?: number,
+): number =&gt; {
+  if (
+    !discountPercentage ||
+    discountPercentage &lt;= 0 ||
+    discountPercentage &gt;= 100
+  ) {
+    return price; // If no discount or invalid discount, return the current price
+  }
+  return price / (1 - discountPercentage / 100);
+};
+</code></pre>
+
+        <p>สังเกต guard clause ก่อนคำนวณ: ถ้าไม่มีส่วนลด (<code>undefined</code> หรือ <code>0</code>), ส่วนลดติดลบ หรือส่วนลดตั้งแต่ 100% ขึ้นไป (ซึ่งจะทำให้ตัวหารเป็นศูนย์หรือติดลบ — ได้ราคา <code>Infinity</code> หรือราคาติดลบ!) เราคืน <code>price</code> เดิมไปเลย การเช็คขอบเขตข้อมูลก่อนคำนวณแบบนี้เป็นนิสัยที่ดีมากเวลาทำงานกับข้อมูลจาก API ภายนอกที่เราควบคุมไม่ได้</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> บรรทัด <code>@returns {string} - The original price as a formatted string.</code> ในต้นฉบับ<em>ผิด</em> — ฟังก์ชันประกาศ <code>: number</code> อยู่สามบรรทัดถัดลงมา และคืนตัวเลขจริง ๆ ทั้งสองทางออก JSDoc ก้อนนี้น่าจะเป็นซากของเวอร์ชันก่อนที่เคยคืน string แล้วเปลี่ยนใจทีหลังโดยลืมแก้คำอธิบาย นี่คือตัวอย่างที่ชัดที่สุดของ<strong>comment ที่แย่กว่าไม่มี comment</strong>: มันไม่ทำให้อะไรพัง TypeScript ไม่อ่าน JSDoc เพื่อตรวจ type (มันอ่าน signature) <code>npm run lint</code> ก็ไม่มีกฎที่จับเรื่องนี้ — แต่มันโกหกคนอ่านคนถัดไป และในคอร์สนี้ "คนอ่านคนถัดไป" คือ Agent ที่เรากำลังจะสั่งงานต่อ นั่นคือเหตุผลที่ prompt ต้องมีบรรทัด "ห้ามคืน string แม้ JSDoc จะเขียนไว้แบบนั้น" ต่อท้าย — เราสั่งลอกตามต้นฉบับเพราะโค้ดอ้างอิงของคอร์สนี้คือแอปจริง แต่ต้องกันไม่ให้คำโกหกนั้นกลายเป็นโค้ด ในงานจริงนี่คือ comment ที่ควรเขียนทิ้งไว้ในรีวิว และเป็นสองบรรทัดที่แก้ได้ใน 10 วินาที</blockquote>
+
+        <p><code>src/features/products/components/ProductCard/ProductCard.tsx</code> — คอมโพเนนต์ที่จะถูกวาดซ้ำมากที่สุดในแอปนี้:</p>
+
+        <pre><code class="language-typescript">import React, { useState } from "react";
+import Skeleton from "react-loading-skeleton";
+import StarReview from "@/shared/components/StarReview/StarReview";
+
+interface ProductCardProps {
+  productId: number;
+  image: string;
+  title: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  discount?: number;
+  rating: number; // Rating out of 10
+  reviewsCount: number;
+  skeletonHeight?: number;
+  onProductClick: (id: number) =&gt; void;
+}
+
+const ProductCard: React.FC&lt;ProductCardProps&gt; = ({
+  image,
+  title,
+  description,
+  price,
+  originalPrice,
+  discount,
+  rating,
+  reviewsCount,
+  skeletonHeight = 240,
+  productId,
+  onProductClick,
+}) =&gt; {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+  return (
+    &lt;div
+      className={`flex flex-column`}
+      onClick={() =&gt; onProductClick(productId)}
+    &gt;
+      &lt;div className="image-container"&gt;
+        {!isImageLoaded &amp;&amp; &lt;Skeleton height={skeletonHeight} /&gt;}
+        &lt;img
+          src={image}
+          alt={title}
+          style={{
+            display: isImageLoaded ? "block" : "none",
+          }}
+          onLoad={() =&gt; {
+            setIsImageLoaded(true);
+          }}
+        /&gt;
+      &lt;/div&gt;
+
+      &lt;div className={`pt-15 pb-15`}&gt;
+        &lt;h4 className="fs-18 mb-5 mt-0"&gt;{title}&lt;/h4&gt;
+        &lt;p className="fs-14 text-muted mb-10 mt-0"&gt;{description}&lt;/p&gt;
+        &lt;div className="flex align-item-center mb-15"&gt;
+          &lt;StarReview score={rating} /&gt;
+          &lt;span className="fs-12 text-muted ml-5"&gt;({reviewsCount})&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;p className="fs-20 mb-5"&gt;${price.toFixed(2)}&lt;/p&gt;
+        &lt;div className="flex align-item-center"&gt;
+          {originalPrice &amp;&amp; (
+            &lt;span className="fs-14 text-muted text-line-through"&gt;
+              ${originalPrice.toFixed(2)}
+            &lt;/span&gt;
+          )}
+          {discount &amp;&amp; (
+            &lt;span className="fs-14 fw-medium ml-10 text-primary"&gt;
+              {discount}% Off
+            &lt;/span&gt;
+          )}
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default ProductCard;
+</code></pre>
+
+        <p>มีของให้แกะหลายชิ้นในไฟล์นี้:</p>
+
+        <ul>
+          <li><strong>ไม่มี <code>.module.scss</code> ของตัวเอง</strong> — การ์ดใบนี้แต่งตัวด้วย utility classes จาก <code>_utilities.scss</code> ที่เราวางไว้ตั้งแต่บทเรียน 04 ล้วน ๆ (<code>flex</code>, <code>fs-18</code>, <code>text-muted</code>, <code>text-line-through</code>, …) เมื่อ style ที่ต้องใช้มีครบใน utility อยู่แล้ว การไม่สร้างไฟล์ SCSS เปล่า ๆ เพิ่มก็เป็นการตัดสินใจที่ถูก — SCSS module มีไว้สำหรับ style ที่เฉพาะตัวจริง ๆ อย่างที่ CategoryMenu ด้านล่างจะได้ใช้</li>
+          <li><strong>ลูกเล่น skeleton ของรูป</strong> — ตราบใดที่ <code>isImageLoaded</code> ยังเป็น <code>false</code> เราวาด <code>&lt;Skeleton height={skeletonHeight} /&gt;</code> ค้างไว้ และซ่อน <code>&lt;img&gt;</code> ด้วย <code>display: "none"</code> จุดสำคัญคือเรา<em>ซ่อน</em>รูป ไม่ใช่<em>ไม่วาด</em>รูป — ถ้าเขียน <code>{isImageLoaded &amp;&amp; &lt;img … /&gt;}</code> รูปจะไม่ถูกใส่เข้า DOM เบราว์เซอร์เลยไม่เริ่มโหลด แล้ว <code>onLoad</code> ก็จะไม่มีวันยิง — กลายเป็น skeleton ค้างตลอดกาล พอรูปโหลดเสร็จ เบราว์เซอร์ยิง event <code>onLoad</code> เราตั้ง state เป็น <code>true</code> React วาดใหม่ skeleton หายไป รูปโผล่ขึ้นมาแทนในพื้นที่เดิมพอดี</li>
+          <li><strong><code>skeletonHeight = 240</code></strong> — default parameter ให้การ์ดทั่วไปสูง 240px แต่หน้าไหนอยากได้การ์ดเตี้ยหรือสูงกว่านี้ก็ override ผ่าน prop ได้ (จนจบคอร์สยังไม่มีหน้าไหนใช้สิทธิ์นั้น — prop นี้เป็นความยืดหยุ่นที่เตรียมไว้แล้วไม่ได้ใช้ ซึ่งก็เป็นข้อสังเกตที่ควรเขียนในรีวิวได้)</li>
+          <li><strong>reuse <code>StarReview</code></strong> — ดาวรีวิวที่สร้างไว้ในบทเรียน 14 กลับมาทำงานแล้ว จำ convention ของมันได้ไหม: <code>score</code> เป็นคะแนนเต็ม 10 แล้วภายในหารสองเป็นดาว 5 ดวง คอมเมนต์ <code>// Rating out of 10</code> ใน props ก็ย้ำเรื่องเดียวกัน — เก็บคำว่า "เต็ม 10" นี้ไว้ในหัว บทเรียน 21 จะเอาคำนี้ไปเทียบกับข้อมูลจริง</li>
+          <li><strong><code>onProductClick</code> callback prop</strong> — ตอนการ์ดถูกคลิก เราเรียก callback พร้อมส่ง <code>productId</code> กลับไปให้คนที่ใช้การ์ด สังเกตว่า ProductCard <em>ไม่รู้จัก router เลย</em> — มันไม่ import <code>useNavigate</code> ไม่รู้ว่าคลิกแล้วต้องไปหน้าไหน หน้าที่ของมันมีแค่ "แสดงผลและรายงานว่าถูกคลิก" ให้หน้าเพจที่เป็นเจ้าของตัดสินใจเรื่อง navigation เอง</li>
+          <li><strong><code>className={`flex flex-column`}</code></strong> — backtick ที่ไม่มีตัวแปรอยู่ข้างในเลย เขียนเป็น <code>className="flex flex-column"</code> ก็ได้ผลเท่ากันทุกประการ (เหมือนกับ <code>{`pt-15 pb-15`}</code> อีกจุดหนึ่ง) เราสั่ง prompt ให้ลอกตามต้นฉบับเพราะโค้ดอ้างอิงของคอร์สนี้คือแอปจริง และ Prettier ไม่แปลง template literal กลับเป็น string ให้ ถ้าไม่สั่ง คุณจะได้ diff ที่ไม่ตรงกับโค้ดอ้างอิงโดยที่ไม่มีใครทำอะไรผิด</li>
+        </ul>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> <code>className="image-container"</code> — <code>grep -rn "image-container" src/styles/</code> ไม่เจออะไรเลย class นี้ไม่มีนิยามอยู่ที่ไหนในโปรเจกต์ นี่คือญาติสนิทของ <code>text-white</code> ใน Footer (บทเรียน 10) และ <code>styles.starReview</code> ใน StarReview (บทเรียน 14): <strong>ชื่อ class ที่ไม่มีนิยาม ไม่ทำอะไรเลยแบบเงียบสนิท</strong> ต่างกันตรงที่สองตัวก่อนหน้าเป็น class ของ SCSS module ส่วนตัวนี้เป็น class global ธรรมดา — ไม่มี TypeScript ไม่มี lint ไม่มีอะไรทั้งนั้นที่ตรวจว่า string ในแอตทริบิวต์ <code>className</code> มีอยู่จริงในไฟล์ CSS หรือเปล่า มันเป็นแค่ข้อความ ประเด็นที่ควรรู้จากสามกรณีรวมกันคือ: การไล่ <code>grep</code> ชื่อ class ทุกตัวที่ Agent เขียนมา เป็นขั้นตอนตรวจงานที่ไม่มีเครื่องมือตัวไหนทำแทนได้เลยในโปรเจกต์นี้ และในไฟล์ที่ Agent เขียนใหม่ทั้งไฟล์ ชื่อ class ที่มันแต่งขึ้นเองคือสิ่งที่หลุดรอดง่ายที่สุด</blockquote>
+
+        <p><code>src/features/products/components/ProductsList/ProductsList.tsx</code> — ProductCard รับ props เป็นชิ้น ๆ แต่ข้อมูลจาก query มาเป็น <code>Product[]</code> เต็ม ๆ ตัว ตัวกลางที่ map จากรูปแบบหนึ่งไปอีกรูปแบบหนึ่งคือไฟล์นี้:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import { Product } from "@/features/products/types";
+import ProductCard from "@/features/products/components/ProductCard/ProductCard";
+import { calculateOriginalPrice } from "@/shared/utils/price.utils";
+
+interface ProductsListProps {
+  products: Product[] | undefined;
+  onProductClick: (id: number) =&gt; void;
+}
+
+const ProductsList: React.FC&lt;ProductsListProps&gt; = ({
+  products,
+  onProductClick,
+}) =&gt; {
+  return (
+    &lt;&gt;
+      {products?.map(
+        ({
+          thumbnail,
+          id,
+          title,
+          brand,
+          price,
+          discountPercentage,
+          rating,
+          reviews,
+        }) =&gt; (
+          &lt;div key={id} className="mb-15 pointer"&gt;
+            &lt;ProductCard
+              productId={id}
+              image={thumbnail}
+              title={title}
+              description={brand}
+              price={price}
+              originalPrice={calculateOriginalPrice(price, discountPercentage)}
+              discount={discountPercentage}
+              rating={rating}
+              reviewsCount={reviews.length}
+              onProductClick={onProductClick}
+            /&gt;
+          &lt;/div&gt;
+        ),
+      )}
+    &lt;/&gt;
+  );
+};
+
+export default ProductsList;
+</code></pre>
+
+        <p>ประเด็นที่น่าสนใจ:</p>
+
+        <ul>
+          <li><strong><code>products: Product[] | undefined</code></strong> — จงใจยอมรับ <code>undefined</code> เพราะคนที่จะส่ง prop นี้คือหน้าเพจที่ส่ง <code>data?.products</code> จาก useQuery มาตรง ๆ ซึ่งเป็น <code>undefined</code> ได้เสมอระหว่างรอโหลด optional chaining ใน <code>products?.map(…)</code> จัดการกรณีนั้นให้เงียบ ๆ (ไม่ render อะไรเลย) โดยหน้าเพจไม่ต้องเช็คก่อนส่ง</li>
+          <li><strong>destructuring กลาง parameter ของ map</strong> — แทนที่จะรับ <code>(product) =&gt;</code> แล้วเขียน <code>product.title</code>, <code>product.price</code> ยาว ๆ เราแตกเฉพาะ field ที่ใช้ออกมาตั้งแต่หน้าประตู อ่านปุ๊บรู้เลยว่าคอมโพเนนต์นี้ใช้ข้อมูลอะไรจาก Product บ้าง</li>
+          <li><strong>แปลงข้อมูลตรงนี้ที่เดียว</strong> — <code>calculateOriginalPrice</code> จาก utility เมื่อครู่ถูกเรียกตรงนี้ และ <code>reviews.length</code> ก็ถูกนับตรงนี้ ProductCard เลยได้รับค่าที่พร้อมแสดงผลทันที ไม่ต้องรู้จักโครงสร้าง Product ของ dummyjson เลยแม้แต่นิดเดียว</li>
+          <li><strong><code>key={id}</code></strong> — ใช้ id จริงของสินค้าเป็น key ตามกฎเหล็กของ list rendering จาก Week 4 ไม่ใช้ index เพราะรายการนี้เปลี่ยนชุดได้ทั้งชุดเวลาสลับหมวดหมู่หรือเปลี่ยนหน้า</li>
+          <li><strong><code>description={brand}</code></strong> — บรรทัดที่ 33 ของไฟล์นี้ prop ชื่อ "คำอธิบาย" แต่ค่าที่ใส่คือ "แบรนด์" ซึ่งอ่านแล้วสะดุดนิดหนึ่ง (การ์ดไม่ได้แสดง <code>description</code> ของสินค้าจริง ๆ) แต่ประเด็นที่ใหญ่กว่าเรื่องชื่อ prop อยู่ในกล่องข้างล่าง</li>
+        </ul>
+
+        <blockquote>💡 สังเกตว่าเมื่อสินค้าไม่มีส่วนลด <code>calculateOriginalPrice</code> คืนราคาเดิมกลับมา การ์ดจึงยังแสดงราคาขีดฆ่าที่เท่ากับราคาจริง — ฟังดูแปลก แต่สินค้าของ dummyjson มี <code>discountPercentage</code> ติดมา<em>ครบทั้ง 194 ชิ้น</em> (ตรวจมาแล้วในบทเรียน 16) เคสนี้จึงไม่ปรากฏบนจอเลย ส่วนป้าย "% Off" ถูกซ่อนอยู่แล้วด้วย <code>{discount &amp;&amp; …}</code> ใน ProductCard</blockquote>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — และเป็นคำทำนายจากบทเรียน 16 ที่ถึงกำหนดวันนี้:</strong> กล่อง 💡 ใต้ <code>types.ts</code> ในบทเรียน 16 บอกไว้ว่า <code>brand: string</code> ถูกประกาศแบบ<em>บังคับ</em> ทั้งที่ dummyjson ไม่ได้ส่งฟิลด์นี้มาใน 92 ชิ้นจาก 194 (หมวด <code>groceries</code>, <code>home-decoration</code>, <code>kitchen-accessories</code>, <code>sports-accessories</code>, <code>tops</code>, <code>womens-dresses</code>, <code>womens-jewellery</code> ตั้งแต่ id 16 ขึ้นไป) และบอกด้วยว่าผลของมันจะไปโผล่ที่ <code>ProductsList.tsx</code> บรรทัด 33 — คือบรรทัด <code>description={brand}</code> ที่คุณเพิ่งอ่านจบ ผลจริงคือ <code>brand</code> เป็น <code>undefined</code> ตอนรัน React ไม่ render อะไรเลยสำหรับ <code>undefined</code> ดังนั้น <code>&lt;p className="fs-14 text-muted mb-10 mt-0"&gt;&lt;/p&gt;</code> จะเป็น<strong>ย่อหน้าว่างที่กินความสูงจริง</strong>อยู่ใต้ชื่อสินค้าเกือบครึ่งร้าน โดยที่ TypeScript รับประกันกับคุณตลอดทางว่ามันเป็น <code>string</code> แน่นอน วันนี้ยังไม่มีหน้าไหน render มัน วิธีเห็นด้วยตาวันนี้คือเปิด <code>https://dummyjson.com/products?limit=5&amp;skip=15</code> (URL เดิมจาก Checkpoint บทเรียน 16) แล้วค้นคำว่า <code>brand</code> — ไม่เจอสักตัว ส่วนวิธีเห็นบนหน้าจอจริงคือบทหน้า: หน้า Home จะมีเมนูหมวดหมู่ กด <strong>Groceries</strong> (ตัวที่สี่ในเมนู) แล้วดูใต้ชื่อสินค้าทั้ง 12 ใบ นั่นคือเหตุผลที่ prompt สั่งห้ามใส่ fallback ให้ <code>brand</code> — ถ้าเราปล่อยให้ Agent ใส่ <code>brand ?? ""</code> ให้เงียบ ๆ อาการนี้จะถูกกลบและคุณจะไม่มีวันรู้ว่า type ของคุณโกหก ทางแก้ที่ถูกอยู่ที่ต้นทาง (<code>brand?: string</code> ใน <code>types.ts</code>) ไม่ใช่ที่ปลายทาง และการตัดสินใจว่าจะแก้เมื่อไหร่เป็นของคุณ ไม่ใช่ของ Agent</blockquote>
+
+        <p><code>src/features/products/components/CategoryMenu/CategoryMenu.module.scss</code>:</p>
+
+        <pre><code class="language-scss">.categoryMenu {
+  width: 16%;
+}
+</code></pre>
+
+        <p><code>src/features/products/components/CategoryMenu/CategoryMenu.tsx</code>:</p>
+
+        <pre><code class="language-typescript">import React from "react";
+import styles from "./CategoryMenu.module.scss";
+import { Category } from "@/features/products/types";
+
+interface CategoryMenuProps {
+  categories: Category[];
+  activeCategory: string | undefined;
+  onCategoryClick: (category: Category) =&gt; void;
+}
+
+const CategoryMenu: React.FC&lt;CategoryMenuProps&gt; = ({
+  categories,
+  activeCategory,
+  onCategoryClick,
+}) =&gt; {
+  return (
+    &lt;div className={`${styles.categoryMenu} text-right`}&gt;
+      {categories.map((cat) =&gt; (
+        &lt;span
+          key={cat.slug}
+          className={`nav-link block mb-20 pointer ${
+            activeCategory === cat.slug ? "fw-bold text-primary" : ""
+          }`}
+          onClick={() =&gt; onCategoryClick(cat)}
+        &gt;
+          {cat.name}
+        &lt;/span&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+
+export default CategoryMenu;
+</code></pre>
+
+        <p>สัญญา (contract) ของคอมโพเนนต์นี้ออกแบบมาอย่างจงใจ ลองอ่าน props ทีละตัว:</p>
+
+        <ul>
+          <li><strong><code>categories: Category[]</code></strong> — รายชื่อหมวดหมู่ทั้งหมด มาจาก query <code>productQueries.categories()</code> ที่เราสร้างไว้ในบทเรียน 17 จำ type <code>Category</code> ได้ไหม: <code>{ slug, name, url }</code> — <code>slug</code> คือรหัสสำหรับเรียก API ส่วน <code>name</code> คือชื่อสวย ๆ สำหรับแสดงผล</li>
+          <li><strong><code>activeCategory: string | undefined</code></strong> — รับเป็น <em>slug</em> ของหมวดที่กำลังเลือกอยู่ ไม่ใช่ทั้ง object เพราะสิ่งเดียวที่เมนูต้องรู้คือ "ตัวไหนต้องไฮไลต์" การเทียบ <code>activeCategory === cat.slug</code> แล้วเติมคลาส <code>fw-bold text-primary</code> คือทั้งหมดของลอจิกไฮไลต์ และการยอมรับ <code>undefined</code> ทำให้หน้าเพจส่งค่าจาก state ที่ยังโหลดไม่เสร็จมาได้เลยโดยไม่ต้อง fallback</li>
+          <li><strong><code>onCategoryClick: (category: Category) =&gt; void</code></strong> — ขาออกกลับส่ง<em>ทั้ง object</em> คืนให้ ทำไมไม่ส่งแค่ slug? เพราะหน้าเพจที่รับ event ไปต้องใช้มากกว่านั้น — ต้องใช้ <code>slug</code> ยิง query และใช้ <code>name</code> แสดงหัวหน้า การส่ง object เต็มทำให้ผู้ใช้เมนูไม่ต้องไปไล่หา object จาก slug อีกรอบ</li>
+        </ul>
+
+        <p>และ <code>src/main.tsx</code> หลังถูกแก้ — บรรทัดที่สี่คือบรรทัดใหม่บรรทัดเดียวของไฟล์นี้:</p>
+
+        <pre><code class="language-typescript">import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./styles/main.scss";
+import "react-loading-skeleton/dist/skeleton.css";
+import App from "./app/App";
+
+createRoot(document.getElementById("root")!).render(
+  &lt;StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/StrictMode&gt;,
+);
+</code></pre>
+
+        <p>ทำไม CSS ก้อนนี้ต้องอยู่ที่ <code>main.tsx</code> ไม่ใช่ที่ <code>ProductCard.tsx</code>? เพราะ skeleton จะโผล่ได้หลายที่ในแอป (บทเรียน 21 จะเรียกใช้อีกครั้งใน <code>ProductImageGallery</code>) และการ import ไฟล์ CSS เดียวกันจากหลายคอมโพเนนต์เป็นการอาศัย behavior การ dedupe ของ bundler โดยไม่จำเป็น — CSS ระดับแอปประกาศที่จุดเริ่มต้นของแอปครั้งเดียวจบ ตรงข้ามกับ <code>swiper-bundle.css</code> ในบทหน้าที่ import ไว้ในคอมโพเนนต์ตัวเดียวที่ใช้มันจริง ๆ ทั้งสองท่าถูกทั้งคู่ ต่างกันที่ขอบเขตการใช้งาน</p>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>เปลี่ยน <code>{!isImageLoaded &amp;&amp; &lt;Skeleton … /&gt;}</code> กับ <code>&lt;img style={{display: …}} /&gt;</code> ใน ProductCard ให้กลายเป็น <code>{isImageLoaded ? &lt;img … /&gt; : &lt;Skeleton … /&gt;}</code> แทน แล้วอธิบายว่าทำไมผลลัพธ์ถึงเป็น skeleton ค้างตลอดกาล ชี้ให้ได้ว่า event ไหนที่ไม่มีวันเกิดขึ้น (เสร็จแล้วย้อนกลับ)</li>
+          <li>ค้นทั้งโปรเจกต์ว่ามีกี่จุดที่เรียก <code>.toFixed(2)</code> แล้วตอบว่าถ้าเราย้ายการปัดเศษเข้าไปไว้ใน <code>calculateOriginalPrice</code> ตัวเลขบนการ์ดจะเปลี่ยนไหม และมีที่ไหนในคอร์สนี้ (รวมบทที่ยังมาไม่ถึง) ที่มัน<em>จะ</em>เปลี่ยน</li>
+          <li>ProductCard ไม่รู้จัก <code>Product</code> เลย ส่วน ProductsList รู้จักเต็ม ๆ — สมมติ dummyjson เปลี่ยนชื่อฟิลด์ <code>thumbnail</code> เป็น <code>thumbnailUrl</code> พรุ่งนี้ ตอบว่าต้องแก้กี่ไฟล์ และเทียบกับกรณีที่เรารวมสองตัวนี้เป็นคอมโพเนนต์เดียว</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> ตอนนี้โปรเจกต์ควรมีไฟล์ใหม่ 5 ไฟล์ และ <code>main.tsx</code> ที่เพิ่ม import CSS ของ skeleton แล้ว รัน <code>npm run lint</code> และ <code>npm run typecheck</code> ต้องผ่านทั้งคู่ และ <code>npm run dev</code> ต้องยังแสดงแอปได้เหมือนเดิมทุกหน้า — ไม่มีอะไรใหม่บนจอ เพราะยังไม่มีหน้าไหนเรียกใช้คอมโพเนนต์เหล่านี้ ถ้ามี error เรื่อง import path ตรวจ alias <code>@/</code> และชื่อโฟลเดอร์ให้ตรงตัวพิมพ์ใหญ่-เล็กเป๊ะ ๆ ก่อน commit ให้ย้อนกลับไปอ่านกล่อง 💡 สองกล่อง (<code>image-container</code> และ <code>brand</code>) อีกรอบ แล้วเขียนสิ่งที่คุณเจอลงในข้อความ commit หรือ note ของตัวเอง — ของสองอย่างนั้นจะกลายเป็นสิ่งที่คุณ<em>เห็น</em>บนหน้าจอในบทหน้า ชิ้นส่วนพร้อมแล้ว บทถัดไปเราจะเปิดกล่องของเล่นทั้งหมดที่สะสมมาตั้งแต่ต้นคอร์ส — Banner แบบ carousel, CountdownTimer, FeatureCard, ImageZoom และสามตัวที่เพิ่งสร้างสด ๆ — มาประกอบเป็นหน้า Home เต็ม ๆ หน้าแรกของแอป — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="17_query_factories.html" rel="prev">ก่อนหน้า: Query Factories</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="19_home_page.html" rel="next">ถัดไป: หน้า Home</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

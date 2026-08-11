@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สั่ง Cursor สร้างโมเดลข้อมูลสินค้าจาก dummyjson ตามความจริงของ API พร้อม pagination utils และฟังก์ชันเรียก API ที่ typed ครบทุก endpoint แล้วตรวจชื่อฟิลด์กับ payload จริง" />
+    <title>Types และ Products API | สร้างเว็บ E-commerce ด้วย React + Cursor AI</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article class="lesson">
+        <header class="lesson-header">
+          <p class="lesson-eyebrow">บทเรียน 16 · ชั้นข้อมูลสินค้า (Products Data Layer)</p>
+          <h1>Types และ Products API</h1>
+          <p class="lesson-original-title" lang="en">Product Types &amp; API</p>
+        </header>
+
+        <p>บทที่แล้วเราได้ <code>apiClient</code> ที่ต่อกับ dummyjson และจัดการ error ให้เรียบร้อยแล้ว แต่ข้อมูลที่ได้กลับมายังเป็นก้อน JSON ไร้ type — TypeScript ไม่รู้ว่าข้างในมีอะไร autocomplete ไม่ทำงาน สะกด field ผิดก็ไม่มีใครเตือน บทนี้เราจะแก้ทั้งหมดนั้นด้วยไฟล์สามตัว: <strong>types</strong> ที่บรรยายหน้าตาข้อมูลสินค้า, <strong>pagination utils</strong> สำหรับคณิตศาสตร์ของการแบ่งหน้า และ <strong>api.ts</strong> ที่รวมฟังก์ชันเรียก API แบบ typed ครบทุก endpoint</p>
+
+        <p>และบทนี้มีเรื่องที่ต้องระวังเป็นพิเศษเรื่องหนึ่ง ซึ่งจะกลายเป็นข้อแรกของ checklist: งานนี้คือการ<em>คัดลอกความจริงของ API ภายนอก</em>ลงมาเป็นโค้ด ซึ่งเป็นงานประเภทเดียวที่ Agent เดาแทนเราไม่ได้เลย — มันไม่เคยเห็น payload จริง</p>
+
+        <h2>ทวนก่อน: Pagination จากบทเรียน 05</h2>
+
+        <p>ตอนที่เราวางสถาปัตยกรรมในบทเรียน 05 เราสร้าง <code>src/shared/types/generic.type.ts</code> ทิ้งไว้ ซึ่งวันนี้ได้ใช้จริงแล้ว:</p>
+
+        <pre><code class="language-typescript">export interface Pagination {
+  total: number;
+  skip: number;
+  limit: number;
+}
+</code></pre>
+
+        <p>ทำไมสามฟิลด์นี้? เพราะ endpoint แบบ "รายการ" ของ dummyjson ทุกตัวตอบข้อมูลกำกับการแบ่งหน้ากลับมาด้วยเสมอ ลองดูผลจาก <code>GET /products?limit=1</code> (ตัดฟิลด์ของตัวสินค้าออกไปหลายตัวให้อ่านง่าย — ของจริงมีมากกว่า 20 ฟิลด์ต่อชิ้น และตัวเลขอาจต่างไปเล็กน้อยตามข้อมูลบน server):</p>
+
+        <pre><code class="language-json">{
+  "products": [
+    {
+      "id": 1,
+      "title": "Essence Mascara Lash Princess",
+      "category": "beauty",
+      "price": 9.99,
+      "thumbnail": "https://cdn.dummyjson.com/..."
+    }
+  ],
+  "total": 194,
+  "skip": 0,
+  "limit": 1
+}
+</code></pre>
+
+        <p><code>total</code> คือจำนวนสินค้าทั้งหมดที่มี, <code>skip</code> คือจำนวนที่ถูกข้ามไป และ <code>limit</code> คือจำนวนต่อหน้า — สามค่านี้คือวัตถุดิบที่หน้า Category จะใช้คำนวณว่ามีทั้งหมดกี่หน้า ที่เราวาง type นี้ไว้ใน <code>shared</code> ไม่ใช่ใน <code>features/products</code> ก็เพราะรูปแบบ pagination แบบนี้ไม่ได้ผูกกับสินค้า — API ไหน ๆ ก็นิยมใช้โครงเดียวกัน</p>
+
+        <h2>โมเดลข้อมูลอย่างซื่อสัตย์</h2>
+
+        <p>หลักการสำคัญที่สุดของบทนี้: <strong>type ต้องบรรยายสิ่งที่ API ตอบกลับมาจริง ๆ ไม่ใช่สิ่งที่เราอยากให้มันเป็น</strong> ทุกฟิลด์ใน <code>Product</code> ต้องลอกมาจาก JSON จริงของ dummyjson ตรง ๆ — object ซ้อนอย่าง <code>dimensions</code> และ <code>meta</code> ก็แยกออกมาเป็น interface ของตัวเอง (<code>ProductDimensions</code>, <code>ProductMeta</code>) เพื่อให้อ่านง่ายและหยิบไปใช้ซ้ำได้</p>
+
+        <p>เราจะประกาศแม้กระทั่งฟิลด์ที่ตอนนี้ยังไม่มีแผนจะแสดงผล เช่น <code>barcode</code>, <code>qrCode</code> หรือ <code>sku</code> — ทำไม? เพราะการประกาศไว้แทบไม่มีต้นทุน แต่ให้ผลตอบแทนตลอดทาง: autocomplete เห็นครบทุกฟิลด์, มีเอกสารบรรยาย API อยู่ในโค้ดเราเอง และเมื่อฟีเจอร์ใหม่ต้องใช้ฟิลด์ไหนเพิ่ม ก็ไม่ต้องกลับไปนั่งแกะ JSON ใหม่อีกรอบ ถ้าเราตัด type ให้เหลือแค่ที่ใช้วันนี้ เท่ากับโยนความรู้เรื่อง API ทิ้งไปครึ่งหนึ่ง</p>
+
+        <p>นี่คือจุดที่ต้องเข้าใจให้ขาดก่อนส่ง prompt: <strong>type ที่โกหกจะไม่ทำให้อะไรพังเลยจนกว่าจะถึงหน้าเว็บ</strong> ถ้าเราประกาศฟิลด์ที่ API ไม่ได้ส่งมา TypeScript จะไม่บ่นสักคำ (มันเชื่อสิ่งที่เราประกาศ) แล้ว <code>npm run typecheck</code> ก็ผ่าน จนกว่าจะถึงบทเรียน 21 ที่หน้า Product แสดงคำว่า <code>undefined</code> ออกมากลางจอ ความรู้เรื่องหน้าตาของ payload จึงเป็นสิ่งที่ต้องมาจากคุณ ไม่ใช่จาก Agent</p>
+
+        <h2>มนุษย์คิดเป็น "หน้า" dummyjson คิดเป็น "skip"</h2>
+
+        <p>ปัญหาถัดมา: มนุษย์คิดเป็นหน้า (หน้า 1, หน้า 2, หน้า 3...) แต่ dummyjson คิดเป็น <code>skip</code> กับ <code>limit</code> เราต้องมีตัวแปลระหว่างสองโลกนี้ ซึ่งจะอยู่ในไฟล์ <code>src/shared/utils/pagination.utils.ts</code> และมีสองฟังก์ชัน</p>
+
+        <p><code>calculateOffset</code> แปลงเลขหน้าเป็นจำนวนที่ต้องข้าม: อยู่หน้าไหน แปลว่าข้ามสินค้าของหน้าก่อน ๆ ไปแล้วกี่ชิ้น ลองแทนค่าที่ <code>limit = 20</code> ดู:</p>
+
+        <ul>
+          <li>หน้า 1 → <code>(1 - 1) * 20 = 0</code> — ไม่ข้ามเลย เริ่มจากชิ้นแรก</li>
+          <li>หน้า 2 → <code>(2 - 1) * 20 = 20</code> — ข้าม 20 ชิ้นแรกที่หน้า 1 แสดงไปแล้ว</li>
+          <li>หน้า 3 → <code>(3 - 1) * 20 = 40</code></li>
+        </ul>
+
+        <p><code>calculateTotalPages</code> ทำงานขากลับ: รู้จำนวนสินค้าทั้งหมดกับจำนวนต่อหน้า แล้วตอบว่ามีกี่หน้า ที่ต้องใช้ <code>Math.ceil</code> (ปัดขึ้นเสมอ) เพราะเศษที่เหลือไม่เต็มหน้าก็ยังต้องมีหน้าให้มันอยู่ — สินค้า 194 ชิ้น หน้าละ 20 คือ <code>194 / 20 = 9.7</code> ปัดขึ้นเป็น 10 หน้า โดยหน้าสุดท้ายมีของแค่ 14 ชิ้น ถ้าเผลอใช้ <code>Math.floor</code> สินค้า 14 ชิ้นสุดท้ายจะไม่มีวันถูกเห็นเลย</p>
+
+        <p>สองฟังก์ชันนี้จะถูกใช้จริงในหน้า Category (บทเรียน 20): เอา <code>data.total</code> จาก API มาเข้า <code>calculateTotalPages</code> เพื่อบอกคอมโพเนนต์ <code>Pagination</code> ที่เราสร้างไว้บทเรียน 13 ว่าต้องวาดปุ่มกี่หน้า ส่วน <code>calculateOffset</code> จะได้ใช้ในไฟล์ <code>api.ts</code> ของบทนี้เลย และเพราะทั้งคู่เป็น pure function ที่ไม่แตะ DOM ไม่แตะ network มันจึงเป็นเป้าเทสต์ที่ง่ายที่สุดในแอป — บทเรียน 31 เราจะเขียน unit test ให้มันเป็นกลุ่มแรก ๆ</p>
+
+        <h2>เป้าหมายของบทนี้</h2>
+
+        <p>สามไฟล์ใหม่ ไม่มีไฟล์ไหนพิมพ์เอง — บทนี้เป็นงานที่ Agent ทำได้ดี<em>ถ้า</em>เราป้อนความจริงของ API ให้มันครบ:</p>
+
+        <pre><code class="language-bash">src/
+├── features/
+│   └── products/
+│       ├── types.ts              # 🤖 รูปร่างข้อมูลสินค้าตาม dummyjson
+│       └── api.ts                # 🤖 สี่ฟังก์ชัน หนึ่งตัวต่อหนึ่ง endpoint
+└── shared/
+    └── utils/
+        └── pagination.utils.ts   # 🤖 คณิตศาสตร์ของการแบ่งหน้า</code></pre>
+
+        <p>ทั้งสองโฟลเดอร์ (<code>src/features/products/</code> และ <code>src/shared/utils/</code>) เราสั่ง <code>mkdir</code> ทิ้งไว้ตั้งแต่บทเรียน 05 และยังว่างอยู่จนถึงตอนนี้</p>
+
+        <p>สัญญาที่แต่ละไฟล์ต้องทำให้ได้ — และสิ่งที่มันต้องไม่ทำ:</p>
+
+        <ul>
+          <li><strong><code>types.ts</code></strong> — ต้องมีหก interface ที่ export ครบ (<code>ProductDimensions</code>, <code>ProductReview</code>, <code>ProductMeta</code>, <code>Product</code>, <code>Category</code>, <code>FetchProductsResponse</code>) และชื่อฟิลด์ทุกตัวต้องสะกดตรงกับ payload จริงของ dummyjson ต้องไม่มี <code>any</code>, ไม่มี index signature แบบ <code>[key: string]: unknown</code> และต้องไม่ทำให้ทุกฟิลด์เป็น optional เพื่อความปลอดภัย</li>
+          <li><strong><code>pagination.utils.ts</code></strong> — ต้องเป็น pure function สองตัวที่รับ number คืน number ต้องไม่รู้จัก axios, ไม่รู้จัก <code>Product</code> และไม่มี state ใด ๆ</li>
+          <li><strong><code>api.ts</code></strong> — ต้องมีสี่ฟังก์ชันตรงกับสี่ endpoint แต่ละตัวคืน <code>data</code> ที่ typed แล้ว และรับพารามิเตอร์เป็น <code>page</code> ไม่ใช่ <code>skip</code> ต้องไม่มี <code>try/catch</code> ไม่มีการแปลง error เอง และต้องไม่มีคำว่า <code>skip</code> โผล่ในหน้าตาของฟังก์ชันที่คนอื่นเรียก</li>
+        </ul>
+
+        <h2>🤖 Prompt ที่ส่งให้ Cursor</h2>
+
+        <p>prompt ของบทนี้ยาวกว่าทุกบทที่ผ่านมา และความยาวนั้นอยู่ที่รายชื่อฟิลด์เกือบทั้งหมด นั่นถูกแล้ว — รายชื่อฟิลด์คือ<em>ข้อมูลที่ Agent ไม่มีทางรู้</em> ส่วนรูปทรงของไฟล์นั้นมันรู้อยู่แล้ว</p>
+
+        <blockquote class="lesson-ai-prompt">
+          <p>🤖 <strong>Prompt ที่ส่งให้ Cursor</strong> — แชทใหม่ โหมด Agent ก่อนกดส่ง เปิด <code>https://dummyjson.com/products?limit=5</code> ในเบราว์เซอร์ค้างไว้อีกแท็บหนึ่ง เดี๋ยวตอนตรวจงานจะได้ไม่ต้องหา:</p>
+          <pre><code class="language-text">สร้าง type ของสินค้า ฟังก์ชันคำนวณการแบ่งหน้า และฟังก์ชันเรียก API ของ dummyjson
+
+บริบท: @src/shared/api/client.ts @src/shared/types/generic.type.ts @src/features/products @src/shared/utils
+src/shared/api/client.ts export apiClient (axios instance ที่ตั้ง baseURL ไว้แล้ว) และ class ApiError
+baseURL ชี้ไปที่ https://dummyjson.com แล้ว ทุก path ในงานนี้จึงเขียนแบบสั้น เช่น /products
+src/shared/types/generic.type.ts มี interface Pagination ที่มีสามฟิลด์ total, skip, limit
+src/features/products/ และ src/shared/utils/ ยังเป็นโฟลเดอร์ว่างทั้งคู่
+alias @/ ชี้ไปที่ src/ ตั้งค่าไว้แล้วทั้งใน vite.config.ts และ tsconfig.app.json
+โปรเจกต์นี้ไม่ได้เปิด verbatimModuleSyntax ให้ใช้ import แบบธรรมดา ไม่ต้องใช้ import type
+
+โครงสร้าง: สร้างไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
+- src/features/products/types.ts
+- src/shared/utils/pagination.utils.ts
+- src/features/products/api.ts
+
+ข้อกำหนดทางเทคนิค:
+- types.ts: import { Pagination } from "@/shared/types/generic.type";
+  แล้ว export interface ตามลำดับนี้ ห้ามเพิ่มหรือลดฟิลด์
+  ProductDimensions: width, height, depth ทั้งหมดเป็น number
+  ProductReview: rating (number), comment, date, reviewerName, reviewerEmail (string ทั้งสี่)
+  ProductMeta: createdAt, updatedAt, barcode, qrCode เป็น string ทั้งหมด
+  Product เรียงฟิลด์ตามนี้เป๊ะ:
+    id: number, title: string, description: string, category: string, price: number,
+    discountPercentage?: number, rating: number, stock: number, tags: string[],
+    brand: string, sku: string, weight: number, dimensions: ProductDimensions,
+    warrantyInformation: string, shippingInformation: string, availabilityStatus: string,
+    reviews: ProductReview[], returnPolicy: string, minimumOrderQuantity: number,
+    meta: ProductMeta, images: string[], thumbnail: string
+    ฟิลด์เดียวที่เป็น optional คือ discountPercentage นอกนั้นบังคับทั้งหมด
+  Category: slug, name, url เป็น string ทั้งสาม
+  FetchProductsResponse extends Pagination แล้วเพิ่ม products: Product[]
+- pagination.utils.ts: export function สองตัว ไม่มี default export
+  calculateOffset(page: number, limit: number): number คืน (page - 1) * limit
+  calculateTotalPages(total: number, limit: number): number คืน Math.ceil(total / limit)
+- api.ts: บรรทัด import สามบรรทัด ตามลำดับนี้
+    import { apiClient } from "@/shared/api/client";
+    import { Category, FetchProductsResponse, Product } from "@/features/products/types";
+    import { calculateOffset } from "@/shared/utils/pagination.utils";
+  export interface ProductListParams { page?: number; limit?: number }
+  export interface CategoryProductsParams extends ProductListParams { category: string }
+  ทุกฟังก์ชันเป็น async function ที่ประกาศ return type ชัดเจน และจบด้วย return data
+  โดย destructure ผลจาก axios ด้วย const { data } = await apiClient.get&lt;T&gt;(...)
+  getProducts({ page = 1, limit = 20 }: ProductListParams = {}): Promise&lt;FetchProductsResponse&gt;
+    GET /products พร้อม params { skip: calculateOffset(page, limit), limit }
+  getProductsByCategory({ category, page = 1, limit = 20 }: CategoryProductsParams): Promise&lt;FetchProductsResponse&gt;
+    GET /products/category/${category} พร้อม params ชุดเดียวกับข้างบน
+  getCategories(): Promise&lt;Category[]&gt;  GET /products/categories ไม่มี params
+  getProduct(id: string | number): Promise&lt;Product&gt;  GET /products/${id} ไม่มี params
+  ห้ามใส่ try/catch ห้าม log error และห้ามแปลง error เอง
+  ห้ามให้ฟังก์ชันไหนรับพารามิเตอร์ชื่อ skip การแปลง page เป็น skip เกิดขึ้นในไฟล์นี้เท่านั้น
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่
+- ห้ามแก้ src/shared/api/client.ts หรือ src/shared/types/generic.type.ts
+- ห้ามสร้าง queries.ts, custom hook หรือ index.ts/ไฟล์ barrel ใด ๆ
+- ห้ามสร้าง price.utils.ts หรือ util อื่นที่ไม่ได้สั่ง
+- ยังไม่ต้องเอาฟังก์ชันเหล่านี้ไปใช้ในหน้าไหน</code></pre>
+        </blockquote>
+
+        <h2>✅ ตรวจโค้ดที่ AI สร้าง</h2>
+
+        <blockquote class="lesson-ai-review">
+          <p>✅ <strong>ตรวจโค้ดที่ AI สร้าง</strong> — <code>git status</code> และ <code>git diff</code> ก่อน แล้วไล่ทีละข้อ ข้อแรกคือข้อที่ใช้เวลานานที่สุดและคุ้มที่สุด:</p>
+          <ul>
+            <li><strong>AI มักพลาดตรงนี้:</strong> <em>แต่งฟิลด์ที่ dummyjson ไม่ได้ส่งมาจริง</em> ตัวยอดฮิตคือ <code>discountPrice</code>, <code>originalPrice</code>, <code>imageUrl</code>, <code>inStock</code> หรือเปลี่ยน <code>title</code> เป็น <code>name</code> — ทุกตัวเป็นชื่อที่ "ฟังดูสมเหตุสมผลสำหรับเว็บขายของ" ซึ่งเป็นเหตุผลเดียวที่โมเดลเลือกมัน และไม่มีเครื่องมือตัวไหนในโปรเจกต์จับได้เลย: TypeScript <em>เชื่อ</em> type ที่เราประกาศ มันไม่เคยเห็น payload จริง <code>npm run typecheck</code> จึงผ่านฉลุย แล้วอาการจะไปโผล่ตอนบทเรียน 21 เป็นคำว่า <code>undefined</code> กลางหน้า Product วิธีจับมีทางเดียว: <strong>เปิด <code>https://dummyjson.com/products?limit=5&amp;skip=15</code> ในเบราว์เซอร์ แล้ววางคู่กับ <code>types.ts</code> ไล่ชื่อฟิลด์ทีละตัวด้วยตา</strong> ทั้ง <code>Product</code>, <code>ProductDimensions</code>, <code>ProductMeta</code> และ <code>ProductReview</code> (กาง <code>reviews[0]</code> ใน JSON ดู) ส่วน <code>Category</code> ให้เทียบกับ <code>https://dummyjson.com/products/categories</code> อีกแท็บ ฟิลด์ที่ไม่มีใน JSON = ฟิลด์ที่ต้องลบทิ้ง ฟิลด์ที่มีใน JSON แต่ไม่มีใน type = ความรู้ที่หายไป ให้เติมกลับ สังเกต <code>skip=15</code> ให้ดี — เราจงใจไม่ดูสินค้าห้าชิ้นแรก เพราะสินค้าชิ้นต้น ๆ ของ dummyjson ครบฟิลด์เกินไปจนไม่เห็นของจริง (กล่อง 💡 ใต้ <code>types.ts</code> บอกว่ามันซ่อนอะไรไว้) การเลือก sample ให้กว้างพอคือส่วนหนึ่งของงานตรวจ ไม่ใช่รายละเอียดปลีกย่อย</li>
+            <li>ไฟล์ใหม่ <strong>3 ไฟล์พอดี</strong> ไม่มี <code>index.ts</code>, <code>queries.ts</code>, <code>price.utils.ts</code> หรือ hook แถมมา และไม่มีไฟล์เดิมไฟล์ไหนขึ้นสถานะ modified</li>
+            <li><code>discountPercentage</code> เป็นฟิลด์<strong>เดียว</strong>ใน <code>Product</code> ที่มี <code>?</code> ตรงตามที่ prompt สั่ง — ถ้า Agent โปรย <code>?</code> ให้ฟิลด์อื่นทั่วไปหมด (โมเดลชอบทำเพื่อ "ความปลอดภัย") ให้เอาออก เพราะ type ที่ทุกอย่าง optional คือ type ที่ไม่ได้บอกอะไรเลย <strong>ยกเว้นข้อเดียว:</strong> ถ้ามันใส่ <code>brand?: string</code> มา <em>อย่าเพิ่งลบ</em> ให้ไปอ่านกล่อง 💡 ใต้โค้ดอ้างอิงของ <code>types.ts</code> ก่อนแล้วค่อยตัดสินใจ — นั่นเป็นฟิลด์ที่ payload จริงมีเรื่องจะบอก และเป็นข้อที่ Agent มีสิทธิ์ถูกกว่าต้นฉบับ</li>
+            <li><code>FetchProductsResponse</code> เขียนว่า <code>extends Pagination</code> จริง ไม่ใช่พิมพ์ <code>total</code>, <code>skip</code>, <code>limit</code> ซ้ำลงไปเอง — และ <code>Pagination</code> ถูก import มาจาก <code>@/shared/types/generic.type</code> ไม่ใช่ประกาศใหม่ในไฟล์นี้</li>
+            <li><code>calculateTotalPages</code> ใช้ <code>Math.ceil</code> ไม่ใช่ <code>Math.round</code> หรือ <code>Math.floor</code> — ข้อนี้ต่างกันแค่คำเดียวแต่ทำให้สินค้าหน้าสุดท้ายหายไปทั้งหน้า</li>
+            <li>ทั้งสี่ฟังก์ชันใน <code>api.ts</code> <strong>ไม่มี <code>try/catch</code> สักตัว</strong> — <code>grep -n "catch" src/features/products/api.ts</code> ต้องไม่เจออะไร (เหตุผลอยู่ใต้โค้ดอ้างอิง)</li>
+            <li>คำว่า <code>skip</code> โผล่ที่เดียวคือใน <code>params</code> ของ request ไม่ใช่ในหน้าตาของ <code>ProductListParams</code> — ถ้า Agent ทำ <code>ProductListParams</code> เป็น <code>{ skip?: number; limit?: number }</code> แปลว่ามันยกภาษาของ server ขึ้นมาให้ UI ต้องพูดตาม ซึ่งผิดทิศทางที่เราออกแบบไว้</li>
+            <li>ทุก <code>apiClient.get</code> มี generic กำกับ (<code>get&lt;FetchProductsResponse&gt;</code>, <code>get&lt;Category[]&gt;</code>, <code>get&lt;Product&gt;</code>) — ถ้าขาด <code>data</code> จะเป็น <code>any</code> เงียบ ๆ แล้วทุกอย่างหลังจากนั้นก็ไร้ type ตามไปด้วย</li>
+            <li><code>getProduct</code> รับ <code>id: string | number</code> ไม่ใช่ <code>string</code> อย่างเดียว หรือ <code>number</code> อย่างเดียว (เหตุผลอยู่ใต้โค้ดอ้างอิง และบทหน้าจะใช้มันเต็ม ๆ)</li>
+            <li><code>api.ts</code> มีบรรทัด import <strong>สามคำสั่ง</strong> เรียงตามที่ prompt สั่ง — แต่คำสั่งกลาง (<code>Category</code>, <code>FetchProductsResponse</code>, <code>Product</code>) จะกลับมาเป็น<em>ห้าบรรทัด</em>ไม่ใช่บรรทัดเดียว เพราะเขียนติดกันแล้วยาว 85 ตัวอักษร เกิน 80 ที่ Prettier ตั้งไว้ มันจึงตัดขึ้นบรรทัดใหม่ให้เอง นี่คือฝีมือ Prettier ไม่ใช่ Agent ทำผิดคำสั่ง สิ่งที่ต้องตรงคือ<em>มีสามคำสั่งและเรียงตามลำดับนั้น</em> ไม่ใช่จำนวนบรรทัด (บทหน้าจะเจอเรื่องเดียวกันอีกครั้งกับ array <code>extends</code> ใน <code>eslint.config.js</code>)</li>
+            <li>ไม่มี <code>any</code> และไม่มี <code>as</code> ที่ใช้กลบ type error ทั้งสามไฟล์ — ผิดกติกาในไฟล์ rules</li>
+            <li>ไม่มี comment แบบ <code>// product interface</code> หรือ JSDoc ที่เขียนซ้ำสิ่งที่ signature บอกอยู่แล้ว</li>
+          </ul>
+        </blockquote>
+
+        <p>เหมือนบทก่อน ๆ: <code>npm run lint</code> อาจตกเรื่อง <code>import-x/order</code> ก่อน แก้ด้วย <code>npx eslint . --fix</code> แล้วรันซ้ำให้ผ่านเงียบ ๆ จากนั้นค่อย <code>npm run typecheck</code></p>
+
+        <h3>โค้ดอ้างอิง</h3>
+
+        <p><code>src/features/products/types.ts</code> — ไฟล์นี้อยู่ใน <code>features/products</code> เพราะมันคือความรู้เฉพาะของฟีเจอร์สินค้า:</p>
+
+        <pre><code class="language-typescript">import { Pagination } from "@/shared/types/generic.type";
+
+export interface ProductDimensions {
+  width: number;
+  height: number;
+  depth: number;
+}
+
+export interface ProductReview {
+  rating: number;
+  comment: string;
+  date: string;
+  reviewerName: string;
+  reviewerEmail: string;
+}
+
+export interface ProductMeta {
+  createdAt: string;
+  updatedAt: string;
+  barcode: string;
+  qrCode: string;
+}
+
+export interface Product {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  discountPercentage?: number;
+  rating: number;
+  stock: number;
+  tags: string[];
+  brand: string;
+  sku: string;
+  weight: number;
+  dimensions: ProductDimensions;
+  warrantyInformation: string;
+  shippingInformation: string;
+  availabilityStatus: string;
+  reviews: ProductReview[];
+  returnPolicy: string;
+  minimumOrderQuantity: number;
+  meta: ProductMeta;
+  images: string[];
+  thumbnail: string;
+}
+
+export interface Category {
+  slug: string;
+  name: string;
+  url: string;
+}
+
+export interface FetchProductsResponse extends Pagination {
+  products: Product[];
+}
+</code></pre>
+
+        <p>มีจุดตัดสินใจที่น่าสนใจอยู่สองสามจุด:</p>
+
+        <ul>
+          <li><strong><code>discountPercentage?: number</code></strong> — ฟิลด์เดียวใน <code>Product</code> ที่เป็น optional เพราะเราไม่อยากให้ทั้งแอปตั้งอยู่บนสมมติฐานว่าสินค้าทุกชิ้น<em>ต้อง</em>มีส่วนลด การประกาศเป็น optional บังคับให้โค้ดฝั่ง UI ต้องรองรับกรณีไม่มีส่วนลดเสมอ — เดี๋ยวบทเรียน 18 ตอนเขียน price utils คุณจะเห็นว่า TypeScript ไล่บี้เราเรื่องนี้อย่างไร (เหตุผลนี้ฟังขึ้น แต่<em>ข้อเท็จจริง</em>ที่มันตั้งอยู่ไม่ตรงกับ payload จริง — อ่านกล่อง 💡 ถัดจากรายการนี้)</li>
+          <li><strong><code>ProductReview</code> แยกออกมา</strong> — เพราะหน้า Product detail (บทเรียน 21) มีทั้ง <code>ReviewSection</code> และ <code>ReviewCard</code> ที่ต้องรับ review เป็น props การมี type ชื่อชัด ๆ ให้ import ดีกว่า <code>Product["reviews"][number]</code> เยอะ</li>
+          <li><strong><code>Category</code> เป็น object ไม่ใช่ string</strong> — <code>GET /products/categories</code> ของ dummyjson ตอบ array ของ object <code>{ slug, name, url }</code>: <code>slug</code> เอาไว้ประกอบ URL (เช่น <code>/products/category/beauty</code>) ส่วน <code>name</code> คือชื่อสวย ๆ ไว้แสดงผล (เช่น "Beauty") ชื่อ <code>Category</code> นี้จะไปชนกับชื่อคอมโพเนนต์หน้า <code>Category</code> ในบทเรียน 20 ซึ่งแก้ด้วยการ import แบบ <code>Category as CategoryType</code> (หน้า Home ในบทเรียน 19 ไม่ได้ชนกับใคร แต่ใช้ alias เดียวกันเพื่อความสม่ำเสมอ) — ไม่ใช่ปัญหา แต่รู้ไว้ก่อนจะได้ไม่งง</li>
+          <li><strong><code>FetchProductsResponse extends Pagination</code></strong> — รูปแบบคำตอบของ endpoint รายการสินค้า คือ <code>products</code> บวกสามฟิลด์ pagination ที่ทวนไปเมื่อครู่ การ <code>extends</code> ทำให้เราประกอบ type จากชิ้นส่วนที่มีอยู่แล้วโดยไม่ต้องพิมพ์ซ้ำ</li>
+        </ul>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว — และมันคือประเด็นทั้งหมดของบทนี้:</strong> ต้นฉบับประกาศ <code>brand: string</code> แบบบังคับ และ <code>discountPercentage?: number</code> แบบไม่บังคับ ซึ่ง<em>กลับกัน</em>กับความจริงของ dummyjson จากสินค้าทั้ง 194 ชิ้น <code>discountPercentage</code> มีครบทุกชิ้น ส่วน <code>brand</code> <strong>หายไป 92 ชิ้น</strong> — ทั้งหมวด <code>groceries</code>, <code>home-decoration</code>, <code>kitchen-accessories</code>, <code>sports-accessories</code>, <code>tops</code>, <code>womens-dresses</code> และ <code>womens-jewellery</code> ตั้งแต่ <code>id</code> 16 ขึ้นไป ลองเปิด <code>https://dummyjson.com/products?limit=5&amp;skip=15</code> ที่ checklist บอกให้เปิด แล้วค้นคำว่า <code>brand</code> ในหน้านั้นดู — ไม่เจอสักตัว การประกาศอย่างซื่อสัตย์จึงเป็น <code>brand?: string</code> และของที่ควรบังคับคือ <code>discountPercentage</code> เราสั่งตามต้นฉบับเพราะโค้ดอ้างอิงของคอร์สนี้คือแอปจริง แต่ผลของมันมีจริง: <code>brand</code> ถูก render ตรง ๆ ทั้งใน <code>ProductsList</code> (บทเรียน 18) และ <code>ProductDetailInfo</code> (บทเรียน 21) แปลว่าสินค้าเกือบครึ่งร้านจะมีช่องว่างเปล่าตรงนั้น โดยที่ TypeScript รับประกันกับคุณตลอดทางว่ามันเป็น <code>string</code> แน่นอน — นี่คืออาการ "type โกหก" ที่บทนี้ทั้งบทเตือนไว้ เกิดขึ้นบน type ของบทนี้เอง และไม่มี lint, typecheck หรือ <code>npm run dev</code> ตัวไหนบอกคุณได้ มีแต่การเปิด payload จริงที่กว้างพอ</blockquote>
+
+        <blockquote>💡 ใน Week 4 เราเขียน <code>import type</code> เพราะโปรเจกต์นั้นเปิด <code>verbatimModuleSyntax</code> ไว้ แต่ template ของโปรเจกต์นี้ไม่ได้เปิด option นั้น <code>import { Pagination }</code> แบบธรรมดาจึงใช้ได้ — TypeScript รู้เองว่าเป็น type แล้วตัดทิ้งตอน build ให้ นี่เป็นอีกข้อที่ต้องบอก Agent ตรง ๆ ในบริบท ไม่งั้นมันจะเลือกท่าที่พบบ่อยกว่าให้</blockquote>
+
+        <p><code>src/shared/utils/pagination.utils.ts</code>:</p>
+
+        <pre><code class="language-typescript">export function calculateOffset(page: number, limit: number): number {
+  return (page - 1) * limit;
+}
+
+export function calculateTotalPages(total: number, limit: number): number {
+  return Math.ceil(total / limit);
+}
+</code></pre>
+
+        <p>สองฟังก์ชันที่รวมกันแล้วไม่ถึงสิบบรรทัด แต่มันคือเส้นแบ่งระหว่างภาษาของผู้ใช้กับภาษาของ server ทั้งเส้น — และเพราะมันเป็น pure function ล้วน คุณพิสูจน์ความถูกต้องของมันได้ในหัวโดยไม่ต้องเปิดเบราว์เซอร์</p>
+
+        <p><code>src/features/products/api.ts</code> — ได้เวลาประกอบทุกอย่างเข้าด้วยกัน: client จากบทที่แล้ว + types + offset math กลายเป็นฟังก์ชันเรียก API หนึ่งตัวต่อหนึ่ง endpoint:</p>
+
+        <pre><code class="language-typescript">import { apiClient } from "@/shared/api/client";
+import {
+  Category,
+  FetchProductsResponse,
+  Product,
+} from "@/features/products/types";
+import { calculateOffset } from "@/shared/utils/pagination.utils";
+
+export interface ProductListParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface CategoryProductsParams extends ProductListParams {
+  category: string;
+}
+
+export async function getProducts({
+  page = 1,
+  limit = 20,
+}: ProductListParams = {}): Promise&lt;FetchProductsResponse&gt; {
+  const { data } = await apiClient.get&lt;FetchProductsResponse&gt;("/products", {
+    params: { skip: calculateOffset(page, limit), limit },
+  });
+  return data;
+}
+
+export async function getProductsByCategory({
+  category,
+  page = 1,
+  limit = 20,
+}: CategoryProductsParams): Promise&lt;FetchProductsResponse&gt; {
+  const { data } = await apiClient.get&lt;FetchProductsResponse&gt;(
+    `/products/category/${category}`,
+    { params: { skip: calculateOffset(page, limit), limit } },
+  );
+  return data;
+}
+
+export async function getCategories(): Promise&lt;Category[]&gt; {
+  const { data } = await apiClient.get&lt;Category[]&gt;("/products/categories");
+  return data;
+}
+
+export async function getProduct(id: string | number): Promise&lt;Product&gt; {
+  const { data } = await apiClient.get&lt;Product&gt;(`/products/${id}`);
+  return data;
+}
+</code></pre>
+
+        <p>สี่ฟังก์ชัน ตรงกับสี่ endpoint ที่แนะนำไปในบทที่แล้วเป๊ะ ๆ มาดูรายละเอียดที่ซ่อนอยู่</p>
+
+        <blockquote>💡 <strong>ของที่ควรถูกทักในรีวิว:</strong> บรรทัดที่สองของไฟล์ import <code>types</code> ด้วย <code>@/features/products/types</code> ทั้งที่ <code>types.ts</code> นั่งอยู่<em>โฟลเดอร์เดียวกัน</em>กับ <code>api.ts</code> — กติกาในไฟล์ rules เขียนไว้ว่า "import ข้ามโฟลเดอร์ใช้ alias <code>@/</code> เสมอ" ซึ่งแปลว่าไฟล์ในโฟลเดอร์เดียวกันควรใช้ <code>./types</code> และคุณจะเห็นในบทหน้าว่า <code>queries.ts</code> ใช้ <code>./api</code> จริง ๆ — สองไฟล์ในโฟลเดอร์เดียวกัน สองธรรมเนียม เราสั่งตามต้นฉบับเพราะโค้ดอ้างอิงของคอร์สนี้คือแอปจริง ไม่ใช่แอปในอุดมคติ แต่ถ้านี่เป็น pull request ในงานจริง นี่คือ comment ที่ควรเขียนทิ้งไว้ และสังเกตว่าไม่มีเครื่องมือตัวไหนจับได้ เพราะทั้งสองแบบ resolve ไปที่ไฟล์เดียวกัน</blockquote>
+
+        <h3>Params ที่คิดเป็น "หน้า" ตั้งแต่ต้นทาง</h3>
+
+        <p><code>ProductListParams</code> รับ <code>page</code> กับ <code>limit</code> — ภาษาที่ UI คิด — แล้วให้ <code>calculateOffset</code> แปลงเป็น <code>skip</code> ภาษาที่ dummyjson คิด ตอนส่ง request วิธีนี้ทำให้ความรู้เรื่อง skip/limit ถูกกักไว้ในไฟล์นี้ไฟล์เดียว หน้าเพจไม่ต้องรู้จักมันเลย ส่วน <code>CategoryProductsParams</code> ก็แค่ <code>extends</code> เพิ่ม <code>category</code> ที่จำเป็นเข้าไป</p>
+
+        <p>ตรง signature ของ <code>getProducts</code> มีท่า TypeScript ที่ควรอ่านให้ขาด: <code>{ page = 1, limit = 20 }: ProductListParams = {}</code> ทำงานสองชั้น — <code>= {}</code> ด้านนอกทำให้เรียก <code>getProducts()</code> โดยไม่ส่งอะไรเลยก็ได้ ส่วน <code>page = 1, limit = 20</code> ด้านในคือ default ของแต่ละฟิลด์ที่ผู้เรียกไม่ได้ระบุ ผลคือฟังก์ชันเดียวรองรับตั้งแต่ "ขอหน้าแรกแบบมาตรฐาน" ยัน "ขอหน้า 3 หน้าละ 12 ชิ้น" โดย type ปลอดภัยทุกทาง</p>
+
+        <h3>Generic ที่ทำให้ทุกอย่าง typed</h3>
+
+        <p><code>apiClient.get&lt;FetchProductsResponse&gt;(...)</code> คือการใช้ generic ของ axios บอกว่า "response.data ของ request นี้มีหน้าตาแบบนี้นะ" จากนั้นเรา destructure <code>const { data } = ...</code> แล้ว return เฉพาะ <code>data</code> ออกไป — ผู้เรียกไม่ต้องรู้ด้วยซ้ำว่าเบื้องหลังเป็น axios ที่ห่อของไว้ใน response object ได้ของ typed สะอาด ๆ ไปใช้เลย และ return type ที่ประกาศไว้ (<code>Promise&lt;FetchProductsResponse&gt;</code>) ก็ทำหน้าที่เป็นสัญญาสองชั้น: ถ้าวันไหนเราแก้ไส้ในแล้วของที่ return ไม่ตรงสัญญา TypeScript ฟ้องทันที</p>
+
+        <p>ย้ำอีกครั้งว่า generic ตัวนี้คือ<em>คำประกาศ</em> ไม่ใช่<em>การตรวจสอบ</em> — axios ไม่ได้ไปเทียบ payload จริงกับ type ให้ ถ้า <code>types.ts</code> โกหก generic ก็ส่งคำโกหกนั้นต่อไปทั้งแอปอย่างมั่นใจ นี่คือเหตุผลที่ข้อแรกของ checklist ต้องทำด้วยตาคน</p>
+
+        <p>ส่วน <code>getProduct(id: string | number)</code> ที่รับได้ทั้งสอง type ไม่ใช่ความหละหลวม แต่เป็นความจงใจ: id ที่มาจาก URL param จะเป็น string (<code>"42"</code>) แต่ id ที่มาจาก object สินค้าจะเป็น number (<code>42</code>) — รับได้ทั้งคู่ที่นี่ แล้วเดี๋ยวบทหน้าเราจะเห็นวิธีทำให้สอง id นี้ชี้ cache ก้อนเดียวกัน</p>
+
+        <h3>สังเกตไหมว่าไม่มี try/catch สักตัว</h3>
+
+        <p>นี่คือดอกผลของบทที่แล้ว: <strong>ไฟล์นี้ไม่ต้องจัดการ error เลยแม้แต่บรรทัดเดียว</strong> เพราะ interceptor ใน <code>client.ts</code> ที่คุณพิมพ์เองเป็นเจ้าของเรื่อง error แต่เพียงผู้เดียว ถ้า request ล้มเหลว promise ของฟังก์ชันเหล่านี้จะ reject ออกไปเป็น <code>ApiError</code> โดยอัตโนมัติ</p>
+
+        <p>และที่จริง การใส่ <code>try/catch</code> ตรงนี้ไม่ใช่แค่ไม่จำเป็น แต่<em>อันตราย</em>: ถ้าเรา catch แล้วไม่ throw ต่อ error จะถูกกลืนหาย TanStack Query จะไม่มีวันรู้ว่า request พัง ไม่ตั้งค่า error state ให้ แล้ว UI ก็ค้างอยู่ในสถานะ loading ตลอดกาล ฟังก์ชันชั้นนี้จึงควร "บาง" ที่สุด: รับ params → ยิง request → คืนข้อมูล typed จบ ความบางนี้ยังทำให้ชั้น query ที่ครอบมันอยู่ถูกเทสต์ด้วย MSW ได้ง่ายมากในบทเรียน 32 เพราะไม่มี logic ซ่อนอยู่ให้ต้อง mock อะไรพิสดาร</p>
+
+        <p>สังเกตว่าข้อ "ห้าม try/catch" เป็นข้อที่ Agent ฝ่าฝืนบ่อยมากถ้าไม่สั่งห้ามไว้ในขอบเขต เพราะ "ฟังก์ชันเรียก API ที่ดี" ในโค้ดตัวอย่างทั่วโลกมักมี <code>try/catch</code> ครอบไว้เสมอ — มันไม่ผิดในโปรเจกต์ที่ไม่มี interceptor แต่ในโปรเจกต์นี้มันคือการทำงานซ้ำที่ทำลายของเดิม</p>
+
+        <h2>🤔 อธิบายให้ได้</h2>
+
+        <ol>
+          <li>เติมฟิลด์ปลอมชื่อ <code>discountPrice: number</code> เข้าไปใน <code>Product</code> แล้วรัน <code>npm run lint</code> กับ <code>npm run typecheck</code> — ทั้งคู่ผ่าน อธิบายว่าทำไม TypeScript ถึงไม่รู้ว่ามันไม่มีอยู่จริง และบอกได้ว่าคุณจะรู้ตัวเมื่อไหร่ถ้าไม่ได้เปิด JSON จริงมาเทียบ (เสร็จแล้วลบทิ้ง)</li>
+          <li>ลบ <code>= {}</code> ตัวนอกออกจาก signature ของ <code>getProducts</code> แล้วตอบว่าโค้ดแบบไหนที่เคยเรียกได้จะเรียกไม่ได้อีกต่อไป และ <code>page = 1</code> ที่อยู่ข้างในยังทำงานอยู่ไหม</li>
+          <li>ใส่ <code>try/catch</code> ที่ <code>catch</code> แล้ว <code>return { products: [], total: 0, skip: 0, limit: 20 }</code> ครอบ <code>getProducts</code> ดู — typecheck ผ่านสบาย ไล่ให้ได้ว่าผู้ใช้จะเห็นอะไรบนหน้าจอตอน server ล่ม และเทียบกับสิ่งที่เขาควรเห็น (เสร็จแล้วลบทิ้ง)</li>
+        </ol>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> บทนี้ยังไม่มีอะไรใหม่ให้ดูในเบราว์เซอร์ — เราสร้างของสามชิ้นที่ยังไม่มีใครเรียกใช้ แต่ความถูกต้องของมันตรวจได้สองทาง: <code>npm run lint</code> กับ <code>npm run typecheck</code> ต้องผ่านทั้งคู่ และ<em>ตาของคุณ</em>ต้องผ่านการเทียบ <code>types.ts</code> กับ <code>https://dummyjson.com/products?limit=5&amp;skip=15</code> ทีละฟิลด์มาแล้วจริง ๆ (ไม่ใช่ห้าชิ้นแรก — เหตุผลอยู่ในกล่อง 💡 ใต้ <code>types.ts</code>) ถ้า TypeScript บ่น ให้อ่านชื่อไฟล์กับบรรทัดที่มันชี้ดี ๆ — จุดพลาดยอดนิยมคือสะกดชื่อฟิลด์ใน <code>types.ts</code> ไม่ตรงกับตอน import ไปใช้ใน <code>api.ts</code> เมื่อผ่านแล้ว commit ได้ ชั้นข้อมูลของเราเหลือชิ้นสุดท้ายชิ้นเดียว: ทำให้ TanStack Query รู้จักฟังก์ชันเหล่านี้อย่างเป็นระบบด้วย query factory ในบทถัดไป — ถ้าข้อ "อธิบายให้ได้" ยังตอบไม่ได้ อย่าเพิ่งไปบทถัดไป</blockquote>
+
+        <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+          <a href="15_api_client.html" rel="prev">ก่อนหน้า: API Client</a>
+          <a href="index.html">สารบัญบทเรียน</a>
+          <a href="17_query_factories.html" rel="next">ถัดไป: Query Factories</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
