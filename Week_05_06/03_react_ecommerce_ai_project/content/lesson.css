@@ -8,6 +8,7 @@
   --blue-dark: #174876;
   --blue-soft: #e8f1fb;
   --amber: #d89b13;
+  --amber-soft: #fdf6e7;
   --border: #ccd8e5;
   --code-bg: #172033;
   --code-text: #eef4ff;
@@ -315,6 +316,7 @@ blockquote,
 
 .lesson-ai-review {
   border-inline-start-color: var(--amber);
+  background: var(--amber-soft);
 }
 
 .lesson-manual {
