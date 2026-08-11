@@ -156,9 +156,9 @@ mkdir -p src/shared/api src/shared/components src/shared/hooks src/shared/utils<
 
         <p>สังเกตว่าทำไมมันอยู่ <code>shared/types</code> ไม่ใช่ <code>features/products</code>: ในนั้นไม่มีคำว่า product สักคำ — มันคือรูปร่างของ "การแบ่งหน้า" ล้วน ๆ ที่ list ไหน ๆ ก็ใช้ได้ ผ่านเกณฑ์ "ยกไปแอปอื่นได้ไหม" สบาย ๆ ในทางกลับกัน ถ้าวันหน้าเราเผลอเพิ่มฟิลด์ <code>products</code> เข้าไปใน interface นี้ นั่นคือวินาทีที่มันต้องย้ายบ้านออกจาก shared ทันที</p>
 
-        <blockquote>💡 <strong>Checkpoint:</strong> บทนี้ไม่มีอะไรเปลี่ยนบนหน้าจอ — ตัวชี้วัดคือโครงสร้าง รัน <code>find src -type d | sort</code> แล้วผลลัพธ์ต้องมีครบ: <code>src/app/layouts</code>, <code>src/pages</code>, <code>src/features/products</code>, <code>src/features/cart</code>, <code>src/features/checkout</code>, <code>src/shared/api</code>, <code>src/shared/components</code>, <code>src/shared/hooks</code>, <code>src/shared/types</code>, <code>src/shared/utils</code>, <code>src/styles</code> จากนั้น <code>npm run typecheck</code> กับ <code>npm run lint</code> ต้องผ่านเหมือนเดิม ได้แผนที่ครบแล้ว — บทหน้าเราจะติดตั้ง Cursor แล้วเริ่มให้มันทำงานบนโครงนี้</blockquote>
-
         <p>บทนี้ปิดฉากช่วงที่เราพิมพ์เองล้วน ๆ ตอนนี้โปรเจกต์มีรูปทรงชัดเจนแล้วว่าอะไรอยู่ชั้นไหน ใครเรียกใครได้ และ import ไหลไปทางไหน โครงสร้างที่เราเพิ่งตกลงกันนี้ จะกลายเป็น "กฎ" ที่เราเขียนให้ Cursor อ่านในบทเรียน 07 — ตั้งแต่บทนั้นเป็นต้นไป ทุกครั้งที่ Cursor สร้างไฟล์ใหม่ มันจะรู้เองว่าไฟล์นั้นควรไปอยู่ตรงไหน เพราะคุณเป็นคนบอกมันด้วยกติกาชุดที่คุณเพิ่งอ่านจบไป</p>
+
+        <blockquote>💡 <strong>Checkpoint:</strong> บทนี้ไม่มีอะไรเปลี่ยนบนหน้าจอ — ตัวชี้วัดคือโครงสร้าง รัน <code>find src -type d | sort</code> แล้วผลลัพธ์ต้องมีครบ: <code>src/app/layouts</code>, <code>src/pages</code>, <code>src/features/products</code>, <code>src/features/cart</code>, <code>src/features/checkout</code>, <code>src/shared/api</code>, <code>src/shared/components</code>, <code>src/shared/hooks</code>, <code>src/shared/types</code>, <code>src/shared/utils</code>, <code>src/styles</code> จากนั้น <code>npm run typecheck</code> กับ <code>npm run lint</code> ต้องผ่านเหมือนเดิม ได้แผนที่ครบแล้ว — บทหน้าเราจะติดตั้ง Cursor แล้วเริ่มให้มันทำงานบนโครงนี้</blockquote>
 
         <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
           <a href="04_scss_foundation.html" rel="prev">ก่อนหน้า: โครงสร้าง SCSS</a>
