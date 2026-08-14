@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ความแตกต่างระหว่าง absolute path กับ relative path สัญลักษณ์ ., .., ~, / และวิธีจัดการชื่อไฟล์ที่มีช่องว่าง"
+    />
+    <title>Path แบบ Absolute และ Relative</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>Path แบบ Absolute และ Relative</h1>
+
+        <p>
+          บทที่แล้วเราใช้ <code>cd</code> ย้ายไปมาระหว่างโฟลเดอร์ด้วยชื่อสั้น ๆ เช่น
+          <code>projects</code> หรือ <code>..</code> คำเหล่านี้ล้วนเป็น “path” รูปแบบหนึ่ง บทนี้จะแยกให้ชัดว่า
+          path มีสองแบบ คือ absolute กับ relative ต่างกันอย่างไร และทำไมเข้าใจความต่างนี้ให้ดีถึงช่วยไม่ให้
+          รันคำสั่งผิดที่ผิดทางในอนาคต
+        </p>
+
+        <h2>Path คือที่อยู่ของไฟล์</h2>
+        <p>
+          path คือ “ที่อยู่” ของไฟล์หรือโฟลเดอร์หนึ่ง ๆ ในระบบไฟล์ เหมือนที่อยู่ทางไปรษณีย์
+          ลองเทียบกับชีวิตจริงดู
+        </p>
+        <ul>
+          <li>
+            <strong>absolute path</strong> เหมือนที่อยู่เต็มบนซองจดหมาย เช่น “บ้านเลขที่ 12 ถนน
+            สุขุมวิท แขวงคลองตัน เขตคลองเตย กรุงเทพฯ” ใช้ที่อยู่นี้ส่งของจากที่ไหนในโลกก็ถึงบ้านหลังเดิมเสมอ
+            เพราะบอกครบทุกระดับตั้งแต่จุดเริ่มต้นบนสุด
+          </li>
+          <li>
+            <strong>relative path</strong> เหมือนคำบอกทาง “เลี้ยวขวาแล้วนับไปอีกสองบ้าน” คำบอกทางนี้
+            ใช้งานได้ก็ต่อเมื่อรู้ว่าตอนนี้ยืนอยู่ตรงไหนก่อน ถ้ายืนคนละจุด คำบอกทางเดียวกันจะพาไปคนละที่ทันที
+          </li>
+        </ul>
+        <p>
+          ในโลก terminal ก็เหมือนกัน absolute path ใช้ได้จากทุกที่เสมอ ส่วน relative path ขึ้นอยู่กับว่า
+          <code>pwd</code> ตอนนี้อยู่ที่ไหน
+        </p>
+
+        <h2>Absolute Path</h2>
+        <p>
+          absolute path คือ path ที่ขึ้นต้นด้วย <code>/</code> เสมอ นับจาก root มาตรง ๆ จนถึงปลายทาง
+          ไม่ว่าจะรันจากโฟลเดอร์ไหนก็ตาม ผลลัพธ์คือไฟล์เดียวกันเสมอ
+        </p>
+        <pre><code>/Users/mint/projects/coffee-master/index.html</code></pre>
+        <p>
+          path นี้ชี้ไปที่ไฟล์ <code>index.html</code> ตัวเดียวในเครื่องเสมอ ไม่ว่าตอนรันคำสั่งจะยืนอยู่
+          ที่ home directory, อยู่ในโฟลเดอร์อื่น หรืออยู่ลึกไปอีกกี่ชั้นก็ตาม เพราะ path เริ่มนับจาก
+          <code>/</code> ซึ่งมีอยู่จุดเดียวในระบบเสมอ ลองพิสูจน์ด้วยคำสั่ง <code>cat</code>
+          (ใช้แสดงเนื้อหาไฟล์ จะอธิบายละเอียดในบทที่ 8) จากคนละตำแหน่งดู
+        </p>
+        <pre><code>$ cd /
+$ cat /Users/mint/projects/coffee-master/index.html
+&lt;html&gt;&lt;/html&gt;
+
+$ cd /Users/mint
+$ cat /Users/mint/projects/coffee-master/index.html
+&lt;html&gt;&lt;/html&gt;</code></pre>
+        <p>
+          สังเกตว่าคำสั่งที่สองเปลี่ยนตำแหน่งปัจจุบันไปแล้ว แต่ absolute path เดิมยังพาไปถึงไฟล์เดียวกันได้
+        </p>
+
+        <h2>Relative Path</h2>
+        <p>
+          relative path คือ path ที่ไม่ขึ้นต้นด้วย <code>/</code> ความหมายของมันขึ้นอยู่กับ
+          <code>pwd</code> เสมอ relative path มีสัญลักษณ์พิเศษอยู่สี่แบบที่ใช้บ่อยมาก
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>สัญลักษณ์</th>
+              <th>ความหมาย</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>.</code></td>
+              <td>โฟลเดอร์ปัจจุบัน</td>
+            </tr>
+            <tr>
+              <td><code>..</code></td>
+              <td>โฟลเดอร์แม่ (ขึ้นไปหนึ่งชั้น)</td>
+            </tr>
+            <tr>
+              <td><code>~</code></td>
+              <td>home directory ของเรา</td>
+            </tr>
+            <tr>
+              <td><code>/</code></td>
+              <td>root ของทั้งระบบ</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          <code>.</code> กับ <code>..</code> เป็น relative path เพราะความหมายเปลี่ยนไปตามตำแหน่งที่ยืน
+          อยู่เสมอ ส่วน <code>~</code> กับ <code>/</code> แม้จะดูเหมือนคงที่ แต่จริง ๆ แล้ว
+          <code>~</code> ก็ขึ้นกับว่ากำลังล็อกอินเป็นใคร (บนเครื่องเดียวกันแต่คนละ user ค่า
+          <code>~</code> ก็ต่างกัน) จึงมักถูกจัดอยู่ในกลุ่ม path แบบ relative-to-user เช่นกัน
+          ต่างจาก <code>/</code> ที่มีความหมายเดียวตายตัวไม่ว่าใครหรือที่ไหนก็ตาม
+        </p>
+
+        <h2>ตัวอย่างเดินขึ้นแล้วลง</h2>
+        <p>
+          ลองดูสถานการณ์จริง สมมติ <code>pwd</code> ตอนนี้อยู่ที่
+          <code>~/projects/coffee-master/src</code> และอยากไปเปิดไฟล์
+          <code>notes.txt</code> ที่อยู่ในโฟลเดอร์ <code>projects</code>
+        </p>
+
+        <div class="file-tree">/
+└── Users
+    └── mint
+        └── projects
+            ├── notes.txt
+            └── coffee-master
+                └── src
+                    └── app.js</div>
+
+        <p>
+          จากตำแหน่ง <code>src</code> ต้องเดินขึ้นสองชั้นก่อนถึงจะเจอ <code>projects</code> ขึ้นหนึ่งชั้น
+          (<code>..</code>) จะถึง <code>coffee-master</code> ขึ้นอีกหนึ่งชั้น (<code>../..</code>)
+          จะถึง <code>projects</code> พอดี
+        </p>
+
+        <pre><code>$ pwd
+/Users/mint/projects/coffee-master/src
+
+$ cat ../../notes.txt
+(เนื้อหาของ notes.txt)</code></pre>
+
+        <p>
+          หรือจะใช้ <code>~</code> เป็นจุดเริ่มต้นแทนก็ได้ผลลัพธ์เดียวกัน เพราะ
+          <code>~/projects/notes.txt</code> กับ <code>../../notes.txt</code> (เมื่อยืนอยู่ที่
+          <code>src</code>) ต่างก็ชี้ไปที่ไฟล์เดียวกันในต้นไม้ด้านบน
+        </p>
+
+        <pre><code>$ cat ~/projects/notes.txt
+(เนื้อหาของ notes.txt)</code></pre>
+
+        <p>
+          <code>~/projects/notes.txt</code> จริง ๆ แล้วเป็น path แบบผสม เริ่มจาก <code>~</code>
+          ซึ่งขยายเป็น <code>/Users/mint</code> เสมอ จึงทำงานได้แน่นอนไม่ว่าจะยืนอยู่ที่ไหนก็ตาม
+          คล้ายกับ absolute path มากกว่า relative path ล้วน ๆ อย่าง <code>../../notes.txt</code>
+          ที่ต้องรู้ตำแหน่งปัจจุบันก่อนถึงจะตีความถูก
+        </p>
+
+        <h2>ชื่อไฟล์ที่มีช่องว่าง</h2>
+        <p>
+          บางครั้งชื่อโฟลเดอร์หรือไฟล์มีช่องว่างอยู่ในชื่อ เช่นโฟลเดอร์ที่ macOS สร้างให้อัตโนมัติ
+          ชื่อ “My Documents” ถ้าพิมพ์ path แบบไม่ระวัง shell จะตีความช่องว่างผิดทันที
+        </p>
+
+        <pre><code>$ cd My Documents
+zsh:cd:1: string not in pwd: My</code></pre>
+
+        <p>
+          error นี้เกิดเพราะ shell ตัดคำที่เจอช่องว่างออกเป็น argument แยกกันเสมอ shell จึงเห็นว่า
+          <code>cd</code> ได้รับสอง argument คือ <code>My</code> กับ <code>Documents</code> ไม่ใช่
+          argument เดียวที่ชื่อ “My Documents” (bash จะฟ้องคนละข้อความ ประมาณ
+          <code>cd: My: No such file or directory</code> แต่สาเหตุเดียวกัน) วิธีแก้มีสองแบบ คือใส่
+          เครื่องหมายคำพูดครอบทั้งชื่อ หรือใส่ <code>\</code> หน้าช่องว่างเพื่อบอกว่านี่คือช่องว่างจริง
+          ๆ ไม่ใช่ตัวแบ่ง argument
+        </p>
+
+        <pre><code>$ cd "My Documents"
+$ pwd
+/Users/mint/My Documents
+
+$ cd ~
+$ cd My\ Documents
+$ pwd
+/Users/mint/My Documents</code></pre>
+
+        <div class="callout">
+          <p>
+            <strong>บน Windows:</strong> path ที่ Explorer แสดงเป็น
+            <code>C:\Users\mint\projects</code> จะเขียนใน Git Bash ว่า
+            <code>/c/Users/mint/projects</code> คือเปลี่ยน <code>\</code> เป็น <code>/</code>
+            และเปลี่ยน <code>C:</code> เป็น <code>/c</code> ส่วนใน PowerShell ใช้รูปแบบเดิมของ
+            Windows ได้เลย
+          </p>
+        </div>
+
+        <blockquote>
+          <p>
+            <strong>ข้อผิดพลาดที่พบบ่อย:</strong> พิมพ์ relative path จากตำแหน่งที่ไม่ตรงกับที่คิดไว้
+            ในหัว เช่นจำว่าเพิ่งอยู่ที่โฟลเดอร์ <code>src</code> แต่จริง ๆ terminal สลับไปอยู่ที่อื่นแล้ว
+            (จากการ <code>cd</code> ก่อนหน้า) ทำให้ <code>../notes.txt</code> ชี้ไปผิดไฟล์หรือได้ error
+            <code>No such file or directory</code> วิธีแก้ที่ได้ผลเสมอคือรัน <code>pwd</code> เช็กตำแหน่ง
+            ก่อนพิมพ์ relative path ทุกครั้ง จนกว่าจะกลายเป็นความเคยชิน การเสียเวลาพิมพ์
+            <code>pwd</code> เพิ่มสามตัวอักษรนั้นถูกกว่าการเดา path ผิดแล้วต้องไล่หาว่าทำไมคำสั่งพัง
+          </p>
+        </blockquote>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          สมมติ <code>pwd</code> รายงานว่าตอนนี้อยู่ที่
+          <code>/Users/mint/projects/coffee-master/src</code> เขียน
+        </p>
+        <ol>
+          <li>relative path ไปยัง <code>/Users/mint/projects/notes.txt</code></li>
+          <li>absolute path ไปยัง <code>index.html</code> ที่อยู่ในโฟลเดอร์ <code>coffee-master</code></li>
+        </ol>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>
+            เริ่มนับจาก <code>src</code> ขึ้นหนึ่งชั้น (<code>..</code>) ถึง <code>coffee-master</code>
+            ขึ้นอีกหนึ่งชั้น (<code>../..</code>) ถึง <code>projects</code> ซึ่งเป็นที่ที่
+            <code>notes.txt</code> อยู่พอดี ดังนั้น relative path คือ <code>../../notes.txt</code>
+          </p>
+          <p>
+            ส่วน absolute path ไม่ต้องนับจากตำแหน่งปัจจุบันเลย เขียนเต็มจาก root ไปตรง ๆ ได้ทันทีว่า
+            <code>/Users/mint/projects/coffee-master/index.html</code> path แบบนี้ใช้ได้ไม่ว่าจะรันคำสั่งจาก
+            ตำแหน่งไหนในเครื่องก็ตาม เพราะเริ่มต้นจาก <code>/</code> ซึ่งมีความหมายเดียวเสมอ
+          </p>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="04_navigating_the_filesystem.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="06_creating_files_and_folders.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

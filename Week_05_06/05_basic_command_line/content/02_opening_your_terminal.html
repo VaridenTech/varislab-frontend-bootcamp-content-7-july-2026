@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="วิธีเปิด terminal บน macOS, Linux และ Windows การอ่าน prompt และการรันคำสั่งแรกของคุณ"
+    />
+    <title>เปิด Terminal ครั้งแรก</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>เปิด Terminal ครั้งแรก</h1>
+
+        <p>
+          บทที่แล้วเราคุยกันว่า terminal, shell และ prompt คืออะไร บทนี้จะพาคุณเปิด terminal
+          ขึ้นมาจริง ๆ ไม่ว่าคุณจะใช้เครื่องแบบไหนก็ตาม แล้วลองพิมพ์คำสั่งแรกดู
+        </p>
+
+        <h2>เปิด Terminal บน macOS</h2>
+        <p>
+          วิธีที่เร็วที่สุดคือใช้ Spotlight กด <code>Cmd + Space</code> แล้วพิมพ์
+          <code>Terminal</code> จากนั้นกด Enter เพื่อเปิดโปรแกรม Terminal ที่ติดตั้งมากับเครื่องอยู่แล้ว
+        </p>
+        <p>
+          macOS ใช้ shell ชื่อ <strong>zsh</strong> เป็นค่าเริ่มต้นมาตั้งแต่ macOS Catalina
+          เป็นต้นมา ตัวอย่างในคอร์สนี้จึงอ้างอิงพฤติกรรมของ zsh เป็นหลัก
+        </p>
+
+        <h2>เปิด Terminal บน Linux</h2>
+        <p>
+          ดิสโทรส่วนใหญ่ตั้งค่าคีย์ลัด <code>Ctrl + Alt + T</code> ไว้เปิด terminal ได้ทันที
+          ถ้าคีย์ลัดนี้ไม่ทำงาน ให้ค้นหาโปรแกรมชื่อ Terminal จากเมนูแอปพลิเคชันของดิสโทรที่ใช้อยู่แทน
+        </p>
+
+        <h2>เปิด Terminal บน Windows</h2>
+        <p>
+          Windows มี Command Prompt และ PowerShell ติดตั้งมาให้อยู่แล้ว แต่คำสั่งของทั้งสองตัว
+          ต่างจากคำสั่งที่สอนในคอร์สนี้ค่อนข้างมาก เพื่อให้ทุกคนพิมพ์คำสั่งชุดเดียวกันได้ทั้งห้อง
+          ให้ติดตั้งและใช้ <strong>Git Bash</strong> แทน
+        </p>
+
+        <div class="callout">
+          <p>
+            <strong>บน Windows:</strong> ให้ติดตั้ง
+            <a href="https://gitforwindows.org/">Git for Windows</a> แล้วเปิดโปรแกรม
+            <strong>Git Bash</strong> ใช้ตลอดคอร์สนี้ เพราะคำสั่งจะตรงกับที่สอนทุกบท
+            ถ้าองค์กรของคุณติดตั้ง WSL ไว้แล้วก็ใช้ WSL ได้เช่นกัน
+            ส่วน PowerShell และ Command Prompt ใช้คำสั่งคนละชุด
+            บทเรียนจะบอกคำสั่งเทียบเท่าให้ในกล่องแบบนี้เมื่อจำเป็น
+          </p>
+        </div>
+
+        <h2>อ่าน Prompt ให้เป็น</h2>
+        <p>
+          เมื่อเปิด terminal ขึ้นมา สิ่งแรกที่เห็นคือ prompt ซึ่งบอกข้อมูลหลายอย่างในบรรทัดเดียว
+          ตัวอย่างเช่น
+        </p>
+
+        <pre><code>mint@macbook ~/projects %</code></pre>
+
+        <p>prompt บรรทัดนี้แบ่งออกเป็นสี่ส่วน</p>
+        <ul>
+          <li><code>mint</code> คือ username ของผู้ใช้ที่ล็อกอินอยู่</li>
+          <li><code>macbook</code> คือ hostname หรือชื่อเครื่อง</li>
+          <li><code>~/projects</code> คือโฟลเดอร์ปัจจุบันที่ terminal ยืนอยู่</li>
+          <li>
+            <code>%</code> คือสัญลักษณ์ที่บอกว่า prompt พร้อมรับคำสั่งแล้ว ใน zsh มักใช้
+            <code>%</code> ส่วนใน bash มักใช้ <code>$</code> ความหมายเหมือนกัน
+          </li>
+        </ul>
+
+        <h2>สามคำสั่งแรกของคุณ</h2>
+        <p>ลองพิมพ์สามคำสั่งนี้ทีละบรรทัด แล้วดูว่า terminal ตอบกลับมาว่าอย่างไร</p>
+
+        <pre><code>$ whoami
+mint
+
+$ date
+Fri Aug 14 10:32:41 +07 2026
+
+$ pwd
+/Users/mint</code></pre>
+
+        <p>
+          <code>whoami</code> บอกชื่อผู้ใช้ที่กำลังล็อกอินอยู่ <code>date</code> บอกวันเวลาปัจจุบัน
+          ของเครื่อง ส่วน <code>pwd</code> ย่อมาจาก “print working directory” แปลว่า
+          “บอกโฟลเดอร์ที่ทำงานอยู่ตอนนี้” terminal จะมีโฟลเดอร์ปัจจุบันอยู่เสมอ
+          เหมือนกับหน้าต่าง Finder หรือ Explorer ที่เปิดค้างอยู่ในโฟลเดอร์ใดโฟลเดอร์หนึ่งตลอดเวลา
+        </p>
+
+        <h2>ปิด Terminal</h2>
+        <p>
+          พิมพ์คำสั่ง <code>exit</code> แล้วกด Enter เพื่อปิด shell ปัจจุบัน หรือจะกดปิดหน้าต่าง
+          terminal ตรง ๆ เหมือนโปรแกรมอื่นก็ได้เช่นกัน
+        </p>
+
+        <blockquote>
+          <p>
+            <strong>ข้อผิดพลาดที่พบบ่อย:</strong> พิมพ์เครื่องหมาย <code>$</code> หรือ
+            <code>%</code> จากตัวอย่างเข้าไปด้วย ทั้งที่มันเป็นส่วนหนึ่งของ prompt เท่านั้น
+            อีกเรื่องที่คนพลาดบ่อยคือคิดว่า terminal จะเปิดอยู่ที่โฟลเดอร์เดียวกับที่ VS Code
+            เปิดค้างไว้ ซึ่งไม่จริง terminal จะไม่ไปโฟลเดอร์นั้นเองจนกว่าเราจะสั่งย้ายด้วยคำสั่ง
+            <code>cd</code> ซึ่งเป็นเรื่องของบทถัดไป
+          </p>
+        </blockquote>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          เปิด terminal ของคุณขึ้นมาจริง ๆ แล้วรันคำสั่ง <code>whoami</code>, <code>date</code>
+          และ <code>pwd</code> ทีละคำสั่ง จดผลลัพธ์ที่ได้ไว้ จากนั้นตอบคำถามว่า terminal
+          เริ่มต้นที่โฟลเดอร์ไหน และโฟลเดอร์นั้นเป็นโฟลเดอร์เดียวกับโปรเจกต์ของคอร์สนี้หรือไม่
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>
+            เมื่อเปิด terminal ขึ้นมาใหม่ ค่า <code>pwd</code> ที่ได้เกือบทุกครั้งจะเป็น
+            home directory ของผู้ใช้ ซึ่งหน้าตาต่างกันไปตามระบบปฏิบัติการ บน macOS จะเป็น
+            <code>/Users/&lt;ชื่อ&gt;</code> บน Linux จะเป็น <code>/home/&lt;ชื่อ&gt;</code>
+            และใน Git Bash บน Windows จะเป็น <code>/c/Users/&lt;ชื่อ&gt;</code>
+          </p>
+          <p>
+            โฟลเดอร์นี้แทบไม่เคยเป็นโฟลเดอร์โปรเจกต์ของคอร์สโดยตรง เพราะ home directory
+            คือจุดเริ่มต้นกลาง ๆ ของผู้ใช้ ไม่ใช่ที่เก็บโปรเจกต์ใดโปรเจกต์หนึ่งเป็นการเฉพาะ
+            การย้าย terminal ไปยังโฟลเดอร์โปรเจกต์จริงจะเป็นเนื้อหาของบทถัดไปเรื่องการเดินทางในระบบไฟล์
+          </p>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="01_what_is_command_line.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="03_anatomy_of_a_command.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

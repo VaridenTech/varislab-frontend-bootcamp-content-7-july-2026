@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="รันไฟล์ JavaScript ด้วย node เปิดโหมด REPL สร้างโปรเจกต์ด้วย npm init ติดตั้ง package และรันสคริปต์ที่กำหนดไว้ใน package.json"
+    />
+    <title>รันสคริปต์และโปรเจกต์ Node</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>รันสคริปต์และโปรเจกต์ Node</h1>
+
+        <p>
+          บทที่แล้วติดตั้ง Node.js และ npm เรียบร้อยแล้ว บทสุดท้ายของคอร์สนี้พาลงมือใช้งานจริง ตั้งแต่รันไฟล์
+          JavaScript เดี่ยว ๆ ไฟล์เดียว ไปจนถึงสร้างโปรเจกต์ npm เต็มรูปแบบ ติดตั้ง package และรันสคริปต์ที่กำหนดไว้
+          ทุกขั้นตอนในบทนี้คือสิ่งที่จะทำซ้ำแทบทุกวันในคอร์ส Node.js ที่ต่อจากนี้
+        </p>
+
+        <h2>รันไฟล์ JavaScript ด้วย node</h2>
+        <p>สร้างไฟล์ <code>hello.js</code> ขึ้นมาสักไฟล์ แล้วเปิดด้วย VS Code</p>
+        <pre><code>$ touch hello.js
+$ code hello.js</code></pre>
+        <p>พิมพ์โค้ด JavaScript ธรรมดาลงไปหนึ่งบรรทัดแล้วบันทึก</p>
+        <pre><code>console.log("hello")</code></pre>
+        <p>จากนั้นรันไฟล์นี้ด้วย <code>node</code></p>
+        <pre><code>$ node hello.js
+hello</code></pre>
+        <p>
+          <code>node</code> ตามด้วยชื่อไฟล์คือวิธีรันไฟล์ JavaScript ที่ใช้บ่อยที่สุด จุดที่ต้องระวังคือชื่อไฟล์ที่ให้ไปเป็น
+          <strong>relative path</strong> เทียบกับ <code>pwd</code> ปัจจุบันเสมอ ตามที่เรียนไปในบทที่ 5 เรื่อง path
+          ถ้ายืนอยู่ผิดโฟลเดอร์แล้วรัน <code>node hello.js</code> โดยที่ไฟล์นั้นไม่ได้อยู่ในโฟลเดอร์ปัจจุบัน จะได้ error
+          ทันที
+        </p>
+        <pre><code>$ node hello.js
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/Users/mint/hello.js'</code></pre>
+        <p>
+          <code>Cannot find module</code> ในกรณีนี้ไม่ได้แปลว่าไฟล์เสียหรือโค้ดผิด แต่แปลว่า Node.js มองหาไฟล์ชื่อนี้
+          ใน path ที่ระบุแล้วไม่เจอ วิธีแก้อันดับแรกเสมอคือรัน <code>pwd</code> และ <code>ls</code> เพื่อยืนยันว่ากำลัง
+          ยืนอยู่ในโฟลเดอร์ที่มีไฟล์นั้นจริง ๆ
+        </p>
+
+        <h2>โหมด REPL</h2>
+        <p>
+          พิมพ์ <code>node</code> เฉย ๆ โดยไม่ใส่ชื่อไฟล์ตามหลัง จะเปิดโหมดโต้ตอบที่เรียกว่า REPL (Read-Eval-Print
+          Loop) พิมพ์โค้ด JavaScript ทีละบรรทัดแล้วเห็นผลลัพธ์ทันที เหมาะกับการทดลองสั้น ๆ โดยไม่ต้องสร้างไฟล์
+        </p>
+        <pre><code>$ node
+Welcome to Node.js v22.23.2.
+Type ".help" for more information.
+> 1 + 1
+2
+> .exit
+$</code></pre>
+        <p>
+          ออกจาก REPL ได้สองวิธีคือพิมพ์ <code>.exit</code> แล้วกด Enter หรือกด <code>Ctrl + D</code>
+          ที่บรรทัด prompt ว่าง ๆ
+        </p>
+
+        <h2>สร้างโปรเจกต์ด้วย npm init</h2>
+        <p>
+          โปรเจกต์ Node.js เกือบทุกโปรเจกต์เริ่มต้นด้วยไฟล์ <code>package.json</code> ที่เก็บข้อมูลของโปรเจกต์
+          ใช้คำสั่ง <code>npm init</code> เพื่อสร้างไฟล์นี้ขึ้นมา แต่ปกติ <code>npm init</code> จะถามคำถามทีละข้อ
+          (ชื่อโปรเจกต์ เวอร์ชัน คำอธิบาย ฯลฯ) เติม flag <code>-y</code> เพื่อข้ามคำถามทั้งหมดแล้วใช้ค่า default ไปเลย
+          เริ่มจากสร้างโฟลเดอร์โปรเจกต์เปล่า ๆ ขึ้นมาก่อน แล้ว <code>cd</code> เข้าไปข้างในให้เรียบร้อยก่อนรัน
+          <code>npm init</code> เสมอ
+        </p>
+        <pre><code>$ mkdir hello-node-demo
+$ cd hello-node-demo
+$ npm init -y
+Wrote to /Users/mint/hello-node-demo/package.json:
+
+{
+  "name": "hello-node-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}</code></pre>
+        <p>
+          <code>package.json</code> ที่ได้คือไฟล์ config หลักของโปรเจกต์ เก็บชื่อ เวอร์ชัน สคริปต์ที่รันได้
+          และรายชื่อ package ที่โปรเจกต์นี้พึ่งพา ทุกโปรเจกต์ Node.js ที่จะเจอในคอร์สถัดไปมีไฟล์นี้เกือบทั้งหมด
+        </p>
+
+        <h2>ติดตั้ง package ด้วย npm install</h2>
+        <p>ลองติดตั้ง package จากภายนอกสักตัวหนึ่ง เช่น <code>dayjs</code> ซึ่งเป็น library จัดการวันที่</p>
+        <pre><code>$ npm install dayjs
+
+added 1 package, and audited 2 packages in 906ms
+
+found 0 vulnerabilities</code></pre>
+        <p>คำสั่งนี้ทำให้เกิดการเปลี่ยนแปลงสามอย่างในโฟลเดอร์โปรเจกต์</p>
+        <ol>
+          <li>
+            โฟลเดอร์ <code>node_modules/</code> ถูกสร้างขึ้น เก็บโค้ดจริงของ <code>dayjs</code>
+            (และของทุก package ที่ติดตั้งต่อจากนี้) ไว้ข้างใน
+          </li>
+          <li>
+            <code>package.json</code> มี key <code>dependencies</code> เพิ่มขึ้นมา ระบุว่าโปรเจกต์นี้ต้องใช้
+            <code>dayjs</code> เวอร์ชันไหน
+          </li>
+          <li>
+            ไฟล์ <code>package-lock.json</code> ถูกสร้างขึ้นใหม่ เก็บเวอร์ชันที่ติดตั้งจริงแบบละเอียดของทุก package
+            รวมถึง package ที่ <code>dayjs</code> เองก็พึ่งพาอยู่อีกที
+          </li>
+        </ol>
+        <pre><code>$ ls
+node_modules		package-lock.json	package.json
+
+$ cat package.json
+{
+  "name": "hello-node-demo",
+  "version": "1.0.0",
+  ...
+  "dependencies": {
+    "dayjs": "^1.11.21"
+  }
+}</code></pre>
+        <p>
+          เพราะ <code>node_modules</code> สร้างใหม่ได้เสมอจาก <code>package.json</code> โปรเจกต์ Node.js ที่ clone มาจากคนอื่น
+          จึงมักไม่มี <code>node_modules</code> ติดมาด้วยเลย (ดูเหตุผลเรื่อง <code>.gitignore</code> ด้านล่าง) วิธี restore
+          ให้ครบคือลบ <code>node_modules</code> ทิ้งแล้วรัน <code>npm install</code> เฉย ๆ โดยไม่ระบุชื่อ package ตามหลัง
+          มันจะอ่าน <code>package.json</code> แล้วติดตั้งทุกอย่างที่ระบุไว้ในนั้นให้ครบเหมือนเดิม
+        </p>
+        <pre><code>$ rm -rf node_modules
+$ npm install
+
+added 1 package, and audited 2 packages in 660ms
+
+found 0 vulnerabilities</code></pre>
+        <p>
+          <code>node_modules</code> เป็นโฟลเดอร์ที่ npm <strong>generate</strong> ขึ้นมาเองทั้งหมด สร้างใหม่ได้เสมอ
+          จากข้อมูลใน <code>package.json</code> ด้วยการรัน <code>npm install</code> อีกครั้ง จึงไม่มีเหตุผลต้อง
+          commit โฟลเดอร์นี้เข้า git เลย และเพราะขนาดของมันมักใหญ่มาก (บาง package เดียวก็ดึง package ย่อยตามมาอีกหลายสิบตัว)
+          โปรเจกต์ Node.js แทบทุกโปรเจกต์จึงมี <code>node_modules</code> อยู่ในไฟล์ <code>.gitignore</code> เป็นบรรทัดแรก ๆ
+          เสมอ ตามหลักการเดียวกับที่เรียนไปแล้วในคอร์ส Git (<code>Week_04/01_basic_git</code>) เรื่องไม่ commit ไฟล์ที่
+          generate ขึ้นมาได้เอง
+        </p>
+
+        <h2>สคริปต์ใน package.json</h2>
+        <p>
+          <code>package.json</code> มี key <code>scripts</code> ไว้เก็บคำสั่งที่ตั้งชื่อไว้ล่วงหน้า เพิ่ม script ชื่อ
+          <code>start</code> เข้าไปเพื่อสั่งให้รัน <code>index.js</code>
+        </p>
+        <pre><code>{
+  "scripts": {
+    "start": "node index.js"
+  }
+}</code></pre>
+        <p>
+          ก่อนจะรันสคริปต์นี้ได้ ต้องมีไฟล์ <code>index.js</code> อยู่จริงก่อน สร้างไฟล์แล้วเปิดด้วย VS Code
+        </p>
+        <pre><code>$ touch index.js
+$ code index.js</code></pre>
+        <p>พิมพ์โค้ดบรรทัดนี้ลงไปแล้วบันทึก</p>
+        <pre><code>console.log("hello from my first node project")</code></pre>
+        <p>แล้วเรียกใช้ script นี้ด้วย <code>npm run</code> ตามด้วยชื่อ script</p>
+        <pre><code>$ npm run start
+
+> hello-node-demo@1.0.0 start
+> node index.js
+
+hello from my first node project</code></pre>
+        <p>
+          <code>npm run start</code> ทำงานง่าย ๆ คือไปเปิด <code>package.json</code> มองหา script ชื่อ
+          <code>start</code> แล้วรันคำสั่งที่เขียนไว้ตรงนั้นให้ ข้อดีของการอ้อมผ่าน <code>npm run</code> แทนที่จะพิมพ์
+          <code>node index.js</code> ตรง ๆ คือทุกโปรเจกต์เรียกใช้งานได้ด้วยคำสั่งเดียวกันเป๊ะ ไม่ว่าเบื้องหลังไฟล์
+          entry point จะชื่ออะไรหรือซับซ้อนแค่ไหนก็ตาม คนที่มาเปิดโปรเจกต์นี้ทีหลังไม่จำเป็นต้องรู้รายละเอียดภายในเลย
+          รู้แค่ว่าพิมพ์ <code>npm run start</code> ก็พอ
+        </p>
+
+        <h2>หยุด process ด้วย Ctrl + C</h2>
+        <p>
+          บางสคริปต์ไม่จบตัวเองหลังรันเสร็จ เช่น dev server ที่คอยรอรับ request อยู่ตลอด สคริปต์แบบนี้จะค้างอยู่ที่ terminal
+          ไปเรื่อย ๆ โดยตั้งใจ ไม่ได้แปลว่าค้างเพราะพัง วิธีหยุดคือกด <code>Ctrl + C</code> ตามที่เรียนไปแล้วในบทที่ 9
+          ไม่ใช่ปิดหน้าต่าง terminal ทิ้งตรง ๆ
+        </p>
+
+        <div class="callout">
+          <p>
+            <strong>บน Windows:</strong> สคริปต์ใน <code>package.json</code>
+            ของบางโปรเจกต์เขียนด้วยคำสั่งแบบ Unix เช่น <code>rm -rf dist</code>
+            ซึ่งจะรันไม่ผ่านใน Command Prompt แต่รันได้ใน Git Bash หรือ WSL
+            อีกเหตุผลหนึ่งที่คอร์สนี้แนะนำให้ใช้ Git Bash ตลอด
+          </p>
+        </div>
+
+        <blockquote>
+          <p>
+            <strong>ข้อผิดพลาดที่พบบ่อย:</strong> รัน <code>npm install</code> ผิดโฟลเดอร์ เช่นรันที่ home directory
+            แทนที่จะเป็นโฟลเดอร์โปรเจกต์ ทำให้เกิด <code>node_modules</code> แปลกปลอมขึ้นที่ home directory โดยไม่ตั้งใจ
+            เปลืองพื้นที่และสร้างความสับสนภายหลัง ก่อนรัน <code>npm install</code> ทุกครั้งควรเช็ก <code>pwd</code>
+            ก่อนเสมอว่ากำลังยืนอยู่ในโฟลเดอร์โปรเจกต์จริง ๆ
+          </p>
+          <p>
+            อีกข้อผิดพลาดที่พบบ่อยไม่แพ้กันคือ commit โฟลเดอร์ <code>node_modules</code> เข้า git โดยลืมเช็ก
+            <code>.gitignore</code> ก่อน ทำให้ repository บวมขึ้นมหาศาลโดยไม่จำเป็น เพราะ <code>node_modules</code>
+            สร้างขึ้นใหม่ได้เสมอจาก <code>package.json</code> ไม่มีเหตุผลต้องเก็บไว้ใน git เลย
+          </p>
+        </blockquote>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          สร้างโปรเจกต์ขึ้นมาใหม่ทั้งหมดตั้งแต่ศูนย์ สร้างโฟลเดอร์ชื่อ <code>hello-node</code> เข้าไปข้างใน รัน
+          <code>npm init -y</code> สร้างไฟล์ <code>index.js</code> ที่ print ข้อความทักทายอะไรก็ได้หนึ่งบรรทัด
+          เพิ่ม <code>start</code> script เข้าไปใน <code>package.json</code> แล้วรันด้วย <code>npm run start</code>
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>
+            <code>npm init -y</code> ข้ามคำถามทั้งหมดแล้วใช้ค่า default ทันที ผลคือได้ <code>package.json</code>
+            พร้อมใช้งานโดยไม่ต้องรอตอบทีละข้อ ส่วน <code>start</code> script ก็เป็นแค่คำสั่งที่บันทึกชื่อไว้ล่วงหน้าเฉย ๆ
+            ไม่มีอะไรพิเศษ เหตุผลที่ควรใช้ <code>npm run start</code> แทนการพิมพ์ <code>node index.js</code> ตรง ๆ
+            คือถ้าวันหนึ่ง entry point ของโปรเจกต์เปลี่ยนชื่อไฟล์หรือย้ายตำแหน่ง แค่แก้ script ใน
+            <code>package.json</code> ที่เดียว คนอื่นที่เรียกใช้ด้วย <code>npm run start</code> เหมือนเดิมจะไม่ได้รับ
+            ผลกระทบเลย ไม่ต้องมีใครมาจำใหม่ว่าต้องพิมพ์คำสั่งอะไร
+          </p>
+          <pre><code>$ mkdir hello-node
+$ cd hello-node
+$ npm init -y
+$ touch index.js
+$ code .</code></pre>
+          <p>
+            หลังจากพิมพ์ <code>console.log("hello from my first node project")</code> ลงใน <code>index.js</code>
+            และเพิ่ม <code>start</code> script แล้ว
+          </p>
+          <pre><code>$ npm run start
+
+> hello-node@1.0.0 start
+> node index.js
+
+hello from my first node project</code></pre>
+          <p>
+            สองบรรทัดที่ขึ้นต้นด้วย <code>&gt;</code> ในผลลัพธ์ (<code>&gt; hello-node@1.0.0 start</code> และ
+            <code>&gt; node index.js</code>) เป็นข้อความที่ npm พิมพ์ออกมาเองเพื่อบอกว่ากำลังจะรัน script ไหนด้วย
+            คำสั่งอะไร ไม่ใช่ผลลัพธ์จากโปรแกรมของเรา บรรทัดสุดท้าย <code>hello from my first node project</code>
+            เท่านั้นที่มาจาก <code>console.log</code> ในไฟล์ <code>index.js</code> จริง ๆ
+          </p>
+        </details>
+
+        <h2>ก้าวต่อไป</h2>
+        <p>
+          ถึงตรงนี้ ทักษะการใช้ terminal ที่จำเป็นสำหรับคอร์ส Node.js ที่จะเรียนต่อจากนี้ครบแล้วทั้งหมด ตั้งแต่เดินทางในระบบไฟล์
+          จัดการไฟล์และโฟลเดอร์ อ่าน environment variable และ <code>PATH</code> ไปจนถึงติดตั้ง Node.js และรันโปรเจกต์ npm
+          จริง ขั้นตอนที่เหลือคือลงมือเขียนโค้ด Node.js กันต่อในคอร์สถัดไป
+        </p>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="11_installing_node_and_npm.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

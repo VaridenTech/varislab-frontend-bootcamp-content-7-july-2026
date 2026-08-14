@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้โครงสร้างของคำสั่ง command, option (flag) และ argument พร้อมวิธีอ่านคู่มือคำสั่งด้วย man และ --help"
+    />
+    <title>โครงสร้างของคำสั่ง</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>โครงสร้างของคำสั่ง</h1>
+
+        <p>
+          ตอนนี้คุณเปิด terminal เป็นแล้ว และรันคำสั่งง่าย ๆ อย่าง <code>pwd</code> กับ
+          <code>whoami</code> มาแล้ว บทนี้จะแกะโครงสร้างของคำสั่งที่ซับซ้อนขึ้น เพื่อให้คุณอ่านคำสั่งที่เจอในเอกสารหรือบทเรียนถัดไปได้เอง
+          แม้จะไม่เคยเห็นคำสั่งนั้นมาก่อน
+        </p>
+
+        <h2>คำสั่งประกอบด้วยสามส่วน</h2>
+        <p>ลองดูคำสั่งนี้เป็นตัวอย่าง</p>
+
+        <pre><code>$ ls -l /etc</code></pre>
+
+        <p>
+          คำสั่งหนึ่งบรรทัดแบ่งออกเป็นสามส่วนเสมอ ได้แก่ command, option (หรือเรียกว่า flag)
+          และ argument แต่ละส่วนตอบคำถามคนละอย่าง
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>ส่วน</th>
+              <th>ในตัวอย่างนี้คือ</th>
+              <th>ตอบคำถามว่า</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Command</td>
+              <td><code>ls</code></td>
+              <td>ทำอะไร (list ไฟล์และโฟลเดอร์)</td>
+            </tr>
+            <tr>
+              <td>Option (flag)</td>
+              <td><code>-l</code></td>
+              <td>ทำแบบไหน (แสดงผลแบบ long format)</td>
+            </tr>
+            <tr>
+              <td>Argument</td>
+              <td><code>/etc</code></td>
+              <td>ทำกับอะไร (โฟลเดอร์ <code>/etc</code>)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Flag แบบสั้นและแบบยาว</h2>
+        <p>
+          flag ส่วนใหญ่มีสองรูปแบบให้เลือกใช้ แบบสั้นขึ้นต้นด้วยขีดเดียวตามด้วยตัวอักษรตัวเดียว
+          เช่น <code>-a</code> ส่วนแบบยาวขึ้นต้นด้วยสองขีดตามด้วยคำเต็ม เช่น <code>--all</code>
+          ทั้งสองแบบมักมีความหมายเดียวกัน ต่างกันแค่ความยาวที่พิมพ์
+        </p>
+        <p>
+          flag แบบสั้นพิมพ์เร็วกว่า ส่วน flag แบบยาวอ่านเข้าใจง่ายกว่าเมื่อกลับมาดูคำสั่งภายหลัง
+          หรือเมื่อแชร์คำสั่งให้คนอื่นอ่าน
+        </p>
+
+        <h2>รวม Flag หลายตัวเข้าด้วยกัน</h2>
+        <p>
+          เมื่อต้องใช้ flag แบบสั้นหลายตัวพร้อมกัน สามารถเขียนแยกกันหรือรวมไว้หลังขีดเดียวก็ได้
+          ผลลัพธ์เหมือนกันทุกประการ
+        </p>
+
+        <pre><code>$ ls -l -a
+total 24
+drwxr-xr-x   6 mint  staff   192 Aug 14 10:20 .
+drwxr-xr-x   9 mint  staff   288 Aug 14 09:55 ..
+-rw-r--r--   1 mint  staff   212 Aug 14 10:20 .gitignore
+-rw-r--r--   1 mint  staff  1450 Aug 14 10:18 package.json
+
+$ ls -la
+total 24
+drwxr-xr-x   6 mint  staff   192 Aug 14 10:20 .
+drwxr-xr-x   9 mint  staff   288 Aug 14 09:55 ..
+-rw-r--r--   1 mint  staff   212 Aug 14 10:20 .gitignore
+-rw-r--r--   1 mint  staff  1450 Aug 14 10:18 package.json</code></pre>
+
+        <p>
+          <code>ls -l -a</code> กับ <code>ls -la</code> คือคำสั่งเดียวกัน แค่เขียนคนละรูปแบบ
+          การรวม flag แบบนี้ทำได้เฉพาะ flag แบบสั้นเท่านั้น flag แบบยาวต้องเขียนแยกกันเสมอ
+        </p>
+
+        <h2>Argument บางคำสั่งมีได้หลายตัว</h2>
+        <p>
+          argument ไม่จำเป็นต้องมีแค่ตัวเดียว บางคำสั่งรับ argument ได้หลายตัวในบรรทัดเดียว เช่น
+        </p>
+
+        <pre><code>$ cp file1.txt file2.txt backup/</code></pre>
+
+        <p>
+          คำสั่งนี้มี argument สามตัวคือ <code>file1.txt</code>, <code>file2.txt</code> และ
+          <code>backup/</code> ความหมายคือคัดลอกทั้ง <code>file1.txt</code> และ
+          <code>file2.txt</code> ไปไว้ในโฟลเดอร์ <code>backup/</code>
+        </p>
+
+        <h2>อ่านคู่มือของคำสั่ง</h2>
+        <p>
+          ไม่มีใครจำ flag ของทุกคำสั่งได้หมด วิธีหลักที่ใช้ได้ทั้ง macOS และ Linux คือคำสั่ง
+          <code>man</code> (ย่อจาก manual) ซึ่งเปิดคู่มือแบบละเอียดของคำสั่งนั้น เช่น
+          <code>man ls</code> จะเปิดคู่มือของ <code>ls</code> ขึ้นมาเต็มหน้าจอในโปรแกรมอ่านที่เรียกว่า
+          pager กด <code>q</code> เพื่อออกจากหน้าคู่มือแล้วกลับมาที่ prompt
+        </p>
+
+        <p>
+          คู่มือที่เปิดด้วย <code>man</code> มักยาวเกินกว่าจะไล่อ่านทีละบรรทัด ให้ค้นหาคำที่ต้องการแทน
+          พิมพ์ <code>/</code> ตามด้วยคำที่ค้นหา แล้วกด Enter เช่น <code>/time</code> จากนั้นกด
+          Enter จะพาเคอร์เซอร์ไปหยุดที่คำว่า <code>time</code> จุดแรกที่เจอ กด <code>n</code>
+          เพื่อกระโดดไปยังจุดที่เจอคำนี้ถัดไปเรื่อย ๆ
+        </p>
+
+        <p>
+          อีกวิธีที่หลายคนคุ้นเคยคือ <code>--help</code> ซึ่งเป็นรูปแบบของ GNU ใช้ได้บน Linux
+          และใน Git Bash บน Windows แต่ <strong>ใช้ไม่ได้บน macOS</strong> เพราะ <code>ls</code>
+          ที่ติดมากับ macOS เป็นเวอร์ชัน BSD ซึ่งไม่รู้จัก flag นี้ ถ้าลองรันบน macOS จะได้ error
+          แบบนี้
+        </p>
+
+        <pre><code>$ ls --help
+ls: unrecognized option `--help'
+usage: ls [-@ABCFGHILOPRSTUWXabcdefghiklmnopqrstuvwxy1%,] [--color=when] [-D format] [file ...]</code></pre>
+
+        <p>
+          error นี้ไม่ได้แปลว่าพิมพ์ผิด แต่แปลว่า <code>ls</code> เวอร์ชัน BSD ไม่รู้จัก flag
+          <code>--help</code> เท่านั้น ส่วนบน Linux หรือใน Git Bash คำสั่งเดียวกันนี้จะได้ผลลัพธ์แบบ
+          GNU แทน
+        </p>
+
+        <pre><code>$ ls --help
+Usage: ls [OPTION]... [FILE]...
+List information about the FILEs.
+
+  -a, --all                  do not ignore entries starting with .
+  -l                         use a long listing format
+  ...</code></pre>
+
+        <div class="callout">
+          <p>
+            <strong>บน Windows:</strong> Git Bash ไม่มีคำสั่ง <code>man</code> ให้ใช้
+            <code>ls --help</code> แทน ส่วนใน PowerShell ให้ใช้
+            <code>Get-Help Get-ChildItem</code> ซึ่งเป็นคำสั่งเทียบเท่ากับ <code>ls</code>
+          </p>
+        </div>
+
+        <blockquote>
+          <p>
+            <strong>ข้อผิดพลาดที่พบบ่อย:</strong> ลืมเว้นวรรคระหว่าง command กับ flag เช่นพิมพ์
+            <code>ls-l</code> ติดกัน ซึ่ง shell จะมองว่าเป็นชื่อคำสั่งเดียวที่ไม่มีอยู่จริง
+            อีกกรณีที่พบบ่อยคือคัดลอกเครื่องหมายขีดจากเว็บไซต์หรือแอปแชท แล้วได้ en dash
+            <code>–</code> ติดมาแทนที่จะเป็นขีดกลางธรรมดา <code>-</code> ทำให้ terminal
+            แจ้ง error ที่งงว่าทำไมคำสั่งที่พิมพ์ถูกต้องถึงใช้ไม่ได้
+          </p>
+        </blockquote>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>กำหนดคำสั่งต่อไปนี้ให้</p>
+        <pre><code>$ ls -lah ~/Downloads</code></pre>
+        <ol>
+          <li>บอกว่าคำสั่งนี้แบ่งเป็นกี่ส่วน แต่ละส่วนคืออะไร และคำสั่งทั้งหมดทำอะไร</li>
+          <li>
+            ใช้ <code>man ls</code> ค้นหาว่า flag ตัวไหนของ <code>ls</code> ใช้เรียงลำดับไฟล์ตามเวลาที่แก้ไขล่าสุด
+          </li>
+        </ol>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>
+            <code>ls</code> คือ command <code>-lah</code> คือการรวม flag แบบสั้นสามตัวเข้าด้วยกัน
+            ได้แก่ <code>-l</code> แสดงผลแบบ long format, <code>-a</code> แสดงไฟล์ที่ซ่อนอยู่ด้วย
+            และ <code>-h</code> แสดงขนาดไฟล์ในหน่วยที่มนุษย์อ่านง่าย เช่น KB หรือ MB แทนตัวเลข byte ดิบ
+            ส่วน <code>~/Downloads</code> คือ argument ที่บอกว่าให้ทำกับโฟลเดอร์ Downloads
+            ของผู้ใช้ปัจจุบัน คำสั่งทั้งหมดจึงแปลว่า “แสดงรายการไฟล์ทั้งหมดในโฟลเดอร์ Downloads
+            รวมไฟล์ที่ซ่อนอยู่ ด้วยรายละเอียดครบและขนาดที่อ่านง่าย”
+          </p>
+          <p>
+            flag ที่ใช้เรียงลำดับตามเวลาที่แก้ไขล่าสุดคือ <code>-t</code> หาได้จากการรัน
+            <code>man ls</code> แล้วพิมพ์ <code>/time</code> ตามด้วย Enter เพื่อค้นหาคำว่า time
+            ในคู่มือ จุดแรกที่เจอจะพาไปยังส่วนที่อธิบาย <code>-t</code> ว่าใช้เรียงลำดับตามเวลาที่แก้ไขล่าสุด
+            ถ้าจุดแรกยังไม่ใช่ส่วนที่ต้องการ กด <code>n</code> เพื่อค้นหาจุดถัดไปได้
+          </p>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="02_opening_your_terminal.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="04_navigating_the_filesystem.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>
