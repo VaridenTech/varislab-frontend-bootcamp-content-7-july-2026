@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="คัดลอกไฟล์ด้วย cp ย้ายและเปลี่ยนชื่อด้วย mv ลบด้วย rm พร้อมข้อควรระวังเรื่องการลบไฟล์แบบถาวรบน command line"
+    />
+    <title>คัดลอก ย้าย และลบ</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>คัดลอก ย้าย และลบ</h1>
+
+        <p>
+          บทที่แล้วสร้างโฟลเดอร์ฝึกมือ <code>my-cli-lab</code> พร้อมไฟล์ข้างในไว้แล้ว บทนี้จะพาคุณจัดการไฟล์เหล่านั้นด้วย
+          สามคำสั่งที่ใช้บ่อยที่สุดใน terminal ได้แก่ <code>cp</code> (copy), <code>mv</code> (move)
+          และ <code>rm</code> (remove) ทั้งสามคำสั่งไม่มีหน้าต่างยืนยันแบบที่ Finder หรือ File Explorer มีให้
+          จึงต้องเข้าใจให้แม่นก่อนใช้งานจริง
+        </p>
+
+        <h2>คัดลอกด้วย cp</h2>
+        <p>
+          <code>cp</code> รับ argument สองตัวคือไฟล์ต้นทางและปลายทาง ลองคัดลอก <code>README.md</code>
+          เป็นไฟล์สำรองในโฟลเดอร์เดียวกัน
+        </p>
+        <pre><code>$ cd ~/my-cli-lab
+$ cp README.md README.backup.md
+$ ls
+README.backup.md	README.md	notes		src</code></pre>
+        <p>
+          ตอนนี้มีไฟล์ <code>README.backup.md</code> เพิ่มขึ้นมา เป็นสำเนาอิสระจาก <code>README.md</code>
+          แก้ไขไฟล์ใดไฟล์หนึ่งจะไม่กระทบอีกไฟล์เลย
+        </p>
+        <p>
+          ถ้าลองคัดลอกทั้งโฟลเดอร์ด้วยวิธีเดียวกันจะเจอ error
+        </p>
+        <pre><code>$ cp src src-backup
+cp: src is a directory (not copied).</code></pre>
+        <p>
+          <code>cp</code> ธรรมดาคัดลอกได้แค่ไฟล์เดี่ยว ๆ เท่านั้น เพราะโฟลเดอร์มีเนื้อหาซ้อนอยู่ข้างในหลายชั้น
+          <code>cp</code> จึงไม่กล้าเดาเองว่าต้องคัดลอกลึกแค่ไหน ต้องสั่งชัดเจนด้วย flag <code>-r</code>
+          (recursive) เพื่อบอกว่าให้ไล่คัดลอกทุกไฟล์และทุกโฟลเดอร์ย่อยข้างในไปด้วย
+        </p>
+        <pre><code>$ cp -r src src-backup
+$ ls
+README.backup.md	README.md	notes		src		src-backup
+$ ls -R src-backup
+index.js	utils
+
+src-backup/utils:
+format.js</code></pre>
+        <p>
+          คราวนี้ <code>src-backup</code> มีโครงสร้างเหมือน <code>src</code> ทุกประการ ทั้ง <code>index.js</code>
+          และ <code>utils/format.js</code> ที่ซ้อนอยู่ข้างใน
+        </p>
+
+        <h2>ย้ายด้วย mv</h2>
+        <p>
+          <code>mv</code> มีรูปแบบ argument เหมือน <code>cp</code> ทุกอย่าง ต่างกันตรงที่ไฟล์ต้นทางจะหายไปจากตำแหน่งเดิม
+          แทนที่จะมีสำเนาเหลืออยู่สองที่
+        </p>
+        <pre><code>$ mv README.backup.md notes/
+$ ls
+README.md	notes		src		src-backup
+$ ls notes
+README.backup.md</code></pre>
+        <p>
+          <code>README.backup.md</code> หายไปจากโฟลเดอร์ปัจจุบันแล้ว เพราะย้ายเข้าไปอยู่ใน <code>notes/</code>
+          แทน สังเกตว่า <code>mv</code> ไม่ต้อง flag <code>-r</code> เหมือน <code>cp</code> แม้จะย้ายทั้งโฟลเดอร์
+          เพราะการย้ายไม่ต้องอ่านเนื้อหาข้างในทีละไฟล์ แค่เปลี่ยนตำแหน่งอ้างอิงของไฟล์เท่านั้น
+        </p>
+
+        <h2>เปลี่ยนชื่อก็คือ mv</h2>
+        <p>
+          command line ไม่มีคำสั่ง <code>rename</code> แยกต่างหาก เพราะสำหรับ shell แล้ว
+          “เปลี่ยนชื่อ” กับ “ย้าย” คือการกระทำเดียวกัน นั่นคือเปลี่ยนตำแหน่งที่ไฟล์ถูกอ้างอิงถึง
+          ต่างกันแค่ว่าเปลี่ยนแค่ชื่อหรือเปลี่ยนทั้ง path เท่านั้น เรื่องนี้ทำให้มือใหม่หลายคนงงเมื่อเจอครั้งแรก
+          เพราะคุ้นเคยกับ Finder หรือ File Explorer ที่แยกเมนู “Rename” กับ “Move” ออกจากกันชัดเจน
+        </p>
+        <pre><code>$ mv notes docs
+$ ls
+README.md	docs		src		src-backup</code></pre>
+        <p>
+          คำสั่งนี้ “เปลี่ยนชื่อ” <code>notes</code> เป็น <code>docs</code> โดยที่ตำแหน่งยังอยู่ในโฟลเดอร์ปัจจุบันเหมือนเดิม
+          เบื้องหลังคือ <code>mv</code> คำสั่งเดียวกันกับที่ใช้ย้ายไฟล์ข้ามโฟลเดอร์นั่นเอง ถ้าอยากเปลี่ยนชื่อ
+          พร้อมย้ายไปโฟลเดอร์อื่นในคำสั่งเดียวก็ทำได้ เช่น <code>mv notes archive/old-notes</code>
+        </p>
+
+        <h2>ลบด้วย rm</h2>
+        <p>
+          <code>rm</code> ลบไฟล์ที่ระบุทันที เริ่มจากลบไฟล์สำรองที่ย้ายเข้า <code>docs</code> ไปก่อนหน้านี้
+        </p>
+        <pre><code>$ rm docs/README.backup.md
+$ ls docs</code></pre>
+        <p>
+          <code>ls docs</code> ไม่แสดงอะไรเลยเพราะโฟลเดอร์นี้กลับมาว่างเปล่าอีกครั้ง เช่นเดียวกับ
+          <code>cp</code> คำสั่ง <code>rm</code> ธรรมดาก็ลบโฟลเดอร์ตรง ๆ ไม่ได้เหมือนกัน ต้องเติม
+          <code>-r</code> เพื่อไล่ลบทุกอย่างข้างในให้หมดก่อน
+        </p>
+        <pre><code>$ rm -r src-backup
+$ ls
+README.md	docs		src</code></pre>
+        <p>
+          <code>src-backup</code> พร้อมทุกไฟล์ข้างในถูกลบไปทั้งโฟลเดอร์ในคำสั่งเดียว
+        </p>
+
+        <h2>ระวัง: rm ไม่มีถังขยะ</h2>
+        <blockquote>
+          <p>
+            <code>rm</code> ลบไฟล์ทันทีแบบถาวร ไม่มี Recycle Bin หรือ Trash ให้กู้คืน และไม่มีคำสั่ง undo
+            ไฟล์ที่หายไปแล้วคือหายไปเลย ยิ่งเมื่อรวม flag <code>-r</code> (recursive) กับ <code>-f</code>
+            (force) เป็น <code>rm -rf</code> จะยิ่งอันตรายกว่าเดิม เพราะ <code>-f</code> ปิดการถามยืนยันทุกกรณี
+            แม้แต่กรณีที่ไฟล์เขียนป้องกันไว้ก็ยังลบผ่านโดยไม่มีคำเตือนใด ๆ
+          </p>
+          <p>
+            นิสัยที่ช่วยกันความผิดพลาดได้จริงคือ รัน <code>ls</code> กับ target ก่อนรัน <code>rm</code> ทุกครั้ง
+            เพื่อดูให้แน่ใจว่ากำลังจะลบอะไรบ้าง โดยเฉพาะก่อนใช้ wildcard อย่าง <code>rm *</code> ที่จะกล่าวถึงในบทที่ 9
+            ระหว่างที่ยังไม่ชิน แนะนำให้ใช้ <code>rm -i</code> แทน ซึ่งจะถามยืนยันทีละไฟล์ก่อนลบจริง
+            ให้มีโอกาสยกเลิกทันเวลา
+          </p>
+        </blockquote>
+
+        <div class="callout">
+          <p>
+            <strong>บน Windows:</strong> Git Bash ใช้ <code>cp</code>, <code>mv</code>,
+            <code>rm</code> ได้เหมือน macOS ส่วนใน PowerShell คำสั่งเทียบเท่าคือ
+            <code>Copy-Item</code>, <code>Move-Item</code> และ <code>Remove-Item</code>
+            และไฟล์ที่ลบด้วยคำสั่งเหล่านี้ก็ไม่เข้า Recycle Bin เช่นกัน
+          </p>
+        </div>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          ในโฟลเดอร์ <code>~/my-cli-lab</code> ทำตามลำดับต่อไปนี้ โดยรัน <code>ls</code> เช็กผลลัพธ์หลังทุกขั้นตอน
+        </p>
+        <ol>
+          <li>คัดลอก <code>README.md</code> เป็น <code>README.backup.md</code></li>
+          <li>เปลี่ยนชื่อโฟลเดอร์ <code>notes</code> เป็น <code>docs</code></li>
+          <li>ย้าย <code>README.backup.md</code> เข้าไปใน <code>docs/</code></li>
+          <li>ลบไฟล์สำรองนั้นทิ้ง</li>
+        </ol>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>
+            <code>cp</code> สร้างสำเนาแยกไว้ก่อนโดยไม่กระทบไฟล์ต้นฉบับ จากนั้น <code>mv</code>
+            ทำหน้าที่สองอย่างในแบบฝึกหัดนี้คือเปลี่ยนชื่อโฟลเดอร์ (ย้ายภายในตำแหน่งเดิม) และย้ายไฟล์ข้ามโฟลเดอร์
+            (ย้ายไปตำแหน่งใหม่) ซึ่งเป็นคำสั่งเดียวกันทั้งคู่ ส่วนการรัน <code>ls</code> คั่นระหว่างแต่ละขั้นตอน
+            คือ safety net ที่ทำให้เห็นสถานะจริงก่อนพิมพ์คำสั่งถัดไป ถ้าพลาดตั้งแต่ขั้นแรกจะได้รู้ตัวทันที
+            ไม่ใช่มารู้ตัวหลัง <code>rm</code> ไปแล้ว
+          </p>
+          <pre><code>$ cd ~/my-cli-lab
+$ cp README.md README.backup.md
+$ mv notes docs
+$ mv README.backup.md docs/
+$ ls docs
+README.backup.md
+$ rm docs/README.backup.md
+$ ls docs</code></pre>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="06_creating_files_and_folders.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="08_viewing_file_contents.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

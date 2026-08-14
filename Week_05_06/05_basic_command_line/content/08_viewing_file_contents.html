@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ดูเนื้อหาไฟล์ด้วย cat, head, tail และ less และค้นหาข้อความในไฟล์ด้วย grep โดยไม่ต้องเปิด editor"
+    />
+    <title>ดูและค้นหาเนื้อหาในไฟล์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>ดูและค้นหาเนื้อหาในไฟล์</h1>
+
+        <p>
+          บางครั้งแค่อยากรู้ว่าไฟล์หนึ่งมีอะไรอยู่ข้างในบ้าง ไม่ต้องถึงขั้นเปิด VS Code ก็ตอบคำถามนี้ได้เร็วกว่าด้วย
+          command line ล้วน ๆ บทนี้แนะนำคำสั่งอ่านไฟล์ที่ใช้บ่อยที่สุดห้าคำสั่ง แต่ละคำสั่งเหมาะกับสถานการณ์ต่างกัน
+          เลือกให้ถูกจะเร็วกว่ามาก
+        </p>
+
+        <h2>ดูทั้งไฟล์ด้วย cat</h2>
+        <p>
+          <code>cat</code> ย่อจาก “concatenate” พิมพ์เนื้อหาทั้งไฟล์ออกมาที่หน้าจอรวดเดียว เหมาะกับไฟล์สั้น ๆ
+          ที่พอดีกับหน้าจอเดียว
+        </p>
+        <pre><code>$ cat README.md
+# Demo Project
+
+โปรเจกต์ตัวอย่างสำหรับฝึกดูเนื้อหาไฟล์ในบทที่ 8</code></pre>
+        <p>
+          ถ้าไฟล์ยาวเกินหนึ่งหน้าจอ <code>cat</code> ก็ยังพิมพ์ออกมาหมดอยู่ดี แค่ต้องเลื่อนดูเอง ซึ่งไม่สะดวก
+          กรณีแบบนั้นคำสั่งถัด ๆ ไปในบทนี้จะเหมาะกว่า
+        </p>
+
+        <h2>ดูเฉพาะหัวและท้ายด้วย head และ tail</h2>
+        <p>
+          <code>head</code> แสดงเฉพาะบรรทัดแรก ๆ ของไฟล์ ส่วน <code>tail</code> แสดงเฉพาะบรรทัดท้าย ๆ
+          ทั้งคู่รับ flag <code>-n</code> ตามด้วยจำนวนบรรทัดที่ต้องการ
+        </p>
+        <pre><code>$ head -n 5 package.json
+{
+  "name": "demo-project",
+  "version": "1.0.0",
+  "description": "โปรเจกต์ตัวอย่างสำหรับฝึกคำสั่งดูไฟล์",
+  "main": "index.js",</code></pre>
+        <p>
+          ใช้ <code>head</code> เมื่ออยากรู้ว่าไฟล์คืออะไรคร่าว ๆ โดยไม่ต้องอ่านทั้งไฟล์ เช่นเช็กว่า
+          <code>package.json</code> นี้ชื่ออะไร เวอร์ชันเท่าไร ส่วน <code>tail</code> เหมาะกับไฟล์ log
+          ที่เหตุการณ์ล่าสุดอยู่ท้ายไฟล์เสมอ
+        </p>
+        <pre><code>$ tail -n 20 debug.log
+2026-08-14 08:55:00 INFO  loading environment variables
+2026-08-14 08:55:02 INFO  connecting to database
+2026-08-14 08:55:03 INFO  database connection established
+2026-08-14 08:55:05 INFO  server started on port 3000
+2026-08-14 08:56:10 INFO  request received: GET /health
+2026-08-14 08:56:10 INFO  request completed in 4ms
+2026-08-14 08:57:22 INFO  request received: GET /api/users
+2026-08-14 08:57:22 INFO  request completed in 45ms
+2026-08-14 09:00:01 INFO  server restarted on port 3000
+2026-08-14 09:00:03 INFO  connected to database
+2026-08-14 09:01:15 ERROR failed to fetch user profile: timeout
+2026-08-14 09:01:16 INFO  retrying request
+2026-08-14 09:01:17 INFO  request succeeded
+2026-08-14 09:02:40 WARN  deprecated API called: /v1/users
+2026-08-14 09:03:02 error: unhandled promise rejection
+2026-08-14 09:03:10 INFO  request completed in 120ms
+2026-08-14 09:04:00 INFO  request completed in 98ms
+2026-08-14 09:05:12 ERROR database connection lost
+2026-08-14 09:06:03 INFO  request completed in 105ms
+2026-08-14 09:07:41 INFO  new request received</code></pre>
+        <p>
+          ไฟล์ <code>debug.log</code> นี้มีทั้งหมด 30 บรรทัด <code>tail -n 20</code> จึงตัดสิบบรรทัดแรกทิ้งไป
+          เหลือแค่ 20 บรรทัดหลังสุดเท่านั้น ถ้าไฟล์มีน้อยกว่า 20 บรรทัด <code>tail</code> ก็จะแสดงเท่าที่มีทั้งหมด
+          โดยไม่ฟ้อง error แต่อย่างใด
+        </p>
+        <p>
+          ถ้าไฟล์ที่ระบุไม่มีอยู่จริง ทั้ง <code>head</code> และ <code>tail</code> บน macOS จะฟ้อง error
+          ทันทีแทนที่จะแสดงอะไรเลย
+        </p>
+        <pre><code>$ head nonexistent.txt
+head: nonexistent.txt: No such file or directory</code></pre>
+
+        <h2>ไฟล์ยาว ๆ ใช้ less</h2>
+        <p>
+          ไฟล์ที่ยาวมาก เช่น <code>package-lock.json</code> ที่มักยาวเป็นพันบรรทัด ไม่เหมาะกับ <code>cat</code>
+          เพราะจะพิมพ์ท่วมหน้าจอจนหาอะไรไม่เจอ คำสั่ง <code>less</code> เปิดไฟล์แบบเลื่อนดูทีละหน้าแทน
+          ไม่พิมพ์ทุกอย่างออกมาพร้อมกัน
+        </p>
+        <pre><code>$ less package-lock.json</code></pre>
+        <p>
+          เมื่อรันแล้ว terminal จะเปลี่ยนไปแสดงหน้าจอแบบเต็มจอ ประมาณนี้ (ตัวอย่างสมมติเพื่อให้เห็นภาพ
+          เพราะ <code>less</code> เป็นโปรแกรมโต้ตอบแบบเรียลไทม์ ไม่มีทางบันทึกผลลัพธ์เป็นข้อความนิ่ง ๆ ได้)
+        </p>
+        <pre><code>{
+  "name": "demo-project",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "demo-project",
+      "version": "1.0.0",
+      "dependencies": {
+        "react": "^18.2.0",
+:</code></pre>
+        <p>
+          เลื่อนดูด้วยลูกศรขึ้นลง หรือกด <code>Space</code> เพื่อเลื่อนลงทีละหน้าจอ และ <code>b</code>
+          เพื่อเลื่อนย้อนกลับขึ้นทีละหน้าจอ ค้นหาคำในไฟล์ด้วย <code>/</code> ตามด้วยคำที่ต้องการแล้วกด Enter
+          เหมือนที่เคยใช้กับ <code>man</code> ในบทที่ 3 ส่วนคีย์ที่สำคัญที่สุดคือ <strong>กด <code>q</code>
+          เพื่อออกจาก <code>less</code></strong> แล้วกลับมาที่ prompt ปกติ มือใหม่จำนวนมากติดอยู่ในหน้าจอนี้
+          เพราะไม่รู้ว่าต้องกดอะไร การจำคีย์ <code>q</code> ไว้ให้แม่นจะช่วยได้มาก
+        </p>
+
+        <h2>ตามดู log แบบสด ๆ ด้วย tail -f</h2>
+        <p>
+          ตอน dev server กำลังรันอยู่ เช่น <code>npm run dev</code> log ใหม่จะถูกเขียนเพิ่มเข้าไฟล์ log ตลอดเวลา
+          ถ้าใช้ <code>tail</code> ธรรมดาจะเห็นแค่ภาพนิ่ง ณ ตอนที่รันคำสั่งเท่านั้น แต่ถ้าเติม flag
+          <code>-f</code> (follow) <code>tail</code> จะไม่ปิดตัวเอง แล้วพิมพ์บรรทัดใหม่ที่ถูกเขียนเพิ่มออกมาเรื่อย ๆ
+          แบบเรียลไทม์ เหมือนเฝ้าดู log สด
+        </p>
+        <pre><code>$ tail -f debug.log
+2026-08-14 09:04:00 INFO  request completed in 98ms
+2026-08-14 09:05:12 ERROR database connection lost
+2026-08-14 09:06:03 INFO  request completed in 105ms
+2026-08-14 09:07:41 INFO  new request received</code></pre>
+        <p>
+          (ตัวอย่างข้างต้นเป็นตัวอย่างสมมติเพื่อให้เห็นพฤติกรรม เพราะ <code>tail -f</code> ไม่มีวันจบเอง
+          ต่างจากคำสั่งทั่วไปที่พิมพ์ผลลัพธ์แล้วคืน prompt ให้ทันที) <code>tail -f</code> จะค้างอยู่แบบนี้ตลอดไป
+          รอบรรทัดใหม่มาเรื่อย ๆ วิธีเดียวที่จะหยุดมันคือกด <code>Ctrl + C</code> ซึ่งจะอธิบายรายละเอียดเพิ่มเติม
+          ในบทถัดไปเรื่องปุ่มลัด
+        </p>
+
+        <h2>ค้นหาข้อความด้วย grep</h2>
+        <p>
+          <code>grep</code> ค้นหาข้อความในไฟล์แล้วแสดงเฉพาะบรรทัดที่พบ ประหยัดเวลากว่าการเปิดไฟล์แล้วไล่หาเองมาก
+        </p>
+        <pre><code>$ grep "scripts" package.json
+  "scripts": {</code></pre>
+        <p>
+          ปกติ <code>grep</code> สนใจตัวพิมพ์เล็กใหญ่ ถ้าไม่แน่ใจว่าคำที่ค้นหาสะกดด้วยตัวพิมพ์แบบไหน
+          เติม <code>-i</code> (ไม่สนตัวพิมพ์เล็กใหญ่) เพื่อจับได้ทั้งสองแบบในคำสั่งเดียว
+        </p>
+        <pre><code>$ grep -i "error" debug.log
+2026-08-14 09:01:15 ERROR failed to fetch user profile: timeout
+2026-08-14 09:03:02 error: unhandled promise rejection
+2026-08-14 09:05:12 ERROR database connection lost</code></pre>
+        <p>
+          ผลลัพธ์จับได้ทั้ง <code>ERROR</code> ตัวใหญ่ล้วนและ <code>error</code> ตัวเล็กล้วน ถ้าไม่ใส่
+          <code>-i</code> จะจับได้แค่บรรทัดที่สะกดตรงกับที่พิมพ์เป๊ะ ๆ เท่านั้น
+        </p>
+        <p>
+          และ <code>grep</code> ยังค้นได้ทั้งโฟลเดอร์ในคำสั่งเดียว ด้วย <code>-r</code> (recursive) ไล่ค้นทุกไฟล์
+          ในโฟลเดอร์นั้น รวมโฟลเดอร์ย่อยข้างในด้วย บวกกับ <code>-n</code> ให้แสดงเลขบรรทัดกำกับมาด้วย
+        </p>
+        <pre><code>$ grep -rn "useState" src/
+src/App.jsx:1:import { useState } from "react";
+src/App.jsx:4:  const [count, setCount] = useState(0);
+src/Counter.jsx:1:import { useState } from "react";
+src/Counter.jsx:4:  const [value, setValue] = useState(0);</code></pre>
+        <p>
+          รูปแบบผลลัพธ์คือ <code>ชื่อไฟล์:เลขบรรทัด:เนื้อหาบรรทัดนั้น</code> ทำให้เปิดไฟล์แล้วกระโดดไปบรรทัดที่ต้องการได้ทันที
+          คำสั่งเดียวนี้ค้นเจอทุกจุดที่เรียกใช้ <code>useState</code> ทั้งโปรเจกต์ โดยไม่ต้องเปิดไฟล์ทีละไฟล์เอง
+        </p>
+        <p>
+          อีกจุดที่ต่างกันเล็กน้อยระหว่างเครื่องคือสีของผลลัพธ์ เมื่อรันใน terminal จริงที่รองรับสี
+          <code>grep</code> บน Linux หลายจัดจำหน่ายมักตั้ง alias ให้ไฮไลต์คำที่ค้นเจอเป็นสีแดงให้อัตโนมัติ
+          ส่วนบน macOS ค่าเริ่มต้นจะไม่ไฮไลต์สีให้ ต้องเติม flag <code>--color=auto</code> เองถ้าต้องการ
+          ผลลัพธ์ที่แสดงในหน้านี้จึงเป็นข้อความล้วนไม่มีสี
+        </p>
+
+        <div class="callout">
+          <p>
+            <strong>บน Windows:</strong> Git Bash มี <code>cat</code>, <code>head</code>,
+            <code>tail</code>, <code>less</code> และ <code>grep</code> ครบ ส่วนใน PowerShell
+            ให้ใช้ <code>Get-Content</code> แทน <code>cat</code> และ
+            <code>Select-String</code> แทน <code>grep</code>
+          </p>
+        </div>
+
+        <blockquote>
+          <p>
+            <strong>ข้อผิดพลาดที่พบบ่อย:</strong> รัน <code>cat</code> กับไฟล์ที่ใหญ่มากหรือเป็นไฟล์ binary
+            เช่นไฟล์รูปภาพหรือไฟล์ที่ compile แล้ว จะได้ข้อความขยะเต็มหน้าจอ บางทีถึงขั้นเปลี่ยน encoding
+            ของ terminal ไปเลยจนตัวอักษรที่พิมพ์ต่อไปอ่านไม่ออก ทางแก้เมื่อเจอสถานการณ์นี้คือกด
+            <code>Ctrl + C</code> เพื่อหยุด แล้วรัน <code>clear</code> เพื่อล้างหน้าจอให้กลับมาอ่านง่ายเหมือนเดิม
+            ครั้งต่อไปถ้าไม่แน่ใจว่าไฟล์ใหญ่แค่ไหนหรือเป็น binary หรือเปล่า ใช้ <code>less</code> หรือ
+            <code>head</code> แทน <code>cat</code> จะปลอดภัยกว่า
+          </p>
+        </blockquote>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          ในโปรเจกต์ใด ๆ ที่มีไฟล์ <code>package.json</code> ให้หาสองอย่างต่อไปนี้ด้วยคำสั่งเดียวต่ออย่าง
+        </p>
+        <ol>
+          <li>แสดงเฉพาะบรรทัดที่มีคำว่า <code>scripts</code> ในไฟล์</li>
+          <li>แสดงเฉพาะสิบบรรทัดแรกของไฟล์</li>
+        </ol>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>
+            สองข้อนี้ตอบคำถามกันคนละแบบ <code>grep</code> กรองตามเนื้อหา คือหาว่าบรรทัดไหน “มีคำนี้อยู่”
+            ไม่ว่าคำนั้นจะอยู่บรรทัดที่เท่าไรของไฟล์ก็ตาม ส่วน <code>head</code> กรองตามตำแหน่ง คือตัดมาเฉพาะ
+            บรรทัดต้น ๆ ของไฟล์โดยไม่สนใจว่าข้างในมีคำว่าอะไรบ้าง ทั้งสองคำสั่งจึงไม่ใช่คำสั่งเดียวกันที่ใช้แทนกันได้
+            แต่เป็นเครื่องมือคนละชนิดที่เลือกใช้ตามคำถามที่ต้องการคำตอบ
+          </p>
+          <pre><code>$ grep -n "scripts" package.json
+6:  "scripts": {
+$ head -n 10 package.json
+{
+  "name": "demo-project",
+  "version": "1.0.0",
+  "description": "โปรเจกต์ตัวอย่างสำหรับฝึกคำสั่งดูไฟล์",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest"
+  },</code></pre>
+          <p>
+            เติม <code>-n</code> ให้ <code>grep</code> เพื่อแสดงเลขบรรทัดกำกับมาด้วย (ในตัวอย่างนี้คือบรรทัดที่ 6)
+            ทำให้เปิด editor แล้วกระโดดไปบรรทัดนั้นได้ทันทีโดยไม่ต้องไล่หาเอง
+          </p>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="07_copying_moving_deleting.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="09_shortcuts_history_and_wildcards.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

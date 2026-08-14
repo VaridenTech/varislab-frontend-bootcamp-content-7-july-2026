@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="พิมพ์คำสั่งให้เร็วขึ้นด้วย Tab completion เรียกคำสั่งเดิมด้วยลูกศรขึ้น จำปุ่มลัดที่ต้องรู้ และจัดการหลายไฟล์พร้อมกันด้วย wildcard"
+    />
+    <title>ทางลัด ประวัติคำสั่ง และ Wildcard</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>ทางลัด ประวัติคำสั่ง และ Wildcard</h1>
+
+        <p>
+          บทที่ผ่านมาเน้นว่าคำสั่งไหนทำอะไร บทนี้เปลี่ยนมุมมาที่ความเร็วในการพิมพ์แทน เพราะยิ่งใช้ terminal
+          บ่อยเท่าไร ทางลัดพวกนี้ยิ่งประหยัดเวลาและลดโอกาสพิมพ์ผิดได้มากเท่านั้น
+        </p>
+
+        <h2>กด Tab ให้ shell พิมพ์ให้</h2>
+        <p>
+          ไม่ต้องพิมพ์ชื่อไฟล์หรือโฟลเดอร์ให้ครบทุกตัวอักษรเอง shell เดาให้ได้ถ้าพิมพ์แค่บางส่วนแล้วกด
+          <code>Tab</code> เช่นอยู่ใน home directory แล้วมีโฟลเดอร์ <code>my-cli-lab</code> อยู่
+        </p>
+        <pre><code>$ cd my-c[กด Tab]
+$ cd my-cli-lab/</code></pre>
+        <p>
+          (ตัวอย่างข้างต้นจำลองให้เห็นภาพ เพราะการกด Tab เป็นการโต้ตอบกับ shell โดยตรง ไม่มีทางบันทึกเป็นข้อความนิ่ง ๆ ได้)
+          พิมพ์แค่ <code>my-c</code> แล้วกด <code>Tab</code> หนึ่งครั้ง shell จะเติมส่วนที่เหลือให้ครบเป็น
+          <code>my-cli-lab/</code> ทันที เพราะในโฟลเดอร์ปัจจุบันมีชื่อที่ขึ้นต้นด้วย <code>my-c</code>
+          อยู่แบบเดียว ไม่กำกวม
+        </p>
+        <p>
+          ถ้ามีหลายชื่อที่ขึ้นต้นเหมือนกัน เช่นมีทั้ง <code>my-cli-lab</code> และ <code>my-cli-notes</code>
+          shell จะเติมให้ได้แค่ส่วนที่ตรงกันทั้งหมด (<code>my-cli-</code>) แล้วหยุดรอ กด <code>Tab</code>
+          ซ้ำอีกครั้งเพื่อให้แสดงรายชื่อทั้งหมดที่เป็นไปได้ให้เลือกพิมพ์ต่อเอง
+        </p>
+        <p>
+          นิสัยกด <code>Tab</code> แทนการพิมพ์ชื่อยาว ๆ เองทุกตัวอักษรคือทางลัดเดียวที่ลดพิมพ์ผิดชื่อไฟล์หรือ
+          พิมพ์ path ผิดได้มากที่สุด เพราะถ้าพิมพ์ผิดตั้งแต่ต้น <code>Tab</code> จะไม่เติมอะไรให้เลย
+          ซึ่งเป็นสัญญาณเตือนทันทีว่าพิมพ์ชื่อผิดตั้งแต่แรก
+        </p>
+
+        <h2>เรียกคำสั่งเดิมด้วยลูกศรขึ้น</h2>
+        <p>
+          shell จำคำสั่งที่เคยพิมพ์ไปแล้วทั้งหมดไว้เป็นประวัติ กดลูกศรขึ้น <code>↑</code> เพื่อดึงคำสั่งก่อนหน้ากลับมา
+          ที่ prompt โดยไม่ต้องพิมพ์ใหม่ กดซ้ำหลายครั้งเพื่อย้อนกลับไปไกลขึ้นเรื่อย ๆ และกดลูกศรลง <code>↓</code>
+          เพื่อเลื่อนมาทางคำสั่งที่ใหม่กว่า สะดวกมากเวลาต้องรันคำสั่งเดิมซ้ำ หรือรันคำสั่งที่คล้ายของเดิมแต่แก้นิดหน่อย
+        </p>
+        <p>
+          ถ้าอยากเห็นรายการคำสั่งทั้งหมดที่เคยรันมาในเซสชันนี้ ใช้คำสั่ง <code>history</code>
+        </p>
+        <pre><code>$ history
+  501  cd ~/my-cli-lab
+  502  ls
+  503  cp README.md README.backup.md
+  504  mv notes docs
+  505  history</code></pre>
+        <p>
+          (ตัวเลขและคำสั่งในตัวอย่างข้างต้นจำลองขึ้นเพื่อให้เห็นรูปแบบ เพราะประวัติจริงขึ้นกับคำสั่งที่แต่ละคนเคยพิมพ์มาก่อน)
+          ตัวเลขด้านหน้าคือลำดับในประวัติ ใช้เรียกคำสั่งนั้นซ้ำแบบเจาะจงได้ด้วย <code>!</code> ตามด้วยเลข เช่น
+          <code>!503</code> จะรันคำสั่งลำดับที่ 503 ซ้ำทันที
+        </p>
+
+        <h2>ปุ่มลัดที่ต้องรู้</h2>
+        <p>นอกจาก Tab กับลูกศร ยังมีปุ่มลัดอีกชุดที่ใช้บ่อยจนควรจำขึ้นใจ</p>
+        <table>
+          <thead>
+            <tr>
+              <th>ปุ่ม</th>
+              <th>ทำอะไร</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Ctrl + C</code></td>
+              <td>หยุด process ที่กำลังรันอยู่</td>
+            </tr>
+            <tr>
+              <td><code>Ctrl + L</code></td>
+              <td>ล้างหน้าจอ (เท่ากับคำสั่ง <code>clear</code>)</td>
+            </tr>
+            <tr>
+              <td><code>Ctrl + D</code></td>
+              <td>จบ input หรือออกจาก shell</td>
+            </tr>
+            <tr>
+              <td><code>Ctrl + A</code> / <code>Ctrl + E</code></td>
+              <td>ย้ายเคอร์เซอร์ไปต้น / ท้ายบรรทัด</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          ปุ่มที่ใช้บ่อยที่สุดในสี่ปุ่มนี้คือ <code>Ctrl + C</code> เพราะเป็นวิธีหยุดคำสั่งที่ค้างอยู่หรือรันไม่รู้จบ
+          เช่น <code>tail -f</code> ที่เพิ่งเห็นในบทที่แล้ว, dev server ที่รันด้วย <code>npm run dev</code>,
+          หรือ <code>sass --watch</code> ที่คอย compile SCSS ใหม่ทุกครั้งที่ไฟล์เปลี่ยน คำสั่งพวกนี้ถูกออกแบบมาให้ค้าง
+          รันต่อเนื่องอยู่แล้วโดยตั้งใจ ไม่ใช่ค้างเพราะพัง การกด <code>Ctrl + C</code> คือวิธีปกติที่ใช้หยุดมัน
+          ไม่ใช่การปิดหน้าต่าง terminal ทิ้ง
+        </p>
+
+        <h2>Wildcard: จัดการหลายไฟล์พร้อมกัน</h2>
+        <p>
+          Wildcard คือสัญลักษณ์พิเศษที่ shell ขยายเป็นชื่อไฟล์จริงก่อนส่งให้คำสั่งทำงาน ใช้ได้กับแทบทุกคำสั่งที่รับชื่อไฟล์
+          เป็น argument ตัวที่ใช้บ่อยที่สุดมีสองตัวคือ <code>*</code> ซึ่งแทนตัวอักษรกี่ตัวก็ได้ (รวมถึงศูนย์ตัว)
+          และ <code>?</code> ซึ่งแทนตัวอักษรตัวเดียวเท่านั้น
+        </p>
+        <pre><code>$ ls *.json
+package.json</code></pre>
+        <p>
+          <code>*.json</code> ขยายเป็นชื่อไฟล์ทุกไฟล์ในโฟลเดอร์ปัจจุบันที่ลงท้ายด้วย <code>.json</code>
+          ก่อนที่ <code>ls</code> จะเห็นด้วยซ้ำ ใช้ในโฟลเดอร์ย่อยได้เช่นกัน
+        </p>
+        <pre><code>$ ls src/*.js
+src/index.js</code></pre>
+        <p>
+          ส่วน <code>?</code> แทนตัวอักษรได้แค่ตัวเดียว ต่างจาก <code>*</code> ที่แทนได้กี่ตัวก็ได้
+        </p>
+        <pre><code>$ ls file?.txt
+file1.txt
+file2.txt</code></pre>
+        <p>
+          กรณีนี้ <code>file?.txt</code> จับ <code>file1.txt</code> และ <code>file2.txt</code> ได้ แต่จะไม่จับ
+          <code>file10.txt</code> เพราะมีตัวอักษรหลัง <code>file</code> สองตัวไม่ใช่ตัวเดียว
+        </p>
+        <p>
+          จุดที่มีประโยชน์มากคือใช้ wildcard ร่วมกับคำสั่งที่จัดการหลายไฟล์ได้ เช่นลบไฟล์ log ทั้งหมดในคำสั่งเดียว
+        </p>
+        <pre><code>$ rm *.log</code></pre>
+        <p>
+          คำสั่งนี้ลบทุกไฟล์ที่ลงท้ายด้วย <code>.log</code> ในโฟลเดอร์ปัจจุบันพร้อมกันหมด โดยไม่แตะไฟล์ที่ลงท้ายแบบอื่นเลย
+        </p>
+
+        <div class="callout">
+          <p>
+            <strong>บน Windows:</strong> ปุ่มลัดเหล่านี้ใช้ได้ใน Git Bash ทั้งหมด ส่วนใน
+            PowerShell <code>Ctrl + C</code> ทำงานเหมือนกัน แต่ <code>Ctrl + D</code>
+            อาจไม่ทำงาน ให้พิมพ์ <code>exit</code> แทน
+          </p>
+        </div>
+
+        <blockquote>
+          <p>
+            <strong>ข้อผิดพลาดที่พบบ่อย:</strong> ปิดหน้าต่าง terminal ทิ้งตรง ๆ แทนที่จะกด
+            <code>Ctrl + C</code> เพื่อหยุด process ที่รันอยู่ บางครั้งจะทำให้ dev server ยังจับ port นั้นค้างไว้อยู่เบื้องหลัง
+            พอเปิดใหม่แล้วสั่งรันอีกครั้งก็จะเจอ error ว่า port ถูกใช้งานอยู่แล้ว ทั้งที่มองไม่เห็นโปรแกรมไหนรันอยู่เลยจากหน้าจอ
+          </p>
+          <p>
+            อีกกรณีที่อันตรายกว่านั้นคือรัน <code>rm *</code> ทั้งที่ยืนอยู่ผิดโฟลเดอร์ เพราะ <code>*</code>
+            เพียงตัวเดียวขยายเป็น “ทุกไฟล์ในโฟลเดอร์ปัจจุบัน” โดยไม่เจาะจงนามสกุลเลย ถ้าไม่ได้เช็ก
+            <code>pwd</code> ก่อน อาจลบไฟล์ผิดโฟลเดอร์ไปทั้งหมดโดยไม่รู้ตัว รัน <code>ls *</code> ดูก่อนเสมอ
+            เพื่อยืนยันว่า wildcard นั้นจับไฟล์ที่ตั้งใจไว้จริง ๆ ก่อนจะรัน <code>rm</code> ตามหลังไป
+            เสียเวลาแค่สองสามวินาที แต่กันความเสียหายที่แก้คืนไม่ได้
+          </p>
+        </blockquote>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          ใน <code>~/my-cli-lab</code> สร้างไฟล์เปล่าสามไฟล์คือ <code>a.log</code>, <code>b.log</code> และ
+          <code>notes.txt</code> จากนั้นใช้ wildcard หนึ่งคำสั่งแสดงเฉพาะไฟล์ <code>.log</code>
+          แล้วใช้ wildcard อีกหนึ่งคำสั่งลบไฟล์ <code>.log</code> ทั้งหมดทิ้ง โดยที่ <code>notes.txt</code>
+          ต้องไม่ถูกแตะต้องเลย
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>
+            <code>*.log</code> ถูก shell ขยายเป็นรายชื่อไฟล์จริงทุกไฟล์ที่ลงท้ายด้วย <code>.log</code>
+            ก่อนที่คำสั่งจะเริ่มทำงานด้วยซ้ำ ในกรณีนี้คือ <code>a.log</code> กับ <code>b.log</code>
+            ดังนั้น <code>rm *.log</code> จึงเทียบเท่ากับพิมพ์ <code>rm a.log b.log</code> ตรง ๆ
+            <code>rm</code> เห็นแค่สองชื่อไฟล์นี้เท่านั้น ไม่มีทางเห็น <code>notes.txt</code> เลยเพราะชื่อนั้น
+            ไม่ตรงกับ pattern การรัน <code>ls *.log</code> ก่อนเป็นวิธียืนยันว่า pattern จับไฟล์ที่ต้องการจริง ๆ
+            ก่อนจะสั่งลบตามหลัง
+          </p>
+          <pre><code>$ cd ~/my-cli-lab
+$ touch a.log b.log notes.txt
+$ ls *.log
+a.log	b.log
+$ rm *.log
+$ ls
+README.md	docs		notes.txt	src</code></pre>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="08_viewing_file_contents.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="10_environment_variables_and_path.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>
