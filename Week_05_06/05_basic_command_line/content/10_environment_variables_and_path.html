@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ทำความเข้าใจ environment variable และ PATH อ่านค่าด้วย echo หาที่มาของคำสั่งด้วย which และแก้ปัญหา command not found อย่างเป็นระบบ"
+    />
+    <title>Environment Variables และ PATH</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>Environment Variables และ PATH</h1>
+
+        <p>
+          บทที่ผ่านมาทั้งหมดเน้นคำสั่งที่จับต้องได้ เช่นสร้างไฟล์ ย้ายไฟล์ ดูเนื้อหาไฟล์ บทนี้พาไปดูสิ่งที่มองไม่เห็นตรง ๆ
+          แต่กำกับอยู่เบื้องหลังทุกคำสั่งที่พิมพ์ไป นั่นคือ environment variable และตัวที่สำคัญที่สุดในนั้นคือ
+          <code>PATH</code> ซึ่งเป็นตัวตัดสินว่าพิมพ์ <code>node</code> แล้ว shell ไปเจอโปรแกรมชื่อนี้จากที่ไหน
+          เรื่องนี้เป็นพื้นฐานที่ต้องเข้าใจก่อนติดตั้ง Node.js ในบทถัดไป เพราะปัญหาที่พบบ่อยที่สุดตอนติดตั้งเครื่องมือใหม่ ๆ
+          ล้วนย้อนกลับมาที่ <code>PATH</code> ทั้งนั้น
+        </p>
+
+        <h2>Environment Variable คืออะไร</h2>
+        <p>
+          environment variable คือตัวแปรที่ shell เก็บไว้ให้ทุกคำสั่งที่รันในเซสชันนั้นมองเห็นและใช้งานได้
+          เปรียบเทียบง่าย ๆ ก็เหมือนการตั้งค่าระดับ session ที่ทุกโปรแกรมที่เปิดจาก terminal นี้อ่านค่าได้ร่วมกัน เช่น
+          โปรแกรมจะรู้ได้ว่า home directory ของผู้ใช้อยู่ที่ไหน โดยไม่ต้องถามผู้ใช้เองทุกครั้ง เพราะมีตัวแปร
+          <code>HOME</code> เก็บค่านั้นไว้ให้แล้ว environment variable ต่างจากตัวแปรในโปรแกรมทั่วไปตรงที่มันไม่ได้อยู่แค่ในโปรแกรมเดียว
+          แต่ส่งต่อไปให้ทุกโปรเซสลูกที่ถูกรันจาก shell นั้นเห็นด้วย
+        </p>
+
+        <h2>อ่านค่าด้วย echo</h2>
+        <p>
+          ใช้ <code>echo</code> ตามด้วยเครื่องหมาย <code>$</code> และชื่อตัวแปรเพื่ออ่านค่าของ environment
+          variable ใด ๆ ก็ได้
+        </p>
+        <pre><code>$ echo $HOME
+/Users/varis
+
+$ echo $USER
+varis</code></pre>
+        <p>
+          (ผลลัพธ์ข้างต้นคือค่าจริงจากเครื่องที่ใช้เขียนบทเรียนนี้ ไม่ใช่ตัวอย่างสมมติ บนเครื่องของคุณเองค่าทั้งสอง
+          จะเปลี่ยนไปตาม username ที่ล็อกอินอยู่ เช่นถ้า username คือ <code>mint</code> ผลลัพธ์ก็จะเป็น
+          <code>/Users/mint</code> และ <code>mint</code> ตามลำดับ)
+        </p>
+        <p>
+          จุดที่ต้องระวังคือเครื่องหมาย <code>$</code> ในที่นี้<strong>ไม่ใช่</strong> สัญลักษณ์ prompt แบบที่เจอในบทที่ 1
+          ตอนนั้น <code>$</code> ที่อยู่หน้าสุดของบรรทัดเป็นแค่สัญลักษณ์บอกว่า “บรรทัดนี้คือคำสั่งที่พิมพ์” ไม่ต้องพิมพ์ตามจริง
+          แต่ <code>$</code> ที่อยู่หน้าชื่อตัวแปรแบบ <code>$HOME</code> นี้เป็นส่วนหนึ่งของคำสั่งจริง ๆ ที่ต้องพิมพ์ตาม
+          ความหมายคือ “ให้เอาค่าของตัวแปรชื่อนี้มาแทนที่ตรงนี้” พิมพ์ <code>echo HOME</code> โดยไม่มี
+          <code>$</code> จะได้คำว่า <code>HOME</code> ออกมาเฉย ๆ ไม่ใช่ค่าของตัวแปร
+        </p>
+
+        <h2>PATH คือรายชื่อโฟลเดอร์ที่ shell ใช้ค้นหาโปรแกรม</h2>
+        <p>
+          <code>PATH</code> เป็น environment variable ที่สำคัญที่สุดตัวหนึ่ง เพราะเป็นตัวตัดสินว่าพิมพ์ชื่อคำสั่งสั้น ๆ
+          แบบ <code>node</code> หรือ <code>ls</code> แล้ว shell ไปหาโปรแกรมที่ชื่อนี้จากที่ไหน
+        </p>
+        <pre><code>$ echo $PATH
+/Users/varis/.nvm/versions/node/v22.23.2/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</code></pre>
+        <p>
+          (ตัวอย่างนี้ตัดบางรายการที่เป็นเฉพาะเครื่องออกไปเพื่อให้อ่านง่าย ของจริงบนเครื่องหนึ่ง ๆ มักมีมากกว่านี้อีกหลายรายการ
+          จากโปรแกรมอื่น ๆ ที่ติดตั้งไว้)
+        </p>
+        <p>
+          ค่าของ <code>PATH</code> คือรายชื่อโฟลเดอร์ที่คั่นด้วย <code>:</code> เรียงกันเป็นเส้นตรง เวลาพิมพ์ชื่อคำสั่งใด ๆ
+          shell จะเดินไล่ค้นหาไฟล์ที่ชื่อนั้นทีละโฟลเดอร์ <strong>จากซ้ายไปขวา</strong> แล้วรันไฟล์แรกที่เจอ
+          ตัวอย่างข้างบนถ้าพิมพ์ <code>node</code> shell จะเจอไฟล์ <code>node</code> ในโฟลเดอร์แรกสุดคือ
+          <code>/Users/varis/.nvm/versions/node/v22.23.2/bin</code> ก่อน แล้วหยุดค้นหาทันที ไม่สนใจว่าโฟลเดอร์ถัดไปในรายการ
+          จะมีไฟล์ชื่อ <code>node</code> อยู่ด้วยหรือไม่ ลำดับก่อนหลังในรายการนี้จึงมีผลจริง ถ้ามีโปรแกรมชื่อเดียวกันติดตั้งไว้
+          หลายที่ โฟลเดอร์ที่มาก่อนใน <code>PATH</code> จะชนะเสมอ
+        </p>
+
+        <h2>หาว่าคำสั่งมาจากไหนด้วย which</h2>
+        <p>
+          เมื่อสงสัยว่าคำสั่งที่พิมพ์ไปนั้นจริง ๆ แล้วรันมาจากไฟล์ไหนในบรรดาโฟลเดอร์ทั้งหมดใน <code>PATH</code>
+          ใช้คำสั่ง <code>which</code> ตามด้วยชื่อคำสั่งนั้นเพื่อดูคำตอบตรง ๆ
+        </p>
+        <pre><code>$ which node
+/Users/varis/.nvm/versions/node/v22.23.2/bin/node
+
+$ which npm
+/Users/varis/.nvm/versions/node/v22.23.2/bin/npm</code></pre>
+        <p>
+          <code>which</code> เดินหา <code>PATH</code> ตามลำดับเดียวกับที่ shell ใช้จริง แล้วรายงานแค่ path
+          ของไฟล์แรกที่เจอ ประโยชน์คือถ้าเครื่องมีโปรแกรมชื่อเดียวกันติดตั้งไว้มากกว่าหนึ่งที่ (เช่นมี Node ทั้งจาก nvm
+          และจาก installer อื่น) <code>which</code> จะบอกได้ทันทีว่าเวอร์ชันไหนกำลังถูกใช้งานอยู่จริง
+        </p>
+        <p>
+          <code>which</code> ไม่ได้มีอยู่ใน shell ทุกตัวเหมือนกันหมด ทางเลือกที่พกพาได้กว้างกว่าคือ
+          <code>command -v</code> ซึ่งทำหน้าที่เดียวกันและมีอยู่ใน shell มาตรฐานเกือบทุกตัว
+        </p>
+        <pre><code>$ command -v node
+/Users/varis/.nvm/versions/node/v22.23.2/bin/node</code></pre>
+
+        <h2>ทำไมถึงเจอ command not found</h2>
+        <p>
+          <code>command not found</code> เป็น error ที่เจอบ่อยที่สุดอันหนึ่งในการใช้ terminal สาเหตุมีอยู่สามแบบ
+          เรียงตามลำดับที่มักเจอจริง ดังนี้
+        </p>
+        <ol>
+          <li>
+            <strong>พิมพ์ชื่อคำสั่งผิด</strong> เช่นพิมพ์ <code>nod</code> แทน <code>node</code> หรือพิมพ์ตัวใหญ่เล็กผิด
+            วิธีแก้คือตรวจตัวสะกดให้ตรงเป๊ะ แล้วลองใช้ <code>Tab</code> ช่วยเติมให้ตามที่เรียนไปในบทที่แล้ว
+          </li>
+          <li>
+            <strong>ยังไม่ได้ติดตั้งโปรแกรมนั้นเลย</strong> เช่นพิมพ์ <code>node</code> ทั้งที่เครื่องยังไม่มี Node.js
+            อยู่จริง ๆ วิธีแก้คือติดตั้งโปรแกรมนั้นก่อน (บทถัดไปจะสอนติดตั้ง Node.js โดยเฉพาะ)
+          </li>
+          <li>
+            <strong>ติดตั้งแล้ว แต่โฟลเดอร์ของมันไม่อยู่ใน <code>PATH</code></strong> สาเหตุที่พบบ่อยที่สุดของข้อนี้คือ
+            เปิด terminal ค้างไว้ตั้งแต่ก่อนติดตั้ง แล้วติดตั้งเสร็จก็ลองรันในหน้าต่างเดิมทันที วิธีแก้คือปิดแล้วเปิด
+            terminal ใหม่ ตามที่จะอธิบายเพิ่มด้านล่าง
+          </li>
+        </ol>
+
+        <h2>ตั้งค่าตัวแปรชั่วคราว</h2>
+        <p>
+          บางครั้งจำเป็นต้องตั้งค่า environment variable ของตัวเองชั่วคราว เช่นเก็บ API key ไว้ให้โปรแกรมอ่าน
+          โดยไม่ต้องเขียนค่านั้นลงในโค้ดตรง ๆ ใช้ <code>export</code> เพื่อประกาศตัวแปรให้มีผลตลอดทั้งเซสชันของ terminal
+          บานนั้น
+        </p>
+        <pre><code>$ export API_KEY=abc123
+$ echo $API_KEY
+abc123</code></pre>
+        <p>
+          ถ้าต้องการตั้งค่าแค่ครั้งเดียวสำหรับคำสั่งเดียวเท่านั้น ไม่ต้องคงอยู่ตลอดเซสชัน วางชื่อตัวแปรกับค่าไว้หน้าคำสั่งได้เลย
+          โดยไม่ต้องมี <code>export</code>
+        </p>
+        <pre><code>$ API_KEY=abc123 node app.js</code></pre>
+        <p>
+          รูปแบบนี้ตั้งค่า <code>API_KEY</code> ให้เห็นเฉพาะตอนรัน <code>node app.js</code> คำสั่งเดียวเท่านั้น
+          คำสั่งถัดไปจะไม่เห็นค่านี้อีกแล้ว ทั้งสองแบบมีจุดร่วมกันคือ<strong>ค่าที่ตั้งจะหายไปทันทีที่ปิด terminal</strong>
+          ถ้าต้องการให้ตัวแปรคงอยู่ถาวรทุกครั้งที่เปิด terminal ใหม่ ต้องเขียนค่านั้นลงในไฟล์ตั้งค่าของ shell เช่น
+          <code>.zshrc</code> หรือ <code>.bashrc</code> ซึ่งเป็นเรื่องที่อยู่นอกเหนือขอบเขตของคอร์สนี้
+        </p>
+
+        <div class="callout">
+          <p>
+            <strong>บน Windows:</strong> ใน Git Bash ใช้ <code>echo $PATH</code> ได้ตามปกติ
+            ส่วนใน PowerShell ให้ใช้ <code>$env:PATH</code> และแทน <code>which</code>
+            ด้วย <code>where.exe node</code> โดยตัวคั่นใน PATH ของ Windows จะเป็น
+            <code>;</code> ไม่ใช่ <code>:</code>
+          </p>
+        </div>
+
+        <blockquote>
+          <p>
+            <strong>ข้อผิดพลาดที่พบบ่อย:</strong> ติดตั้งโปรแกรมใหม่เสร็จแล้วรีบพิมพ์ชื่อคำสั่งทดสอบใน terminal
+            บานเดิมที่เปิดค้างไว้ตั้งแต่ก่อนติดตั้ง แล้วเจอ <code>command not found</code> ทันทีจนคิดว่าติดตั้งไม่สำเร็จ
+            ทั้งที่จริง ๆ แล้วติดตั้งสำเร็จดี สาเหตุคือ shell จะอ่านค่า <code>PATH</code> แค่ตอนเริ่มต้นเซสชันเท่านั้น
+            ไฟล์ตั้งค่าที่ตัวติดตั้งเขียนเพิ่มเข้าไปจะยังไม่มีผลกับ shell ที่เปิดค้างอยู่ก่อนหน้า วิธีแก้คือปิด terminal
+            บานนั้นแล้วเปิดใหม่ เพื่อให้ shell อ่านค่า <code>PATH</code> ที่อัปเดตแล้วเข้ามา
+          </p>
+        </blockquote>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          รันคำสั่ง <code>echo $PATH</code> และ <code>which node</code> บนเครื่องของคุณเอง ถ้ายังไม่ได้ติดตั้ง
+          Node.js ให้บอกว่าผลลัพธ์ของ <code>which node</code> จะเป็นอย่างไร แล้วตอบคำถามนี้: โฟลเดอร์ไหนใน
+          <code>PATH</code> ของคุณที่มีแนวโน้มจะเป็นที่มาของคำสั่ง <code>node</code> มากที่สุด (เมื่อติดตั้งแล้ว)
+        </p>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>
+            <code>which node</code> พิมพ์ path เต็มของไฟล์ที่จะถูกรันจริงเมื่อพิมพ์ <code>node</code>
+            บนเครื่องที่ติดตั้ง Node.js ผ่าน nvm ไฟล์นั้นจะอยู่ใต้ <code>~/.nvm/versions/node/&lt;เวอร์ชัน&gt;/bin</code>
+            ส่วนเครื่องที่ติดตั้งผ่านตัวติดตั้งแบบ <code>.pkg</code> จาก nodejs.org มักจะอยู่ที่ <code>/usr/local/bin</code>
+            แทน สองแบบนี้ให้ path ที่หน้าตาต่างกันโดยสิ้นเชิง แต่ทั้งคู่ถูกต้องเท่ากัน ขึ้นอยู่กับว่าติดตั้งด้วยวิธีไหน
+          </p>
+          <p>
+            ถ้ายังไม่ได้ติดตั้ง Node.js เลย <code>which node</code> จะไม่พิมพ์อะไรออกมา (หรือพิมพ์ว่าไม่พบคำสั่ง
+            ขึ้นอยู่กับ shell) และจบด้วย exit code ที่ไม่ใช่ศูนย์ ซึ่งก็คือสถานการณ์ <code>command not found</code>
+            ที่อธิบายไปข้างต้นนั่นเอง บทถัดไปจะแก้ปัญหานี้ด้วยการติดตั้ง Node.js ให้เรียบร้อย
+          </p>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="09_shortcuts_history_and_wildcards.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="11_installing_node_and_npm.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>
