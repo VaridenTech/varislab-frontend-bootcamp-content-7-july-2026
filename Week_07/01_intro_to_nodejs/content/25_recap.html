@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="สรุปทบทวนเนื้อหาทั้งหมดของคอร์ส Node.js เบื้องต้น และแนวทางเรียนรู้ต่อไป" />
+  <title>สรุปทบทวนเนื้อหาทั้งหมด — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>สรุปทบทวนเนื้อหาทั้งหมด</h1>
+      <p>ยินดีด้วย! คุณเรียนจบคอร์ส Node.js เบื้องต้นแล้ว มาทบทวนกันอีกครั้งว่าเราได้เรียนรู้อะไรไปบ้างระหว่างการสร้างแอป Todo แบบ CLI ตัวนี้</p>
+      <p>สิ่งที่น่าภูมิใจอย่างหนึ่งคือแอปทั้งตัวนี้เราเขียนด้วย Node.js ล้วน ๆ ไม่ได้ติดตั้งแพ็กเกจภายนอกเลยสักตัว (ยกเว้น Jest ที่ใช้ตอนเทสต์) ทุกอย่างที่เราต้องใช้ Node.js มีมาให้ครบอยู่แล้ว</p>
+
+      <h2>ความรู้พื้นฐานเกี่ยวกับ Node.js</h2>
+      <ul>
+        <li>Node.js คือเทคโนโลยีที่ทำให้เรารันโค้ด JavaScript นอกเว็บ Browser ได้ สร้างโดย Ryan Dahl ในปี 2009 บนพื้นฐานของ V8 Engine</li>
+        <li>Node.js ใช้สถาปัตยกรรมแบบ <strong>Non-blocking I/O</strong> และ <strong>Event-driven</strong> โดยอาศัย Event Loop, Callback และ API แบบ Non-blocking ทำให้รองรับการเชื่อมต่อจำนวนมากได้ด้วยทรัพยากรที่ไม่มาก</li>
+        <li>เรารันโปรแกรม Node.js ได้ด้วยคำสั่ง <code>node index.js</code> และทดลองโค้ดสั้น ๆ แบบโต้ตอบได้ด้วย <strong>Node REPL</strong></li>
+        <li>JavaScript บน Browser กับบน Node.js ต่างกันที่ Global Object (<code>window</code> vs. <code>global</code>), การมีหรือไม่มี DOM และวิธีการ Import Module</li>
+        <li>Object <code>process</code> ให้เราเข้าถึง Argument จาก Command Line (<code>process.argv</code>) และ Environment Variables (<code>process.env</code>)</li>
+      </ul>
+
+      <h2>การสร้าง CLI</h2>
+      <ul>
+        <li>เราสร้างโปรเจกต์ด้วย <code>npm init</code> แล้วลงทะเบียนชื่อคำสั่งไว้ใน Field <code>bin</code> ของ <code>package.json</code></li>
+        <li>เราเพิ่ม <strong>Hashbang</strong> (<code>#!/usr/bin/env node</code>) ไว้บรรทัดแรกของไฟล์ เพื่อบอกระบบปฏิบัติการว่าให้ใช้ Node.js เป็นตัวแปลภาษา</li>
+        <li>เราใช้ <code>npm link</code> เพื่อสร้าง Symlink ทำให้เรียกคำสั่ง <code>todo</code> ได้จากทุกที่ในเครื่อง</li>
+        <li>เราอ่านคำสั่งและ Argument จาก <code>process.argv.slice(2)</code> แล้วใช้ <code>switch</code> แยกการทำงานของแต่ละคำสั่ง โดยไม่ต้องพึ่งไลบรารีช่วยแยก Argument เลย</li>
+      </ul>
+
+      <h2>Module และ NPM</h2>
+      <ul>
+        <li>Module ใน Node.js มี 3 ประเภท ได้แก่ <strong>Internal Module</strong> (เช่น <code>fs</code>, <code>http</code>, <code>path</code>), <strong>Module ที่เราสร้างเอง</strong> และ <strong>Module จากภายนอกผ่าน npm</strong></li>
+        <li><code>require</code> เป็นวิธีดั้งเดิมของ CommonJS ส่วน <code>import</code> เป็นมาตรฐาน ES6 ที่ใหม่กว่า</li>
+        <li>Module ที่ดีควรมีหน้าที่ชัดเจนเพียงอย่างเดียว ไม่ผูกติดกับ Module อื่นแน่นเกินไป และเราใช้ <strong>Index.js Pattern</strong> เพื่อรวม Export ไว้ที่เดียวได้</li>
+        <li>เราใช้ <code>npm install</code> เพื่อติดตั้งแพ็กเกจ และกำหนดคำสั่งลัดไว้ใน Field <code>scripts</code> ของ <code>package.json</code></li>
+        <li>CLI ของเรามีคำสั่ง <code>add</code>, <code>list</code>, <code>done</code>, <code>remove</code> และ <code>web</code></li>
+      </ul>
+
+      <h2>การทำงานกับไฟล์ (File I/O)</h2>
+      <ul>
+        <li>เราจัดการโค้ดแบบ Asynchronous ได้ 3 วิธี คือ <strong>Callback</strong>, <strong>Promise</strong> และ <strong>Async/Await</strong> พร้อมทั้งจัดการข้อผิดพลาดด้วย <code>try/catch</code> หรือ <code>catch</code></li>
+        <li><strong>FS Module</strong> มีเมธอดสำหรับอ่าน เขียน ลบ และเปลี่ยนชื่อไฟล์ โดยควรเลือกใช้เวอร์ชัน Asynchronous เป็นหลัก</li>
+        <li>เราใช้ไฟล์ <code>db.json</code> เป็นฐานข้อมูล และสร้างฟังก์ชันช่วยเหลือ <code>readTodos</code> กับ <code>saveTodos</code> ไว้ใน <code>src/todos.js</code></li>
+        <li>เราสร้างฟังก์ชัน <strong>CRUD</strong> ได้แก่ <code>addTodo</code>, <code>markDone</code> และ <code>removeTodo</code> โดยตั้งใจเขียนให้เป็น <strong>Pure Function</strong> ที่รับ Array เข้ามาแล้วคืน Array ใหม่ออกไป ไม่ยุ่งกับไฟล์เลย</li>
+        <li>เราแยกส่วนที่คุยกับไฟล์ออกจากส่วนที่จัดการข้อมูล ซึ่งทำให้โค้ดอ่านง่ายขึ้นและทดสอบได้ง่ายขึ้นมาก</li>
+      </ul>
+
+      <h2>การทดสอบ</h2>
+      <ul>
+        <li>การทดสอบมีหลายประเภท ได้แก่ <strong>Unit</strong>, <strong>Integration</strong>, <strong>End-to-End (E2E)</strong> และ <strong>API Testing</strong> ซึ่งแต่ละแบบมีจุดประสงค์ต่างกัน</li>
+        <li>เราเขียน Unit Test ด้วย <strong>Jest</strong> โดยใช้ฟังก์ชัน <code>test</code> และ <code>expect</code> ทดสอบ <code>addTodo</code>, <code>markDone</code> และ <code>removeTodo</code></li>
+        <li>เพราะฟังก์ชันเหล่านั้นเป็น Pure Function เราจึงทดสอบมันได้ตรง ๆ เลย ไม่ต้องเตรียมไฟล์หรือลบไฟล์ทิ้งหลังเทสต์เสร็จ นี่คือเหตุผลที่การออกแบบโค้ดให้ดีตั้งแต่แรกช่วยเราตอนเขียนเทสต์มาก</li>
+      </ul>
+
+      <h2>เซิร์ฟเวอร์</h2>
+      <ul>
+        <li>Server คือโปรแกรมที่คอยรับ Request จากเครือข่ายและตอบสนองกลับไป โดยรับผิดชอบการจัดการข้อมูลและสถานะ ในขณะที่ Client รับผิดชอบการนำเสนอข้อมูล</li>
+        <li>เราสร้างเว็บเซิร์ฟเวอร์ด้วย Module <code>http</code> ล้วน ๆ โดยใช้ <code>http.createServer</code> รับ Request แล้วตอบ HTML ที่สร้างจาก Template Literal กลับไปด้วย <code>res.end</code></li>
+        <li>เรารู้จัก Error <code>EADDRINUSE</code> ที่เกิดเมื่อ Port ถูกใช้งานอยู่แล้ว และแก้ได้ด้วยการเปลี่ยนไปใช้ Port อื่น</li>
+      </ul>
+
+      <h2>ก้าวต่อไป</h2>
+      <p>ตอนนี้คุณมีรากฐานที่มั่นคงใน Node.js แล้ว และพร้อมที่จะก้าวไปสู่การสร้างแอปพลิเคชันที่ใช้งานได้จริงบนแพลตฟอร์มนี้ ลองต่อยอดด้วยการเชื่อมต่อฐานข้อมูลจริง สร้าง API ด้วย Framework อย่าง Express หรือนำ Node.js ไปใช้ร่วมกับ Framework ฝั่ง Frontend เพื่อสร้างเว็บแอปพลิเคชันแบบ Full-stack ต่อไป</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="24_vanilla_server.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+    </nav>
+  </main>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ทำความเข้าใจว่า Server คืออะไรในบริบทของ Node.js และต่างจากแอปฝั่ง Client อย่างไร" />
+  <title>Server คืออะไร? — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Server คืออะไร?</h1>
+      <p>ในบริบทของ Node.js นั้น <strong>Server</strong> คือโปรแกรมที่คอยรับ Request ที่เข้ามาทางเครือข่าย และตอบสนองต่อ Request เหล่านั้นด้วยการรันโค้ดหรือส่งข้อมูลกลับไป Server เป็นรากฐานสำคัญของสถาปัตยกรรมเว็บแอปพลิเคชัน และทำให้เกิดการสื่อสารระหว่าง Client (เช่น แอปมือถือหรือเว็บไซต์) กับฐานข้อมูลหรือบริการ Backend อื่น ๆ</p>
+
+      <h2>ตัวอย่าง Server อย่างง่าย</h2>
+      <p>นี่คือตัวอย่างของ Server อย่างง่ายที่เขียนด้วย Node.js ซึ่งคอยรับ Request ที่ Port 3000 และตอบกลับทุก Request ที่เข้ามาด้วยข้อความ "Hello, World!":</p>
+      <pre><code>const http = require('http');
+
+const server = http.createServer((req, res) =&gt; {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello, World!');
+});
+
+server.listen(3000, () =&gt; {
+  console.log('Server running on port 3000');
+});</code></pre>
+
+      <h2>Server ต่างจาก Client อย่างไร</h2>
+      <p>ความแตกต่างที่สำคัญอย่างหนึ่งระหว่าง Server กับแอปฝั่ง Client อย่างแอปมือถือหรือเว็บไซต์ คือ Server มีหน้าที่จัดการข้อมูลและสถานะ (State) ในขณะที่ Client มีหน้าที่นำเสนอข้อมูลนั้นให้ผู้ใช้เห็น Server จะทำงานอยู่ตลอดเวลาและพร้อมตอบสนอง Request เสมอ ในขณะที่ Client จะทำงานเฉพาะตอนที่ผู้ใช้กำลังโต้ตอบกับมันเท่านั้น</p>
+      <p>ความแตกต่างสำคัญอีกอย่างคือ โดยทั่วไป Server จะทำงานอยู่บนเครื่องคนละเครื่องกับแอปฝั่ง Client สิ่งนี้ทำให้ Server สามารถรับผิดชอบงานที่ต้องใช้การประมวลผลหนัก รวมถึงจัดการการจัดเก็บและเรียกดูข้อมูล ในขณะที่แอปฝั่ง Client สามารถมุ่งเน้นไปที่การมอบประสบการณ์การใช้งานที่ลื่นไหลให้ผู้ใช้</p>
+
+      <h2>สรุป</h2>
+      <p>โดยรวมแล้ว Server เป็นส่วนประกอบที่สำคัญอย่างยิ่งของเว็บแอปพลิเคชันสมัยใหม่ และเป็นแกนหลักของการสื่อสารระหว่าง Client กับบริการต่าง ๆ ในฝั่ง Backend</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="22_unit_testing_with_jest.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="24_vanilla_server.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

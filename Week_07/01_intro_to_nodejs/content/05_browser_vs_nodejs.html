@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เปรียบเทียบความแตกต่างของการเขียน JavaScript บน Browser กับบน Node.js" />
+  <title>Browser vs. Node.js: ความแตกต่าง — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Browser vs. Node.js: ความแตกต่าง</h1>
+      <p>JavaScript รันได้ทั้งใน Browser และบนเซิร์ฟเวอร์ผ่าน Node.js แม้จะใช้ภาษาเดียวกัน แต่เครื่องมือและสิ่งที่โค้ดเข้าถึงได้ในสองสภาพแวดล้อมนี้ไม่เหมือนกัน</p>
+
+      <h2>Global Object</h2>
+      <p>ใน Browser ตัว Global Object คือ <code>window</code> ส่วน Node.js ใช้ <code>global</code> หากอยากดู Global Object ใน Browser ให้ใช้:</p>
+      <pre><code>console.log(window);</code></pre>
+      <p>ส่วนบน Node.js เราใช้:</p>
+      <pre><code>console.log(global);</code></pre>
+
+      <h2>Modules</h2>
+      <p>บน Browser เราสามารถ Import Module ได้โดยใช้แท็ก <code>script</code> พร้อมกำหนด Attribute <code>type</code> เป็น <code>module</code> และกำหนด Attribute <code>src</code> เป็น Path ของไฟล์ Module ตัวอย่างเช่น:</p>
+      <pre><code>&lt;script type="module" src="./module.js"&gt;&lt;/script&gt;</code></pre>
+      <p>จากนั้นไฟล์หลักก็ Import ฟังก์ชันที่ Export ไว้มาใช้ได้ ตัวอย่างนี้นำ <code>sayHello</code> จาก <code>module.js</code> เข้ามา:</p>
+      <pre><code>import { sayHello } from './module.js';
+sayHello();</code></pre>
+      <p>ฝั่ง Node.js เราโหลด Module ด้วย <code>require</code> หรือ <code>import</code>:</p>
+      <pre><code>import { module } from './module.js';</code></pre>
+
+      <h2>DOM</h2>
+      <p>Browser มี Document Object Model (DOM) ที่ช่วยให้เราโต้ตอบกับ HTML Element ได้ ตัวอย่างเช่น หากต้องการเปลี่ยนข้อความของ HTML Element บน Browser เราใช้:</p>
+      <pre><code>document.getElementById('elementId').innerHTML = 'New text';</code></pre>
+      <p>แต่ใน Node.js ไม่มี DOM ดังนั้นเราจึงไม่สามารถเข้าถึงหรือแก้ไข HTML Element ได้</p>
+
+      <h2>Server vs. Website</h2>
+      <p>Node.js ถูกใช้เป็นหลักในการสร้างแอปพลิเคชันฝั่งเซิร์ฟเวอร์ ในขณะที่ Browser ถูกใช้สำหรับแสดงเว็บไซต์ ตัวอย่างเช่น เราสามารถสร้างเซิร์ฟเวอร์อย่างง่ายใน Node.js ได้ดังนี้:</p>
+      <pre><code>const http = require('http');
+
+const server = http.createServer((req, res) =&gt; {
+  res.write('Hello World!');
+  res.end();
+});
+
+server.listen(3000);</code></pre>
+      <p>ในทางกลับกัน บน Browser เราจะสร้างเว็บไซต์ด้วย HTML, CSS และ JavaScript</p>
+
+      <h2>Console</h2>
+      <p>Object <code>console</code> ทำงานเหมือนกันทั้งบน Browser และ Node.js ตัวอย่างเช่น หากต้องการแสดงข้อความบน Browser เราใช้:</p>
+      <pre><code>console.log('Hello World!');</code></pre>
+      <p>เช่นเดียวกัน บน Node.js เราก็ใช้:</p>
+      <pre><code>console.log('Hello World!');</code></pre>
+
+      <h2>ประเด็นสำคัญ</h2>
+      <p>สรุปคือภาษา JavaScript เหมือนเดิม แต่ Browser กับ Node.js มี API และหน้าที่ต่างกัน หากคุณเขียน JavaScript เป็นอยู่แล้ว การเริ่มใช้ Node.js จะไม่ไกลเกินเอื้อม</p>
+      <p>จำให้ได้ว่าโค้ดกำลังรันอยู่ที่ไหน แล้วคุณจะเลือกใช้ Global Object, Module และ API ได้ถูกกับสภาพแวดล้อมนั้น</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="04_hello_world.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="06_node_repl.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

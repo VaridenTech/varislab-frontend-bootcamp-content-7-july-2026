@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ทำความรู้จัก Module ใน Node.js ทั้งสามประเภท พร้อมวิธี Export และ Import" />
+  <title>Module คืออะไร? — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Module คืออะไร?</h1>
+      <p>ใน Node.js <strong>Module</strong> คือชิ้นส่วนของโค้ดที่สมบูรณ์ในตัวเอง ซึ่งทำหน้าที่อย่างใดอย่างหนึ่งโดยเฉพาะ มันอาจเป็นฟังก์ชัน, Object หรือชุดความสามารถที่สามารถนำไปใช้ในส่วนอื่น ๆ ของแอปพลิเคชันได้</p>
+      <p>ใน Node.js มี Module อยู่ 3 ประเภท ได้แก่ <strong>Internal Module</strong>, <strong>Module ที่ผู้ใช้สร้างเอง</strong> และ <strong>Module จากภายนอกผ่าน npm</strong></p>
+
+      <h2>Internal Modules</h2>
+      <p>Internal Module คือ Module ที่มีมาให้พร้อมกับ Node.js อยู่แล้ว และเข้าถึงได้ด้วยฟังก์ชัน <code>require</code> โดยไม่ต้องติดตั้งเพิ่ม ตัวอย่างเช่น Module <code>http</code> ที่มีมาให้ในตัว ใช้สำหรับสร้าง Web Server:</p>
+      <pre><code>const http = require('http');
+
+http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.end('Hello World!');
+}).listen(8080);</code></pre>
+      <p>ในตัวอย่างนี้ เราใช้ฟังก์ชัน <code>require()</code> เพื่อโหลด Module <code>http</code> แล้วนำมาสร้าง Web Server ที่คอยรับ Request ที่ Port 8080</p>
+
+      <h2>Module ที่ผู้ใช้สร้างเอง (User-created Modules)</h2>
+      <p>Module ที่ผู้ใช้สร้างเองคือ Module ที่คุณเขียนขึ้นมาเอง และสามารถนำเข้าไปใช้ในแอปพลิเคชันได้ด้วยฟังก์ชัน <code>require</code> ตัวอย่างเช่น คุณสามารถสร้าง Module ที่ Export ฟังก์ชันสำหรับบวกเลขสองจำนวน:</p>
+      <pre><code>// math.js
+
+function add(a, b) {
+  return a + b;
+}
+
+module.exports = add;</code></pre>
+      <p>แล้วนำไปใช้ในไฟล์อื่น:</p>
+      <pre><code>// index.js
+
+const add = require('./math');
+
+console.log(add(2, 3)); // ผลลัพธ์: 5</code></pre>
+      <p>ในตัวอย่างนี้ เราสร้าง Module ชื่อ <code>math.js</code> ที่ Export ฟังก์ชันชื่อ <code>add</code> ออกมา จากนั้นเราใช้ฟังก์ชัน <code>require()</code> เพื่อโหลดฟังก์ชัน <code>add</code> จาก Module <code>math.js</code> มาใช้บวกเลขสองจำนวน</p>
+
+      <h2>Module จากภายนอก (Third-party Modules)</h2>
+      <p>Module จากภายนอกผ่าน npm คือ Module ที่นักพัฒนาคนอื่นสร้างขึ้น และสามารถดาวน์โหลดได้จาก npm Registry ผ่านตัวจัดการแพ็กเกจ npm ตัวอย่างเช่น คุณสามารถใช้ Module <code>axios</code> เพื่อส่ง HTTP Request:</p>
+      <pre><code>const axios = require('axios');
+
+axios.get('https://jsonplaceholder.typicode.com/users')
+  .then(function (response) {
+    console.log(response.data);
+  })
+  .catch(function (error) {
+    console.log(error);
+  });</code></pre>
+      <p>ในตัวอย่างนี้ เราใช้ฟังก์ชัน <code>require()</code> เพื่อโหลด Module <code>axios</code> แล้วนำมาส่ง HTTP GET Request ไปยัง API ของ <code>jsonplaceholder</code></p>
+
+      <h2>การ Export Module</h2>
+      <p>ในการ Export Module ออกจากไฟล์ คุณต้องใช้ <code>module.exports</code> หรือ Keyword <code>export</code> ซึ่งจะทำให้ Module นั้นพร้อมใช้งานในส่วนอื่น ๆ ของแอปพลิเคชัน ตัวอย่างเช่น คุณสามารถสร้าง Module ที่ Export Object ออกมา:</p>
+      <pre><code>// logger.js
+
+const logger = {
+  log: function(message) {
+    console.log(message);
+  }
+};
+
+module.exports = logger;</code></pre>
+      <p>แล้วนำไปใช้ในไฟล์อื่น:</p>
+      <pre><code>// index.js
+
+const logger = require('./logger');
+
+logger.log('Hello, world!'); // ผลลัพธ์: Hello, world!</code></pre>
+      <p>ในตัวอย่างนี้ เราสร้าง Module ชื่อ <code>logger.js</code> ที่ Export Object ซึ่งมีฟังก์ชัน <code>log</code> อยู่ข้างใน จากนั้นเราใช้ฟังก์ชัน <code>require()</code> เพื่อโหลด Module <code>logger.js</code> มาใช้แสดงข้อความ</p>
+
+      <h2>การ Import Module</h2>
+      <p>ใน Node.js เวอร์ชันใหม่ ๆ คุณสามารถใช้คำสั่ง <code>import</code> เพื่อ Import Module ได้ด้วย คำสั่งนี้คล้ายกับฟังก์ชัน <code>require()</code> แต่มีความแตกต่างบางอย่างทั้งในเรื่องรูปแบบการเขียนและพฤติกรรม ตัวอย่างเช่น คุณสามารถ Import แบบระบุชื่อ (Named Export) ได้:</p>
+      <pre><code>// math.js
+
+export function add(a, b) {
+  return a + b;
+}</code></pre>
+      <p>แล้วนำไปใช้ในไฟล์อื่น:</p>
+      <pre><code>// index.js
+
+import { add } from './math';
+
+console.log(add(2, 3)); // ผลลัพธ์: 5</code></pre>
+      <p>ในตัวอย่างนี้ เราสร้าง Module ชื่อ <code>math.js</code> ที่ Export ฟังก์ชันแบบระบุชื่อว่า <code>add</code> จากนั้นเราใช้คำสั่ง <code>import</code> เพื่อโหลดฟังก์ชัน <code>add</code> จาก Module <code>math.js</code> มาใช้บวกเลขสองจำนวน</p>
+
+      <h2>สรุป</h2>
+      <p>Module เป็นส่วนสำคัญของการพัฒนาด้วย Node.js และการเข้าใจวิธีสร้าง, Import และ Export Module เป็นสิ่งจำเป็นอย่างยิ่งต่อการสร้างแอปพลิเคชันที่มีประสิทธิภาพและขยายขนาดได้</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="09_creating_a_cli.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="11_require_vs_import.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

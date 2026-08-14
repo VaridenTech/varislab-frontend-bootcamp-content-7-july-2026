@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="รู้จักกับ Node REPL เครื่องมือรันโค้ด JavaScript แบบโต้ตอบได้ทันทีบน Terminal" />
+  <title>การใช้งาน Node REPL — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งาน Node REPL</h1>
+      <p>Node.js มีเครื่องมือชื่อ <strong>REPL</strong> (Read-Eval-Print-Loop) ให้เราพิมพ์ JavaScript ใน Terminal แล้วดูผลลัพธ์ได้ทันที โดยไม่ต้องสร้างไฟล์ก่อน</p>
+      <p>นึกภาพว่า REPL คือ Command-line Interface สำหรับ JavaScript เราพิมพ์โค้ดทีละบรรทัดแล้วเห็นคำตอบตรงนั้นเลย จึงเหมาะกับการลองโค้ดสั้น ๆ หรือตรวจว่าแนวคิดหนึ่งทำงานอย่างที่คิดหรือไม่</p>
+
+      <h2>วิธีเริ่มใช้งาน</h2>
+      <p>เริ่มใช้งานได้ง่าย ๆ แค่เปิด Terminal แล้วพิมพ์ <code>node</code> เมื่อเห็น Prompt ของ Node REPL ก็เริ่มพิมพ์ JavaScript ได้เลย</p>
+
+      <h2>ตัวอย่างการใช้งาน Node REPL</h2>
+      <pre><code>// การคำนวณพื้นฐาน
+&gt; 2 + 2
+4
+
+// การจัดการข้อความ (String)
+&gt; 'hello, world'.toUpperCase()
+'HELLO, WORLD'
+
+// การประกาศตัวแปร
+&gt; var x = 10
+undefined
+&gt; x
+10
+
+// การใช้งานฟังก์ชัน
+&gt; function add(a, b) { return a + b }
+undefined
+&gt; add(3, 5)
+8</code></pre>
+
+      <h2>ข้อดีและข้อจำกัด</h2>
+      <p>REPL เหมาะกับการลองไอเดียเร็ว ๆ, Debug โค้ดสั้น ๆ หรือทำต้นแบบก่อนย้ายโค้ดเข้าโปรเจกต์จริง</p>
+      <p>แต่ REPL ไม่ได้แทน IDE หรือ Text Editor เพราะไม่ได้ออกแบบมาสำหรับโค้ดขนาดใหญ่และไม่มีเครื่องมือช่วยครบเท่า ดังนั้นใช้มันเป็นกระดาษทดเล็ก ๆ ระหว่างพัฒนาจะเหมาะที่สุด</p>
+      <p>สรุปสั้น ๆ: ถ้าอยากรู้ว่า JavaScript บรรทัดหนึ่งให้ผลอะไร เปิด REPL แล้วลองได้ทันที</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="05_browser_vs_nodejs.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="07_process_and_environment.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

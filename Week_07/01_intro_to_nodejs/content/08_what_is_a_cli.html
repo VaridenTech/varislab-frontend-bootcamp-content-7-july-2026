@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ทำความรู้จัก Command-Line Interface (CLI) พร้อมแนวคิดเรื่อง Flag และ Argument" />
+  <title>CLI คืออะไร? — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>CLI คืออะไร?</h1>
+      <p><strong>Command-Line Interface (CLI)</strong> คือหน้าติดต่อโปรแกรมแบบข้อความ เราสั่งงานด้วยการพิมพ์คำสั่งแทนการกดปุ่มบนหน้าจอ นักพัฒนาและผู้ดูแลระบบจึงนิยมใช้ CLI กับงานที่ต้องทำเร็ว ๆ หรือทำซ้ำบ่อย ๆ</p>
+
+      <h2>การใช้คำสั่ง CLI บน Bash</h2>
+      <p>คำสั่ง Bash พื้นฐานตรงไปตรงมา: ใช้ <code>ls</code> ดูไฟล์ในโฟลเดอร์, <code>cd</code> ย้ายโฟลเดอร์ และ <code>rm</code> ลบไฟล์ เรายังเติม Flag และ Argument เพื่อระบุรายละเอียดให้แต่ละคำสั่งได้ด้วย</p>
+
+      <h3>Flag และ Argument</h3>
+      <p><strong>Flag</strong> คือตัวเลือกที่ปรับพฤติกรรมของคำสั่ง เช่น เติม <code>-a</code> หลัง <code>ls</code> เพื่อให้แสดงไฟล์ที่ซ่อนไว้</p>
+      <p>ส่วน <strong>Argument</strong> คือข้อมูลที่ส่งให้คำสั่ง เช่น <code>mkdir</code> ต้องรับชื่อโฟลเดอร์ที่เราต้องการสร้างเป็น Argument</p>
+
+      <h2>การสร้าง CLI ด้วย Node.js</h2>
+      <p>การสร้าง CLI ด้วย Node.js เป็นทางเลือกยอดนิยมของนักพัฒนา เพราะช่วยให้คุณสร้าง CLI ของตัวเองขึ้นมาเพื่อทำงานเฉพาะทางได้ ในโปรเจกต์ขนาดใหญ่ที่มีคำสั่งและ Flag เยอะมาก ๆ นักพัฒนามักใช้ไลบรารีจากภายนอกอย่าง <code>commander</code> หรือ <code>yargs</code> มาช่วยอ่านค่า Argument ให้</p>
+      <p>แต่ในคอร์สนี้เราจะเขียนส่วนนั้นเองทั้งหมด เพราะแอปของเรามีแค่ไม่กี่คำสั่ง และการลงมือทำเองจะทำให้คุณเห็นชัดว่าจริง ๆ แล้วไลบรารีพวกนั้นทำอะไรให้เราบ้าง ซึ่งเอาเข้าจริงมันไม่ได้ซับซ้อนอย่างที่คิด</p>
+
+      <h3>ติดตั้งแบบ Global หรือ Local?</h3>
+      <p>ตอนติดตั้ง CLI เราเลือกได้ว่าจะติดตั้งแบบ Global หรือ Local แบบ Global เรียกใช้ได้จากทุกโฟลเดอร์ในเครื่อง ส่วนแบบ Local จะผูกอยู่กับโปรเจกต์ที่ติดตั้งไว้</p>
+
+      <h3>การติดตั้ง CLI</h3>
+      <p>เราใช้ <code>npm</code> ติดตั้ง CLI ที่เผยแพร่ไว้ในแพ็กเกจของ Node.js ได้ ตัวอย่างนี้ติดตั้ง <code>create-react-app</code> แบบ Global:</p>
+      <pre><code>npm install -g create-react-app</code></pre>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="07_process_and_environment.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="09_creating_a_cli.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

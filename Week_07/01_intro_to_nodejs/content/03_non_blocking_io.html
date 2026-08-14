@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ทำความเข้าใจสถาปัตยกรรมแบบ Non-blocking I/O และ Event Loop ที่ทำให้ Node.js มีประสิทธิภาพสูง" />
+  <title>การทำงานแบบไม่บล็อก (Non-blocking I/O) — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การทำงานแบบไม่บล็อก (Non-blocking I/O)</h1>
+      <p>จุดเด่นของ Node.js คือจัดการงาน I/O ได้ดีและรองรับการขยายระบบ เพราะใช้สถาปัตยกรรมแบบ <strong>Non-blocking</strong> และ <strong>Event-driven</strong> งาน I/O จึงทำแบบ Asynchronous โดยไม่หยุดโปรแกรมหลักไว้ระหว่างรอ</p>
+      <p>ถ้าเป็น I/O แบบ Blocking โปรแกรมต้องรอให้งานหนึ่งเสร็จก่อนจึงเริ่มงานถัดไป แต่ Node.js ส่งหลายงานไปทำต่อได้โดยไม่ต้องยืนรอทีละงาน</p>
+
+      <h2>ภาพรวมการทำงานของ Event Loop</h2>
+      <p>ก่อนจะลงรายละเอียด ลองดูภาพรวมกันก่อนว่าเมื่อเราสั่งงาน I/O หนึ่งครั้ง มีอะไรเกิดขึ้นบ้าง และทำไมโปรแกรมถึงไม่ต้องหยุดรอ</p>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 800 440" role="img" aria-labelledby="dg1-title dg1-desc">
+          <title id="dg1-title">ภาพรวมการทำงานของ Event Loop ใน Node.js</title>
+          <desc id="dg1-desc">โค้ดของคุณส่งงาน I/O ให้ libuv ไปทำเบื้องหลังแล้วทำงานบรรทัดถัดไปต่อทันที เมื่องานเบื้องหลังเสร็จ Callback จะถูกส่งเข้า Callback Queue และ Event Loop จะหยิบไปรันบน Call Stack เมื่อ Call Stack ว่าง</desc>
+          <defs>
+            <marker id="dg1-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto">
+              <path d="M0 0 L10 5 L0 10 Z" fill="#2563a6" />
+            </marker>
+          </defs>
+
+          <rect class="diagram__box" x="40" y="40" width="250" height="120" rx="12" />
+          <text class="diagram__title" x="165" y="80" text-anchor="middle">Call Stack (โค้ดของคุณ)</text>
+          <text class="diagram__text" x="165" y="106" text-anchor="middle">รันทีละบรรทัด บน Thread เดียว</text>
+          <text class="diagram__text" x="165" y="130" text-anchor="middle">เช่น การคำนวณ, console.log()</text>
+
+          <rect class="diagram__box diagram__box--accent" x="510" y="40" width="250" height="160" rx="12" />
+          <text class="diagram__title" x="635" y="76" text-anchor="middle">Node.js API / libuv</text>
+          <text class="diagram__note" x="635" y="98" text-anchor="middle">ทำงานเบื้องหลัง ไม่รบกวน Call Stack</text>
+          <text class="diagram__text" x="536" y="128">• อ่าน/เขียนไฟล์ (fs)</text>
+          <text class="diagram__text" x="536" y="152">• เครือข่าย / HTTP</text>
+          <text class="diagram__text" x="536" y="176">• ตั้งเวลา (setTimeout)</text>
+
+          <rect class="diagram__box" x="510" y="300" width="250" height="120" rx="12" />
+          <text class="diagram__title" x="635" y="336" text-anchor="middle">Callback Queue</text>
+          <text class="diagram__note" x="635" y="358" text-anchor="middle">คิวของ Callback ที่ทำงานเสร็จแล้ว</text>
+          <rect class="diagram__badge" x="545" y="372" width="52" height="26" rx="6" />
+          <rect class="diagram__badge" x="609" y="372" width="52" height="26" rx="6" />
+          <rect class="diagram__badge" x="673" y="372" width="52" height="26" rx="6" />
+          <text class="diagram__badge-text" x="571" y="390" text-anchor="middle">cb</text>
+          <text class="diagram__badge-text" x="635" y="390" text-anchor="middle">cb</text>
+          <text class="diagram__badge-text" x="699" y="390" text-anchor="middle">cb</text>
+
+          <rect class="diagram__box diagram__box--solid" x="40" y="300" width="250" height="120" rx="12" />
+          <text class="diagram__title--invert" x="165" y="342" text-anchor="middle">Event Loop</text>
+          <text class="diagram__text--invert" x="165" y="368" text-anchor="middle">เฝ้าดูว่า Call Stack ว่างหรือยัง</text>
+          <text class="diagram__text--invert" x="165" y="392" text-anchor="middle">ถ้าว่าง → หยิบ Callback มารัน</text>
+
+          <line class="diagram__flow" x1="290" y1="100" x2="500" y2="100" marker-end="url(#dg1-arrow)" />
+          <text class="diagram__step" x="395" y="86" text-anchor="middle">① ส่งงานให้ทำเบื้องหลัง</text>
+          <text class="diagram__note" x="395" y="122" text-anchor="middle">แล้วทำบรรทัดถัดไปต่อทันที</text>
+
+          <line class="diagram__flow" x1="635" y1="205" x2="635" y2="292" marker-end="url(#dg1-arrow)" />
+          <text class="diagram__step" x="622" y="238" text-anchor="end">② งานเสร็จแล้ว</text>
+          <text class="diagram__note" x="622" y="258" text-anchor="end">ส่ง Callback เข้าคิว</text>
+
+          <line class="diagram__flow" x1="500" y1="360" x2="298" y2="360" marker-end="url(#dg1-arrow)" />
+          <text class="diagram__step" x="399" y="346" text-anchor="middle">③ Event Loop ตรวจคิว</text>
+
+          <line class="diagram__flow" x1="165" y1="292" x2="165" y2="168" marker-end="url(#dg1-arrow)" />
+          <text class="diagram__step" x="180" y="238">④ Call Stack ว่างแล้ว</text>
+          <text class="diagram__note" x="180" y="258">จึงรัน Callback ได้</text>
+        </svg>
+        <figcaption>หัวใจสำคัญอยู่ที่ขั้นตอน ① — ระหว่างที่งานเบื้องหลังกำลังทำงานอยู่ Call Stack จะว่าง โปรแกรมจึงทำงานอื่นต่อได้ทันทีโดยไม่ต้องรอ</figcaption>
+      </figure>
+
+      <h2>Node.js ทำ Non-blocking I/O ได้อย่างไร</h2>
+      <ul>
+        <li>
+          <strong>Event Loop</strong> — Node.js ใช้ Event Loop ในการจัดการงาน I/O ตัว Event Loop คือลูปที่คอยเฝ้าฟังเหตุการณ์ (Event) และเรียกฟังก์ชัน Callback ที่เกี่ยวข้องให้ทำงาน เมื่อมีการเริ่มงาน I/O ขึ้น Node.js จะลงทะเบียนฟังก์ชัน Callback นั้นไว้กับ Event Loop และเมื่องานเสร็จสิ้น Event Loop จะเรียก Callback ให้ทำงานเพื่อประมวลผลผลลัพธ์ต่อไป
+        </li>
+        <li>
+          <strong>Callbacks</strong> — Callback คือฟังก์ชันที่ถูกส่งเข้าไปเป็น Argument ให้กับฟังก์ชันอื่น ใน Node.js เราใช้ Callback เพื่อจัดการผลลัพธ์ของงาน I/O เมื่อเริ่มงาน I/O เราจะส่งฟังก์ชัน Callback เข้าไปด้วย ซึ่งจะถูกเรียกเมื่องานเสร็จสิ้น การใช้ Callback ทำให้ Node.js สามารถรันโค้ดส่วนอื่นต่อไปได้ระหว่างที่รองาน I/O
+        </li>
+        <li>
+          <strong>Non-Blocking APIs</strong> — Node.js มีชุด API แบบ Non-blocking ให้นักพัฒนาใช้ทำงาน I/O แบบ Asynchronous เช่น Module <code>fs</code> ที่มีเมธอดแบบ Non-blocking สำหรับอ่านและเขียนไฟล์ เมื่อเรียกเมธอดเหล่านี้ Node.js จะคืนการควบคุมกลับให้โปรแกรมทันที เพื่อให้โปรแกรมรันโค้ดส่วนอื่นต่อไปได้ และเมื่องาน I/O เสร็จสิ้น ฟังก์ชัน Callback จึงจะถูกเรียกพร้อมกับผลลัพธ์
+        </li>
+        <li>
+          <strong>Single-Threaded</strong> — Node.js เป็นสภาพแวดล้อมแบบ Single-thread หมายความว่างาน I/O ทั้งหมดถูกจัดการด้วย Thread เพียงตัวเดียว สิ่งนี้ทำให้ Node.js รองรับการเชื่อมต่อพร้อมกันจำนวนมากได้โดยใช้ทรัพยากรของระบบไม่มาก ในทางกลับกัน สภาพแวดล้อมอื่นอย่าง Python หรือ Ruby ใช้หลาย Thread ในการจัดการงาน I/O ซึ่งอาจทำให้ใช้ทรัพยากรมากกว่าและทำงานได้ช้ากว่า
+        </li>
+      </ul>
+
+      <h2>เปรียบเทียบ: Single-Thread กับ Multi-Thread</h2>
+      <p>ข้อสุดท้ายเรื่อง Single-Thread มักเป็นจุดที่ทำให้สับสนมากที่สุด ลองดูภาพเปรียบเทียบว่าเมื่อมี Request เข้ามาพร้อมกันหลายตัว ระบบทั้งสองแบบรับมือต่างกันอย่างไร</p>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 800 420" role="img" aria-labelledby="dg3-title dg3-desc">
+          <title id="dg3-title">เปรียบเทียบการรับ Request แบบหลาย Thread กับแบบ Single-Thread</title>
+          <desc id="dg3-desc">ฝั่งซ้ายคือระบบแบบหลาย Thread ที่ต้องสร้าง Thread ใหม่หนึ่งตัวต่อหนึ่ง Request ทำให้ใช้ทรัพยากรเพิ่มขึ้นตามจำนวน Request ส่วนฝั่งขวาคือ Node.js ที่ทุก Request ถูกส่งเข้า Thread เดียวกันซึ่งมี Event Loop คอยสลับงานให้ จึงใช้ทรัพยากรเท่าเดิมแม้ Request จะเพิ่มขึ้น</desc>
+          <defs>
+            <marker id="dg3-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+              <path d="M0 0 L10 5 L0 10 Z" fill="#2563a6" />
+            </marker>
+          </defs>
+
+          <rect class="diagram__panel" x="30" y="30" width="356" height="360" rx="12" />
+          <text class="diagram__title" x="208" y="60" text-anchor="middle">แบบหลาย Thread (Python, Ruby)</text>
+          <text class="diagram__note" x="208" y="82" text-anchor="middle">ทุก Request ต้องสร้าง Thread ใหม่ของตัวเอง</text>
+
+          <rect class="diagram__box" x="52" y="105" width="76" height="38" rx="8" />
+          <text class="diagram__text" x="90" y="129" text-anchor="middle">Req 1</text>
+          <line class="diagram__flow" x1="132" y1="124" x2="174" y2="124" marker-end="url(#dg3-arrow)" />
+          <rect class="diagram__box" x="180" y="105" width="180" height="38" rx="8" />
+          <text class="diagram__text" x="270" y="129" text-anchor="middle">Thread 1</text>
+
+          <rect class="diagram__box" x="52" y="165" width="76" height="38" rx="8" />
+          <text class="diagram__text" x="90" y="189" text-anchor="middle">Req 2</text>
+          <line class="diagram__flow" x1="132" y1="184" x2="174" y2="184" marker-end="url(#dg3-arrow)" />
+          <rect class="diagram__box" x="180" y="165" width="180" height="38" rx="8" />
+          <text class="diagram__text" x="270" y="189" text-anchor="middle">Thread 2</text>
+
+          <rect class="diagram__box" x="52" y="225" width="76" height="38" rx="8" />
+          <text class="diagram__text" x="90" y="249" text-anchor="middle">Req 3</text>
+          <line class="diagram__flow" x1="132" y1="244" x2="174" y2="244" marker-end="url(#dg3-arrow)" />
+          <rect class="diagram__box" x="180" y="225" width="180" height="38" rx="8" />
+          <text class="diagram__text" x="270" y="249" text-anchor="middle">Thread 3</text>
+
+          <rect class="diagram__box" x="52" y="285" width="76" height="38" rx="8" />
+          <text class="diagram__text" x="90" y="309" text-anchor="middle">Req 4</text>
+          <line class="diagram__flow" x1="132" y1="304" x2="174" y2="304" marker-end="url(#dg3-arrow)" />
+          <rect class="diagram__box" x="180" y="285" width="180" height="38" rx="8" />
+          <text class="diagram__text" x="270" y="309" text-anchor="middle">Thread 4</text>
+
+          <text class="diagram__note" x="208" y="352" text-anchor="middle">ยิ่ง Request มาก ยิ่งต้องสร้าง Thread มาก</text>
+          <text class="diagram__note" x="208" y="372" text-anchor="middle">ใช้หน่วยความจำและทรัพยากรมากตามไปด้วย</text>
+
+          <rect class="diagram__panel" x="414" y="30" width="356" height="360" rx="12" />
+          <text class="diagram__title" x="592" y="60" text-anchor="middle">แบบ Single-Thread (Node.js)</text>
+          <text class="diagram__note" x="592" y="82" text-anchor="middle">ทุก Request ใช้ Thread เดียวกันร่วมกัน</text>
+
+          <rect class="diagram__box" x="436" y="105" width="76" height="38" rx="8" />
+          <text class="diagram__text" x="474" y="129" text-anchor="middle">Req 1</text>
+          <rect class="diagram__box" x="436" y="165" width="76" height="38" rx="8" />
+          <text class="diagram__text" x="474" y="189" text-anchor="middle">Req 2</text>
+          <rect class="diagram__box" x="436" y="225" width="76" height="38" rx="8" />
+          <text class="diagram__text" x="474" y="249" text-anchor="middle">Req 3</text>
+          <rect class="diagram__box" x="436" y="285" width="76" height="38" rx="8" />
+          <text class="diagram__text" x="474" y="309" text-anchor="middle">Req 4</text>
+
+          <line class="diagram__flow" x1="516" y1="124" x2="584" y2="203" marker-end="url(#dg3-arrow)" />
+          <line class="diagram__flow" x1="516" y1="184" x2="584" y2="215" marker-end="url(#dg3-arrow)" />
+          <line class="diagram__flow" x1="516" y1="244" x2="584" y2="235" marker-end="url(#dg3-arrow)" />
+          <line class="diagram__flow" x1="516" y1="304" x2="584" y2="247" marker-end="url(#dg3-arrow)" />
+
+          <rect class="diagram__box diagram__box--solid" x="590" y="150" width="160" height="150" rx="10" />
+          <text class="diagram__title--invert" x="670" y="205" text-anchor="middle">Thread เดียว</text>
+          <text class="diagram__text--invert" x="670" y="232" text-anchor="middle">+ Event Loop</text>
+          <text class="diagram__text--invert" x="670" y="256" text-anchor="middle">คอยสลับงานให้</text>
+
+          <text class="diagram__note" x="592" y="352" text-anchor="middle">Request เพิ่มขึ้น ก็ยังใช้ Thread เดียวเท่าเดิม</text>
+          <text class="diagram__note" x="592" y="372" text-anchor="middle">จึงใช้ทรัพยากรน้อยและรองรับได้จำนวนมาก</text>
+        </svg>
+        <figcaption>เพราะแต่ละ Request ใช้เวลาส่วนใหญ่ไปกับการ "รอ" งาน I/O อยู่แล้ว Node.js จึงใช้ช่วงเวลารอนั้นไปทำ Request อื่นต่อได้ โดยไม่ต้องเสียทรัพยากรสร้าง Thread เพิ่ม</figcaption>
+      </figure>
+
+      <p>มีสองเรื่องที่ควรเข้าใจให้ถูกต้องเกี่ยวกับคำว่า Single-Thread</p>
+      <ul>
+        <li><strong>โค้ด JavaScript ของเรารันบน Thread เดียว แต่ Node.js ทั้งระบบไม่ได้มีแค่ Thread เดียว</strong> — เบื้องหลัง libuv ยังมี Thread Pool ขนาดเล็กไว้ทำงานบางอย่างให้ เช่น การอ่านเขียนไฟล์ เพียงแต่เราไม่ต้องจัดการ Thread เหล่านั้นเอง</li>
+        <li><strong>ถ้าเราเขียนโค้ดที่กินเวลาประมวลผลนาน ๆ ทุกอย่างจะหยุดชะงัก</strong> — เพราะมี Thread เดียวที่รันโค้ดของเรา การคำนวณหนัก ๆ ใน Callback ตัวเดียวจะบล็อก Request อื่นทั้งหมด จุดแข็งของ Node.js จึงอยู่ที่งานที่ต้องรอ I/O เป็นหลัก มากกว่างานที่ใช้ CPU หนัก</li>
+      </ul>
+
+      <h2>ตัวอย่าง</h2>
+
+      <h3>ตัวอย่างโค้ดแบบ Blocking</h3>
+      <pre><code>const getUserSync = (userId) =&gt; {
+  const users = {
+    1: { name: 'John', age: 35 },
+    2: { name: 'Jane', age: 28 }
+  };
+  return users[userId];
+}
+
+const user = getUserSync(1);
+console.log(user);</code></pre>
+      <p>ตัวอย่างนี้ <code>getUserSync</code> ค้นหาและคืน Object ของผู้ใช้จากรายชื่อที่เขียนไว้ในโค้ด การทำงานเป็นแบบ <strong>Blocking</strong> เพราะทุกอย่างเกิดขึ้นแบบ Synchronous ก่อนโปรแกรมจะไปบรรทัดถัดไป</p>
+
+      <h3>ตัวอย่างโค้ดแบบ Non-blocking</h3>
+      <pre><code>const getUserAsync = (userId, callback) =&gt; {
+  const users = {
+    1: { name: 'John', age: 35 },
+    2: { name: 'Jane', age: 28 }
+  };
+  setTimeout(() =&gt; {
+    callback(users[userId]);
+  }, 1000);
+}
+
+getUserAsync(1, (user) =&gt; {
+  console.log(user);
+});</code></pre>
+      <p><code>getUserAsync</code> ค้นหาข้อมูลชุดเดียวกัน แต่ทำแบบ Asynchronous โดยใช้ <code>setTimeout</code> จำลองการรอหนึ่งวินาที ฟังก์ชันรับ Callback เป็น Argument ตัวที่สอง และเรียก Callback พร้อม Object ของผู้ใช้เมื่อข้อมูลพร้อมแล้ว</p>
+
+      <h2>เจาะลึก: ข้างใน Event Loop มีอะไรบ้าง</h2>
+      <p>ในทางปฏิบัติ Event Loop ไม่ได้มีคิวเดียว แต่แบ่งการทำงานออกเป็น <strong>เฟส (Phase)</strong> หลายเฟสที่วนซ้ำเป็นรอบ ๆ แต่ละเฟสมีคิวของตัวเอง และ Node.js จะรัน Callback ในคิวของเฟสนั้นจนหมดก่อน แล้วจึงเลื่อนไปเฟสถัดไป</p>
+      <p>ส่วนนี้เป็นเนื้อหาเสริม ยังไม่ต้องจำทุกเฟสตอนนี้ แค่เห็นภาพรวมไว้ก่อนก็จะช่วยให้ตามพฤติกรรมของโค้ด Asynchronous ได้ง่ายขึ้นในภายหลัง</p>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 800 560" role="img" aria-labelledby="dg2-title dg2-desc">
+          <title id="dg2-title">เฟสต่าง ๆ ของ Event Loop ใน Node.js</title>
+          <desc id="dg2-desc">Event Loop วนซ้ำผ่าน 6 เฟสตามลำดับ ได้แก่ timers, pending callbacks, idle prepare, poll, check และ close callbacks แล้วจึงวนกลับไปเริ่มรอบใหม่</desc>
+          <defs>
+            <marker id="dg2-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+              <path d="M0 0 L10 5 L0 10 Z" fill="#2563a6" />
+            </marker>
+          </defs>
+
+          <rect class="diagram__box" x="140" y="40" width="600" height="56" rx="10" />
+          <circle class="diagram__badge" cx="170" cy="68" r="15" />
+          <text class="diagram__badge-text" x="170" y="73" text-anchor="middle">1</text>
+          <text class="diagram__title" x="196" y="64">timers</text>
+          <text class="diagram__text" x="196" y="84">รัน Callback ที่ตั้งเวลาไว้ด้วย setTimeout() และ setInterval()</text>
+
+          <rect class="diagram__box" x="140" y="116" width="600" height="56" rx="10" />
+          <circle class="diagram__badge" cx="170" cy="144" r="15" />
+          <text class="diagram__badge-text" x="170" y="149" text-anchor="middle">2</text>
+          <text class="diagram__title" x="196" y="140">pending callbacks</text>
+          <text class="diagram__text" x="196" y="160">รัน Callback ของ I/O บางอย่างที่ถูกเลื่อนมาจากรอบก่อนหน้า</text>
+
+          <rect class="diagram__box" x="140" y="192" width="600" height="56" rx="10" />
+          <circle class="diagram__badge" cx="170" cy="220" r="15" />
+          <text class="diagram__badge-text" x="170" y="225" text-anchor="middle">3</text>
+          <text class="diagram__title" x="196" y="216">idle, prepare</text>
+          <text class="diagram__text" x="196" y="236">Node.js ใช้ภายในเท่านั้น เราไม่ต้องยุ่งกับเฟสนี้</text>
+
+          <rect class="diagram__box diagram__box--accent" x="140" y="268" width="600" height="56" rx="10" />
+          <circle class="diagram__badge" cx="170" cy="296" r="15" />
+          <text class="diagram__badge-text" x="170" y="301" text-anchor="middle">4</text>
+          <text class="diagram__title" x="196" y="292">poll</text>
+          <text class="diagram__text" x="196" y="312">รับ Event I/O ใหม่ และรัน Callback ของ I/O เกือบทั้งหมด — เป็นเฟสที่ Node.js ใช้เวลารออยู่</text>
+
+          <rect class="diagram__box" x="140" y="344" width="600" height="56" rx="10" />
+          <circle class="diagram__badge" cx="170" cy="372" r="15" />
+          <text class="diagram__badge-text" x="170" y="377" text-anchor="middle">5</text>
+          <text class="diagram__title" x="196" y="368">check</text>
+          <text class="diagram__text" x="196" y="388">รัน Callback ที่ลงทะเบียนไว้ด้วย setImmediate()</text>
+
+          <rect class="diagram__box" x="140" y="420" width="600" height="56" rx="10" />
+          <circle class="diagram__badge" cx="170" cy="448" r="15" />
+          <text class="diagram__badge-text" x="170" y="453" text-anchor="middle">6</text>
+          <text class="diagram__title" x="196" y="444">close callbacks</text>
+          <text class="diagram__text" x="196" y="464">รัน Callback ตอนปิดการเชื่อมต่อ เช่น socket.on('close', ...)</text>
+
+          <line class="diagram__flow" x1="440" y1="99" x2="440" y2="113" marker-end="url(#dg2-arrow)" />
+          <line class="diagram__flow" x1="440" y1="175" x2="440" y2="189" marker-end="url(#dg2-arrow)" />
+          <line class="diagram__flow" x1="440" y1="251" x2="440" y2="265" marker-end="url(#dg2-arrow)" />
+          <line class="diagram__flow" x1="440" y1="327" x2="440" y2="341" marker-end="url(#dg2-arrow)" />
+          <line class="diagram__flow" x1="440" y1="403" x2="440" y2="417" marker-end="url(#dg2-arrow)" />
+
+          <path class="diagram__flow diagram__flow--loop" d="M 200 476 V 508 Q 200 520 188 520 H 82 Q 70 520 70 508 V 66 Q 70 54 82 54 H 130" marker-end="url(#dg2-arrow)" />
+          <text class="diagram__step" x="216" y="525">วนกลับไปเริ่มรอบใหม่ ตราบใดที่ยังมีงานเหลืออยู่</text>
+        </svg>
+        <figcaption>ลำดับเฟสของ Event Loop ตามเอกสารทางการของ Node.js — เมื่อจบเฟสที่ 6 แล้ว Event Loop จะวนกลับไปเริ่มที่เฟส timers ใหม่อีกครั้ง</figcaption>
+      </figure>
+
+      <p>อีกจุดที่ควรรู้คือ Callback ของ <code>process.nextTick()</code> และ Promise ซึ่งเรียกรวมกันว่า <strong>Microtask</strong> ไม่ได้อยู่ในเฟสใดเฟสหนึ่งโดยตรง Node.js จะแทรกงานเหล่านี้หลังจบแต่ละเฟส ก่อนที่ Event Loop จะขยับไปเฟสถัดไป</p>
+      <p>หากอยากอ่านรายละเอียดเพิ่มเติม เอกสารทางการของ Node.js อธิบายเรื่องนี้ไว้อย่างครบถ้วนที่ <a href="https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick">The Node.js Event Loop</a></p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="02_history_of_nodejs.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="04_hello_world.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="รู้จัก FS Module ของ Node.js สำหรับอ่าน เขียน ลบ และจัดการไฟล์" />
+  <title>การใช้งาน FS Module (จัดการไฟล์) — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งาน FS Module (จัดการไฟล์)</h1>
+      <p><strong>FS (File System) Module</strong> คือ Module ที่มีมาให้ในตัวของ Node.js ซึ่งมอบ API สำหรับโต้ตอบกับระบบไฟล์ Module นี้ช่วยให้นักพัฒนาทำงานกับไฟล์ได้หลากหลายรูปแบบ เช่น การอ่าน การเขียน การอัปเดต การลบ และการเปลี่ยนชื่อไฟล์</p>
+
+      <h2>เมธอดที่ใช้บ่อย</h2>
+      <p>หนึ่งในเมธอดที่ใช้บ่อยที่สุดใน FS Module คือ <code>fs.readFile()</code> ซึ่งอ่านเนื้อหาของไฟล์แบบ Asynchronous แล้วส่งเนื้อหานั้นกลับมาผ่านฟังก์ชัน Callback อีกเมธอดที่ได้รับความนิยมคือ <code>fs.writeFile()</code> ซึ่งเขียนข้อมูลลงไฟล์แบบ Asynchronous</p>
+      <p>เมธอดอื่น ๆ ที่ใช้กันบ่อยได้แก่:</p>
+      <ul>
+        <li><code>fs.mkdir()</code> — สร้างโฟลเดอร์ใหม่</li>
+        <li><code>fs.readdir()</code> — อ่านรายการสิ่งที่อยู่ภายในโฟลเดอร์</li>
+        <li><code>fs.stat()</code> — ดึงข้อมูลรายละเอียดเกี่ยวกับไฟล์</li>
+        <li><code>fs.unlink()</code> — ลบไฟล์</li>
+        <li><code>fs.rename()</code> — เปลี่ยนชื่อไฟล์</li>
+      </ul>
+
+      <h2>เวอร์ชัน Synchronous vs. Asynchronous</h2>
+      <p>FS Module ยังมีเมธอดเหล่านี้ในเวอร์ชัน Synchronous ให้ใช้ด้วย ซึ่งมีประโยชน์สำหรับสคริปต์ง่าย ๆ หรือแอปพลิเคชันขนาดเล็กที่ประสิทธิภาพไม่ใช่ประเด็นสำคัญ</p>
+      <p>อย่างไรก็ตาม โดยทั่วไปแล้วแนะนำให้ใช้เมธอดเวอร์ชัน Asynchronous มากกว่า เพราะมันเป็นแบบ Non-blocking และให้ประสิทธิภาพที่ดีกว่าในแอปพลิเคชันขนาดใหญ่</p>
+
+      <h2>สรุป</h2>
+      <p>โดยรวมแล้ว FS Module เป็นเครื่องมือทรงพลังสำหรับนักพัฒนาที่ทำงานกับ Node.js เพราะช่วยให้พวกเขาโต้ตอบกับระบบไฟล์ได้อย่างง่ายดาย และทำงานกับไฟล์ได้หลากหลายรูปแบบ</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="16_async_in_node.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="18_using_a_file_as_a_db.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

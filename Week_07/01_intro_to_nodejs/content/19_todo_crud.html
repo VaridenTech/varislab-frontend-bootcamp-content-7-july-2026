@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ทำความเข้าใจ CRUD และเขียนฟังก์ชันเพิ่ม แก้ไข และลบรายการ Todo แบบ Pure Function" />
+  <title>การเขียนฟังก์ชัน CRUD สำหรับ Todo — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การเขียนฟังก์ชัน CRUD สำหรับ Todo</h1>
+      <p><strong>CRUD</strong> ย่อมาจาก Create, Read, Update และ Delete ซึ่งเป็นการทำงานพื้นฐาน 4 อย่างที่แทบทุกแอปต้องมี ในแอปของเรามันตรงกับคำสั่งที่เราวางไว้พอดี:</p>
+      <ul>
+        <li><strong>Create</strong> — เพิ่มรายการใหม่ (คำสั่ง <code>add</code>)</li>
+        <li><strong>Read</strong> — ดูรายการทั้งหมด (คำสั่ง <code>list</code>)</li>
+        <li><strong>Update</strong> — แก้ไขรายการที่มีอยู่ ในที่นี้คือทำเครื่องหมายว่าเสร็จแล้ว (คำสั่ง <code>done</code>)</li>
+        <li><strong>Delete</strong> — ลบรายการทิ้ง (คำสั่ง <code>remove</code>)</li>
+      </ul>
+
+      <h2>แนวคิดสำคัญ: ฟังก์ชันที่ไม่ยุ่งกับไฟล์</h2>
+      <p>ก่อนจะเขียนโค้ด มีเรื่องหนึ่งที่อยากให้สังเกต ฟังก์ชันที่เราจะเขียนต่อไปนี้จะ<strong>ไม่อ่านและไม่เขียนไฟล์เลย</strong> มันแค่รับ Array เข้ามา แล้วคืน Array ใหม่กลับไปเท่านั้น</p>
+      <p>ฟังก์ชันแบบนี้เรียกว่า <strong>Pure Function</strong> ซึ่งมีข้อดีคือ:</p>
+      <ul>
+        <li>อ่านง่าย เพราะดูแค่ตัวมันเองก็รู้ว่าทำอะไร ไม่ต้องไปตามดูว่าไฟล์ข้างนอกมีอะไรอยู่</li>
+        <li>ทดสอบง่ายมาก เดี๋ยวในบทที่ 22 เราจะเขียนเทสต์ให้ฟังก์ชันพวกนี้ แล้วคุณจะเห็นว่ามันง่ายแค่ไหน</li>
+      </ul>
+      <p>ส่วนงานอ่านเขียนไฟล์จริง ๆ เราแยกไปไว้ที่ <code>readTodos</code> กับ <code>saveTodos</code> ที่เขียนไว้แล้วในบทที่แล้ว</p>
+
+      <h2>เขียนต่อในไฟล์ todos.js</h2>
+      <p>ให้เขียนโค้ดต่อไปนี้ต่อท้ายไฟล์ <code>src/todos.js</code> ที่เราสร้างไว้ในบทที่แล้ว:</p>
+      <pre><code>// --- ส่วนที่แก้ไข Array เฉย ๆ ---
+
+const nextId = (todos) =&gt; {
+  if (todos.length === 0) return 1
+  return Math.max(...todos.map(todo =&gt; todo.id)) + 1
+}
+
+export const addTodo = (todos, text) =&gt; {
+  const todo = { id: nextId(todos), text, done: false }
+  return [...todos, todo]
+}
+
+export const markDone = (todos, id) =&gt; {
+  return todos.map(todo =&gt; todo.id === id ? { ...todo, done: true } : todo)
+}
+
+export const removeTodo = (todos, id) =&gt; {
+  return todos.filter(todo =&gt; todo.id !== id)
+}</code></pre>
+
+      <h2>คำอธิบายโค้ด</h2>
+      <ul>
+        <li><code>nextId</code> คำนวณ ID ของรายการถัดไป ถ้ายังไม่มีรายการเลยก็เริ่มที่ 1 ถ้ามีแล้วก็หา ID ที่มากที่สุดแล้วบวกหนึ่ง ที่ต้องทำแบบนี้เพราะถ้าเราใช้ <code>todos.length + 1</code> เฉย ๆ พอผู้ใช้ลบรายการไปแล้ว ID จะซ้ำกันได้ ส่วน <code>...</code> ที่อยู่ใน <code>Math.max(...)</code> คือ Spread Operator ที่กระจาย Array ออกมาเป็น Argument ทีละตัว เพราะ <code>Math.max</code> รับตัวเลขทีละตัว ไม่ได้รับ Array</li>
+        <li><code>addTodo</code> สร้าง Object ของรายการใหม่ แล้วคืน Array ใหม่ที่มีของเดิมทั้งหมดบวกตัวใหม่ต่อท้าย สังเกตว่าเราใช้ <code>[...todos, todo]</code> ไม่ใช่ <code>todos.push(todo)</code> เพราะเราไม่อยากไปแก้ Array เดิม แต่อยากสร้างอันใหม่ขึ้นมาแทน</li>
+        <li><code>markDone</code> ใช้ <code>map</code> วนดูทุกรายการ ถ้าเจอตัวที่ ID ตรงกันก็คืน Object ใหม่ที่ <code>done</code> เป็น <code>true</code> ส่วนตัวอื่นคืนกลับไปเหมือนเดิม</li>
+        <li><code>removeTodo</code> ใช้ <code>filter</code> เก็บเฉพาะรายการที่ ID <strong>ไม่</strong>ตรงกับที่ระบุ ผลลัพธ์คือ Array ที่ไม่มีรายการนั้นแล้ว</li>
+      </ul>
+      <p>เมธอด <code>map</code>, <code>filter</code> และ Spread Operator เหล่านี้คือตัวเดียวกันกับที่เราใช้ตอนจัดการ State ใน React นั่นเอง หลักการเหมือนกันเป๊ะ คือไม่แก้ของเดิม แต่สร้างของใหม่ขึ้นมาแทน</p>
+      <p>แล้ว Read ล่ะ? เราไม่ต้องเขียนฟังก์ชันเพิ่มเลย เพราะ <code>readTodos</code> ที่เขียนไว้แล้วก็คืน Array ทั้งหมดมาให้อยู่แล้ว</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="18_using_a_file_as_a_db.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="20_updating_commands.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

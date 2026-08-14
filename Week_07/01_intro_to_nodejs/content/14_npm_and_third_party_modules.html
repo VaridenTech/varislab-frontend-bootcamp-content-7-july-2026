@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้การจัดการแพ็กเกจด้วย NPM ตั้งแต่ npm init, npm install จนถึงการตั้งค่า scripts" />
+  <title>NPM และโมดูลจากภายนอก (3rd Party Modules) — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>NPM และโมดูลจากภายนอก (3rd Party Modules)</h1>
+      <p>ใน Node.js เรามีโมดูลจากภายนอกให้เลือกใช้มากมายเพื่อขยายความสามารถของโค้ดเรา เราสามารถจัดการโมดูลเหล่านี้ได้ด้วย <strong>Node Package Manager (NPM)</strong> ซึ่งเป็น Command-line Interface ที่ช่วยให้เราติดตั้ง อัปเดต และลบแพ็กเกจได้</p>
+
+      <h2>เริ่มต้นด้วย package.json</h2>
+      <p>เริ่มแรก เราต้องสร้างไฟล์ <code>package.json</code> ในโฟลเดอร์โปรเจกต์ของเราก่อน ไฟล์นี้เก็บข้อมูล Metadata เกี่ยวกับโปรเจกต์และ Dependency ที่จำเป็นต่อการรันโปรเจกต์ เราสามารถสร้างไฟล์นี้ได้ด้วยคำสั่ง <code>npm init</code> แล้วตอบคำถามตามที่ระบบถาม</p>
+
+      <h2>การติดตั้งแพ็กเกจ</h2>
+      <p>เมื่อเราตั้งค่าไฟล์ <code>package.json</code> เรียบร้อยแล้ว เราก็สามารถเริ่มติดตั้งแพ็กเกจด้วยคำสั่ง <code>npm install &lt;package-name&gt;</code> ได้ คำสั่งนี้จะติดตั้งแพ็กเกจและบันทึกไว้ในโฟลเดอร์ <code>node_modules</code> ของโปรเจกต์ พร้อมทั้งเพิ่มแพ็กเกจนั้นเป็น Dependency ในไฟล์ <code>package.json</code> ของเราด้วย</p>
+      <p>เรายังสามารถติดตั้งแพ็กเกจแบบ Global ได้ด้วย Flag <code>-g</code> แพ็กเกจเหล่านี้จะถูกติดตั้งไว้ในโฟลเดอร์ส่วนกลางและใช้ได้กับทุกโปรเจกต์ อย่างไรก็ตาม แนะนำให้ติดตั้งแพ็กเกจแบบ Local เพื่อหลีกเลี่ยงปัญหาความเข้ากันได้ของเวอร์ชัน</p>
+
+      <h2>การรัน Script ด้วย NPM</h2>
+      <p>ในการรัน Script ผ่าน NPM เราสามารถกำหนด Script เหล่านั้นไว้ในไฟล์ <code>package.json</code> ภายใต้ Field <code>scripts</code> ตัวอย่างเช่น เราสามารถกำหนด Script สำหรับเริ่มเซิร์ฟเวอร์ด้วยคำสั่ง <code>node server.js</code> โดยเพิ่มบรรทัดต่อไปนี้ลงในไฟล์ <code>package.json</code>:</p>
+      <pre><code>"scripts": {
+  "start": "node server.js"
+}</code></pre>
+      <p>จากนั้นเราก็สามารถรัน Script นี้ได้ด้วยคำสั่ง <code>npm run start</code></p>
+
+      <h2>การ Import Module มาใช้ในโค้ด</h2>
+      <p>ในการ Import Module มาใช้ในโค้ดของเรา เราใช้คำสั่ง <code>import</code> ตัวอย่างเช่น หากเราต้องการใช้ Module <code>express</code> เราสามารถ Import ได้ด้วยโค้ดต่อไปนี้:</p>
+      <pre><code>import express from 'express'</code></pre>
+      <p>โค้ดนี้ Import Module <code>express</code> เข้ามาและกำหนดให้กับตัวแปรชื่อ <code>express</code> จากนั้นเราก็สามารถใช้ความสามารถต่าง ๆ ที่ Module <code>express</code> มีให้ในโค้ดของเราได้</p>
+
+      <h2>ลองติดตั้งของจริงกันสักครั้ง</h2>
+      <p>อ่านอย่างเดียวคงไม่เห็นภาพ มาลองติดตั้งแพ็กเกจจริง ๆ กันสักตัว ให้สร้างโฟลเดอร์ใหม่แยกออกมาต่างหาก (อย่าทำในโฟลเดอร์แอปของเรานะ อันนี้เราจะลองเล่นเฉย ๆ) แล้วรัน:</p>
+      <pre><code>npm init -y
+npm pkg set type=module
+npm i cowsay</code></pre>
+      <p>จากนั้นสร้างไฟล์ <code>demo.js</code> แล้วเขียน:</p>
+      <pre><code>import cowsay from 'cowsay'
+
+console.log(cowsay.say({ text: 'สวัสดี npm!' }))</code></pre>
+      <p>รันด้วย <code>node demo.js</code> แล้วคุณจะเห็นวัวพูดได้:</p>
+      <pre><code> _____________
+&lt; สวัสดี npm! &gt;
+ -------------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||</code></pre>
+      <p>ลองเปิดไฟล์ <code>package.json</code> ดู จะเห็นว่า <code>cowsay</code> ถูกเพิ่มเข้าไปใน <code>dependencies</code> ให้อัตโนมัติ และลองเปิดโฟลเดอร์ <code>node_modules</code> ดูก็ได้ โค้ดของ <code>cowsay</code> ที่เราเพิ่งโหลดมาอยู่ในนั้นทั้งหมด</p>
+      <p>นี่คือทั้งหมดที่ npm ทำ — ไปโหลดโค้ดของคนอื่นมาไว้ในโปรเจกต์เรา แล้วจดไว้ใน <code>package.json</code> ว่าเราใช้อะไรบ้าง</p>
+
+      <h2>แล้วแอป Todo ของเราล่ะ?</h2>
+      <p>เราจะ<strong>ไม่ติดตั้งแพ็กเกจใด ๆ เลย</strong>ในแอป Todo ของเรา เพราะทุกอย่างที่เราต้องใช้ Node.js มีมาให้ครบอยู่แล้ว ทั้งการอ่าน Argument, การอ่านเขียนไฟล์ และการสร้างเซิร์ฟเวอร์</p>
+      <p>การรู้จัก npm ยังสำคัญมากอยู่ดี เพราะโปรเจกต์จริงเกือบทุกตัวที่คุณจะเจอต่อจากนี้ล้วนใช้มัน แต่สำหรับแอปเล็ก ๆ แบบนี้ การไม่พึ่งแพ็กเกจภายนอกเลยจะช่วยให้คุณเห็นชัดว่าอะไรคือความสามารถของ Node.js เองจริง ๆ</p>
+
+      <h2>สรุป</h2>
+      <p>โดยสรุปแล้ว NPM คือเครื่องมือทรงพลังที่ช่วยให้เราจัดการโมดูลจากภายนอกในโปรเจกต์ Node.js ได้ เราสามารถติดตั้งแพ็กเกจ จัดการ Dependency รัน Script และ Import Module ได้ผ่าน NPM ด้วยความสามารถเหล่านี้ เราจึงสามารถขยายขีดความสามารถของแอปพลิเคชัน Node.js และทำให้มันมีประสิทธิภาพและใช้งานได้ดียิ่งขึ้น</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="13_internal_modules.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="15_reading_command_arguments.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

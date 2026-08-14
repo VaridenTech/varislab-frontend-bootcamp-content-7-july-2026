@@ -1,0 +1,157 @@
+{
+  "questions": [
+    {
+      "prompt": "จาก snippet สองชิ้นนี้ ข้อใดต้องผ่านการคอมไพล์ก่อน เบราว์เซอร์จึงจะใช้งานได้?",
+      "body": "<pre><code>/* Snippet A */\n.card {\n  border-radius: 12px;\n}\n\n/* Snippet B */\n$brand-color: #6f3cc3;\n\n.card {\n  border-color: $brand-color;\n}</code></pre>",
+      "choices": [
+        "Snippet A เพราะ border-radius เป็น property ที่เบราว์เซอร์รุ่นเก่าไม่รองรับ",
+        "Snippet B เพราะมีตัวแปร $brand-color ซึ่งเป็นไวยากรณ์ของ SCSS ไม่ใช่ CSS",
+        "ทั้งสอง snippet เพราะไฟล์ที่มี selector ต้องคอมไพล์เสมอ"
+      ],
+      "correctChoice": 2,
+      "explanation": "เครื่องหมาย $ ไม่มีอยู่ใน CSS ปกติ เป็น feature ของ SCSS เท่านั้น เบราว์เซอร์อ่านไม่ออก จึงต้องให้ compiler แทนค่าจริงลงไปก่อนตาม workflow SCSS → compiler → CSS → browser"
+    },
+    {
+      "prompt": "ข้อใดอธิบายความต่างระหว่างคำว่า “Sass” กับ “SCSS” ได้ถูกต้องตามบทเรียน?",
+      "choices": [
+        "Sass คือชื่อภาษาและตัวแปลง ส่วน SCSS คือ syntax แบบหนึ่งของ Sass ที่ยังใช้ {} และ ; เหมือน CSS",
+        "Sass คือไฟล์ที่เบราว์เซอร์อ่านได้โดยตรง ส่วน SCSS ต้องคอมไพล์ก่อน",
+        "Sass เป็นเวอร์ชันใหม่ที่ออกมาแทน SCSS ทั้งหมดแล้ว"
+      ],
+      "correctChoice": 1,
+      "explanation": "Sass มักใช้เรียกทั้ง ecosystem ของภาษาและ compiler ส่วน SCSS คือรูปแบบไวยากรณ์ที่ออกแบบให้หน้าตาใกล้เคียง CSS มากที่สุด ทั้งคู่ต้องคอมไพล์ก่อนใช้งานเหมือนกัน"
+    },
+    {
+      "prompt": "ต้องการคอมไพล์ styles/app.scss ไปเป็น public/app.css แบบเฝ้าดูไฟล์ตลอดเวลา ควรใช้คำสั่งใด?",
+      "choices": [
+        "npx sass --watch styles/app.scss public/app.css",
+        "npx sass --watch public/app.css:styles/app.scss",
+        "npx sass --watch styles/app.scss:public/app.css"
+      ],
+      "correctChoice": 3,
+      "explanation": "โหมด watch ใช้รูปแบบ ต้นทาง:ปลายทาง คั่นด้วยเครื่องหมาย colon (ต่างจากการคอมไพล์ครั้งเดียวที่คั่นด้วยช่องว่าง) และหยุด process ได้ด้วย Ctrl + C"
+    },
+    {
+      "prompt": "ในไฟล์ index.html ควร link ไปยังไฟล์ใด และเพราะอะไร?",
+      "choices": [
+        "link ไปที่ scss/main.scss เพราะเป็นไฟล์ต้นฉบับที่มีข้อมูลครบที่สุด",
+        "link ไปที่ css/main.css เพราะเบราว์เซอร์ใช้งานได้เฉพาะ CSS ที่คอมไพล์แล้ว",
+        "link ได้ทั้งสองไฟล์ เบราว์เซอร์จะเลือกไฟล์ที่อ่านออกให้เอง"
+      ],
+      "correctChoice": 2,
+      "explanation": "แม้เราจะเขียนงานอยู่ในโฟลเดอร์ scss/ แต่ไฟล์ที่หน้าเว็บโหลดได้จริงคือผลลัพธ์ที่ compiler สร้างไว้ใน css/main.css ถ้า link ไฟล์ .scss ตรง ๆ สไตล์จะไม่แสดงผล"
+    },
+    {
+      "prompt": "ข้อใดคือความต่างหลักระหว่าง Sass variable ($brand-color) กับ CSS custom property (--brand-color)?",
+      "choices": [
+        "ทั้งคู่ทำงานตอน runtime เหมือนกัน ต่างกันแค่รูปแบบการเขียน",
+        "custom property ถูกแทนค่าตอนคอมไพล์ ส่วน Sass variable ทำงานตอน runtime",
+        "Sass variable ถูกแทนด้วยค่าจริงตอนคอมไพล์จนเบราว์เซอร์ไม่เห็นชื่อเดิม ส่วน custom property ยังอยู่ใน CSS และทำงานตอน runtime"
+      ],
+      "correctChoice": 3,
+      "explanation": "Sass variable ทำงานตอนคอมไพล์ ชื่อจะหายไปจาก CSS ปลายทาง ส่วน CSS custom property ยังอยู่ในไฟล์ที่ส่งให้เบราว์เซอร์ จึงเหมาะกับค่าที่ต้องเปลี่ยนตอน runtime เช่น theme สว่าง/มืด"
+    },
+    {
+      "prompt": "ตามแนวทาง purpose-based token ของบทเรียน ชื่อตัวแปรแบบใดเหมาะกว่า?",
+      "choices": [
+        "$brand-color เพราะสื่อ “หน้าที่” ของค่า ทำให้ยังอ่านรู้เรื่องแม้เปลี่ยนดีไซน์ในอนาคต",
+        "$purple-1 เพราะบอกค่าจริงของสีได้ตรงที่สุด",
+        "$c1 เพราะสั้นและพิมพ์เร็วที่สุด"
+      ],
+      "correctChoice": 1,
+      "explanation": "การตั้งชื่อตามหน้าที่ทำให้โค้ดทนต่อการเปลี่ยนดีไซน์ ถ้าวันหนึ่งสีแบรนด์เปลี่ยนจากม่วงเป็นเขียว ชื่อ $brand-color ยังถูกต้อง แต่ $purple-1 จะกลายเป็นชื่อที่หลอกคนอ่าน"
+    },
+    {
+      "prompt": "SCSS ชุดนี้จะถูกคอมไพล์ออกมาเป็น CSS แบบใด?",
+      "body": "<pre><code>.card {\n  padding: 1rem;\n\n  &amp;__title {\n    margin-bottom: 0.75rem;\n  }\n}</code></pre>",
+      "choices": [
+        ".card { padding: 1rem; } และ .card .card__title { margin-bottom: 0.75rem; }",
+        ".card { padding: 1rem; } และ .card__title { margin-bottom: 0.75rem; }",
+        ".card { padding: 1rem; } และ .card &__title { margin-bottom: 0.75rem; }"
+      ],
+      "correctChoice": 2,
+      "explanation": "เครื่องหมาย & แทน selector แม่แล้ว “ต่อคำ” เข้าไปโดยตรง จึงได้ .card__title ไม่ใช่ descendant selector .card .card__title ซึ่งเป็นผลของการซ้อน selector แบบปกติ"
+    },
+    {
+      "prompt": "เขียน @media (max-width: 640px) ซ้อนไว้ข้างใน .card ผลลัพธ์หลังคอมไพล์เป็นอย่างไร?",
+      "choices": [
+        "Sass ย้าย .card ทั้ง block เข้าไปอยู่ใน media query ทำให้ style ปกติหายไป",
+        "media query ยังซ้อนอยู่ใน .card เหมือนเดิม เพราะ CSS รองรับ media query ซ้อนใน selector",
+        "Sass ดึง media query ออกมาไว้ระดับบนสุด แล้ววาง .card ไว้ข้างใน ส่วน style ปกติของ .card ยังอยู่ข้างนอก"
+      ],
+      "correctChoice": 3,
+      "explanation": "Nested media query เป็นความสะดวกตอนเขียน (เห็น style ปกติกับ responsive อยู่ด้วยกัน) แต่ CSS ปลายทางยังเป็นรูปแบบมาตรฐาน คือ .card ปกติหนึ่งชุด และ @media ที่มี .card อยู่ข้างในอีกชุด"
+    },
+    {
+      "prompt": "ไฟล์จริงชื่อ _tokens.scss แต่เขียน @use \"tokens\"; ได้ เพราะอะไร?",
+      "choices": [
+        "เพราะ Sass มองหาไฟล์ partial ที่ขึ้นต้นด้วย underscore ให้เองอัตโนมัติ จึงไม่ต้องพิมพ์ _ หรือ .scss",
+        "เพราะต้องเปลี่ยนชื่อไฟล์เป็น tokens.scss ก่อน ไม่งั้นจะ error",
+        "เพราะ underscore ใช้ได้เฉพาะกับ @import รุ่นเก่าเท่านั้น"
+      ],
+      "correctChoice": 1,
+      "explanation": "ธรรมเนียมของ partial คือขึ้นต้นชื่อไฟล์ด้วย _ เพื่อสื่อว่าไฟล์นี้มีไว้ให้ไฟล์อื่นนำไปใช้ ไม่ใช่ entry point แต่เวลาอ้างถึงใช้แค่ชื่อ module สั้น ๆ"
+    },
+    {
+      "prompt": "หลังเขียน @use \"tokens\" as t; จะอ้างถึงตัวแปร $brand-color ในไฟล์นั้นอย่างไร?",
+      "choices": [
+        "$brand-color ได้เลย เพราะ @use เททุกอย่างเข้ามาใน global scope",
+        "t.$brand-color เพราะ alias เปลี่ยนชื่อ namespace ที่ใช้อ้างถึง module นั้น",
+        "tokens.$brand-color เพราะ alias มีผลเฉพาะกับ mixin ไม่รวมตัวแปร"
+      ],
+      "correctChoice": 2,
+      "explanation": "จุดสำคัญของ @use คือไม่เททุกอย่างลง global scope แต่บังคับให้อ้างผ่าน namespace ส่วน as ใช้ตั้ง alias ให้ชื่อสั้นลงโดยยังรู้ที่มาของค่าอยู่"
+    },
+    {
+      "prompt": "ข้อใดถูกต้องเกี่ยวกับ @use ตามบทเรียน?",
+      "choices": [
+        "วาง @use ไว้ข้างใน selector ได้ ถ้าอยากโหลด module เฉพาะบางกรณี",
+        "ถ้าหลายไฟล์ @use \"tokens\" เหมือนกัน CSS ของ module นั้นจะถูกปล่อยซ้ำทุกไฟล์",
+        "@use ต้องอยู่ระดับ top level ด้านบนของไฟล์ และเป็นตัวที่ควรใช้แทน @import ที่ deprecated แล้ว"
+      ],
+      "correctChoice": 3,
+      "explanation": "Sass ต้องรู้ dependency ของไฟล์ตั้งแต่เริ่มคอมไพล์ @use จึงต้องอยู่ top level และ module เดียวกันจะถูกโหลดเพียงครั้งเดียวในระบบโมดูล ส่วน @import เป็น syntax legacy ที่ไม่แนะนำสำหรับโค้ดใหม่"
+    },
+    {
+      "prompt": "โปรเจกต์มี abstracts/_tokens.scss, base/_reset.scss, components/_button.scss และ main.scss เราควรสั่งคอมไพล์ไฟล์ใด?",
+      "choices": [
+        "คอมไพล์ main.scss ไฟล์เดียว เพราะเป็น entry point ที่รวม module ทั้งหมดไว้แล้ว",
+        "คอมไพล์ทุกไฟล์ทีละไฟล์ แล้วให้ HTML link CSS ทุกไฟล์ที่ได้",
+        "คอมไพล์เฉพาะ partial ที่ขึ้นต้นด้วย _ ส่วน main.scss ไม่ต้อง"
+      ],
+      "correctChoice": 1,
+      "explanation": "partial มีไว้ประกอบ entry point ไม่ใช่คอมไพล์เดี่ยว ๆ เบราว์เซอร์ควรได้ CSS ปลายทางชุดเดียวที่จัดเรียงครบแล้ว (โปรเจกต์ใหญ่อาจมีหลาย entry point เช่น admin.scss กับ marketing.scss แต่หลักคิดเดิม)"
+    },
+    {
+      "prompt": "ไฟล์ components/_button.scss ต้องใช้ token จาก abstracts/_tokens.scss ควรทำอย่างไรตามหลัก explicit dependency?",
+      "choices": [
+        "ไม่ต้องทำอะไร ถ้า main.scss โหลด tokens ไว้ก่อนแล้ว ไฟล์นี้จะเห็นตัวแปรเอง",
+        "คัดลอกค่าจริงของ token มาใส่ในไฟล์ _button.scss เพื่อตัด dependency ทิ้ง",
+        "เขียน @use \"../abstracts/tokens\"; ไว้ในไฟล์ _button.scss เอง แล้วอ้างผ่าน tokens.$..."
+      ],
+      "correctChoice": 3,
+      "explanation": "การพึ่งพาแบบซ่อนเร้น (หวังว่าไฟล์อื่นโหลดไว้ให้) ทำให้ย้ายไฟล์หรือนำไปใช้ซ้ำยาก เมื่อประกาศ @use ในไฟล์ที่ใช้จริง เปิดไฟล์เดียวก็รู้ทันทีว่ามันพึ่งอะไรอยู่"
+    },
+    {
+      "prompt": "โค้ดนี้จะให้ CSS ปลายทางแบบใด?",
+      "body": "<pre><code>@mixin card-surface {\n  padding: 1.5rem;\n  border-radius: 18px;\n  background-color: #fff;\n}\n\n.profile-card {\n  @include card-surface;\n}\n\n.pricing-card {\n  @include card-surface;\n}</code></pre>",
+      "choices": [
+        "Sass รวมให้อัตโนมัติเป็น .profile-card, .pricing-card { ... } เพื่อลดขนาดไฟล์",
+        "declaration ชุดเดิมถูกคัดลอกออกมาซ้ำในทั้งสอง selector เพราะ @include คือการ “คัดลอก” ไม่ใช่การ “อ้างอิง”",
+        "เฉพาะ .profile-card ที่ได้ declaration ส่วน .pricing-card ต้องใช้ @extend แทน"
+      ],
+      "correctChoice": 2,
+      "explanation": "ทุกครั้งที่ @include Sass จะปล่อย declaration ชุดนั้นออกมาใหม่ตรงจุดที่เรียก ถ้า helper ตัวใหญ่ถูก include หลายสิบจุด CSS ปลายทางจะยาวขึ้นทันที"
+    },
+    {
+      "prompt": "เมื่อ style ชุดหนึ่งที่มีหลาย declaration ต้องถูกใช้ซ้ำในหลาย selector ที่ชื่อต่างกัน ควรใช้เครื่องมือใด?",
+      "choices": [
+        "ตัวแปร เพราะเก็บค่าไว้จุดเดียวแล้วเรียกใช้ซ้ำได้",
+        "CSS class เพราะเป็น selector ที่มีอยู่จริงใน CSS ปลายทาง",
+        "Mixin เพราะเก็บชุด declaration หลายบรรทัดแล้วปล่อยออกมาที่ selector ที่ include"
+      ],
+      "correctChoice": 3,
+      "explanation": "ตัวแปรเก็บค่าเดียว, CSS class เหมาะเมื่อ HTML ใส่ class เดิมซ้ำได้โดยตรง ส่วน mixin คือ “สูตร” ของ declaration หลายบรรทัดที่นำไปปล่อยใน selector ต่าง ๆ ได้"
+    }
+  ]
+}

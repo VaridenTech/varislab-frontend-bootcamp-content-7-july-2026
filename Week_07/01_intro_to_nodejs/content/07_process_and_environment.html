@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้ Object process และ Environment Variables ใน Node.js" />
+  <title>Process และ Environment — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Process และ Environment</h1>
+
+      <h2>Process</h2>
+      <p>Node.js มี Global Object ชื่อ <code>process</code> สำหรับดูข้อมูลและควบคุมโปรแกรมที่กำลังรันอยู่ Property และ Method ที่เจอบ่อยมีดังนี้:</p>
+      <ul>
+        <li><code>process.argv</code> — Array ที่เก็บ Argument ที่ถูกส่งเข้ามาทาง Command Line ของ Process ปัจจุบัน</li>
+        <li><code>process.pid</code> — ID ของ Process ปัจจุบัน</li>
+        <li><code>process.env</code> — Object ที่เก็บ Environment Variables ของ Process ปัจจุบัน</li>
+        <li><code>process.exit()</code> — สั่งจบการทำงานของ Process ปัจจุบัน โดยจะระบุ Exit Code ด้วยก็ได้</li>
+      </ul>
+      <p>ตัวอย่างการใช้ Property <code>process.argv</code> เพื่อดึง Argument ที่ถูกส่งเข้ามาทาง Command Line ของสคริปต์ Node.js:</p>
+      <pre><code>// script.js
+console.log(process.argv);</code></pre>
+      <p>หากเรารันสคริปต์นี้ด้วยคำสั่ง <code>node script.js arg1 arg2</code> ผลลัพธ์ที่ได้จะเป็น:</p>
+      <pre><code>[ 'node', '/path/to/script.js', 'arg1', 'arg2' ]</code></pre>
+      <p>จะเห็นว่า <code>process.argv</code> เก็บ Path ของ Node.js, Path ของสคริปต์ และ Argument สองตัวที่เราส่งเข้ามาตามลำดับ</p>
+
+      <h2>Environment</h2>
+      <p>Environment คือชุดตัวแปรที่โปรแกรมอ่านได้ระหว่างทำงาน (Runtime) Node.js เก็บตัวแปรเหล่านี้ไว้ใน <code>process.env</code> ในรูปคู่ Key-Value</p>
+      <p>ตัวอย่างการใช้ Object <code>process.env</code> เพื่อเข้าถึง Environment Variable:</p>
+      <pre><code>// script.js
+console.log(process.env.NODE_ENV);</code></pre>
+      <p>หากเรารันสคริปต์นี้ด้วยคำสั่ง <code>NODE_ENV=production node script.js</code> ผลลัพธ์ที่ได้จะเป็น:</p>
+      <pre><code>production</code></pre>
+      <p>ตัวอย่างนี้อ่าน Environment Variable ชื่อ <code>NODE_ENV</code> ผ่าน <code>process.env</code> ได้โดยตรง</p>
+
+      <h2>สรุป</h2>
+      <p><code>process</code> จึงเป็นช่องทางที่โปรแกรม Node.js ใช้คุยกับสภาพแวดล้อมรอบตัว ทั้งรับ Argument, อ่านค่าตั้งต้น และสั่งจบการทำงาน เราจะได้ใช้ <code>process.argv</code> ต่อทันทีตอนสร้าง CLI</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="06_node_repl.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="08_what_is_a_cli.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

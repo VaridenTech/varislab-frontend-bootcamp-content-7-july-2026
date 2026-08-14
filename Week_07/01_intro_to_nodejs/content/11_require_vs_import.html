@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เปรียบเทียบ require กับ import ใน Node.js พร้อมรูปแบบการ Export ของ CommonJS และ ES6 Modules" />
+  <title>Require vs. Import — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Require vs. Import</h1>
+      <p>ใน Node.js นั้น <code>require</code> และ <code>import</code> คือสองวิธีในการนำ Module จากภายนอกเข้ามาใช้ในโค้ดของเรา ทั้งสองมีจุดประสงค์เดียวกัน แต่ก็มีความแตกต่างบางอย่างที่ควรรู้ไว้</p>
+
+      <h2>Require</h2>
+      <p><code>require</code> คือฟังก์ชันที่มีมาให้ในตัวของ Node.js ซึ่งช่วยให้คุณโหลด Module จากภายนอกได้ มันทำงานแบบ Synchronous หมายความว่ามันจะหยุดขวางการทำงานของโค้ดส่วนที่เหลือจนกว่า Module จะโหลดเสร็จ ตัวอย่างเช่น:</p>
+      <pre><code>const fs = require('fs');
+const data = fs.readFileSync('file.txt', 'utf8');
+console.log(data);</code></pre>
+      <p>ในตัวอย่างนี้ เรากำลังโหลด Module <code>fs</code> ซึ่งเป็น Module ที่ใช้โต้ตอบกับระบบไฟล์ จากนั้นเราใช้เมธอด <code>readFileSync</code> เพื่ออ่านเนื้อหาของไฟล์ที่ชื่อ <code>file.txt</code> และสุดท้ายเราแสดงเนื้อหานั้นออกทาง Console</p>
+
+      <h2>Import</h2>
+      <p><code>import</code> คือวิธีที่ใหม่กว่าในการนำ Module จากภายนอกเข้ามาใช้ในโค้ด มันเป็นส่วนหนึ่งของมาตรฐาน ES6 (ECMAScript 2015) และทำงานแบบ Asynchronous ตัวอย่างเช่น:</p>
+      <pre><code>import fs from 'fs/promises';
+async function readFile() {
+  const data = await fs.readFile('file.txt', 'utf8');
+  console.log(data);
+}
+readFile();</code></pre>
+      <p>ในตัวอย่างนี้ เราใช้คำสั่ง <code>import</code> เพื่อโหลด Module <code>fs/promises</code> ซึ่งเป็น Module ที่ใช้โต้ตอบกับระบบไฟล์ด้วย Promise จากนั้นเรานิยามฟังก์ชัน <code>async</code> ชื่อ <code>readFile</code> ซึ่งใช้เมธอด <code>readFile</code> เพื่ออ่านเนื้อหาของไฟล์ที่ชื่อ <code>file.txt</code> และสุดท้ายเราแสดงเนื้อหานั้นออกทาง Console</p>
+
+      <h2>การ Export</h2>
+      <p>นอกจากการโหลด Module จากภายนอกแล้ว คุณอาจต้องการ Export โค้ดของคุณเองออกไปเป็น Module เพื่อให้ส่วนอื่น ๆ ของแอปพลิเคชันนำไปใช้ได้ด้วย ซึ่งมีหลายวิธีขึ้นอยู่กับระบบ Module ที่คุณใช้อยู่</p>
+
+      <h3>CommonJS</h3>
+      <p>CommonJS คือระบบ Module ที่ Node.js ใช้ ในการ Export Module แบบ CommonJS คุณสามารถใช้ Object <code>module.exports</code> หรือ <code>exports</code> ได้ ตัวอย่างเช่น:</p>
+      <pre><code>// module.js
+function hello(name) {
+  console.log(`Hello, ${name}!`);
+}
+module.exports = { hello };
+
+// app.js
+const module = require('./module');
+module.hello('world');</code></pre>
+      <p>ในตัวอย่างนี้ เรานิยามฟังก์ชันชื่อ <code>hello</code> ไว้ใน Module ที่ชื่อ <code>module.js</code> จากนั้นเรา Export ฟังก์ชันนั้นออกไปด้วย <code>module.exports</code> ส่วนในไฟล์ <code>app.js</code> เราโหลด Module นั้นด้วย <code>require</code> แล้วเรียกใช้ฟังก์ชัน <code>hello</code></p>
+
+      <h3>ES6 Modules</h3>
+      <p>ES6 Modules คือระบบ Module ที่ใหม่กว่า ซึ่งรองรับโดย Browser บางตัวและโดย Node.js ผ่าน Flag <code>--experimental-modules</code> ในการ Export Module แบบ ES6 คุณสามารถใช้ Keyword <code>export</code> ได้ ตัวอย่างเช่น:</p>
+      <pre><code>// module.js
+function hello(name) {
+  console.log(`Hello, ${name}!`);
+}
+export { hello };
+
+// app.js
+import { hello } from './module.js';
+hello('world');</code></pre>
+      <p>ในตัวอย่างนี้ เรานิยามฟังก์ชันชื่อ <code>hello</code> ไว้ใน Module ที่ชื่อ <code>module.js</code> จากนั้นเรา Export ฟังก์ชันนั้นออกไปด้วย Keyword <code>export</code> ส่วนในไฟล์ <code>app.js</code> เราโหลด Module นั้นด้วย <code>import</code> แล้วเรียกใช้ฟังก์ชัน <code>hello</code></p>
+
+      <h2>สรุป</h2>
+      <p>โดยสรุปแล้ว <code>require</code> และ <code>import</code> คือสองวิธีในการโหลด Module จากภายนอกใน Node.js ทั้งสองมีความแตกต่างกันบ้างในเรื่องรูปแบบการเขียนและพฤติกรรม แต่ต่างก็มีจุดประสงค์เดียวกัน นอกจากนี้ยังมีวิธีการ Export โค้ดของคุณเองออกไปเป็น Module ได้หลายแบบ ขึ้นอยู่กับระบบ Module ที่คุณใช้อยู่</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="10_what_is_a_module.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="12_thinking_in_modules.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

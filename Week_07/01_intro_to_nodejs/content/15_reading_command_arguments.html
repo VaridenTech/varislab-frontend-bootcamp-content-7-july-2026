@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="อ่านคำสั่งและ Argument จาก process.argv แล้วใช้ switch แยกการทำงานของแต่ละคำสั่งใน CLI แอป Todo" />
+  <title>การรับคำสั่งจาก process.argv — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การรับคำสั่งจาก process.argv</h1>
+      <p>ในบทที่ 9 เราอ่านข้อความหนึ่งอันจาก <code>process.argv[2]</code> ได้แล้ว แต่ตอนนี้แอปของเราต้องทำได้หลายอย่าง ไม่ใช่แค่เพิ่มรายการอย่างเดียว เราอยากได้แบบนี้:</p>
+      <pre><code>todo add "ซื้อนม"
+todo list
+todo done 3
+todo remove 3
+todo web</code></pre>
+      <p>สังเกตว่าคำแรกหลัง <code>todo</code> คือ<strong>คำสั่ง</strong> (add, list, done, remove, web) และคำที่สองคือ<strong>ข้อมูลเพิ่มเติม</strong>ของคำสั่งนั้น ซึ่งบางคำสั่งก็ไม่ต้องมี</p>
+
+      <h2>process.argv มีอะไรอยู่ข้างในบ้าง</h2>
+      <p>ก่อนจะเขียนอะไร มาดูกันก่อนว่า <code>process.argv</code> หน้าตาเป็นยังไง ลอง <code>console.log(process.argv)</code> แล้วรัน <code>todo add "ซื้อนม"</code> ดู:</p>
+      <pre><code>[
+  '/usr/local/bin/node',
+  '/Users/you/todo/index.js',
+  'add',
+  'ซื้อนม'
+]</code></pre>
+      <p>สองตัวแรกคือ Path ของ Node.js และ Path ของไฟล์เรา ซึ่งเราไม่ได้ใช้ ตัวที่เราสนใจคือตั้งแต่ตัวที่สามเป็นต้นไป เราจึงใช้ <code>slice(2)</code> เพื่อตัดสองตัวแรกทิ้ง:</p>
+      <pre><code>const [command, arg] = process.argv.slice(2)</code></pre>
+      <p>บรรทัดเดียวจบ เราใช้ Array Destructuring ที่เคยเรียนมาแล้วดึงค่าออกมาใส่ตัวแปรสองตัว ถ้ารัน <code>todo add "ซื้อนม"</code> จะได้ <code>command</code> เป็น <code>'add'</code> และ <code>arg</code> เป็น <code>'ซื้อนม'</code> ส่วนถ้ารัน <code>todo list</code> เฉย ๆ จะได้ <code>command</code> เป็น <code>'list'</code> และ <code>arg</code> เป็น <code>undefined</code></p>
+
+      <h2>แยกการทำงานด้วย switch</h2>
+      <p>เมื่อรู้แล้วว่าผู้ใช้พิมพ์คำสั่งอะไรมา เราก็แค่ต้องเลือกว่าจะทำอะไรต่อ ซึ่งงานแบบนี้ <code>switch</code> เหมาะที่สุด ในไฟล์ <code>index.js</code>:</p>
+      <pre><code>#!/usr/bin/env node
+
+const [command, arg] = process.argv.slice(2)
+
+switch (command) {
+  case 'add': {
+    console.log('จะเพิ่ม:', arg)
+    break
+  }
+  case 'list': {
+    console.log('จะแสดงรายการทั้งหมด')
+    break
+  }
+  case 'done': {
+    console.log('จะทำเครื่องหมายว่าเสร็จ:', arg)
+    break
+  }
+  case 'remove': {
+    console.log('จะลบ:', arg)
+    break
+  }
+  case 'web': {
+    console.log('จะเปิดเว็บ')
+    break
+  }
+  default: {
+    console.log('คำสั่งที่ใช้ได้: add, list, done, remove, web')
+  }
+}</code></pre>
+      <p>ลองรันดูได้เลย ทุกคำสั่งควรจะตอบกลับมาถูกตัว และถ้าพิมพ์คำสั่งมั่ว ๆ หรือไม่พิมพ์อะไรเลย <code>default</code> จะทำงานแล้วบอกผู้ใช้ว่ามีคำสั่งอะไรให้ใช้บ้าง</p>
+
+      <h2>ทำไมต้องมี break และวงเล็บปีกกา</h2>
+      <ul>
+        <li><code>break</code> จำเป็นมาก ถ้าลืมใส่ โปรแกรมจะไหลลงไปทำ <code>case</code> ถัดไปต่อด้วย (เรียกว่า Fall-through) ซึ่งไม่ใช่สิ่งที่เราต้องการ</li>
+        <li>วงเล็บปีกกา <code>{ }</code> รอบเนื้อหาของแต่ละ <code>case</code> ไม่ได้บังคับ แต่ใส่ไว้ดีกว่า เพราะมันทำให้เราประกาศตัวแปรด้วย <code>const</code> ข้างในแต่ละ <code>case</code> ได้โดยไม่ชนกัน</li>
+      </ul>
+
+      <h2>ก้าวต่อไป</h2>
+      <p>ตอนนี้โครงของ CLI เราครบแล้ว แต่ละคำสั่งยังแค่ <code>console.log</code> เฉย ๆ เพราะเรายังไม่มีที่เก็บข้อมูล ในบทต่อ ๆ ไปเราจะเรียนเรื่องการทำงานแบบ Asynchronous และการอ่านเขียนไฟล์ แล้วค่อยกลับมาเติมเนื้อในให้แต่ละคำสั่งทำงานได้จริง</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="14_npm_and_third_party_modules.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="16_async_in_node.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

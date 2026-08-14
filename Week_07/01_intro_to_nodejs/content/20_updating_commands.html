@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="นำฟังก์ชัน CRUD มาต่อเข้ากับ switch ใน index.js เพื่อให้ CLI แอป Todo ทำงานได้จริง" />
+  <title>การอัปเดตคำสั่งให้ทำงานได้จริง — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การอัปเดตคำสั่งให้ทำงานได้จริง</h1>
+      <p>ตอนนี้เรามีครบทุกชิ้นแล้ว ทั้งฟังก์ชันอ่านเขียนไฟล์และฟังก์ชันจัดการ Array เหลือแค่เอามาต่อเข้ากับ <code>switch</code> ใน <code>index.js</code> ที่เราเขียนโครงไว้ตั้งแต่บทที่ 15</p>
+
+      <h2>โค้ดฉบับสมบูรณ์ของ index.js</h2>
+      <pre><code>#!/usr/bin/env node
+import { readTodos, saveTodos, addTodo, markDone, removeTodo } from './src/todos.js'
+
+const [command, arg] = process.argv.slice(2)
+const todos = await readTodos()
+
+switch (command) {
+  case 'add': {
+    await saveTodos(addTodo(todos, arg))
+    console.log('เพิ่มแล้ว:', arg)
+    break
+  }
+  case 'list': {
+    todos.forEach(todo =&gt; {
+      console.log(todo.id, todo.done ? '✅' : '⬜', todo.text)
+    })
+    break
+  }
+  case 'done': {
+    await saveTodos(markDone(todos, Number(arg)))
+    console.log('ทำเสร็จแล้ว:', arg)
+    break
+  }
+  case 'remove': {
+    await saveTodos(removeTodo(todos, Number(arg)))
+    console.log('ลบแล้ว:', arg)
+    break
+  }
+  default: {
+    console.log('คำสั่งที่ใช้ได้: add, list, done, remove, web')
+  }
+}</code></pre>
+
+      <h2>คำอธิบายโค้ด</h2>
+      <p>รูปแบบของทุกคำสั่งที่แก้ไขข้อมูลจะเหมือนกันหมด คือ <strong>อ่านเข้ามา → แปลง → เขียนกลับ</strong> ตัวอย่างเช่นบรรทัดนี้:</p>
+      <pre><code>await saveTodos(addTodo(todos, arg))</code></pre>
+      <p>อ่านจากในออกนอก: <code>addTodo(todos, arg)</code> คืน Array ใหม่ที่มีรายการเพิ่มเข้ามา แล้วเราส่ง Array นั้นให้ <code>saveTodos</code> เขียนลงไฟล์ทันที</p>
+      <p>จุดที่ต้องระวังคือ <code>Number(arg)</code> เพราะทุกอย่างที่มาจาก <code>process.argv</code> เป็น String เสมอ ถ้าผู้ใช้พิมพ์ <code>todo done 3</code> ค่า <code>arg</code> ที่ได้จะเป็น <code>'3'</code> ที่เป็นข้อความ ไม่ใช่ตัวเลข <code>3</code> และเราเปรียบเทียบด้วย <code>===</code> ซึ่งเช็คชนิดข้อมูลด้วย ทำให้ <code>'3' === 3</code> เป็น <code>false</code> ถ้าลืมแปลง คำสั่ง <code>done</code> กับ <code>remove</code> จะไม่ทำงานเลยโดยไม่มี Error ใด ๆ ให้เห็น</p>
+      <p>ส่วนคำสั่ง <code>list</code> ไม่ต้องบันทึกอะไร แค่วนแสดงผลอย่างเดียว โดยใช้ Ternary เลือกสัญลักษณ์ ✅ หรือ ⬜ ตามสถานะ <code>done</code></p>
+      <p>สังเกตว่าเราใช้ <code>await</code> ที่ระดับบนสุดของไฟล์ได้เลยโดยไม่ต้องห่อด้วย <code>async function</code> ความสามารถนี้เรียกว่า Top-level await ซึ่งใช้ได้เพราะเราตั้ง <code>"type": "module"</code> ไว้ใน <code>package.json</code> ตั้งแต่บทที่ 9</p>
+
+      <h2>ทดลองใช้งาน</h2>
+      <p>ลองรันตามลำดับนี้ดู:</p>
+      <pre><code>todo add "ซื้อนม"
+todo add "อ่านหนังสือ"
+todo add "ออกกำลังกาย"
+todo list</code></pre>
+      <p>จะได้ผลลัพธ์:</p>
+      <pre><code>1 ⬜ ซื้อนม
+2 ⬜ อ่านหนังสือ
+3 ⬜ ออกกำลังกาย</code></pre>
+      <p>แล้วลองทำเครื่องหมายว่าเสร็จกับลบดู:</p>
+      <pre><code>todo done 2
+todo remove 1
+todo list</code></pre>
+      <pre><code>2 ✅ อ่านหนังสือ
+3 ⬜ ออกกำลังกาย</code></pre>
+      <p>ลองเปิดไฟล์ <code>db.json</code> ดูด้วย จะเห็นข้อมูลจริง ๆ ที่ถูกบันทึกไว้:</p>
+      <pre><code>[
+  {
+    "id": 2,
+    "text": "อ่านหนังสือ",
+    "done": true
+  },
+  {
+    "id": 3,
+    "text": "ออกกำลังกาย",
+    "done": false
+  }
+]</code></pre>
+      <p>ตอนนี้แอปของเราใช้งานได้จริงแล้ว ลองปิด Terminal แล้วเปิดใหม่ สั่ง <code>todo list</code> อีกครั้ง ข้อมูลยังอยู่ครบ เหลือแค่คำสั่ง <code>web</code> ที่เรายังไม่ได้ทำ ซึ่งจะอยู่ในบทที่ 24</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="19_todo_crud.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="21_types_of_test.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

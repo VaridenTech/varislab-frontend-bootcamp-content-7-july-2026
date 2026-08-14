@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ใช้ไฟล์ JSON เป็นฐานข้อมูลเก็บรายการ Todo พร้อมสร้างฟังก์ชัน readTodos และ saveTodos" />
+  <title>การใช้ไฟล์เป็นฐานข้อมูล (File as a DB) — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้ไฟล์เป็นฐานข้อมูล (File as a DB)</h1>
+      <p>ปัญหาที่ค้างไว้ตั้งแต่บทที่ 9 คือรายการของเราหายไปทุกครั้งที่โปรแกรมจบ ถึงเวลาแก้แล้ว เราจะใช้ FS Module ร่วมกับไฟล์ JSON เป็นฐานข้อมูลเก็บรายการ Todo ของเรา</p>
+      <p>ให้สร้างไฟล์ <code>db.json</code> ไว้ที่ Root แล้วใส่ Array ว่างลงไป:</p>
+      <pre><code>[]</code></pre>
+      <p>แค่นั้นเลย ข้อมูลของเราคือ Array ของ Todo ตรง ๆ ไม่ต้องมีอะไรห่อไว้อีกชั้น พออ่านไฟล์นี้เข้ามาแล้วแปลงเป็น JavaScript เราจะได้ Array มาใช้ได้ทันที</p>
+
+      <h2>สร้างไฟล์ todos.js</h2>
+      <p>ต่อไป ให้สร้างโฟลเดอร์ <code>src</code> แล้วสร้างไฟล์ <code>todos.js</code> ไว้ข้างใน ไฟล์นี้จะเป็นที่รวม Logic ทั้งหมดของแอปเรา แยกออกมาจาก <code>index.js</code> ที่ทำหน้าที่รับคำสั่งอย่างเดียว</p>
+      <p>ในบทนี้เราจะเขียนแค่ส่วนที่คุยกับไฟล์ก่อน:</p>
+      <pre><code>import fs from 'node:fs/promises'
+
+const DB_PATH = new URL('../db.json', import.meta.url).pathname
+
+// --- ส่วนที่คุยกับไฟล์ ---
+
+export const readTodos = async () =&gt; {
+  const data = await fs.readFile(DB_PATH, 'utf-8')
+  return JSON.parse(data)
+}
+
+export const saveTodos = async (todos) =&gt; {
+  await fs.writeFile(DB_PATH, JSON.stringify(todos, null, 2))
+}</code></pre>
+
+      <h2>คำอธิบายโค้ด</h2>
+      <p>อันดับแรกเรา Import FS Module เข้ามา อย่างไรก็ตาม เราต้องการใช้ Async/Await ซึ่งทำงานร่วมกับ Promise ดังนั้นแทนที่จะใช้เมธอดของ <code>fs</code> เวอร์ชัน Callback เราจะ Import เมธอดของ <code>fs</code> เวอร์ชัน Promise ที่ Node.js มีให้มาใช้แทน โดยสังเกตที่ <code>node:fs/promises</code></p>
+      <p>ต่อมาเรากำหนด <code>DB_PATH</code> คือตำแหน่งที่ไฟล์ <code>db.json</code> อยู่ ตรงนี้เราต้องเขียนแบบนี้เพราะ <code>import.meta.url</code> จะบอกตำแหน่งของไฟล์ <code>todos.js</code> เอง แล้วเราถอยขึ้นไปหนึ่งชั้นด้วย <code>../</code> เพื่อไปหา <code>db.json</code> ที่อยู่ Root ถ้าเราเขียนแค่ <code>'./db.json'</code> เฉย ๆ Node.js จะไปหาไฟล์จากโฟลเดอร์ที่เรารันคำสั่ง ซึ่งอาจเป็นที่ไหนก็ได้ในเครื่อง</p>
+      <p>จากนั้นเราสร้างฟังก์ชันขึ้นมา 2 ตัว:</p>
+      <ul>
+        <li><code>readTodos</code> — อ่านไฟล์ <code>db.json</code> เข้ามาเป็นข้อความ แล้วใช้ <code>JSON.parse</code> แปลงเป็น Array ของ JavaScript</li>
+        <li><code>saveTodos</code> — รับ Array เข้ามา แปลงกลับเป็นข้อความด้วย <code>JSON.stringify</code> แล้วเขียนทับลงไฟล์ ส่วน <code>null, 2</code> ที่ใส่ไว้คือการบอกให้จัดย่อหน้าสวย ๆ 2 Space เวลาเราเปิดไฟล์ดูเองจะได้อ่านง่าย</li>
+      </ul>
+      <p>สังเกตว่าทั้งสองฟังก์ชันนี้ไม่ได้รู้เรื่อง Todo อะไรเลย มันแค่อ่านกับเขียนไฟล์เท่านั้น ส่วน Logic ที่ว่าจะเพิ่มหรือลบรายการยังไง เราจะเขียนในบทถัดไป</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="17_the_fs_module.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="19_todo_crud.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

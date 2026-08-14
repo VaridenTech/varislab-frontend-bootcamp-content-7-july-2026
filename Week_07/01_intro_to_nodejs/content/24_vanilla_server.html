@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="สร้างเว็บเซิร์ฟเวอร์ด้วย http module ล้วน ๆ เพื่อแสดงรายการ Todo ทั้งหมดบน Browser" />
+  <title>การสร้าง Server ด้วย Node.js ล้วน ๆ — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การสร้าง Server ด้วย Node.js ล้วน ๆ</h1>
+      <p>เหลือคำสั่งสุดท้ายที่เรายังไม่ได้ทำ คือ <code>web</code> เราอยากให้มันเปิดเว็บเซิร์ฟเวอร์ขึ้นมาแสดงรายการ Todo ทั้งหมด เพื่อให้เราเปิดดูใน Browser ได้</p>
+      <p>สิ่งที่น่าสนใจคือเราจะทำทั้งหมดนี้ด้วย Module <code>http</code> ที่มากับ Node.js โดยไม่ต้องติดตั้งอะไรเพิ่มเลย</p>
+
+      <h2>สร้างไฟล์ server.js</h2>
+      <p>ให้สร้างไฟล์ <code>server.js</code> ในโฟลเดอร์ <code>src</code>:</p>
+      <pre><code>import http from 'node:http'
+
+const buildHtml = (todos) =&gt; {
+  const items = todos.map(todo =&gt; {
+    const mark = todo.done ? '✅' : '⬜'
+    return `&lt;li&gt;${mark} ${todo.text}&lt;/li&gt;`
+  }).join('')
+
+  return `
+    &lt;h1&gt;รายการสิ่งที่ต้องทำ&lt;/h1&gt;
+    &lt;ul&gt;${items}&lt;/ul&gt;
+  `
+}
+
+export const start = (todos, port) =&gt; {
+  const server = http.createServer((req, res) =&gt; {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    res.end(buildHtml(todos))
+  })
+
+  server.listen(port, () =&gt; {
+    console.log(`เปิดดูได้ที่ http://localhost:${port}`)
+  })
+}</code></pre>
+
+      <h2>คำอธิบายโค้ด</h2>
+      <ul>
+        <li><code>buildHtml</code> รับ Array ของ Todo แล้วสร้างข้อความ HTML ขึ้นมา เราใช้ <code>map</code> แปลงแต่ละรายการให้เป็น <code>&lt;li&gt;</code> แล้วใช้ <code>join('')</code> เชื่อมทุกตัวติดกันเป็นข้อความเดียว ถ้าไม่ใส่ <code>join</code> เวลา Array ถูกแปลงเป็นข้อความมันจะมีเครื่องหมายคอมมาคั่นให้เห็นด้วย</li>
+        <li><code>http.createServer</code> รับฟังก์ชันเข้าไปหนึ่งตัว ซึ่งจะถูกเรียกทุกครั้งที่มี Request เข้ามา ฟังก์ชันนี้ได้ <code>req</code> คือข้อมูลของ Request ที่เข้ามา และ <code>res</code> คือตัวที่เราใช้ตอบกลับ</li>
+        <li><code>res.writeHead(200, ...)</code> คือการบอกสถานะว่าสำเร็จ (200) พร้อมบอกชนิดข้อมูลว่าเป็น HTML ส่วน <code>charset=utf-8</code> สำคัญมาก ถ้าไม่ใส่ ภาษาไทยจะแสดงผลเป็นตัวอักษรแปลก ๆ ใน Browser</li>
+        <li><code>res.end(...)</code> คือการส่งเนื้อหากลับไปแล้วปิด Response</li>
+        <li><code>server.listen(port, ...)</code> คือการเริ่มรอรับ Request ที่ Port ที่ระบุ ฟังก์ชันข้างในจะทำงานเมื่อเซิร์ฟเวอร์พร้อมแล้ว เราจึงใช้ตรงนี้แสดง URL ให้ผู้ใช้กดเข้าไปดู</li>
+      </ul>
+      <p>สังเกตว่าเซิร์ฟเวอร์ของเราตอบ HTML เดิมกลับไปเสมอไม่ว่าจะขอ Path ไหนก็ตาม เพราะเรายังไม่ได้ดู <code>req.url</code> เลย ซึ่งพอสำหรับแอปเล็ก ๆ แบบนี้ ส่วนการแยกเส้นทางตาม URL เป็นเรื่องที่เราจะได้เรียนกันต่อไปตอนใช้ Framework อย่าง Express</p>
+
+      <h2>นำไปใช้กับคำสั่ง web</h2>
+      <p>กลับไปที่ <code>index.js</code> เพิ่ม Import ตัวใหม่ไว้ข้างบน:</p>
+      <pre><code>import { start } from './src/server.js'</code></pre>
+      <p>แล้วเพิ่ม <code>case</code> ใหม่เข้าไปใน <code>switch</code>:</p>
+      <pre><code>  case 'web': {
+    start(todos, Number(arg) || 3000)
+    break
+  }</code></pre>
+      <p>ส่วน <code>|| 3000</code> คือการกำหนดค่าเริ่มต้น ถ้าผู้ใช้ไม่ได้ระบุ Port มา <code>arg</code> จะเป็น <code>undefined</code> และ <code>Number(undefined)</code> จะได้ <code>NaN</code> ซึ่งเป็นค่าที่ JavaScript ถือว่าเป็นเท็จ ทำให้ <code>||</code> เลือกใช้ 3000 แทน</p>
+
+      <h2>ทดลองใช้งาน</h2>
+      <pre><code>todo web</code></pre>
+      <p>จะได้ผลลัพธ์:</p>
+      <pre><code>เปิดดูได้ที่ http://localhost:3000</code></pre>
+      <p>กด Link นั้นหรือ Copy ไปเปิดใน Browser ได้เลย จะเห็นรายการ Todo ทั้งหมดของเราแสดงอยู่ และถ้าอยากใช้ Port อื่นก็ระบุต่อท้ายได้ เช่น <code>todo web 4000</code></p>
+
+      <h2>ถ้าเจอ Error ว่า EADDRINUSE</h2>
+      <p>ถ้ารันแล้วเจอข้อความประมาณนี้:</p>
+      <pre><code>Error: listen EADDRINUSE: address already in use :::3000</code></pre>
+      <p>แปลว่ามีโปรแกรมอื่นจอง Port นั้นไว้อยู่แล้ว หนึ่ง Port มีเจ้าของได้แค่คนเดียวเท่านั้น วิธีแก้ง่ายที่สุดคือเปลี่ยนไปใช้ Port อื่น เช่น <code>todo web 4000</code></p>
+      <p>สาเหตุที่พบบ่อยคือเราเปิด Dev Server ของโปรเจกต์ React ค้างไว้อยู่ ซึ่งก็ใช้ Port 3000 เหมือนกัน</p>
+      <p>อีกกรณีหนึ่งที่คนใช้ Mac มักเจอคือ Port 5000 ถูกฟีเจอร์ AirPlay Receiver ของ macOS จองไว้ตลอดเวลา ดังนั้นถ้าคุณลองเปลี่ยนไปใช้ 5000 แล้วยังไม่ได้ อย่าเพิ่งคิดว่าโค้ดตัวเองผิด ให้เปลี่ยนไปใช้เลขอื่นแทน</p>
+      <p>สังเกตว่าคำสั่งนี้จะไม่จบเอง เพราะเซิร์ฟเวอร์ต้องคอยรอรับ Request อยู่ตลอด ถ้าอยากหยุดให้กด <kbd>Ctrl</kbd> + <kbd>C</kbd> ใน Terminal</p>
+      <p>ข้อสังเกตอีกอย่างคือหน้าเว็บจะไม่อัปเดตเองถ้าเราไปเพิ่มรายการใหม่จาก Terminal อีกหน้าต่างหนึ่ง เพราะเราอ่านข้อมูลจากไฟล์แค่ครั้งเดียวตอนเริ่มเซิร์ฟเวอร์แล้วส่งเข้าไปให้ <code>start</code> ถ้าอยากให้ข้อมูลสดเสมอ ลองคิดดูว่าต้องย้ายการเรียก <code>readTodos</code> ไปไว้ตรงไหน ถือเป็นแบบฝึกหัดเล็ก ๆ ท้ายบทนะ</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="23_what_is_a_server.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="25_recap.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

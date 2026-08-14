@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="แนวคิดการแบ่งโค้ดเป็น Module ที่ดี พร้อมรูปแบบการ Export/Import และ Index.js Pattern" />
+  <title>การคิดแบบ Module (Thinking in Modules) — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การคิดแบบ Module (Thinking in Modules)</h1>
+      <p>เมื่อพัฒนาแอป Node.js สิ่งสำคัญคือต้องมอง Module เป็นชิ้นส่วนความสามารถที่แยกจากกัน ซึ่งดูแลรักษาและนำกลับมาใช้ใหม่ได้ง่าย การแบ่งโค้ดออกเป็น Module ขนาดเล็กที่สมบูรณ์ในตัวเอง จะช่วยให้คุณเขียนโค้ดที่เป็นระบบ ดูแลง่าย นำกลับมาใช้ซ้ำได้ และมีประสิทธิภาพมากขึ้น</p>
+
+      <h2>อะไรที่ควรเป็น Module?</h2>
+      <p>Module แต่ละตัวควรมีจุดประสงค์ที่ชัดเจนและเฉพาะเจาะจง ไม่ควรซับซ้อนเกินไปหรือผูกติดกับ Module อื่นแน่นจนเกินไป หมายความว่าคุณควรตั้งเป้าสร้าง Module ที่มุ่งเน้นงานหรือหน้าที่เพียงอย่างเดียว และสามารถนำไปใช้ในส่วนต่าง ๆ ของแอป หรือแม้แต่ในแอปอื่น ๆ ได้</p>
+      <p>ตัวอย่างเช่น Module ที่จัดการการเชื่อมต่อฐานข้อมูล ควรรับผิดชอบเฉพาะการจัดการการเชื่อมต่อกับฐานข้อมูลเท่านั้น และไม่ควรรับผิดชอบงานอื่น เช่น การตรวจสอบความถูกต้องของข้อมูล (Data Validation) หรือ Business Logic การทำเช่นนี้ทำให้ Module นั้นถูกนำกลับไปใช้ในส่วนต่าง ๆ ของแอปหรือในแอปอื่นได้ โดยไม่ต้องแก้ไขโค้ดของมัน</p>
+      <p>ในทำนองเดียวกัน Module ที่จัดการการยืนยันตัวตนผู้ใช้ (User Authentication) ควรรับผิดชอบเฉพาะการยืนยันตัวตนผู้ใช้เท่านั้น และไม่ควรรับผิดชอบงานอื่น เช่น การเข้าถึงฐานข้อมูล หรือการแสดงผล UI การทำเช่นนี้ทำให้ Module นั้นดูแลรักษาได้ง่าย เพราะการเปลี่ยนแปลง Logic ของการยืนยันตัวตนใด ๆ สามารถทำได้โดยไม่กระทบส่วนอื่นของแอป</p>
+
+      <h2>รูปแบบการ Export และ Import ที่ดีที่สุด</h2>
+      <p>เมื่อจะ Export ออกจาก Module ให้ใช้ Keyword <code>export</code> ตามด้วยชื่อของฟังก์ชัน ตัวแปร หรือคลาสที่คุณต้องการ Export คุณยังสามารถใช้ <code>export default</code> เพื่อ Export ค่าเพียงค่าเดียวออกจาก Module ได้ด้วย</p>
+      <p>เมื่อจะ Import Module ให้ใช้ Keyword <code>import</code> ตามด้วยชื่อของ Module แล้วใช้จุด (Dot Notation) เพื่อเข้าถึงค่าที่ถูก Export ออกมา วิธีนี้ช่วยให้คุณเลือก Import เฉพาะฟังก์ชัน ตัวแปร หรือคลาสที่คุณต้องการจาก Module ได้ และหลีกเลี่ยงการทำให้ Global Namespace ของแอปรกเกินไป</p>
+      <p>ตัวอย่างเช่น:</p>
+      <pre><code>// modules/myModule.js
+export function myFunction() {
+  // ...
+}
+
+export const myVariable = 42;
+
+// app.js
+import { myFunction, myVariable } from './modules/myModule.js';</code></pre>
+
+      <h2>Index.js Pattern</h2>
+      <p>เป็นเรื่องปกติที่จะใช้ไฟล์ <code>index.js</code> ภายในโฟลเดอร์เพื่อ Export หลาย ๆ Module ออกไปพร้อมกัน วิธีนี้ช่วยให้คุณจัดกลุ่ม Module ที่เกี่ยวข้องกันไว้ด้วยกัน และมอบช่องทางที่สะอาดและเรียบง่ายสำหรับการ Import</p>
+      <p>ตัวอย่างเช่น สมมติว่าคุณมีสอง Module คือ <code>myModule1</code> และ <code>myModule2</code> ที่คุณต้องการ Export ออกจากโฟลเดอร์ชื่อ <code>modules</code> คุณสามารถสร้างไฟล์ <code>index.js</code> ภายในโฟลเดอร์ <code>modules</code> ที่ Export ทั้งสอง Module ออกมาได้:</p>
+      <pre><code>// modules/myModule1.js
+export function myFunction1() {
+  // ...
+}
+
+// modules/myModule2.js
+export function myFunction2() {
+  // ...
+}
+
+// modules/index.js
+export { myFunction1 } from './myModule1.js';
+export { myFunction2 } from './myModule2.js';
+
+// app.js
+import { myFunction1, myFunction2 } from './modules';</code></pre>
+      <p>การใช้ Index.js Pattern ช่วยให้คำสั่ง Import ของคุณเรียบง่ายขึ้น และทำให้โค้ดอ่านง่ายขึ้น</p>
+
+      <h2>สรุป</h2>
+      <p>โดยสรุปแล้ว การคิดแบบ Module คือแนวคิดพื้นฐานในการพัฒนา Node.js ที่จะช่วยให้คุณเขียนโค้ดที่เป็นระบบ ดูแลรักษาง่าย และนำกลับมาใช้ซ้ำได้มากขึ้น การทำตามแนวทางเหล่านี้จะช่วยให้คุณเขียนโค้ดที่เข้าใจง่ายกว่า แก้ไขง่ายกว่า และขยายขนาดได้ง่ายกว่า</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="11_require_vs_import.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="13_internal_modules.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

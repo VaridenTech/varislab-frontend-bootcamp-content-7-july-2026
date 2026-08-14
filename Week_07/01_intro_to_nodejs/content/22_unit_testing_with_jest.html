@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ติดตั้ง Jest แล้วเขียน Unit Test ให้ฟังก์ชัน addTodo, markDone และ removeTodo" />
+  <title>การเขียน Unit Test ด้วย Jest — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การเขียน Unit Test ด้วย Jest</h1>
+      <p><strong>Jest</strong> คือ Framework สำหรับการทดสอบ JavaScript ที่ได้รับความนิยม มันมอบวิธีการเขียนเทสต์และรันเทสต์ที่เรียบง่าย</p>
+      <p>จำได้ไหมว่าในบทที่ 19 เราตั้งใจแยกฟังก์ชันจัดการ Array ออกจากฟังก์ชันอ่านเขียนไฟล์ ตอนนี้แหละที่เราจะได้เก็บเกี่ยวผลของการแยกนั้น เพราะ <code>addTodo</code>, <code>markDone</code> และ <code>removeTodo</code> ไม่ยุ่งกับไฟล์เลย เราจึงทดสอบมันได้ตรง ๆ แค่ส่ง Array เข้าไปแล้วดูว่าได้ Array อะไรออกมา ไม่ต้องเตรียมไฟล์ ไม่ต้องลบไฟล์ทิ้งหลังเทสต์เสร็จ</p>
+
+      <h2>ติดตั้ง Jest</h2>
+      <pre><code>npm i -D jest</code></pre>
+      <p>Flag <code>-D</code> ย่อมาจาก <code>--save-dev</code> หมายความว่าแพ็กเกจนี้จำเป็นตอนพัฒนาเท่านั้น ไม่ได้จำเป็นตอนที่ผู้ใช้เอาแอปเราไปใช้จริง มันจะถูกบันทึกไว้ใน <code>devDependencies</code> แยกออกจาก <code>dependencies</code></p>
+      <p>ต่อไปให้เพิ่ม Script ลงใน <code>package.json</code>:</p>
+      <pre><code>"scripts": {
+  "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+}</code></pre>
+      <p>ปกติเราเขียนแค่ <code>"test": "jest"</code> ก็พอ แต่เพราะโปรเจกต์เราใช้ <code>import</code> / <code>export</code> แบบ ES Modules ซึ่ง Jest ยังรองรับได้ไม่เต็มที่ เราจึงต้องเปิด Flag ตัวนี้ให้มัน ตรงนี้ไม่ต้องจำ Copy ไปวางได้เลย</p>
+
+      <h2>เขียนเทสต์</h2>
+      <p>ให้สร้างโฟลเดอร์ <code>tests</code> ไว้ที่ Root แล้วสร้างไฟล์ <code>todos.test.js</code>:</p>
+      <pre><code>import { addTodo, markDone, removeTodo } from '../src/todos.js'
+
+test('addTodo เพิ่มรายการใหม่เข้าไปใน Array', () =&gt; {
+  const todos = []
+  const result = addTodo(todos, 'ซื้อนม')
+
+  expect(result).toHaveLength(1)
+  expect(result[0].text).toBe('ซื้อนม')
+  expect(result[0].done).toBe(false)
+})
+
+test('markDone เปลี่ยน done ของรายการที่ตรงกับ id เป็น true', () =&gt; {
+  const todos = [
+    { id: 1, text: 'ซื้อนม', done: false },
+    { id: 2, text: 'อ่านหนังสือ', done: false },
+  ]
+  const result = markDone(todos, 2)
+
+  expect(result[0].done).toBe(false)
+  expect(result[1].done).toBe(true)
+})
+
+test('removeTodo ลบรายการที่ตรงกับ id ออกไป', () =&gt; {
+  const todos = [
+    { id: 1, text: 'ซื้อนม', done: false },
+    { id: 2, text: 'อ่านหนังสือ', done: false },
+  ]
+  const result = removeTodo(todos, 1)
+
+  expect(result).toHaveLength(1)
+  expect(result[0].id).toBe(2)
+})</code></pre>
+
+      <h2>โครงสร้างของเทสต์</h2>
+      <p>ทุกเทสต์มีรูปแบบเหมือนกันหมด 3 ขั้นตอน:</p>
+      <ol>
+        <li><strong>เตรียมข้อมูล</strong> — สร้าง Array ที่เราอยากทดสอบขึ้นมาเอง</li>
+        <li><strong>เรียกฟังก์ชัน</strong> — เอา Array นั้นส่งเข้าไปแล้วรับผลลัพธ์</li>
+        <li><strong>ตรวจผลลัพธ์</strong> — ใช้ <code>expect</code> เช็คว่าได้ตามที่คาดไว้หรือไม่</li>
+      </ol>
+      <p>ฟังก์ชัน <code>test</code> รับสองอย่างคือชื่อเทสต์ที่อธิบายว่ากำลังทดสอบอะไร กับฟังก์ชันที่มีโค้ดเทสต์อยู่ข้างใน ส่วน <code>expect</code> ใช้คู่กับ Matcher เพื่อบอกว่าเราคาดหวังอะไร เช่น <code>toBe</code> เช็คว่าเท่ากันเป๊ะ ๆ และ <code>toHaveLength</code> เช็คความยาวของ Array</p>
+      <p>สังเกตว่าเทสต์ของ <code>markDone</code> เราไม่ได้เช็คแค่ว่ารายการที่ 2 เปลี่ยนเป็น <code>true</code> แต่เช็คด้วยว่ารายการที่ 1 ยังเป็น <code>false</code> อยู่ เพราะถ้าเราเผลอเขียนโค้ดผิดจนมันเปลี่ยนทุกตัวเป็นเสร็จหมด เทสต์ตัวนี้จะจับได้</p>
+
+      <h2>รันเทสต์</h2>
+      <pre><code>npm test</code></pre>
+      <p>Jest จะหาไฟล์ที่ลงท้ายด้วย <code>.test.js</code> ให้เองอัตโนมัติแล้วรันทั้งหมด ผลลัพธ์จะออกมาประมาณนี้:</p>
+      <pre><code>Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        0.157 s
+Ran all test suites.</code></pre>
+      <p>ลองแกล้งทำให้เทสต์พังดูก็ได้ เช่น เข้าไปแก้ <code>removeTodo</code> ใน <code>src/todos.js</code> จาก <code>!==</code> เป็น <code>===</code> แล้วรัน <code>npm test</code> อีกครั้ง Jest จะบอกทันทีว่าเทสต์ไหนพัง คาดหวังอะไร และได้อะไรมาแทน อย่าลืมแก้กลับด้วยล่ะ</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="21_types_of_test.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="23_what_is_a_server.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

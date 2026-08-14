@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เขียนและรันโปรแกรม Node.js ตัวแรกของคุณด้วยคำสั่ง node" />
+  <title>โปรแกรม Node.js แรกของคุณ (Hello World) — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>โปรแกรม Node.js แรกของคุณ (Hello World)</h1>
+      <p>มาเขียนโปรแกรม Node.js ตัวแรกกันเลย โปรแกรม Node.js หน้าตาเป็นอย่างไร? ง่ายมาก—มันก็คือไฟล์ JavaScript ที่เราคุ้นเคยนั่นเอง</p>
+      <pre><code>console.log('hello world')</code></pre>
+      <p>เมื่อมีไฟล์แล้ว ขั้นต่อไปคือรันมันด้วย Node CLI เปิด Terminal แล้วพิมพ์:</p>
+      <pre><code>node index.js</code></pre>
+      <p>Node CLI จะรันไฟล์ JavaScript ตาม Path ที่ระบุ เท่านี้โปรแกรมแรกของคุณก็ทำงานแล้ว</p>
+      <p>ถ้าทุกอย่างถูกต้อง คุณจะเห็น <code>hello world</code> ใน Terminal เพราะ Console ของโปรแกรม Node.js จะแสดงผลตรงนั้น</p>
+
+      <h2>ลองทำแบบฝึกหัด</h2>
+      <p>ลองสร้างไฟล์ <code>index.js</code> แล้วเขียนโค้ดให้แสดงชื่อของคุณทาง Console จากนั้นรันไฟล์ด้วย Node CLI</p>
+      <details>
+        <summary>ดูเฉลย</summary>
+        <pre><code>// index.js
+console.log('สวัสดี ผมชื่อ Scott')</code></pre>
+        <p>จากนั้นรันด้วยคำสั่ง:</p>
+        <pre><code>node index.js</code></pre>
+      </details>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="03_non_blocking_io.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="05_browser_vs_nodejs.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

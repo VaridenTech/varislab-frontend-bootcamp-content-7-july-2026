@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="รู้จัก Internal Module ที่มากับ Node.js เช่น fs, http, path, os, crypto และการใช้ prefix node:" />
+  <title>Internal Modules (โมดูลที่มากับ Node.js) — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Internal Modules (โมดูลที่มากับ Node.js)</h1>
+      <p><strong>Internal Module</strong> ใน Node.js หมายถึง Module ที่มีมาให้ในตัวและพร้อมใช้งานภายในสภาพแวดล้อมของ Node.js Module เหล่านี้เป็นส่วนหนึ่งของแกนหลัก (Core) ของ Node.js และมอบความสามารถกับเครื่องมือหลากหลายที่คุณนำไปใช้ในแอปพลิเคชันได้ทันที โดยไม่ต้องติดตั้งแพ็กเกจจากภายนอกเพิ่มเติม</p>
+
+      <h2>Internal Module ที่มีให้ใช้งาน</h2>
+      <p>Node.js มี Internal Module ให้ใช้งานหลายตัว รวมถึง (แต่ไม่จำกัดเพียง):</p>
+      <ul>
+        <li><strong>fs</strong> — ใช้สำหรับการทำงานกับระบบไฟล์</li>
+        <li><strong>http</strong> — ใช้สำหรับสร้าง HTTP Server และ Client</li>
+        <li><strong>path</strong> — ใช้สำหรับทำงานกับ Path ของไฟล์</li>
+        <li><strong>os</strong> — ใช้สำหรับดึงข้อมูลที่เกี่ยวข้องกับระบบปฏิบัติการ</li>
+        <li><strong>crypto</strong> — ใช้สำหรับงานด้านการเข้ารหัส</li>
+      </ul>
+
+      <h2>วิธีใช้งาน</h2>
+      <p>ในการใช้ Module เหล่านี้ในแอปพลิเคชัน Node.js ของคุณ คุณต้อง Import เข้ามาด้วยฟังก์ชัน <code>require()</code> ตัวอย่างเช่น หากต้องการใช้ Module <code>fs</code> เพื่ออ่านไฟล์ในแอปของคุณ ให้เขียนแบบนี้:</p>
+      <pre><code>const fs = require('fs');
+fs.readFile('file.txt', (err, data) =&gt; {
+  if (err) throw err;
+  console.log(data);
+});</code></pre>
+      <p>ตั้งแต่ Node.js เวอร์ชัน 13 เป็นต้นไป คุณสามารถใช้รูปแบบ ES6 Module เพื่อ Import Internal Module ได้เช่นกัน</p>
+      <pre><code>import fs from 'fs';</code></pre>
+      <p>ส่วนใน Node.js V18 คุณสามารถระบุให้ชัดเจนว่ากำลัง Import Core Module หรือ Internal Module ได้แบบนี้:</p>
+      <pre><code>import fs from 'node:fs'</code></pre>
+      <p>การใช้ Prefix <code>node:</code> ไม่ได้เปลี่ยนพฤติกรรมของการ Import แต่อย่างใด มันเป็นเพียงวิธีระบุให้ชัดเจนว่า Module นี้เป็น Core Module ไม่ใช่ Module จากภายนอก</p>
+
+      <h2>สรุป</h2>
+      <p>โดยสรุปแล้ว Internal Module ใน Node.js คือ Module ที่มีมาให้ในตัว ซึ่งมอบความสามารถและเครื่องมือที่หลากหลาย คุณสามารถ Import มันเข้ามาได้ทั้งด้วยฟังก์ชัน <code>require()</code> หรือด้วยรูปแบบ ES6 Module ขึ้นอยู่กับเวอร์ชันของ Node.js ที่คุณใช้ และประเภทของ Module ที่คุณต้องการ Import</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="12_thinking_in_modules.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="14_npm_and_third_party_modules.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เรียนรู้การเขียนโค้ด Asynchronous ใน Node.js ด้วย Callback, Promise และ Async/Await" />
+  <title>การเขียนโค้ดแบบ Asynchronous ใน Node.js — เริ่มต้นใช้งาน Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การเขียนโค้ดแบบ Asynchronous ใน Node.js</h1>
+      <p>โค้ดแบบ Asynchronous เป็นแนวคิดสำคัญใน Node.js มันช่วยให้โปรแกรมรันโค้ดแบบ Non-blocking ได้ ซึ่งหมายความว่าโปรแกรมสามารถทำงานอย่างอื่นต่อไปได้ในระหว่างที่รอให้งานหนึ่งเสร็จสิ้น</p>
+
+      <h2>Callbacks</h2>
+      <p>Callback คือวิธีดั้งเดิมในการจัดการโค้ดแบบ Asynchronous ใน Node.js ฟังก์ชัน Callback จะถูกส่งเข้าไปเป็น Argument ให้กับฟังก์ชันที่ทำงานแบบ Asynchronous และเมื่องานนั้นเสร็จสิ้น ฟังก์ชัน Callback ก็จะถูกเรียกให้ทำงาน</p>
+      <pre><code>fs.readFile('file.txt', (err, data) =&gt; {
+  if (err) {
+    console.error(err)
+    return
+  }
+  console.log(data)
+})</code></pre>
+      <p>ในตัวอย่างข้างต้น ฟังก์ชัน <code>readFile</code> จะอ่านเนื้อหาของไฟล์ <code>file.txt</code> เมื่ออ่านไฟล์เสร็จ ฟังก์ชัน Callback ก็จะถูกเรียกให้ทำงาน หากเกิดข้อผิดพลาดขึ้นระหว่างการทำงาน ตัวข้อผิดพลาดจะถูกส่งเข้าไปให้ฟังก์ชัน Callback เป็น Argument ตัวแรก</p>
+
+      <h2>Promises</h2>
+      <p>Promise เป็นวิธีที่สะอาดกว่าในการจัดการโค้ดแบบ Asynchronous ใน Node.js โดย Promise แทนค่าที่อาจจะยังไม่พร้อมใช้งานในตอนนี้ และช่วยให้คุณเชื่อมต่อการทำงานแบบ Asynchronous หลาย ๆ อย่างเข้าด้วยกันได้</p>
+      <pre><code>const fs = require('fs/promises')
+
+fs.readFile('file.txt')
+  .then(data =&gt; {
+    console.log(data)
+  })
+  .catch(err =&gt; {
+    console.error(err)
+  })</code></pre>
+      <p>ในตัวอย่างข้างต้น ฟังก์ชัน <code>readFile</code> จะคืนค่าเป็น Promise เมื่อ Promise นั้นสำเร็จ (Resolved) ฟังก์ชัน <code>then</code> จะถูกเรียกให้ทำงาน แต่ถ้า Promise ล้มเหลว (Rejected) ฟังก์ชัน <code>catch</code> จะถูกเรียกแทน</p>
+
+      <h2>Async/Await</h2>
+      <p>Async/Await เป็นวิธีที่ใหม่กว่าในการจัดการโค้ดแบบ Asynchronous ใน Node.js มันช่วยให้เขียนโค้ด Asynchronous ได้อ่านง่ายและกระชับกว่า โดยใช้ Keyword <code>async</code> และ <code>await</code></p>
+      <pre><code>const fs = require('fs/promises')
+
+async function readFile() {
+  try {
+    const data = await fs.readFile('file.txt')
+    console.log(data)
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+readFile()</code></pre>
+      <p>ในตัวอย่างข้างต้น ฟังก์ชัน <code>readFile</code> ถูกกำกับไว้ด้วย <code>async</code> ซึ่งทำให้เราสามารถใช้ Keyword <code>await</code> เพื่อรอให้ฟังก์ชัน <code>readFile</code> ทำงานเสร็จก่อนที่จะรันโค้ดบรรทัดถัดไป และหากเกิดข้อผิดพลาดขึ้นระหว่างการทำงาน มันจะถูกดักจับด้วยบล็อก <code>try/catch</code></p>
+
+      <h2>การจัดการข้อผิดพลาด (Error Handling)</h2>
+      <p>การจัดการข้อผิดพลาดเป็นส่วนสำคัญของการเขียนโค้ดแบบ Asynchronous ใน Node.js ในทุกตัวอย่างข้างต้น การจัดการข้อผิดพลาดทำได้ด้วยบล็อก <code>try/catch</code> หรือด้วยฟังก์ชัน <code>catch</code></p>
+      <p>สิ่งสำคัญคือต้องจัดการข้อผิดพลาดให้เหมาะสมเพื่อไม่ให้แอปพลิเคชันหยุดทำงาน นอกจากนี้ การให้ข้อความแสดงข้อผิดพลาดที่สื่อความหมายก็เป็นสิ่งสำคัญ เพราะจะช่วยในการแก้ไขปัญหา (Debug) ได้มาก</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="15_reading_command_arguments.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="17_the_fs_module.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>
