@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="เรียนรู้โครงสร้างของคำสั่ง command, option (flag) และ argument พร้อมวิธีอ่านคู่มือคำสั่งด้วย --help และ man"
+      content="เรียนรู้โครงสร้างของคำสั่ง command, option (flag) และ argument พร้อมวิธีอ่านคู่มือคำสั่งด้วย man และ --help"
     />
     <title>โครงสร้างของคำสั่ง</title>
     <link rel="stylesheet" href="lesson.css" />
@@ -109,8 +109,34 @@ drwxr-xr-x   9 mint  staff   288 Aug 14 09:55 ..
 
         <h2>อ่านคู่มือของคำสั่ง</h2>
         <p>
-          ไม่มีใครจำ flag ของทุกคำสั่งได้หมด วิธีที่เร็วที่สุดคือให้คำสั่งบอกตัวมันเองด้วย
-          <code>--help</code>
+          ไม่มีใครจำ flag ของทุกคำสั่งได้หมด วิธีหลักที่ใช้ได้ทั้ง macOS และ Linux คือคำสั่ง
+          <code>man</code> (ย่อจาก manual) ซึ่งเปิดคู่มือแบบละเอียดของคำสั่งนั้น เช่น
+          <code>man ls</code> จะเปิดคู่มือของ <code>ls</code> ขึ้นมาเต็มหน้าจอในโปรแกรมอ่านที่เรียกว่า
+          pager กด <code>q</code> เพื่อออกจากหน้าคู่มือแล้วกลับมาที่ prompt
+        </p>
+
+        <p>
+          คู่มือที่เปิดด้วย <code>man</code> มักยาวเกินกว่าจะไล่อ่านทีละบรรทัด ให้ค้นหาคำที่ต้องการแทน
+          พิมพ์ <code>/</code> ตามด้วยคำที่ค้นหา แล้วกด Enter เช่น <code>/time</code> จากนั้นกด
+          Enter จะพาเคอร์เซอร์ไปหยุดที่คำว่า <code>time</code> จุดแรกที่เจอ กด <code>n</code>
+          เพื่อกระโดดไปยังจุดที่เจอคำนี้ถัดไปเรื่อย ๆ
+        </p>
+
+        <p>
+          อีกวิธีที่หลายคนคุ้นเคยคือ <code>--help</code> ซึ่งเป็นรูปแบบของ GNU ใช้ได้บน Linux
+          และใน Git Bash บน Windows แต่ <strong>ใช้ไม่ได้บน macOS</strong> เพราะ <code>ls</code>
+          ที่ติดมากับ macOS เป็นเวอร์ชัน BSD ซึ่งไม่รู้จัก flag นี้ ถ้าลองรันบน macOS จะได้ error
+          แบบนี้
+        </p>
+
+        <pre><code>$ ls --help
+ls: unrecognized option `--help'
+usage: ls [-@ABCFGHILOPRSTUWXabcdefghiklmnopqrstuvwxy1%,] [--color=when] [-D format] [file ...]</code></pre>
+
+        <p>
+          error นี้ไม่ได้แปลว่าพิมพ์ผิด แต่แปลว่า <code>ls</code> เวอร์ชัน BSD ไม่รู้จัก flag
+          <code>--help</code> เท่านั้น ส่วนบน Linux หรือใน Git Bash คำสั่งเดียวกันนี้จะได้ผลลัพธ์แบบ
+          GNU แทน
         </p>
 
         <pre><code>$ ls --help
@@ -120,12 +146,6 @@ List information about the FILEs.
   -a, --all                  do not ignore entries starting with .
   -l                         use a long listing format
   ...</code></pre>
-
-        <p>
-          อีกวิธีคือคำสั่ง <code>man</code> (ย่อจาก manual) ซึ่งเปิดคู่มือแบบละเอียดของคำสั่งนั้น
-          เช่น <code>man ls</code> จะเปิดคู่มือของ <code>ls</code> ขึ้นมาเต็มหน้าจอในโปรแกรมอ่านที่เรียกว่า
-          pager กด <code>q</code> เพื่อออกจากหน้าคู่มือแล้วกลับมาที่ prompt
-        </p>
 
         <div class="callout">
           <p>
@@ -151,7 +171,7 @@ List information about the FILEs.
         <ol>
           <li>บอกว่าคำสั่งนี้แบ่งเป็นกี่ส่วน แต่ละส่วนคืออะไร และคำสั่งทั้งหมดทำอะไร</li>
           <li>
-            ใช้ <code>--help</code> ค้นหาว่า flag ตัวไหนของ <code>ls</code> ใช้เรียงลำดับไฟล์ตามเวลาที่แก้ไขล่าสุด
+            ใช้ <code>man ls</code> ค้นหาว่า flag ตัวไหนของ <code>ls</code> ใช้เรียงลำดับไฟล์ตามเวลาที่แก้ไขล่าสุด
           </li>
         </ol>
 
@@ -167,8 +187,9 @@ List information about the FILEs.
           </p>
           <p>
             flag ที่ใช้เรียงลำดับตามเวลาที่แก้ไขล่าสุดคือ <code>-t</code> หาได้จากการรัน
-            <code>ls --help</code> แล้วไล่อ่านหาบรรทัดที่มีคำว่า time ปรากฏอยู่ ซึ่งจะอธิบายไว้ว่า
-            <code>-t</code> ใช้เรียงตามเวลาแก้ไข
+            <code>man ls</code> แล้วพิมพ์ <code>/time</code> ตามด้วย Enter เพื่อค้นหาคำว่า time
+            ในคู่มือ จุดแรกที่เจอจะพาไปยังส่วนที่อธิบาย <code>-t</code> ว่าใช้เรียงลำดับตามเวลาที่แก้ไขล่าสุด
+            ถ้าจุดแรกยังไม่ใช่ส่วนที่ต้องการ กด <code>n</code> เพื่อค้นหาจุดถัดไปได้
           </p>
         </details>
       </article>
