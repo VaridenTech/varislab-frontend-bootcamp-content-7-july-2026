@@ -200,12 +200,12 @@ th {
 }
 
 tbody tr:nth-child(even) {
-  background: #fcf8ff;
+  background: #f6fbfa;
 }
 
 details {
   overflow: hidden;
-  background: #fcf8ff;
+  background: #f6fbfa;
   border: 1px solid var(--border);
   border-radius: 10px;
 }
@@ -348,7 +348,7 @@ blockquote,
   padding: 0.75rem 1rem;
   align-items: center;
   color: var(--text);
-  background: #fcf8ff;
+  background: #f6fbfa;
   border: 1px solid var(--border);
   border-radius: 9px;
   text-decoration: none;
@@ -370,7 +370,7 @@ blockquote,
 
 ::selection {
   color: var(--text);
-  background: #ffd0ca;
+  background: #f7dcb4;
 }
 
 @media (max-width: 640px) {
