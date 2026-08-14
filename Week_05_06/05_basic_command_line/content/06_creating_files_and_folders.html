@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="สร้างโฟลเดอร์ด้วย mkdir สร้างไฟล์เปล่าด้วย touch และประกอบร่างโปรเจกต์ฝึกมือที่จะใช้ต่อในบทถัดไป"
+    />
+    <title>สร้างไฟล์และโฟลเดอร์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>สร้างไฟล์และโฟลเดอร์</h1>
+
+        <p>
+          สองบทที่แล้วเราเดินไปมาในระบบไฟล์ที่มีอยู่แล้วเท่านั้น บทนี้จะพาคุณสร้างโฟลเดอร์และไฟล์ขึ้นมาเอง
+          ด้วยคำสั่ง <code>mkdir</code> และ <code>touch</code> แล้วประกอบเป็นโปรเจกต์ฝึกมือหนึ่งชุดที่จะใช้ต่อ
+          ในบทเรียนถัดไปอีกหลายบท
+        </p>
+
+        <h2>สร้างโฟลเดอร์ด้วย mkdir</h2>
+        <p>
+          <code>mkdir</code> ย่อจาก “make directory” รับชื่อโฟลเดอร์ที่ต้องการสร้างเป็น argument
+        </p>
+        <pre><code>$ mkdir my-cli-lab
+$ ls
+my-cli-lab</code></pre>
+        <p>
+          คำสั่งนี้สร้างโฟลเดอร์เปล่าชื่อ <code>my-cli-lab</code> ขึ้นในตำแหน่งปัจจุบัน แล้ว
+          <code>ls</code> ยืนยันว่าโฟลเดอร์นี้มีอยู่จริงแล้ว
+        </p>
+
+        <h2>สร้างหลายชั้นพร้อมกันด้วย -p</h2>
+        <p>
+          ถ้าอยากสร้างโฟลเดอร์ที่มีโฟลเดอร์ลูกซ้อนอยู่ข้างในทันที เช่น <code>src/components</code>
+          โดยที่ <code>src</code> ยังไม่มีอยู่เลย <code>mkdir</code> แบบธรรมดาจะทำไม่ได้
+        </p>
+        <pre><code>$ mkdir src/components
+mkdir: src: No such file or directory</code></pre>
+        <p>
+          error นี้บอกตรง ๆ ว่าไม่พบ <code>src</code> ซึ่งเป็นโฟลเดอร์แม่ที่ต้องมีอยู่ก่อน
+          <code>mkdir</code> ปกติสร้างได้แค่ชั้นเดียวต่อครั้งเท่านั้น ทางแก้คือเติม flag
+          <code>-p</code> (parents) เพื่อสั่งให้สร้างทุกชั้นที่ยังไม่มีให้ครบในคำสั่งเดียว
+        </p>
+        <pre><code>$ mkdir -p src/components
+$ ls src
+components</code></pre>
+        <p>
+          คราวนี้ <code>mkdir</code> สร้างทั้ง <code>src</code> และ <code>components</code> ที่อยู่ข้างในให้พร้อมกัน
+          ไม่ฟ้อง error แม้ <code>src</code> จะยังไม่เคยมีมาก่อนเลยก็ตาม
+        </p>
+
+        <h2>สร้างไฟล์เปล่าด้วย touch</h2>
+        <p>
+          <code>touch</code> สร้างไฟล์เปล่าขึ้นมาใหม่ ถ้าไฟล์นั้นยังไม่มีอยู่ รับชื่อไฟล์ได้หลายตัวพร้อมกันในคำสั่งเดียว
+        </p>
+        <pre><code>$ touch index.js README.md
+$ ls
+README.md	index.js	src</code></pre>
+        <p>
+          แต่ถ้าไฟล์นั้นมีอยู่แล้ว <code>touch</code> จะ<strong>ไม่ลบหรือแก้เนื้อหาข้างในเลย</strong>
+          มันแค่อัปเดตเวลาที่แก้ไขล่าสุด (modified time) ของไฟล์ให้เป็นตอนนี้เท่านั้น
+        </p>
+        <pre><code>$ ls -l README.md
+-rw-r--r--  1 mint  staff  0 Aug 14 19:46 README.md
+
+$ touch README.md
+$ ls -l README.md
+-rw-r--r--  1 mint  staff  0 Aug 14 19:46 README.md</code></pre>
+        <p>
+          สังเกตว่าขนาดไฟล์ยังเป็น 0 byte เท่าเดิม (เพราะไฟล์นี้ว่างเปล่าอยู่แล้วตั้งแต่แรก) สิ่งที่เปลี่ยน
+          คือเวลาที่แก้ไขล่าสุดเท่านั้น คุณสมบัตินี้ทำให้ <code>touch</code> ปลอดภัยที่จะรันซ้ำกับไฟล์เดิมได้เสมอ
+          โดยไม่ต้องกลัวข้อมูลหาย
+        </p>
+
+        <h2>สร้างโครงโปรเจกต์ฝึกมือ</h2>
+        <p>
+          ลองรวมทุกคำสั่งที่เรียนมาสร้างโปรเจกต์ฝึกมือขึ้นจริง ๆ สักหนึ่งโฟลเดอร์ เริ่มจาก home
+          directory
+        </p>
+        <pre><code>$ cd ~
+$ mkdir my-cli-lab
+$ cd my-cli-lab
+$ mkdir -p src notes
+$ touch README.md src/index.js
+$ ls -R
+notes		README.md	src
+
+./notes:
+
+./src:
+index.js</code></pre>
+        <p>
+          <code>ls -R</code> (recursive) แสดงรายการไฟล์ของทุกโฟลเดอร์แบบไล่ลึกลงไปในคำสั่งเดียว
+          แต่ละโฟลเดอร์ลูกจะขึ้นหัวข้อของตัวเองตามด้วยรายการไฟล์ข้างใน สังเกตว่าลำดับที่แสดงเป็น
+          <code>notes</code> ก่อน <code>README.md</code> ไม่ใช่เรียงตามตัวพิมพ์ใหญ่เล็กแบบ ASCII
+          ตรง ๆ (ซึ่งจะให้ <code>README.md</code> ขึ้นก่อนเพราะ R ตัวใหญ่มาก่อน n ตัวเล็ก) เพราะ
+          macOS เรียงชื่อไฟล์ตาม locale ที่ตั้งไว้ (ในที่นี้คือ <code>en_US.UTF-8</code>)
+          ซึ่งเทียบตัวอักษรแบบไม่สนตัวพิมพ์ใหญ่เล็ก ถ้าเปลี่ยน locale หรือไปรันบน Linux ที่ใช้ locale
+          <code>C</code> ลำดับที่เห็นอาจสลับกันได้ อย่าแปลกใจถ้าลำดับบนเครื่องคุณไม่ตรงกับตัวอย่างนี้เป๊ะ ๆ
+        </p>
+        <p>
+          <strong>เก็บโฟลเดอร์ <code>my-cli-lab</code> นี้ไว้ในเครื่อง</strong> อย่าเพิ่งลบทิ้ง
+          เพราะบทเรียนที่ 7 ถึง 9 จะใช้โฟลเดอร์นี้ต่อในการฝึกคัดลอก ย้าย ลบ และดูเนื้อหาไฟล์
+        </p>
+
+        <h2>เปิดโฟลเดอร์ใน VS Code ด้วย code .</h2>
+        <p>
+          หลังสร้างโครงโปรเจกต์เสร็จ ขั้นตอนถัดไปที่ทำบ่อยที่สุดคือเปิดโฟลเดอร์นี้ใน VS Code ทันที
+          โดยไม่ต้องสลับไปเปิดผ่านเมนู File อีกที
+        </p>
+        <pre><code>$ code .</code></pre>
+        <p>
+          <code>code</code> คือคำสั่งเปิด VS Code จาก terminal ส่วน <code>.</code> คือ relative
+          path ที่หมายถึง “โฟลเดอร์ปัจจุบัน” ตามที่เรียนไปในบทที่แล้ว รวมกันแล้ว
+          <code>code .</code> จึงแปลว่า “เปิด VS Code โดยให้โฟลเดอร์ปัจจุบันเป็น workspace” ซึ่งเร็วกว่า
+          เปิด VS Code แล้วค่อยไปกด File → Open Folder มาก
+        </p>
+        <p>
+          คำสั่ง <code>code</code> ไม่ได้ติดตั้งมาให้อัตโนมัติ ต้องเปิด VS Code ขึ้นมาก่อนครั้งหนึ่ง
+          กด <code>Cmd + Shift + P</code> (macOS) หรือ <code>Ctrl + Shift + P</code> (Windows/Linux)
+          เพื่อเปิด Command Palette แล้วพิมพ์หา <code>Shell Command: Install 'code' command in
+          PATH</code> กด Enter หนึ่งครั้ง จากนั้น <code>code</code> จะใช้งานได้จาก terminal ทุกครั้งไป
+          (เรื่อง PATH คืออะไรจะอธิบายละเอียดในบทเรียนถัดไปเรื่อง environment variables)
+        </p>
+
+        <div class="callout">
+          <p>
+            <strong>บน Windows:</strong> ใน Git Bash คำสั่ง <code>mkdir</code> และ
+            <code>touch</code> ใช้ได้ตามปกติ แต่ใน PowerShell ไม่มี <code>touch</code>
+            ให้ใช้ <code>New-Item README.md</code> แทน ส่วน <code>code .</code>
+            ใช้ได้เหมือนกันถ้าตอนติดตั้ง VS Code เลือก “Add to PATH” ไว้
+          </p>
+        </div>
+
+        <blockquote>
+          <p>
+            <strong>ข้อผิดพลาดที่พบบ่อย:</strong> รัน <code>mkdir</code> สร้างโฟลเดอร์ซ้อนกันโดยลืมเติม
+            <code>-p</code> เช่น <code>mkdir src/components</code> ทั้งที่ <code>src</code> ยังไม่มีอยู่
+            แล้วงงว่าทำไม error บอกว่าไม่พบ <code>src</code> ทั้งที่เพิ่งจะสั่งสร้างมันไป (จริง ๆ แล้วคำสั่งนี้
+            พยายามสร้างแค่ <code>components</code> ข้างใน <code>src</code> เท่านั้น ไม่ได้สร้าง
+            <code>src</code> ให้ด้วย)
+          </p>
+          <p>
+            อีกเรื่องที่พบบ่อยไม่แพ้กันคือสร้างโฟลเดอร์ฝึกมือไว้ผิดที่ เพราะไม่ได้เช็ก <code>pwd</code>
+            ก่อนรัน <code>mkdir</code> ทำให้ <code>my-cli-lab</code> ไปโผล่อยู่ในโฟลเดอร์โปรเจกต์อื่นแทนที่
+            จะอยู่ที่ home directory ตามตั้งใจ นิสัยที่ดีคือรัน <code>pwd</code> เช็กตำแหน่งก่อนสร้างโฟลเดอร์ใหม่เสมอ
+            เหมือนที่เน้นย้ำไปแล้วในบทก่อนหน้า
+          </p>
+        </blockquote>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>สร้างโครงสร้างต่อไปนี้ให้ครบ โดยใช้จำนวนคำสั่งให้น้อยที่สุด แล้วพิสูจน์ด้วย <code>ls -R</code></p>
+        <div class="file-tree">my-cli-lab/
+├── README.md
+├── notes/
+└── src/
+    ├── index.js
+    └── utils/
+        └── format.js</div>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>
+            ใช้แค่สี่คำสั่งก็พอ เพราะ <code>mkdir -p</code> สร้างโฟลเดอร์ซ้อนกันหลายชั้นได้ในครั้งเดียว
+            (สั่ง <code>src/utils</code> กับ <code>notes</code> พร้อมกันในบรรทัดเดียวได้ เพราะ
+            <code>mkdir</code> รับหลาย argument) และ <code>touch</code> ก็สร้างไฟล์ได้หลายไฟล์พร้อมกัน
+            เช่นกัน ไม่จำเป็นต้องรันทีละไฟล์ทีละโฟลเดอร์
+          </p>
+          <pre><code>$ cd ~/my-cli-lab
+$ mkdir -p src/utils notes
+$ touch README.md src/index.js src/utils/format.js
+$ ls -R
+notes		README.md	src
+
+./notes:
+
+./src:
+index.js	utils
+
+./src/utils:
+format.js</code></pre>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="05_paths_absolute_and_relative.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="07_copying_moving_deleting.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>

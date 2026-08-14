@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="เรียนรู้วิธีดูตำแหน่งปัจจุบันด้วย pwd, ดูรายการไฟล์ด้วย ls และย้ายไปมาระหว่างโฟลเดอร์ด้วย cd"
+    />
+    <title>เดินทางในระบบไฟล์</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>เดินทางในระบบไฟล์</h1>
+
+        <p>
+          บทที่แล้วเราแกะโครงสร้างของคำสั่งไปแล้ว บทนี้จะพาคุณใช้คำสั่งสามตัวที่ใช้บ่อยที่สุดใน
+          terminal นั่นคือ <code>pwd</code>, <code>ls</code> และ <code>cd</code> ทั้งสามตัวนี้ทำหน้าที่
+          เดียวกับการคลิกเปิดโฟลเดอร์ใน Finder หรือ Explorer เพียงแต่ทำผ่านการพิมพ์คำสั่งแทน
+        </p>
+
+        <h2>ระบบไฟล์คือต้นไม้</h2>
+        <p>
+          ไฟล์และโฟลเดอร์ทั้งหมดในเครื่องเรียงตัวกันเป็นโครงสร้างต้นไม้ (tree) โดยมีจุดเริ่มต้นบนสุด
+          เรียกว่า <strong>root</strong> เขียนแทนด้วยเครื่องหมาย <code>/</code> เพียงตัวเดียว ทุกไฟล์
+          ทุกโฟลเดอร์ในเครื่องเป็นลูกหลานของ root ทั้งหมด ไม่ทางใดก็ทางหนึ่ง
+        </p>
+
+        <div class="file-tree">/
+├── Users
+│   └── mint
+│       ├── Desktop
+│       ├── Downloads
+│       └── projects
+│           └── coffee-master
+│               ├── index.html
+│               └── style.css
+└── Applications</div>
+
+        <p>
+          จากภาพนี้ <code>coffee-master</code> เป็นลูกของ <code>projects</code> ซึ่งเป็นลูกของ
+          <code>mint</code> ซึ่งเป็นลูกของ <code>Users</code> ซึ่งเป็นลูกของ root การ “เดินทาง”
+          ในระบบไฟล์ก็คือการย้ายตำแหน่งขึ้นลงบนต้นไม้นี้นั่นเอง
+        </p>
+
+        <h2>อยู่ที่ไหน: pwd</h2>
+        <p>
+          ก่อนจะย้ายไปไหน ต้องรู้ก่อนว่าตอนนี้ยืนอยู่ตรงไหน คำสั่ง <code>pwd</code> (print
+          working directory) บอกตำแหน่งปัจจุบันเสมอ
+        </p>
+
+        <pre><code>$ pwd
+/Users/mint/projects/coffee-master</code></pre>
+
+        <p>
+          ผลลัพธ์ที่ได้คือ absolute path เต็ม ๆ นับจาก root มาเรื่อย ๆ จนถึงตำแหน่งปัจจุบัน
+          (บทถัดไปจะพูดถึง absolute path โดยละเอียด)
+        </p>
+
+        <h2>มีอะไรอยู่ตรงนี้: ls</h2>
+        <p>คำสั่ง <code>ls</code> (list) แสดงรายการไฟล์และโฟลเดอร์ในตำแหน่งปัจจุบัน</p>
+
+        <pre><code>$ ls
+index.html	style.css</code></pre>
+
+        <p>
+          แบบเปล่า ๆ <code>ls</code> บอกแค่ชื่อ ถ้าอยากรู้รายละเอียดเพิ่ม ให้เติม flag
+          <code>-l</code> (long format)
+        </p>
+
+        <pre><code>$ ls -l
+total 16
+-rw-r--r--  1 mint  staff    14 Aug 14 10:20 index.html
+-rw-r--r--  1 mint  staff     7 Aug 14 10:20 style.css</code></pre>
+
+        <p>แต่ละบรรทัดของ <code>ls -l</code> อ่านจากซ้ายไปขวาได้ดังนี้</p>
+        <ul>
+          <li>
+            <code>-rw-r--r--</code> คือ permission บอกว่าใครอ่าน/เขียน/รันไฟล์นี้ได้บ้าง
+            (รายละเอียดเรื่อง permission เป็นหัวข้อของบทเรียนอื่น ตอนนี้รู้แค่ว่านี่คือคอลัมน์นี้ก็พอ)
+          </li>
+          <li><code>14</code> คือขนาดไฟล์ หน่วยเป็น byte</li>
+          <li><code>Aug 14 10:20</code> คือวันเวลาที่แก้ไขไฟล์ล่าสุด</li>
+          <li><code>index.html</code> คือชื่อไฟล์</li>
+        </ul>
+
+        <p>
+          และถ้าอยากเห็นไฟล์ที่ซ่อนอยู่ด้วย ให้เติม flag <code>-a</code> (all)
+        </p>
+
+        <pre><code>$ ls -a
+.		..		.git		.gitignore	index.html	style.css</code></pre>
+
+        <p>
+          ไฟล์หรือโฟลเดอร์ที่ชื่อขึ้นต้นด้วยจุด เช่น <code>.git</code> หรือ <code>.gitignore</code>
+          คือ “dot-file” ระบบซ่อนไฟล์เหล่านี้จาก <code>ls</code> แบบธรรมดาโดยอัตโนมัติ เพราะส่วนใหญ่เป็นไฟล์
+          config หรือข้อมูลภายในของเครื่องมือต่าง ๆ ที่ไม่ได้ใช้งานตรง ๆ ทุกวัน ไม่ใช่ไฟล์ที่มี
+          permission พิเศษอะไร แค่ตั้งชื่อให้ <code>ls</code> ข้ามไปเฉย ๆ ส่วน <code>.</code> กับ
+          <code>..</code> ที่เห็นอยู่เสมอคือทางลัดไปยังโฟลเดอร์ปัจจุบันและโฟลเดอร์แม่ ซึ่งจะอธิบายต่อในหัวข้อถัดไป
+        </p>
+
+        <h2>ย้ายไปที่อื่น: cd</h2>
+        <p>
+          คำสั่ง <code>cd</code> (change directory) ใช้ย้ายตำแหน่งปัจจุบัน รับ argument เป็นชื่อโฟลเดอร์
+          ปลายทาง ลองไล่ดูทีละขั้นตอน เริ่มจาก home directory
+        </p>
+
+        <pre><code>$ pwd
+/Users/mint
+
+$ cd projects
+$ pwd
+/Users/mint/projects
+
+$ cd coffee-master
+$ pwd
+/Users/mint/projects/coffee-master
+
+$ cd ..
+$ pwd
+/Users/mint/projects
+
+$ cd ..
+$ pwd
+/Users/mint
+
+$ cd -
+/Users/mint/projects
+$ pwd
+/Users/mint/projects</code></pre>
+
+        <p>รูปแบบของ argument ที่ <code>cd</code> รับมีความหมายพิเศษอยู่สี่แบบ</p>
+        <ul>
+          <li><code>cd projects</code> — ย้ายลงไปในโฟลเดอร์ลูกชื่อ <code>projects</code></li>
+          <li><code>cd ..</code> — ขึ้นหนึ่งชั้น ไปยังโฟลเดอร์แม่ของโฟลเดอร์ปัจจุบัน</li>
+          <li>
+            <code>cd ~</code> — กลับบ้าน คือกลับไปที่ home directory ของผู้ใช้ปัจจุบันทันที
+            ไม่ว่าจะอยู่ลึกแค่ไหน
+          </li>
+          <li>
+            <code>cd -</code> — กลับไปที่โฟลเดอร์เดิมก่อนหน้าการ <code>cd</code> ครั้งล่าสุด
+            สลับไปมาระหว่างสองโฟลเดอร์ได้สะดวกโดยไม่ต้องพิมพ์ path เต็ม
+            (สังเกตว่า <code>cd -</code> จะพิมพ์ path ปลายทางออกมาให้ดูด้วย ต่างจาก <code>cd</code> แบบอื่นที่เงียบเมื่อสำเร็จ)
+          </li>
+        </ul>
+
+        <div class="callout">
+          <p>
+            <strong>บน Windows:</strong> ใน Git Bash ใช้คำสั่งเดียวกับ macOS ทุกอย่าง
+            แต่ถ้าจำเป็นต้องใช้ PowerShell คำสั่ง <code>ls</code> จะเป็น
+            <code>Get-ChildItem</code> (มีชื่อย่อว่า <code>dir</code>) ส่วน <code>pwd</code> คือ
+            <code>Get-Location</code> และ <code>cd</code> ใช้ได้เหมือนกัน
+          </p>
+        </div>
+
+        <blockquote>
+          <p>
+            <strong>ข้อผิดพลาดที่พบบ่อย:</strong> ใช้ <code>cd</code> กับไฟล์แทนที่จะเป็นโฟลเดอร์ เช่น
+            รันคำสั่ง <code>cd index.html</code> ทั้งที่ <code>index.html</code> เป็นไฟล์ ไม่ใช่โฟลเดอร์
+            terminal จะแจ้ง error ประมาณ <code>not a directory: index.html</code> ทันที วิธีแก้คือเช็กด้วย
+            <code>ls</code> ก่อนว่าสิ่งที่จะ <code>cd</code> เข้าไปเป็นโฟลเดอร์จริงหรือเปล่า
+          </p>
+          <p>
+            อีกเรื่องที่ทำให้งงคือเรื่องตัวพิมพ์เล็กใหญ่ของชื่อโฟลเดอร์ ดิสก์ macOS ส่วนใหญ่ (APFS
+            แบบ default) เป็น <strong>case-insensitive แต่ case-preserving</strong> แปลว่าต่อให้สร้างโฟลเดอร์ชื่อ
+            <code>Projects</code> ไว้ คำสั่ง <code>cd projects</code> ตัวพิมพ์เล็กก็ยังพาไปถึงได้เหมือนเดิม
+            แต่บน Linux (และบน macOS ที่จงใจฟอร์แมตดิสก์เป็นแบบ case-sensitive) ระบบไฟล์จะมองว่า
+            <code>Projects</code> กับ <code>projects</code> เป็นคนละชื่อกันเลย <code>cd projects</code>
+            จะได้ error <code>No such file or directory</code> ถ้าโฟลเดอร์จริงชื่อ
+            <code>Projects</code> ด้วยตัว P ใหญ่ ทางที่ปลอดภัยที่สุดคือพิมพ์ชื่อให้ตรงตัวพิมพ์เสมอ
+            ไม่พึ่งพฤติกรรมที่ต่างกันไปตามระบบ
+          </p>
+        </blockquote>
+
+        <h2>แบบฝึกหัด</h2>
+        <p>
+          เปิด terminal จริง ย้ายไปที่โฟลเดอร์โปรเจกต์ของคอร์สนี้ด้วย <code>cd</code> แล้วรัน
+          <code>ls -la</code> จากนั้นตอบว่า
+        </p>
+        <ol>
+          <li>มี entry ไหนบ้างที่เป็นไฟล์หรือโฟลเดอร์ที่ซ่อนอยู่ (ขึ้นต้นด้วยจุด)</li>
+          <li>ถ้ารัน <code>cd ..</code> จากตำแหน่งนี้ จะไปถึงโฟลเดอร์ไหน</li>
+        </ol>
+
+        <details>
+          <summary>ดูเฉลย</summary>
+          <p>
+            entry ที่ซ่อนอยู่คือทุกตัวที่ชื่อขึ้นต้นด้วยจุด ซึ่งในโปรเจกต์ทั่วไปมักเจอ <code>.git</code>
+            (ข้อมูลของ Git repository), <code>.gitignore</code> (รายชื่อไฟล์ที่ไม่ต้องการให้ Git
+            ติดตาม), <code>.DS_Store</code> (ไฟล์ที่ macOS สร้างเก็บข้อมูลการแสดงผลของ Finder
+            เฉพาะบน macOS) และ <code>.vscode</code> (การตั้งค่าเฉพาะโปรเจกต์ของ VS Code) entry เหล่านี้
+            ถูกซ่อนโดย “ข้อตกลง” ของ <code>ls</code> เท่านั้น ไม่ได้ถูกจำกัดสิทธิ์การเข้าถึงแต่อย่างใด
+            การเติม <code>-a</code> จึงทำให้เห็นได้ตามปกติ
+          </p>
+          <p>
+            จากในโฟลเดอร์โปรเจกต์ การรัน <code>cd ..</code> จะพาไปยังโฟลเดอร์ที่ครอบโปรเจกต์นี้อยู่
+            เช่นถ้าโปรเจกต์อยู่ที่ <code>/Users/mint/projects/coffee-master</code> การ
+            <code>cd ..</code> หนึ่งครั้งจะพาไปที่ <code>/Users/mint/projects</code> ซึ่งเป็นโฟลเดอร์แม่
+            ที่เก็บโปรเจกต์อื่น ๆ ไว้ด้วยเช่นกัน
+          </p>
+        </details>
+      </article>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a
+          class="lesson-navigation__link lesson-navigation__link--previous"
+          href="03_anatomy_of_a_command.html"
+          rel="prev"
+          >← บทก่อนหน้า</a
+        >
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html"
+          >บทเรียนทั้งหมด</a
+        >
+        <a
+          class="lesson-navigation__link lesson-navigation__link--next"
+          href="05_paths_absolute_and_relative.html"
+          rel="next"
+          >บทถัดไป →</a
+        >
+      </nav>
+    </main>
+  </body>
+</html>
