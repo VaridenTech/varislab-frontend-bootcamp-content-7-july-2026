@@ -105,9 +105,8 @@ hello from node</code></pre>
         <blockquote>
           <p>
             <strong>ข้อผิดพลาดที่พบบ่อย:</strong> รัน <code>node -v</code> ใน terminal บานเดิมที่เปิดค้างไว้ตั้งแต่ก่อน
-            ติดตั้ง nvm หรือก่อนติดตั้ง Node.js แล้วเจอ <code>command not found</code> จนสรุปไปเองว่าติดตั้งไม่สำเร็จ
-            ทั้งที่จริง ๆ ติดตั้งผ่านเรียบร้อยดี ให้ปิด terminal บานนั้นแล้วเปิดใหม่ก่อนเสมอ แล้วค่อยตรวจสอบอีกครั้ง
-            ปัญหานี้เป็นเรื่องเดียวกับที่อธิบายไปแล้วในบทก่อนหน้าเกี่ยวกับ <code>PATH</code>
+            ติดตั้ง แล้วเจอ <code>command not found</code> จนสรุปไปเองว่าติดตั้งไม่สำเร็จ ทั้งที่จริง ๆ ติดตั้งผ่านเรียบร้อยดี
+            สาเหตุเดียวกับเรื่อง <code>PATH</code> ที่อธิบายไปแล้วในบทที่ 10 ให้ปิด terminal บานนั้นแล้วเปิดใหม่ก่อนเสมอ
           </p>
         </blockquote>
 
@@ -128,11 +127,11 @@ hello from node</code></pre>
             <code>node -e</code> พิสูจน์ว่า runtime รันโค้ด JavaScript จริงได้ ไม่ใช่แค่รายงานเลขเวอร์ชันเฉย ๆ
           </p>
           <pre><code>$ node -v
-v22.11.0
+v22.23.2
 $ npm -v
-10.9.0
+10.9.8
 $ which node
-/Users/mint/.nvm/versions/node/v22.11.0/bin/node
+/Users/mint/.nvm/versions/node/v22.23.2/bin/node
 $ node -e "console.log(2 + 2)"
 4</code></pre>
           <p>

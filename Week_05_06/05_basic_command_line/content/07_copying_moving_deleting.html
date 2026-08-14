@@ -136,8 +136,10 @@ README.md	docs		src</code></pre>
         <h2>แบบฝึกหัด</h2>
         <p>
           ในโฟลเดอร์ <code>~/my-cli-lab</code> ทำตามลำดับต่อไปนี้ โดยรัน <code>ls</code> เช็กผลลัพธ์หลังทุกขั้นตอน
+          (เนื้อหาข้างบนเปลี่ยนชื่อ <code>notes</code> เป็น <code>docs</code> ไปแล้ว จึงต้องเปลี่ยนชื่อกลับก่อนเพื่อฝึกขั้นตอนนี้อีกครั้ง)
         </p>
         <ol>
+          <li>เปลี่ยนชื่อโฟลเดอร์ <code>docs</code> กลับเป็น <code>notes</code></li>
           <li>คัดลอก <code>README.md</code> เป็น <code>README.backup.md</code></li>
           <li>เปลี่ยนชื่อโฟลเดอร์ <code>notes</code> เป็น <code>docs</code></li>
           <li>ย้าย <code>README.backup.md</code> เข้าไปใน <code>docs/</code></li>
@@ -154,6 +156,7 @@ README.md	docs		src</code></pre>
             ไม่ใช่มารู้ตัวหลัง <code>rm</code> ไปแล้ว
           </p>
           <pre><code>$ cd ~/my-cli-lab
+$ mv docs notes
 $ cp README.md README.backup.md
 $ mv notes docs
 $ mv README.backup.md docs/

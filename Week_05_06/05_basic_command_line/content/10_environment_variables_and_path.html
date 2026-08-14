@@ -38,15 +38,10 @@
           variable ใด ๆ ก็ได้
         </p>
         <pre><code>$ echo $HOME
-/Users/varis
+/Users/mint
 
 $ echo $USER
-varis</code></pre>
-        <p>
-          (ผลลัพธ์ข้างต้นคือค่าจริงจากเครื่องที่ใช้เขียนบทเรียนนี้ ไม่ใช่ตัวอย่างสมมติ บนเครื่องของคุณเองค่าทั้งสอง
-          จะเปลี่ยนไปตาม username ที่ล็อกอินอยู่ เช่นถ้า username คือ <code>mint</code> ผลลัพธ์ก็จะเป็น
-          <code>/Users/mint</code> และ <code>mint</code> ตามลำดับ)
-        </p>
+mint</code></pre>
         <p>
           จุดที่ต้องระวังคือเครื่องหมาย <code>$</code> ในที่นี้<strong>ไม่ใช่</strong> สัญลักษณ์ prompt แบบที่เจอในบทที่ 1
           ตอนนั้น <code>$</code> ที่อยู่หน้าสุดของบรรทัดเป็นแค่สัญลักษณ์บอกว่า “บรรทัดนี้คือคำสั่งที่พิมพ์” ไม่ต้องพิมพ์ตามจริง
@@ -61,7 +56,7 @@ varis</code></pre>
           แบบ <code>node</code> หรือ <code>ls</code> แล้ว shell ไปหาโปรแกรมที่ชื่อนี้จากที่ไหน
         </p>
         <pre><code>$ echo $PATH
-/Users/varis/.nvm/versions/node/v22.23.2/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</code></pre>
+/Users/mint/.nvm/versions/node/v22.23.2/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</code></pre>
         <p>
           (ตัวอย่างนี้ตัดบางรายการที่เป็นเฉพาะเครื่องออกไปเพื่อให้อ่านง่าย ของจริงบนเครื่องหนึ่ง ๆ มักมีมากกว่านี้อีกหลายรายการ
           จากโปรแกรมอื่น ๆ ที่ติดตั้งไว้)
@@ -70,7 +65,7 @@ varis</code></pre>
           ค่าของ <code>PATH</code> คือรายชื่อโฟลเดอร์ที่คั่นด้วย <code>:</code> เรียงกันเป็นเส้นตรง เวลาพิมพ์ชื่อคำสั่งใด ๆ
           shell จะเดินไล่ค้นหาไฟล์ที่ชื่อนั้นทีละโฟลเดอร์ <strong>จากซ้ายไปขวา</strong> แล้วรันไฟล์แรกที่เจอ
           ตัวอย่างข้างบนถ้าพิมพ์ <code>node</code> shell จะเจอไฟล์ <code>node</code> ในโฟลเดอร์แรกสุดคือ
-          <code>/Users/varis/.nvm/versions/node/v22.23.2/bin</code> ก่อน แล้วหยุดค้นหาทันที ไม่สนใจว่าโฟลเดอร์ถัดไปในรายการ
+          <code>/Users/mint/.nvm/versions/node/v22.23.2/bin</code> ก่อน แล้วหยุดค้นหาทันที ไม่สนใจว่าโฟลเดอร์ถัดไปในรายการ
           จะมีไฟล์ชื่อ <code>node</code> อยู่ด้วยหรือไม่ ลำดับก่อนหลังในรายการนี้จึงมีผลจริง ถ้ามีโปรแกรมชื่อเดียวกันติดตั้งไว้
           หลายที่ โฟลเดอร์ที่มาก่อนใน <code>PATH</code> จะชนะเสมอ
         </p>
@@ -81,10 +76,10 @@ varis</code></pre>
           ใช้คำสั่ง <code>which</code> ตามด้วยชื่อคำสั่งนั้นเพื่อดูคำตอบตรง ๆ
         </p>
         <pre><code>$ which node
-/Users/varis/.nvm/versions/node/v22.23.2/bin/node
+/Users/mint/.nvm/versions/node/v22.23.2/bin/node
 
 $ which npm
-/Users/varis/.nvm/versions/node/v22.23.2/bin/npm</code></pre>
+/Users/mint/.nvm/versions/node/v22.23.2/bin/npm</code></pre>
         <p>
           <code>which</code> เดินหา <code>PATH</code> ตามลำดับเดียวกับที่ shell ใช้จริง แล้วรายงานแค่ path
           ของไฟล์แรกที่เจอ ประโยชน์คือถ้าเครื่องมีโปรแกรมชื่อเดียวกันติดตั้งไว้มากกว่าหนึ่งที่ (เช่นมี Node ทั้งจาก nvm
@@ -95,7 +90,7 @@ $ which npm
           <code>command -v</code> ซึ่งทำหน้าที่เดียวกันและมีอยู่ใน shell มาตรฐานเกือบทุกตัว
         </p>
         <pre><code>$ command -v node
-/Users/varis/.nvm/versions/node/v22.23.2/bin/node</code></pre>
+/Users/mint/.nvm/versions/node/v22.23.2/bin/node</code></pre>
 
         <h2>ทำไมถึงเจอ command not found</h2>
         <p>

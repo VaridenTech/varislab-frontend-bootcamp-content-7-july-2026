@@ -22,9 +22,13 @@
         </p>
 
         <h2>รันไฟล์ JavaScript ด้วย node</h2>
-        <p>สร้างไฟล์ <code>hello.js</code> ขึ้นมาสักไฟล์ ใส่โค้ด JavaScript ธรรมดาลงไปหนึ่งบรรทัด</p>
-        <pre><code>$ echo 'console.log("hello")' > hello.js
-$ node hello.js
+        <p>สร้างไฟล์ <code>hello.js</code> ขึ้นมาสักไฟล์ แล้วเปิดด้วย VS Code</p>
+        <pre><code>$ touch hello.js
+$ code hello.js</code></pre>
+        <p>พิมพ์โค้ด JavaScript ธรรมดาลงไปหนึ่งบรรทัดแล้วบันทึก</p>
+        <pre><code>console.log("hello")</code></pre>
+        <p>จากนั้นรันไฟล์นี้ด้วย <code>node</code></p>
+        <pre><code>$ node hello.js
 hello</code></pre>
         <p>
           <code>node</code> ตามด้วยชื่อไฟล์คือวิธีรันไฟล์ JavaScript ที่ใช้บ่อยที่สุด จุดที่ต้องระวังคือชื่อไฟล์ที่ให้ไปเป็น
@@ -66,8 +70,12 @@ $</code></pre>
           โปรเจกต์ Node.js เกือบทุกโปรเจกต์เริ่มต้นด้วยไฟล์ <code>package.json</code> ที่เก็บข้อมูลของโปรเจกต์
           ใช้คำสั่ง <code>npm init</code> เพื่อสร้างไฟล์นี้ขึ้นมา แต่ปกติ <code>npm init</code> จะถามคำถามทีละข้อ
           (ชื่อโปรเจกต์ เวอร์ชัน คำอธิบาย ฯลฯ) เติม flag <code>-y</code> เพื่อข้ามคำถามทั้งหมดแล้วใช้ค่า default ไปเลย
+          เริ่มจากสร้างโฟลเดอร์โปรเจกต์เปล่า ๆ ขึ้นมาก่อน แล้ว <code>cd</code> เข้าไปข้างในให้เรียบร้อยก่อนรัน
+          <code>npm init</code> เสมอ
         </p>
-        <pre><code>$ npm init -y
+        <pre><code>$ mkdir hello-node-demo
+$ cd hello-node-demo
+$ npm init -y
 Wrote to /Users/mint/hello-node-demo/package.json:
 
 {
@@ -122,6 +130,18 @@ $ cat package.json
   }
 }</code></pre>
         <p>
+          เพราะ <code>node_modules</code> สร้างใหม่ได้เสมอจาก <code>package.json</code> โปรเจกต์ Node.js ที่ clone มาจากคนอื่น
+          จึงมักไม่มี <code>node_modules</code> ติดมาด้วยเลย (ดูเหตุผลเรื่อง <code>.gitignore</code> ด้านล่าง) วิธี restore
+          ให้ครบคือลบ <code>node_modules</code> ทิ้งแล้วรัน <code>npm install</code> เฉย ๆ โดยไม่ระบุชื่อ package ตามหลัง
+          มันจะอ่าน <code>package.json</code> แล้วติดตั้งทุกอย่างที่ระบุไว้ในนั้นให้ครบเหมือนเดิม
+        </p>
+        <pre><code>$ rm -rf node_modules
+$ npm install
+
+added 1 package, and audited 2 packages in 660ms
+
+found 0 vulnerabilities</code></pre>
+        <p>
           <code>node_modules</code> เป็นโฟลเดอร์ที่ npm <strong>generate</strong> ขึ้นมาเองทั้งหมด สร้างใหม่ได้เสมอ
           จากข้อมูลใน <code>package.json</code> ด้วยการรัน <code>npm install</code> อีกครั้ง จึงไม่มีเหตุผลต้อง
           commit โฟลเดอร์นี้เข้า git เลย และเพราะขนาดของมันมักใหญ่มาก (บาง package เดียวก็ดึง package ย่อยตามมาอีกหลายสิบตัว)
@@ -140,6 +160,13 @@ $ cat package.json
     "start": "node index.js"
   }
 }</code></pre>
+        <p>
+          ก่อนจะรันสคริปต์นี้ได้ ต้องมีไฟล์ <code>index.js</code> อยู่จริงก่อน สร้างไฟล์แล้วเปิดด้วย VS Code
+        </p>
+        <pre><code>$ touch index.js
+$ code index.js</code></pre>
+        <p>พิมพ์โค้ดบรรทัดนี้ลงไปแล้วบันทึก</p>
+        <pre><code>console.log("hello from my first node project")</code></pre>
         <p>แล้วเรียกใช้ script นี้ด้วย <code>npm run</code> ตามด้วยชื่อ script</p>
         <pre><code>$ npm run start
 

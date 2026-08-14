@@ -107,10 +107,10 @@ $ cd my-cli-lab/</code></pre>
           เป็น argument ตัวที่ใช้บ่อยที่สุดมีสองตัวคือ <code>*</code> ซึ่งแทนตัวอักษรกี่ตัวก็ได้ (รวมถึงศูนย์ตัว)
           และ <code>?</code> ซึ่งแทนตัวอักษรตัวเดียวเท่านั้น
         </p>
-        <pre><code>$ ls *.json
-package.json</code></pre>
+        <pre><code>$ ls *.md
+README.md</code></pre>
         <p>
-          <code>*.json</code> ขยายเป็นชื่อไฟล์ทุกไฟล์ในโฟลเดอร์ปัจจุบันที่ลงท้ายด้วย <code>.json</code>
+          <code>*.md</code> ขยายเป็นชื่อไฟล์ทุกไฟล์ในโฟลเดอร์ปัจจุบันที่ลงท้ายด้วย <code>.md</code>
           ก่อนที่ <code>ls</code> จะเห็นด้วยซ้ำ ใช้ในโฟลเดอร์ย่อยได้เช่นกัน
         </p>
         <pre><code>$ ls src/*.js
@@ -119,8 +119,7 @@ src/index.js</code></pre>
           ส่วน <code>?</code> แทนตัวอักษรได้แค่ตัวเดียว ต่างจาก <code>*</code> ที่แทนได้กี่ตัวก็ได้
         </p>
         <pre><code>$ ls file?.txt
-file1.txt
-file2.txt</code></pre>
+file1.txt	file2.txt</code></pre>
         <p>
           กรณีนี้ <code>file?.txt</code> จับ <code>file1.txt</code> และ <code>file2.txt</code> ได้ แต่จะไม่จับ
           <code>file10.txt</code> เพราะมีตัวอักษรหลัง <code>file</code> สองตัวไม่ใช่ตัวเดียว
