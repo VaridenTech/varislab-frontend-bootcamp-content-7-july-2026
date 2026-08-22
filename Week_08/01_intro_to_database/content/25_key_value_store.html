@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เข้าใจ Key-Value Store กรณีใช้งาน Cache Session และตัวเลือกอย่าง Redis Valkey Memcached" />
+    <title>รู้จักฐานข้อมูลแบบ Key-Value — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>รู้จักฐานข้อมูลแบบ Key-Value</h1>
+
+      <p>ฐานข้อมูลแบบ Key-Value แตกต่างจากฐานข้อมูลที่เราเรียนมาก่อนหน้านี้อย่างชัดเจน สิ่งแรกที่ควรรู้คือ เราแทบไม่ใช้ Key-Value Store เป็นฐานข้อมูลหลัก แต่จะใช้เป็นเครื่องมือเสริมให้ฐานข้อมูลอื่น แม้จะมีระบบที่ใช้ Key-Value Store เพียงอย่างเดียว แต่เป็นกรณีขั้นสูงและพบไม่บ่อย</p>
+      <p>จุดเด่นของ Key-Value Store คือ API และความสามารถที่เรียบง่าย จึงเข้าใจง่าย ใช้งานง่าย และรองรับปริมาณงานสูงมากได้ เพราะไม่ต้องประมวลผล Query ซับซ้อนเหมือน PostgreSQL ที่ JOIN หลายตารางหรือ Aggregate ข้อมูลได้ โดยแก่นของ Key-Value Store คือ “บันทึกค่านี้ด้วย Key นี้” และ “อ่านค่าจาก Key นี้”</p>
+      <p>ลองนึกภาพ Key-Value Store เป็น JavaScript Object ขนาดใหญ่ เราบันทึกค่าได้ด้วย <code>store['my-key'] = 5</code> แล้วกลับมาอ่านด้วย <code>store['my-key']</code> เพื่อรับค่า <code>5</code> แนวคิดหลักมีเพียงการผูก Value ไว้กับ Key และเรียกคืนในภายหลัง</p>
+      <h2>กรณีใช้งาน</h2>
+      <p>กรณีที่พบบ่อยที่สุดคือการทำ Cache สมมติว่า PostgreSQL Query หนึ่งใช้เวลาห้าวินาที ถูกเรียกบ่อย และข้อมูลเปลี่ยนไม่บ่อย การรัน Query เดิมทุกครั้งจะทำให้ Server รับภาระหนัก เราจึงอาจรันวันละครั้งแล้วเก็บผลไว้ใน Redis เมื่อแอปต้องการข้อมูลก็ลองอ่าน Cache ก่อน ถ้าพบก็ใช้ได้ทันที วิธีนี้ช่วยเพิ่มประสิทธิภาพได้มาก</p>
+      <p>อีกกรณีคือข้อมูลที่ถูกใช้งานบ่อยแต่ไม่ใช่ข้อมูลวิกฤต เช่น Session ของผู้ใช้ หาก Cache หาย ผู้ใช้ทั้งหมดอาจต้อง Login ใหม่ ซึ่งไม่ดีแต่ระบบยังทำงานต่อได้ จึงไม่ควรเก็บข้อมูลสำคัญไว้ใน Key-Value Store เพียงแห่งเดียวในฐานะ Source of Truth</p>
+      <p>Key-Value Store ยังเหมาะกับ Analytics หรือ Telemetry เพราะเพิ่มหรือลดตัวเลขได้รวดเร็ว เช่น นับ Page View ของเว็บไซต์ที่มี Traffic สูง ยังมีกรณีอื่นอีกมาก จึงควรเปิดกว้างและเลือกใช้ตามลักษณะงาน</p>
+      <h2>ตัวเลือกของ Key-Value Store</h2>
+      <h3>PostgreSQL hstore และ JSONB</h3>
+      <p>PostgreSQL เลียนแบบ API แบบ SET/GET ของ Redis ได้ผ่าน hstore และ JSONB ปัจจุบัน JSONB แพร่หลายกว่า โดยทั่วไปเราใช้ Redis เพื่อลดภาระ PostgreSQL ดังนั้นการใช้ JSONB แบบ Key-Value เหมาะกับงานเบาหรือเมื่ออยากได้ API ที่เรียบง่ายเท่านั้น</p>
+      <h3>Memcached</h3>
+      <p>Memcached เป็น Key-Value Store รุ่นเก่าที่ยังนิยม จุดแข็งคือความเรียบง่าย ไม่มี Replication ในตัว ไม่มีฟีเจอร์จำนวนมาก และไม่เขียนข้อมูลลง Disk ทุกอย่างอยู่ใน Memory หากพื้นที่เต็มก็ขับข้อมูลเก่าออก เหมาะกับ Session และ Cache ที่สูญหายได้ ให้ประสิทธิภาพสูงแต่ Server ปิดแล้วข้อมูลทั้งหมดจะหาย</p>
+      <p>Memcached เก็บเฉพาะ String แต่ String นั้นใส่ข้อมูลใดก็ได้โดยไม่มี Validation จึงมักแปลง Object เป็น JSON String ก่อนจัดเก็บ</p>
+      <h3>Redis</h3>
+      <p>Redis ย่อจาก <strong>re</strong>mote <strong>di</strong>ctionary <strong>s</strong>erver เป็นเครื่องมือหลักของบทนี้ มีแนวคิดคล้าย Memcached แต่ฟีเจอร์มากกว่า เช่น Cluster ชนิดข้อมูลหลายแบบ และการบันทึก Cache ลง Disk เพื่อกู้สถานะหลัง Restart อย่างไรก็ตาม การรับประกันข้อมูลยังไม่เทียบเท่า MongoDB หรือ PostgreSQL</p>
+      <h3>Valkey</h3>
+      <p>ปี 2024 Redis เปลี่ยนจากสัญญาอนุญาต Open Source เป็น Dual License ที่เข้มงวดขึ้น Linux Foundation จึง Fork โครงการเป็น Valkey (<strong>Val</strong>ue <strong>Key</strong>) ภายใต้สัญญาอนุญาต Open Source เดิม Valkey ใช้ API คำสั่ง Protocol และ Client Library ร่วมกับ Redis ได้ หากเริ่มโครงการใหม่และให้ความสำคัญกับสัญญาอนุญาต Valkey เป็นตัวเลือกที่ควรศึกษา ทุกแนวคิดต่อจากนี้ใช้ได้กับทั้ง Redis และ Valkey</p>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/key-value-store/key-value-store">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="24_nodejs_app_with_neo4j.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="26_redis.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

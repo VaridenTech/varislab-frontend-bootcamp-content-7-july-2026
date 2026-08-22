@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ใช้ find ตัวดำเนินการ เงื่อนไข การเรียงลำดับ และ Projection ใน MongoDB" />
+    <title>การสืบค้นข้อมูลใน MongoDB — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>การสืบค้นข้อมูลใน MongoDB</h1>
+
+      <p>ตอนนี้เราได้ใส่เอกสารจำนวนมากลงในฐานข้อมูลของเราแล้ว ก็ถึงเวลาค้นหาฐานข้อมูลของเราเพื่อดึงข้อมูลออกมา มีหลายเหตุผลและวิธีการในการสืบค้นฐานข้อมูล คุณสามารถสืบค้นฐานข้อมูลเพื่อรับบันทึกเฉพาะ เช่น หากคุณกำลังค้นหาวัตถุผู้ใช้เพื่อแสดงหน้าโปรไฟล์ หรือคุณอาจค้นหาหลาย ๆ อย่างพร้อมกัน เช่น หากผู้ใช้กำลังค้นหาสัตว์เลี้ยงและคุณต้องการแสดงผลลัพธ์ห้ารายการ</p>
+      <h2>ค้นหาหนึ่ง</h2>
+      <p>เริ่มต้นด้วยการสืบค้นขั้นพื้นฐาน เรียกใช้สิ่งนี้ในคอนโซล</p>
+      <pre><code class="language-javascript">db.pets.findOne();</code></pre>
+      <p>คำสั่งนี้จะค้นหาและคืนเอกสารแรกที่ตรงกับเงื่อนไข แต่ในกรณีนี้เราไม่ได้ระบุเงื่อนไขใด ๆ จึงมีความหมายประมาณว่า &quot;ขอเอกสารอะไรก็ได้หนึ่งรายการ&quot; คุณจึงอาจได้เอกสารแรกที่เคยเพิ่มลงในฐานข้อมูลกลับมา ซึ่งในตัวอย่างนี้คือสุนัขพันธุ์ฮาวานีสชื่อลูน่า</p>
+      <p>เอาล่ะ สมมติว่าเราต้องการค้นหารายการ 1337 ที่เราใส่ไว้ในฐานข้อมูล ลองสิ่งนี้:</p>
+      <pre><code class="language-javascript">db.pets.findOne({ index: 1337 });</code></pre>
+      <p>นี่จะค้นหารายการหนึ่งให้คุณ (ซึ่งมีเพียงรายการเดียวเท่านั้น) โดยที่ดัชนีมีค่าเท่ากับ 1337 เอาล่ะ อีกอย่าง มาหาอันหนึ่งที่เป็นสุนัขชื่อ Spot</p>
+      <pre><code class="language-javascript">db.pets.findOne({ name: &quot;Spot&quot;, type: &quot;dog&quot; });</code></pre>
+      <h2>หา</h2>
+      <p>จนถึงตอนนี้เรากำลังมองหาการค้นหาเพียงบันทึกเดียวเท่านั้น หากคุณต้องการค้นหาเอกสารทั้งหมดที่ตรงกับข้อความค้นหาของคุณ คุณจะต้องใช้ find แทน findOne มาลองดูกัน</p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; });</code></pre>
+      <p>สังเกตว่านี่ให้ผลลัพธ์เพียงยี่สิบเท่านั้น สิ่งที่ MongoDB ทำโดยค่าเริ่มต้นคือส่งผลลัพธ์ให้คุณครั้งละยี่สิบผลลัพธ์เท่านั้นในรูปแบบของสิ่งที่เรียกว่า <strong>ตัววนซ้ำ</strong> หรือ <strong>เคอร์เซอร์</strong> ตัววนซ้ำจะให้คุณครั้งละยี่สิบบันทึก และช่วยให้คุณสามารถวนซ้ำผลลัพธ์ของคุณได้ บ่อยครั้งนี่เป็นรูปแบบที่มีประโยชน์ เพราะในทางทฤษฎีแล้วคุณอาจต้องการวนซ้ำคอลเลกชันทั้งหมดของคุณ และสิ่งนี้จะทำให้คุณสามารถทำมันทีละชิ้นได้</p>
+      <p>ลองทำซ้ำตอนนี้ เรียกใช้สิ่งนี้:</p>
+      <pre><code>it
+it
+it</code></pre>
+      <p>คุณจะสังเกตว่าแต่ละครั้งได้รับเอกสารชุดใหม่อีกยี่สิบรายการ คำสั่ง <code>it</code> จะบอกให้เคอร์เซอร์จากคำค้นหาล่าสุดดึงผลลัพธ์ชุดถัดไปออกมา</p>
+      <h2>นับ จำกัด และ toArray</h2>
+      <p>เอาล่ะ เรามาลองทำดังนี้:</p>
+      <pre><code class="language-javascript">db.pets.countDocuments({ type: &quot;dog&quot; }); // probably pretty big number
+db.pets.find({ type: &quot;dog&quot; }).limit(40);
+it; // after this the cursor will end</code></pre>
+      <p><code>countDocuments</code> ช่วยให้คุณทราบได้ว่ามีบางสิ่งอยู่กี่รายการ <code>limit</code> บอกให้เคอร์เซอร์รู้ว่าคุณต้องการหยุดเมื่อใด แต่ถ้าคุณต้องการได้รับทุกสิ่งทั้งหมดในคราวเดียวล่ะ? ลอง <code>toArray</code></p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; }).limit(40).toArray();</code></pre>
+      <p>นี่จะเป็นการดัมพ์ทุกอย่างออกไปในอาเรย์ ซึ่งดีถ้าคุณต้องการทุกอย่างพร้อมกัน มีหลายสิ่งหลายอย่างที่คุณสามารถทำได้เพื่อกำหนดวิธีการส่งคืนข้อมูล แต่คุณสามารถค้นหาได้อย่างง่ายดายเมื่อคุณต้องการ</p>
+      <h2>ตัวดำเนินการแบบสอบถาม</h2>
+      <p>จะเป็นอย่างไรหากเราต้องการค้นหาแมวสูงอายุทั้งหมดในชุดข้อมูลของเรา MongoDB จะให้คุณทำเช่นนั้น! มาลองสิ่งนี้กัน</p>
+      <pre><code class="language-javascript">db.pets.countDocuments({ type: &quot;cat&quot;, age: { $gt: 12 } });</code></pre>
+      <p>โปรดทราบว่าคุณสามารถใช้ <a href="https://www.mongodb.com/docs/manual/reference/mql/query-predicates/comparison/">ตัวดำเนินการสืบค้น</a> เหล่านี้ได้ทุกที่ที่คุณระบุการสืบค้น เช่น findOne, find ฯลฯ สิ่งที่คุณจะสนใจเป็นหลักคือ</p>
+      <ul>
+        <li>\$gt - มากกว่า</li>
+        <li>\$gte - มากกว่าหรือเท่ากับ</li>
+        <li>\$lt - น้อยกว่า</li>
+        <li>\$lte - น้อยกว่าหรือเท่ากับ</li>
+        <li>\$eq - เท่ากับ (ปกติไม่จำเป็น)</li>
+        <li>\$ne - ไม่เท่ากับ</li>
+        <li>\$in - มีค่าอยู่ในอาร์เรย์ (MongoDB สามารถจัดเก็บอาร์เรย์และวัตถุได้เช่นกัน!)</li>
+        <li>\$nin - ไม่มีค่าในอาร์เรย์</li>
+      </ul>
+      <p>หากคุณต้องการเห็น Fidos ทั้งหมดที่ไม่ใช่สุนัข คุณสามารถทำได้:</p>
+      <pre><code class="language-javascript">db.pets.find({
+  type: { $ne: &quot;dog&quot; },
+  name: &quot;Fido&quot;,
+});</code></pre>
+      <h2>ตัวดำเนินการเชิงตรรกะ</h2>
+      <p>ก้าวไปอีกขั้น คุณสามารถดำเนินการเชิงตรรกะได้เช่นกัน สมมติว่าคุณต้องการหานกอายุระหว่าง 4 ถึง 8 ปี</p>
+      <pre><code class="language-javascript">db.pets.find({
+  type: &quot;bird&quot;,
+  $and: [{ age: { $gte: 4 } }, { age: { $lte: 8 } }],
+});</code></pre>
+      <p>คุณมี $or, $nor และ \$ไม่พร้อมใช้งานสำหรับคุณ โปรดทราบว่า $not และ $ne นั้นแตกต่างกัน อย่างแรกคือตัวดำเนินการเชิงตรรกะ และอย่างหลังคือ <code>!==</code></p>
+      <h2>ผู้ประกอบการพิเศษ</h2>
+      <p>สิ่งเหล่านี้จะไม่มีประโยชน์ในตอนนี้ แต่ฉันแค่อยากแจ้งให้คุณทราบว่าคุณสามารถสืบค้นตามประเภท (ดูว่ามีบางอย่างที่เป็นตัวเลข อาร์เรย์ วัตถุ ฯลฯ) ด้วย $type และคุณสามารถสืบค้นได้ว่าเอกสารมีช่องหรือไม่พร้อมกับ $exists</p>
+      <p>ยังมีอีกมากมายที่คุณสามารถทำได้เช่นกัน MongoDB ยังมี <a href="https://www.mongodb.com/docs/manual/reference/mql/query-predicates/geospatial/">ตัวดำเนินการเชิงพื้นที่</a> ดังนั้นคุณจึงสามารถสอบถามได้ว่าจุดสองจุดบนโลกอยู่ใกล้กันหรือไม่!</p>
+      <h2>เรียงลำดับ</h2>
+      <p>บ่อยครั้งคุณจะต้องดำเนินการประเภทต่างๆ กับข้อความค้นหาของคุณ สมมติว่าคุณกำลังสร้างหน้าค้นหาสัตว์เลี้ยงเหล่านี้ (เพื่อสื่อถึงสิ่งที่เรากำลังจะทำ!) บางทีผู้ที่ค้นหาในเว็บไซต์ของคุณอาจเป็นคนที่มีจิตใจดีและต้องการรับเลี้ยงสุนัขสูงวัยบางตัว พวกเขาสามารถพูดเรียงตามอายุจากมากไปน้อย</p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; }).sort({ age: -1 });</code></pre>
+      <p><code>-1</code> หมายถึง จากมากไปน้อย และอย่างที่คุณคงเดาได้ 1 หมายถึง จากน้อยไปมาก</p>
+      <h2>การคาดการณ์</h2>
+      <p>สุดท้ายนี้ เพื่อสรุปบทเรียนเล็กๆ น้อยๆ ของเราที่สอบถาม (ยังมีอะไรอีกมากมายที่คุณสามารถทำได้) เรามาพูดถึงการคาดการณ์กันดีกว่า วิธีที่ง่ายที่สุดในการใช้การคาดการณ์คือการจำกัดฟิลด์ที่คุณส่งคืน</p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; }, { name: 1, breed: 1 });</code></pre>
+      <p><code>1</code> หมายถึง &quot;รวมสิ่งนี้ไว้ด้วยอย่างแน่นอน&quot; ในกรณีนี้ เราจะรวมเฉพาะชื่อและสายพันธุ์เท่านั้น หากคุณทิ้งบางสิ่งไว้ (เช่น อายุ) มันก็จะไม่เข้ากับการเดินทาง โปรดสังเกตว่า <code>_id</code> มาพร้อมด้วย หากคุณไม่ต้องการสิ่งนั้น คุณจะต้องยกเว้นมันอย่างชัดเจน สิ่งนี้คล้ายกับการฉายภาพที่เราพูดคุยกับ Postgres</p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; }, { name: 1, breed: 1, _id: 0 });
+db.pets.find({ type: &quot;dog&quot; }, { name: true, breed: true, _id: false }); // note that true and false work too</code></pre>
+      <p>นอกจากนี้ยังใช้งานได้เพื่อยกเว้นฟิลด์ต่างๆ ซึ่งหมายความว่ารวมทุกสิ่งที่ฉันไม่ได้ยกเว้นไว้ด้วย</p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; }, { _id: 0 });</code></pre>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/nosql/querying-mongodb">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="13_mongodb.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="15_updating_mongodb.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ใช้ DuckDB อ่าน Parquet จากไฟล์หรือ S3 และวิเคราะห์ข้อมูลด้วย SQL" />
+    <title>เริ่มต้นใช้งาน DuckDB — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>เริ่มต้นใช้งาน DuckDB</h1>
+
+      <p>DuckDB ทำงานต่างจาก Server Database ที่ผ่านมา PostgreSQL และ MongoDB เปิด Server แล้วให้ Client อย่าง <code>psql</code> หรือ <code>mongosh</code> ส่งคำสั่งไปประมวลผล แต่ DuckDB เหมือน SQLite คือเป็น Toolkit แบบ All-in-one ที่ CLI อ่านและแก้ไฟล์บน Disk โดยตรง ไม่ได้เชื่อมต่อ Server</p>
+      <p><a href="https://motherduck.com/">MotherDuck</a> ให้บริการ DuckDB บน Cloud คล้าย Turso สำหรับ SQLite และ DuckDB ยังอ่านเขียนไฟล์ Parquet บน S3 จากระยะไกลได้ จึงยืดหยุ่น เรียบง่าย และมีขนาดเล็ก บทนี้แนะนำให้ติดตั้ง DuckDB โดยตรง แต่ใช้ Docker ก็ได้ ดูวิธีติดตั้งจาก <a href="https://duckdb.org/install/">เอกสาร DuckDB</a></p>
+      <p>เริ่มด้วยการเปิดไฟล์ว่าง</p>
+      <pre><code class="language-bash"># this will create a file called my-duck.db
+duckdb my-duck.db</code></pre>
+      <blockquote><p>หากเปิด DuckDB CLI พร้อม Flag <code>-ui</code> จะได้หน้าจอ Browser สำหรับรัน Query</p></blockquote>
+      <p>ลอง Query ไฟล์จาก URL ระยะไกลโดยตรง</p>
+      <pre><code class="language-sql">SELECT * FROM read_parquet(
+  's3://us-prd-motherduck-open-datasets/netflix/netflix_daily_top_10.parquet'
+) LIMIT 10;</code></pre>
+      <blockquote><p>ตัวอย่างนี้ขึ้นกับว่า MotherDuck ยังเก็บไฟล์ไว้ใน S3 Bucket หรือไม่ หลักสำคัญคือ DuckDB Query ไฟล์ Parquet ที่ Host ไว้จาก URL ได้โดยตรง</p></blockquote>
+      <p>ต่อไปบันทึกข้อมูลลงฐานข้อมูลในเครื่อง</p>
+      <pre><code class="language-sql">CREATE TABLE netflix AS SELECT * FROM read_parquet('s3://us-prd-motherduck-open-datasets/netflix/netflix_daily_top_10.parquet');
+SELECT DISTINCT title FROM netflix LIMIT 25;
+FROM netflix LIMIT 5;
+DESCRIBE netflix;</code></pre>
+      <blockquote><p>หาก S3 URL ใช้ไม่ได้ ให้ดาวน์โหลด <a href="https://databases-v2.holt.courses/netflix_daily_top_10.parquet">ไฟล์ Parquet สำรอง</a> แล้วเปลี่ยนคำสั่งเป็น <code>CREATE TABLE netflix AS SELECT * FROM read_parquet('&lt;file path to your parquet file here&gt;');</code></p></blockquote>
+      <p>คำสั่งแรกโหลด Parquet จาก S3 สู่ Table <code>netflix</code> จากนั้นเลือกชื่อเรื่องไม่ซ้ำ 25 รายการ ดูตัวอย่างห้า Row ด้วย Syntax ย่อ และใช้ <code>DESCRIBE</code> ดู Column ทั้งหมด Query มีหน้าตาเหมือน SQL ปกติแต่เพิ่มความสามารถที่เหมาะกับงานวิเคราะห์</p>
+      <p>ใน Columnar Database ค่าใน Column เดียวกัน เช่น <code>Title</code>, <code>Rank</code> และ <code>Last Week Rank</code> ถูกเก็บรวมกัน จึง Aggregate ข้าม Column ได้รวดเร็ว ตรงข้ามกับ PostgreSQL หรือ MongoDB ที่เก็บแต่ละ Row หรือ Document เป็นก้อนเดียวและต้องเปิดทุก Record เพื่อดึง Field ที่ต้องการ นี่คือเหตุผลที่ DuckDB เร็วสำหรับ OLAP แต่ไม่เหมาะกับ OLTP ที่อ่าน Record ครบชุดทีละรายการ</p>
+      <p>มาดูว่าช่วง Lockdown ผู้คนดูเรื่องใดต่อเนื่องมากที่สุด</p>
+      <pre><code class="language-sql">SELECT Title, Type, MAX(&quot;Days In Top 10&quot;) as peak_days
+FROM netflix
+WHERE &quot;As of&quot; BETWEEN '2020-03-15' AND '2020-06-30'
+GROUP BY ALL
+ORDER BY peak_days DESC
+LIMIT 10;</code></pre>
+      <p><code>GROUP BY ALL</code> แสดงแนวคิดที่ DuckDB ออกแบบมาให้งานวิเคราะห์สะดวก PostgreSQL ต้องระบุ <code>GROUP BY Title, Type</code> เอง หาก Query มีเก้า Column และแก้ SELECT บ่อย ก็ต้องแก้ GROUP BY ให้ตรงทุกครั้ง แต่ DuckDB ลดงานซ้ำนี้ให้</p>
+      <pre><code class="language-sql">SELECT
+  Title,
+  Type,
+  MAX(&quot;Days In Top 10&quot;) as total_days,
+  ROUND(AVG(&quot;Viewership Score&quot;), 1) as avg_score
+FROM netflix
+WHERE &quot;Netflix Exclusive&quot; = 'Yes'
+GROUP BY ALL
+ORDER BY total_days DESC
+LIMIT 10;</code></pre>
+      <p>Query นี้วิเคราะห์รายการ Exclusive ของ Netflix โดยเปรียบเทียบจำนวนวันที่ติด Top 10 กับคะแนนผู้ชม Insight ลักษณะนี้ช่วยตัดสินใจว่าควรลงทุนกับเนื้อหาแบบใด</p>
+      <pre><code class="language-sql">COPY (
+  SELECT Title, Type, MAX(&quot;Days In Top 10&quot;) as peak_days
+  FROM netflix
+  GROUP BY ALL
+  ORDER BY peak_days DESC
+) TO 'top_titles.csv' (HEADER);</code></pre>
+      <p>คำสั่ง <code>COPY</code> Export ผลลัพธ์เป็น CSV เพื่อแชร์หรือนำไปใช้ต่อ ฐานข้อมูลอื่นก็ทำได้ แต่ DuckDB ให้ความสามารถนี้เป็นแกนหลักจึงมี Syntax ที่ง่ายและทำงานเร็ว</p>
+      <p>นี่เป็นเพียงจุดเริ่มต้นของ DuckDB และฐานข้อมูล OLAP เป้าหมายของบทคือให้เข้าใจว่ามันคืออะไร ทำไม Columnar Storage จึงเร็วสำหรับงานวิเคราะห์ และควรเลือกใช้เมื่อใด</p>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/columnar/duckdb">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="31_columnar_databases.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="33_conclusion.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

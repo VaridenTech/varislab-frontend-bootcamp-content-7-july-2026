@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ทำ Semantic Search และ RAG ด้วย Embedding ส่วนขยาย pgvector และ PostgreSQL" />
+    <title>การค้นหาแบบเวกเตอร์ — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>การค้นหาแบบเวกเตอร์</h1>
+
+      <p>เรามาพูดถึงการค้นหาเวกเตอร์ซึ่งใช้บ่อยที่สุดกับเทคนิคที่เรียกว่า RAG (การสร้างแบบดึงข้อมูลเสริม) ที่ง่ายที่สุด RAG คือแนวคิดที่ว่าคุณมีฐานข้อมูลที่เต็มไปด้วยบริบทที่เป็นประโยชน์สำหรับ LLM</p>
+      <p>สมมติว่าคุณเปิดร้านขายอุปกรณ์กลางแจ้ง และผู้ใช้ถามว่าถุงมือนั้นเหมาะกับการเล่นสกีในฤดูใบไม้ผลิที่อุ่นกว่าหรือไม่ คุณมีฐานข้อมูลที่เต็มไปด้วยคำอธิบายของถุงมือ ก่อนที่คุณจะขอคำแนะนำจาก LLM คุณจะต้องสืบค้นฐานข้อมูลของคุณด้วยสตริงการค้นหาและฟีดนั้นเป็นบริบทใน LLM เพื่อให้มีรายการผลิตภัณฑ์ที่เกี่ยวข้องกับการสืบค้นอยู่แล้ว โดยให้บริบททั้งหมดที่จำเป็นในให้คำแนะนำโดยอาศัยข้อมูลตามผลิตภัณฑ์จริงที่คุณมี</p>
+      <p>สมมติว่าคุณกำลังสร้างบอทสนับสนุนลูกค้าและคุณมีฐานข้อมูลที่เต็มไปด้วยโซลูชั่นที่ได้รับการยอมรับ คุณสามารถใช้ RAG เพื่อดึงข้อมูลวิธีแก้ปัญหาที่ได้รับการยอมรับ ก่อนที่จะขอให้บอทแก้ไขปัญหา โดยให้เหตุผลเบื้องต้นโดยถือว่าปัญหาการสนับสนุนส่วนใหญ่ไม่ใช่ครั้งแรกที่คุณพบปัญหานั้น</p>
+      <p>สิ่งนี้เรียกว่า RAG และคุณใช้สิ่งที่เรียกว่าการค้นหาเวกเตอร์เพื่อให้บรรลุเป้าหมาย เวกเตอร์เป็นเพียงอาร์เรย์ของตัวเลข ข้อความของคุณจะกลายเป็นอาร์เรย์ของตัวเลขที่แสดงถึงความคล้ายคลึงและระยะห่างที่สัมพันธ์กับมิติอื่นๆ ในฐานข้อมูลของคุณ</p>
+      <p>เวกเตอร์เหล่านี้ไม่สามารถอ่านหรือเข้าใจได้โดยมนุษย์ คุณส่งข้อความของคุณไปยังโมเดลการฝัง (LLM เฉพาะทางที่ทำเช่นนี้เท่านั้น) และข้อความจะส่งกลับชุดของเวกเตอร์ที่คุณจัดเก็บไว้ในฐานข้อมูลการค้นหาเวกเตอร์ของคุณ</p>
+      <p>ผลลัพธ์ที่ได้ค่อนข้างดีเพราะรวมกลุ่มคำ หัวข้อ และแนวคิดไว้ด้วยกัน หมายความว่าสิ่งต่างๆ เช่น &quot;การผลักดันให้ใช้งานจริงในวันศุกร์ถือเป็นฝันร้าย&quot; และ &quot;การหยุดทำงานของการปรับใช้ในช่วงสุดสัปดาห์ทำให้ฉันกังวลเช่นนั้น&quot; น่าจะปรากฏขึ้นพร้อมกันในการค้นหาเนื่องจากสิ่งเหล่านั้นเกี่ยวข้องกัน แม้ว่าจะไม่แชร์คีย์เวิร์ดก็ตาม นั่นคือพลังของการค้นหาเวกเตอร์</p>
+      <p>การค้นหาเวกเตอร์อาจมีประโยชน์นอกเหนือจาก RAG แต่ส่วนใหญ่จะเป็นที่ที่คุณจะเห็น สำหรับสิ่งต่างๆ เช่น การค้นหาข้อความแบบเต็ม มีเครื่องมืออื่นๆ เช่น Elasticsearch ที่ได้รับการปรับให้เหมาะสมที่สุดสำหรับสิ่งนั้น</p>
+      <p>เราเคยต้องการฐานข้อมูลพิเศษ เช่น [pinecone] เพื่อให้สามารถทำเช่นนี้ได้ แต่แล้วสิ่งต่างๆ เช่น <a href="https://github.com/pgvector/pgvector">pgvector</a> ก็เข้ามาทำสิ่งนั้น และทั้งหมดนี้ก็อยู่ใน Postgres ของคุณ และได้ขจัดความจำเป็นส่วนใหญ่ในการใช้เครื่องมือพิเศษ เช่น Pinecone</p>
+      <h2>มาทำกัน</h2>
+      <p>เราจะเพิ่มการดึงข้อมูล RAG ลงในตารางความคิดเห็นของเรา เพื่อให้เราสามารถค้นหาความคิดเห็นที่คล้ายกันโดยอิงจากเวกเตอร์ได้</p>
+      <p>คุณมีทางเลือกสองสามทางเกี่ยวกับวิธีการฝังเวกเตอร์ กระบวนการคือคุณใช้โมเดล LLM เฉพาะทางซึ่งมีประโยชน์สำหรับการเข้ารหัสการฝังเท่านั้น ฉันจะให้คุณทำสองวิธี: ผ่านการเรียก API ไปยัง OpenAI หรือผ่าน LLM ท้องถิ่นผ่าน Ollama โดยใช้ nomic-embed-text ขอย้ำอีกครั้งว่าไม่สำคัญว่าคุณจะใช้อันไหน คุณแค่ต้องใช้ <em>the Same</em> อันหนึ่งอย่างสม่ำเสมอ VoyageAI ก็เป็นตัวเลือกเช่นกัน และเป็นตัวเลือกที่ Anthropic แนะนำ</p>
+      <p>หากคุณมีแล็ปท็อปที่สามารถใช้งาน LLM และ Ollama ขนาดเล็กได้ ฉันขอแนะนำให้ทำตามข้อความ nomic-embed-text มิฉะนั้น การใช้การเรียก OpenAI, OpenRouter หรือ VoyagerAI API จะทำงานได้ดี</p>
+      <p>เมื่อคุณติดตั้ง Ollama แล้ว ให้เรียกใช้สิ่งนี้จาก CLI ของคุณ</p>
+      <pre><code class="language-bash">ollama pull nomic-embed-text
+
+curl http://localhost:11434/api/embed \
+  -d '{
+    &quot;model&quot;: &quot;nomic-embed-text&quot;,
+    &quot;input&quot;: &quot;Never push to prod on a Friday&quot;
+  }'</code></pre>
+      <p>ฉันมีบางอย่างที่มีลักษณะเช่นนี้:</p>
+      <pre><code class="language-json">{&quot;model&quot;:&quot;nomic-embed-text&quot;,&quot;embeddings&quot;:[[0.009210397,0.043993976,-0.14392269,-0.0077514267,0.061490994,-0.004973118,0.009365671,0.007229709,-0.018027218,-0.046408247,0.009731809,0.07082095,0.0038592147,0.02665532,0.062885955,0.003577928,0.04486645,-0.08607875,0.014982383,0.02072975,0.011557674,-0.06717606,-0.069490105,-0.0026118876,0.11706118,0.026608134,0.024565192,-0.0070613204,-0.036495667, &lt;a lot more numbers&gt;]],&quot;total_duration&quot;:573477125,&quot;load_duration&quot;:427736542,&quot;prompt_eval_count&quot;:10}</code></pre>
+      <p>อย่างที่คุณเห็น มันเป็นเพียงตัวเลข ไม่ได้มีไว้เพื่อให้คุณอ่าน หากคุณกำลังทำเช่นนี้กับ OpenAI การเรียก API ของคุณจะมีลักษณะดังนี้</p>
+      <pre><code class="language-bash">curl https://api.openai.com/v1/embeddings \
+  -H &quot;Authorization: Bearer $OPENAI_API_KEY&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{
+    &quot;input&quot;: &quot;Never push to prod on a Friday&quot;,
+    &quot;model&quot;: &quot;text-embedding-3-small&quot;
+  }'</code></pre>
+      <p>และคุณจะได้ผลลัพธ์ที่ดูคล้ายกัน เพียงแค่ดูจากแบบจำลองแทนที่จะเป็นแบบโนมิกส์ <a href="https://developers.openai.com/api/docs/guides/embeddings/">คู่มือ OpenAI อยู่ที่นี่</a></p>
+      <p>ฉันชอบแยกรูปแบบข้อมูลเหล่านี้ออกและบอกคุณว่ารูปแบบเหล่านี้หมายถึงอะไร แต่จริงๆ แล้วรูปแบบเหล่านี้แทบจะเป็นไปไม่ได้เลยในฐานะผู้ที่ไม่ใช่ผู้เชี่ยวชาญที่จะแยกออกจากกัน พอจะพูดได้ว่ามันคืออาร์เรย์ของตัวเลขที่แสดงความหมายของสตริงข้อความเป็นจุดข้อมูลจำนวนคงที่ นั่นคือมากเท่าที่คุณสามารถพูดได้ จากนั้นระยะห่างระหว่างจุดข้อมูลเหล่านี้จะถูกใช้เพื่อจัดกลุ่มสตริงข้อความที่มีความหมายคล้ายกัน</p>
+      <p>เรามาเพิ่มความสามารถนี้ให้กับ Postgres กัน คุณต้องเพิ่มส่วนขยายที่เรียกว่า <code>vector</code> อย่างเหมาะสม</p>
+      <p>โดยปกติคุณจะรันคำสั่งดังนี้:</p>
+      <pre><code class="language-sql">CREATE EXTENSION IF NOT EXISTS vector;
+ALTER TABLE comments ADD COLUMN embedding vector(&lt;length of your vector&gt;);</code></pre>
+      <p>โมเดลการฝังของคุณจะกำหนดความยาวของเวกเตอร์ของคุณ โมเดลโนมิกมีความยาว <code>768</code> และโมเดล OpenAI มีความยาวเวกเตอร์ <code>1536</code> นี่คือตัวเลขที่คุณจะใช้ที่นั่น หากคุณใช้เวกเตอร์อื่น คุณจะมีตัวเลขที่แตกต่างกันตรงนั้น</p>
+      <p>ฉันมีสิ่งนี้อยู่ในสคริปต์ฝังแล้ว ดังนั้นคุณไม่จำเป็นต้องทำเช่นนี้ แต่นี่คือวิธีที่คุณเพิ่มส่วนขยายให้กับ Postgres: คุณพบมัน เพิ่มลงใน Postgres (ซึ่งเราทำโดยใช้คอนเทนเนอร์ pgvector) ทำการเรียก <code>CREATE EXTENSION</code> แล้วใช้งาน <code>vector()</code> เป็นประเภทข้อมูลที่รวมอยู่ในส่วนขยายและเพิ่มความสามารถในการสืบค้นเวกเตอร์</p>
+      <p>ดังนั้นให้เพิ่มสคริปต์ฝังนี้ในโครงการของคุณ:</p>
+      <pre><code class="language-javascript">import pg from &quot;pg&quot;;
+
+const CONNECTION_STRING =
+  &quot;postgresql://postgres:mysecretpassword@localhost:5432&quot;; // NOTE you may need to add your database name (e.g. /message_boards) if you aren't using the default postgres database
+
+const PROVIDERS = {
+  openai: {
+    dimensions: 1536,
+    model: &quot;text-embedding-3-small&quot;,
+    async embed(texts) {
+      const res = await fetch(&quot;https://api.openai.com/v1/embeddings&quot;, {
+        method: &quot;POST&quot;,
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          &quot;Content-Type&quot;: &quot;application/json&quot;,
+        },
+        body: JSON.stringify({
+          input: texts,
+          model: &quot;text-embedding-3-small&quot;,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`OpenAI API error: ${res.status} ${err}`);
+      }
+
+      const data = await res.json();
+      return data.data.map((d) =&gt; d.embedding);
+    },
+  },
+
+  ollama: {
+    dimensions: 768,
+    model: &quot;nomic-embed-text&quot;,
+    async embed(texts) {
+      const res = await fetch(&quot;http://localhost:11434/api/embed&quot;, {
+        method: &quot;POST&quot;,
+        headers: { &quot;Content-Type&quot;: &quot;application/json&quot; },
+        body: JSON.stringify({
+          model: &quot;nomic-embed-text&quot;,
+          input: texts,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Ollama API error: ${res.status} ${err}`);
+      }
+
+      const data = await res.json();
+      return data.embeddings;
+    },
+  },
+};
+
+const [mode, providerName, ...rest] = process.argv.slice(2);
+
+if (!PROVIDERS[providerName] || ![&quot;generate&quot;, &quot;get&quot;].includes(mode)) {
+  console.error(&quot;Usage:&quot;);
+  console.error(
+    &quot;  node embeddings.js generate &lt;openai|ollama&gt;     Embed all comments&quot;,
+  );
+  console.error(
+    '  node embeddings.js get &lt;openai|ollama&gt; &quot;text&quot;    Get a single embedding',
+  );
+  process.exit(1);
+}
+
+const provider = PROVIDERS[providerName];
+
+if (mode === &quot;get&quot;) {
+  const text = rest.join(&quot; &quot;);
+  if (!text) {
+    console.error(
+      'Provide text to embed: node embeddings.js get ollama &quot;your text here&quot;',
+    );
+    process.exit(1);
+  }
+
+  const [embedding] = await provider.embed([text]);
+  console.log(`[${embedding.join(&quot;,&quot;)}]`);
+} else {
+  console.log(
+    `Using ${providerName} (${provider.model}, ${provider.dimensions} dimensions)`,
+  );
+
+  const client = new pg.Client({ connectionString: CONNECTION_STRING });
+  await client.connect();
+
+  await client.query(&quot;CREATE EXTENSION IF NOT EXISTS vector&quot;);
+
+  // Drop and recreate column to match provider dimensions
+  await client.query(`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'comments' AND column_name = 'embedding'
+      ) THEN
+        ALTER TABLE comments DROP COLUMN embedding;
+      END IF;
+    END $$
+  `);
+  await client.query(
+    `ALTER TABLE comments ADD COLUMN embedding vector(${provider.dimensions})`,
+  );
+
+  const { rows } = await client.query(
+    &quot;SELECT comment_id, comment FROM comments ORDER BY comment_id&quot;,
+  );
+  console.log(`Found ${rows.length} comments to embed`);
+
+  const BATCH_SIZE = 50;
+  for (let i = 0; i &lt; rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE);
+    const texts = batch.map((r) =&gt; r.comment);
+    const embeddings = await provider.embed(texts);
+
+    for (let j = 0; j &lt; batch.length; j++) {
+      const vectorStr = `[${embeddings[j].join(&quot;,&quot;)}]`;
+      await client.query(
+        &quot;UPDATE comments SET embedding = $1 WHERE comment_id = $2&quot;,
+        [vectorStr, batch[j].comment_id],
+      );
+    }
+
+    console.log(
+      `Embedded ${Math.min(i + BATCH_SIZE, rows.length)}/${rows.length}`,
+    );
+  }
+
+  console.log(&quot;Done!&quot;);
+  await client.end();
+}</code></pre>
+      <p>จากนั้นเพิ่มสิ่งเหล่านี้ลงในสคริปต์ของคุณใน package.json</p>
+      <pre><code class="language-json">&quot;scripts&quot;: {
+  &quot;embed:openai&quot;: &quot;node embed.js generate openai&quot;,
+  &quot;embed:ollama&quot;: &quot;node embed.js generate ollama&quot;,
+  &quot;get:openai&quot;: &quot;node embed.js get openai&quot;,
+  &quot;get:ollama&quot;: &quot;node embed.js get ollama&quot;
+},</code></pre>
+      <p>ตอนนี้หากคุณรัน <code>npm run embed:&lt;provider&gt;</code> มันจะสอบถามทุกความคิดเห็น รันผ่านโมเดลการฝัง และบันทึกลงในฐานข้อมูล ตรวจสอบให้แน่ใจว่าคุณได้ดึงโมเดลที่ถูกต้องสำหรับ ollama และโมเดลจะทำงานหากคุณใช้ Ollama และตรวจสอบให้แน่ใจว่าคุณมี <code>OPENAI_API_KEY</code> ในสภาพแวดล้อมของคุณหากคุณต้องการใช้ OpenAI เช่น <code>OPENAI_API_KEY=&lt;your OpenAI API key&gt; npm run embed:openai</code>. สิ่งนี้ควรแบทช์และบันทึกลงในฐานข้อมูลของคุณ อาจใช้เวลาประมาณ 10 วินาทีในการดำเนินการบน M3 MacBook Air บน Ollama (ตัวโมเดลเองมีขนาด 273MB ในขณะที่เขียน และควรทำงานบนแล็ปท็อปสมัยใหม่เกือบทุกรุ่น) และฉันคิดว่ามันน้อยกว่า 1¢ เมื่อฉันรันบน OpenAI (ฉันบอกไม่ได้ แต่มันก็เป็นจำนวนเล็กน้อย)</p>
+      <p>เมื่อคุณดำเนินการเสร็จแล้ว เรามาดำเนินการค้นหากันดีกว่า!</p>
+      <pre><code class="language-sql">SELECT comment, embedding FROM comments LIMIT 1;</code></pre>
+      <p>การจัดรูปแบบอาจดูแปลกเล็กน้อย แต่เมื่อเลื่อนลงไปจะเห็นความคิดเห็นพร้อมชุดตัวเลขที่แทนความหมายของข้อความนั้น ต่อไปเราจะนำข้อมูลนี้ไปใช้งานจริง แต่มีประเด็นหนึ่งคือ เราต้องแปลงข้อความค้นหาให้เป็นเวกเตอร์ก่อนจึงจะค้นหาได้ โดยปกติแอปจะเรียกโมเดลจากภายในโค้ด แต่เพื่อไม่ต้องสร้างแอปอีกชุด ตัวอย่างนี้จึงเตรียมเป็นสคริปต์ npm ให้เรียกใช้แทน</p>
+      <p>แบบสอบถามของคุณจะมีลักษณะเช่นนี้</p>
+      <pre><code class="language-sql">SELECT
+  comment,
+  embedding &lt;=&gt; '[&lt;your vectors&gt;]' AS distance
+FROM comments
+ORDER BY distance
+LIMIT 15;</code></pre>
+      <p>ดังนั้นตอนนี้วิ่ง</p>
+      <pre><code class="language-bash">npm run embed:&lt;ollama or openai&gt; &quot;your search string here&quot;
+npm run embed:&lt;ollama or openai&gt; --silent &quot;your search string here&quot; | pbcopy # this will copy it to your clipboard on macOS</code></pre>
+      <p>สิ่งนี้จะส่งออกเวกเตอร์ของคุณไปยัง CLI หากคุณใช้ Mac และใช้ pbcopy คุณจะต้องลบสองสามบรรทัดที่จุดเริ่มต้น</p>
+      <p>จากนั้นคุณสามารถคัดลอกและวางแบบสอบถามนั้นโดยมีเวกเตอร์อยู่ในนั้น และรับผลลัพธ์กลับมาซึ่งจะมีลักษณะเช่นนี้</p>
+      <pre><code class="language-md">                                                                     comment                                                                      |      distance
+--------------------------------------------------------------------------------------------------------------------------------------------------+---------------------
+ We have a hard rule: no deploys after Thursday noon. It has saved us more times than I can count.                                                |  0.2770497569293393
+ Automated deployments are great until the automation itself breaks and nobody remembers how to deploy manually.                                  |  0.3574482286223275
+ Our deploy process: merge PR, CI builds, deploy to canary, wait 10 minutes, promote. Simple and it has never bitten us.                          |  0.3587287787411174
+ Lambda cold starts are manageable if you keep your deployment package small. The teams complaining about cold starts usually have 200MB bundles. | 0.36594019571174496
+ If deploying your app requires a wiki page with 30 steps, you do not have a deployment process. You have a ritual.                               | 0.37398297369986555
+ Container images make deployments reproducible. Container orchestration makes your weekends disappear. Choose wisely.                            |  0.3791594834387738
+ Feature flags let us deploy code that's not ready without branching. Ship the flag off, flip it on when confidence is high. Game changer.        |  0.3793973470452213
+ We test in production and I'm not ashamed. Feature flags, canary rollouts, and good monitoring make it safe. Staging is a lie anyway.            |  0.3938557054406431
+ Set the Secure flag on every cookie. If you're not on HTTPS by now, that's a different conversation.                                             |   0.395735220957141
+ My phone got 47 push notifications from our staging environment at 2am because someone left a test flag on.                                      |  0.3987481477114623
+ I don't always use the command line, but when I do, I forget the flags and end up on StackOverflow anyway.                                       |  0.4120026476383941
+ We passed a security audit, felt great, then found a SQL injection vulnerability the next week. Audits are a snapshot, not a guarantee.          |  0.4125302851055693
+ Set up alerts on your 99th percentile latency, not your average. Average hides the pain from your worst-off users.                               | 0.41835813194067306
+ On-call wouldn't be so bad if alerts were actually actionable. 90% of ours are noise.                                                            |  0.4187183670812683
+ Our first production deploy took 4 hours of manual steps. We automated it down to 8 minutes. Should have done that first.                        |  0.4195256962936351</code></pre>
+      <p>ขั้นตอนมากมาย แต่สุดท้ายก็กลายเป็นโค้ดที่ค่อนข้างง่าย</p>
+      <ol>
+        <li>ทำการฝังทุกอย่างในฐานข้อมูลของคุณ</li>
+        <li>ตรวจสอบให้แน่ใจว่าคุณเพิ่มการฝังสำหรับทุกความคิดเห็นใหม่ที่เพิ่มลงในฐานข้อมูล และอัปเดตการฝังหากความคิดเห็นมีการเปลี่ยนแปลง</li>
+        <li>เมื่อคุณไปทำ RAG ด้วย LLM ให้รันคำค้นหาผ่านโมเดลการฝัง</li>
+        <li>ใช้สิ่งนั้นเพื่อค้นหาฐานข้อมูลโดยใช้ตัวดำเนินการ <code>&lt;=&gt;</code></li>
+        <li>กำไร</li>
+      </ol>
+      <p>ลองนึกภาพถ้าคุณต้องการค้นหาความคิดเห็นที่คล้ายกับความคิดเห็นที่มีอยู่ในฐานข้อมูลของคุณแล้ว ง่ายด้วยแบบสอบถามย่อย</p>
+      <pre><code class="language-sql">-- Wrap it in a function they can call
+-- (you'd create this ahead of time)
+SELECT
+  comment,
+  embedding &lt;=&gt; (
+    SELECT embedding FROM comments
+    WHERE comment_id = 1
+  ) AS distance
+FROM comments
+WHERE comment_id != 1
+ORDER BY distance
+LIMIT 15;</code></pre>
+      <p>เนื่องจากการฝังมีอยู่แล้ว คุณจึงไม่จำเป็นต้องเรียกโมเดล นี่จะให้ความคิดเห็นที่คล้ายกันมากที่สุดกับความคิดเห็น ID 1</p>
+      <p>เปรียบเทียบสิ่งนี้กับการค้นหาการเปรียบเทียบข้อความ (เช่น <code>LIKE</code>, <code>ILIKE</code>) - คุณจะได้รับสิ่งที่มีคำหลักเหมือนกันทุกประการ แต่คุณจะพลาดสิ่งที่มีความหมายคล้ายกัน</p>
+      <h2>คำเตือนเกี่ยวกับ RAG</h2>
+      <p>RAG ไม่ใช่กระสุนเงิน มันไม่ได้ทำให้ผลลัพธ์ของคุณจาก LLM ดีขึ้นเสมอไป</p>
+      <p>มาใช้บอทสนับสนุนลูกค้าของเรากันเถอะ มันอาจจะทำงานได้ดีหากคุณมีแคตตาล็อกวิธีแก้ปัญหาที่มีประสิทธิภาพ <em>และ</em> ปัญหาส่วนใหญ่คือปัญหาที่คุณเคยเห็นมาก่อน แต่หากคุณมีแค็ตตาล็อกโซลูชันที่ไม่ดี และ/หรือปัญหาส่วนใหญ่เป็นปัญหาใหม่และไม่มีอยู่ในแค็ตตาล็อกโซลูชัน ถ้าอย่างนั้น คุณกำลังพูดถึงบริบทมากมายที่ไม่เพียงแต่ไร้ประโยชน์เท่านั้น แต่ยังกำลังขับเคลื่อน LLM ไปในทิศทางที่ผิดอีกด้วย มันเป็นอันตรายต่อผลิตภัณฑ์ของคุณจริงๆ</p>
+      <p>ดังนั้นคำเตือนบางประการ:</p>
+      <ul>
+        <li>การเรียกค้นที่ไม่ถูกต้องนั้นแย่ยิ่งกว่าการไม่เรียกค้นเลย RAG ทำงานในสถานการณ์เฉพาะที่คุณมีบริบทที่เป็นประโยชน์ในพื้นที่ปัญหาที่มีขอบเขต - คำแนะนำผลิตภัณฑ์จากร้านค้าของคุณคือตัวอย่างที่ดีในเรื่องนี้ เป็น/อาจเป็นอันตรายได้เมื่อเป็นปัญหาที่มีขอบเขตน้อยกว่า เช่น ฝ่ายสนับสนุนลูกค้า ไม่ว่าในกรณีใด คุณต้องทดสอบอย่างละเอียดเพื่อให้แน่ใจว่า RAG ของคุณช่วยได้ไม่ทำให้เจ็บ</li>
+        <li>LLM เริ่มฉลาดขึ้นเรื่อยๆ และบ่อยครั้งไม่จำเป็นต้องใช้ RAG เพื่อให้ได้โซลูชันที่ดี ในบางกรณี ปล่อยให้ LLM ดำเนินการต่อไปและดูว่าจะได้อะไรกลับมาบ้าง คุณสามารถเพิ่มเช่นเซิร์ฟเวอร์ MCP หรือทักษะในการดึงข้อมูลของตัวเองได้หากเหมาะสมกับกรณีการใช้งานของคุณสำหรับโมเดล &quot;LLM สามารถดึงบริบทเมื่อจำเป็น&quot; แทน &quot;พุชบริบทไปยัง LLM ทุกครั้ง&quot;</li>
+        <li>ในบางกรณี คุณสามารถ fine-tune โมเดลแทนการใช้ RAG ได้ หากเป้าหมายคือการเปลี่ยน <em>พฤติกรรม</em> ของโมเดล ไม่ใช่เพิ่มบริบทใหม่ตอนค้นหา นั่นเป็นโจทย์ของการ fine-tune ไม่ใช่การดึงข้อมูล วิธีนี้เหมาะกับการปรับโทน รูปแบบการแก้ปัญหา หรือฝังแนวโน้มบางอย่างลงในคำตอบโดยตรง (บางกรณีอาจแก้ได้ด้วยการออกแบบ prompt อย่างง่าย ทั้งนี้ขึ้นอยู่กับปัญหา)</li>
+      </ul>
+      <p>โปรดทราบว่าการทำ RAG มีต้นทุนทั้งเวลาแฝง ความซับซ้อนของโค้ดสำหรับการค้นหา จำนวนโทเค็นที่เพิ่มขึ้นในทุกคำขอ และโครงสร้างพื้นฐานเพิ่มเติมสำหรับจัดการเวกเตอร์ จึงควรตรวจสอบให้แน่ใจว่าระบบได้รับประโยชน์จากมันจริง ๆ คุณสามารถเพิ่ม RAG ในภายหลังได้เสมอ และโดยทั่วไปหากยังไม่จำเป็นก็ควรเริ่มต้นโดยไม่มี RAG ก่อน</p>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/sql/vector-search">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="10_nodejs_app_with_postgresql.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="12_nosql.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

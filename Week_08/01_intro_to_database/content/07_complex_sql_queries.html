@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เรียนรู้ Foreign Key JOIN Subquery และ GROUP BY ผ่านโครงสร้างข้อมูลที่สัมพันธ์กัน" />
+    <title>คำสั่ง SQL ที่ซับซ้อน — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>คำสั่ง SQL ที่ซับซ้อน</h1>
+
+      <p>มาดูการสืบค้นที่ซับซ้อนกว่านี้กันดีกว่า สิ่งแรกที่เราต้องการคือตาราง ความคิดเห็น และบอร์ดเพิ่มเติมอีกสองตาราง เราจะสร้างโครงสร้างข้อมูลสำหรับระบบกระดานข้อความที่เรียบง่ายซึ่งมีผู้ใช้ ความคิดเห็น และกระดานต่างๆ ส่วนที่น่าสนใจคือทุกความคิดเห็นจะถูกโพสต์โดยผู้ใช้ ดังนั้นจะต้องอ้างอิงถึงตารางผู้ใช้ และจะถูกโพสต์บนบอร์ด ดังนั้นจึงต้องอ้างอิงบอร์ดจากตารางบอร์ด นี่คือสิ่งที่คุณเรียกว่าข้อมูลเชิงสัมพันธ์ และจุดที่ฐานข้อมูลเชิงสัมพันธ์โดดเด่นจริงๆ</p>
+      <h2>กุญแจต่างประเทศ</h2>
+      <p>มาจดสคีมาทั้งหมดสำหรับผู้ใช้ บอร์ด และความคิดเห็นของเรากัน</p>
+      <blockquote><p>คุณไม่จำเป็นต้องเรียกใช้สิ่งเหล่านี้หากคุณรันคำสั่ง SQL ตัวอย่างก่อนหน้านี้ นี่เป็นเพียงเพื่อให้คุณดูสคีมา</p></blockquote>
+      <pre><code class="language-sql">
+CREATE TABLE users (
+  user_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  username VARCHAR ( 25 ) UNIQUE NOT NULL,
+  email VARCHAR ( 50 ) UNIQUE NOT NULL,
+  full_name VARCHAR ( 100 ) NOT NULL,
+  last_login TIMESTAMP,
+  created_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE boards (
+  board_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  board_name VARCHAR ( 50 ) UNIQUE NOT NULL,
+  board_description TEXT NOT NULL
+);
+
+CREATE TABLE comments (
+  comment_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+  board_id INT REFERENCES boards(board_id) ON DELETE CASCADE,
+  comment TEXT NOT NULL,
+  time TIMESTAMP
+);
+</code></pre>
+      <ul>
+        <li>สองอันแรกน่าจะดูคุ้นเคยดี สิ่งใหม่เพียงอย่างเดียวคือผู้ใช้ประเภทข้อมูล <code>TEXT</code> โดยพื้นฐานแล้วนี่คือ VARCHAR ที่ไม่มีขีดจำกัดความยาว (หรือค่อนข้างจะเป็นแคปที่ใหญ่มาก) มันมีความแตกต่างเล็กๆ น้อยๆ อื่นๆ แต่ตอนนี้แค่รู้ว่ามันเป็นข้อความที่ไม่ได้แคป</li>
+        <li>ในทางเทคนิคแล้ว <code>user_id INT REFERENCES users(user_id)</code> เป็นสิ่งที่คุณต้องการในการสร้างคีย์ต่างประเทศ ส่วนแรก <code>INT</code> ทำให้รู้ว่าคีย์นี้จะถูกจัดเก็บเป็นจำนวนเต็ม จากนั้นจะใช้คีย์เวิร์ด <code>REFERENCES</code> เพื่อให้ PostgreSQL ทราบว่าเป็นคีย์ต่างประเทศ Foreign Key คือเขตข้อมูลในตารางหนึ่งที่อ้างอิงคีย์ <strong>หลัก</strong> ของอีกตารางหนึ่ง ในกรณีนี้ ความคิดเห็นจะอ้างอิงถึง user_id ในตารางอื่น ซึ่งก็คือตาราง users ส่วนของ <code>users</code> บอกว่าเป็นการอ้างอิงตารางผู้ใช้ และ <code>(user_id)</code> เป็นชื่อของคีย์ในอีกตารางหนึ่ง ในกรณีนี้ เราเรียกทั้ง user_id (ซึ่งอาจจะเกิดขึ้นค่อนข้างบ่อยแต่ไม่เสมอไป) ดังนั้นทั้งสองจึงตรงกัน แต่ถ้าเราเรียก user_id เพียง id ในตาราง users เราจะใส่ <code>id</code> ไว้ที่นั่น</li>
+        <li><code>ON DELETE CASCADE</code> ช่วยให้ PostgreSQL รู้ว่าต้องทำอย่างไรหากผู้ใช้ถูกลบ ดังนั้นหากผู้ใช้แสดงความคิดเห็นบนกระดานข้อความแล้วลบบัญชีของพวกเขา คุณต้องการให้ทำอย่างไร? หากคุณละเว้นส่วน <code>ON DELETE CASCADE</code> จะเหมือนกับการทำ <code>ON DELETE NO ACTION</code> ซึ่งหมายความว่าจะเกิดข้อผิดพลาดและไม่อนุญาตให้คุณลบผู้ใช้จนกว่าคุณจะลบความคิดเห็นทั้งหมดก่อน คุณยังสามารถทำ <code>ON DELETE SET NULL</code> ซึ่งหมายความว่าจะทำให้ user_id เป็นโมฆะในความคิดเห็นใด ๆ ที่ทำโดยผู้ใช้นั้น</li>
+        <li>เราทำเช่นเดียวกันกับ board_id เพียงอ้างอิงตารางบอร์ดแทนตารางผู้ใช้</li>
+      </ul>
+      <p>ไปข้างหน้าและใส่ข้อมูลจำลองลงไปที่นั่น คัดลอก / วาง <a href="https://databases-v2.holt.courses/sample-postgresql.sql">แบบสอบถามนี้</a> ลงในเทอร์มินัล psql ของคุณหากคุณยังไม่ได้ดำเนินการ (SQL ตัวอย่างเดียวกันกับเมื่อก่อน) อาจใช้เวลาสักครู่</p>
+      <h2>เข้าร่วม</h2>
+      <p>ดังนั้นเราจึงต้องการสร้างมุมมองของกระดานข้อความที่ผู้ใช้สามารถดูตัวอย่างโพสต์แต่ละรายการได้ เราจะเขียนแบบสอบถามนั้นได้อย่างไร?</p>
+      <pre><code class="language-sql">SELECT comment_id, user_id, LEFT(comment, 20) AS preview FROM comments WHERE board_id = 39;</code></pre>
+      <ul>
+        <li>สองสิ่งใหม่ที่นี่ ฟังก์ชัน <code>LEFT</code> จะส่งกลับอักขระ X ตัวแรกของสตริง (ดังที่คุณเดาได้ RIGHT จะส่งกลับอักขระ X ตัวสุดท้าย) เราทำสิ่งนี้เพราะสิ่งนี้อ่านยากในบรรทัดคำสั่ง</li>
+        <li>คีย์เวิร์ด <code>AS</code> ให้คุณเปลี่ยนชื่อวิธีการฉายสตริงได้ หากเราไม่ใช้ AS ที่นี่ สตริงจะถูกส่งกลับภายใต้คีย์ <code>left</code> ซึ่งไม่สมเหตุสมผล</li>
+      </ul>
+      <p>เอาล่ะ คุณจะได้บางอย่างกลับมาดังนี้:</p>
+      <pre><code> comment_id | user_id |       preview
+------------+---------+----------------------
+         63 |     858 | Maecenas tristique,
+        358 |     876 | Mauris enim leo, rho
+        429 |     789 | Maecenas ut massa qu
+        463 |     925 | Phasellus sit amet e
+        485 |     112 | Maecenas tristique,
+        540 |     588 | Nullam porttitor lac
+        545 |     587 | Praesent id massa id
+        972 |     998 | Aenean lectus. Pelle
+(8 rows)</code></pre>
+      <p>เราไม่สามารถใช้สิ่งนี้เพื่อแสดงความคิดเห็นบนแอปพลิเคชันเว็บของเราได้ เนื่องจากผู้ใช้ของคุณไม่สนใจว่า user_id โพสต์ความคิดเห็นเหล่านี้อย่างไร แต่พวกเขาต้องการชื่อผู้ใช้ แต่นั่นไม่มีอยู่ในตารางความคิดเห็นซึ่งมีอยู่ในตารางผู้ใช้ แล้วเราจะเชื่อมโยงสิ่งเหล่านั้นเข้าด้วยกันได้อย่างไร?</p>
+      <pre><code class="language-sql">SELECT
+  comment_id, comments.user_id, users.username, time, LEFT(comment, 20) AS preview
+FROM
+  comments
+INNER JOIN
+  users
+ON
+  comments.user_id = users.user_id
+WHERE
+  board_id = 39;</code></pre>
+      <p>มายากล! คีย์ใหญ่ที่นี่คือ <code>INNER JOIN</code> ซึ่งช่วยให้เราสามารถจับคู่คีย์ทั้งหมดจากตารางหนึ่งไปยังอีกตารางหนึ่งได้ เราทำอย่างนั้นในส่วนคำสั่ง <code>ON</code> ที่เราบอกว่าการจับคู่ user_ids คือที่ที่คุณสามารถรวมบันทึกเหล่านั้นไว้ในระเบียนเดียวได้</p>
+      <p>มาพูดถึง <code>INNER</code> กันสักครู่ JOIN มีหลายประเภท INNER เป็นจุดเริ่มต้นที่ดี ข้อความระบุว่า &quot;ค้นหาตำแหน่งที่ user_ids ตรงกัน หากคุณพบบันทึกที่มี user_id อยู่ในรายการหนึ่ง แต่ไม่มีอยู่ในอีกรายการหนึ่ง ให้ละเว้นไว้ในผลลัพธ์&quot; นี่ไม่ใช่ความแตกต่างที่มีประโยชน์อย่างยิ่งสำหรับเราในขณะนี้ เนื่องจาก user_id ทั้งหมดจะมีอยู่ใน users และเรามั่นใจได้เนื่องจากข้อจำกัดของคีย์ต่างประเทศที่เราใช้ อย่างไรก็ตาม หากความคิดเห็นไม่มี user_id ก็จะละความคิดเห็นนั้นในผลลัพธ์</p>
+      <p><a href="https://commons.wikimedia.org/wiki/File:SQL_Joins.svg"><img src="https://databases-v2.holt.courses/images/SQL_Joins.png" alt="แผนภาพของการรวม SQL" loading="lazy" /></a></p>
+      <p><code>LEFT JOIN</code> จะระบุว่า &quot;หากความคิดเห็นมี user_id ที่ไม่มีอยู่ ให้ใส่ไว้ด้วย&quot; <code>RIGHT JOIN</code> อาจไม่สมเหตุสมผลนักในที่นี้ แต่มันจะรวมผู้ใช้ด้วย แม้ว่าพวกเขาจะไม่มีความคิดเห็นในบอร์ดนั้นก็ตาม</p>
+      <p>นอกจากนี้เรายังสามารถ <code>OUTER JOIN</code> ซึ่งจะเป็นทุกอย่างที่ <em>ไม่ตรงกัน</em> ในฐานข้อมูลของเรา นั่นจะไม่มีอะไรเลยเพราะเรารับประกันว่าทุกอย่างจะตรงกันเนื่องจากข้อจำกัดของเรา</p>
+      <p>คุณยังสามารถทำ <code>FULL OUTER JOIN</code> ซึ่งระบุว่ารวมทุกอย่างไว้ด้วย หากไม่มีข้อมูลที่ตรงกันจากทั้งสองฝ่าย ให้รวมไว้ด้วย หากมีการจับคู่ให้รวมไว้ด้วย</p>
+      <p>การรวมอีกอย่างที่ไม่ค่อยมีประโยชน์คือ <code>CROSS JOIN</code> สิ่งนี้ทำให้ <em>Cartesian product</em> ของทั้งสองตารางซึ่งมีขนาดใหญ่มาก ผลคูณคาร์ทีเซียนจะจับคู่กับทุกแถวในตารางอื่น หากคุณมี A, B และ C ในตารางหนึ่งโดยมี D และ E อยู่ในอีกตารางหนึ่ง CROSS JOIN ของคุณจะเป็น AD, AE, BD, BE, CD, CE หากคุณรวมข้ามระหว่างสองตารางโดยแต่ละตารางมี 1,000 แถว คุณจะได้รับ 1,000,000 ระเบียนกลับ</p>
+      <p>ตารางยังสามารถเข้าร่วมได้ด้วยตนเอง ลองนึกภาพคุณมีตารางพนักงานและหนึ่งในฟิลด์คือ direct_reports ซึ่งมี Employee_ids ของพนักงานที่รายงานพนักงานเดิม คุณสามารถเข้าร่วมด้วยตนเองเพื่อรับข้อมูลสำหรับรายงานได้</p>
+      <p>จริงๆ แล้ว 95% ของสิ่งที่ฉันทำครอบคลุมโดย INNER และ LEFT joins</p>
+      <p>เคล็ดลับดีๆ ประการหนึ่งที่เราสามารถทำได้ที่นี่คือการรวมอย่างเป็นธรรมชาติ</p>
+      <pre><code class="language-sql">SELECT
+  comment_id, comments.user_id, users.username, time, LEFT(comment, 20) AS preview
+FROM
+  comments
+NATURAL INNER JOIN
+  users
+WHERE
+  board_id = 39;</code></pre>
+      <p>คำสั่งนี้ให้ผลเหมือนตัวอย่างด้านบน โดย <code>NATURAL JOIN</code> เป็นการบอก PostgreSQL ว่า &quot;คอลัมน์ในสองตารางนี้ใช้ชื่อเดียวกัน ให้จับคู่คอลัมน์เหล่านั้นเข้าด้วยกันได้เลย&quot; วิธีนี้สะดวกเมื่อชื่อคอลัมน์ตรงกัน แต่โดยทั่วไปการระบุเงื่อนไข JOIN ให้ชัดเจนจะสื่อเจตนาได้ดีกว่า จึงควรใช้ <code>NATURAL JOIN</code> อย่างระมัดระวัง</p>
+      <h2>แบบสอบถามย่อย</h2>
+      <p>สมมติว่าคุณต้องค้นหาความคิดเห็นทั้งหมดของ Maynord Simonich คุณสามารถทำการสืบค้นได้สองแบบ: สืบค้น user_id ของ Kate จากผู้ใช้ จากนั้นใช้ user_id นั้นเพื่อค้นหาความคิดเห็น หรือเราจะทำทุกอย่างพร้อมกันด้วยแบบสอบถามย่อยก็ได้!</p>
+      <pre><code class="language-sql">SELECT comment_id, user_id, LEFT(comment, 20) FROM comments WHERE user_id = (SELECT user_id FROM users WHERE full_name = 'Maynord Simonich');</code></pre>
+      <p>การดำเนินการนี้จะสอบถาม ID ของ Maynord และใช้ข้อมูลนั้นในการสืบค้นอื่นทันที ตรวจสอบให้แน่ใจว่าสิ่งนี้ส่งคืนแถวเดียว ไม่เช่นนั้นการดำเนินการนี้จะล้มเหลว คุณสามารถใช้แบบสอบถามย่อยได้หลายวิธี แต่โดยทั่วไปแล้วจะมีลักษณะเช่นนี้โดยมี <code>()</code> ล้อมรอบแบบสอบถามย่อย คุณสามารถมีแบบสอบถามย่อยในแบบสอบถามย่อยของคุณได้!</p>
+      <h2>จัดกลุ่มตาม</h2>
+      <p>จะเป็นอย่างไรหากคุณกำลังจัดทำรายงานและต้องการแสดงกระดานข้อความที่มีการโพสต์มากที่สุดสิบอันดับแรก คุณสามารถเรียกใช้สิ่งนี้</p>
+      <pre><code class="language-sql">SELECT
+  boards.board_name, COUNT(*) AS comment_count
+FROM
+  comments
+INNER JOIN
+  boards
+ON
+  boards.board_id = comments.board_id
+GROUP BY
+  boards.board_name
+ORDER BY
+  comment_count DESC
+LIMIT 10;</code></pre>
+      <p><code>GROUP BY</code> กำลังจะยุบ board_names เดียวกันทั้งหมด (รับประกันว่าไม่ซ้ำกันเนื่องจากข้อจำกัด UNIQUE ของเราบนบอร์ด) จากนั้นเราใช้ <code>COUNT(*)</code> เพื่อนับจำนวนบอร์ดที่มี <code>board_name</code> เหมือนกัน วิธีนี้ได้ผล! นี่จะทำให้เราได้จำนวนความคิดเห็นที่แน่นอนบนกระดานด้านบน!</p>
+      <p>แล้วถ้าคุณต้องการเห็นกระดานที่มีประชากรน้อยที่สุดล่ะ? เราสามารถพลิก <code>ORDER BY</code> เป็น <code>ASC</code> ได้ แต่มีปัญหาที่ชัดเจน: จะเกิดอะไรขึ้นหากไม่มีการโพสต์บนกระดาน?</p>
+      <pre><code class="language-sql">SELECT
+  boards.board_name, COUNT(*) AS comment_count
+FROM
+  comments
+INNER JOIN
+  boards
+ON
+  boards.board_id = comments.board_id
+GROUP BY
+  boards.board_name
+ORDER BY
+  comment_count ASC
+LIMIT 10;</code></pre>
+      <p>มันจะไม่แสดงขึ้นมาเนื่องจาก <code>INNER JOIN</code> แล้วเราต้องการอะไร? กระดาน &quot;LEFT&quot; ที่นี่คือความคิดเห็น (อันที่อยู่ใน FROM จะเป็น LEFT) และเราไม่ต้องการอะไรเพิ่มเติมจากกระดานแสดงความคิดเห็น เนื่องจากทั้งหมดจะปรากฏในการสืบค้นด้วยข้อจำกัดของคีย์ต่างประเทศ ดังนั้นเราจึงต้องมีการเข้าร่วมที่ถูกต้อง! เราจำเป็นต้องรวมบอร์ดที่ไม่มีความคิดเห็นใดๆ เรายังจำเป็นต้องเปลี่ยน <code>COUNT(*)</code> เนื่องจากแถวใดๆ นับเป็น <code>*</code> และนั่นจะทำให้ดูเหมือนว่ามีความคิดเห็นหนึ่งรายการบนกระดานว่างของเรา ทั้งที่ในความเป็นจริงแล้วไม่มีความคิดเห็นเลย ดังนั้นเราจึงจำเป็นต้องเป็น <code>COUNT(comment_id)</code> เพราะนั่นจะนับจำนวนความคิดเห็นที่มีอยู่จริง</p>
+      <pre><code class="language-sql">SELECT
+  boards.board_name, COUNT(comment_id) AS comment_count
+FROM
+  comments
+RIGHT JOIN
+  boards
+ON
+  boards.board_id = comments.board_id
+GROUP BY
+  boards.board_name
+ORDER BY
+  comment_count;</code></pre>
+      <p>หากิน! สิ่งสำคัญคือต้องทราบข้อมูลของคุณ สิ่งที่คุณคาดหวังที่จะเห็น และตระหนักถึงข้อจำกัดของการสืบค้นของคุณ!</p>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/sql/complex-sql-queries">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="06_querying_postgresql.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="08_json_in_postgresql.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

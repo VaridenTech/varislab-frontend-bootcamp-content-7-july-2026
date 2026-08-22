@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เชื่อมต่อ Express กับ Neo4j และสร้างแอปค้นหาเส้นทางที่สั้นที่สุดระหว่างบุคคล" />
+    <title>สร้างแอป Node.js ด้วย Neo4j — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>สร้างแอป Node.js ด้วย Neo4j</h1>
+
+      <p>มาเขียนโปรเจ็กต์ Node.js สั้นๆ กันอย่างรวดเร็วเพื่อช่วยคุณถ่ายทอดทักษะจากบรรทัดคำสั่งไปยังโลกแห่งการเขียนโค้ด</p>
+      <p><a href="https://github.com/btholt/db-v2-samples">คุณสามารถเข้าถึงตัวอย่างทั้งหมดสำหรับโปรเจ็กต์นี้ได้ที่นี่</a></p>
+      <p>สร้างไดเร็กทอรีใหม่ ในไดเร็กทอรีนั้นให้รัน:</p>
+      <pre><code class="language-bash">npm init -y
+npm pkg set type=module
+npm i neo4j-driver@6.0.1 express@5.2.1
+mkdir static
+touch static/index.html server.js
+code . # or open this folder in VS Code or whatever editor you want</code></pre>
+      <p>เรามาสร้างส่วนหน้าโง่ๆ ที่สร้างคำค้นหากับส่วนหลังกันดีกว่า ใน static/index.html ใส่:</p>
+      <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot; /&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+    &lt;title&gt;Neo4j Sample&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;input type=&quot;text&quot; placeholder=&quot;Person 1&quot; id=&quot;person1&quot; /&gt;
+    &lt;input type=&quot;text&quot; placeholder=&quot;Person 2&quot; id=&quot;person2&quot; /&gt;
+    &lt;button id=&quot;btn&quot;&gt;Search&lt;/button&gt;
+    &lt;pre&gt;
+        &lt;code id=&quot;code&quot;&gt;&lt;/code&gt;
+    &lt;/pre&gt;
+
+    &lt;script&gt;
+      const btn = document.getElementById(&quot;btn&quot;);
+      const code = document.getElementById(&quot;code&quot;);
+      const person1 = document.getElementById(&quot;person1&quot;);
+      const person2 = document.getElementById(&quot;person2&quot;);
+
+      btn.addEventListener(&quot;click&quot;, async () =&gt; {
+        code.innerText = &quot;loading&quot;;
+
+        const res = await fetch(
+          `/get?person1=${encodeURIComponent(
+            person1.value,
+          )}&amp;person2=${encodeURIComponent(person2.value)}`,
+        );
+        const json = await res.json();
+
+        code.innerText = &quot;\n&quot; + JSON.stringify(json, null, 4);
+      });
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      <ul>
+        <li>ปกติแล้วฉันจะบอกว่าอย่าใส่แท็กสคริปต์ขนาดใหญ่ลงไป แต่ตอนนี้เรากำลังมุ่งสู่ความเรียบง่าย คุณสามารถปรับโครงสร้างสิ่งนี้ใหม่ในภายหลังเพื่อให้ได้สิ่งที่ดีกว่า</li>
+        <li>จะดีกว่ามากถ้าเรามีนักแสดง นักแสดง และผู้กำกับทั้งหมดในกราฟแบบเลื่อนลง แทนที่จะเป็นข้อความรูปแบบอิสระ ฉันจะปล่อยให้คุณทำแบบสอบถามและอัปเดต UI</li>
+      </ul>
+      <p>ใน server.js ให้ใส่สิ่งนี้:</p>
+      <pre><code class="language-javascript">import express from &quot;express&quot;;
+import neo4j from &quot;neo4j-driver&quot;;
+
+const CONNECTION_STRING =
+  process.env.NEO4J_CONNECTION_STRING || &quot;bolt://localhost:7687&quot;;
+
+const driver = neo4j.driver(CONNECTION_STRING);
+
+async function init() {
+  const app = express();
+
+  app.get(&quot;/get&quot;, async (req, res) =&gt; {
+    const session = driver.session();
+    const result = await session.run(
+      `
+        MATCH path = shortestPath(
+            (First:Person {name: $person1 })-[*]-(Second:Person {name: $person2 })
+        )
+        UNWIND nodes(path) as node
+        RETURN coalesce(node.name, node.title) as text;
+    `,
+      {
+        person1: req.query.person1,
+        person2: req.query.person2,
+      },
+    );
+
+    res.json({
+      status: &quot;ok&quot;,
+      path: result.records.map((record) =&gt; record.get(&quot;text&quot;)),
+    });
+
+    await session.close();
+  });
+
+  app.use(express.static(&quot;./static&quot;));
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT);
+  console.log(`running on http://localhost:${PORT}`);
+}
+init();</code></pre>
+      <ul>
+        <li>Neo4j มีโปรโตคอลการถ่ายโอนของตัวเอง (ตรงข้ามกับ HTTP) ที่เรียกว่า bolt ทั้ง PostgreSQL และ MongoDB ก็มีของตัวเองเช่นกัน</li>
+        <li>เช่นเดียวกับพูลของ PostgreSQL ไดรเวอร์ของ Neo4j จะทำสิ่งนั้นเพื่อคุณและให้ไคลเอนต์แก่คุณผ่านเซสชัน ตรวจสอบให้แน่ใจว่าคุณปิดเซสชันเมื่อดำเนินการเสร็จแล้วเพื่อให้สามารถใช้การเชื่อมต่อซ้ำได้</li>
+        <li>เรากำลังทำการสืบค้นแบบกำหนดพารามิเตอร์เช่นเดียวกับ PostgreSQL อย่างที่คุณเห็นว่าคุณกำลังส่งสตริงไปที่ Neo4j ซึ่งเป็นการตีความสตริงนั้นเป็นคำสั่ง ทุกครั้งที่เกิดเหตุการณ์เช่นนี้ คุณอาจถูกฉีดยาโจมตีได้ โชคดีที่คุณสามารถทำสิ่งเดียวกันได้ที่นี่ด้วยการสืบค้นแบบกำหนดพารามิเตอร์ ดังนั้นไดรเวอร์จึงมั่นใจได้ว่าจะไม่มีสิ่งใดเสียหายเกิดขึ้น</li>
+        <li>โดยพื้นฐานแล้วนี่เป็นคำค้นหาของ Kevin Bacon แต่โดยทั่วไปแล้วจะเป็นคำค้นหาแบบคนสองคน</li>
+        <li>Neo4j ส่งคืนรายการของวัตถุ Record และคุณต้องเรียก <code>get()</code> ในแต่ละระเบียนเพื่อรับแอตทริบิวต์ที่คุณต้องการ ซึ่งเป็นสิ่งที่เราทำกับคำสั่ง map เพื่อรับชื่อและหัวเรื่องแต่ละรายการ</li>
+      </ul>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/graph/nodejs-app-with-neo4j">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="23_indexes_in_neo4j.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="25_key_value_store.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

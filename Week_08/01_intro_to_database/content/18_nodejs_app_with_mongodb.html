@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เชื่อมต่อ Express กับ MongoDB และสร้างหน้าค้นหาข้อมูลด้วย Text Index" />
+    <title>สร้างแอป Node.js ด้วย MongoDB — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>สร้างแอป Node.js ด้วย MongoDB</h1>
+
+      <p>มาเขียนโปรเจ็กต์ Node.js สั้นๆ กันอย่างรวดเร็วเพื่อช่วยคุณถ่ายทอดทักษะจากบรรทัดคำสั่งไปยังโลกแห่งการเขียนโค้ด</p>
+      <p><a href="https://github.com/btholt/db-v2-samples">คุณสามารถเข้าถึงตัวอย่างทั้งหมดสำหรับโปรเจ็กต์นี้ได้ที่นี่</a></p>
+      <p>สร้างไดเร็กทอรีใหม่ ในไดเร็กทอรีนั้นให้รัน:</p>
+      <pre><code class="language-bash">npm init -y
+npm pkg set type=module
+npm i mongodb@7.1.0 express@5.2.1
+mkdir static
+touch static/index.html server.js
+code . # or open this folder in VS Code or whatever editor you want</code></pre>
+      <p>เรามาสร้างส่วนหน้าโง่ๆ ที่สร้างคำค้นหากับส่วนหลังกันดีกว่า ใน static/index.html ใส่:</p>
+      <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot; /&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+    &lt;title&gt;MongoDB Sample&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;input type=&quot;text&quot; placeholder=&quot;Search&quot; id=&quot;search&quot; /&gt;
+    &lt;button id=&quot;btn&quot;&gt;Search&lt;/button&gt;
+    &lt;pre&gt;
+        &lt;code id=&quot;code&quot;&gt;&lt;/code&gt;
+    &lt;/pre&gt;
+
+    &lt;script&gt;
+      const btn = document.getElementById(&quot;btn&quot;);
+      const code = document.getElementById(&quot;code&quot;);
+      const search = document.getElementById(&quot;search&quot;);
+
+      btn.addEventListener(&quot;click&quot;, async () =&gt; {
+        code.innerText = &quot;loading&quot;;
+
+        const res = await fetch(
+          &quot;/get?search=&quot; + encodeURIComponent(search.value),
+        );
+        const json = await res.json();
+
+        code.innerText = &quot;\n&quot; + JSON.stringify(json, null, 4);
+      });
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      <p>ปกติแล้วฉันจะบอกว่าอย่าใส่แท็กสคริปต์ขนาดใหญ่ลงไป แต่ตอนนี้เรากำลังมุ่งสู่ความเรียบง่าย คุณสามารถปรับโครงสร้างสิ่งนี้ใหม่ในภายหลังเพื่อให้ได้สิ่งที่ดีกว่า</p>
+      <p>ใน server.js ให้ใส่สิ่งนี้:</p>
+      <pre><code class="language-javascript">import express from &quot;express&quot;;
+import { MongoClient } from &quot;mongodb&quot;;
+
+const connectionString =
+  process.env.MONGODB_CONNECTION_STRING || &quot;mongodb://localhost:27017&quot;;
+
+async function init() {
+  const client = new MongoClient(connectionString);
+  await client.connect();
+
+  const app = express();
+
+  app.get(&quot;/get&quot;, async (req, res) =&gt; {
+    const db = await client.db(&quot;adoption&quot;);
+    const collection = db.collection(&quot;pets&quot;);
+
+    const pets = await collection
+      .find(
+        {
+          $text: { $search: req.query.search },
+        },
+        { projection: { _id: 0 } },
+      )
+      .sort({ score: { $meta: &quot;textScore&quot; } })
+      .limit(10)
+      .toArray();
+
+    res.json({ status: &quot;ok&quot;, pets }).end();
+  });
+
+  const PORT = process.env.PORT || 3000;
+  app.use(express.static(&quot;./static&quot;));
+  app.listen(PORT);
+
+  console.log(`running on http://localhost:${PORT}`);
+}
+init();</code></pre>
+      <blockquote><p>🚨 <strong>ปัญหาที่อาจเกิดขึ้นที่คุณอาจเห็น:</strong> หากคุณเห็นข้อผิดพลาด <code>UnhandledPromiseRejectionWarning: MongoError: text index required for $text query (no such collection 'adoption.pets')</code> แสดงว่าคุณอาจมีชื่อฐานข้อมูลที่ไม่ถูกต้องในรหัสของคุณ ในตัวอย่างของฉัน ฉันเรียกฐานข้อมูลของฉัน <code>adoption</code> หากคุณไม่ได้เปลี่ยนชื่อฐานข้อมูลของคุณ ฐานข้อมูลจะเรียกว่า <code>test</code> หากคุณไม่ทราบชื่อฐานข้อมูลของคุณ ให้รัน <code>db</code> ใน mongo shell ของคุณ แล้วระบบจะแจ้งให้คุณทราบ เมื่อคุณค้นพบชื่อฐานข้อมูลของคุณแล้ว ให้เปลี่ยนบรรทัด <code>const db = await client.db(&quot;&lt;the name of your database here&gt;&quot;);</code> เพื่อให้ตรงกับชื่อฐานข้อมูลของคุณ</p></blockquote>
+      <p>มาดูบันทึกย่อบางส่วนที่นี่ เพื่อให้ชัดเจน นี่เป็นการแสดงให้คุณเห็นถึงวิธีเชื่อมต่อกับ MongoDB จากโค้ดเป็นส่วนใหญ่ และเพื่อแสดงให้คุณเห็นว่าข้อความค้นหาทั้งหมดที่คุณได้เรียนรู้ในส่วนที่แล้วนำไปใช้ได้เกือบจะโดยไม่มีการแก้ไขใดๆ (มีความแตกต่างเล็กน้อยอยู่บ้าง)</p>
+      <ul>
+        <li>เราดึงสตริงการเชื่อมต่อ MongoDB ออกจากตัวแปรสภาพแวดล้อม (ดังนั้นคุณสามารถทำได้หากทำงานบนเซิร์ฟเวอร์บนคลาวด์) ไม่เช่นนั้นจะใช้สำเนาที่รันในเครื่องเหมือนที่เราทำตอนนี้</li>
+        <li>คุณต้องเชื่อมต่อกับ DB จากนั้นเชื่อมต่อกับ db (ฐานข้อมูล) จากนั้นจึงเชื่อมต่อกับคอลเลกชัน</li>
+        <li>คุณเรียกใช้แบบสอบถามทั้งหมดในระดับคอลเลกชัน</li>
+        <li>ค้นหา, จัดเรียง, จำกัด, toArray, DeleteOne, findOneAndReplace ฯลฯ ทั้งหมดนี้ทำงานในแบบที่คุณคาดหวัง</li>
+      </ul>
+      <p>แค่นั้นแหละ! นั่นเป็นเซิร์ฟเวอร์ Node.js ที่รวดเร็วที่เชื่อมต่อกับ MongoDB!</p>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/nosql/nodejs-app-with-mongodb">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="17_aggregation.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="19_graph_databases.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

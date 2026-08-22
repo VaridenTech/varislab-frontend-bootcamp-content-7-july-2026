@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เชื่อมต่อ Express กับ PostgreSQL ใช้ Connection Pool และป้องกัน SQL Injection" />
+    <title>สร้างแอป Node.js ด้วย PostgreSQL — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>สร้างแอป Node.js ด้วย PostgreSQL</h1>
+
+      <p>มาเขียนโปรเจ็กต์ Node.js สั้นๆ กันอย่างรวดเร็วเพื่อช่วยคุณถ่ายทอดทักษะจากบรรทัดคำสั่งไปยังโลกแห่งการเขียนโค้ด</p>
+      <p><a href="https://github.com/btholt/db-v2-samples">คุณสามารถเข้าถึงตัวอย่างทั้งหมดสำหรับโปรเจ็กต์นี้ได้ที่นี่</a></p>
+      <p>สร้างไดเร็กทอรีใหม่ ในไดเร็กทอรีนั้นให้รัน:</p>
+      <pre><code class="language-bash">npm init -y
+npm pkg set type=module
+npm i pg@8.20.0 express@5.2.1
+mkdir static
+touch static/index.html server.js
+code . # or open this folder in VS Code or whatever editor you want</code></pre>
+      <p>เรามาสร้างส่วนหน้าโง่ๆ ที่สร้างคำค้นหากับส่วนหลังกันดีกว่า ใน static/index.html ใส่:</p>
+      <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot; /&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+    &lt;title&gt;PostgreSQL Sample&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;input type=&quot;text&quot; placeholder=&quot;Board ID Number&quot; id=&quot;search&quot; /&gt;
+    &lt;button id=&quot;btn&quot;&gt;Search&lt;/button&gt;
+    &lt;pre&gt;
+        &lt;code id=&quot;code&quot;&gt;&lt;/code&gt;
+    &lt;/pre&gt;
+
+    &lt;script&gt;
+      const btn = document.getElementById(&quot;btn&quot;);
+      const code = document.getElementById(&quot;code&quot;);
+      const search = document.getElementById(&quot;search&quot;);
+
+      btn.addEventListener(&quot;click&quot;, async () =&gt; {
+        code.innerText = &quot;loading&quot;;
+
+        const res = await fetch(
+          &quot;/get?search=&quot; + encodeURIComponent(search.value),
+        );
+        const json = await res.json();
+
+        code.innerText = &quot;\n&quot; + JSON.stringify(json, null, 4);
+      });
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      <p>ปกติแล้วฉันจะบอกว่าอย่าใส่แท็กสคริปต์ขนาดใหญ่ลงไป แต่ตอนนี้เรากำลังมุ่งสู่ความเรียบง่าย คุณสามารถปรับโครงสร้างสิ่งนี้ใหม่ในภายหลังเพื่อให้ได้สิ่งที่ดีกว่า</p>
+      <p>ใน server.js ให้ใส่สิ่งนี้:</p>
+      <pre><code class="language-javascript">import express from &quot;express&quot;;
+import { Pool } from &quot;pg&quot;;
+const pool = new Pool({
+  connectionString: &quot;postgresql://postgres:mysecretpassword@localhost:5432&quot;,
+});
+
+async function init() {
+  const app = express();
+
+  app.get(&quot;/get&quot;, async (req, res) =&gt; {
+    const client = await pool.connect();
+    const [commentsRes, boardRes] = await Promise.all([
+      client.query(
+        // `SELECT * FROM comments NATURAL LEFT JOIN rich_content WHERE board_id = ${req.query.search}`
+        &quot;SELECT * FROM comments NATURAL LEFT JOIN rich_content WHERE board_id = $1&quot;,
+        [req.query.search],
+      ),
+      client.query(&quot;SELECT * FROM boards WHERE board_id = $1&quot;, [
+        req.query.search,
+      ]),
+    ]);
+    res
+      .json({
+        status: &quot;ok&quot;,
+        board: boardRes.rows[0] || {},
+        posts: commentsRes.rows,
+      })
+      .end();
+    client.release(); // don't use client.end()
+  });
+
+  const PORT = process.env.PORT || 3000;
+  app.use(express.static(&quot;./static&quot;));
+  app.listen(PORT);
+
+  console.log(`running on http://localhost:${PORT}`);
+}
+init();</code></pre>
+      <ul>
+        <li>แอปนี้มีเจตนาคล้ายกับ MongoDB ที่เราจะทำในภายหลังเพื่อแสดงให้คุณเห็นว่าการเข้าถึงฐานข้อมูลนั้นค่อนข้างคล้ายกันทั่วทั้งกระดาน</li>
+        <li>เรากำลังใช้พูลการเชื่อมต่อ PostgreSQL สามารถรองรับการเชื่อมต่อได้มากมายเท่านั้น และเป็นกระบวนการที่ช้าในการยกเลิกการเชื่อมต่ออย่างต่อเนื่อง สิ่งนี้จะยึดการเชื่อมต่อได้มากเท่าที่จำเป็นและนำมาใช้ซ้ำให้ได้มากที่สุด</li>
+        <li>เราใช้สองแบบสอบถาม นี่เป็นเรื่องปกติ ในกรณีนี้ เราสามารถเพิ่มประสิทธิภาพการค้นหาแต่ละรายการแยกกัน และอาจแคชผลลัพธ์แต่ละรายการแยกกันเพื่อประสิทธิภาพด้วย</li>
+        <li>ฉันขี้เกียจขอ <code>*</code> ที่นี่ คุณควรขอเฉพาะสิ่งที่คุณต้องการเท่านั้น</li>
+        <li>ด้วย <code>rich_content</code> มันจะสร้างแถวใหม่ในการตอบกลับสำหรับแต่ละแถว <code>rich_content</code> ที่ได้รับ คุณจะต้องรวมสิ่งเหล่านี้ไว้ในโค้ดซึ่งก็โอเค มีวิธีที่ง่ายกว่าในการสืบค้นเพื่อรวมไว้ล่วงหน้าหรือคุณอาจใช้การสืบค้นครั้งที่สามก็ได้</li>
+      </ul>
+      <h2>การฉีด SQL</h2>
+      <ul>
+        <li>เรากำลังใช้สิ่งที่เรียกว่าแบบสอบถามแบบกำหนดพารามิเตอร์กับธุรกิจ <code>$1</code> เมื่อใดก็ตามที่คุณใส่เนื้อหาที่ผู้ใช้กำหนดลงในคำสั่ง SQL โดยตรง คุณจะต้องตระหนักถึงอันตรายที่ผู้ใช้สามารถใช้สิ่งนั้นในทางที่ผิดเพื่อเรียกใช้แบบสอบถามกับฐานข้อมูลของคุณ ซึ่งอาจเปิดเผยข้อมูลที่ละเอียดอ่อน (เช่น ตารางผู้ใช้ของเรา) หรือทำสิ่งที่ทำลายล้าง (เช่น ทำตารางทั้งหมดของเราตก)</li>
+      </ul>
+      <p>สมมติว่าเราระมัดระวังน้อยลงเล็กน้อยและโค้ดของเรามีลักษณะดังนี้:</p>
+      <pre><code class="language-javascript">import express from &quot;express&quot;;
+import { Pool } from &quot;pg&quot;;
+const pool = new Pool({
+  connectionString: &quot;postgresql://postgres:mysecretpassword@localhost:5432&quot;,
+});
+
+async function init() {
+  const app = express();
+
+  app.get(&quot;/get&quot;, async (req, res) =&gt; {
+    const client = await pool.connect();
+    const [commentsRes, boardRes] = await Promise.all([
+      client.query(
+        `SELECT * FROM comments NATURAL LEFT JOIN rich_content WHERE board_id = ${req.query.search}`,
+        // &quot;SELECT * FROM comments NATURAL LEFT JOIN rich_content WHERE board_id = $1&quot;,
+        // [req.query.search]
+      ),
+      client.query(
+        &quot;SELECT * FROM boards WHERE board_id = $1&quot;,
+        [
+          // req.query.search,
+          39,
+        ],
+      ),
+    ]);
+    res
+      .json({
+        status: &quot;ok&quot;,
+        board: boardRes.rows[0] || {},
+        // posts: commentsRes.rows,
+        posts: commentsRes,
+      })
+      .end();
+    await client.release();
+  });
+
+  app.use(express.static(&quot;./static&quot;));
+  app.listen(process.env.PORT || 3000);
+}
+init();</code></pre>
+      <ul>
+        <li>จะเป็นอย่างไรถ้าเราใส่ <code>1; SELECT * FROM users; --</code> เป็นคำค้นหาของเรา <code>1;</code> จะตอบสนองแบบสอบถามแรก จากนั้นเราสามารถเรียกใช้แบบสอบถามที่สองเพื่อแสดงผู้ใช้ทั้งหมดในฐานข้อมูลของเรา แย่มาก แย่มาก</li>
+        <li>ตอนนี้ ฉันต้องเปลี่ยนโค้ดบางส่วนเพื่อให้มันแสดงข้อมูลที่กรองออกมาได้จริง แต่นั่นก็ไม่จำเป็นด้วยซ้ำ จะเป็นอย่างไรถ้าเราใส่ <code>1; DROP TABLE users; --</code>? มันจะล้างฐานข้อมูลผู้ใช้ทั้งหมดของเรา! หวังว่าเราจะมีข้อมูลสำรอง</li>
+        <li>จริงๆ แล้วยังมีอีกมากที่พวกเขาสามารถทำได้ พวกเขาสามารถเพิ่มผู้ใช้ใหม่ใน PostgreSQL คว้าที่อยู่ IP จากนั้นเชื่อมต่อกับฐานข้อมูลเอง</li>
+        <li>ไม่จำเป็นต้องพูดว่า นี่เป็นหายนะถ้ามันเกิดขึ้นกับคุณ แบบสอบถามที่มีการกำหนดพารามิเตอร์ป้องกันสิ่งนี้ (วิธีที่เราเขียนไว้ด้านบน) มันจะไม่ยอมให้สิ่งที่อยู่ในคิวรีเป็นสิ่งที่ SQL สามารถแทรกแซงเป็นการดำเนินการได้</li>
+      </ul>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/sql/nodejs-app-with-postgresql">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="09_indexes_in_postgresql.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="11_vector_search.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="วิเคราะห์ข้อมูลด้วย Aggregation Pipeline และ Stage เช่น match sort group และ bucket" />
+    <title>Aggregation ใน MongoDB — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Aggregation ใน MongoDB</h1>
+
+      <p>MongoDB มีฟีเจอร์สนุกๆ ที่เรียกว่า aggregation มีสองวิธีในการทำไปป์ไลน์การรวมและการลดแผนที่ Map-reduce เป็นสิ่งที่คุณคาดหวังอย่างแน่นอนหากคุณมาจากพื้นฐานการเขียนโปรแกรมเชิงฟังก์ชัน โดยคุณจัดเตรียมฟังก์ชัน map ให้กับ MongoDB ซึ่งจะเรียกใช้ทุกรายการในอาร์เรย์ จากนั้นจึงเพิ่มฟังก์ชันลดเพื่อรวมคอลเลกชันของคุณเป็นชุดข้อมูลที่เล็กลง</p>
+      <p>MongoDB ยังมีแนวคิดเกี่ยวกับไปป์ไลน์การรวมกลุ่มที่มีแนวโน้มที่จะทำงานได้ดีกว่าและยังสามารถบำรุงรักษาได้ง่ายกว่าอีกด้วย ด้วยสิ่งเหล่านี้ คุณจะจัดเตรียมอ็อบเจ็กต์การกำหนดค่าให้กับไปป์ไลน์ <code>aggregation</code></p>
+      <p>จะเป็นอย่างไรถ้าเราต้องการทราบว่าเรามีลูกสุนัข สุนัขโตเต็มวัย และสุนัขสูงอายุจำนวนเท่าใดในคอลเลคชันสัตว์เลี้ยงของเรา? มาลองกันดูครับ</p>
+      <pre><code class="language-javascript">db.pets.aggregate([
+  {
+    $bucket: {
+      groupBy: &quot;$age&quot;,
+      boundaries: [0, 3, 9, 15],
+      default: &quot;very senior&quot;,
+      output: {
+        count: { $sum: 1 },
+      },
+    },
+  },
+]);</code></pre>
+      <ul>
+        <li>ด้วยไปป์ไลน์การรวม คุณจัดเตรียมขั้นตอนของสิ่งที่ต้องทำ ในกรณีนี้ เรามีขั้นตอนเดียวเท่านั้น ได้แก่ สัตว์เลี้ยงในถังอายุ 0-2 ปี 3-8 ปี 9-14 ปี (ขอบเขตสุดท้ายไม่รวมอยู่ด้วย ดังนั้นจึงไม่รวม 15 ตัว) และ &quot;อาวุโสมาก&quot; (ซึ่งเป็นที่เก็บข้อมูลเริ่มต้น)</li>
+        <li>ด้วยผลลัพธ์ คุณกำลังกำหนดสิ่งที่คุณต้องการส่งผ่านไปยังขั้นตอนถัดไป ในกรณีนี้ เราเพียงต้องการสรุปผลโดยเพิ่ม 1 ในการนับทุกครั้งที่เราเห็นสัตว์เลี้ยงที่ตรงกับถัง</li>
+      </ul>
+      <p>นี่คือสัตว์เลี้ยงทั้งหมด เราต้องการแค่สุนัข มาเพิ่มอีกขั้นกัน</p>
+      <pre><code class="language-javascript">db.pets.aggregate([
+  {
+    $match: {
+      type: &quot;dog&quot;,
+    },
+  },
+  {
+    $bucket: {
+      groupBy: &quot;$age&quot;,
+      boundaries: [0, 3, 9, 15],
+      default: &quot;very senior&quot;,
+      output: {
+        count: { $sum: 1 },
+      },
+    },
+  },
+]);</code></pre>
+      <p>การใช้ขั้นตอนการรวมกลุ่ม <code>$match</code> ทำให้เราสามารถยกเว้นสัตว์เลี้ยงทุกตัวที่ไม่ใช่สุนัขได้</p>
+      <p>สุดท้าย จะเป็นอย่างไรหากเราต้องการเรียงลำดับผลลัพธ์ตามกลุ่มที่มีสัตว์เลี้ยงมากที่สุด?</p>
+      <pre><code class="language-javascript">db.pets.aggregate([
+  {
+    $match: {
+      type: &quot;dog&quot;,
+    },
+  },
+  {
+    $bucket: {
+      groupBy: &quot;$age&quot;,
+      boundaries: [0, 3, 9, 15],
+      default: &quot;very senior&quot;,
+      output: {
+        count: { $sum: 1 },
+      },
+    },
+  },
+  {
+    $sort: {
+      count: -1,
+    },
+  },
+]);</code></pre>
+      <p>อย่างที่คุณเห็น คุณเพียงเพิ่มขั้นตอนเพิ่มเติมในการรวมกลุ่มจนกว่าคุณจะรวบรวมข้อมูลเชิงลึกที่คุณกำลังมองหา มีหลายสิ่งที่คุณสามารถทำได้ ดังนั้น <a href="https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/">นี่คือลิงก์ไปยังขั้นตอนการรวมกลุ่มที่มีอยู่ทั้งหมด</a></p>
+      <p>นี่เป็นหนึ่งในส่วนที่สนุกที่สุดเกี่ยวกับ MongoDB อย่างแน่นอน ฉันเคยใช้ฟีเจอร์การรวมกลุ่มของ MongoDB เพื่อจับผู้ฉ้อโกงในแอปคลาสสิฟายด์ของเรา!</p>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/nosql/aggregation">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="16_indexes_in_mongodb.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="18_nodejs_app_with_mongodb.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

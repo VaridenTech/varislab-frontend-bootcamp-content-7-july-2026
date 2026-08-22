@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เพิ่มประสิทธิภาพคำสั่ง SQL ด้วย Index EXPLAIN Compound Index และ Full-text Search" />
+    <title>Index ใน PostgreSQL — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Index ใน PostgreSQL</h1>
+
+      <p>ฐานข้อมูลเป็นสิ่งมหัศจรรย์แห่งเทคโนโลยีอย่างแท้จริง ฉันจำได้ว่าในโปรแกรมวิทยาการคอมพิวเตอร์ฉันต้องเขียนวิชาหนึ่ง และแทบจะใช้คำสั่งพื้นฐานที่จำเป็นในการผ่านชั้นเรียนไม่ได้ ฐานข้อมูลเหล่านี้ขับเคลื่อนทุกสิ่งรอบตัวคุณและแพร่กระจายผ่านข้อมูลขนาดเพตะไบต์</p>
+      <p>บ่อยครั้งที่ฐานข้อมูลเหล่านี้สามารถรองรับการสืบค้นได้โดยไม่ต้องมีการกำหนดค่าเพิ่มเติมใดๆ เมื่อแกะออกจากกล่อง พวกมันรวดเร็วและยืดหยุ่นมาก อย่างไรก็ตาม บางครั้งคุณจะพบปัญหาด้านประสิทธิภาพด้วยเหตุผลหลายประการ การสืบค้นอาจช้ามาก จะทำให้เซิร์ฟเวอร์โหลดจำนวนมาก ทำให้เซิร์ฟเวอร์ทำงานไม่น่าเชื่อถือ หรือแม้แต่ทั้งหมดที่กล่าวมาข้างต้น ในกรณีเหล่านี้ <strong>ดัชนี</strong> สามารถช่วยคุณได้</p>
+      <p>ดัชนีเป็นโครงสร้างข้อมูลที่แยกต่างหากที่ฐานข้อมูลเก็บรักษาเพื่อให้สามารถค้นหาสิ่งต่างๆ ได้อย่างรวดเร็ว ข้อเสียตรงที่ดัชนีอาจทำให้การแทรก การอัปเดต และการลบช้าลงเล็กน้อย เนื่องจากดัชนียังต้องอัปเดตดัชนี และใช้พื้นที่บนดิสก์มากขึ้น แต่ในการแลกเปลี่ยน คุณจะได้รับข้อความค้นหาที่รวดเร็วมาก รวมถึงคุณสมบัติอื่นๆ ที่เรียบร้อย เราจะสำรวจ เช่น การบังคับใช้คีย์เฉพาะ</p>
+      <h2>อธิบาย</h2>
+      <p>เริ่มต้นด้วยการบอกว่าฉันไม่ใช่ DBA แน่นอน เป็นผู้ดูแลระบบฐานข้อมูลหรือสถาปนิกฐานข้อมูล ขึ้นอยู่กับว่าคุณจะถามใคร มีคนที่ทำงานทั้งหมดดังนี้: รู้วิธีเพิ่มประสิทธิภาพฐานข้อมูลให้เหมาะกับกรณีการใช้งาน แต่ฉันจะอธิบายกรณีการใช้งานบางส่วนให้คุณทราบ และแสดงเครื่องมือที่ฉันรู้จักเพื่อนำไปตรวจสอบวิธีแก้ปัญหาที่ดีกว่า จากนั้นจะเป็นการดีที่สุดที่จะทำงานร่วมกับคนที่มีความรู้อย่างลึกซึ้งเกี่ยวกับสิ่งที่คุณพยายามทำ</p>
+      <p>พิจารณาคำถามที่พบบ่อยนี้สำหรับกระดานข้อความ—รวบรวมความคิดเห็นทั้งหมดสำหรับกระดานใดกระดานหนึ่ง:</p>
+      <pre><code class="language-sql">SELECT comment_id, user_id, time, LEFT(comment, 20) FROM comments WHERE board_id = 39 ORDER BY time DESC LIMIT 40;</code></pre>
+      <p>ค่อนข้างง่าย อย่างไรก็ตาม แบบสอบถามนี้ทำสิ่งที่น่ารังเกียจจริงๆ: จริงๆ แล้วจะทำให้ฐานข้อมูลดู <strong>ทุกบันทึก</strong> ในตาราง สำหรับเราที่เล่นคอมพิวเตอร์อยู่ นี่ไม่ใช่เรื่องใหญ่ แต่ถ้าคุณใช้งานจริงเป็นจำนวนมาก มันจะมีราคาแพงและเปราะบางมาก ในกรณีนี้ ถ้ามีดัชนีมาช่วยเราจะมีประโยชน์มากกว่ามาก</p>
+      <p>มาดูกันว่า PostgreSQL ทำอะไรได้บ้างโดยเพิ่ม <code>EXPLAIN</code> ไว้ข้างหน้า:</p>
+      <pre><code class="language-sql">EXPLAIN SELECT comment_id, user_id, time, LEFT(comment, 20) FROM comments WHERE board_id = 39 ORDER BY time DESC LIMIT 40;</code></pre>
+      <p>ส่วนนี้จะทำให้คุณใจสลาย: <code>Seq Scan on comments</code>. ซึ่งหมายความว่าจะต้องดูทุกความคิดเห็นในตารางเพื่อค้นหาคำตอบ นั่นคือการค้นหาเชิงเส้น O(n) ไม่ดี! มาสร้างดัชนีเพื่อทำให้งานนี้ดีขึ้นมาก</p>
+      <h2>สร้างดัชนี</h2>
+      <pre><code class="language-sql">CREATE INDEX ON comments (board_id);</code></pre>
+      <p>ทีนี้มาเรียกใช้ EXPLAIN อีกครั้ง:</p>
+      <pre><code class="language-sql">EXPLAIN SELECT comment_id, user_id, time, LEFT(comment, 20) FROM comments WHERE board_id = 39 ORDER BY time DESC LIMIT 40;</code></pre>
+      <p>คุณจะเห็นว่ามันทำ <code>Bitmap Heap Scan</code> แทน Seq Scan ดีขึ้นมาก! ขณะนี้ PostgreSQL ใช้ดัชนีของเราเพื่อข้ามไปยังแถวที่ต้องการโดยตรง แทนที่จะสแกนทั้งตาราง</p>
+      <p>คุณสามารถดูดัชนีทั้งหมดบนโต๊ะด้วย:</p>
+      <pre><code class="language-sql">SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'comments';</code></pre>
+      <h2>ดัชนีผสม</h2>
+      <p>หากคุณใช้สองคีย์ร่วมกันบ่อยครั้ง เช่น <code>board_id</code> และ <code>time</code> คุณอาจพิจารณาใช้ดัชนีผสม ซึ่งจะทำให้ดัชนีของทั้งสองสิ่งมารวมกัน ในกรณีเฉพาะที่คุณกำลังสอบถามกับสิ่งเหล่านั้นร่วมกัน มันจะทำงานได้ดีกว่าดัชนีที่แยกกันสองตัว เนื่องจากนี่ไม่ใช่บทความเชิงลึกเกี่ยวกับดัชนี ฉันจะให้คุณสำรวจเมื่อคุณต้องการ</p>
+      <pre><code class="language-sql">CREATE INDEX ON comments (board_id, time);</code></pre>
+      <h2>ดัชนีที่ไม่ซ้ำ</h2>
+      <p>บ่อยครั้งคุณต้องการบังคับใช้ความไม่ซ้ำกันกับฟิลด์ใดฟิลด์หนึ่งในฐานข้อมูลของคุณ ตัวอย่างที่ดีคือชื่อผู้ใช้ในฐานข้อมูลผู้ใช้ของคุณควรไม่ซ้ำกัน ผู้ใช้ไม่ควรลงชื่อสมัครใช้ด้วยชื่อผู้ใช้ที่มีอยู่แล้วได้</p>
+      <pre><code class="language-sql">CREATE UNIQUE INDEX username_idx ON users (username);</code></pre>
+      <p><code>username_idx</code> เป็นเพียงชื่อของดัชนี คุณสามารถเรียกมันว่าสิ่งที่คุณต้องการ</p>
+      <p>ตอนนี้ลองใส่ชื่อผู้ใช้ที่ซ้ำกัน:</p>
+      <pre><code class="language-sql">INSERT INTO users (username, email, full_name, created_on) VALUES ('aaizikovj', 'lol@example.com', 'Brian Holt', NOW());</code></pre>
+      <p>สิ่งนี้จะล้มเหลวเนื่องจากมีชื่อผู้ใช้นั้นอยู่แล้ว เพื่อเป็นโบนัส ตอนนี้ฟิลด์นี้ได้รับการจัดทำดัชนีแล้ว ดังนั้นคุณจึงสามารถค้นหาด้วยชื่อผู้ใช้ได้อย่างรวดเร็ว</p>
+      <h2>ค้นหาข้อความแบบเต็ม</h2>
+      <p>บ่อยครั้งสิ่งที่คุณต้องการทำเรียกว่า &quot;การค้นหาข้อความแบบเต็ม&quot; สิ่งนี้คล้ายกับสิ่งที่เกิดขึ้นเมื่อคุณค้นหาบางสิ่งใน Google: คุณต้องการให้ &quot;คำหยุด&quot; หายไป (เช่น a, the และ ฯลฯ) และคุณต้องการให้มันจับคู่สิ่งที่คลุมเครือ</p>
+      <p>PostgreSQL มีความสามารถในการค้นหาข้อความแบบเต็มในตัว สมมติว่าเราต้องการค้นหาความคิดเห็นด้วยคำที่เจาะจง:</p>
+      <pre><code class="language-sql">SELECT comment_id, LEFT(comment, 50)
+FROM comments
+WHERE to_tsvector('english', comment) @@ to_tsquery('english', 'love');</code></pre>
+      <ul>
+        <li><code>to_tsvector</code> แปลงข้อความเป็นเวกเตอร์ที่ค้นหาได้ของคำศัพท์ (คำที่ทำให้เป็นมาตรฐาน)</li>
+        <li><code>to_tsquery</code> แปลงข้อความค้นหาของคุณให้เป็นข้อความค้นหา</li>
+        <li><code>@@</code> เป็นตัวดำเนินการ &quot;จับคู่&quot;</li>
+      </ul>
+      <p>ใช้งานได้ แต่ช้าเพราะ PostgreSQL ต้องคำนวณ tsvector สำหรับทุกแถว มาเพิ่มดัชนี:</p>
+      <pre><code class="language-sql">CREATE INDEX comments_search_idx ON comments USING GIN (to_tsvector('english', comment));</code></pre>
+      <p>GIN (Generalized Inverted Index) เป็นประเภทดัชนีที่ออกแบบมาสำหรับการค้นหาข้อความแบบเต็ม ตอนนี้แบบสอบถามนั้นจะเร็วขึ้นมาก</p>
+      <p>คุณสามารถค้นหาที่ซับซ้อนมากขึ้นได้เช่นกัน:</p>
+      <pre><code class="language-sql">-- Search for comments containing &quot;love&quot; AND &quot;dog&quot;
+SELECT comment_id, LEFT(comment, 50)
+FROM comments
+WHERE to_tsvector('english', comment) @@ to_tsquery('english', 'love &amp; dog');
+
+-- Search for &quot;love&quot; OR &quot;hate&quot;
+SELECT comment_id, LEFT(comment, 50)
+FROM comments
+WHERE to_tsvector('english', comment) @@ to_tsquery('english', 'love | hate');</code></pre>
+      <p>สำหรับปริมาณงานการค้นหาที่จริงจัง เช่น การขับเคลื่อนการค้นหาอีคอมเมิร์ซด้วยการกรองแบบแยกส่วน การยอมรับการพิมพ์ผิด และการปรับแต่งความเกี่ยวข้อง โดยทั่วไปแล้ว คุณจะเปลี่ยนไปใช้เครื่องมือค้นหาเฉพาะเช่น Elasticsearch แต่สำหรับหลายๆ แอปพลิเคชัน การค้นหาข้อความแบบเต็มในตัวของ PostgreSQL นั้นมีประสิทธิภาพมาก</p>
+      <p>PostgreSQL มี <a href="https://www.postgresql.org/docs/current/indexes.html">ดัชนีประเภทต่างๆ มากขึ้น</a> ที่ควรค่าแก่การสำรวจตามความต้องการของคุณที่เพิ่มขึ้น</p>
+      <p>ฉันพูดถึงเรื่องนี้ในเชิงลึกมากขึ้นในชั้นเรียน Postgres ของฉัน <a href="https://sql.holt.courses/lessons/query-performance/explain">ดูที่นี่</a></p>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/sql/indexes-in-postgresql">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="08_json_in_postgresql.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="10_nodejs_app_with_postgresql.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

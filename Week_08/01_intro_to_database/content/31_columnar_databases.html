@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เปรียบเทียบ OLAP กับ OLTP ทำความเข้าใจ ETL ELT Parquet Iceberg และ Delta Lake" />
+    <title>ฐานข้อมูลแบบ Columnar — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>ฐานข้อมูลแบบ Columnar</h1>
+
+      <p>ฐานข้อมูลในส่วนนี้ต่างจากหัวข้อก่อนหน้า PostgreSQL, MongoDB, Neo4j และ Redis เน้นการสร้างแอป ส่วนฐานข้อมูลแบบ Columnar เน้นงาน Data Science การสำรวจข้อมูล สร้างรายงาน และค้นหา Insight</p>
+      <p>โดยทั่วไปเราไม่ใช้ Columnar Database เพียงลำพังเพื่อแสดง Product Catalog หรือ User Profile เพราะออกแบบมาสำหรับงานวิเคราะห์ ไม่ใช่ Transaction ทั่วไปของแอป</p>
+      <p>ฐานข้อมูลก่อนหน้านี้เก็บข้อมูลทีละ Row เมื่อ PostgreSQL อ่านผู้ใช้หนึ่งคน จะอ่านทั้งชื่อ Email อายุ และทุก Column เพราะข้อมูลทั้ง Row อยู่ติดกันบน Disk รูปแบบนี้เหมาะกับคำถาม “ขอข้อมูลทั้งหมดของผู้ใช้หมายเลข 47” ซึ่งแอปทำเป็นประจำ</p>
+      <p>Columnar Database กลับแนวคิดนี้โดยเก็บข้อมูลทีละ Column อายุทั้งหมดอยู่ด้วยกัน ชื่อทั้งหมดอยู่ด้วยกัน และ Email ทั้งหมดอยู่ด้วยกัน เมื่อต้องหาอายุเฉลี่ยของผู้ใช้สิบล้านคน ฐานข้อมูลแบบ Row ต้องอ่านทุก Row เพื่อดึงเพียงอายุ แต่ฐานข้อมูลแบบ Column อ่านเฉพาะ Column อายุ จึงอ่านข้อมูลน้อยและเร็วกว่าอย่างมาก</p>
+      <p>ข้อแลกเปลี่ยนคือ หากต้องการ Record ครบชุดของผู้ใช้คนเดียว Columnar Database ต้องอ่านจากทุก Column แล้วประกอบกลับ จึงไม่ควรใช้ DuckDB เสิร์ฟหน้า User Profile รูปแบบการจัดเก็บต่างกันจึงมีจุดแข็งต่างกัน</p>
+      <h2>OLAP และ OLTP</h2>
+      <p>OLAP ย่อจาก Online Analytical Processing ใช้อธิบายฐานข้อมูลเพื่อวิเคราะห์ข้อมูล เช่น DuckDB, ClickHouse, Snowflake Lakehouse และ Databricks Lakehouse ส่วน OLTP หรือ Online Transaction Processing คือฐานข้อมูลทั่วไปสำหรับ Transaction ของแอป เช่น PostgreSQL, MySQL, Oracle และ MongoDB</p>
+      <h2>ETL, ELT และ Reverse ETL</h2>
+      <p>ข้อมูลเข้าสู่ระบบวิเคราะห์ได้หลายวิธี DuckDB ทำงานกับไฟล์เหมือน SQLite จึงชี้ไปยัง CSV, JSON หรือไฟล์ชนิดอื่นแล้วอ่านเขียนได้ทันที เช่นให้ PostgreSQL Export CSV ไปยัง S3 แล้วใช้ DuckDB วิเคราะห์ในภายหลัง นี่เป็นวิธีเริ่มต้นที่เรียบง่าย</p>
+      <p>ระบบ Hosted มักใช้กระบวนการ <strong>ETL</strong>: Extract ข้อมูล, Transform ให้เข้ากับ Schema แล้ว Load เข้าฐานข้อมูลเป้าหมาย อีกแบบคือ <strong>ELT</strong>: Extract, Load ข้อมูลดิบก่อน แล้ว Transform ตอน Query วิธีหลังช่วยให้ขั้น Extract ใกล้ Real-time มากขึ้น ขณะที่ ETL มักทำล่วงหน้าเป็นรอบ เช่น ทุกชั่วโมงหรือทุกวัน จึงมีความล้าของข้อมูล</p>
+      <p><strong>Reverse ETL</strong> คือการนำ Insight จาก OLAP กลับเข้า OLTP เพื่อใช้ในผลิตภัณฑ์ ตัวอย่างร้านค้าออนไลน์ส่งยอดขายจาก PostgreSQL ไป MotherDuck แล้ววิเคราะห์ว่า “ผู้ซื้อสินค้า X มักซื้อสินค้า Y ด้วย” จากนั้นเขียนผลกลับ PostgreSQL เพื่อให้แอปแนะนำสินค้าได้</p>
+      <h2>Delta Lake, Iceberg และ Parquet</h2>
+      <p>งาน OLAP ให้ความสำคัญกับรูปแบบการจัดเก็บมาก เดิมสถาปัตยกรรม Big Data มี Data Lake สำหรับไฟล์ดิบและ Data Warehouse สำหรับข้อมูลที่จัดรูปแบบพร้อมใช้ Databricks เสนอ Data Lakehouse ซึ่งอ่านงานวิเคราะห์จากพื้นที่เก็บข้อมูลดิบได้โดยตรง จึงรวมแนวคิดทั้งสองเข้าด้วยกัน</p>
+      <p>Apache Parquet กลายเป็นมาตรฐานไฟล์ Columnar ที่มีประสิทธิภาพ แต่ Parquet เองไม่รองรับ ACID ครบถ้วนและต้องเขียนไฟล์ใหม่ทั้งไฟล์เมื่อแก้ข้อมูล จึงต้องมีชั้นจัดการเพิ่มเติม</p>
+      <p>Apache Iceberg เพิ่มความสามารถเหล่านี้บน Parquet และได้รับการรองรับจากฐานข้อมูล OLAP รายใหญ่จำนวนมาก ส่วน Databricks สร้าง Delta Lake เพื่อเพิ่มฟีเจอร์ที่เข้ากับระบบของตน ภายหลัง Apache Iceberg v3 รับความสามารถสำคัญจากฝั่ง Databricks เข้ามา ช่วยลดความแตกแยกของ Ecosystem</p>
+      <p>บทถัดไปจะใช้ไฟล์ Parquet ส่วน DuckDB อ่านเขียน Delta Lake และ Iceberg ได้บางส่วน ติดตามสถานะได้จาก <a href="https://duckdb.org/docs/stable/lakehouse_formats">เอกสาร Lakehouse Format ของ DuckDB</a></p>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/columnar/columnar">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="30_nodejs_app_with_redis.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="32_duckdb.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ใช้ insert update upsert delete findAnd และ bulkWrite เพื่อจัดการ Document" />
+    <title>การเพิ่ม แก้ไข และลบข้อมูลใน MongoDB — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>การเพิ่ม แก้ไข และลบข้อมูลใน MongoDB</h1>
+
+      <h2>แทรก insertOne และ insertMany</h2>
+      <p>คุณพบ insert ที่จุดเริ่มต้นของส่วนนี้แล้ว แต่ฉันแค่อยากจะแยกแยะ insertOne และ insertMany ให้คุณ insert ทำหน้าที่ของทั้ง insertMany และ insertOne เป็นหลัก: ถ้าคุณให้อาร์เรย์กับมัน มันจะแทรกหลาย ๆ อัน และถ้าคุณให้วัตถุกับมัน มันจะแทรกอันหนึ่ง <code>update</code> เลิกใช้แล้วจริงๆ แต่ฉันยังคงเห็นมันในเอกสาร ดังนั้นฉันจึงต้องการรวมมันไว้ด้วย เมธอด insertOne และ insertMany นั้นดี เพราะถ้าคุณเผลอใส่วัตถุผิด (เช่น ให้วัตถุเมื่อคุณตั้งใจจะให้อาร์เรย์) มันจะทำให้เกิดข้อผิดพลาดและทำให้คุณแก้ไขมันได้ ด้วยการแทรก คุณมีโอกาสสูงที่จะทำสิ่งผิด และเมื่อเลิกใช้แล้ว ก็อย่าใช้มัน มันถูกลบออกไปโดยสิ้นเชิงใน SDK</p>
+      <p>โดยทั่วไปแล้วจะใช้ insertOne และ insertMany สิ่งนี้ยังใช้กับ Delete vs DeleteMany/deleteOne, update vs updateMany/updateOne เป็นต้น</p>
+      <h2>อัพเดท</h2>
+      <p>เมื่อคุณอัปเดต คุณจะต้องระบุตัวกรองและสิ่งที่คุณต้องการอัปเดต ลองทำตัวอย่างกัน</p>
+      <pre><code class="language-javascript">db.pets.updateOne(
+  { type: &quot;dog&quot;, name: &quot;Luna&quot;, breed: &quot;Havanese&quot; },
+  { $set: { owner: &quot;Brian Holt&quot; } },
+);</code></pre>
+      <p>วัตถุแรกคือแบบสอบถาม นี่เป็นแบบสอบถามประเภทเดียวกับที่คุณใช้ใน <code>.find()</code> อย่างที่สองคือวัตถุอัปเดตของคุณ ที่นี่คุณมีตัวเลือกสองสามตัวสำหรับตัวดำเนินการอัพเดตต่างๆ เรามาลองอันอื่นกันดีกว่า สมมติว่าวันนี้เป็นวันเกิด <strong>สุนัขทุกตัว</strong> เราจะเพิ่มอายุของพวกเขาทั้งหมดด้วยการอัพเดตเพียงครั้งเดียวได้อย่างไร</p>
+      <pre><code class="language-javascript">db.pets.updateMany({ type: &quot;dog&quot; }, { $inc: { age: 1 } });</code></pre>
+      <p>การทำเช่นนี้จะทำให้อายุของสุนัขทุกตัวเพิ่มขึ้น 1 ตัว มีการอัปเดตประเภทอื่นๆ อีกมากมาย แต่คุณสามารถดูเอกสารได้ <a href="https://www.mongodb.com/docs/manual/reference/mql/update/#fields">นี่คือตัวดำเนินการอัปเดตที่มีอยู่</a></p>
+      <p>น่าสังเกตว่ามีพารามิเตอร์พิเศษที่คุณสามารถ updateOne และ updateMany พร้อมตัวเลือกเพิ่มเติมได้ เรากำลังจะพูดถึงหนึ่งในนั้นในหัวข้อถัดไป ตื่นเถอะ</p>
+      <p>โปรดทราบว่ายังมีการแทนที่หนึ่งเช่นกัน การทำงานเหมือนกับ updateOne แต่จะลบฟิลด์ใด ๆ ที่คุณละเว้นในเอกสารการอัพเดตของคุณที่มีอยู่แล้วในเอกสาร</p>
+      <h2>หงุดหงิด</h2>
+      <p>MongoDB มีแนวคิดเรื่อง &quot;upserting&quot; นี่เป็นคำผสมของคำว่า update และ insert และหมายถึง &quot;แทรกเอกสารใหม่ด้วยสิ่งเหล่านี้ หากคุณไม่พบเอกสารที่มีอยู่ด้วย&quot; เช่น บางทีคุณอาจต้องการสร้างผู้ใช้ใหม่ด้วยที่อยู่อีเมลหากคุณยังไม่มี และหากมีอยู่ คุณต้องการอัปเดตด้วยข้อมูลใหม่</p>
+      <p>มาดูวิธีการทำกัน สมมติว่าคุณต้องการค้นหาสุนัขชื่อ &quot;Sudo&quot; และอัปเดตเจ้าของเป็น &quot;Sarah Drasner&quot; หากมีอยู่ (ในกรณีของเราไม่ใช่) และสร้างบันทึกใหม่หากไม่มี</p>
+      <pre><code class="language-javascript">db.pets.updateOne(
+  {
+    type: &quot;dog&quot;,
+    name: &quot;Sudo&quot;,
+    breed: &quot;Wheaten&quot;,
+  },
+  {
+    $set: {
+      type: &quot;dog&quot;,
+      name: &quot;Sudo&quot;,
+      breed: &quot;Wheaten&quot;,
+      age: 5,
+      index: 10000,
+      owner: &quot;Sarah Drasner&quot;,
+    },
+  },
+  {
+    upsert: true,
+  },
+);</code></pre>
+      <p>เราเล่นเรื่องนี้เร็วและขี้เกียจนิดหน่อย เราควรตรวจสอบให้แน่ใจจริงๆ ว่าเรากำลังค้นหาออบเจ็กต์ที่ไม่ซ้ำใครโดยอิงจากคีย์เฉพาะบางประเภท (เราจะพูดถึงเรื่องนั้นในขั้นตอนต่อไป) แต่ใช่ ตรวจสอบให้แน่ใจว่าคุณได้จัดเตรียมเอกสารทั้งหมดด้วยการใส่ upsert ไม่เช่นนั้นคุณจะได้รับเอกสารที่ไม่สมบูรณ์ที่ด้านแทรกของ upsert</p>
+      <h2>ลบ</h2>
+      <p>การลบทำงานเกือบจะเหมือนกันในการค้นหา ยกเว้นแต่แทนที่จะส่งคืนเอกสาร จะเป็นการลบทิ้ง มีทั้ง <code>deleteOne</code> และ <code>deleteMany</code> อยู่ (เช่นเดียวกับ <code>delete</code> ซึ่งเลิกสนับสนุนและเลิกใช้แล้ว) สมมติว่าคุณต้องการลบสัตว์เลื้อยคลาน Havanese ทั้งหมดเนื่องจากไม่สมเหตุสมผล</p>
+      <pre><code class="language-javascript">db.pets.deleteMany({ type: &quot;reptile&quot;, breed: &quot;Havanese&quot; });</code></pre>
+      <h2>ค้นหาและ*</h2>
+      <p>ในบางครั้งคุณจำเป็นต้องค้นหาเอกสาร <em>and</em> อัปเดต/ลบ/แทนที่พร้อมกัน แทนที่จะต้องทำสองคำสั่งและทำให้มีสภาวะการแข่งขันของบางสิ่งที่แก้ไขเอกสารของคุณในระหว่างนี้ มีคำสั่งสามคำสั่งที่จะช่วยให้คุณทำเช่นนั้นได้ ได้แก่ findOneAndUpdate, findOneAndReplace และ findOneAndDelete โดยพื้นฐานแล้วงานเหล่านี้เหมือนกับ updateOne, แทนที่ One และ DeleteOne พวกมันเพิ่งส่งคืนในตอนท้าย</p>
+      <blockquote><p>โปรดทราบว่ามันจะส่งคืนเอกสารเหมือนเดิม <em>before</em> อัปเดต/แทนที่/ลบ ไม่ใช่หลังจากนั้น</p></blockquote>
+      <h2>BulkWrite</h2>
+      <p>โดยเฉพาะอย่างยิ่งเมื่อคุณเขียนโค้ด บางครั้งคุณจำเป็นต้องเรียกใช้ชุดคำสั่งทั้งหมดในคราวเดียว นั่นอาจเป็นส่วนแทรกหลายรายการหรืออาจมีการอัปเดตและลบเล็กน้อย แทนที่จะทำการสืบค้น รอ แล้วดำเนินการต่อไปตามลำดับ ฯลฯ คุณสามารถทำสิ่งที่เรียกว่า BulkWrite ได้ BulkWrite ช่วยให้คุณสามารถจัดคิวอาร์เรย์ของการสืบค้น และจะดำเนินการสืบค้นเหล่านั้นตามลำดับที่คุณระบุให้กับ MongoDB เป็นไปได้แต่แปลกๆ ที่จะทำใน mongo CLI เชลล์ ดังนั้นเราจะพูดถึงมันเมื่อเราเขียนโค้ดแล้ว พอจะพูดได้ว่าเป็นเพียงสิ่งที่เรากำลังทำอยู่ แต่แทนที่จะเป็นออบเจ็กต์คิวรีเดียว คุณกลับจัดเตรียมอาร์เรย์ของออบเจ็กต์คิวรีเดียวกันเหล่านั้น</p>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/nosql/updating-mongodb">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="14_querying_mongodb.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="16_indexes_in_mongodb.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>
