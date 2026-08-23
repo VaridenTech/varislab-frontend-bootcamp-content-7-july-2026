@@ -11,7 +11,7 @@
   <main>
     <article>
       <h1>การอัปเดตคำสั่งให้ทำงานได้จริง</h1>
-      <p>ตอนนี้เรามีครบทุกชิ้นแล้ว ทั้งฟังก์ชันอ่านเขียนไฟล์และฟังก์ชันจัดการ Array เหลือแค่เอามาต่อเข้ากับ <code>switch</code> ใน <code>index.js</code> ที่เราเขียนโครงไว้ตั้งแต่บทที่ 15</p>
+      <p>ตอนนี้ชิ้นส่วนพร้อมแล้ว ทั้งฟังก์ชันอ่านเขียนไฟล์และฟังก์ชันจัดการ Array เหลือเพียงต่อทุกอย่างเข้ากับ <code>switch</code> ใน <code>index.js</code> ที่วางโครงไว้ตั้งแต่บทที่ 15</p>
 
       <h2>โค้ดฉบับสมบูรณ์ของ index.js</h2>
       <pre><code>#!/usr/bin/env node
@@ -51,7 +51,7 @@ switch (command) {
       <p>รูปแบบของทุกคำสั่งที่แก้ไขข้อมูลจะเหมือนกันหมด คือ <strong>อ่านเข้ามา → แปลง → เขียนกลับ</strong> ตัวอย่างเช่นบรรทัดนี้:</p>
       <pre><code>await saveTodos(addTodo(todos, arg))</code></pre>
       <p>อ่านจากในออกนอก: <code>addTodo(todos, arg)</code> คืน Array ใหม่ที่มีรายการเพิ่มเข้ามา แล้วเราส่ง Array นั้นให้ <code>saveTodos</code> เขียนลงไฟล์ทันที</p>
-      <p>จุดที่ต้องระวังคือ <code>Number(arg)</code> เพราะทุกอย่างที่มาจาก <code>process.argv</code> เป็น String เสมอ ถ้าผู้ใช้พิมพ์ <code>todo done 3</code> ค่า <code>arg</code> ที่ได้จะเป็น <code>'3'</code> ที่เป็นข้อความ ไม่ใช่ตัวเลข <code>3</code> และเราเปรียบเทียบด้วย <code>===</code> ซึ่งเช็คชนิดข้อมูลด้วย ทำให้ <code>'3' === 3</code> เป็น <code>false</code> ถ้าลืมแปลง คำสั่ง <code>done</code> กับ <code>remove</code> จะไม่ทำงานเลยโดยไม่มี Error ใด ๆ ให้เห็น</p>
+      <p>ระวัง <code>Number(arg)</code> ให้ดี เพราะค่าจาก <code>process.argv</code> เป็น String เสมอ เมื่อพิมพ์ <code>todo done 3</code> เราจะได้ <code>'3'</code> ไม่ใช่ตัวเลข <code>3</code> และ <code>===</code> ตรวจชนิดข้อมูลด้วย จึงทำให้ <code>'3' === 3</code> เป็น <code>false</code> ถ้าลืมแปลง คำสั่ง <code>done</code> กับ <code>remove</code> จะเงียบและไม่แก้ข้อมูล แม้ไม่มี Error แสดงขึ้นมา</p>
       <p>ส่วนคำสั่ง <code>list</code> ไม่ต้องบันทึกอะไร แค่วนแสดงผลอย่างเดียว โดยใช้ Ternary เลือกสัญลักษณ์ ✅ หรือ ⬜ ตามสถานะ <code>done</code></p>
       <p>สังเกตว่าเราใช้ <code>await</code> ที่ระดับบนสุดของไฟล์ได้เลยโดยไม่ต้องห่อด้วย <code>async function</code> ความสามารถนี้เรียกว่า Top-level await ซึ่งใช้ได้เพราะเราตั้ง <code>"type": "module"</code> ไว้ใน <code>package.json</code> ตั้งแต่บทที่ 9</p>
 
@@ -84,7 +84,7 @@ todo list</code></pre>
     "done": false
   }
 ]</code></pre>
-      <p>ตอนนี้แอปของเราใช้งานได้จริงแล้ว ลองปิด Terminal แล้วเปิดใหม่ สั่ง <code>todo list</code> อีกครั้ง ข้อมูลยังอยู่ครบ เหลือแค่คำสั่ง <code>web</code> ที่เรายังไม่ได้ทำ ซึ่งจะอยู่ในบทที่ 24</p>
+      <p>ตอนนี้แอปใช้งานจริงได้แล้ว ลองปิด Terminal เปิดใหม่ แล้วสั่ง <code>todo list</code> ข้อมูลก็ยังอยู่ครบ เหลือเพียงคำสั่ง <code>web</code> ซึ่งเราจะทำในบทที่ 24</p>
     </article>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="19_todo_crud.html" rel="prev">← บทก่อนหน้า</a>

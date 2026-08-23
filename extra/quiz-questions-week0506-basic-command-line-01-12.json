@@ -1,0 +1,126 @@
+{
+  "questions": [
+    {
+      "prompt": "เมื่อเห็นตัวอย่างคำสั่งที่ขึ้นต้นด้วย $ เช่น $ pwd ควรพิมพ์อะไรลงใน terminal?",
+      "choices": [
+        "พิมพ์ $ pwd ทั้งหมด เพราะ $ เป็นส่วนหนึ่งของคำสั่ง",
+        "พิมพ์เฉพาะ pwd เพราะ $ เป็นส่วนหนึ่งของ prompt",
+        "พิมพ์เฉพาะ $ เพราะ shell จะเติมชื่อคำสั่งให้เอง"
+      ],
+      "correctChoice": 2,
+      "explanation": "เครื่องหมาย $ ในตัวอย่างใช้แทน prompt ที่บอกว่า shell พร้อมรับคำสั่ง ผู้ใช้จึงพิมพ์เฉพาะ pwd เท่านั้น"
+    },
+    {
+      "prompt": "คำสั่งใดใช้ตรวจสอบว่า terminal กำลังอยู่ในโฟลเดอร์ใด?",
+      "choices": [
+        "whoami",
+        "date",
+        "pwd"
+      ],
+      "correctChoice": 3,
+      "explanation": "pwd ย่อมาจาก print working directory และแสดง path ของโฟลเดอร์ปัจจุบัน"
+    },
+    {
+      "prompt": "ในคำสั่งนี้ ส่วนใดคือ command, flag และ argument ตามลำดับ?",
+      "body": "<pre><code>ls -lah ~/Downloads</code></pre>",
+      "choices": [
+        "ls คือ command, -lah คือ flag และ ~/Downloads คือ argument",
+        "ls คือ command, -lah คือ argument และ ~/Downloads คือ flag",
+        "ls -lah คือ argument และ ~/Downloads คือ command"
+      ],
+      "correctChoice": 1,
+      "explanation": "ls ระบุโปรแกรมที่ต้องรัน, -lah ปรับรูปแบบการทำงานด้วย flag ที่รวมกัน และ ~/Downloads ระบุตำแหน่งเป้าหมาย"
+    },
+    {
+      "prompt": "ถ้าต้องการย้ายจากโฟลเดอร์ปัจจุบันขึ้นไปยังโฟลเดอร์แม่หนึ่งระดับ ควรใช้คำสั่งใด?",
+      "choices": [
+        "cd .",
+        "cd ..",
+        "cd /"
+      ],
+      "correctChoice": 2,
+      "explanation": ".. เป็น path พิเศษที่หมายถึงโฟลเดอร์แม่ ส่วน . หมายถึงโฟลเดอร์ปัจจุบัน และ / คือ root"
+    },
+    {
+      "prompt": "สมมติว่า pwd คือ /Users/mint/projects path ใดเป็น relative path ที่ชี้ไปยังไฟล์ index.html ในโฟลเดอร์ coffee-master?",
+      "choices": [
+        "/Users/mint/projects/coffee-master/index.html",
+        "~/projects/coffee-master/index.html",
+        "coffee-master/index.html"
+      ],
+      "correctChoice": 3,
+      "explanation": "relative path อ้างอิงจากโฟลเดอร์ปัจจุบัน จึงไม่เริ่มจาก / หรือ ~ และใช้ coffee-master/index.html ได้โดยตรง"
+    },
+    {
+      "prompt": "ต้องการสร้างโฟลเดอร์ projects/demo/css โดยที่ projects และ demo ยังไม่มีอยู่ ควรใช้คำสั่งใด?",
+      "choices": [
+        "mkdir -p projects/demo/css",
+        "touch projects/demo/css",
+        "mkdir projects demo css"
+      ],
+      "correctChoice": 1,
+      "explanation": "flag -p ทำให้ mkdir สร้างโฟลเดอร์แม่ที่ยังไม่มีให้ครบทุกระดับในคำสั่งเดียว"
+    },
+    {
+      "prompt": "ข้อใดอธิบายคำสั่งนี้ได้ถูกต้อง?",
+      "body": "<pre><code>mv draft.txt final.txt</code></pre>",
+      "choices": [
+        "คัดลอก draft.txt แล้วเก็บไฟล์ต้นฉบับไว้",
+        "ลบ draft.txt โดยย้ายไปไว้ในถังขยะ",
+        "เปลี่ยนชื่อ draft.txt เป็น final.txt"
+      ],
+      "correctChoice": 3,
+      "explanation": "การเปลี่ยนชื่อไฟล์คือการย้ายไฟล์ไปยังชื่อใหม่ในโฟลเดอร์เดิม จึงใช้ mv ได้"
+    },
+    {
+      "prompt": "ต้องการดูบรรทัดใหม่ที่ถูกเติมลงในไฟล์ server.log แบบต่อเนื่อง ควรใช้คำสั่งใด?",
+      "choices": [
+        "cat server.log",
+        "tail -f server.log",
+        "head server.log"
+      ],
+      "correctChoice": 2,
+      "explanation": "tail -f จะแสดงท้ายไฟล์และเฝ้ารอข้อมูลใหม่ จึงเหมาะกับการติดตาม log แบบสด ๆ"
+    },
+    {
+      "prompt": "ถ้าต้องการแสดงรายชื่อไฟล์ HTML ทั้งหมดในโฟลเดอร์ปัจจุบัน ควรใช้คำสั่งใด?",
+      "choices": [
+        "ls *.html",
+        "ls html.*",
+        "ls *html*.*"
+      ],
+      "correctChoice": 1,
+      "explanation": "wildcard * แทนตัวอักษรจำนวนเท่าใดก็ได้ ดังนั้น *.html จึงตรงกับทุกชื่อไฟล์ที่ลงท้ายด้วย .html"
+    },
+    {
+      "prompt": "เมื่อพิมพ์ node แล้ว shell สามารถหาโปรแกรมมารันได้ เพราะเหตุใด?",
+      "choices": [
+        "shell ค้นหาไฟล์ชื่อ node ทุกที่ในเครื่องพร้อมกัน",
+        "ทุกคำสั่งที่ติดตั้งจะถูกคัดลอกมาไว้ในโฟลเดอร์ปัจจุบัน",
+        "shell ไล่ค้นหาไฟล์ executable ในโฟลเดอร์ต่าง ๆ ที่ระบุไว้ใน PATH ตามลำดับ"
+      ],
+      "correctChoice": 3,
+      "explanation": "PATH คือรายการโฟลเดอร์ที่ shell ใช้ค้นหาโปรแกรมตามลำดับเมื่อผู้ใช้พิมพ์ชื่อคำสั่ง"
+    },
+    {
+      "prompt": "หลังติดตั้ง Node.js ด้วย nvm แล้ว ข้อใดถูกต้องเกี่ยวกับ npm?",
+      "choices": [
+        "ต้องดาวน์โหลด npm จากเว็บไซต์อื่นและติดตั้งแยกเสมอ",
+        "npm ติดตั้งมาพร้อมกับ Node.js และตรวจสอบได้ด้วย npm -v",
+        "npm ใช้ได้เฉพาะเมื่อรันผ่าน npx เท่านั้น"
+      ],
+      "correctChoice": 2,
+      "explanation": "npm ถูกรวมมากับ Node.js อยู่แล้ว เมื่อติดตั้ง Node.js สำเร็จจึงใช้ npm ได้โดยไม่ต้องติดตั้งแยก"
+    },
+    {
+      "prompt": "เมื่อ clone โปรเจกต์ Node.js ที่ไม่มีโฟลเดอร์ node_modules มา ควรใช้คำสั่งใดเพื่อติดตั้ง dependencies ตาม package.json?",
+      "choices": [
+        "npm install",
+        "npm init -y",
+        "node package.json"
+      ],
+      "correctChoice": 1,
+      "explanation": "npm install ที่ไม่ระบุชื่อ package จะอ่าน dependencies จาก package.json แล้วติดตั้งทั้งหมดลงใน node_modules"
+    }
+  ]
+}

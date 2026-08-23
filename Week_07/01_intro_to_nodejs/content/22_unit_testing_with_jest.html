@@ -11,8 +11,8 @@
   <main>
     <article>
       <h1>การเขียน Unit Test ด้วย Jest</h1>
-      <p><strong>Jest</strong> คือ Framework สำหรับการทดสอบ JavaScript ที่ได้รับความนิยม มันมอบวิธีการเขียนเทสต์และรันเทสต์ที่เรียบง่าย</p>
-      <p>จำได้ไหมว่าในบทที่ 19 เราตั้งใจแยกฟังก์ชันจัดการ Array ออกจากฟังก์ชันอ่านเขียนไฟล์ ตอนนี้แหละที่เราจะได้เก็บเกี่ยวผลของการแยกนั้น เพราะ <code>addTodo</code>, <code>markDone</code> และ <code>removeTodo</code> ไม่ยุ่งกับไฟล์เลย เราจึงทดสอบมันได้ตรง ๆ แค่ส่ง Array เข้าไปแล้วดูว่าได้ Array อะไรออกมา ไม่ต้องเตรียมไฟล์ ไม่ต้องลบไฟล์ทิ้งหลังเทสต์เสร็จ</p>
+      <p><strong>Jest</strong> เป็น Framework ยอดนิยมสำหรับเขียนและรันเทสต์ JavaScript โดยมีเครื่องมือที่จำเป็นมาให้พร้อมใช้งาน</p>
+      <p>จำได้ไหมว่าบทที่ 19 เราแยกฟังก์ชันจัดการ Array ออกจากงานอ่านเขียนไฟล์ ตอนนี้ข้อดีเริ่มชัดแล้ว: <code>addTodo</code>, <code>markDone</code> และ <code>removeTodo</code> ไม่แตะไฟล์ เราจึงส่ง Array เข้าไปและตรวจผลลัพธ์ได้ตรง ๆ โดยไม่ต้องเตรียมหรือล้างไฟล์หลังเทสต์</p>
 
       <h2>ติดตั้ง Jest</h2>
       <pre><code>npm i -D jest</code></pre>
@@ -21,7 +21,7 @@
       <pre><code>"scripts": {
   "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
 }</code></pre>
-      <p>ปกติเราเขียนแค่ <code>"test": "jest"</code> ก็พอ แต่เพราะโปรเจกต์เราใช้ <code>import</code> / <code>export</code> แบบ ES Modules ซึ่ง Jest ยังรองรับได้ไม่เต็มที่ เราจึงต้องเปิด Flag ตัวนี้ให้มัน ตรงนี้ไม่ต้องจำ Copy ไปวางได้เลย</p>
+      <p>ปกติ <code>"test": "jest"</code> ก็เพียงพอ แต่โปรเจกต์นี้ใช้ <code>import</code> / <code>export</code> แบบ ES Modules จึงต้องเปิด Flag เพิ่มให้ Jest ส่วนนี้ยังไม่ต้องจำ คัดลอกไปใช้ได้เลย</p>
 
       <h2>เขียนเทสต์</h2>
       <p>ให้สร้างโฟลเดอร์ <code>tests</code> ไว้ที่ Root แล้วสร้างไฟล์ <code>todos.test.js</code>:</p>

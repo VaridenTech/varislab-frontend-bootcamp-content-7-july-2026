@@ -11,7 +11,7 @@
   <main>
     <article>
       <h1>การรับคำสั่งจาก process.argv</h1>
-      <p>ในบทที่ 9 เราอ่านข้อความหนึ่งอันจาก <code>process.argv[2]</code> ได้แล้ว แต่ตอนนี้แอปของเราต้องทำได้หลายอย่าง ไม่ใช่แค่เพิ่มรายการอย่างเดียว เราอยากได้แบบนี้:</p>
+      <p>บทที่ 9 เราอ่านค่าหนึ่งตัวจาก <code>process.argv[2]</code> ได้แล้ว แต่แอปของเราต้องรองรับมากกว่าการเพิ่มรายการ รูปแบบที่อยากได้คือ:</p>
       <pre><code>todo add "ซื้อนม"
 todo list
 todo done 3
@@ -29,7 +29,7 @@ todo web</code></pre>
 ]</code></pre>
       <p>สองตัวแรกคือ Path ของ Node.js และ Path ของไฟล์เรา ซึ่งเราไม่ได้ใช้ ตัวที่เราสนใจคือตั้งแต่ตัวที่สามเป็นต้นไป เราจึงใช้ <code>slice(2)</code> เพื่อตัดสองตัวแรกทิ้ง:</p>
       <pre><code>const [command, arg] = process.argv.slice(2)</code></pre>
-      <p>บรรทัดเดียวจบ เราใช้ Array Destructuring ที่เคยเรียนมาแล้วดึงค่าออกมาใส่ตัวแปรสองตัว ถ้ารัน <code>todo add "ซื้อนม"</code> จะได้ <code>command</code> เป็น <code>'add'</code> และ <code>arg</code> เป็น <code>'ซื้อนม'</code> ส่วนถ้ารัน <code>todo list</code> เฉย ๆ จะได้ <code>command</code> เป็น <code>'list'</code> และ <code>arg</code> เป็น <code>undefined</code></p>
+      <p>บรรทัดเดียวก็พอ เราใช้ Array Destructuring ดึงค่าออกมาใส่สองตัวแปร ถ้ารัน <code>todo add "ซื้อนม"</code> ค่า <code>command</code> จะเป็น <code>'add'</code> และ <code>arg</code> จะเป็น <code>'ซื้อนม'</code> แต่ถ้ารันเพียง <code>todo list</code> ค่า <code>arg</code> จะเป็น <code>undefined</code></p>
 
       <h2>แยกการทำงานด้วย switch</h2>
       <p>เมื่อรู้แล้วว่าผู้ใช้พิมพ์คำสั่งอะไรมา เราก็แค่ต้องเลือกว่าจะทำอะไรต่อ ซึ่งงานแบบนี้ <code>switch</code> เหมาะที่สุด ในไฟล์ <code>index.js</code>:</p>
@@ -71,7 +71,7 @@ switch (command) {
       </ul>
 
       <h2>ก้าวต่อไป</h2>
-      <p>ตอนนี้โครงของ CLI เราครบแล้ว แต่ละคำสั่งยังแค่ <code>console.log</code> เฉย ๆ เพราะเรายังไม่มีที่เก็บข้อมูล ในบทต่อ ๆ ไปเราจะเรียนเรื่องการทำงานแบบ Asynchronous และการอ่านเขียนไฟล์ แล้วค่อยกลับมาเติมเนื้อในให้แต่ละคำสั่งทำงานได้จริง</p>
+      <p>ตอนนี้โครง CLI ครบแล้ว แม้แต่ละคำสั่งจะยังแค่ <code>console.log</code> เพราะเรายังไม่มีที่เก็บข้อมูล บทต่อไปเราจะเรียนเรื่อง Asynchronous และการอ่านเขียนไฟล์ ก่อนกลับมาเติมให้ทุกคำสั่งทำงานจริง</p>
     </article>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="14_npm_and_third_party_modules.html" rel="prev">← บทก่อนหน้า</a>

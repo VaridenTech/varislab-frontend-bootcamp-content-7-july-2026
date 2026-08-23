@@ -11,10 +11,10 @@
   <main>
     <article>
       <h1>การเขียนโค้ดแบบ Asynchronous ใน Node.js</h1>
-      <p>โค้ดแบบ Asynchronous เป็นแนวคิดสำคัญใน Node.js มันช่วยให้โปรแกรมรันโค้ดแบบ Non-blocking ได้ ซึ่งหมายความว่าโปรแกรมสามารถทำงานอย่างอื่นต่อไปได้ในระหว่างที่รอให้งานหนึ่งเสร็จสิ้น</p>
+      <p>Asynchronous เป็นแนวคิดสำคัญของ Node.js เพราะทำให้โปรแกรมไม่ต้องหยุดรอทุกงาน ระหว่างที่งานหนึ่งยังไม่เสร็จ โปรแกรมก็ไปทำอย่างอื่นต่อได้</p>
 
       <h2>Callbacks</h2>
-      <p>Callback คือวิธีดั้งเดิมในการจัดการโค้ดแบบ Asynchronous ใน Node.js ฟังก์ชัน Callback จะถูกส่งเข้าไปเป็น Argument ให้กับฟังก์ชันที่ทำงานแบบ Asynchronous และเมื่องานนั้นเสร็จสิ้น ฟังก์ชัน Callback ก็จะถูกเรียกให้ทำงาน</p>
+      <p>Callback เป็นวิธีดั้งเดิมของ Node.js เราส่งฟังก์ชันหนึ่งเข้าไปเป็น Argument ของงาน Asynchronous แล้ว Node.js จะเรียกฟังก์ชันนั้นเมื่องานเสร็จ</p>
       <pre><code>fs.readFile('file.txt', (err, data) =&gt; {
   if (err) {
     console.error(err)
@@ -22,10 +22,10 @@
   }
   console.log(data)
 })</code></pre>
-      <p>ในตัวอย่างข้างต้น ฟังก์ชัน <code>readFile</code> จะอ่านเนื้อหาของไฟล์ <code>file.txt</code> เมื่ออ่านไฟล์เสร็จ ฟังก์ชัน Callback ก็จะถูกเรียกให้ทำงาน หากเกิดข้อผิดพลาดขึ้นระหว่างการทำงาน ตัวข้อผิดพลาดจะถูกส่งเข้าไปให้ฟังก์ชัน Callback เป็น Argument ตัวแรก</p>
+      <p>ตัวอย่างนี้ <code>readFile</code> เริ่มอ่าน <code>file.txt</code> แล้วเรียก Callback เมื่อเสร็จ หากมีข้อผิดพลาด Callback จะได้รับ Error เป็น Argument ตัวแรก</p>
 
       <h2>Promises</h2>
-      <p>Promise เป็นวิธีที่สะอาดกว่าในการจัดการโค้ดแบบ Asynchronous ใน Node.js โดย Promise แทนค่าที่อาจจะยังไม่พร้อมใช้งานในตอนนี้ และช่วยให้คุณเชื่อมต่อการทำงานแบบ Asynchronous หลาย ๆ อย่างเข้าด้วยกันได้</p>
+      <p>Promise แทนค่าที่ยังไม่พร้อมในตอนนี้ และช่วยให้เราเชื่อมงาน Asynchronous หลายขั้นเข้าด้วยกันได้โดยโค้ดไม่ซ้อนลึกเหมือน Callback</p>
       <pre><code>const fs = require('fs/promises')
 
 fs.readFile('file.txt')
@@ -35,10 +35,10 @@ fs.readFile('file.txt')
   .catch(err =&gt; {
     console.error(err)
   })</code></pre>
-      <p>ในตัวอย่างข้างต้น ฟังก์ชัน <code>readFile</code> จะคืนค่าเป็น Promise เมื่อ Promise นั้นสำเร็จ (Resolved) ฟังก์ชัน <code>then</code> จะถูกเรียกให้ทำงาน แต่ถ้า Promise ล้มเหลว (Rejected) ฟังก์ชัน <code>catch</code> จะถูกเรียกแทน</p>
+      <p>ครั้งนี้ <code>readFile</code> คืน Promise ถ้าสำเร็จ (Resolved) โค้ดใน <code>then</code> จะทำงาน แต่ถ้าล้มเหลว (Rejected) จะไปที่ <code>catch</code> แทน</p>
 
       <h2>Async/Await</h2>
-      <p>Async/Await เป็นวิธีที่ใหม่กว่าในการจัดการโค้ดแบบ Asynchronous ใน Node.js มันช่วยให้เขียนโค้ด Asynchronous ได้อ่านง่ายและกระชับกว่า โดยใช้ Keyword <code>async</code> และ <code>await</code></p>
+      <p>Async/Await เป็นรูปแบบที่อ่านต่อเนื่องคล้ายโค้ด Synchronous เราใช้ Keyword <code>async</code> และ <code>await</code> เพื่อเขียนงาน Asynchronous ให้กระชับขึ้น</p>
       <pre><code>const fs = require('fs/promises')
 
 async function readFile() {
@@ -51,11 +51,11 @@ async function readFile() {
 }
 
 readFile()</code></pre>
-      <p>ในตัวอย่างข้างต้น ฟังก์ชัน <code>readFile</code> ถูกกำกับไว้ด้วย <code>async</code> ซึ่งทำให้เราสามารถใช้ Keyword <code>await</code> เพื่อรอให้ฟังก์ชัน <code>readFile</code> ทำงานเสร็จก่อนที่จะรันโค้ดบรรทัดถัดไป และหากเกิดข้อผิดพลาดขึ้นระหว่างการทำงาน มันจะถูกดักจับด้วยบล็อก <code>try/catch</code></p>
+      <p>ฟังก์ชันตัวอย่างมี <code>async</code> กำกับไว้ จึงใช้ <code>await</code> รอให้ <code>readFile</code> ทำงานเสร็จก่อนเดินไปบรรทัดถัดไปได้ หากเกิดข้อผิดพลาด บล็อก <code>try/catch</code> จะรับไปจัดการ</p>
 
       <h2>การจัดการข้อผิดพลาด (Error Handling)</h2>
       <p>การจัดการข้อผิดพลาดเป็นส่วนสำคัญของการเขียนโค้ดแบบ Asynchronous ใน Node.js ในทุกตัวอย่างข้างต้น การจัดการข้อผิดพลาดทำได้ด้วยบล็อก <code>try/catch</code> หรือด้วยฟังก์ชัน <code>catch</code></p>
-      <p>สิ่งสำคัญคือต้องจัดการข้อผิดพลาดให้เหมาะสมเพื่อไม่ให้แอปพลิเคชันหยุดทำงาน นอกจากนี้ การให้ข้อความแสดงข้อผิดพลาดที่สื่อความหมายก็เป็นสิ่งสำคัญ เพราะจะช่วยในการแก้ไขปัญหา (Debug) ได้มาก</p>
+      <p>อย่าปล่อย Error ทิ้งไว้โดยไม่จัดการ เพราะอาจทำให้แอปหยุดทำงาน และควรเขียนข้อความ Error ให้บอกได้ว่าเกิดอะไรขึ้น เวลา Debug จะหาต้นเหตุได้เร็วกว่า</p>
     </article>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="15_reading_command_arguments.html" rel="prev">← บทก่อนหน้า</a>

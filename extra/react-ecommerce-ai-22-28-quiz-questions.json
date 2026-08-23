@@ -1,0 +1,76 @@
+{
+  "questions": [
+    {
+      "prompt": "ทำไม CartProvider จึงควรใช้ useReducer แบบสามอาร์กิวเมนต์ตามโค้ดนี้?",
+      "body": "<pre><code class=\"language-typescript\">const [cart, dispatch] = useReducer(\n  cartReducer,\n  undefined,\n  loadCartState,\n);</code></pre>",
+      "choices": [
+        "เพื่อให้ loadCartState ถูกเรียกใหม่ทุกครั้งที่ cart เปลี่ยน จะได้ sync กับ localStorage ตลอดเวลา",
+        "เพื่อให้ React เรียก loadCartState เพียงครั้งเดียวตอน mount แทนการอ่านและ parse localStorage ซ้ำทุก render",
+        "เพื่อให้ cartReducer เขียน state ลง localStorage ได้โดยตรงหลังจัดการทุก action"
+      ],
+      "correctChoice": 2,
+      "explanation": "อาร์กิวเมนต์ตัวที่สามคือ lazy initializer ซึ่ง React เรียกตอน mount เพื่อสร้าง state เริ่มต้นเพียงครั้งเดียว หากเขียน loadCartState() เป็นอาร์กิวเมนต์ตัวที่สอง ฟังก์ชันจะถูกรันซ้ำทุก render แม้ React จะใช้ผลลัพธ์เฉพาะ render แรก ส่วนการบันทึกกลับ localStorage เป็นหน้าที่ของ effect ไม่ใช่ reducer"
+    },
+    {
+      "prompt": "ตะกร้ามีสินค้า A จำนวน 3 ชิ้น และสินค้า B จำนวน 2 ชิ้น ตัวเลขบน badge ของ CartSummary ควรเป็นเท่าไร และควรคำนวณอย่างไร?",
+      "choices": [
+        "2 โดยใช้ cart.items.length เพราะ badge ต้องนับจำนวนแถวสินค้า",
+        "5 โดย reduce แล้วรวม quantity ของสินค้าทุกแถว",
+        "5 โดยรวม id ของสินค้าทุกแถวเพื่อหลีกเลี่ยงการนับสินค้าซ้ำ"
+      ],
+      "correctChoice": 2,
+      "explanation": "badge ต้องแสดงจำนวนชิ้นทั้งหมด ไม่ใช่จำนวนชนิดสินค้า ดังนั้น cart.items.length จะได้เพียง 2 แต่การ reduce รวม quantity จะได้ 3 + 2 = 5"
+    },
+    {
+      "prompt": "เหตุใด CartTable จึงอ่าน cart.items ผ่าน useCart() เอง แต่รับ onRemoveItem และ onUpdateQuantity ผ่าน props?",
+      "choices": [
+        "เพราะ Context อนุญาตให้ component อ่าน state ได้ แต่ไม่อนุญาตให้เรียกฟังก์ชันที่แก้ state",
+        "เพื่อให้ตารางรู้ว่าต้องแสดงข้อมูลอะไรโดยตรง แต่รวมจุดที่สั่งแก้ตะกร้าของหน้าไว้ใน Cart.tsx ให้ตามหาและควบคุมได้จากที่เดียว",
+        "เพื่อป้องกัน CartTable re-render หลังผู้ใช้ลบสินค้าหรือเปลี่ยนจำนวน"
+      ],
+      "correctChoice": 2,
+      "explanation": "ฝั่งอ่านของ CartTable ผูกกับตะกร้าโดยธรรมชาติ จึงอ่าน items เองได้ ส่วนการส่งคำสั่งแก้ผ่าน props ทำให้ Cart.tsx เป็นจุดเดียวที่มองเห็นการแก้ตะกร้าทั้งหมดของหน้านี้ และทำให้พฤติกรรมของตารางควบคุมได้จาก parent"
+    },
+    {
+      "prompt": "การประกาศ CheckoutAddressFormData ด้วย z.infer จาก checkoutAddressSchema ให้ประโยชน์สำคัญที่สุดข้อใด?",
+      "choices": [
+        "ทำให้ schema ทำงานเฉพาะตอน compile จึงไม่เพิ่มโค้ด validation ลงใน bundle",
+        "ทำให้ทุก field ของฟอร์มกลายเป็น optional โดยอัตโนมัติจนกว่าผู้ใช้จะกด submit",
+        "ทำให้ runtime validation และ TypeScript type มาจากแหล่งเดียว ลดโอกาสที่ interface กับกติกา validation จะเหลื่อมกัน"
+      ],
+      "correctChoice": 3,
+      "explanation": "zod schema ตรวจข้อมูลจริงตอน runtime ได้ และ z.infer สกัด TypeScript type จาก schema เดียวกัน จึงไม่ต้องดูแล interface กับ validation แยกสองชุดที่อาจเปลี่ยนไม่พร้อมกัน"
+    },
+    {
+      "prompt": "react-hook-form ทำให้ CheckoutAddressForm เป็น uncontrolled form ได้อย่างไร?",
+      "choices": [
+        "ใช้ register เชื่อม input ผ่าน ref ให้ DOM เก็บค่า แล้วรวบรวมและ validate ข้อมูลเมื่อ submit โดยไม่ต้องมี useState ต่อช่อง",
+        "คัดลอกค่าจากทุก input เข้า Context ทุกครั้งที่ผู้ใช้กดแป้นพิมพ์ จึงไม่ต้องใช้ local state",
+        "อ่านค่า input ด้วย document.querySelector เฉพาะตอน submit แล้วข้ามการตรวจด้วย zodResolver"
+      ],
+      "correctChoice": 1,
+      "explanation": "register ส่ง ref และ props ที่จำเป็นไปยัง input ทำให้ค่าอยู่ใน DOM แบบ uncontrolled จากนั้น handleSubmit รวบรวมค่าและให้ zodResolver ตรวจด้วย checkoutAddressSchema จึงไม่ต้องสร้าง useState และ validation ซ้ำสำหรับแต่ละ field"
+    },
+    {
+      "prompt": "ทำไม CheckoutDeliveryBox และ CheckoutPaymentBox จึงไม่ควร import รายการจาก consts.ts หรือเก็บ id ที่เลือกไว้ใน useState ของตัวเอง?",
+      "choices": [
+        "เพราะ component ที่มี map() ไม่สามารถใช้ import และ useState ในไฟล์เดียวกันได้",
+        "เพราะรายการและ id ที่เลือกควรถูกส่งผ่าน props โดยมี useCheckout เป็นเจ้าของ state จุดเดียว ทำให้กล่องใช้กับข้อมูลอื่นและทดสอบแยกได้โดยไม่เกิด state สองแหล่ง",
+        "เพราะ RadioInput จะเลือกได้ทีละตัวเฉพาะเมื่อ parent component ไม่มี state"
+      ],
+      "correctChoice": 2,
+      "explanation": "กล่องทั้งสองเป็น presentational components: รับรายการ, id ที่เลือก และ callback ผ่าน props ส่วน useCheckout ในบทถัดไปเป็นเจ้าของ state จริง การ import constants หรือถือ state ซ้ำในกล่องจะผูก component กับข้อมูลจริงและเสี่ยงให้แหล่งความจริงสองจุดเพี้ยนกัน"
+    },
+    {
+      "prompt": "ถ้า placeOrder API ล้มเหลว โค้ดแบบใดทำให้สินค้ายังคงอยู่ในตะกร้าอย่างถูกต้อง?",
+      "body": "<pre><code class=\"language-typescript\">const { mutate: placeOrderMutate } = useMutation({\n  mutationFn: placeOrder,\n  onSuccess: () =&gt; {\n    clearCart();\n    goToOrderSuccess();\n  },\n});\n\nconst onPlaceOrder = () =&gt; {\n  placeOrderMutate();\n};</code></pre>",
+      "choices": [
+        "วาง clearCart ไว้ใน onSuccess เพราะ callback นี้ทำงานหลังเซิร์ฟเวอร์ยืนยันความสำเร็จเท่านั้น",
+        "เรียก clearCart ต่อจาก placeOrderMutate ใน onPlaceOrder เพราะ mutate รอจน request เสร็จก่อนคืนค่าเสมอ",
+        "เรียก clearCart ก่อน placeOrderMutate เพื่อป้องกันผู้ใช้กดสั่งซื้อซ้ำระหว่างรอ"
+      ],
+      "correctChoice": 1,
+      "explanation": "mutate เป็นแบบ fire-and-forget โค้ดที่เขียนต่อท้ายจะทำงานก่อนรู้ผลของ request การล้างตะกร้าและนำทางจึงต้องอยู่ใน onSuccess เพื่อให้เกิดเฉพาะเมื่อสั่งซื้อสำเร็จ หาก API ล้มเหลว onSuccess จะไม่ทำงานและผู้ใช้ยังลองใหม่ด้วยตะกร้าเดิมได้"
+    }
+  ]
+}

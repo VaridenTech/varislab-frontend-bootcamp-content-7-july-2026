@@ -1,0 +1,65 @@
+{
+  "questions": [
+    {
+      "prompt": "ทำไมชุดทดสอบจึงใช้ MSW ดัก request ที่ชั้น network แทนการ vi.mock axios?",
+      "choices": [
+        "เพื่อให้เทสต์ข้าม apiClient และ interceptor แล้วเรียกข้อมูล fixture ได้เร็วที่สุด",
+        "เพื่อให้โค้ดจริงตั้งแต่ query, ฟังก์ชัน API, axios จนถึง interceptor ยังทำงานครบ โดยปลอมเฉพาะ server ปลายทาง",
+        "เพราะ Vitest ไม่รองรับการ mock package ที่ติดตั้งจาก npm"
+      ],
+      "correctChoice": 2,
+      "explanation": "การ mock axios จะตัด apiClient และ interceptor ออกจากเส้นทางที่ถูกทดสอบ ทำให้บั๊กในชั้นเหล่านั้นไม่ถูกจับ MSW ดักที่ network จึงปล่อยให้โค้ดฝั่งแอปทำงานจริงครบสาย ขณะเดียวกันก็ไม่พึ่ง server หรืออินเทอร์เน็ตจริง"
+    },
+    {
+      "prompt": "เหตุใด assertion แรกจึงพิสูจน์สูตรได้น้อยกว่า assertion ที่สอง?",
+      "body": "<pre><code class=\"language-typescript\">// แบบที่ 1\nexpect(calculateOriginalPrice(price, discount)).toBeCloseTo(\n  price / (1 - discount / 100),\n);\n\n// แบบที่ 2\nexpect(calculateOriginalPrice(90, 10)).toBeCloseTo(100);</code></pre>",
+      "choices": [
+        "แบบที่ 1 ใช้ toBeCloseTo ซึ่งตรวจเลขทศนิยมไม่ได้แม่นเท่า toBe",
+        "แบบที่ 1 คำนวณค่าคาดหวังด้วยสูตรเดียวกับโค้ดที่ทดสอบ จึงอาจยังผ่านเมื่อสูตรถูกเปลี่ยนผิดเหมือนกันทั้งสองฝั่ง",
+        "แบบที่ 1 ประกาศตัวแปรนอก assertion ทำให้ Vitest cache ค่าเดิมข้ามเทสต์"
+      ],
+      "correctChoice": 2,
+      "explanation": "ค่าคาดหวังควรมาจากคำตอบที่ผู้เขียนเทสต์ตัดสินไว้ ไม่ใช่คำนวณซ้ำด้วย implementation เดียวกัน เลข 100 จะไม่เปลี่ยนตามเมื่อสูตรในฟังก์ชันพัง และการลองแก้ implementation ให้ผิดแล้วเห็นเทสต์แดงคือหลักฐานว่าเทสต์คุ้มกันพฤติกรรมนั้นจริง"
+    },
+    {
+      "prompt": "ในเทสต์ hook แบบ async สัญญาณใดเหมาะกว่าสำหรับ waitFor เพื่อยืนยันว่า query สำเร็จจริง?",
+      "choices": [
+        "รอ isLoading เป็น false เพราะค่านี้รับประกันว่าข้อมูลสำเร็จและไม่มี error",
+        "รอ isSuccess เป็น true แล้ว assert ข้อมูลที่คาดหวัง เพราะเป็นสัญญาณทางเดียวที่เกิดเมื่อ query สำเร็จ",
+        "รอ result.current.data เป็น undefined เพราะเป็นค่าเริ่มต้นก่อน request ทำงาน"
+      ],
+      "correctChoice": 2,
+      "explanation": "isLoading อาจเป็น false ได้ทั้งเมื่อสำเร็จ ล้มเหลว หรือก่อนงานบางชนิดเริ่ม จึงอาจทำให้ waitFor ผ่านโดยไม่ได้พิสูจน์เส้นทางที่ต้องการ การรอ isSuccess เป็น true แล้วตรวจข้อมูลยืนยันทั้งการเปลี่ยนสถานะและผลลัพธ์ของ query"
+    },
+    {
+      "prompt": "หลัง render หน้า Home ซึ่งต้องโหลดสินค้าผ่าน TanStack Query และ MSW ควรเลือก Testing Library query แบบใดสำหรับข้อความสินค้าที่จะปรากฏภายหลัง?",
+      "choices": [
+        "getByText เพราะมัน retry จนกว่าข้อความจะปรากฏหรือครบ timeout",
+        "queryByText เพราะมันโยน error ทันทีเมื่อข้อความยังไม่อยู่บนจอ",
+        "await findByText เพราะมันรอและค้นซ้ำจน element จากงาน async ปรากฏ"
+      ],
+      "correctChoice": 3,
+      "explanation": "getBy ค้นทันทีและโยน error เมื่อยังไม่พบ ส่วน queryBy คืน null และเหมาะกับการยืนยันว่า element ไม่อยู่บนจอ findBy มีการรอในตัว จึงเหมาะเป็นประตูรอข้อมูลที่ render หลัง request แบบ async"
+    },
+    {
+      "prompt": "หลังให้ AI อ่านทั้งโปรเจกต์แล้วรายงานปัญหา วิธีจัดการผลลัพธ์แบบใดถูกต้องที่สุด?",
+      "choices": [
+        "ถือทุกข้อเป็นสมมติฐานที่ต้องมี path:บรรทัดและยืนยันกับโค้ดหรือการทดลองก่อน แล้วจึงแก้ทีละข้อและ commit แยก",
+        "สลับกลับเป็น Agent แล้วสั่งแก้ทั้งรายการพร้อมกัน เพราะ AI อ่านบริบทครบทั้งโปรเจกต์แล้ว",
+        "ยอมรับเฉพาะข้อที่เกี่ยวกับ lint และทิ้งข้อด้าน behavior ทั้งหมด เพราะ AI รันโค้ดไม่ได้"
+      ],
+      "correctChoice": 1,
+      "explanation": "AI มองเห็นความสอดคล้องของโค้ดได้ แต่ไม่รู้เสมอว่าสิ่งหนึ่งเป็นบั๊กหรือการตัดสินใจที่ตั้งใจไว้ ผลลัพธ์ทุกข้อจึงเป็นสมมติฐาน ต้องชี้ตำแหน่งที่ตรวจได้ ยืนยันทีละข้อ และไม่รวมการแก้หลายเรื่องไว้ใน diff เดียว"
+    },
+    {
+      "prompt": "ทำไม server ที่ deploy React SPA ต้องตั้ง fallback ให้ URL ที่หาไฟล์ไม่เจอส่ง index.html กลับมา?",
+      "choices": [
+        "เพื่อให้ Vite สร้างไฟล์ HTML แยกสำหรับทุก route เมื่อผู้ใช้เปิดหน้าโดยตรง",
+        "เพราะแอปมี HTML จริงเพียงไฟล์เดียว และต้องให้ react-router รับ URL เช่น /categories ไปตัดสินใจ render หลัง browser โหลด index.html",
+        "เพื่อเปลี่ยน response 404 ทุกชนิด รวมถึงรูปภาพที่หาย ให้กลายเป็นหน้า Home"
+      ],
+      "correctChoice": 2,
+      "explanation": "route ของ SPA อยู่ฝั่ง browser ไม่ได้มีไฟล์ /categories อยู่บน server เมื่อเปิด URL นั้นตรง ๆ หรือ refresh server จึงต้องคืน index.html แล้วปล่อยให้ react-router เลือกหน้าที่ถูกต้อง"
+    }
+  ]
+}

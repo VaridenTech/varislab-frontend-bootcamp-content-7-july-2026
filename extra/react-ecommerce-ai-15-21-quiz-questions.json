@@ -1,0 +1,76 @@
+{
+  "questions": [
+    {
+      "prompt": "ทำไม response interceptor ใน API client ต้องคืนค่า Promise.reject(new ApiError(...)) เมื่อ request ล้มเหลว?",
+      "choices": [
+        "เพื่อเปลี่ยน error ให้เป็นค่าปกติที่ component นำไป render ได้โดยไม่ต้องใช้ error state",
+        "เพื่อ normalize error ให้อยู่ในรูป ApiError พร้อมคงสถานะ rejected ไว้ ให้ TanStack Query รู้ว่า request ล้มเหลว",
+        "เพื่อให้ axios ลองส่ง request เดิมซ้ำโดยอัตโนมัติจนกว่าจะสำเร็จ"
+      ],
+      "correctChoice": 2,
+      "explanation": "interceptor มีหน้าที่แปลงความล้มเหลวจาก axios ให้เป็น ApiError รูปแบบเดียวกันทั้งแอป แต่ยังต้อง reject ต่อไป หากคืน ApiError เป็นค่าปกติ promise จะกลายเป็น fulfilled และ TanStack Query จะมอง request ที่พังว่าสำเร็จ"
+    },
+    {
+      "prompt": "ฟังก์ชัน getProducts รับ page ที่เริ่มนับจาก 1 แต่ DummyJSON รับ skip การคำนวณใดถูกต้อง?",
+      "body": "<pre><code class=\"language-typescript\">type GetProductsParams = {\n  page?: number;\n  limit?: number;\n};</code></pre>",
+      "choices": [
+        "skip = page * limit",
+        "skip = page - limit",
+        "skip = (page - 1) * limit"
+      ],
+      "correctChoice": 3,
+      "explanation": "หน้า 1 ต้องเริ่มที่รายการลำดับ 0 จึงต้องลบ 1 จาก page ก่อนคูณ limit เช่น page 3 และ limit 20 จะได้ skip 40"
+    },
+    {
+      "prompt": "เหตุใด productKeys.detail(42) และ productKeys.detail(\"42\") จึงควรสร้าง query key เดียวกัน?",
+      "choices": [
+        "เพื่อป้องกันข้อมูลสินค้ารหัสเดียวกันถูกเก็บเป็น cache คนละก้อนเพียงเพราะชนิดของ id ต่างกัน",
+        "เพราะ TanStack Query อนุญาตให้ query key มีสมาชิกเป็น string เท่านั้น",
+        "เพราะ DummyJSON จะตอบ 404 เสมอเมื่อ id ที่ส่งเข้า query function เป็น number"
+      ],
+      "correctChoice": 1,
+      "explanation": "การ normalize id ด้วย String(id) ทำให้ทุกจุดที่อ้างถึงสินค้ารหัสเดียวกันใช้ cache entry เดียวกัน ไม่ว่าจะได้ id มาจาก URL เป็น string หรือจากข้อมูลสินค้าเป็น number"
+    },
+    {
+      "prompt": "ทำไม ProductCard จึงต้อง render ทั้ง <img> และ Skeleton ระหว่างที่รูปยังโหลดไม่เสร็จ แทนการ render อย่างใดอย่างหนึ่งด้วย ternary?",
+      "choices": [
+        "เพราะ Skeleton ต้องอ่านขนาดจริงจาก <img> ก่อนจึงจะแสดงผลได้",
+        "เพราะถ้ายังไม่ render <img> เหตุการณ์ onLoad จะไม่มีวันเกิด และ state จะไม่เปลี่ยนเพื่อเอา Skeleton ออก",
+        "เพราะ React ไม่อนุญาตให้ใช้ ternary expression กับ element ที่มี onLoad"
+      ],
+      "correctChoice": 2,
+      "explanation": "รูปต้องอยู่ใน DOM เพื่อเริ่มดาวน์โหลดและยิง onLoad เพียงซ่อนรูปด้วย CSS ระหว่างรอ แล้วแสดง Skeleton ควบคู่กัน เมื่อ onLoad เปลี่ยน state จึงค่อยซ่อน Skeleton และแสดงรูป"
+    },
+    {
+      "prompt": "หน้า Home ยิงหลาย query สำหรับหลาย section วิธีจัดการ loading และ error แบบใดเหมาะกับโครงสร้างนี้ที่สุด?",
+      "choices": [
+        "early return ทั้งหน้าทันทีเมื่อ query ใด query หนึ่งกำลังโหลดหรือเกิด error",
+        "รวมทุก query เป็น promise เดียว เพื่อให้ทุก section สำเร็จหรือล้มเหลวพร้อมกัน",
+        "จัดการ loading และ error แยกภายในแต่ละ section เพื่อให้ส่วนที่มีข้อมูลแล้วแสดงต่อได้"
+      ],
+      "correctChoice": 3,
+      "explanation": "แต่ละ section ของ Home เป็นอิสระและใช้ข้อมูลคนละชุด การจัดการสถานะแยกส่วนทำให้ query หนึ่งที่ช้าหรือล้มเหลวไม่บังเนื้อหาส่วนอื่นทั้งหน้า"
+    },
+    {
+      "prompt": "placeholderData: keepPreviousData ช่วยประสบการณ์เปลี่ยนหน้าในหน้า Category อย่างไร?",
+      "choices": [
+        "เก็บสินค้าหน้าเดิมไว้แสดงระหว่างรอข้อมูลหน้าใหม่ จึงไม่ย้อนกลับไปเป็น spinner หรือหน้าว่างทุกครั้ง",
+        "เก็บเลขหน้าไว้ใน URL ทำให้ refresh แล้วกลับมาหน้าเดิมได้",
+        "ดาวน์โหลดข้อมูลทุกหน้าล่วงหน้าตั้งแต่ผู้ใช้เปิดหน้า Category ครั้งแรก"
+      ],
+      "correctChoice": 1,
+      "explanation": "query key ยังเปลี่ยนตามเลขหน้าและมีการขอข้อมูลใหม่ตามปกติ แต่ keepPreviousData ใช้ข้อมูลสำเร็จชุดก่อนเป็น placeholder ระหว่างรอ จึงทำให้การเปลี่ยนหน้าดูลื่นขึ้น โดยไม่ได้แก้ข้อจำกัดเรื่องเลขหน้าที่เก็บใน component state"
+    },
+    {
+      "prompt": "ข้อมูล rating จาก DummyJSON อยู่ในสเกล 1–5 หาก RatingBreakdown ใช้ Math.round(review.rating / 2) จะเกิดผลใด?",
+      "body": "<pre><code class=\"language-typescript\">const roundedRating = Math.round(review.rating / 2);</code></pre>",
+      "choices": [
+        "คะแนนรีวิวจะกระจายครบ 1–5 ตามเดิม แต่จำนวนรีวิวแต่ละแถวจะถูกปัดขึ้น",
+        "รีวิว 5 ดาวจะถูกนับเป็น 3 ดาว และแถว 4–5 ดาวจะเป็นศูนย์เสมอ",
+        "โค้ดจะ throw RangeError เมื่อได้รับ rating เป็นเลขคี่"
+      ],
+      "correctChoice": 2,
+      "explanation": "การหารสองเหมาะกับข้อมูลสเกล 10 แต่ DummyJSON ใช้สเกล 5: ค่า 1–5 จะถูกแปลงเป็น 1, 1, 2, 2, 3 ทำให้ไม่มีรีวิวใดถูกนับในแถว 4 หรือ 5 ดาว ทางแก้คือลบ / 2 ออก"
+    }
+  ]
+}

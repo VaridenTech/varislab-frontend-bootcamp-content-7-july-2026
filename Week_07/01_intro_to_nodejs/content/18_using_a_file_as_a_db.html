@@ -11,7 +11,7 @@
   <main>
     <article>
       <h1>การใช้ไฟล์เป็นฐานข้อมูล (File as a DB)</h1>
-      <p>ปัญหาที่ค้างไว้ตั้งแต่บทที่ 9 คือรายการของเราหายไปทุกครั้งที่โปรแกรมจบ ถึงเวลาแก้แล้ว เราจะใช้ FS Module ร่วมกับไฟล์ JSON เป็นฐานข้อมูลเก็บรายการ Todo ของเรา</p>
+      <p>ปัญหาที่ค้างมาตั้งแต่บทที่ 9 คือพอโปรแกรมจบ รายการทั้งหมดก็หายไป ถึงเวลาเก็บข้อมูลไว้จริง ๆ ด้วย FS Module และไฟล์ JSON ที่ทำหน้าที่เป็นฐานข้อมูลของแอป</p>
       <p>ให้สร้างไฟล์ <code>db.json</code> ไว้ที่ Root แล้วใส่ Array ว่างลงไป:</p>
       <pre><code>[]</code></pre>
       <p>แค่นั้นเลย ข้อมูลของเราคือ Array ของ Todo ตรง ๆ ไม่ต้องมีอะไรห่อไว้อีกชั้น พออ่านไฟล์นี้เข้ามาแล้วแปลงเป็น JavaScript เราจะได้ Array มาใช้ได้ทันที</p>
@@ -35,8 +35,8 @@ export const saveTodos = async (todos) =&gt; {
 }</code></pre>
 
       <h2>คำอธิบายโค้ด</h2>
-      <p>อันดับแรกเรา Import FS Module เข้ามา อย่างไรก็ตาม เราต้องการใช้ Async/Await ซึ่งทำงานร่วมกับ Promise ดังนั้นแทนที่จะใช้เมธอดของ <code>fs</code> เวอร์ชัน Callback เราจะ Import เมธอดของ <code>fs</code> เวอร์ชัน Promise ที่ Node.js มีให้มาใช้แทน โดยสังเกตที่ <code>node:fs/promises</code></p>
-      <p>ต่อมาเรากำหนด <code>DB_PATH</code> คือตำแหน่งที่ไฟล์ <code>db.json</code> อยู่ ตรงนี้เราต้องเขียนแบบนี้เพราะ <code>import.meta.url</code> จะบอกตำแหน่งของไฟล์ <code>todos.js</code> เอง แล้วเราถอยขึ้นไปหนึ่งชั้นด้วย <code>../</code> เพื่อไปหา <code>db.json</code> ที่อยู่ Root ถ้าเราเขียนแค่ <code>'./db.json'</code> เฉย ๆ Node.js จะไปหาไฟล์จากโฟลเดอร์ที่เรารันคำสั่ง ซึ่งอาจเป็นที่ไหนก็ได้ในเครื่อง</p>
+      <p>ก่อนอื่น Import FS Module เข้ามา เราจะใช้ Async/Await ซึ่งทำงานกับ Promise จึงเลือก <code>node:fs/promises</code> แทนเมธอด <code>fs</code> แบบ Callback</p>
+      <p>จากนั้นกำหนด <code>DB_PATH</code> ให้ชี้ไปยัง <code>db.json</code> โดย <code>import.meta.url</code> บอกตำแหน่งของ <code>todos.js</code> แล้ว <code>../</code> ถอยขึ้นไปหาไฟล์ที่ Root ถ้าใช้เพียง <code>'./db.json'</code> Node.js จะเริ่มค้นจากโฟลเดอร์ที่รันคำสั่ง ซึ่งอาจเปลี่ยนไปได้</p>
       <p>จากนั้นเราสร้างฟังก์ชันขึ้นมา 2 ตัว:</p>
       <ul>
         <li><code>readTodos</code> — อ่านไฟล์ <code>db.json</code> เข้ามาเป็นข้อความ แล้วใช้ <code>JSON.parse</code> แปลงเป็น Array ของ JavaScript</li>
