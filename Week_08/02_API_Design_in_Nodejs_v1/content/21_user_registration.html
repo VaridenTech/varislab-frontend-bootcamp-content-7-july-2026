@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เขียน Flow สมัครสมาชิกตั้งแต่ Validate, Hash รหัสผ่านด้วย bcrypt, Insert ลง Database ไปจนถึงการออก Token พร้อมสร้าง src/utils/password.ts และ Controller register ตัวแรกของโปรเจกต์" />
+  <title>ระบบสมัครสมาชิก (Registration) — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>ระบบสมัครสมาชิก (Registration)</h1>
+      <p>บทนี้เราจะลงมือเขียนโค้ดจริงแล้ว สิ่งที่เราจะได้คือ <code>POST /api/auth/register</code> ที่ทำงานได้จริง ครอบคลุมทั้ง Identification และ Authentication ตามที่คุยกันไว้บทที่แล้ว</p>
+
+      <h2>Flow ของการสมัครสมาชิก</h2>
+      <ol>
+        <li><strong>Validate Input</strong> — ตรวจว่าข้อมูลที่ส่งมาครบและถูกรูปแบบ</li>
+        <li><strong>เช็คความซ้ำ</strong> — Email หรือ Username ต้องไม่ถูกใช้ไปแล้ว</li>
+        <li><strong>Hash รหัสผ่าน</strong> — ห้ามเก็บข้อความดิบลง Database เด็ดขาด</li>
+        <li><strong>สร้าง User</strong> — Insert ลงตาราง</li>
+        <li><strong>ออก Token</strong> — ล็อกอินให้เขาทันทีโดยไม่ต้องกรอกซ้ำ</li>
+        <li><strong>ส่งอีเมลยืนยัน</strong> — ไม่บังคับ และเราจะไม่ทำในคอร์สนี้</li>
+      </ol>
+      <p>ข้อ 1 เราทำเสร็จไปแล้วตั้งแต่บทที่ 12 ด้วย <code>validateBody</code> และ Schema ที่ Drizzle สร้างให้เรา</p>
+
+      <h2>ข้อ 2 อย่าเขียน Query เช็คความซ้ำเอง</h2>
+      <p>ถ้าคุณกำลังจะเขียน Query ไปไล่ดูว่ามี Email นี้ใน Database แล้วหรือยัง <strong>หยุดก่อน</strong> ลองคิดดูว่าถ้าคุณมีผู้ใช้ร้อยล้านคน แล้วทุกครั้งที่มีคนสมัคร คุณต้องไปไล่หาทีละแถว มันคือหายนะด้านประสิทธิภาพ และผมรับประกันว่าไม่มีใคร Merge PR แบบนั้นให้คุณ</p>
+      <p>ของแบบนี้เป็นหน้าที่ของ Database เราใส่ <code>.unique()</code> ให้ <code>email</code> และ <code>username</code> ไว้แล้วตั้งแต่บทที่ 16 ซึ่ง Postgres จะสร้าง Unique Index ให้ ถ้ามีคนสมัครซ้ำ Database จะโยน Error ออกมาเอง<strong>ฟรี ๆ และเร็วกว่ามาก</strong> เราแค่รับ Error นั้นมาจัดการต่อ</p>
+
+      <h2>ทำไมต้อง Hash รหัสผ่าน</h2>
+      <p>ถ้า Database รั่ว สิ่งที่คนร้ายเห็นจะเป็นแบบนี้</p>
+      <pre><code>id | email             | password
+1  | user@example.com  | MyPassword123!
+2  | admin@site.com    | admin2024</code></pre>
+      <p>ผลที่ตามมาไม่ได้จบแค่แอปเรา เพราะคนส่วนใหญ่ใช้รหัสผ่านซ้ำกันหลายเว็บ รหัสที่หลุดจากเราจะกลายเป็นกุญแจเปิดอีเมลและบัญชีธนาคารของเขาต่อ นี่ยังไม่นับความรับผิดทางกฎหมายและความเชื่อมั่นที่หายไปทั้งหมด</p>
+      <p>แต่ถ้า Hash ไว้ สิ่งที่รั่วออกไปจะเป็นแบบนี้แทน</p>
+      <pre><code>id | email             | password
+1  | user@example.com  | $2b$12$N9qo8uL...
+2  | admin@site.com    | $2b$12$K7xI9pQ...</code></pre>
+      <p>เหตุการณ์แบบนี้เกิดขึ้นจริงและเกิดบ่อย LinkedIn ปี 2012 หลุดรหัสผ่านที่ Hash แบบไม่ใส่ Salt ไป 6.5 ล้านรายการ Adobe ปี 2013 หลุด 150 ล้านรายการที่เข้ารหัสแบบถอดกลับได้ ส่วน RockYou ปี 2009 หลุด 32 ล้านรายการที่เป็นข้อความดิบล้วน ๆ อย่าไปเป็นข่าวหน้าถัดไป</p>
+
+      <h2>Hash ไม่ใช่การสุ่ม</h2>
+      <p>จุดที่คนเข้าใจผิดบ่อยคือ ถ้ามันดูมั่วขนาดนั้นแล้วเราจะเทียบตอนล็อกอินได้อย่างไร คำตอบคือ <strong>Hashing เป็น Deterministic</strong> คือใส่วัตถุดิบชุดเดิมเข้าไปจะได้ผลลัพธ์เดิมเสมอ</p>
+      <p>ถ้าคุณเคยเขียน Hash Table คุณจะคุ้นความรู้สึกนี้ Key เดิมผ่าน Algorithm เดิมย่อมได้ Index เดิมทุกครั้ง ไม่งั้น Hash Table ก็ใช้งานไม่ได้ ถ้า Hashing ไม่ Deterministic เราก็จะล็อกอินใครไม่ได้เลยตลอดกาล</p>
+
+      <h2>bcrypt ทำงานอย่างไร</h2>
+      <p>bcrypt คือมาตรฐานที่ใช้กันมานานสำหรับงานนี้โดยเฉพาะ ขั้นตอนคร่าว ๆ เป็นแบบนี้</p>
+      <pre><code>// รหัสผ่านที่ผู้ใช้กรอก
+"MyPassword123!"
+
+// สิ่งที่ bcrypt ทำ
+1. สุ่ม Salt ขึ้นมาหนึ่งชุด: "$2b$12$N9qo8uLOickgx2ZMRZoMye"
+2. เอา Salt มาต่อกับรหัสผ่าน
+3. ผ่าน Blowfish Algorithm 2^12 ครั้ง (4,096 รอบ)
+4. ได้ผลลัพธ์: "$2b$12$N9qo8uLOickgx2ZMRZoMye.IjQ0JwF2cJX8nnYA5VYA.KQIeqHLWa"</code></pre>
+      <p><strong>Salt</strong> คือค่าสุ่มที่ถูกสร้างใหม่ทุกครั้งที่ Hash และถูกเก็บติดไปในผลลัพธ์เลย ส่วน <strong>Rounds</strong> คือเลขที่บอกว่าจะวนกี่รอบ ยิ่งเยอะยิ่งทนต่อการเดาสุ่ม แต่ก็ยิ่งกินเวลา CPU ตัวเลขที่ใช้กันคือ 10 ถึง 12 ซึ่งตรงกับที่เราตั้ง <code>BCRYPT_ROUNDS</code> ไว้ใน <code>env.ts</code> ตั้งแต่บทที่ 6 (เราจะเจาะรายละเอียดของ String ผลลัพธ์ทีละส่วนในบทที่ 23 ตอนทำ Sign In)</p>
+
+      <h2>สร้าง src/utils/password.ts</h2>
+      <p>ก่อนจะเขียน Controller เรามาทำเครื่องมือให้พร้อมก่อน สร้างโฟลเดอร์ <code>src/utils</code> ขึ้นมา ผมมักมีโฟลเดอร์ชื่อนี้ในทุกโปรเจกต์ (บางคนเรียก <code>helpers</code> หรือ <code>modules</code>) ไว้เก็บฟังก์ชันที่มีประโยชน์แต่ไม่รู้จะไปอยู่ตรงไหนดี แล้วสร้างไฟล์ <code>password.ts</code></p>
+      <pre><code>import bcrypt from 'bcrypt'
+import { env } from '../../env.ts'
+
+export const hashPassword = async (password: string): Promise&lt;string&gt; =&gt; {
+  return bcrypt.hash(password, env.BCRYPT_ROUNDS)
+}</code></pre>
+      <p>สังเกตว่ามันเป็น <code>async</code> ซึ่งสำคัญมาก bcrypt มีเวอร์ชัน <code>hashSync</code> ให้ใช้ด้วย แต่<strong>อย่าใช้</strong> เพราะการวน 4,096 รอบแบบ Synchronous จะบล็อก Event Loop ของ Node.js ทั้งเส้น แปลว่าตอนใครสักคนสมัครสมาชิก Request ของคนอื่นทั้งหมดจะหยุดรอ</p>
+      <p>อีกเหตุผลที่ต้องแยกออกมาเป็นไฟล์ต่างหากแทนที่จะเรียก <code>bcrypt.hash()</code> ตรง ๆ ใน Controller คือ <strong>เราต้องการเทสต์มันแยกได้</strong> ถ้า Logic นี้ฝังอยู่กลาง Controller เราจะเขียน Test ให้เฉพาะส่วนนี้ไม่ได้เลย และถ้าวันหนึ่งต้องเปลี่ยนวิธี Hash เราก็แก้ที่เดียวจบ</p>
+      <p>ตอนนี้กลับไปแก้ <code>src/db/seed.ts</code> ได้แล้วตามที่สัญญาไว้ในบทที่ 19 เปลี่ยนจากรหัสผ่านข้อความดิบเป็น <code>await hashPassword('demo123')</code> แล้วรัน Seed ใหม่</p>
+
+      <h2>สร้าง src/controllers/authController.ts</h2>
+      <p>สร้างโฟลเดอร์ <code>src/controllers</code> แล้วสร้างไฟล์ <code>authController.ts</code> คำว่า Controller กับ Handler หมายถึงสิ่งเดียวกัน คือฟังก์ชันที่เราเสียบเข้าไปใน Route เพื่อบอกว่า "ถ้า Request วิ่งมาที่นี่ ให้รันตัวนี้" ผมสลับไปมาระหว่างสองคำนี้ตลอด รอบนี้ขอใช้คำว่า Controller</p>
+      <p>เริ่มจากโครงเปล่า ๆ พร้อม <code>try/catch</code></p>
+      <pre><code>import type { Request, Response } from 'express'
+import { db } from '../db/connection.ts'
+import { users, type NewUser } from '../db/schema.ts'
+import { hashPassword } from '../utils/password.ts'
+
+export const register = async (
+  req: Request&lt;any, any, NewUser&gt;,
+  res: Response
+) =&gt; {
+  try {
+    // เดี๋ยวมาเติม
+  } catch (e) {
+    console.error('Registration error', e)
+    res.status(500).json({ error: 'Failed to create user' })
+  }
+}</code></pre>
+      <p><strong>ทำไม 500</strong> เพราะถ้าโค้ดหลุดมาถึงตรงนี้ได้ แปลว่าไม่น่าใช่ความผิดของฝั่งผู้ใช้แล้ว Input ผ่านการตรวจไปตั้งแต่ Middleware ที่หน้า Route ดังนั้นสิ่งที่พังได้คือ Database ล่ม หรือโค้ดเราเอง — ซึ่งทั้งคู่เป็นความผิดของเรา</p>
+      <p>มีข้อยกเว้นอยู่หนึ่งกรณีคือคนสมัครด้วย Email ที่ถูกใช้ไปแล้ว Postgres จะโยน Error Code เฉพาะสำหรับ Duplicate ออกมา ซึ่งเราดักแล้วตอบ 400 แทนได้ ตอนนี้ผมขอตอบ 500 ไปทุกกรณีก่อน แล้วดูจาก <code>console.error</code> ว่า Error หน้าตาเป็นอย่างไรจริง ๆ</p>
+      <p>ส่วน <code>Request&lt;any, any, NewUser&gt;</code> คือการบอก TypeScript ว่า <code>req.body</code> หน้าตาเป็นอย่างไร Generic ตัวแรกคือ Params ซึ่ง Route นี้ไม่มี เลยใส่ <code>any</code> ตัวที่สามคือ Body — เราใช้ <code>NewUser</code> ที่ Export ไว้ตั้งแต่บทที่ 17 <strong>ไม่ใช่ <code>User</code></strong> เพราะ <code>User</code> มาจาก <code>$inferSelect</code> ซึ่งจะมี <code>id</code>, <code>createdAt</code>, <code>updatedAt</code> ครบเสมอ แต่คนที่กำลังจะสมัครยังไม่มีของพวกนั้น ส่วน <code>NewUser</code> มาจาก <code>$inferInsert</code> จึงเหลือแค่ที่จำเป็นจริง ๆ ตรงกับสิ่งที่ Client ส่งมาพอดี</p>
+      <p>ย้ำว่าสิ่งนี้<strong>ไม่ได้เปลี่ยนพฤติกรรมของโค้ดเลย</strong> มันคือ TypeScript ล้วน ๆ แต่ผลที่ได้คือพอพิมพ์ <code>req.body.</code> ในเอดิเตอร์ ทุก Field ของ User จะเด้งขึ้นมาให้เลือก</p>
+
+      <h2>เติมเนื้อใน Controller</h2>
+      <pre><code>const hashedPassword = await hashPassword(req.body.password)
+
+const [user] = await db
+  .insert(users)
+  .values({
+    ...req.body,
+    password: hashedPassword,
+  })
+  .returning({
+    id: users.id,
+    email: users.email,
+    username: users.username,
+    firstName: users.firstName,
+    lastName: users.lastName,
+    createdAt: users.createdAt,
+  })
+
+const token = await generateToken({
+  id: user.id,
+  email: user.email,
+  username: user.username,
+})
+
+return res.status(201).json({
+  message: 'User created',
+  user,
+  token,
+})</code></pre>
+      <p>ลำดับสำคัญมาก เรา Hash <em>ก่อน</em> Insert เสมอ</p>
+      <p>ลูกเล่นที่ผมชอบคือ <code>...req.body</code> แล้วเขียน <code>password</code> ทับไว้ทีหลัง ถ้าสลับลำดับกันคือเอา <code>password</code> ขึ้นก่อนแล้ว Spread ทีหลัง รหัสผ่านข้อความดิบจะทับค่าที่ Hash แล้วทันที ซึ่งเป็นบั๊กที่มองไม่เห็นด้วยตาเปล่า ที่กล้าทำแบบนี้ได้เพราะเรา Validate Body มาแล้วอย่างเข้มงวด จึงมั่นใจว่าไม่มีของแปลกปลอมหลุดเข้ามา</p>
+      <p><strong><code>.returning()</code> คือจุดสำคัญที่สุดของบทนี้</strong> ถ้าเราเรียก <code>.returning()</code> เปล่า ๆ Drizzle จะคืน User ทั้งแถวมาให้ ซึ่ง<em>รวมคอลัมน์ <code>password</code></em> ด้วย ถ้าเราเผลอส่งกลับไปให้ Client ก็เท่ากับยิงรหัสผ่านที่ Hash ไว้ออกไปในสายลม เราจึงระบุเองว่าอยากได้ Field ไหนบ้าง และไม่มี <code>password</code> อยู่ในนั้น</p>
+      <p>ผมขอตั้งเป็นกฎเลย — <strong>เหตุผลเดียวที่คุณควร Query คอลัมน์ <code>password</code> คือตอนล็อกอินกับตอนเปลี่ยนรหัสผ่าน</strong> นอกจากสองเรื่องนี้ไม่มีเหตุผลอื่นเลย</p>
+      <p>และเพราะ <code>.returning()</code> คืน Array เสมอ เราจึง Destructure ด้วย <code>[user]</code> เหมือนที่ทำใน Seed Script</p>
+
+      <h2>ทำไมต้องออก Token ทันทีที่สมัครเสร็จ</h2>
+      <p>เพราะการออก Token ณ จุดนี้เท่ากับ<strong>ล็อกอินให้เขาอัตโนมัติ</strong> ลองเทียบสองแบบ</p>
+      <p>ถ้าไม่ออก Token ผู้ใช้ต้องกรอกฟอร์มสมัคร กดส่ง เห็นข้อความว่าสร้างบัญชีแล้ว ถูกพาไปหน้าล็อกอิน กรอกข้อมูลเดิมซ้ำอีกรอบ แล้วถึงจะเข้าใช้งานได้ — หกขั้นตอน ผมเกลียดแอปที่ทำแบบนี้มาก คุณเพิ่งรู้ทุกอย่างของผมเมื่อสามวินาทีที่แล้ว ทำไมต้องให้กรอกใหม่</p>
+      <p>ถ้าออก Token เลย เหลือแค่กรอกฟอร์ม กดส่ง เข้าใช้งานได้ทันที — สี่ขั้นตอนและไม่มีความหงุดหงิด</p>
+      <p>ฟังก์ชัน <code>generateToken</code> ที่เราเรียกไว้ยังไม่มีตัวตนนะครับ ตอนนี้เอดิเตอร์จะขึ้นเส้นแดง เราจะไปสร้างมันกันในบทหน้า พร้อมกับเสียบ Route และทดสอบทั้งหมดใน Postman</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="20_authentication_strategies.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="22_working_with_jwt.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

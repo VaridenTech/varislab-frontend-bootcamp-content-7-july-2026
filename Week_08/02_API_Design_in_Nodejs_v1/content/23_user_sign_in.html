@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เขียน Controller login ตั้งแต่การหา User ด้วย db.query.findFirst, การเทียบรหัสผ่านด้วย bcrypt.compare, การตอบ 401 Invalid credentials ที่ไม่บอกใบ้ว่า Field ไหนผิด ไปจนถึงการแยกส่วนของ bcrypt Hash ทีละชิ้น" />
+  <title>ระบบเข้าสู่ระบบ (Sign In) — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>ระบบเข้าสู่ระบบ (Sign In)</h1>
+      <p>เราสมัครสมาชิกได้แล้วและได้ Token กลับมาเรียบร้อย ทีนี้คนที่มีบัญชีอยู่แล้วต้องเข้าระบบได้ด้วย ซึ่งคล้ายกับการสมัครมาก แค่ต่างกันนิดเดียว</p>
+
+      <h2>Flow ของการเข้าสู่ระบบ</h2>
+      <ol>
+        <li>ผู้ใช้ส่ง <code>email</code> กับ <code>password</code> ขึ้นมา</li>
+        <li>หา User ในตารางจาก <code>email</code> นั้น</li>
+        <li>เอา Hash ที่เก็บไว้มาเทียบกับรหัสผ่านที่เพิ่งส่งขึ้นมา</li>
+        <li>ถ้าตรง ออก JWT ให้แล้วส่งกลับไป</li>
+      </ol>
+      <p>มีจุดที่เส้นทางนี้จบก่อนกำหนดได้สองจุด จุดแรกคือหา Email ไม่เจอ แปลว่าคนนี้ไม่เคยสมัคร จุดที่สองคือเจอ Email แต่รหัสผ่านไม่ตรง ซึ่งอาจเป็นเจ้าตัวที่ลืมรหัสผ่าน หรืออาจเป็นคนอื่นที่กำลังนั่งเดารหัสผ่านของเขาอยู่ก็ได้ ไม่ว่าทางไหนเราก็ไม่ให้เข้า</p>
+
+      <h2>bcrypt.compare ทำงานอย่างไร</h2>
+      <p>ประเด็นที่น่าสนใจคือ bcrypt เทียบรหัสผ่านได้<strong>โดยไม่ต้องรู้ค่าเดิมของรหัสผ่านเลย</strong></p>
+      <pre><code>// ตอนสมัคร (บทที่ 21)
+const hash = await bcrypt.hash('myPassword123', 12)
+// เก็บลง Database: $2b$12$N9qo8uLOickgx2ZMRZoMye.IjQ0JwF2cJX8nnYA5VYA.KQIeqHLWa
+
+// ตอนล็อกอิน (บทนี้)
+const isValid = await bcrypt.compare('myPassword123', hash)
+// ได้ true ถ้าตรง, false ถ้าไม่ตรง</code></pre>
+      <p>มันทำแบบนั้นได้เพราะ Hash ที่เก็บอยู่<strong>มีวัตถุดิบครบทุกอย่างอยู่ในตัวเอง</strong> ทั้ง Algorithm ทั้งจำนวนรอบ และทั้ง Salt ตอน Compare มันแค่ดึงวัตถุดิบเหล่านั้นออกมา เอาไปทำซ้ำกับรหัสผ่านที่เพิ่งส่งขึ้นมา แล้วเทียบผลลัพธ์</p>
+
+      <h2>ผ่า bcrypt Hash ออกเป็นชิ้น ๆ</h2>
+      <p>ขอออกตัวก่อนว่าเรื่องนี้<strong>ไม่จำเป็นต่อการทำงาน</strong> ถ้าคุณไม่ได้ทำงานสาย Security คุณจะไม่มีวันต้องรู้เรื่องนี้ ผมเองเพิ่งรู้เมื่อไม่นานมานี้เอง แต่มันน่าสนใจดีเลยอยากเล่าให้ฟัง</p>
+      <pre><code>$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
+
+$2b$                             → เวอร์ชันของ Algorithm
+10                               → Cost Factor (จำนวนรอบ)
+N9qo8uLOickgx2ZMRZoMye           → Salt (22 ตัวอักษรถัดมา)
+IjZAgcfl7p92ldGxad68LJZdL17lhWy  → ผลลัพธ์ของการ Hash (ที่เหลือทั้งหมด)</code></pre>
+      <p>Cost Factor ยิ่งสูงยิ่งทนต่อ Brute Force แต่ก็ยิ่งช้า ต้องหาจุดสมดุลตามเครื่องที่รันจริง ส่วนผลลัพธ์ท่อนสุดท้ายคือการ Hash รหัสผ่านรวมกับ Salt ข้างบน</p>
+
+      <h2>Salt มีไว้ทำไม</h2>
+      <p>เราห้ามคนสองคนใช้รหัสผ่านเดียวกันไม่ได้ แต่เรา<strong>ไม่อยากให้ Hash ของทั้งสองคนเหมือนกัน</strong> เพราะคนร้ายที่ได้ Database ไปแล้วเห็นสิบแถวมีค่า Hash เท่ากันเป๊ะ ย่อมรู้ทันทีว่าสิบคนนี้ใช้รหัสผ่านเดียวกัน แกะได้อันเดียวก็เปิดได้ทั้งสิบบัญชี</p>
+      <p>Salt คือค่าสุ่มที่ถูกสร้างใหม่ทุกครั้งที่ Hash แล้ว<em>ผสมเข้าไปในการคำนวณ</em> ไม่ใช่แค่แปะไว้ข้างหน้าเฉย ๆ (ถ้าแค่แปะไว้ คนร้ายก็ข้าม 22 ตัวแรกไปเทียบส่วนที่เหลือซึ่งยังเหมือนกันอยู่ดี) มันจึงเป็นการเติมความสุ่มเข้าไปในกระบวนการที่ปกติแล้ว Deterministic ผลคือต่อให้คุณกับผมใช้รหัสผ่านเดียวกัน Hash ในฐานข้อมูลก็ต่างกันคนละเรื่อง</p>
+
+      <h2>Timing Attack และการเทียบแบบ Constant Time</h2>
+      <p>มีการโจมตีแบบหนึ่งชื่อ <strong>Timing Attack</strong> คือคนร้ายจับเวลาว่าฟังก์ชันเทียบรหัสผ่านใช้เวลานานแค่ไหน ถ้าฟังก์ชันเทียบทีละตัวอักษรแล้วหยุดทันทีที่เจอตัวผิด การเดาที่ถูกไป 5 ตัวจะช้ากว่าการเดาที่ผิดตั้งแต่ตัวแรก คนร้ายก็ไล่เดาทีละตัวจากเวลาที่ต่างกันได้ bcrypt แก้ด้วยการทำให้ <code>compare</code> เป็น <strong>Constant Time</strong> คือใช้เวลาเท่ากันเสมอไม่ว่าจะตรงกี่ตัวอักษร</p>
+      <pre><code>// สองบรรทัดนี้ใช้เวลาเท่ากันเป๊ะ ๆ
+await bcrypt.compare('a', hash)              // ผิดตั้งแต่ตัวแรก
+await bcrypt.compare('myPassword12', hash)   // ผิดแค่ตัวสุดท้าย</code></pre>
+      <p>ย้ำว่านี่ต่างจากตอน Hash นะครับ ตอน Hash ยิ่งรอบเยอะยิ่งช้าตามจำนวนรอบ แต่ตอน Compare เวลาคงที่เสมอ</p>
+
+      <h2>เพิ่ม comparePassword</h2>
+      <p>กลับไปที่ <code>src/utils/password.ts</code> แล้วเพิ่มฟังก์ชันที่สอง</p>
+      <pre><code>export const comparePassword = async (
+  password: string,
+  hashedPassword: string
+): Promise&lt;boolean&gt; =&gt; {
+  return bcrypt.compare(password, hashedPassword)
+}</code></pre>
+      <p>ลำดับ Argument สำคัญมาก <strong>ตัวแรกคือรหัสผ่านข้อความดิบที่เพิ่งส่งขึ้นมา ตัวที่สองคือ Hash จาก Database</strong> สลับกันแล้วผลลัพธ์จะเป็น <code>false</code> ตลอดชีวิตโดยไม่มี Error อะไรฟ้องให้เห็นเลย</p>
+
+      <h2>เขียน Controller login</h2>
+      <p>เปิด <code>src/controllers/authController.ts</code> เพิ่ม Import สองตัว</p>
+      <pre><code>import { comparePassword } from '../utils/password.ts'
+import { eq } from 'drizzle-orm'</code></pre>
+      <p>แล้วเขียนฟังก์ชันที่สองต่อจาก <code>register</code></p>
+      <pre><code>export const login = async (req: Request, res: Response) =&gt; {
+  try {
+    const { email, password } = req.body
+
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    })
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' })
+    }
+
+    const isValidPassword = await comparePassword(password, user.password)
+
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' })
+    }
+
+    const token = await generateToken({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+    })
+
+    return res.status(200).json({
+      message: 'Login success',
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        createdAt: user.createdAt,
+      },
+      token,
+    })
+  } catch (e) {
+    console.error('Login error', e)
+    res.status(500).json({ error: 'Failed to login' })
+  }
+}</code></pre>
+
+      <h2>findFirst กับ select ต่างกันอย่างไร</h2>
+      <p>Drizzle มีสองวิธีในการหาข้อมูล และคุณจะเจอทั้งคู่ในโค้ดจริง</p>
+      <pre><code>// แบบที่ 1 — Query API คืน Object เดียวหรือ undefined
+const user = await db.query.users.findFirst({
+  where: eq(users.email, email),
+})
+
+// แบบที่ 2 — Select API คืน Array เสมอ จึงต้อง Destructure
+const [user] = await db.select().from(users).where(eq(users.email, email))</code></pre>
+      <p><code>eq</code> ที่ Import มาจาก <code>drizzle-orm</code> ย่อมาจาก equals อ่านตรงตัวว่า "คอลัมน์ <code>email</code> ของตาราง <code>users</code> เท่ากับค่า <code>email</code> ที่ส่งขึ้นมา"</p>
+      <p>ที่กล้าใช้ <code>findFirst</code> ได้เพราะเราตั้ง <code>.unique()</code> ไว้ที่ <code>email</code> ตั้งแต่บทที่ 16 จึงเป็นไปไม่ได้ที่จะมีสองแถว</p>
+
+      <h2>ทำไม 401 ทั้งสองกรณีและทำไมข้อความเหมือนกัน</h2>
+      <p>นี่คือส่วนที่สำคัญที่สุดของบทนี้ สังเกตว่าทั้งกรณี "ไม่มี Email นี้" และกรณี "รหัสผ่านผิด" เราตอบ <code>Invalid credentials</code> เหมือนกันเป๊ะ</p>
+      <p>เพราะถ้าแยกข้อความ เราจะกลายเป็นเครื่องมือให้คนร้ายโดยไม่ตั้งใจ ลองนึกภาพว่าผมอยากรู้ว่าคุณเป็นลูกค้าธนาคารแห่งนี้ไหม ผมก็แค่เอา Email ของคุณไปกรอกที่หน้าล็อกอินพร้อมรหัสผ่านมั่ว ๆ ถ้าระบบตอบว่า "ไม่พบผู้ใช้นี้" แปลว่าคุณไม่ใช่ลูกค้า แต่ถ้าตอบว่า "รหัสผ่านไม่ถูกต้อง" ผมยืนยันได้ทันทีว่าคุณเป็นลูกค้าที่นี่ เหลือแค่หาทางเดารหัสผ่านต่อ</p>
+      <p>ช่องโหว่นี้เรียกว่า <strong>User Enumeration</strong> และไม่ได้จบแค่หน้าล็อกอิน หน้าสมัครสมาชิกที่ตอบว่า "อีเมลนี้ถูกใช้แล้ว" ก็รั่วข้อมูลแบบเดียวกัน (แอปดัง ๆ หลายเจ้าก็ยังทำแบบนี้อยู่) ข้อความที่นิยมใช้กันจึงเป็นทำนอง "ไม่พบผู้ใช้ที่ตรงกับอีเมลและรหัสผ่านนี้" ซึ่งเป็นความจริงทั้งสองกรณีและไม่บอกใบ้ว่าตัวไหนผิด</p>
+      <p>ส่วนที่เลือก <strong>401 ไม่ใช่ 404</strong> เพราะ 401 แปลว่า "ยังพิสูจน์ตัวตนไม่ผ่าน" ซึ่งตรงกับสถานการณ์พอดี ถ้าตอบ 404 จะกลายเป็นการยืนยันว่า Resource ไม่มีอยู่ ซึ่งย้อนกลับไปสู่ปัญหา User Enumeration อีกรอบ</p>
+
+      <h2>เช็คด้านลบแล้ว Return ทันที</h2>
+      <p>สังเกตรูปแบบของทั้งสอง <code>if</code> — เราเช็คกรณี<em>ที่ไม่ผ่าน</em>แล้ว <code>return</code> ออกไปเลย ไม่ใช่เขียน <code>if (user) { ... }</code> แล้วห่อโค้ดที่เหลือไว้ข้างใน เพราะถ้าเขียนแบบหลัง พอเงื่อนไขเพิ่มขึ้นโค้ดจะซ้อนกันลึกลงไปเรื่อย ๆ และ <code>return</code> ของกรณีที่ไม่ผ่านจะกระจายอยู่คนละระดับความลึกทั่วทั้งฟังก์ชัน อ่านแล้วเวียนหัว การเช็คด้านลบแล้วออกทันทีทำให้โค้ดแบนราบและไล่อ่านจากบนลงล่างได้ตรง ๆ</p>
+
+      <h2>อย่าส่ง User ทั้งก้อนกลับไป</h2>
+      <p>คุณอาจสงสัยว่าทำไมไม่เขียนสั้น ๆ ว่า <code>res.json({ user })</code> ไปเลย คำตอบคือ <strong><code>findFirst</code> คืน User ทั้งแถวมาให้ ซึ่งรวมคอลัมน์ <code>password</code> ด้วย</strong> ถ้าส่งกลับไปตรง ๆ เราจะยิง Hash ของรหัสผ่านออกไปให้ทุกคนที่ดักดูสายได้เห็น ตอนสมัครสมาชิกเราไม่เจอปัญหานี้เพราะ <code>.returning()</code> กรอง Field ให้ตั้งแต่ระดับ Query แต่ตอนล็อกอินเราต้องดึงคอลัมน์ <code>password</code> มาจริง ๆ เพื่อเอาไปเทียบ จึงต้องประกอบ Object ที่จะส่งกลับด้วยมือ</p>
+
+      <h2>ยังมีอะไรทำได้อีกที่จุดนี้</h2>
+      <p>ตรงจุดที่รหัสผ่านไม่ตรงเป็นตำแหน่งที่ระบบจริงมักใส่ของเพิ่ม เพราะถ้าคุณคิดถึงแค่สถานการณ์ "เจ้าตัวลืมรหัสผ่าน" คุณจะปล่อยให้ลองกี่ครั้งก็ได้ตลอดชีวิต แต่ถ้าคิดถึงสถานการณ์ที่สองด้วยคือ "คนอื่นกำลังไล่เดารหัสผ่านอยู่" คุณจะรีบหยุดเขาก่อนที่เขาจะเดาถูก ของที่นิยมใส่กันคือนับจำนวนครั้งที่ล็อกอินพลาดแล้วล็อกบัญชีชั่วคราว หรือทำ Rate Limiting ที่ระดับ Route เราไม่ทำในคอร์สนี้ แต่ให้ติดไว้ในหัวว่าจุดนี้คือจุดที่มันควรอยู่</p>
+
+      <h2>Schema สำหรับล็อกอินและการทดสอบ</h2>
+      <p>เปิด <code>src/routes/authRoutes.ts</code> เราใช้ <code>insertUserSchema</code> กับ Route นี้ไม่ได้ เพราะมันบังคับให้มี <code>username</code> ด้วย ทั้งที่เราล็อกอินด้วย Email กับรหัสผ่านเท่านั้น จึงต้องเขียน Schema ใหม่</p>
+      <pre><code>import { z } from 'zod'
+import { login } from '../controllers/authController.ts'
+
+const loginSchema = z.object({
+  email: z.email('Invalid email'),
+  password: z.string().min(1, 'Password is required'),
+})
+
+router.post('/login', validateBody(loginSchema), login)</code></pre>
+      <p>สังเกตว่าเราเขียน <code>z.email()</code> ไม่ใช่ <code>z.string().email()</code> เพราะใน Zod เวอร์ชันปัจจุบัน <code>z.string().email()</code> ถูกทำเครื่องหมายว่า Deprecated ไปแล้ว ตัวตรวจ Email กลายเป็น Type ของตัวเองที่สืบทอดมาจาก String อีกที</p>
+      <p>อีกจุดที่ตั้งใจคือ <code>password</code> เราขอแค่ <code>.min(1)</code> คือมีค่าอะไรก็ได้ <strong>เราไม่ตรวจความแข็งแรงของรหัสผ่านตอนล็อกอิน</strong> เพราะถ้าวันหนึ่งเราขึ้นเกณฑ์ความปลอดภัยให้เข้มขึ้น คนที่สมัครไว้ตั้งแต่สมัยเกณฑ์เก่าจะล็อกอินไม่ได้ทันทีทั้งที่รหัสผ่านของเขาถูกต้อง การตรวจความแข็งแรงเป็นเรื่องของตอน<em>สมัคร</em>เท่านั้น</p>
+      <p>ทดสอบใน Postman ด้วยการยิง <code>POST /api/auth/login</code> ลองพิมพ์ Email ให้ผิดไปหนึ่งตัวจะได้ <code>401 Invalid credentials</code> ซึ่งถูกต้อง เพราะผ่าน Validation มาแล้ว (รูปแบบ Email ยังถูก) แต่หาในฐานข้อมูลไม่เจอ ลองลบ Field <code>email</code> ออกทั้งอันจะได้ <code>400</code> จาก Validation แทน แล้วพอใส่ให้ถูกทั้งหมดจะได้ <code>Login success</code> พร้อม Token ใบใหม่</p>
+      <p>ตอนนี้เราออก Token เป็นแล้วทั้งตอนสมัครและตอนล็อกอิน แต่<strong>ยังไม่ได้เอามันไปใช้ทำอะไรเลย</strong> Token ที่ได้ไปเป็นหน้าที่ของ Client ที่จะเก็บไว้ใน Local Storage หรือ SQLite บนมือถือ แล้วแนบขึ้นมาทุก Request บทหน้าเราจะไปทำฝั่ง Server ให้มันเริ่มบังคับใช้ Token จริง ๆ</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="22_working_with_jwt.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="24_auth_middleware_protected_routes.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>
