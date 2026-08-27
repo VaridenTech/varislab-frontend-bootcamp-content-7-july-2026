@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ยิงทดสอบ CRUD Routes ของ Habit ทุกเส้นทางใน Postman ด้วย Bearer Token ดู Response ที่ควรได้ในแต่ละกรณี พร้อมไล่หาสาเหตุของ Error ที่เจอจริงและกับดักที่พลาดกันบ่อย" />
+  <title>ทดสอบ CRUD Routes — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>ทดสอบ CRUD Routes</h1>
+      <p>โค้ดที่ยังไม่เคยรันคือโค้ดที่ยังไม่รู้ว่าใช้ได้ไหม บทนี้เราจะเปิด Postman แล้วยิงทุกเส้นทางที่เขียนไปในบทที่แล้วให้ครบ ทั้งเส้นทางที่ควรสำเร็จและเส้นทางที่ควรพัง</p>
+      <p>ผมจะไม่ตัดตอนที่ยิงแล้วพังออกด้วยนะครับ เพราะตอนสอนสดผมก็เจอ Error จริงหนึ่งตัว และวิธีที่เราไล่หาสาเหตุมันคือสิ่งที่มีค่ากว่าโค้ดที่ผ่านตั้งแต่ครั้งแรกเสียอีก</p>
+
+      <h2>เตรียมตัวก่อนยิง</h2>
+      <p>เช็คสองอย่างก่อน อย่างแรกคือ Server รันอยู่จริงด้วย <code>npm run dev</code> อย่างที่สองคือ <strong>Token ของคุณยังไม่หมดอายุ</strong></p>
+      <p>ข้อสองนี้พลาดกันบ่อยมาก Token ที่ค้างอยู่ในแท็บ Postman เมื่อวานอาจหมดอายุไปแล้ว วิธีที่ปลอดภัยที่สุดคือยิง <code>POST /api/auth/login</code> ใหม่หนึ่งครั้ง แล้วก๊อป Token สด ๆ มาใช้</p>
+      <p>จากนั้นในทุก Request ของ Habit ให้ไปที่แท็บ <strong>Authorization</strong> เลือกประเภทเป็น <strong>Bearer Token</strong> แล้ววาง Token ลงไป ตามที่เราทำกันไว้ในบทที่ 24 เพราะทุก Route ใต้ <code>habitRoutes</code> ถูกล็อกด้วย <code>authenticateToken</code> หมดแล้ว</p>
+
+      <h2>Create — POST /api/habits</h2>
+      <p>สร้าง Request ใหม่ ตั้ง Method เป็น <strong>POST</strong> URL เป็น <code>http://localhost:3000/api/habits</code> แล้วไปที่แท็บ <strong>Body</strong> เลือก <strong>raw</strong> แล้วเลือกชนิดเป็น <strong>JSON</strong></p>
+      <p>Payload ต้องตรงกับ <code>createHabitSchema</code> ที่เราเขียนไว้ในบทที่แล้ว</p>
+      <pre><code>{
+  "name": "stretch",
+  "frequency": "daily",
+  "targetCount": 30
+}</code></pre>
+      <p>ผมข้าม <code>description</code> กับ <code>tagIds</code> ไปเพราะทั้งคู่เป็น Optional</p>
+      <p>ตอนสอนสดผมพลาดที่นี่เอง เพราะเผลอใส่ <code>targetCount</code> เป็น String ว่า <code>"30"</code> แล้วได้ก้อนนี้กลับมา</p>
+      <pre><code>{
+  "error": "Validation failed",
+  "details": [
+    {
+      "field": "targetCount",
+      "message": "Invalid input: expected number, received string"
+    }
+  ]
+}</code></pre>
+      <p>สังเกตว่ามันบอกชัดว่า Field ไหนและผิดอย่างไร <strong>นี่คือผลตอบแทนของการเขียน Validation Middleware ในบทที่ 12</strong> ถ้าไม่มีมัน สิ่งที่เราจะได้คือ Error ดิบ ๆ จาก Database ที่อ่านไม่รู้เรื่อง</p>
+      <p>วิธีเช็คว่าจริง ๆ แล้วมันควรเป็นชนิดอะไร คือกลับไปดู Schema ของ Database — คอลัมน์ <code>target_count</code> เป็น <code>integer</code> ก็แปลว่าต้องเป็นตัวเลข เอาเครื่องหมายคำพูดออกแล้วยิงใหม่</p>
+      <pre><code>{
+  "message": "Habit created successfully",
+  "habit": {
+    "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "userId": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "stretch",
+    "description": null,
+    "frequency": "daily",
+    "targetCount": 30,
+    "isActive": true,
+    "createdAt": "2026-03-14T09:12:44.512Z",
+    "updatedAt": "2026-03-14T09:12:44.512Z"
+  }
+}</code></pre>
+      <p>ได้ <code>201</code> พร้อม Habit ที่สร้างเสร็จ ให้<strong>ก๊อป <code>id</code> เก็บไว้</strong> เดี๋ยวเราจะใช้มันตอนอัปเดต</p>
+      <p>สังเกตด้วยว่า <code>userId</code> ที่ได้กลับมาคือ Id ของคุณเอง ทั้งที่เราไม่ได้ส่งมันขึ้นไปเลยแม้แต่นิดเดียว มันมาจาก Token ล้วน ๆ ตามที่ออกแบบไว้</p>
+
+      <h2>Read — GET /api/habits</h2>
+      <p>อันนี้ง่ายที่สุด <strong>เปลี่ยน Method จาก POST เป็น GET แล้วกดส่งได้เลย</strong> ไม่ต้องแก้อะไรอีก เพราะ GET ไม่มี Body ให้ส่ง (ถ้ามี Body ค้างอยู่ในแท็บ Postman ก็ไม่เป็นไร Express จะไม่สนใจมัน)</p>
+      <pre><code>{
+  "habits": [
+    {
+      "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "userId": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "stretch",
+      "frequency": "daily",
+      "targetCount": 30,
+      "isActive": true,
+      "createdAt": "2026-03-14T09:12:44.512Z",
+      "updatedAt": "2026-03-14T09:12:44.512Z",
+      "tags": []
+    }
+  ]
+}</code></pre>
+      <p>ได้ Habit ที่เพิ่งสร้างกลับมาหนึ่งอัน พร้อม <code>tags</code> ที่เป็น Array ว่างเพราะเรายังไม่ได้ผูก Tag อะไรเลย และไม่มี <code>habitTags</code> โผล่มาให้เกะกะเพราะเราตัดมันทิ้งไปตอนแปลงข้อมูล</p>
+      <p>ลองยิง <code>GET /api/habits/&lt;id&gt;</code> ต่อด้วยก็ได้ คุณจะได้ Habit อันเดียวพร้อม <code>entries</code> ที่เป็น Array ว่าง เพราะยังไม่เคยบันทึกว่าทำสำเร็จเลยสักครั้ง</p>
+
+      <h2>Update — PATCH /api/habits/:id</h2>
+      <p>เอา <code>id</code> ที่ก๊อปไว้มาต่อท้าย URL เปลี่ยน Method เป็น <strong>PATCH</strong> แล้วส่งเฉพาะ Field ที่อยากแก้</p>
+      <pre><code>{
+  "name": "stretch hammies"
+}</code></pre>
+      <p>และนี่คือ Error จริงที่ผมเจอตอนสอน</p>
+      <pre><code>missing FROM-clause entry for table "habit_tags"</code></pre>
+      <p>ข้อความนี้มาจาก PostgreSQL ตรง ๆ ไม่ได้มาจากโค้ดเรา ความหมายของมันคือ "Query นี้อ้างถึงตาราง <code>habit_tags</code> ทั้งที่ Query ไม่ได้ดึงตารางนั้นเข้ามาด้วย" ซึ่งพอรู้แบบนี้ก็ตามหาได้ไม่ยาก — ผมไปเขียน <code>where</code> ของคำสั่ง Update ผิด ใส่เป็น <code>habitTags.id</code> ทั้งที่ต้องเป็น <code>habits.id</code> เพราะเรากำลังอัปเดตตาราง <code>habits</code></p>
+      <pre><code>// ผิด — อ้างถึงตารางที่ไม่ได้อยู่ในคำสั่ง Update นี้
+.where(and(eq(habitTags.id, id), eq(habits.userId, userId)))
+
+// ถูก
+.where(and(eq(habits.id, id), eq(habits.userId, userId)))</code></pre>
+      <p>บทเรียนที่ได้คือ <strong>อ่านข้อความ Error จาก Database ให้จบก่อนเสมอ</strong> มันมักบอกชื่อตารางหรือชื่อคอลัมน์ที่มีปัญหาไว้ตรง ๆ อยู่แล้ว แก้แล้วยิงใหม่</p>
+      <pre><code>{
+  "message": "Habit updated successfully",
+  "habit": {
+    "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "name": "stretch hammies",
+    "frequency": "daily",
+    "targetCount": 30,
+    "updatedAt": "2026-03-14T09:21:03.884Z"
+  }
+}</code></pre>
+      <p>ชื่อเปลี่ยนแล้ว และ <code>updatedAt</code> ก็ขยับตามด้วยเพราะเราใส่ <code>new Date()</code> ให้มันทุกครั้งที่อัปเดต ส่วน <code>frequency</code> กับ <code>targetCount</code> ยังอยู่ครบทั้งที่เราไม่ได้ส่งมา นั่นคือความหมายของคำว่า Partial Update</p>
+
+      <h2>กับดักที่เจอบ่อยที่สุด</h2>
+      <p>ก่อนจบขอไล่กรณีที่พังบ่อยให้ครบ เพราะการรู้ว่า Error แต่ละแบบหน้าตาเป็นอย่างไรจะช่วยคุณประหยัดเวลาได้มหาศาล ลองยิงเองให้เห็นกับตาสักรอบ</p>
+      <h3>ลืมแนบ Token</h3>
+      <pre><code>{ "error": "Access token required" }   // 401</code></pre>
+      <p>เกิดตอนที่คุณสร้าง Request ใหม่ใน Postman แล้วลืมตั้งแท็บ Authorization ซึ่งเกิดง่ายมากเพราะแต่ละ Request เก็บค่านี้แยกกัน</p>
+      <h3>มี Token แต่ลืมคำว่า Bearer</h3>
+      <p>ได้ <code>401</code> เหมือนกันเป๊ะ ทั้งที่ Token ถูกต้องทุกตัวอักษร เพราะ Middleware ของเรา <code>.split(' ')</code> แล้วหยิบ Index 1 อาการนี้หลอกคนมาเยอะแล้วตามที่เตือนไว้ในบทที่ 25</p>
+      <h3>Token หมดอายุหรือถูกแก้</h3>
+      <pre><code>{ "error": "Invalid or expired token" }   // 403</code></pre>
+      <p>ต่างจากสองข้อบนตรงที่คราวนี้เป็น <code>403</code> ไม่ใช่ <code>401</code> เพราะคุณส่งอะไรมาให้เราตรวจแล้ว แค่มันใช้ไม่ได้ ทางแก้คือล็อกอินใหม่</p>
+      <h3>Id ผิดรูปแบบ</h3>
+      <p>ถ้าคุณใส่ Route Param เป็น <code>123</code> เฉย ๆ ซึ่งไม่ใช่ UUID ผลจะต่างกันตรงที่ Route นั้นมี <code>validateParams(uuidSchema)</code> หรือไม่ ถ้ามีคุณจะได้ <code>400</code> พร้อมข้อความบอกว่ารูปแบบผิด ถ้าไม่มี Query จะวิ่งไปถึง Database แล้วพัง คุณก็จะได้ <code>500</code> ที่บอกอะไรไม่ได้เลย</p>
+      <p>นี่คือเหตุผลที่การตรวจ Param คุ้มค่ากับการพิมพ์เพิ่มสามบรรทัด</p>
+      <h3>Id ที่ไม่มีอยู่จริง หรือเป็นของคนอื่น</h3>
+      <pre><code>{ "error": "Habit not found" }   // 404</code></pre>
+      <p>ทั้งสองกรณีให้ผลเหมือนกันเป๊ะ และนั่นคือความตั้งใจ เพราะ <code>where</code> ของเรากรองด้วย <code>userId</code> อยู่แล้ว Habit ของคนอื่นจึงไม่มีทางแมตช์ และการตอบเหมือนกันทั้งสองกรณีก็<strong>ไม่ได้ใบ้ให้ใครรู้ว่า Id นั้นมีอยู่จริงหรือเปล่า</strong></p>
+      <p>ถ้าอยากพิสูจน์ ลองสมัครผู้ใช้คนที่สอง ล็อกอินเอา Token ใหม่ แล้วเอา Token นั้นมายิง PATCH ใส่ Id ของ Habit ที่เราเพิ่งสร้าง — คุณจะได้ <code>404</code> ทั้งที่ Habit อันนั้นมีอยู่จริง ๆ นั่นแหละคือบรรทัด <code>eq(habits.userId, userId)</code> กำลังทำงาน</p>
+      <h3>ลืมเลือก raw กับ JSON ใน Postman</h3>
+      <p>ถ้า Postman ไม่ได้ส่ง Header <code>Content-Type: application/json</code> มาด้วย <code>express.json()</code> จะไม่ Parse Body ให้ ผลคือ <code>req.body</code> ว่างเปล่า แล้ว Validation จะตีกลับว่าไม่มีข้อมูล ทั้งที่คุณพิมพ์ JSON ไว้เต็มช่องแล้ว</p>
+
+      <h2>ถ้าไม่อยากใช้ Postman</h2>
+      <p>ใน Repo ของโปรเจกต์มีไฟล์เอกสาร API เขียนไว้เป็น Markdown ซึ่งรวบรวมทั้ง Payload ตัวอย่างและคำสั่ง <code>curl</code> ของทุก Endpoint ไว้ให้ก๊อปวางได้เลย</p>
+      <pre><code>curl -X POST http://localhost:3000/api/habits \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer &lt;your-token&gt;" \
+  -d '{"name":"stretch","frequency":"daily","targetCount":30}'</code></pre>
+      <p>ผมสารภาพว่าไฟล์เอกสารนั้นให้ AI ช่วยเขียนให้ ซึ่งเป็นงานที่มันทำได้ดีมากเพราะข้อมูลทุกอย่างอยู่ในโค้ดครบอยู่แล้ว</p>
+      <p>ทีนี้ลองสังเกตอะไรบางอย่าง — Error ทุกก้อนที่เราเห็นในบทนี้เป็น Error ที่เรา<em>คาดไว้แล้ว</em> ทั้งนั้น เราเขียน <code>try/catch</code> ดักไว้เองทีละจุด แล้ววันที่มี Error ที่เราไม่ได้คาดล่ะ จะเกิดอะไรขึ้น บทหน้าเราจะสร้างตาข่ายรองรับกลางไว้ที่เดียวสำหรับเรื่องนี้</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="26_crud_controllers.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="28_error_handling.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

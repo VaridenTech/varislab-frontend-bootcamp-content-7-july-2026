@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="สร้าง Error Handler กลางของ Express ที่รับสี่อาร์กิวเมนต์ เข้าใจว่า Error เดินทางไปหามันได้อย่างไรใน Express 5 พร้อมคลาส APIError รูปแบบ Response ที่สม่ำเสมอ และกฎว่าต้องลงทะเบียนไว้ล่างสุดเสมอ" />
+  <title>Error Handling ใน Express — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Error Handling ใน Express</h1>
+      <p>ที่ผ่านมาเราจัดการ Error กันมาพอสมควรแล้ว ทุก Controller และทุก Middleware ที่เราเขียนมี <code>try/catch</code> ห่อไว้หมด ซึ่งถือว่ารับผิดชอบดี</p>
+      <p>แต่วันที่คุณอยากจัดรูปแบบ Error ให้เหมือนกันทั้งระบบ อยากส่ง Error ไปเก็บที่บริการภายนอก หรืออยากให้มีคนโดนแจ้งเตือนเมื่อ Server มีปัญหา คุณคงไม่อยากไปไล่แก้ทีละไฟล์ <strong>งานแบบนี้ควรอยู่ที่เดียว</strong> เหมือนกับที่เราจับการตรวจ Token มารวมไว้ที่ Middleware ตัวเดียวในบทที่ 24</p>
+      <p>ข่าวดีคือ Express มีของสิ่งนี้ให้อยู่แล้ว และมันก็คือ Middleware นั่นแหละ แค่พิเศษกว่านิดหน่อย</p>
+
+      <h2>Error Handler คือ Middleware ที่มีสี่อาร์กิวเมนต์</h2>
+      <p>ความต่างมีอยู่ข้อเดียวเท่านั้น</p>
+      <pre><code>// Middleware ธรรมดา — สามอาร์กิวเมนต์
+const regular = (req: Request, res: Response, next: NextFunction) =&gt; {
+  next()
+}
+
+// Error Handler — สี่อาร์กิวเมนต์ และตัวแรกคือ Error เสมอ
+const errorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) =&gt; {
+  // จัดการ Error
+}</code></pre>
+      <p><strong>Express ดูจากจำนวนอาร์กิวเมนต์ล้วน ๆ</strong> เพื่อตัดสินว่าฟังก์ชันที่คุณลงทะเบียนไว้เป็น Error Handler หรือไม่ ศัพท์ของเรื่องนี้เรียกว่า Arity ของฟังก์ชัน ผลที่ตามมาคือ<strong>คุณต้องใส่ครบทั้งสี่ตัวเสมอ ถึงจะไม่ได้ใช้ <code>next</code> เลยก็ตาม</strong> ถ้าใส่แค่สาม Express จะมองว่ามันเป็น Middleware ธรรมดาแล้วมันจะไม่มีวันถูกเรียก</p>
+      <p>พูดตามตรง ถ้าเป็นวันนี้ผมคงไม่ออกแบบแบบนี้ มันเป็นความมหัศจรรย์ประเภทที่ทำให้คนอ่านโค้ดงงว่าทำไม แทนที่จะให้ลงทะเบียน Error Handler ด้วยวิธีที่บอกเจตนาตรง ๆ ไปเลย แต่นี่คือมรดกจากยุคนั้นที่เรายังต้องอยู่กับมัน</p>
+      <p>อีกอย่างที่ควรรู้คือ Error Handler วางได้หลายระดับเหมือน Middleware ทั่วไป ทั้งระดับ Route ระดับ Router และระดับ App ส่วนระดับที่สี่คือระดับโค้ดซึ่ง <code>try/catch</code> ทำหน้าที่นั้นอยู่แล้ว</p>
+
+      <h2>Error เดินทางไปหามันได้อย่างไร</h2>
+      <p>วิธีที่ชัดเจนที่สุดคือ <strong>เรียก <code>next()</code> พร้อมส่ง Error เข้าไป</strong> ตามที่เราเจอกันมาตั้งแต่บทที่ 10</p>
+      <pre><code>next(new Error('อะไรบางอย่างพัง'))</code></pre>
+      <p>ทันทีที่ทำแบบนี้ <strong>ทุกอย่างที่เหลือจะถูกข้ามหมด</strong> ไม่มี Middleware ตัวไหนได้ทำงาน ไม่มี Route ไหนถูกเรียก มันจะกระโดดไปหา Error Handler ตัวที่ใกล้ที่สุดทันที และถ้าคุณมี Error Handler หลายตัวลงทะเบียนไว้คนละที่ ตัวที่รับไปก็ยังเรียก <code>next(err)</code> ส่งต่อให้ตัวถัดไปได้อีก</p>
+      <p><strong>ใน Express 5 ยังมีอีกสองทางที่ Error จะไปถึงมันได้เองโดยเราไม่ต้องเรียก <code>next()</code></strong> ตามที่เราเรียนไว้ในบทที่ 13</p>
+      <ul>
+        <li><strong>โยน Error แบบ Synchronous ใน Handler</strong> — Express เรียก Handler ของเราอยู่ใน <code>try/catch</code> ของมันเองอยู่แล้ว จึงรับไปส่งต่อให้ Error Handler ได้</li>
+        <li><strong>Promise ที่ Reject จากฟังก์ชัน Async</strong> — Express 5 <code>await</code> ผลลัพธ์ของ Handler และ Middleware ให้ ถ้ามัน Reject ก็เท่ากับเราเรียก <code>next(err)</code> เอง</li>
+      </ul>
+      <p>ข้อหลังนี่แหละคือสิ่งที่ Express 4 ทำไม่ได้ และเป็นที่มาของรูปแบบ <code>asyncHandler</code> ที่เราคุยกันในบทที่ 13 ถ้าคุณไปอ่านบทความเก่า ๆ ที่บอกว่า "โยน Error ใน Middleware แล้ว Server จะตาย" ให้รู้ไว้ว่านั่นคือกติกาของ Express 4 ซึ่งยังจริงอยู่สำหรับโค้ดเก่าที่ยังไม่อัปเกรด</p>
+      <p>แต่มีข้อยกเว้นที่ยังต้องระวังคือ Error ที่เกิด<em>นอก</em>ช่วงที่ Express ควบคุมอยู่ เช่น Promise ที่คุณยิงทิ้งไว้เฉย ๆ โดยไม่ <code>await</code> หรือ Callback ใน <code>setTimeout</code> พวกนี้ Express ไม่มีทางเห็น</p>
+
+      <h3>แล้วควรเรียก next() ใน Controller ไหม</h3>
+      <p>ในทางเทคนิคทำได้ แต่ผมมีความเห็นเรื่องนี้ — <strong>การเรียก <code>next(err)</code> ใน Controller เท่ากับตั้งสมมติฐานว่า Controller ตัวนี้จะถูกลงทะเบียนไว้ในที่ที่มี Error Handler รออยู่ข้างใต้เสมอ</strong> เพราะ Controller คือปลายทาง ถ้ามันเรียก <code>next</code> แล้วไม่มี Error Handler อยู่ ก็ไม่มีอะไรมารับช่วงต่อ</p>
+      <p>มันเหมือนเวลาเราเขียน Component ใน React แล้วใส่สมมติฐานลงไปว่า Component แม่จะต้องหน้าตาแบบนั้นแบบนี้ เช่นพวก <code>TableRow</code> ที่ทำงานได้ก็ต่อเมื่ออยู่ใน <code>Table</code> เท่านั้น พอทำแบบนั้นแล้ว Component นั้นก็ยกไปวางที่อื่นไม่ได้อีก Controller ก็เหมือนกัน — ยืดหยุ่นน้อยลง แต่บางทีมันก็ไม่จำเป็นต้องยืดหยุ่นตั้งแต่แรกอยู่แล้ว คุณแค่ต้องรู้ตัวว่ากำลังแลกอะไรไป</p>
+      <p>ส่วนใน Middleware นั้นคนละเรื่อง คุณ<em>ต้อง</em>เรียก <code>next</code> อยู่แล้ว ไม่งั้น Request จะค้าง</p>
+
+      <h2>สร้าง errorHandler.ts</h2>
+      <p>สร้างไฟล์ <code>src/middleware/errorHandler.ts</code></p>
+      <pre><code>import type { NextFunction, Request, Response } from 'express'
+import { env } from '../../env.ts'
+
+export class APIError extends Error {
+  status: number
+  name: string
+  message: string
+
+  constructor(message: string, name: string, status: number) {
+    super()
+    this.message = message
+    this.name = name
+    this.status = status
+  }
+}
+
+export const errorHandler = (
+  err: APIError,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) =&gt; {
+  console.log(err.stack)
+
+  let status = err.status || 500
+  let message = err.message || 'Internal Server Error'
+
+  if (err.name === 'ValidationError') {
+    status = 400
+    message = 'Validation Error'
+  }
+
+  if (err.name === 'UnauthorizedError') {
+    status = 401
+    message = 'Unauthorized'
+  }
+
+  return res.status(status).json({
+    error: message,
+    ...(env.APP_STAGE === 'dev' &amp;&amp; {
+      stack: err.stack,
+      details: err.message,
+    }),
+  })
+}</code></pre>
+      <p>ก่อนจะอธิบายทีละบรรทัด ขอบอกไว้ก่อนว่า <strong>เนื้อในของ Error Handler ไม่มีคำตอบที่ถูกหรือผิด</strong> มันคือความเห็นล้วน ๆ คุณจะส่ง Error ไป Sentry ตรงนี้ก็ได้ จะ Log ด้วย Pino ก็ได้ จะเขียนลงไฟล์ก็ได้ จะยิง Slack เรียกคนที่อยู่เวรก็ได้ สิ่งที่ผมเขียนให้ดูคือ<em>ตัวอย่างของสิ่งที่เป็นไปได้</em> ไม่ใช่แบบแผนที่ต้องทำตาม</p>
+      <p>บทเรียนจริงของบทนี้คือ<strong>การที่ Error ถูกจัดการ</strong> ส่วนจะจัดการอย่างไรขึ้นอยู่กับว่าคุณ Debug ระบบ Production ของคุณด้วยวิธีไหน</p>
+      <p><strong><code>console.log(err.stack)</code></strong> คือ Stack Trace เต็ม ๆ ซึ่งมีประโยชน์มากตอนพัฒนา ในระบบจริงตรงนี้ควรเป็น Logger ที่ส่งไปเก็บที่ไหนสักแห่งมากกว่า</p>
+      <p><strong>ค่าตั้งต้น</strong> — ถ้า Error มี <code>status</code> ติดมาก็ใช้ค่านั้น ถ้าไม่มีก็ถือว่าเป็นความผิดของเราคือ <code>500</code> ข้อความก็เช่นกัน ถ้าไม่มีก็ตอบกลาง ๆ ว่า <code>Internal Server Error</code></p>
+      <p><strong>แยกตามชนิดของ Error</strong> — ผมเลือกดูจาก <code>err.name</code> แล้วจับคู่กับ Status ที่เหมาะสม คุณจะเปลี่ยนไปดูจาก Error Code ของตัวเองแล้วเขียนเป็น <code>switch</code> ก็ได้ หรือจะดูจาก Error Code ของ PostgreSQL ตรง ๆ ก็ได้เหมือนกัน เช่นโค้ด <code>23505</code> ที่แปลว่าข้อมูลซ้ำ ก็แปลงเป็น <code>409</code></p>
+      <p><strong>รายละเอียดเฉพาะตอน Dev</strong> — บรรทัดที่ Spread <code>env.APP_STAGE === 'dev'</code> เข้าไปคือทริกที่ใช้กันบ่อย เพราะ Spread ค่า <code>false</code> เข้า Object จะไม่เกิดอะไรขึ้นเลย ผลคือ <code>stack</code> และ <code>details</code> จะโผล่มาเฉพาะตอนพัฒนา ส่วน Production จะเห็นแค่ <code>error</code> ก้อนเดียว <strong>ซึ่งสำคัญมาก เพราะ Stack Trace บอกโครงสร้างภายในของระบบคุณให้คนนอกรู้</strong></p>
+      <p><strong>คลาส <code>APIError</code></strong> คือทางที่เราเลือกเพื่อให้โค้ดที่โยน Error กำหนดได้เองว่าอยากได้ Status เท่าไรและ Name อะไร มันคือ <code>Error</code> ธรรมดาที่ <code>extends</code> ออกมาแล้วแปะ Field เพิ่มสองตัว</p>
+      <p>ประเด็นที่ต้องคิดต่อคือ Error Handler จะแยกแยะอะไรได้ก็ต่อเมื่อ<strong>โค้ดฝั่งที่โยน Error ร่วมมือกับมัน</strong> ถ้าไม่มีใครโยน <code>APIError</code> ที่มี <code>name</code> ว่า <code>ValidationError</code> เลย เงื่อนไข <code>if</code> ก้อนนั้นก็ไม่มีวันทำงาน นี่คือเหตุผลที่คุณต้องตัดสินใจให้ชัดว่าระบบ Error ของคุณคืออะไร แล้วใช้มันให้เหมือนกันทั้งโปรเจกต์</p>
+
+      <h2>ลงทะเบียนไว้ล่างสุดเสมอ</h2>
+      <p>เปิด <code>src/server.ts</code> แล้วเติมบรรทัดเดียวไว้<strong>ใต้ Route ทั้งหมด</strong></p>
+      <pre><code>import { errorHandler } from './middleware/errorHandler.ts'
+
+app.use('/api/auth', authRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/habits', habitRoutes)
+
+// Global error handler — ต้องอยู่ล่างสุด
+app.use(errorHandler)</code></pre>
+      <p>กฎมีข้อเดียวคือ <strong>มันต้องอยู่ล่างสุด</strong> ด้วยเหตุผลเดียวกับ Middleware ทุกตัว คือมันเห็นเฉพาะสิ่งที่อยู่เหนือมันขึ้นไป ถ้าเผลอเอาไปวางก่อน Route มันจะไม่มีวันถูกเรียกเลยแม้แต่ครั้งเดียว</p>
+      <pre><code>// ผิด — Route ยังไม่ได้ลงทะเบียนเลย
+app.use(errorHandler)
+app.use('/api/habits', habitRoutes)
+
+// ถูก
+app.use('/api/habits', habitRoutes)
+app.use(errorHandler)</code></pre>
+
+      <h2>ทดสอบว่ามันทำงานจริง</h2>
+      <p>วิธีพิสูจน์ที่เร็วที่สุดคือแกล้งโยน Error ทิ้งไว้กลางทาง ใส่ Middleware ชั่วคราวไว้บนสุดของแอป</p>
+      <pre><code>app.use((req, res, next) =&gt; {
+  next(new APIError('validation error', 'ValidationError', 400))
+})</code></pre>
+      <p>ทีนี้ไม่ว่าคุณจะยิง Path ไหนก็จะได้ก้อนนี้กลับมา</p>
+      <pre><code>{
+  "error": "Validation Error",
+  "stack": "Error\n    at ...",
+  "details": "validation error"
+}</code></pre>
+      <p>สังเกตสองอย่าง อย่างแรกคือได้ <code>400</code> ตามที่ <code>name</code> กำหนด อย่างที่สองคือ <strong>Route ทั้งหมดถูกข้ามไปเฉย ๆ</strong> ไม่มีอะไรได้ทำงานเลย มันวิ่งตรงไปหา Error Handler ที่ใกล้ที่สุด ซึ่งก็คือตัวที่เราเพิ่งลงทะเบียนไว้ ทดสอบเสร็จแล้วอย่าลืมลบ Middleware ตัวนี้ทิ้ง</p>
+
+      <h2>จับ Route ที่ไม่มีอยู่จริง</h2>
+      <p>เมื่อมี Error Handler แล้ว การจัดการ 404 ก็ง่ายขึ้น เพิ่ม Middleware ตัวเล็ก ๆ ไว้หลัง Route ทั้งหมดแต่ก่อน Error Handler</p>
+      <pre><code>export const notFound = (req: Request, res: Response, next: NextFunction) =&gt; {
+  next(new APIError(`Not found - ${req.originalUrl}`, 'NotFoundError', 404))
+}</code></pre>
+      <p>หลักการคือถ้า Request วิ่งผ่าน Route ทุกตัวมาถึงตรงนี้ได้ แปลว่าไม่มี Route ไหนรับมันไว้เลย ก็คือ 404 นั่นเอง แล้วเราส่งต่อให้ Error Handler จัดรูปแบบ Response ให้เหมือนกับ Error อื่น ๆ ทั้งหมด แทนที่ผู้ใช้จะได้หน้า HTML ที่ Express แถมมาให้</p>
+      <p>ลำดับใน <code>src/server.ts</code> จึงเป็น <strong>Global Middleware ก่อน แล้ว Route แล้ว <code>notFound</code> แล้ว <code>errorHandler</code> ปิดท้าย</strong></p>
+
+      <h2>แล้ว Middleware เดิมของเราล่ะ</h2>
+      <p>พอมี Error Handler กลางแล้ว <code>validateBody</code> ในบทที่ 12 ก็<em>ไม่จำเป็น</em>ต้องตอบ Response เองอีกต่อไป มันจะแค่สร้าง <code>APIError</code> ที่มี <code>name</code> ว่า <code>ValidationError</code> แล้วเรียก <code>next(error)</code> จบก็ได้ แล้วปล่อยให้ Error Handler เป็นคนแปลงเป็น <code>400</code></p>
+      <p>แต่เราจะไม่แก้มัน ด้วยเหตุผลเดียวกับที่คุยกันไว้ในบทที่ 25 — <strong><code>validateBody</code> และ <code>authenticateToken</code> รู้ดีอยู่แล้วว่า Error ของมันคืออะไรและควรตอบอะไร</strong> การจบเรื่องตรงนั้นทำให้เราคุม Status Code และรูปแบบ Body ได้แม่นยำ เช่นให้ Client เห็น <code>details</code> รายฟิลด์จาก Zod ซึ่งเป็นข้อมูลที่ Error Handler กลางไม่มีทางรู้</p>
+      <p>บทบาทของทั้งสองอย่างจึงต่างกัน — <strong>Error ที่เราคาดไว้แล้วจบที่จุดเกิดเหตุ ส่วน Error ที่เราไม่ได้คาดไว้ตกลงมาที่ตาข่ายกลาง</strong> สังเกตว่า <code>validateBody</code> ของเราลงท้ายด้วย <code>next(e)</code> อยู่แล้วสำหรับ Error ที่ไม่ใช่ <code>ZodError</code> นั่นแหละคือรอยต่อระหว่างสองระบบนี้</p>
+
+      <h2>Error Handler เองก็พังได้</h2>
+      <p>เรื่องนี้เกิดบ่อยกว่าที่คิด ถ้าข้างใน Error Handler คุณทำงาน Async เช่นยิง Error ไปหา Sentry แล้วการยิงนั้นพังเสียเอง <strong>ให้ห่อด้วย <code>try/catch</code></strong> ส่วนงาน Synchronous ธรรมดานั้นถ้าพังคุณจะเจอมันเองตั้งแต่ตอนพัฒนาอยู่แล้ว</p>
+
+      <h2>ตาข่ายชั้นสุดท้ายที่ระดับ Node.js</h2>
+      <p>ยังมีอีกชั้นที่อยู่นอกเหนือ Express ไปเลย คือดักที่ตัว Process</p>
+      <pre><code>process.on('unhandledRejection', (reason) =&gt; {
+  console.error('Unhandled rejection:', reason)
+})
+
+process.on('uncaughtException', (error) =&gt; {
+  console.error('Uncaught exception:', error)
+})</code></pre>
+      <p>สองตัวนี้จับ Error ที่ไม่มีใครรับเลยทั้งโปรแกรม แต่ต้องเข้าใจข้อจำกัดสองข้อ ข้อแรกคือ <strong>Error ที่เกิดใน Express มักไม่ขึ้นมาถึงตรงนี้</strong> เพราะ Express ดักไว้เองแล้วส่งให้ Error Handler ของเราตามที่คุยกันไปข้างบน ข้อที่สองคือ <strong>Callback ตรงนี้เป็น Async ไม่ได้</strong> เพราะตอนนั้นโปรเซสกำลังจะปิดตัวลงแล้ว จึงเหมาะกับการ Log ทิ้งท้ายหรือสั่งปิดอย่างเรียบร้อยเท่านั้น</p>
+      <p>สรุปตรง ๆ ว่า <strong>ไม่มีวิธีไหนกัน Server ไม่ให้ตายได้ร้อยเปอร์เซ็นต์นอกจากเขียนโค้ดให้ดี</strong> สิ่งที่ต้องทำเพิ่มคือตอน Deploy ต้องมีอะไรสักอย่างคอยรีสตาร์ท Server ให้เมื่อมันตาย ซึ่งเราจะได้เห็นในบทที่ 31 และคำถามที่ต้องถามคือ Error นั้นกู้คืนได้ไหม ถ้าเป็นบั๊กในโค้ด รีสตาร์ทกี่รอบมันก็ตายอยู่ดี</p>
+
+      <h2>สรุปแนวปฏิบัติ</h2>
+      <ul>
+        <li><strong>Log ไว้ที่ฝั่ง Server เสมอ</strong> — ถึงจะไม่ได้ส่งอะไรให้ Client เห็นก็ตาม</li>
+        <li><strong>ใช้ Status Code ให้ตรงความหมาย</strong> — <code>4xx</code> คือฝั่งเขาผิด <code>5xx</code> คือฝั่งเราผิด</li>
+        <li><strong>ซ่อนรายละเอียดใน Production</strong> — ไม่ส่ง Stack Trace ออกไปเด็ดขาด</li>
+        <li><strong>รูปแบบต้องเหมือนกันทุก Endpoint</strong> — ของเราคือ <code>{ error }</code> เสมอ คนใช้ API จะเขียนโค้ดรับได้ที่เดียวจบ</li>
+        <li><strong>ลงทะเบียนไว้ล่างสุด</strong> — และใส่ครบสี่อาร์กิวเมนต์</li>
+        <li><strong>มีระบบของ Error ให้ชัด</strong> — จะใช้ Custom Error Class หรือ Error Code ก็ได้ ขอให้ทั้งโปรเจกต์ใช้แบบเดียวกัน</li>
+        <li><strong>เขียนไว้ในเอกสาร API</strong> — บอกให้ชัดว่าแต่ละ Endpoint คืน Error อะไรได้บ้าง</li>
+      </ul>
+      <p>ตอนนี้ API ของเราครบทุกชิ้นส่วนแล้ว ทั้ง Routing, Middleware, Database, Authentication, CRUD และ Error Handling เหลือคำถามสุดท้ายที่ยังตอบไม่ได้คือ <strong>เรารู้ได้อย่างไรว่าทุกอย่างยังทำงานอยู่จริง</strong> หลังจากที่เราแก้โค้ดครั้งต่อไป บทหน้าเราจะเริ่มเขียน Test กัน</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="27_testing_crud_routes.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="29_testing_with_vitest.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>
