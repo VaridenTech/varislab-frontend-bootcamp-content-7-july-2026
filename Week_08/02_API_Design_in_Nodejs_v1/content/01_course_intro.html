@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ภาพรวมคอร์ส API Design in Node.js ทัวร์โปรเจกต์ Habit Tracker API ที่จะสร้าง เครื่องมือที่ใช้ และสิ่งที่ต้องเตรียมก่อนเริ่ม" />
+  <title>แนะนำคอร์สและทัวร์โปรเจกต์ Habit Tracker — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>แนะนำคอร์สและทัวร์โปรเจกต์ Habit Tracker</h1>
+      <p>ยินดีต้อนรับสู่คอร์ส API Design in Node.js ตลอดคอร์สนี้เราจะสร้าง API ตัวหนึ่งขึ้นมาจากศูนย์ด้วยกัน ชื่อว่า <strong>Habit Tracker API</strong> เป็น API สำหรับบันทึกและติดตามนิสัยที่เราอยากทำให้ได้ทุกวัน</p>
+      <p>สิ่งที่คุณจะได้เห็นในบทนี้คือ "ปลายทาง" ก่อน เพื่อให้รู้ว่าเรากำลังเดินไปทางไหน แล้วบทต่อ ๆ ไปเราจะค่อย ๆ สร้างมันขึ้นมาทีละชิ้น</p>
+
+      <h2>เราจะสร้างอะไร</h2>
+      <p>Habit Tracker API เป็น REST API ที่ทำงานเบื้องหลังได้ครบวงจรจริง ๆ ประกอบด้วย</p>
+      <ul>
+        <li>ระบบสมัครสมาชิกและเข้าสู่ระบบ พร้อมออก JSON Web Token (JWT) ให้ Client เก็บไว้ใช้ยืนยันตัวตน</li>
+        <li>Route สำหรับ Habit แบบ CRUD ครบทั้งสร้าง อ่าน แก้ไข และลบ</li>
+        <li>Validation ที่ตรวจข้อมูลขาเข้าและตอบ Error Message ที่อ่านรู้เรื่อง เช่น บอกว่า Password ต้องยาวอย่างน้อย 8 ตัวอักษร</li>
+        <li>Database จริงบนคลาวด์ พร้อม Script สำหรับ Seed ข้อมูลตัวอย่างเข้าไป</li>
+        <li>Integration Test ที่ยิง Request เข้า Route จริง แล้วตรวจว่า Status Code และข้อมูลที่ตอบกลับถูกต้อง</li>
+        <li>การ Deploy ขึ้น Production ให้คนอื่นเรียกใช้ได้จริง</li>
+      </ul>
+      <p>เราจะไม่สร้างหน้าจอ UI เลย เพราะหัวใจของคอร์สนี้คือฝั่ง Backend ล้วน ๆ เราจะใช้เครื่องมือชื่อ Postman เป็นตัวแทน Client ในการยิง Request เข้ามาทดสอบ (ถ้าเรียนจบแล้วอยากต่อยอด การนำ API ตัวนี้ไปทำ UI ครอบเป็นโปรเจกต์ฝึกมือที่ดีมาก)</p>
+
+      <h2>เครื่องมือที่เราจะใช้</h2>
+      <ul>
+        <li><strong>Node.js</strong> — Runtime ที่รันโค้ดของเรา คอร์สนี้ใช้ Node.js เวอร์ชัน 23.6.0 ขึ้นไป เพราะเราจะรันไฟล์ TypeScript ตรง ๆ โดยไม่ต้องมีขั้นตอน Build</li>
+        <li><strong>Express 5</strong> — Framework สำหรับสร้าง Server ที่นิยมที่สุดในโลก Node.js</li>
+        <li><strong>TypeScript</strong> — ช่วยให้เรารู้ตั้งแต่ตอนเขียนว่าข้อมูลแต่ละก้อนหน้าตาเป็นอย่างไร</li>
+        <li><strong>Zod</strong> — ใช้ตรวจสอบ (Validate) ข้อมูลขาเข้าและ Environment Variables</li>
+        <li><strong>Drizzle ORM</strong> — ตัวกลางที่ให้เราคุยกับ Database ด้วย TypeScript แทนการเขียน SQL ดิบ</li>
+        <li><strong>PostgreSQL บน Neon</strong> — Database จริงที่โฮสต์อยู่บนคลาวด์ ไม่ต้องติดตั้งลงเครื่อง</li>
+        <li><strong>JWT และ bcrypt</strong> — สำหรับ Authentication และการเก็บ Password อย่างปลอดภัย</li>
+        <li><strong>Vitest และ Supertest</strong> — สำหรับเขียน Test</li>
+        <li><strong>Render</strong> — บริการที่เราจะใช้ Deploy API ขึ้น Production</li>
+        <li><strong>Postman</strong> — GUI สำหรับยิง Request เข้า API ของเรา</li>
+      </ul>
+
+      <h2>สิ่งที่ต้องเตรียมก่อนเริ่ม</h2>
+      <ul>
+        <li>ติดตั้ง Node.js เวอร์ชัน 23.6.0 ขึ้นไป (ตรวจได้ด้วยคำสั่ง <code>node -v</code>)</li>
+        <li>ติดตั้ง Git และตั้งค่าเรียบร้อย</li>
+        <li>Code Editor สักตัว แนะนำ VS Code</li>
+        <li>ติดตั้ง Postman (เราจะพูดถึงวิธีติดตั้งอย่างละเอียดในบทที่ 4)</li>
+        <li>พอใช้ Terminal ได้ระดับหนึ่ง</li>
+      </ul>
+      <p>ถ้าคุณเคยผ่านคอร์ส Node.js เบื้องต้นมาแล้วก็ถือว่าพร้อมมาก เพราะเราจะต่อยอดจากความเข้าใจเรื่อง Module, npm และ HTTP Server ที่เคยเขียนด้วย Module <code>http</code> ล้วน ๆ</p>
+
+      <h2>ทัวร์โปรเจกต์ฉบับสมบูรณ์</h2>
+      <p>โครงสร้างของโปรเจกต์เมื่อเราสร้างเสร็จแล้วจะหน้าตาประมาณนี้</p>
+      <pre><code>habit-tracker-api/
+├── env.ts                 # อ่านและตรวจสอบ Environment Variables
+├── src/
+│   ├── index.ts           # Entry Point — จุดที่สั่งให้ Server เริ่มทำงาน
+│   ├── server.ts          # นิยาม Express App ทั้งหมด
+│   ├── routes/            # authRoutes.ts, habitRoutes.ts, userRoutes.ts
+│   ├── controllers/       # โค้ดที่ทำงานจริงเมื่อมี Request เข้ามาแต่ละ Route
+│   ├── middleware/        # auth.ts, validation.ts, errorHandler.ts
+│   ├── utils/             # jwt.ts, password.ts
+│   └── db/                # schema.ts, connection.ts, seed.ts
+├── tests/                 # Integration Test
+├── drizzle.config.ts      # ตั้งค่า Drizzle ORM
+├── vitest.config.ts       # ตั้งค่า Vitest
+├── tsconfig.json          # ตั้งค่า TypeScript
+├── .env.example           # ตัวอย่างรายการ Environment Variables ที่ต้องมี
+└── package.json</code></pre>
+      <p>ไม่ต้องตกใจกับจำนวนโฟลเดอร์ เพราะแทบทุกไฟล์ในนี้คุณจะเป็นคนเขียนเองทีละไฟล์ตามลำดับบทเรียน มีเพียงไฟล์ Config ไม่กี่ตัวเท่านั้นที่เตรียมมาให้แล้ว</p>
+
+      <h2>ข้อควรรู้เรื่อง Repository ตัวอย่าง</h2>
+      <p>โปรเจกต์ตัวอย่างมี Branch <code>main</code> เป็นจุดเริ่มต้นที่ยังว่างเปล่า และมี Branch เฉลยของแต่ละบทให้เทียบโค้ดทีหลังได้</p>
+      <p>ข้อควรระวังคือ ถ้าคุณ Clone โค้ดฉบับสมบูรณ์มาแล้วสั่งรันทันที <em>มันจะยังทำงานไม่ได้</em> เพราะโค้ดชุดนั้นต้องการ Database ที่ตั้งค่าไว้แล้วและต้องการ Environment Variables อย่าง <code>DATABASE_URL</code> กับ <code>JWT_SECRET</code> ซึ่งเป็นค่าเฉพาะของแต่ละคน เราจะค่อย ๆ ตั้งค่าพวกนี้กันในบทที่ 5 และบทที่ 18</p>
+      <p>ทุกครั้งที่คุณ Clone โปรเจกต์ใหม่ หรือดึงโค้ดใหม่มาลง Branch ของตัวเอง ให้รัน <code>npm install</code> เสมอ ติดเป็นนิสัยไว้จะช่วยคุณได้เยอะมาก</p>
+
+      <h2>ประเด็นสำคัญ</h2>
+      <p>คอร์สนี้ไม่ได้สอนแค่ "เขียน API ให้ทำงานได้" แต่สอนวิธี<strong>ออกแบบ</strong> API ที่ดูแลต่อได้จริง คือแยกหน้าที่ของแต่ละไฟล์ให้ชัด ตรวจข้อมูลก่อนเชื่อ จัดการ Error อย่างเป็นระบบ มี Test คอยการันตี และ Deploy ขึ้นจริงได้</p>
+      <p>บทถัดไปเราจะถอยกลับมาตั้งหลักกันก่อนว่า Server ในโลกของ Node.js คืออะไรกันแน่ แล้วทำไมเราถึงเลือกใช้ Express</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="02_nodejs_servers_overview.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

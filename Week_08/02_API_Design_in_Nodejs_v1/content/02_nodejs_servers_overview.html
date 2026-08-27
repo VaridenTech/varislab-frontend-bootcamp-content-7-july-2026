@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ทำความเข้าใจว่า Server ในโลก Node.js คืออะไร ต่างจาก JavaScript บน Browser อย่างไร มี Backend แบบไหนบ้าง และทำไมเราถึงเลือกใช้ Express" />
+  <title>ภาพรวมการสร้าง Server ด้วย Node.js — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>ภาพรวมการสร้าง Server ด้วย Node.js</h1>
+      <p>ก่อนจะลงมือเขียนโค้ด เรามาปรับมุมมองกันก่อน เพราะการย้ายจากงาน Frontend มาทำ Backend ไม่ได้เปลี่ยนภาษา แต่เปลี่ยน<strong>สภาพแวดล้อม</strong>ที่ภาษานั้นทำงานอยู่</p>
+
+      <h2>ภาษาเดียวกัน แต่คนละ Runtime</h2>
+      <p>JavaScript ที่คุณเขียนใน Browser กับที่เขียนใน Node.js เป็นภาษาเดียวกันเป๊ะ ๆ ตัว Engine ที่รันมันก็ตัวเดียวกัน คือ V8 ของ Chrome เพียงแต่มีคนหยิบ V8 ออกมาวางไว้บนระดับ Operating System ให้เรารันในเทอร์มินัลได้</p>
+      <p>สิ่งที่ต่างกันคือ "ของแถม" รอบ ๆ Engine ต่างหาก</p>
+      <ul>
+        <li><strong>Global Object</strong> — บน Browser คือ <code>window</code> ส่วนบน Node.js คือ <code>global</code> หรือ <code>globalThis</code></li>
+        <li><strong>API ที่ใช้ได้</strong> — Browser ให้ DOM API และ Web API มาเพื่อทำงานกับหน้าจอ ส่วน Node.js ให้ File System, Networking, Process Management และ Crypto มาเพื่อทำงานกับเครื่อง</li>
+        <li><strong>สิ่งที่หายไป</strong> — บน Node.js ไม่มี <code>document</code> ไม่มี <code>window</code> และไม่มี DOM ให้เล่น</li>
+        <li><strong>Security</strong> — ข้อนี้สำคัญที่สุด</li>
+      </ul>
+      <p>เรื่อง Security คือจุดที่คนย้ายมาจาก Frontend มักไม่ทันคิด บน Browser เราได้ความปลอดภัยมาฟรี ๆ เพราะ Browser ทำ Sandbox ครอบไว้ให้ โค้ดในหน้าเว็บอ่านไฟล์ในเครื่องคุณไม่ได้ ยิง Request ข้ามโดเมนมั่ว ๆ ไม่ได้ แต่บน Node.js ไม่มีใครกั้นให้ โค้ดที่รันมีสิทธิ์เท่ากับผู้ใช้ที่รันมัน ความปลอดภัยจึงกลายเป็นความรับผิดชอบของเราเอง</p>
+      <p>เรื่อง Module ก็เหมือนกัน สมัยก่อน Node.js ใช้ CommonJS แต่เวอร์ชันใหม่ ๆ รองรับ ES Modules (ESM) แล้ว คอร์สนี้เราจะใช้ ESM ล้วน ๆ คือ <code>import</code> และ <code>export</code> แบบเดียวกับที่คุณคุ้นเคยบน Frontend</p>
+
+      <h2>Client กับ Server ต่างกันตรงไหน</h2>
+      <p>Client คือโปรแกรมที่รันอยู่บนเครื่องของผู้ใช้แต่ละคน จะเป็นเว็บ แอปมือถือ แอปบนสมาร์ตทีวี หรือโปรแกรมเดสก์ท็อปก็ได้ ทุกคนมีสำเนาของตัวเองและกินทรัพยากรของเครื่องตัวเอง</p>
+      <p>Server คือคอมพิวเตอร์กลางเครื่องเดียวที่ทุกคน<strong>ใช้ร่วมกัน</strong> และตรงนี้คือความต่างที่สำคัญมาก</p>
+      <p>ถ้าเว็บฝั่ง Client พังขึ้นมา เช่นมี Animation ที่ทำให้หน้าจอค้าง คนที่เดือดร้อนคือคุณคนเดียว รีเฟรชหน้าเว็บก็จบ แต่ถ้า Server พัง <em>ทุกคนใช้งานไม่ได้พร้อมกันทั้งหมด</em> เพราะทุก Client แชร์ Server ตัวเดียวกันอยู่ นี่คือเหตุผลว่าทำไมเรื่อง Error Handling บน Backend ถึงซีเรียสกว่ามาก และเป็นเรื่องที่เราจะเรียนกันจริงจังในบทที่ 28</p>
+
+      <h2>เปลี่ยนมุมจากคนเรียก เป็นคนรับ</h2>
+      <p>สมัยทำ Frontend คุณเป็นฝ่าย "เรียก" ก็จะเขียนประมาณนี้</p>
+      <pre><code>const data = await fetch('/api/users')
+const users = await data.json()</code></pre>
+      <p>คำถามคือแล้วปลายทาง <code>/api/users</code> มันมาจากไหน คำตอบคือมีใครสักคนไปเขียน Route ไว้ฝั่ง Server และตั้งแต่นี้ไปคนคนนั้นก็คือคุณ</p>
+      <pre><code>app.get('/api/users', async (req, res) =&gt; {
+  const users = await db.query('SELECT * FROM users')
+  res.json(users)
+})</code></pre>
+      <p>พูดให้สั้นที่สุด <strong>Server ก็คือตัว Router ที่จับคู่ URL เข้ากับโค้ด</strong> ที่เหลือทั้งหมดในคอร์สนี้เป็นเพียงส่วนเสริมที่ทำให้การจับคู่นั้นปลอดภัย ตรวจสอบได้ และดูแลต่อได้</p>
+
+      <h2>Backend มีกี่แบบ</h2>
+      <p>คำว่า Backend ทุกวันนี้ไม่ได้หมายถึง Server แบบเดียวอีกแล้ว ลองดูภาพรวมกัน</p>
+      <ul>
+        <li><strong>Long-lived Server</strong> — โปรแกรมที่เปิดค้างไว้ตลอด คอยรับ Request ไปเรื่อย ๆ นึกภาพเป็น Loop ที่ไม่มีวันจบ มันจะไม่หยุดจนกว่าเราจะสั่งหยุดหรือมันพังไปเอง ข้อดีคือเก็บ State ระหว่าง Request ได้และรองรับ WebSocket ได้ <strong>นี่คือแบบที่เราจะสร้างในคอร์สนี้</strong></li>
+        <li><strong>Serverless Function</strong> — Function ที่หลับอยู่เฉย ๆ จะตื่นขึ้นมาทำงานก็ต่อเมื่อมีคนเรียก พอทำเสร็จก็ดับไป จ่ายเงินเฉพาะตอนที่รันจริง แต่แลกมาด้วยข้อจำกัดเรื่องความเร็วตอนเริ่มและใช้ของที่ต้องเชื่อมต่อยาว ๆ อย่าง WebSocket ไม่ได้</li>
+        <li><strong>Edge Function</strong> — Serverless ที่ไปรันอยู่บน CDN ซึ่งเป็นเครือข่ายเครื่องที่กระจายสำเนาไฟล์ไว้ทั่วโลกเพื่อให้ผู้ใช้โหลดได้เร็ว จุดเด่นคือใกล้ผู้ใช้มาก แต่ Runtime มักไม่ครบเท่า Node.js เต็ม ๆ</li>
+        <li><strong>Background Job</strong> — งานที่แยกออกไปทำนอกวงจร Request-Response เช่นส่งอีเมล ประมวลผลรูปภาพ หรืองานที่นานเกินกว่าจะให้ผู้ใช้นั่งรอ</li>
+        <li><strong>Cron Job</strong> — Background Job ชนิดที่ทำงานตามตารางเวลา เช่นสรุปรายงานทุกเที่ยงคืน หรือล้างข้อมูลเก่าทุกสัปดาห์</li>
+      </ul>
+
+      <h2>จาก http module สู่ Framework</h2>
+      <p>ถ้าคุณผ่านคอร์ส Node.js เบื้องต้นมา คุณเคยสร้าง Server ด้วย Module <code>http</code> ล้วน ๆ มาแล้ว หน้าตาประมาณนี้</p>
+      <pre><code>import http from 'node:http'
+
+const server = http.createServer((req, res) =&gt; {
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+  res.end('&lt;h1&gt;สวัสดี&lt;/h1&gt;')
+})
+
+server.listen(3000)</code></pre>
+      <p>โค้ดชุดนี้ทำงานได้จริงและไม่ต้องติดตั้งอะไรเพิ่มเลย แต่สังเกตว่ามันตอบเหมือนกันหมดไม่ว่าจะขอ Path ไหน เพราะเรายังไม่ได้ดู <code>req.url</code> ถ้าจะทำ API จริงจัง เราต้องเขียนเองทั้งหมด ตั้งแต่แยก Path แยก HTTP Verb อ่าน Body ที่ส่งมาเป็น JSON ไปจนถึงจัดการ Error</p>
+      <p>Express คือ Framework ที่มาเติมงานน่าเบื่อพวกนั้นให้เรา สิ่งที่ Express ให้มาคือ</p>
+      <ul>
+        <li><strong>Routing</strong> — จับคู่ URL กับ HTTP Verb เข้ากับโค้ดของเราแบบอ่านง่าย</li>
+        <li><strong>Middleware</strong> — ระบบต่อ Function เป็นทอด ๆ เพื่อประมวลผล Request ก่อนถึงปลายทาง เป็นหัวใจของ Express ที่เราจะเรียนกันตั้งแต่บทที่ 10</li>
+        <li><strong>Helper ของ Request และ Response</strong> — เช่น <code>res.json()</code> ที่ตั้ง Header ให้เสร็จสรรพ</li>
+        <li><strong>ระบบนิเวศ</strong> — มี Package ให้ใช้มหาศาล เพราะ Express อยู่มานานและถูกใช้งานจริงในระดับ Production ทั่วโลก</li>
+      </ul>
+      <p>Express อาจไม่ใช่ Framework ที่ใหม่ที่สุด แต่มันคือตัวเลือกที่ผ่านสนามจริงมาแล้วนับไม่ถ้วน และแนวคิดที่คุณได้จากมันย้ายไปใช้กับ Framework อื่นได้แทบทั้งหมด</p>
+
+      <h2>สองเรื่องที่ควรติดหัวไว้</h2>
+      <p><strong>Stateless</strong> — ต่างจากแอป Frontend ที่เก็บ State ไว้ในหน่วยความจำได้ยาว ๆ HTTP Server มองทุก Request เป็นเรื่องอิสระต่อกัน State ตัวจริงอยู่ใน Database ไม่ใช่ในตัวแปรบน Server</p>
+      <p><strong>Concurrency</strong> — Node.js ใช้ Event Loop กับ I/O แบบ Non-blocking หมายความว่า Thread เดียวรับ Request ได้พร้อมกันจำนวนมาก โดยอาศัยการทำงานแบบ Asynchronous ต่างจาก Server แบบดั้งเดิมที่แจก Thread ให้ทีละ Request</p>
+      <p>บทถัดไปเราจะลงมือสร้าง Express App ตัวแรกกันจริง ๆ</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="01_course_intro.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="03_create_express_app.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>
