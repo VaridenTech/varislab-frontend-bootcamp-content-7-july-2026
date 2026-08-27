@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ใช้ app.use เพื่อ Mount Router เข้ากับ App เข้าใจการรวม Path การซ้อน Router หลายชั้น ลำดับ Route ที่สำคัญ และกลยุทธ์การจัดระเบียบ Route ในโปรเจกต์จริง" />
+  <title>การ Mount Route และกลยุทธ์ Routing ขั้นสูง — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การ Mount Route และกลยุทธ์ Routing ขั้นสูง</h1>
+      <p>เรามี Router สามตัวแล้วแต่ยังไม่มีใครรู้จักมัน บทนี้เราจะเอามันไปแปะเข้ากับ App ด้วยคำสั่ง <code>app.use()</code> แล้วต่อด้วยเทคนิคการจัดระเบียบ Route ที่จะช่วยคุณตอนโปรเจกต์โตขึ้น</p>
+
+      <h2>รู้จัก app.use()</h2>
+      <p><code>use</code> เป็น Method ที่ไม่เกี่ยวกับ HTTP Verb เลย ในขณะที่ <code>app.get()</code> หมายถึง "ถ้าเป็น Verb นี้ <em>และ</em> Path นี้ ให้ทำสิ่งนี้" คำว่า <code>app.use()</code> หมายถึง <strong>"ถ้าเป็น Path นี้ ไม่ว่า Verb ไหนก็ตาม ให้ทำสิ่งนี้"</strong></p>
+      <p>เปิด <code>src/server.ts</code> แล้วเพิ่มเข้าไป</p>
+      <pre><code>import express from 'express'
+import authRoutes from './routes/authRoutes.ts'
+import habitRoutes from './routes/habitRoutes.ts'
+import userRoutes from './routes/userRoutes.ts'
+
+const app = express()
+
+// Health check endpoint
+app.get('/health', (req, res) =&gt; {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    service: 'Habit Tracker API',
+  })
+})
+
+// Routes
+app.use('/api/auth', authRoutes)
+app.use('/api/habits', habitRoutes)
+app.use('/api/users', userRoutes)
+
+export { app }
+
+export default app</code></pre>
+      <p>เรื่องที่คนเจอปัญหากันบ่อยคือ <strong>นามสกุล <code>.ts</code> ในบรรทัด Import ต้องใส่เสมอ</strong> ถ้าคุณเคยเขียน Node.js มาก่อนแล้วชินกับการไม่ใส่นามสกุล นั่นคือยุคของ CommonJS พอเปลี่ยนมาใช้ ES Modules แล้วนามสกุลกลายเป็นข้อบังคับ และการใช้ TypeScript ก็ไม่ได้ทำให้ข้อนี้เปลี่ยนไป ถ้าไม่ใส่มันจะ Import ไม่เจอ</p>
+
+      <h2>Mount Path + Route Path = Path จริง</h2>
+      <p>นี่คือสูตรที่ต้องจำ Path จริงที่ Client ยิงมาได้ เกิดจากการเอา Path ที่เรา Mount ไว้ มาต่อกับ Path ที่เขียนไว้ในไฟล์ Router</p>
+      <pre><code>app.use('/api/users', userRoutes)   // Mount Path
+router.get('/:id', handler)          // Route Path
+// ผลลัพธ์: GET /api/users/:id</code></pre>
+      <p>ไล่ดูตารางการจับคู่ทั้งหมดของแอปเรา</p>
+      <pre><code>GET    /api/users             → userRoutes.get('/')
+GET    /api/users/123         → userRoutes.get('/:id')
+PUT    /api/users/123         → userRoutes.put('/:id')
+DELETE /api/users/123         → userRoutes.delete('/:id')
+GET    /api/habits            → habitRoutes.get('/')
+GET    /api/habits/1          → habitRoutes.get('/:id')
+POST   /api/habits            → habitRoutes.post('/')
+DELETE /api/habits/1          → habitRoutes.delete('/:id')
+POST   /api/habits/1/complete → habitRoutes.post('/:id/complete')
+POST   /api/auth/register     → authRoutes.post('/register')
+POST   /api/auth/login        → authRoutes.post('/login')</code></pre>
+      <p>คำว่า <code>/</code> ที่เราเขียนใน Router หมายถึง "แค่ Path ที่มาก่อนหน้าเท่านั้น ไม่ต้องต่ออะไรอีก" ในกรณีของ habitRoutes มันจึงกลายเป็น <code>/api/habits</code> เฉย ๆ</p>
+      <p>ข้อดีที่ใหญ่ที่สุดคือ <strong>Router ไม่ต้องรู้ว่าตัวเองจะไปอยู่ตรงไหน</strong> ถ้าวันหนึ่งเราอยากเปลี่ยนจาก <code>/api/users</code> เป็น <code>/api/v2/users</code> เราแก้ที่ <code>src/server.ts</code> บรรทัดเดียวจบ ไม่ต้องแตะไฟล์ Router เลย นี่คือความหมายของคำว่า Decoupled</p>
+      <p>ลองรัน <code>npm run dev</code> แล้วยิงจาก Postman ดู <code>GET /health</code> ต้องยังทำงานเหมือนเดิม <code>GET /api/habits</code> ต้องได้ <code>{ "message": "habits" }</code> และ <code>POST /api/auth/register</code> ต้องได้ <code>{ "message": "user signed up" }</code> ถ้าได้ 404 ให้เช็คสองอย่างก่อนเสมอ คือ Verb ถูกหรือเปล่า และคำว่า habits เติม s แล้วหรือยัง (พลาดกันบ่อยมาก)</p>
+
+      <h2>Express ไม่ได้สนใจว่าคุณทำอะไรใน Handler</h2>
+      <p>มีคำถามที่ดีมากข้อหนึ่งคือ ในเมื่อ <code>POST /api/auth/register</code> ควรจะสร้าง User แต่เราแค่ตอบ JSON เปล่า ๆ กลับไป ทำไม Express ไม่ฟ้อง Error</p>
+      <p>คำตอบคือ <strong>Express รู้จักแค่ HTTP ไม่รู้จัก REST</strong> HTTP Spec เป็นสิ่งที่ถูกเขียนเป็นมาตรฐานจริง ๆ Express จึงเขียนโค้ดรองรับ Verb ต่าง ๆ ตามนั้น แต่ REST เป็นแค่ข้อตกลงระหว่างมนุษย์ที่ไม่มีอยู่ในโค้ดของใครเลย</p>
+      <p>สิ่งเดียวที่ Express สนใจคือ <strong>คุณต้องส่ง Response กลับ หรือไม่ก็โยน Error ออกมา</strong> เท่านั้นจริง ๆ นอกจากนั้นมันไม่รู้และไม่สนใจ การบังคับให้ POST Route ทำหน้าที่สร้างของจริง ๆ เป็นเรื่องของ Business Logic ที่ทีมคุณต้องช่วยกันดูตอน Review Code เอง</p>
+
+      <h2>ซ้อน Router หลายชั้น</h2>
+      <p>เพิ่ง Mount ไปนั้นคือชั้นเดียว แต่จริง ๆ เราเอา Router ไป Mount บน Router อีกทีก็ได้ และซ้อนลึกลงไปกี่ชั้นก็ได้ ไม่มีอะไรห้าม</p>
+      <pre><code>const userRouter = Router()
+const userHabitsRouter = Router()
+
+userHabitsRouter.get('/', getUserHabits)
+userHabitsRouter.post('/', createUserHabit)
+userHabitsRouter.delete('/:habitId', deleteUserHabit)
+
+// Mount Router ย่อยบน Router
+userRouter.use('/:userId/habits', userHabitsRouter)
+
+// Mount Router บน App
+app.use('/api/users', userRouter)
+
+// ผลลัพธ์:
+// GET    /api/users/123/habits
+// POST   /api/users/123/habits
+// DELETE /api/users/123/habits/456</code></pre>
+      <p>ข้อควรรู้คือโดยปกติ Router ลูกจะ<em>อ่าน Parameter ของ Router แม่ไม่เห็น</em> ถ้าอยากให้เห็นต้องเปิด Option <code>mergeParams</code> ตอนสร้าง</p>
+      <pre><code>const userHabitsRouter = Router({ mergeParams: true })
+
+userHabitsRouter.get('/', (req, res) =&gt; {
+  console.log(req.params.userId) // "123" อ่านค่าจาก Router แม่ได้แล้ว
+})</code></pre>
+      <p>เทคนิคนี้มีประโยชน์เวลาอยากแบ่ง API ตาม Version เช่น <code>/api/v1</code> กับ <code>/api/v2</code> หรือแบ่งตาม Microservice ที่แต่ละทีมดูแลคนละส่วน แต่ต้องระวังว่า <strong>ไม่ว่าจะซ้อนลึกแค่ไหน สุดท้าย Route ทุกตัวจะไปรวมกันอยู่ในทะเบียนเดียว</strong> ยิ่งลึกยิ่งมีโอกาสที่ Route ญาติห่าง ๆ สองตัวจะชนกันโดยที่เราไม่รู้ตัว แล้วตัวที่ลงทะเบียนก่อนก็จะชนะไปเงียบ ๆ ซึ่ง Debug ยากมาก ถ้าโครงสร้างเริ่มซับซ้อนขนาดนั้น แนะนำให้เลิกพิมพ์ String ตรง ๆ แล้วหันไปเก็บชื่อ Path ไว้ในตัวแปรกลางหรือ Enum เพื่อให้ใช้ซ้ำได้และค้นหาเจอ</p>
+
+      <h2>ลำดับของ Route สำคัญมาก</h2>
+      <p>นี่คือกับดักที่คนเขียน Express ทุกคนต้องเคยตกอย่างน้อยหนึ่งครั้ง ลองดูสอง Route นี้</p>
+      <pre><code>// แบบผิด
+router.get('/:id', getUser)         // ดักทุกอย่างรวมถึง /profile
+router.get('/profile', getProfile)  // ไม่มีวันถูกเรียก
+
+// แบบถูก
+router.get('/profile', getProfile)  // ตัวที่เจาะจงไว้ก่อน
+router.get('/:id', getUser)         // ตัวที่กว้างไว้ทีหลัง</code></pre>
+      <p>เหตุผลคือ <code>/:id</code> แปลว่า "Slash แล้วตามด้วยอะไรก็ได้" ซึ่งคำว่าอะไรก็ได้ก็รวมคำว่า <code>profile</code> เข้าไปด้วย สอง Route นี้จึงเป็น Route เดียวกันในสายตาของ Express และตามกฎที่เราเรียนไปในบทที่ 7 คือ<strong>ตัวที่ลงทะเบียนก่อนชนะ</strong> ดังนั้นถ้า <code>/:id</code> อยู่ก่อน คำสั่ง <code>getProfile</code> จะไม่มีวันทำงาน</p>
+      <p>กฎง่าย ๆ คือ <strong>Route ที่เจาะจงกว่าต้องมาก่อน Route ที่กว้างกว่าเสมอ</strong></p>
+
+      <h2>Route แบบมีเงื่อนไข</h2>
+      <p>อย่าลืมว่าไฟล์ Router ก็คือ JavaScript ธรรมดา เราจึงเขียน <code>if</code> ครอบการลงทะเบียน Route ได้เลย</p>
+      <pre><code>import { isDev } from '../env.ts'
+
+if (isDev()) {
+  const devRouter = Router()
+  devRouter.get('/debug', debugInfo)
+  devRouter.post('/seed', seedDatabase)
+  app.use('/dev', devRouter)
+}</code></pre>
+      <p>ตัวอย่างนี้จะเปิด Route สำหรับ Debug เฉพาะตอนพัฒนา พอขึ้น Production แล้ว Route พวกนี้จะไม่มีอยู่เลย ไม่ใช่แค่เข้าไม่ได้ วิธีเดียวกันนี้ใช้ทำ Feature Flag ได้ด้วย คือให้ Environment Variable เป็นตัวตัดสินว่าฟีเจอร์นี้จะเปิดหรือไม่ ซึ่งทำให้เราเปิดปิดฟีเจอร์ได้โดยไม่ต้อง Deploy ใหม่ และเหมาะกับการทำ A/B Test</p>
+
+      <h2>กลยุทธ์การจัดระเบียบ Route</h2>
+      <p>ไม่มีวิธีไหนถูกหรือผิด มีแต่วิธีที่เหมาะกับทีมและโปรเจกต์ของคุณ นี่คือแบบที่พบบ่อย</p>
+      <ul>
+        <li><strong>แบ่งตาม Resource</strong> (แบบที่เราใช้ในคอร์สนี้) — แยกไฟล์ตาม Resource คือ auth, user, habit, tag ข้อดีคือแบนและเรียบง่าย หาของเจอทันที และแบ่งความรับผิดชอบในทีมได้ตรงไปตรงมา</li>
+        <li><strong>แบ่งตาม Feature</strong> — คิดจากมุมประสบการณ์ผู้ใช้ เช่นมีโฟลเดอร์ <code>onboarding/</code> ที่มี <code>registration.ts</code> กับ <code>verification.ts</code> และโฟลเดอร์ <code>dashboard/</code> ที่มี <code>overview.ts</code> กับ <code>analytics.ts</code> เหมาะกับทีมที่แบ่งงานกันตามฟีเจอร์</li>
+        <li><strong>แบ่งตาม Version</strong> — ทำโฟลเดอร์ <code>v1/</code> และ <code>v2/</code> แล้ว Mount แยกกันด้วย <code>app.use('/api/v1', v1Routes)</code> เหมาะกับ API สาธารณะที่มีคนนอกใช้อยู่และเราเปลี่ยนของเดิมทิ้งไม่ได้</li>
+        <li><strong>Co-location</strong> — แทนที่จะมีโฟลเดอร์ <code>routes</code> รวมทุกอย่าง ให้มีโฟลเดอร์ <code>habit/</code> ที่เก็บทั้ง Route, Handler, Test และ Query ของ Habit ไว้ที่เดียวกันหมด แล้วค่อยรวบทุกโฟลเดอร์เข้าด้วยกันที่ไฟล์ Index ตัวเดียว</li>
+      </ul>
+
+      <h2>Endpoint ที่เจอบ่อยในโปรเจกต์จริง</h2>
+      <p><strong>Health Check</strong> — เรามีอยู่แล้วที่ <code>/health</code> Server เกือบทุกตัวในโลกมีเส้นนี้ เพราะมีบริการอย่าง Uptime Robot ที่คอยยิง Request เข้ามาซ้ำ ๆ ตลอดเวลา ถ้าได้ 200 แปลว่าปกติ ถ้าไม่ได้ก็บันทึกไว้แล้วส่งแจ้งเตือนหาคนที่อยู่เวร ประโยชน์อีกข้อคือดูแนวโน้มเวลาตอบสนอง ถ้ามันช้าลงเรื่อย ๆ แปลว่ามีบางอย่างผิดปกติ อาจเป็นเพราะ Traffic เยอะขึ้น (ซึ่งก็น่ายินดี) หรือเพราะโค้ดที่เพิ่งขึ้นไปทำแอปพัง</p>
+      <p><strong>Catch-all 404</strong> — เอาไว้แทนที่หน้า 404 แบบ HTML ของ Express ด้วย JSON ของเราเอง</p>
+      <pre><code>// วางไว้ล่างสุด หลัง Route ทั้งหมด
+app.use('/api/*splat', (req, res) =&gt; {
+  res.status(404).json({
+    error: 'Not Found',
+    message: `Cannot ${req.method} ${req.originalUrl}`,
+  })
+})</code></pre>
+      <p>ที่มันทำงานได้เพราะ<strong>ลำดับสำคัญ</strong> ถ้าเราวางไว้ล่างสุด Route ที่ลงทะเบียนไว้แล้วจะถูกจับคู่ไปก่อนหมด เหลือแต่ตัวที่ไม่ตรงกับอะไรเลยที่จะตกมาถึงตรงนี้</p>
+      <p>สังเกตคำว่า <code>*splat</code> ตัวอย่างเก่า ๆ ตามอินเทอร์เน็ตจะเขียนแค่ <code>'/api/*'</code> ซึ่งใช้ไม่ได้แล้ว เพราะ Express 5 บังคับว่า <strong>Wildcard ต้องมีชื่อ</strong> ชื่อที่ตั้งจะไปโผล่ใน <code>req.params</code> (จะตั้งว่าอะไรก็ได้ แต่คนนิยมใช้คำว่า splat) ด้วยเหตุผลเดียวกัน การใส่ Regex ในวงเล็บแบบ <code>/users/:id(\d+)</code> ก็ถูกถอดออกจาก Express 5 แล้ว ถ้าอยากบังคับรูปแบบให้ไปตรวจใน Handler หรือใช้ Validation Middleware แทน ซึ่งเราจะทำกันในบทที่ 12</p>
+      <p><strong>Catch-all สำหรับ SPA</strong> — ถ้า Server ตัวเดียวกันต้องเสิร์ฟ Single Page Application ด้วย ต้องมี Route แบบ <code>app.get('/*splat', ...)</code> ที่ตอบไฟล์ <code>index.html</code> กลับไปเสมอไม่ว่าจะขอ Path ไหน เพราะชื่อ Single Page App หมายความตามตัวอักษรจริง ๆ คือมีหน้าเดียว เมื่อ Browser ได้ <code>index.html</code> ไปแล้ว JavaScript จะโหลดขึ้นมาและ Router ฝั่ง Client อย่าง React Router ก็รับช่วงจัดการ Routing ต่อเอง แต่ตอนที่ผู้ใช้กด Refresh บน Path ลึก ๆ Browser จะยิงไปหา Server จริง ถ้า Server ไม่มี Route นั้นก็จะได้ 404 ทุกวันนี้เราไม่ต้องเขียนเองแล้วเพราะ Dev Server อย่าง Vite และผู้ให้บริการ Hosting จัดการให้อัตโนมัติ แต่เบื้องหลังก็คือสิ่งนี้</p>
+      <p>Routing ของเราครบแล้ว แต่ตอนนี้ยังไม่มีอะไรมาคั่นกลางระหว่าง Request ที่เข้ามากับ Handler ของเราเลย ทั้งการอ่าน <code>req.body</code> การตรวจสิทธิ์ และการ Log บทถัดไปเราจะรู้จักกับ Middleware ซึ่งเป็นแนวคิดที่ทรงพลังที่สุดของ Express กัน</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="08_routers_and_subrouters.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="10_express_middleware.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

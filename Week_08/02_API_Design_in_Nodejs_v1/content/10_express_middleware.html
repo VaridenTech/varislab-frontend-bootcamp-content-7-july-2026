@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ทำความรู้จัก Middleware ตั้งแต่แนวคิดกลาง ๆ ที่พบได้ทั้งฝั่ง Frontend, Network และ Backend ไปจนถึง Signature (req, res, next) ของ Express ความหมายของ next() ลำดับการทำงาน และกับดักการตอบ Response ซ้ำ" />
+  <title>Middleware ใน Express — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Middleware ใน Express</h1>
+      <p>ถ้าให้เลือกแนวคิดเดียวที่ทรงพลังที่สุดของ Express ผมเลือกคำนี้ทันที — <strong>Middleware</strong> มันคือสิ่งที่ผมเรียกว่ากระดูกสันหลังของ Web App สมัยใหม่ และถ้าคุณเคยเขียนแอปมาบ้าง คุณใช้มันมาแล้วแน่นอน แค่อาจจะไม่รู้ตัว</p>
+
+      <h2>Middleware คืออะไรกันแน่</h2>
+      <p>คำนี้กำกวมพอ ๆ กับคำว่า Caching คือทุกคนใช้กันหมดแต่คนละความหมาย ("Cache ที่ไหน Database? Network? เครื่อง Client?") ความจริงแล้วมันมีความหมายเดียว แค่ถูกเอาไปใช้ในหลายบริบท</p>
+      <p><strong>Middleware คือโค้ดที่นั่งอยู่ตรงกลางระหว่างโค้ดสองก้อน</strong> มันอยู่ "ตรงกลาง" จึงชื่อ Middleware แค่นั้นเลย</p>
+      <p>ในบริบทของ API สิ่งที่เราทำมาตลอดคือ Request เข้ามา → เข้า Handler ของเรา → ส่ง Response กลับ ส่วน Middleware คือของที่ไปแทรกอยู่ระหว่างสองจุดนั้น</p>
+      <pre><code>Request → Middleware 1 → Middleware 2 → ... → Handler → Response</code></pre>
+      <p>และเพราะ Middleware ได้รับ <code>req</code> กับ <code>res</code> ตัวเดียวกันกับที่ Handler ได้รับ มันจึงทำได้ทุกอย่างที่ Handler ทำได้ คือ</p>
+      <ul>
+        <li><strong>อ่าน</strong> Request เช่นดู Header ดู IP ดู Path</li>
+        <li><strong>แก้ไข</strong> Request หรือ Response เช่นแปะข้อมูล User ที่ถอดจาก Token ไว้ที่ <code>req</code></li>
+        <li><strong>ตัดจบ</strong> (Short-circuit) คือตอบกลับไปเลยโดยไม่ให้ถึง Handler</li>
+        <li><strong>ส่งต่อ</strong> ให้ Middleware ตัวถัดไปทำงาน</li>
+      </ul>
+
+      <h2>Middleware มีอยู่ทุกชั้นของ Stack</h2>
+      <p>ก่อนจะลงลึกที่ Express ขอให้เห็นภาพก่อนว่ารูปแบบเดียวกันนี้อยู่รอบตัวเราหมด</p>
+      <p><strong>ชั้น Network (Edge Function)</strong> — ถ้าใช้ Next.js คุณจะเจอไฟล์ <code>middleware.ts</code> ที่เขียนได้ประมาณว่า "ถ้า Path ตรงกับ <code>/about</code> ให้ Redirect ไปหน้าแรก" ของแบบนี้ไม่ได้รันบน Server ของเรา แต่รันอยู่บน CDN <em>ก่อน</em> จะถึง Server ต้นทาง (Origin) ด้วยซ้ำ Cloudflare Workers ก็เป็นหนึ่งใน Edge Function ที่โปรแกรมได้ตัวแรก ๆ ของโลก และทำอะไรได้บ้าระห่ำมาก เช่นดู IP ของ Request ที่เข้ามาแล้วเปลี่ยนหัวข้อบนหน้าเว็บให้ตรงกับบริษัทของคนที่กำลังดูอยู่</p>
+      <p><strong>Load Balancer และ Reverse Proxy</strong> — Nginx ที่ตั้งค่าให้เติม Header อย่าง <code>X-Real-IP</code> แล้วส่งต่อไปยัง Backend ข้างหลัง ก็คือ Middleware แบบดั้งเดิม มันไม่ได้ตอบอะไร แค่เติมของแล้วส่งต่อ</p>
+      <p><strong>ฝั่ง Frontend</strong> — HTTP Interceptor ของ Axios ที่เติม JWT ให้ทุก Request ขาออกโดยที่เราไม่ต้องเขียนซ้ำทุกฟังก์ชัน หรือ Interceptor ขารับที่เช็คว่าถ้าได้ <code>401</code> ให้เด้งไปหน้า Login ก็คือ Middleware (Library ดึงข้อมูลเจ้าอื่นก็มีของแบบนี้กันหมด ไม่ว่าจะเป็น Apollo ของ GraphQL หรือตัวห่อ Fetch ต่าง ๆ)</p>
+      <pre><code>axios.interceptors.request.use((config) =&gt; {
+  config.headers.Authorization = `Bearer ${getToken()}`
+  return config
+})</code></pre>
+      <p>แม้แต่ Component ครอบ Route ใน React ก็ใช่</p>
+      <pre><code>const ProtectedRoute = ({ children }) =&gt; {
+  const { user } = useAuth()
+  if (!user) return &lt;Navigate to="/login" /&gt;
+  return children
+}</code></pre>
+      <p>Logic ตัวนี้นั่งอยู่ตรงกลางระหว่าง "สิ่งที่ผู้ใช้ขอ" กับ "ทรัพยากรที่เขาจะได้" เป๊ะตามนิยาม</p>
+
+      <h2>Signature ของ Middleware ใน Express</h2>
+      <p>Middleware ของ Express หน้าตาเหมือน Handler ทุกประการ ต่างกันแค่ <strong>มี Argument ตัวที่สาม</strong> ชื่อ <code>next</code> — นั่นคือสิ่งเดียวที่ทำให้มันเป็น Middleware</p>
+      <pre><code>const logger = (req, res, next) =&gt; {
+  console.log(`${req.method} ${req.path}`)
+  next() // ส่งต่อให้ตัวถัดไปใน Stack
+}</code></pre>
+      <ul>
+        <li><code>req</code> — Request Object ที่เก็บ Body, Header, Params ทั้งหมดไว้</li>
+        <li><code>res</code> — Response Object ที่ใช้ตอบกลับไปหา Client</li>
+        <li><code>next</code> — Function สำหรับส่งต่อการควบคุมให้ Middleware ตัวถัดไปใน Stack</li>
+      </ul>
+      <p>เบื้องหลังของ <code>next</code> ไม่มีเวทมนตร์อะไรเลย Express เก็บ Middleware ทุกตัวที่เราลงทะเบียนไว้เป็น <em>Array ของ Function</em> แล้วห่อแต่ละตัวด้วย Function ที่รู้ว่าตัวถัดไปคือใคร พอเราเรียก <code>next()</code> มันก็แค่ไปเรียกตัวถัดไปใน Array คิดง่าย ๆ ว่ามันคือ Loop ที่เราคุมจังหวะเดินเอง</p>
+
+      <h2>ลำดับสำคัญเสมอ</h2>
+      <p>Middleware ทำงาน<strong>ตามลำดับที่ลงทะเบียน</strong> คือบนลงล่างสำหรับ <code>app.use()</code> และซ้ายไปขวาสำหรับ Middleware ที่ใส่ไว้ในบรรทัดเดียวกับ Route</p>
+      <pre><code>app.use(middleware1)  // ลำดับ 1
+app.use(middleware2)  // ลำดับ 2
+
+app.get('/test',
+  middleware3,        // ลำดับ 3
+  middleware4,        // ลำดับ 4
+  finalHandler        // ลำดับ 5
+)</code></pre>
+      <p>ทุกครั้งที่เรียก <code>next()</code> Express จะเดินไปตัวถัดไป และถ้าไม่เหลือ Middleware แล้ว มันจะเดินไปที่ Handler ของ Route นั้น</p>
+
+      <h2>Return ไม่ใช่ Response</h2>
+      <p>ตรงนี้คือหัวใจของบทนี้ และเป็นจุดที่คนพลาดกันเยอะที่สุด</p>
+      <p><strong>เมื่อ Request ถูกตอบไปแล้วครั้งหนึ่ง Connection จะถูกปิด</strong> เราตอบซ้ำไม่ได้ และคำสั่ง <code>return</code> ในโค้ดของเรา<em>ไม่ใช่</em>สิ่งเดียวกับการตอบ Response</p>
+      <pre><code>// ระดับโค้ด: JavaScript เลิกทำงานใน Function นี้
+return
+
+// ระดับ Network: HTTP ยังรออยู่ "Response ของฉันอยู่ไหน"</code></pre>
+      <p>เรากำลังจัดการของสองอย่างพร้อมกันคือ <em>โค้ด</em> กับ <em>Network</em> ให้คิดว่า <code>res.json()</code> คือคำสั่ง Return ของ HTTP Request แต่ไม่ใช่ Return ของ Function เรา ถ้าตอบไปแล้วโค้ดยังวิ่งต่อ แล้วบังเอิญมีการตอบอีกรอบ นั่นคือปัญหาใหญ่ (จริง ๆ คือส่ง Header ซ้ำไม่ได้ ซึ่งความหมายเดียวกัน) Express จะกลืนมันไปเงียบ ๆ ซึ่งยิ่ง Debug ยาก</p>
+      <p><strong>กฎที่จำง่ายที่สุด: ถ้าจะตอบ Response ใน Middleware ให้ใส่ <code>return</code> นำหน้าเสมอ</strong> ยกเว้นมันเป็นบรรทัดสุดท้ายจริง ๆ</p>
+      <pre><code>const authenticate = (req, res, next) =&gt; {
+  if (!req.headers.authorization) {
+    return res.status(401).json({ error: 'No token' })  // ตอบแล้วจบ ห้ามเรียก next()
+  }
+  next()
+}</code></pre>
+
+      <h2>เมื่อไรควรเรียก next()</h2>
+      <p>จากประสบการณ์จริง Middleware ที่เราเขียนจะมีแค่สองแบบ</p>
+      <ul>
+        <li><strong>แมลงวันเกาะกำแพง</strong> — แค่มาส่องดู Request หรือแปะข้อมูลเพิ่ม หรือทำ Side Effect ที่ไม่เกี่ยวกับ Request เช่นยิง Analytics แบบนี้<em>เรียก <code>next()</code> เสมอ</em> ไม่มีเงื่อนไข</li>
+        <li><strong>ด่านตรวจ (Go / No-Go)</strong> — เช็คค่าบางอย่างว่าจริงหรือเท็จ ถ้าผ่านก็ <code>next()</code> ถ้าไม่ผ่านก็ <code>res.json()</code> ตัดจบตรงนั้น แบบนี้คือ Authentication, Authorization, Access Control หรือกระทั่ง "บัตรเครดิตคุณหมดอายุและค้างชำระ"</li>
+      </ul>
+      <p>และมีอีกกฎที่ห้ามลืม — <strong>ถ้าไม่ตอบ ไม่โยน Error และไม่เรียก <code>next()</code> Request จะค้างตลอดกาล</strong> เพราะ Express ไม่รู้ว่าจะทำอะไรต่อ มันก็นั่งรออยู่อย่างนั้น ซึ่งอาการเหมือนกับการลืมตอบใน Handler เป๊ะ ๆ</p>
+      <pre><code>// แย่ — Request ค้าง
+const badMiddleware = (req, res, next) =&gt; {
+  console.log('Did something')
+  // ไม่เรียกทั้ง next() และ res.send()
+}</code></pre>
+
+      <h2>next() รับ Argument ได้หนึ่งตัว</h2>
+      <p><code>next</code> รับ Argument ได้แค่ตัวเดียว และ<strong>ไม่ว่าคุณจะส่งอะไรเข้าไป Express ถือว่านั่นคือ Error</strong> ต่อให้เป็น String คำว่า <code>'yes'</code> ก็ตาม</p>
+      <pre><code>const riskyMiddleware = async (req, res, next) =&gt; {
+  try {
+    await someDatabaseOperation()
+    next()        // สำเร็จ ไปต่อ
+  } catch (error) {
+    next(error)   // พัง ส่งให้ Error Handler
+  }
+}</code></pre>
+      <p>ความหมายของมันคือ "มีเรื่องไม่ดีเกิดขึ้น ช่วยข้ามทุกอย่างที่เหลือ แล้วกระโดดไปที่ Error Handler Middleware ทีเถอะ" ถ้าเราลงทะเบียน Error Handler ไว้เองมันจะไปที่ตัวนั้น ถ้าไม่มีก็ใช้ตัวที่ Express ติดมาให้ เราจะเขียนของเราเองในบทที่ 28 และเซอร์ไพรส์ครับ — <strong>Error Handler ก็คือ Middleware</strong> ทุกอย่างใน Express คือ Middleware</p>
+
+      <h2>เกร็ด: res.json() ทำอะไรให้เราบ้าง</h2>
+      <p>ระหว่างทางมีคำถามว่า <code>res.json()</code> กับ <code>res.send()</code> ต่างกันไหม คำตอบคือทุกอย่างคือ <code>send</code> ส่วน <code>json</code> เป็นแค่ตัวห่ออีกที ที่เรียก <code>JSON.stringify()</code> ให้ แล้วเซ็ต Header บอก Client ว่านี่คือ JSON</p>
+      <pre><code>res.json({ ok: true })
+
+// เทียบเท่ากับการทำเองแบบนี้
+res.setHeader('Content-Type', 'application/json')
+res.send(JSON.stringify({ ok: true }))</code></pre>
+      <p>เหตุผลที่ต้อง Stringify คือ<strong>เราส่ง Object ข้ามสายไม่ได้</strong> สิ่งที่ส่งข้ามสายได้มีแค่ String, Number, Boolean เท่านั้น (จริง ๆ ก็คือ String ทั้งหมดนั่นแหละ) และถ้าไม่เซ็ต Header ให้ Client รู้ มันก็จะไม่ถูก Parse เป็น JSON</p>
+
+      <h2>ทำไมรูปแบบนี้ถึงชนะ</h2>
+      <p>ผมคิดว่ารูปแบบ <code>(req, res, next)</code> นี่แหละคือสิ่งที่ทำให้ Node.js ดังเปรี้ยงในยุคนั้น เพราะในเวลาเดียวกัน การเขียน Server ด้วย Java หรือ Python ยากกว่านี้มาก</p>
+      <p>จนถึงวันนี้ Framework ใหม่ ๆ อย่าง Fastify, NestJS หรือ Hono ต่างก็ได้แรงบันดาลใจจากตรงนี้ ส่วนหนึ่งเพื่อให้ยังเข้ากันได้กับ Middleware จำนวนมหาศาลที่มีคนเขียนไว้แล้ว (สมัยก่อนมี Package Middleware ของ Express เยอะพอ ๆ กับ Package React ทุกวันนี้) เหตุผลที่มันชนะคือ Mental Model เข้าใจง่าย ประกอบร่างกันได้ ใช้ซ้ำได้ และยืดหยุ่นพอจะทำได้ทุกเรื่องตั้งแต่ Auth ยัน Logging</p>
+      <p>บทหน้าเราจะเอาแนวคิดนี้ไปใช้จริง โดยติดตั้ง Middleware ระดับ Global ที่ทุกโปรเจกต์ควรมีเข้าไปใน <code>src/server.ts</code> ของเรา</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="09_mounting_and_routing_strategies.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="11_global_middleware.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

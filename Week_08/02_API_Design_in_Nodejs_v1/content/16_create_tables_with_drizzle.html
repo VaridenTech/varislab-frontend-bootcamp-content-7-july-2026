@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ลงมือเขียนไฟล์ src/db/schema.ts สร้างตาราง users, habits, entries, tags และ habit_tags ด้วย Drizzle ORM พร้อมกำหนด Foreign Key, onDelete cascade และประกาศความสัมพันธ์ด้วย relations()" />
+  <title>สร้างตารางและความสัมพันธ์ด้วย Drizzle ORM — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>สร้างตารางและความสัมพันธ์ด้วย Drizzle ORM</h1>
+      <p>ทฤษฎีพอแล้ว บทนี้เราจะเขียน Schema ทั้งห้าตารางของ Habit Tracker กันจริง ๆ สร้างโฟลเดอร์ <code>src/db</code> ขึ้นมา แล้วสร้างไฟล์ <code>src/db/schema.ts</code> ข้างในนั้น</p>
+      <p>ถ้ายังไม่ได้ติดตั้ง Package ให้ติดตั้งก่อน</p>
+      <pre><code>npm install drizzle-orm
+npm install -D drizzle-kit</code></pre>
+      <p>แล้วเริ่มไฟล์ด้วยการ Import ของที่จะใช้</p>
+      <pre><code>import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  timestamp,
+  boolean,
+  integer,
+} from 'drizzle-orm/pg-core'
+import { relations } from 'drizzle-orm'</code></pre>
+      <p>ทุกอย่างที่มาจาก <code>drizzle-orm/pg-core</code> คือของเฉพาะของ PostgreSQL <code>pgTable</code> คือตัวสร้างตาราง ส่วนที่เหลือคือชนิดของคอลัมน์ ส่วน <code>relations</code> ที่มาจาก <code>drizzle-orm</code> ตรง ๆ คือตัวประกาศความสัมพันธ์ ซึ่งเราจะใช้ตอนท้ายบท</p>
+
+      <h2>ตาราง users</h2>
+      <pre><code>export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  username: varchar('username', { length: 50 }).notNull().unique(),
+  password: varchar('password', { length: 255 }).notNull(),
+  firstName: varchar('first_name', { length: 50 }),
+  lastName: varchar('last_name', { length: 50 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})</code></pre>
+      <p>มีรายละเอียดหลายจุดที่ควรเข้าใจ ไม่ใช่แค่ก๊อปวาง</p>
+      <ul>
+        <li><strong>ต้อง <code>export</code> ทุกตารางเสมอ</strong> เพราะเราต้อง Import มันไปอ้างถึงตอนเขียน Query ในโค้ด ผมตั้งชื่อเป็นพหูพจน์เสมอเพื่อให้ตรงกับชื่อในฐานข้อมูล</li>
+        <li><strong>Argument ตัวแรกของ <code>pgTable</code> คือชื่อจริงในฐานข้อมูล</strong> ส่วนชื่อ Const ทางซ้ายคือชื่อที่เราเรียกในโค้ด ผมให้ตรงกันเสมอเพื่อไม่ให้สับสน</li>
+        <li>เช่นเดียวกัน <strong>String ที่ใส่ใน Function ของแต่ละคอลัมน์คือชื่อคอลัมน์จริง</strong> สังเกตว่า <code>firstName</code> ในโค้ดแมปไปเป็น <code>first_name</code> ในฐานข้อมูล เพราะธรรมเนียมของ Relational Database คือ Snake Case ส่วนธรรมเนียมของ JavaScript คือ Camel Case Drizzle เลยให้เราเขียนสองชื่อคู่กันแบบนี้</li>
+        <li><code>uuid('id').primaryKey().defaultRandom()</code> คือ Primary Key ที่เป็น UUID และให้ฐานข้อมูลสุ่มค่าให้เองตอนสร้างแถวใหม่ ข้อดีของ UUID คือไม่ซ้ำกันข้ามระบบ ใส่ใน URL ได้ และไม่หลุดข้อมูลว่าเรามีผู้ใช้กี่คนเหมือนเลขรันนิ่ง</li>
+        <li><strong>ทุกคอลัมน์ที่ไม่ใช่ Primary Key เป็น Optional โดยปริยาย</strong> ถ้าอยากบังคับต้องเติม <code>.notNull()</code> เอง สังเกตว่า <code>firstName</code> กับ <code>lastName</code> เราไม่บังคับ เพราะบางคนไม่อยากบอกชื่อจริง</li>
+        <li><code>.defaultNow()</code> บน <code>createdAt</code> และ <code>updatedAt</code> คือให้ฐานข้อมูลเติมเวลาปัจจุบันให้เอง เรื่อง Timestamp นี้เป็น Best Practice ที่ผมจะย้ำอีกครั้งในบทหน้า</li>
+      </ul>
+
+      <h3>varchar กับ text ต่างกันอย่างไร</h3>
+      <p><code>varchar</code> ก็คือ Text ธรรมดานี่แหละ แค่มันจำกัดความยาวได้ ถ้าไม่ใส่ <code>length</code> เลยมันก็เท่ากับ <code>text</code> เป๊ะ ๆ</p>
+      <p>ผมใส่ <code>length</code> ให้ <code>email</code> ไว้ 255 ไม่ใช่เพราะเชื่อว่าเป็นวิธีที่ดีที่สุด แต่เพื่อให้คุณเห็นว่ามันทำอะไรได้ จะจำกัดความยาวอีเมลจริง ๆ หรือไม่ก็แล้วแต่คุณ ส่วนคอลัมน์อย่าง <code>description</code> ที่เราไม่อยากจำกัดอะไรเลย ใช้ <code>text</code> ไปตรง ๆ ง่ายกว่า</p>
+
+      <h3><code>.unique()</code> คือทางลัดของการสร้าง Unique Index</h3>
+      <p>คุณเจอ Index มาแล้วในคอร์ส Database ของ Week 8 ขอทวนสั้น ๆ ในภาษาที่ใช้กับงานนี้ Index คือที่เก็บแยกอีกที่หนึ่งในฐานข้อมูล ที่จับคู่ Key ไว้กับ<em>ตำแหน่ง</em>ของข้อมูล พูดแบบ JavaScript มันคือ Object ที่ทำหน้าที่เป็น Hash Table นั่นเอง</p>
+      <p>ถ้าไม่มี Index การหาอะไรสักอย่างแปลว่าต้องไล่สแกนทั้งตาราง แต่ถ้ามี Index ฐานข้อมูลจะสแกนแค่ตัว Index ที่เล็กกว่ามาก (บางระบบเก็บไว้ใน Memory เลย) เจอ Key แล้วกระโดดไปที่ตำแหน่งของข้อมูลได้ทันที</p>
+      <p>การเติม <code>.unique()</code> จึงหมายความสองอย่างพร้อมกัน คือ<strong>ห้ามมีอีเมลซ้ำในระบบ</strong> และ<strong>สร้าง Index ให้คอลัมน์นี้ด้วย</strong> เพื่อให้ตอนมีคนสมัครใหม่ ฐานข้อมูลตอบได้ทันทีว่าอีเมลนี้มีคนใช้แล้วหรือยัง โดยไม่ต้องไล่สแกนผู้ใช้ทั้งตาราง</p>
+      <p>สังเกตว่า <code>password</code> เรา <em>ไม่</em> ใส่ <code>.unique()</code> ซึ่งฟังดูตลกแต่มีคนพลาดจริง ลองคิดดูว่าถ้ารหัสผ่านห้ามซ้ำ พอสมัครไม่ผ่านปุ๊บก็แปลว่ามีคนใช้รหัสนี้อยู่ เหลือแค่หาอีเมลให้เจอก็เข้าระบบได้เลย</p>
+      <p>อีกเรื่องที่อยากให้เห็นคือ <strong>Validation เกิดได้หลายชั้น</strong> ทั้งที่ Form ฝั่งหน้าบ้าน ที่ Middleware ที่เราเขียนไปในบทที่ 12 และที่ระดับ Database ตรงนี้ ชั้นนอกข้ามได้ง่าย แต่ชั้นในสุดข้ามไม่ได้เลย ยิ่งกฎตรงกันทุกชั้นยิ่งดี</p>
+
+      <h2>ตาราง habits และ Foreign Key ตัวแรกของเรา</h2>
+      <pre><code>export const habits = pgTable('habits', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .references(() =&gt; users.id, { onDelete: 'cascade' })
+    .notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  frequency: varchar('frequency', { length: 20 }).notNull(), // daily, weekly, monthly
+  targetCount: integer('target_count').default(1), // ทำกี่ครั้งต่อรอบ
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})</code></pre>
+      <p><code>userId</code> คือ Foreign Key ตัวแรกของเรา กฎข้อแรกคือ<strong>ชนิดต้องตรงกับ Primary Key ที่มันชี้ไป</strong> ฝั่ง <code>users.id</code> เป็น <code>uuid</code> ฝั่งนี้ก็ต้องเป็น <code>uuid</code></p>
+      <p><code>.references()</code> รับ Function เข้าไป ไม่ได้รับตัวตารางตรง ๆ ซึ่งจำเป็น เพราะตอน JavaScript อ่านบรรทัดนี้ ตารางที่ถูกอ้างถึงอาจยังไม่ถูกสร้างขึ้น การห่อด้วย Function ทำให้ค่าถูกอ่านทีหลังตอนที่ทุกอย่างพร้อมแล้ว</p>
+      <p><code>{ onDelete: 'cascade' }</code> คือคำสั่งว่า<strong>ถ้า User ที่ถูกอ้างถึงถูกลบ ให้ลบ Habit นี้ตามไปด้วย</strong> ซึ่งสมเหตุสมผล เพราะ Habit ที่ไม่มีเจ้าของก็ไม่มีความหมาย</p>
+      <p>และเพราะเราเติม <code>.notNull()</code> ด้วย จึง<strong>สร้าง Habit โดยไม่ผูกกับ User ไม่ได้เลย</strong> ฐานข้อมูลจะปฏิเสธตั้งแต่ต้น ไม่ต้องรอให้โค้ดเราตรวจ</p>
+      <p>คอลัมน์ที่เหลือ <code>frequency</code> คือรอบการทำ เช่น daily, weekly, monthly ตรงนี้จริง ๆ ควรใช้ Enum จะดีกว่า แต่ผมยังไม่ใส่และจะกลับมาคุยเรื่องนี้ในบทหน้า <code>targetCount</code> คือเป้าหมายว่าต้องทำกี่ครั้งต่อรอบ เผื่อ Habit อย่าง "ดื่มน้ำแปดแก้วต่อวัน" และ <code>isActive</code> ให้ซ่อน Habit ที่เลิกทำแล้วโดยไม่ต้องลบประวัติทิ้ง</p>
+      <p>ข้อนี้เป็นอีกเหตุผลที่ผมชอบ Drizzle คือ<strong>เราเขียน JavaScript ปนลงมาในนี้ได้เลย</strong> จะคำนวณค่า Default ด้วย Function ก็ทำได้ ซึ่งใน Prisma ทำไม่ได้เพราะมันไม่ใช่ JavaScript</p>
+
+      <h2>ตาราง entries</h2>
+      <pre><code>export const entries = pgTable('entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  habitId: uuid('habit_id')
+    .references(() =&gt; habits.id, { onDelete: 'cascade' })
+    .notNull(),
+  completion_date: timestamp('completion_date').defaultNow().notNull(),
+  note: text('note'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})</code></pre>
+      <p>รูปแบบเดิมทุกอย่าง Entry หนึ่งแถวคือ "ทำ Habit นี้สำเร็จหนึ่งครั้ง" ความสัมพันธ์เป็น One-to-Many อีกครั้ง Foreign Key จึงอยู่ฝั่ง Many ตามเคย และ Cascade ก็สมเหตุสมผล เพราะถ้า Habit ถูกลบ ประวัติการทำ Habit นั้นก็ไม่ควรค้างอยู่</p>
+      <p><code>completion_date</code> ใส่ <code>.defaultNow()</code> ไว้ เพราะปกติแถวนี้ถูกสร้างตอนที่คุณเพิ่งทำเสร็จพอดี ส่วน <code>note</code> เป็น Optional เผื่ออยากบันทึกอะไรไว้</p>
+      <p>สังเกตว่าคอลัมน์นี้ชื่อ <code>completion_date</code> ทั้งฝั่งโค้ดและฝั่งฐานข้อมูล ไม่ได้เป็น Camel Case เหมือนคอลัมน์อื่น อันนี้คือหน้าตาที่มันเป็นจริงในโปรเจกต์ ให้จำชื่อนี้ไว้ เพราะเราจะใช้มันตอนเขียน Seed และ Controller ในบทถัด ๆ ไป</p>
+
+      <h2>ตาราง tags กับกับดักเรื่อง Unique</h2>
+      <pre><code>export const tags = pgTable('tags', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 50 }).notNull().unique(),
+  color: varchar('color', { length: 7 }).default('#6B7280'), // hex color
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})</code></pre>
+      <p><code>color</code> ยาว 7 ตัวอักษรพอดีสำหรับ Hex Color อย่าง <code>#6B7280</code> ตรงนี้ไม่มีอะไรซับซ้อน แต่บรรทัด <code>name</code> มีกับดักที่ผมอยากให้เห็น</p>
+      <p>การใส่ <code>.unique()</code> ตรงนี้แปลว่าชื่อ Tag <strong>ห้ามซ้ำกันทั้งระบบ</strong> ซึ่งหมายความว่าถ้าผมสร้าง Tag ชื่อ Fitness ไปแล้ว คุณจะสร้าง Tag ชื่อเดียวกันบนบัญชีของคุณไม่ได้เลย ทั้งที่มันควรเป็นของใครของมัน</p>
+      <p>สิ่งที่ถูกต้องกว่าคือทำ Unique บน<em>คู่</em>ของ <code>userId</code> กับ <code>name</code> (ซึ่งต้องเพิ่มคอลัมน์ <code>userId</code> ให้ตาราง <code>tags</code> ก่อน) ซึ่ง Drizzle รองรับผ่าน Compound Index แต่มันซับซ้อนขึ้นอีกระดับ ผมเลยขอคงไว้แบบนี้ก่อนในคอร์ส แล้วบอกให้คุณรู้ว่ามันเป็นข้อจำกัด</p>
+      <p>ที่ยกมาเล่าเพราะกับดักแบบนี้เกิดขึ้นได้จริง Server ตัวแรกในชีวิตผมเคยมีช่องโหว่ที่ใครก็เข้าไปดูข้อมูลของคนอื่นได้ ทั้งที่ตอนนั้นผมคิดว่าเขียนดีมากแล้ว และมันถูกใช้งานจริงด้วย ผิดแล้วก็จำไว้</p>
+
+      <h2>ตาราง habit_tags ตัวเชื่อม Many-to-Many</h2>
+      <pre><code>export const habitTags = pgTable('habit_tags', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  habitId: uuid('habit_id')
+    .references(() =&gt; habits.id, { onDelete: 'cascade' })
+    .notNull(),
+  tagId: uuid('tag_id')
+    .references(() =&gt; tags.id, { onDelete: 'cascade' })
+    .notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})</code></pre>
+      <p>ตารางนี้ไม่มีข้อมูลของตัวเองเลย หน้าที่เดียวของมันคือ<strong>จับคู่ Habit หนึ่งอันเข้ากับ Tag หนึ่งอัน</strong> แล้วมี <code>id</code> ของตัวเองไว้อ้างถึงคู่นั้น</p>
+      <p>ให้เห็นภาพชัด ๆ <strong>หนึ่งความสัมพันธ์เท่ากับหนึ่งแถวในตารางนี้</strong> ถ้า Habit หนึ่งอันติดยี่สิบ Tag จะมียี่สิบแถวที่ <code>habit_id</code> เหมือนกันหมดแต่ <code>tag_id</code> ต่างกัน ถ้า Tag หนึ่งอันไปเกาะยี่สิบ Habit ก็จะมียี่สิบแถวที่ <code>tag_id</code> เหมือนกันแต่ <code>habit_id</code> ต่างกัน</p>
+
+      <h2>ประกาศความสัมพันธ์ด้วย relations()</h2>
+      <p>ตอนนี้ฐานข้อมูลรู้จักความสัมพันธ์แล้วผ่าน Foreign Key แต่ตัว ORM ยังไม่รู้ว่าเราอยากให้ Query ออกมาหน้าตาแบบไหน นั่นคืองานของ <code>relations()</code></p>
+      <p>คิดง่าย ๆ ว่า <code>.references()</code> คือการบอก<em>ฐานข้อมูล</em> ส่วน <code>relations()</code> คือการบอก<em>Drizzle</em> ว่าเราอยากได้ Field ใหม่อะไรงอกขึ้นมาตอน Query</p>
+      <pre><code>export const usersRelations = relations(users, ({ many }) =&gt; ({
+  habits: many(habits),
+}))
+
+export const habitsRelations = relations(habits, ({ one, many }) =&gt; ({
+  user: one(users, {
+    fields: [habits.userId],
+    references: [users.id],
+  }),
+  entries: many(entries),
+  habitTags: many(habitTags),
+}))
+
+export const entriesRelations = relations(entries, ({ one }) =&gt; ({
+  habit: one(habits, {
+    fields: [entries.habitId],
+    references: [habits.id],
+  }),
+}))
+
+export const tagsRelations = relations(tags, ({ many }) =&gt; ({
+  habitTags: many(habitTags),
+}))
+
+export const habitTagsRelations = relations(habitTags, ({ one }) =&gt; ({
+  habit: one(habits, {
+    fields: [habitTags.habitId],
+    references: [habits.id],
+  }),
+  tag: one(tags, {
+    fields: [habitTags.tagId],
+    references: [tags.id],
+  }),
+}))</code></pre>
+      <p>วิธีอ่านมีแค่นี้ <code>relations()</code> รับตารางที่เราจะประกาศเป็น Argument แรก แล้วรับ Callback ที่เรา Destructure เอา <code>one</code> หรือ <code>many</code> ออกมาใช้ตามชนิดความสัมพันธ์ สิ่งที่ Callback คืนคือ Object ของ<strong>Field ใหม่ที่เราอยากให้มี</strong></p>
+      <p>อย่าง <code>usersRelations</code> อ่านว่า "ถ้า Query User ให้มี Field ชื่อ <code>habits</code> ที่เป็น Habit ทั้งหมดของ User คนนั้น" ฝั่ง <code>many</code> ง่ายเพราะ Drizzle หาทางเชื่อมได้เองจาก Foreign Key ที่เราประกาศไว้แล้ว</p>
+      <p>ฝั่ง <code>one</code> ต้องบอกเพิ่ม อย่างใน <code>habitsRelations</code> เราบอกว่าอยากได้ Field ใหม่ชื่อ <code>user</code> โดยที่ <code>fields</code> คือคอลัมน์บนตารางนี้ที่ใช้เชื่อม และ <code>references</code> คือคอลัมน์ปลายทางที่มันต้องตรงกัน ย้ำว่า<strong>บนตาราง <code>habits</code> ไม่มี Field ชื่อ <code>user</code> อยู่จริง</strong> มีแค่ <code>userId</code> สิ่งที่เรากำลังทำคือขอให้ Drizzle เสกมันขึ้นมาให้เวลาเรา Query</p>
+      <p>ส่วน <code>habitTagsRelations</code> ประกาศเป็น <code>one</code> ทั้งสองฝั่ง เพราะเมื่อมองจากตารางกลาง หนึ่งแถวผูกกับ Habit หนึ่งอันและ Tag หนึ่งอันเท่านั้น ความเป็น Many-to-Many เกิดขึ้นเมื่อมองภาพรวมจากการที่มีหลายแถว</p>
+
+      <h2>สามเรื่องที่ต้องระวัง</h2>
+      <p><strong>หนึ่ง Drizzle ไม่ช่วยจับผิดชื่อคอลัมน์ใน <code>fields</code></strong> ถ้าคุณใส่คอลัมน์ที่มีอยู่จริงบนตารางนั้นแต่เป็นคอลัมน์ผิดตัว TypeScript จะไม่ฟ้องอะไรเลย เพราะมันเป็นคอลัมน์ที่ถูกต้องตาม Type ผมเองติดกับข้อนี้มานับครั้งไม่ถ้วน นั่งงงว่าทำไมข้อมูลไม่โผล่ ทั้งที่ตอนนั้นเปิด Note ที่ตัวเองเขียนไว้อยู่ตรงหน้า ให้อ่านสองรอบทุกครั้ง</p>
+      <p><strong>สอง ทำไม <code>relations()</code> ต้องแยกจาก <code>.references()</code></strong> คำถามนี้ดีมากและผมก็เคยสงสัย เหตุผลที่ผมเดาได้คือถ้าเราประกาศ Field แบบ <code>user</code> ไว้ในตัวนิยามตาราง มันจะกลายเป็นการอ้างถึงตารางอื่นภายในตัวนิยามของตัวเอง ซึ่งพันกันยุ่งมาก แยกออกมาแบบนี้ตรงไปตรงมากว่า ถึงจะดูเยิ่นเย้อไปหน่อยก็ตาม</p>
+      <p><strong>สาม จะแยก Schema เป็นหลายไฟล์ก็ได้</strong> เหมือนที่เราแยก Route ออกเป็นไฟล์ละ Resource บางโปรเจกต์ของผมที่มีเกิน 50 ตารางก็ต้องแยก เพราะเปิดไฟล์เดียวแล้วมึน แต่ของเรามีร้อยกว่าบรรทัด ผมเลยรวมไว้ไฟล์เดียว ถ้าคุณจะแยก ให้ระวังเรื่อง Circular Dependency เพราะไฟล์ตารางอาจ Import กันไปมา ซึ่งเป็นเรื่องที่ต้องมาแก้เพิ่ม แต่ในแง่ความสามารถแล้วไม่ต่างกันเลย</p>
+      <p>Schema ของเราครบแล้ว บทหน้าเราจะดึงประโยชน์จากมันต่อ ด้วยการ Export TypeScript Type และ Zod Schema ออกมาจากตารางพวกนี้โดยไม่ต้องเขียนซ้ำ</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="15_database_migrations.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="17_schema_types_and_best_practices.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

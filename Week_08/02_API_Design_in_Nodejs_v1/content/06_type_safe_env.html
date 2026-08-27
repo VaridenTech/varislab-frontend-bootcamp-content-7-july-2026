@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="สร้างไฟล์ env.ts ที่ตรวจสอบ Environment Variables ด้วย Zod ตั้งแต่ Schema, z.infer, การ Fail Fast ด้วย process.exit ไปจนถึงการนำ env ไปใช้ใน src/index.ts" />
+  <title>Environment Variables แบบ Type-safe — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Environment Variables แบบ Type-safe</h1>
+      <p>บทที่แล้วเรารู้จัก Environment Variables และย้ายเลข Port ออกจากโค้ดไปแล้ว แต่เราทิ้งปัญหาไว้สามข้อ คือไม่มี Type, ไม่มีการตรวจสอบค่า และ Editor ไม่ช่วยเติมชื่อให้</p>
+      <p>บทนี้เราจะสร้างไฟล์ <code>env.ts</code> ที่รากของโปรเจกต์ขึ้นมาแก้ทั้งสามข้อในทีเดียว นี่เป็นไฟล์ที่หลายคนไม่ค่อยทำกัน แต่พอทำแล้วจะติดใจจนต้องทำทุกโปรเจกต์</p>
+
+      <h2>ปัญหาของ process.env แบบดิบ ๆ</h2>
+      <p>ลองดูโค้ดสามบรรทัดนี้ ทุกบรรทัดคือระเบิดเวลา</p>
+      <pre><code>const port = process.env.PORT || 3000     // Type เป็น string | number
+const dbUrl = process.env.DATABASE_URL    // อาจเป็น undefined
+const jwtSecret = process.env.JWT_SECRET  // ไม่มีใครตรวจว่าสั้นเกินไปหรือเปล่า</code></pre>
+      <p>ปัญหาที่แท้จริงไม่ใช่แค่เรื่อง Type แต่คือ<strong>เราจะรู้ว่าตัวแปรหายไปก็ตอนที่โค้ดวิ่งไปถึงบรรทัดที่ใช้มันแล้ว</strong> ลองนึกภาพว่าคุณ Deploy แอปขึ้น Production ทุกอย่างดูปกติดี แล้วอีกสามวันต่อมามีคนกดปุ่มที่ไปเรียกโค้ดส่วนที่ต้องใช้ <code>DATABASE_URL</code> พอดี แล้วแอปพังทั้งระบบ ทั้งที่สาเหตุคือเราลืมกรอกค่าตั้งแต่วันแรก</p>
+      <p>สิ่งที่เราอยากได้คือ ถ้าตัวแปรที่จำเป็นไม่ครบ <strong>ให้ Server ตายตั้งแต่วินาทีที่มันพยายามจะสตาร์ท</strong> พร้อมบอกให้ชัดว่าขาดตัวไหน แนวคิดนี้เรียกว่า Fail Fast และมันจะช่วยชีวิตคุณตอน Deploy อีกหลายครั้งในอนาคต</p>
+      <p>ของแถมอีกข้อคือ Editor จะเติมชื่อตัวแปรให้เราอัตโนมัติ และเราไม่ต้องพิมพ์คำว่า <code>process.env.</code> นำหน้าทุกครั้งอีกต่อไป</p>
+
+      <h2>Zod คือ TypeScript ที่ทำงานตอน Runtime</h2>
+      <p>TypeScript ตรวจ Type ให้เราตอนที่เราพิมพ์โค้ดและตอน Build เท่านั้น แต่ตอนโปรแกรมรันจริง TypeScript ไม่มีตัวตนอยู่แล้ว เพราะ V8 ไม่รู้จักมัน Type ทั้งหมดถูกลบทิ้งไปก่อนหน้านั้น</p>
+      <p>แล้วถ้าเราอยากตรวจ<em>ค่าจริง</em>ที่ไหลเข้ามาตอน Runtime ล่ะ นั่นคือหน้าที่ของ Zod พูดให้ชัดคือ TypeScript ตรวจ<em>โค้ด</em> ส่วน Zod ตรวจ<em>ค่า</em> เราจะเขียน Schema ขึ้นมาหนึ่งชุด แล้วให้ Zod เอา Schema นั้นไปตรวจข้อมูลจริงให้เรา</p>
+      <pre><code>npm install zod</code></pre>
+      <p>ถ้าเจอ Error ว่าหา Package ไม่เจอเมื่อไหร่ ก็แค่ <code>npm install</code> ตัวนั้นเพิ่ม อาการนี้จะตามหลอกหลอนคุณไปตลอดชีวิตการเขียนโค้ด</p>
+
+      <h2>เขียน Schema ของ Environment</h2>
+      <p>ในไฟล์ <code>env.ts</code> ให้เพิ่ม Import ของ Zod ไว้บนสุดคู่กับ <code>custom-env</code> แล้วเขียน Schema ต่อจากส่วนโหลดไฟล์ <code>.env</code> ที่เราเขียนไว้ในบทที่แล้ว</p>
+      <pre><code>import { z } from 'zod'
+
+const envSchema = z.object({
+  NODE_ENV: z
+    .enum(['development', 'test', 'production'])
+    .default('development'),
+
+  APP_STAGE: z.enum(['dev', 'test', 'production']).default('dev'),
+
+  PORT: z.coerce.number().positive().default(3000),
+  DATABASE_URL: z.string().startsWith('postgresql://'),
+  JWT_SECRET: z.string().min(32, 'Must be 32 chars long'),
+  JWT_EXPIRES_IN: z.string().default('7d'),
+  BCRYPT_ROUNDS: z.coerce.number().min(10).max(20).default(12),
+})</code></pre>
+      <p>วิธีอ่าน Schema นี้คือ Key ทางซ้ายคือชื่อ Environment Variable ที่เราคาดหวังว่าจะมี ส่วนทางขวาคือกฎที่ค่านั้นต้องผ่าน มาไล่ดูทีละตัว</p>
+      <ul>
+        <li><code>z.enum([...])</code> แปลว่าค่าต้องเป็นหนึ่งในลิสต์นี้เท่านั้น (คำว่า Enum ย่อมาจาก Enumeration หมายถึงการไล่ตัวเลือกทั้งหมดออกมา) ส่วน <code>.default(...)</code> คือค่าที่จะใช้ถ้าไม่มีใครตั้งมา ทั้งสองตัวนี้จึงไม่บังคับว่าต้องมี</li>
+        <li><code>PORT</code> ใช้ <code>z.coerce.number()</code> เพราะ<strong>ทุก Environment Variable เป็น String เสมอ</strong> ไม่มีข้อยกเว้น มันคือ Text ล้วน ๆ คำว่า Coerce คือสั่งให้ Zod แปลงค่าให้เป็นชนิดที่เราต้องการก่อนตรวจ แล้วเราค่อยเติม <code>.positive()</code> ว่าต้องเป็นเลขบวก และ <code>.default(3000)</code> ให้ตรงกับเลขที่เรา Hardcode ไว้เดิม</li>
+        <li><code>DATABASE_URL</code> เป็น String ที่ต้องขึ้นต้นด้วย <code>postgresql://</code> ตรงนี้คือ Protocol ของ URL ซึ่งไม่ได้มีแค่ <code>http</code> กับ <code>file</code> ใครจะสร้าง Protocol ของตัวเองก็ได้ (แอปบนมือถือทุกตัวก็มี Protocol ของตัวเองไว้ทำ Deep Link) ฐานข้อมูลก็เช่นกัน การเช็คแค่คำนำหน้าก็ช่วยดักคนที่วางค่าผิดชนิดมาได้เยอะแล้ว</li>
+        <li><code>JWT_SECRET</code> ต้องยาวอย่างน้อย 32 ตัวอักษร สังเกตว่าเราใส่ข้อความเป็น Argument ตัวที่สองได้ นั่นคือ Error Message ที่เราจะเห็นตอนมันไม่ผ่าน ซึ่งช่วยให้เดี๋ยวเราไล่ปัญหาได้เร็วขึ้นมาก</li>
+        <li><code>BCRYPT_ROUNDS</code> เกี่ยวกับการ Hash รหัสผ่าน เราจะพูดถึงมันจริงจังในบทที่ 21 ส่วนตัวเลข 10 ถึง 20 มาจากคำแนะนำทั่วไป ไม่ใช่เลขศักดิ์สิทธิ์อะไร</li>
+      </ul>
+      <p>ตัวไหนที่<strong>ไม่มี</strong> <code>.default()</code> แปลว่าบังคับต้องมี ในที่นี้คือ <code>DATABASE_URL</code> กับ <code>JWT_SECRET</code> ถ้าขาดไปแอปจะไม่ยอมสตาร์ท</p>
+
+      <h2>สร้าง Type จาก Schema ด้วย z.infer</h2>
+      <p>จุดที่ Zod เจ๋งที่สุดคือเราสร้าง TypeScript Type ขึ้นมาจาก Schema ได้เลย โดยไม่ต้องนั่งเขียน Type ซ้ำอีกรอบ</p>
+      <pre><code>export type Env = z.infer&lt;typeof envSchema&gt;
+let env: Env</code></pre>
+      <p>ของที่อยู่ในวงเล็บแหลมเรียกว่า Generic ให้นึกภาพว่ามันคือการส่ง Argument เข้าไปใน Type เหมือนที่เราส่ง Argument เข้า Function นั่นแหละ ในที่นี้เราส่ง Type ของ <code>envSchema</code> เข้าไปให้ <code>z.infer</code> แล้วมันจะคายหน้าตาของ Object ที่ผ่านการตรวจแล้วออกมาให้เรา</p>
+      <p>ผลลัพธ์คือเรามี Schema ชุดเดียวแต่ได้ประโยชน์สองต่อ คือได้ Type Checking ตอนพัฒนาจาก TypeScript และได้การตรวจค่าจริงตอน Runtime จาก Zod</p>
+
+      <h2>ตรวจค่าและตายให้ไวถ้าไม่ผ่าน</h2>
+      <p>ทีนี้ก็ถึงเวลาเอา Schema ไปใช้จริง</p>
+      <pre><code>try {
+  env = envSchema.parse(process.env)
+} catch (e) {
+  if (e instanceof z.ZodError) {
+    console.log('Invalid env var')
+    console.error(JSON.stringify(e.flatten().fieldErrors, null, 2))
+
+    e.issues.forEach((err) =&gt; {
+      const path = err.path.join('.')
+      console.log(`${path}: ${err.message}`)
+    })
+
+    process.exit(1)
+  }
+
+  throw e
+}</code></pre>
+      <p>หัวใจอยู่ที่ <code>envSchema.parse(process.env)</code> บรรทัดเดียว เราโยน <code>process.env</code> ทั้งก้อนเข้าไปได้เลย เพราะมันก็เป็นแค่ Object ที่มี Key กับ Value ธรรมดา ๆ ตัวไหนตรงกับ Schema ก็ถูกดึงออกมาแปลงและตรวจให้ ตัวที่ไม่ได้อยู่ใน Schema ก็ถูกมองข้ามไป</p>
+      <p>ถ้ามีอะไรไม่ผ่าน Zod จะ Throw Error ออกมา เราจึงครอบด้วย <code>try...catch</code> ไว้ แล้วในนั้นมีรายละเอียดที่น่าสนใจหลายจุด</p>
+      <ul>
+        <li>เราเช็ค <code>e instanceof z.ZodError</code> ก่อน เพื่อให้แน่ใจว่าเป็นปัญหาเรื่องการตรวจค่าจริง ๆ ไม่ใช่ Error อื่นที่บังเอิญเกิดขึ้น ถ้าไม่ใช่ก็ <code>throw</code> ต่อไปตามปกติ</li>
+        <li><code>e.flatten().fieldErrors</code> ช่วยแบน Error ที่ Zod ซ้อนกันหลายชั้นให้เหลือรูปแบบที่อ่านง่าย</li>
+        <li><code>JSON.stringify(..., null, 2)</code> คือทริกที่ควรจำไว้ใช้ตลอดชีวิต เพราะ <code>console.log</code> ของ Node.js จะย่อ Object ที่ลึกเกินสามชั้นให้เหลือแค่คำว่า <code>[Object]</code> การ Stringify ทำให้เห็นครบทุกชั้น ส่วนเลข <code>2</code> ตัวท้ายคือให้จัดย่อหน้าให้สวยงามด้วยการเว้น 2 ช่อง ไม่งั้นมันจะพ่นออกมาเป็นบรรทัดยาวเหยียดบรรทัดเดียว</li>
+        <li><code>e.issues</code> คือรายการปัญหาทั้งหมดที่เจอ เราวนอ่านทีละตัวเพื่อ Log ว่า Field ไหนพังเพราะอะไร คำว่า <code>path</code> ตรงนี้ไม่ใช่ Path ของไฟล์ แต่เป็นตำแหน่งของ Field ใน Object ที่เราตรวจ (ถ้าเป็น Object ซ้อนกันก็จะเห็นเป็น <code>a.b.c</code>) ถ้าคุณไปเจอตัวอย่างเก่า ๆ ที่เขียนว่า <code>e.errors</code> นั่นคือชื่อเดิมของ Zod รุ่นก่อน ปัจจุบันเปลี่ยนมาเป็น <code>issues</code> แล้ว</li>
+        <li><code>process.exit(1)</code> คือคำสั่งฆ่า Process ของตัวเองทิ้ง ตัวเลขที่ใส่คือ Exit Code โดย <code>0</code> แปลว่าจบแบบปกติ ส่วน <code>1</code> แปลว่าจบเพราะมีข้อผิดพลาด ซึ่งจำเป็นมากเพราะ CI/CD และ Hosting Provider จะดูตัวเลขนี้เพื่อตัดสินว่า Deploy สำเร็จหรือไม่</li>
+      </ul>
+      <p>ปิดท้ายไฟล์ด้วย Helper และ Export</p>
+      <pre><code>export const isProd = () =&gt; env.APP_STAGE === 'production'
+export const isDev = () =&gt; env.APP_STAGE === 'dev'
+export const isTest = () =&gt; env.APP_STAGE === 'test'
+
+export { env }
+export default env</code></pre>
+      <p>Helper สามตัวนี้หน้าตาเหมือนตัวแปร Boolean ที่เราเขียนไว้บนหัวไฟล์ แต่ต่างกันตรงที่ชุดนี้อ้างอิงจาก <code>env</code> ที่ผ่านการตรวจแล้ว เราจะได้เรียกใช้จากที่ไหนก็ได้ในแอปโดยไม่ต้องไปเขียนเงื่อนไขเทียบ String ซ้ำ ๆ ซึ่งวันหนึ่งถ้าเราเปลี่ยนชื่อ Stage เราจะได้แก้ที่เดียว</p>
+
+      <h2>ใช้ env จริงใน src/index.ts</h2>
+      <p>ตอนนี้ <code>env.ts</code> พร้อมแล้ว กลับไปแก้ Entry Point ของเราให้เป็นแบบนี้</p>
+      <pre><code>import { env } from '../env.ts'
+import app from './server.ts'
+
+app.listen(env.PORT, () =&gt; {
+  console.log(`Server running on port ${env.PORT}`)
+  console.log(`Environment: ${env.APP_STAGE}`)
+})</code></pre>
+      <p>ลองพิมพ์ <code>env.</code> ใน Editor ดู คุณจะเห็นรายชื่อตัวแปรทั้งหมดโผล่มาให้เลือก และ <code>env.PORT</code> ก็เป็น <code>number</code> เรียบร้อยแล้วไม่ใช่ <code>string | undefined</code> อีกต่อไป นี่คือผลตอบแทนของงานที่เราเพิ่งทำไป</p>
+      <p>ทดลองของจริงด้วยการลบทุกบรรทัดใน <code>.env</code> ออกให้หมด แล้วรัน <code>npm run dev</code> ใหม่ คุณจะได้เห็นแบบนี้</p>
+      <pre><code>Invalid env var
+{
+  "DATABASE_URL": [
+    "Required"
+  ],
+  "JWT_SECRET": [
+    "Required"
+  ]
+}</code></pre>
+      <p>Server ไม่ยอมสตาร์ทเลยแม้แต่นิดเดียว ซึ่งเป็นสิ่งที่เราต้องการเป๊ะ ๆ ให้ใส่ค่ากลับเข้าไปใน <code>.env</code> จะเป็นค่าอะไรก็ได้ตอนนี้ ขอแค่ <code>DATABASE_URL</code> ขึ้นต้นด้วย <code>postgresql://</code> และ <code>JWT_SECRET</code> ยาวเกิน 32 ตัวอักษร แล้วรันใหม่อีกครั้ง</p>
+      <p>มีอีกเรื่องที่ต้องรู้ไว้ คือถ้าคุณแก้ไฟล์ <code>.env</code> คุณ<strong>ต้องรีสตาร์ท Server เอง</strong> เพราะ Flag <code>--watch</code> เฝ้าดูแค่ไฟล์โค้ด ไม่ได้เฝ้าไฟล์ <code>.env</code> ให้</p>
+
+      <h2>เทคนิคเพิ่มเติมที่ทำได้</h2>
+      <p>พอ Environment เป็น Code แล้ว เราจะต่อยอดอะไรก็ได้ ตัวอย่างที่ใช้กันบ่อยคือ<strong>ตั้งกฎหรือค่า Default ต่างกันตาม Stage</strong> โดยใช้ตัวแปร Boolean ที่เราเขียนไว้บนหัวไฟล์มาช่วย</p>
+      <pre><code>LOG_LEVEL: z
+  .enum(['error', 'warn', 'info', 'debug', 'trace'])
+  .default(isProduction ? 'info' : 'debug'),</code></pre>
+      <p>ด้วยวิธีเดียวกันนี้ เราทำให้ตัวแปรบางตัว<strong>บังคับเฉพาะตอน Production</strong> แต่ไม่บังคับตอนพัฒนาก็ได้ หรือจะใช้เป็น Feature Flag เพื่อเปิดปิดฟีเจอร์โดยไม่ต้อง Deploy ใหม่ก็ได้เช่นกัน</p>
+      <p>ส่วนเรื่องความปลอดภัย มีสามข้อที่ควรจำติดตัวไว้</p>
+      <ul>
+        <li><strong>อย่า Commit <code>.env</code> ขึ้น GitHub เด็ดขาด</strong> ย้ำอีกครั้งเพราะเป็นข้อที่คนพลาดกันมากที่สุด</li>
+        <li><strong>หมุนเปลี่ยน Secret เป็นระยะ</strong> (Rotate) คือการสร้างค่าใหม่แล้วยกเลิกค่าเก่าทุก ๆ ช่วงเวลาหนึ่ง เหมือนการเปลี่ยนรหัสผ่านตามรอบ เผื่อวันที่ค่าเก่าหลุดออกไปโดยที่เราไม่รู้ตัว</li>
+        <li><strong>โปรเจกต์ใหญ่ให้ใช้ Secrets Manager</strong> เช่น HashiCorp Vault แนวคิดคือเก็บ Environment Variables ทั้งหมดไว้ที่เดียว แล้วแอปดึงไปใช้ผ่าน SDK หรือ URL เส้นเดียว คล้ายหน้า Settings ของ Hosting Provider แต่ไม่ผูกกับเจ้าใดเจ้าหนึ่ง และใช้บนเครื่องตัวเองได้ด้วย ข้อดีคือคนเข้าใหม่แค่ต่อเข้า Vault ก็ทำงานได้ทันทีโดยไม่ต้องรู้ค่าจริงสักตัว</li>
+      </ul>
+      <p>โปรเจกต์ใหญ่ ๆ ในโลกจริงมีตัวแปรเกินร้อยตัวก็มี ถ้าไม่มีไฟล์อย่าง <code>env.ts</code> คงไม่มีใครในทีมจำได้ว่าตัวแปรไหนมีอยู่บ้างและตัวไหนบังคับ ลงทุนเขียนไฟล์นี้ครั้งเดียวตอนเริ่มโปรเจกต์ คุ้มกว่ามานั่งไล่บั๊กทีหลังเสมอ</p>
+      <p>รากฐานของ Server เราแน่นพอแล้ว บทถัดไปเราจะเริ่มเข้าเรื่อง HTTP Verbs และการออกแบบ Route ให้เป็น RESTful กัน</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="05_environment_variables.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="07_http_verbs_and_rest.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เขียน verifyToken ใน src/utils/jwt.ts ต่อด้วย Middleware authenticateToken ที่อ่าน Authorization Bearer Header แล้วแปะ User ไว้ที่ req.user จากนั้นล็อก habitRoutes และ userRoutes ด้วย router.use" />
+  <title>Auth Middleware และ Protected Routes — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Auth Middleware และ Protected Routes</h1>
+      <p>เราทำ JWT ครึ่งแรกไปแล้ว คือการสร้างมันตอนสมัครและตอนล็อกอิน บทนี้เราจะทำครึ่งหลัง คือ<strong>เอา Token ที่ Client ส่งกลับขึ้นมามาใช้จริง</strong></p>
+      <p>เปรียบเทียบที่ผมชอบใช้คือ API ของเราเหมือน<strong>การ์ดหน้าผับ</strong> เขาปล่อยคุณเข้าไปรอบแรก คุณเดินออกไปหยิบของที่รถแล้วเดินกลับเข้ามา เขาจำคุณไม่ได้ ต้องขอดูบัตรใหม่ ค้นตัวใหม่ ทุกอย่างใหม่หมด และต่อให้คุณมาที่นี่ทุกวันตลอดทั้งปี ก็เป็นแบบนี้ทุกครั้ง Server ของเราจะเป็นแบบนั้นเป๊ะ ๆ</p>
+
+      <h2>Bearer Token Pattern</h2>
+      <p>รูปแบบมาตรฐานของวงการคือแนบ Token ไว้ที่ <strong>Header ชื่อ <code>Authorization</code></strong> โดยค่าของมันคือคำว่า <code>Bearer</code> เว้นวรรค แล้วตามด้วย Token</p>
+      <pre><code>Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</code></pre>
+      <p>ถ้าใครยังไม่ชิน Header คือ Object แบบ Key-Value ที่ถูกส่งไปกับทุก Request เพื่อบอกข้อมูลประกอบ เช่นมาจากไหน จะให้ Cache อย่างไร ใช้ Content-Type อะไร รวมถึงเรื่อง Authorization แบบนี้ และเราสร้าง Header ของตัวเองได้ด้วย มันแทบจะเป็นสิ่งที่ทรงพลังที่สุดใน HTTP ทั้งที่หน้าตาเป็นแค่ Object ธรรมดา</p>
+      <p>เหตุผลที่วงการเลือกแบบนี้คือมัน Stateless (ไม่ต้องเก็บ Session ฝั่ง Server) Scalable (Server กี่ตัวก็ตรวจได้เองโดยไม่ต้องแชร์อะไรกัน) เป็นมาตรฐานที่ทุกภาษาทุก Framework รองรับ และเพราะไม่ได้อยู่ใน Cookie จึงไม่มีปัญหาเรื่อง CSRF</p>
+      <p>หน้าที่ของ Server คือ อ่าน Header หา Token ถอดมันออกมา ยืนยันว่าเป็นของจริง แล้วปล่อยผ่าน</p>
+
+      <h2>เพิ่ม verifyToken</h2>
+      <p>กลับไปที่ <code>src/utils/jwt.ts</code> แล้วเขียนฟังก์ชันที่เป็นด้านกลับของ <code>generateToken</code> อย่าลืมเพิ่ม <code>jwtVerify</code> เข้าไปใน Import ของ <code>jose</code> ด้วย</p>
+      <pre><code>import { SignJWT, jwtVerify } from 'jose'
+
+export const verifyToken = async (token: string): Promise&lt;JwtPayload&gt; =&gt; {
+  const secretKey = createSecretKey(env.JWT_SECRET, 'utf-8')
+  const { payload } = await jwtVerify(token, secretKey)
+
+  return payload as unknown as JwtPayload
+}</code></pre>
+      <p>เราสร้าง Secret Key ด้วยวิธีเดียวกับตอนเซ็นเป๊ะ ๆ ทั้ง Secret เดียวกันและ Encoding เดียวกัน ถ้าอะไรสักอย่างไม่ตรงการตรวจจะไม่ผ่าน</p>
+      <p><code>jwtVerify</code> ทำสามอย่างให้เราในคราวเดียว คือ <strong>ตรวจลายเซ็น</strong> (พิสูจน์ว่า Token ใบนี้ออกโดย Server ของเราจริง ไม่ใช่ของปลอมหรือของ Server อื่น) <strong>ตรวจวันหมดอายุ</strong> และ<strong>ถอดกลับเป็น Object</strong> ให้ ถ้าข้อไหนไม่ผ่านมันจะโยน Error ออกมา</p>
+      <p>ส่วน <code>as unknown as JwtPayload</code> เป็นเรื่องของ TypeScript ล้วน ๆ เพราะ jose ประกาศชนิดของ Payload ไว้กว้างมากตามมาตรฐาน JWT เราเลยต้องบอกมันว่าเรารู้ว่าข้างในหน้าตาเป็นอย่างไร ถ้าไม่ชอบการ Cast แบบนี้ อีกทางคือหยิบทีละ Field ออกมาประกอบเอง เช่น <code>id: payload.id as string</code> ซึ่งเขียนยาวกว่าแต่ตรงไปตรงมากว่า</p>
+      <p>สังเกตว่าตอนนี้เราเรียก <code>createSecretKey</code> สองที่แล้ว ถ้าโปรเจกต์โตกว่านี้ผมจะแยกมันออกเป็นฟังก์ชันเล็ก ๆ อีกตัวหนึ่ง</p>
+
+      <h2>สร้าง src/middleware/auth.ts</h2>
+      <p>ทีนี้เอา <code>verifyToken</code> ไปห่อเป็น Middleware เพื่อให้เสียบใช้กับ Route ไหนก็ได้ สร้างไฟล์ <code>src/middleware/auth.ts</code> ข้าง ๆ <code>validation.ts</code></p>
+      <pre><code>import type { Request, Response, NextFunction } from 'express'
+import { verifyToken, type JwtPayload } from '../utils/jwt.ts'
+
+export interface AuthenticatedRequest extends Request {
+  user?: JwtPayload
+}
+
+export const authenticateToken = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) =&gt; {
+  try {
+    const authHeader = req.headers['authorization']
+    const token = authHeader &amp;&amp; authHeader.split(' ')[1] // Bearer TOKEN
+
+    if (!token) {
+      return res.status(401).json({ error: 'Access token required' })
+    }
+
+    const payload = await verifyToken(token)
+    req.user = payload
+    next()
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid or expired token' })
+  }
+}</code></pre>
+
+      <h2>ไล่ดูทีละบรรทัด</h2>
+      <p><strong><code>AuthenticatedRequest</code></strong> คือ Request ของ Express ที่เราต่อยอดด้วย <code>extends</code> ให้มี Field <code>user</code> เพิ่มเข้ามา เพราะเมื่อ Middleware ตรวจ Token ผ่านแล้ว เราจะ<strong>แปะข้อมูล User ไว้บน Request Object</strong> แล้วส่งต่อไปให้ Controller ข้างหลัง สิ่งนี้ไม่ได้เปลี่ยนพฤติกรรมอะไรเลย มันคือ TypeScript ล้วน ๆ แต่ผลที่ได้คือใน Controller คุณพิมพ์ <code>req.user.</code> แล้วเอดิเตอร์จะเติมให้เอง</p>
+      <p>สังเกตว่า <code>user</code> เป็น Optional (มีเครื่องหมายคำถาม) เพราะในทางเทคนิคแล้ว Request ที่ยังไม่ผ่าน Middleware ตัวนี้ย่อมไม่มี <code>user</code></p>
+      <p><strong>อ่าน Header</strong> เราเขียน <code>req.headers['authorization']</code> ตัวพิมพ์เล็กทั้งหมด ทั้งที่มาตรฐาน HTTP เขียนว่า <code>Authorization</code> ตัว A ใหญ่ เหตุผลคือ Express ทำให้ชื่อ Header เป็นตัวพิมพ์เล็กทั้งหมดให้อัตโนมัติเพื่อไม่ให้เราต้องมานั่งเดา ซึ่งพอทำแบบนี้ก็เลยกลายเป็นเรื่องที่ทำให้งงแทน</p>
+      <p><strong>ดึง Token ออกมา</strong> เพราะค่าของ Header คือ <code>Bearer &lt;token&gt;</code> เราจึง <code>.split(' ')</code> ตรงช่องว่าง แล้วหยิบ Index 1 ซึ่งคือตัว Token ส่วน <code>authHeader &amp;&amp;</code> ข้างหน้าเป็นการกันไว้ก่อน เพราะถ้าไม่มี Header เลย <code>authHeader</code> จะเป็น <code>undefined</code> แล้วเรียก <code>.split()</code> ใส่มันตรง ๆ จะพังทันที</p>
+      <p><strong>ไม่มี Token ตอบ 401</strong> เพราะคนนี้ยังไม่ได้พิสูจน์ตัวตนเลยแม้แต่นิดเดียว</p>
+      <p><strong>Token ใช้ไม่ได้ตอบ 403</strong> เพราะโค้ดจะหลุดมาที่ <code>catch</code> ก็ต่อเมื่อ <code>verifyToken</code> โยน Error ซึ่งแปลว่ามี Token แต่มันปลอม หรือมันหมดอายุแล้ว ให้ไปเอาใบใหม่มา และสังเกตว่า<strong>เราไม่บอกว่าเพราะอะไร</strong> เพราะไม่มีประโยชน์ที่จะบอกใบ้คนที่พยายามปลอม Token ว่าเขาพลาดตรงไหน</p>
+      <p>เรื่อง Status Code นี้พลาดกันบ่อยมาก จำง่าย ๆ ว่า <strong>401 คือ "คุณเป็นใครไม่รู้" ส่วน 403 คือ "รู้แล้วว่าคุณเป็นใคร แต่ไม่ให้"</strong></p>
+      <p><strong>ทำไมต้อง <code>try/catch</code></strong> ไม่ใช่เพราะกลัว Server ตายนะครับ ตามที่เราเรียนในบทที่ 13 Express 5 รับ Promise ที่ Reject จาก Async Middleware ไปส่งให้ Error Handler กลางให้เองอยู่แล้ว เหตุผลจริงคือ<strong>เราอยากคุมคำตอบเอง</strong> ถ้าปล่อยให้ <code>verifyToken</code> โยน Error ทะลุออกไป Express จะส่งมันไปให้ Error Handler กลางซึ่งไม่รู้เรื่องอะไรเกี่ยวกับ Auth เลย สิ่งที่ผู้ใช้ได้กลับไปจะเป็น 500 พร้อม Body หน้าตาแบบทั่ว ๆ ไป ทั้งที่ความจริงคือ Token ใช้ไม่ได้ซึ่งต้องเป็น 403 การ Catch เองตรงนี้คือวิธีเดียวที่จะตอบ Status Code และรูปแบบ Body ที่ถูกต้องสำหรับเรื่อง Auth โดยเฉพาะ — เหตุผลเดียวกับที่ <code>validateBody</code> ในบทที่ 12 เลือกจบ <code>ZodError</code> เองแทนที่จะโยนต่อ</p>
+      <p>และย้ำอีกครั้งว่าฟังก์ชันต้องเป็น <code>async</code> ด้วย ไม่งั้น <code>await</code> ข้างในใช้ไม่ได้เลย</p>
+      <p><strong>อย่าลืม <code>next()</code></strong> บรรทัดสุดท้ายของทางที่สำเร็จ ถ้าลืมบรรทัดนี้ Request จะค้างอยู่กับ Middleware ตัวนี้ตลอดกาลโดยไม่มี Error อะไรฟ้อง</p>
+
+      <h2>ล็อก Route ไหนดี</h2>
+      <p>คำถามแรกที่ควรถามคือ ควรล็อก <code>authRoutes</code> ไหม</p>
+      <p><strong>ไม่ควรอย่างยิ่ง</strong> ลองคิดดูว่าถ้าคุณต้องล็อกอินก่อนถึงจะสมัครสมาชิกได้ มันไม่มีเหตุผลเลย Route สาธารณะอย่างสมัครสมาชิกและเข้าสู่ระบบต้องเปิดไว้เสมอ</p>
+      <p>และข้อสรุปนี้พาไปสู่ข้อสรุปที่สอง — <strong>เราใส่ Middleware ตัวนี้แบบ Global ไม่ได้</strong> ถ้าเราเอาไปวางไว้บนสุดของ <code>src/server.ts</code> ด้วย <code>app.use()</code> เฉย ๆ มันจะล็อกทั้งแอปรวมถึง <code>/api/auth/register</code> ด้วย ผลคือจะไม่มีใครสมัครสมาชิกได้อีกเลยตลอดกาล</p>
+      <p>ส่วน <code>habitRoutes</code> กับ <code>userRoutes</code> ล็อกได้เต็มที่ เพราะ Habit ทุกอันผูกกับ User อยู่แล้ว ถ้าเราไม่รู้ว่าคุณเป็นใคร เราก็ไม่รู้ว่าจะดึง Habit ของใครมาให้ ทางเลือกเดียวที่เหลือคือคืน Habit ของทุกคนในระบบ ซึ่งฟังแล้วก็รู้ว่าไม่ได้</p>
+
+      <h2>เสียบ Middleware ที่ระดับ Router</h2>
+      <p>เปิด <code>src/routes/habitRoutes.ts</code> แล้วเติมบรรทัดเดียวใต้จุดที่สร้าง Router</p>
+      <pre><code>import { authenticateToken } from '../middleware/auth.ts'
+
+const router = Router()
+
+router.use(authenticateToken)
+
+// ทุก Route ใต้บรรทัดนี้ถูกล็อกหมด
+router.get('/', getUserHabits)
+router.post('/', validateBody(createHabitSchema), createHabit)</code></pre>
+      <p>ตอนนี้ Route ในไฟล์ยังเป็น Placeholder อยู่ ส่วนชื่อ Controller อย่าง <code>getUserHabits</code> กับ <code>createHabit</code> ที่ยกมาให้ดูจะมาถึงจริง ๆ ในบทที่ 26 ตรงนี้ขอให้โฟกัสที่บรรทัด <code>router.use(authenticateToken)</code> เป็นหลัก</p>
+      <p><code>router.use()</code> ที่ไม่ใส่ Path หมายถึง "ใช้กับทุกอย่างใน Router ตัวนี้" เหมือน <code>app.use()</code> ในบทที่ 11 แค่ขอบเขตแคบลงมาเหลือแค่ Router เดียว ทำแบบเดียวกันกับ <code>src/routes/userRoutes.ts</code> ด้วย</p>
+      <p><strong>ตำแหน่งสำคัญมาก</strong> Middleware คุ้มครองเฉพาะ Route ที่อยู่<em>ใต้</em>มันเท่านั้น ถ้าเผลอไปวางไว้ท้ายไฟล์คือไม่ได้ล็อกอะไรเลย</p>
+
+      <h2>Router-level เทียบกับ Route-level</h2>
+      <p>อีกวิธีคือเสียบเป็นรายเส้น</p>
+      <pre><code>router.get('/', authenticateToken, getUserHabits)
+router.post('/', authenticateToken, validateBody(createHabitSchema), createHabit)</code></pre>
+      <p>แบบ Router-level ที่เราเลือกใช้จะสะอาดกว่า สม่ำเสมอกว่า <strong>และลืมไม่ได้</strong> เพราะมีจุดควบคุมจุดเดียว ส่วนแบบ Route-level เขียนยาวกว่าและมีโอกาสลืมสูง แต่มันคือคำตอบเมื่อ Router หนึ่งตัวมีทั้ง Route ที่ต้องล็อกและไม่ต้องล็อกปนกัน</p>
+      <p>ถ้าให้พูดตรง ๆ <strong>การที่คุณจำเป็นต้องใช้แบบ Route-level มักเป็นสัญญาณว่าคุณจัดกลุ่ม Route ไว้ไม่ดีตั้งแต่แรก</strong> ถ้าคุณแยก Route ที่ต้องล็อกกับไม่ต้องล็อกออกจากกันได้ตั้งแต่ตอนออกแบบ คุณจะเสียบ Middleware ที่จุดเดียวสูงขึ้นไปแล้วจบ</p>
+      <p>ซึ่งพาไปสู่คำถามที่ดีมากว่า ทำไมไม่ทำ Router ตัวกลางสำหรับของที่ต้องล็อกไปเลย คำตอบคือทำได้และควรทำด้วยซ้ำ ในโปรเจกต์จริงผมมักไม่เอา <code>authRoutes</code> ไว้ใต้ <code>/api</code> แต่แยกไปไว้ที่ <code>/auth</code> ต่างหาก แล้วมี Router ตัวกลางของ <code>/api</code> ที่รวม <code>/users</code> กับ <code>/habits</code> ไว้ข้างใน ผลคือใส่ <code>authenticateToken</code> ที่เดียวจบ ไม่ต้องไปไล่ใส่ทีละไฟล์ สุดท้ายมันคือคำถามว่าคุณอยากให้ URL ของคุณหน้าตาเป็นอย่างไร</p>
+      <p>ยังมีอีกทางที่ทำได้แต่ผมไม่แนะนำ คือเสียบ Middleware แบบ Global จริง ๆ แล้วเขียนเงื่อนไขข้างในว่า "ถ้า <code>req.url</code> ขึ้นต้นด้วย <code>/api/auth</code> ให้เรียก <code>next()</code> ไปเลยโดยไม่ต้องตรวจ" คล้ายกับที่คนทำ Middleware ใน Next.js กัน ข้อเสียคือ<strong>ชื่อ Route จะไปปรากฏอยู่สองที่</strong> คือที่ตัว Router เองกับที่รายชื่อยกเว้นนี้ วันไหนเปลี่ยนชื่อ Route แล้วลืมแก้อีกที่ ประตูจะเปิดหรือปิดผิดบานทันที ถ้าจำเป็นต้องทำจริง ๆ อย่างน้อยให้เก็บ Path ไว้เป็นตัวแปร Constant ที่เดียวแล้ว Import ไปใช้ทั้งสองที่</p>
+
+      <h2>ทดสอบใน Postman</h2>
+      <p>ยิง <code>GET /api/habits</code> แบบไม่แนบอะไรเลยก่อน คุณจะได้ <code>401</code> พร้อมข้อความ <code>Access token required</code> — ถูกต้องแล้ว ลองปิด Middleware ชั่วคราวแล้วยิงใหม่จะได้ข้อมูลกลับมาปกติ เปิดกลับก็ได้ 401 อีก ยืนยันว่ามันทำงาน</p>
+      <p>ทีนี้ทดสอบว่ามันระบุตัวตนได้จริงไหม ก๊อป Token ที่เราได้ตอนสมัครหรือตอนล็อกอินมา ใน Postman ไปที่แท็บ <strong>Authorization</strong> เลือกประเภทเป็น <strong>Bearer Token</strong> แล้ววาง Token ลงไป (ระวังอย่าเลือก <em>JWT Bearer</em> ซึ่งเป็นคนละอันกัน) หรือจะไปแท็บ Headers แล้วพิมพ์ <code>Authorization: Bearer &lt;token&gt;</code> เองก็ได้ ผลลัพธ์เหมือนกัน</p>
+      <p>ยิงใหม่ คราวนี้ผ่านฉลุย ถ้าอยากเห็นกับตาว่ามันถอดตัวตนได้ถูกคน ลองแอบใส่ <code>console.log(payload)</code> ไว้ใน Middleware ชั่วคราวแล้วดู Log ในเทอร์มินัล</p>
+      <pre><code>{
+  id: '550e8400-e29b-41d4-a716-446655440000',
+  email: 'user@app.com',
+  username: 'user',
+  iat: 1699564234,
+  exp: 1700169034
+}</code></pre>
+      <p>ตรงกับ User ที่เราออก Token ให้พอดี <strong>อย่าลืมลบ <code>console.log</code> ทิ้งหลังทดสอบเสร็จ</strong> เพราะการ Log ข้อมูลที่ระบุตัวตนได้เป็นสิ่งที่ไม่ควรทำ</p>
+
+      <h2>iat กับ exp โผล่มาจากไหน</h2>
+      <p>สองตัวนี้คือของแถมจาก <code>setIssuedAt()</code> และ <code>setExpirationTime()</code> ที่เราใส่ไว้ตอนเซ็น <code>iat</code> คือเวลาที่ออก Token ส่วน <code>exp</code> คือเวลาหมดอายุ ทั้งคู่เป็น Unix Timestamp</p>
+      <p>ของสองอย่างนี้มีประโยชน์กว่าที่คิด สมมติวันหนึ่งคุณรู้ว่าระบบถูกเจาะและมีคนขโมย Token ไปเป็นจำนวนมาก คุณจะเข้าไปลบ Token ทีละใบไม่ได้เพราะ Server ไม่ได้เก็บมันไว้ แต่คุณเขียนกฎได้ว่า "Token ทุกใบที่ <code>iat</code> เก่ากว่าวันนี้ ไม่รับทั้งหมด" แล้วออกใบใหม่ให้ทุกคนตอนล็อกอินครั้งถัดไป มันไม่ละเอียดเท่าการลบ API Key ทีละใบ แต่มันคือสิ่งที่ทำได้ในโลกของ Stateless</p>
+
+      <h2>สิ่งที่เราเพิ่งปลดล็อก</h2>
+      <p>เรื่องใหญ่ที่สุดของบทนี้ไม่ใช่การปิดประตู แต่คือ<strong>ทุก Controller ที่อยู่หลัง Middleware ตัวนี้เข้าถึง <code>req.user</code> ได้แล้ว</strong></p>
+      <p>ถ้า Controller ตัวไหนได้รัน แปลว่ามันผ่าน <code>authenticateToken</code> มาแล้วแน่นอน แปลว่าเรารู้ว่าคนที่ยิงเข้ามาเป็นใคร แปลว่าเราเขียน "ดึง Habit ทั้งหมดของคนนี้" หรือ "สร้าง Habit ให้คนนี้" ได้จริงเสียที</p>
+      <p>และย้ำกฎเหล็กข้อสุดท้าย — <strong>ให้ใช้ <code>req.user.id</code> เท่านั้น ห้ามใช้ <code>req.body.userId</code> เด็ดขาด</strong> เพราะค่าใน Body มาจาก Client ซึ่งใครก็แก้ได้ ถ้าคุณเชื่อมัน ใครก็สร้าง Habit ในชื่อคนอื่นหรือดึงข้อมูลของคนอื่นได้ทันที ส่วน <code>req.user</code> มาจาก Token ที่ผ่านการตรวจลายเซ็นแล้ว ปลอมไม่ได้</p>
+      <p>บทหน้าเราจะเก็บกวาดเรื่อง Security ที่เหลือให้ครบ ก่อนจะไปลงมือเขียน CRUD Controller กันจริงจัง</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="23_user_sign_in.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="25_security_best_practices.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

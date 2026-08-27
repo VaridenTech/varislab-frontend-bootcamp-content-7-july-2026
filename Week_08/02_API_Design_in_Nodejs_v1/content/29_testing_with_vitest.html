@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ตั้งค่าเครื่องมือทดสอบด้วย Vitest ตั้งแต่เหตุผลที่เลือกมันแทน Jest การแยก Database สำหรับ Test ไฟล์ vitest.config.ts Global Setup ที่ Push Schema ให้เอง Helper Functions สำหรับสร้างข้อมูลทดสอบ ไปจนถึงการรัน Test ตัวแรกเพื่อพิสูจน์ว่าทุกอย่างต่อกันติด" />
+  <title>ตั้งค่าการทดสอบด้วย Vitest — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>ตั้งค่าการทดสอบด้วย Vitest</h1>
+      <p>ตลอดคอร์สที่ผ่านมาเราทดสอบ API กันด้วยมือใน Postman ซึ่งได้ผลดีมากตอนกำลังเขียนโค้ดอยู่ แต่พอ Endpoint เริ่มเยอะขึ้น คำถามที่ตอบไม่ได้อีกต่อไปคือ <strong>"แก้ตรงนี้แล้วของเดิมยังทำงานอยู่ไหม"</strong> ไม่มีใครมานั่งยิงยี่สิบ Request ทุกครั้งที่แก้โค้ดหนึ่งบรรทัดหรอกครับ</p>
+      <p>บทนี้เราจะยังไม่เขียน Test จริงจัง แต่จะเตรียมพื้นให้พร้อมก่อน เพราะการทดสอบ API ที่แตะฐานข้อมูลมีเรื่องต้องจัดการมากกว่าการทดสอบฟังก์ชันธรรมดาพอสมควร</p>
+
+      <h2>ทำไมถึงเป็น Vitest ไม่ใช่ Jest</h2>
+      <p>ใน Week 7 เราเขียน Unit Test กันด้วย Jest มาแล้ว ข่าวดีคือสิ่งที่คุณเรียนไปไม่ได้หายไปไหนเลย เพราะ <strong>Vitest ออกแบบ API มาให้เข้ากันได้กับ Jest</strong> คุณยังใช้ <code>describe</code>, <code>test</code>, <code>it</code>, <code>expect</code>, <code>toBe</code>, <code>toHaveProperty</code> เหมือนเดิมทุกอย่าง แทบไม่ต้องเรียนใหม่</p>
+      <p>แล้วทำไมต้องเปลี่ยน คำตอบอยู่ที่โปรเจกต์นี้ครับ โปรเจกต์ของ Week 7 เป็น JavaScript ล้วน ส่วนโปรเจกต์นี้เป็น TypeScript ทั้งก้อนและใช้ ESM (<code>import</code>/<code>export</code>) ล้วน ๆ ซึ่งเป็นจุดที่ Jest ต้องต่อเครื่องมือเพิ่มอีกหลายชั้นถึงจะทำงานได้ ผู้สอนเล่าตรง ๆ ว่าเคยลองให้ Jest ทำงานกับ ESM บวก TypeScript แล้วเอาไม่อยู่ ส่วน Vitest รันไฟล์ <code>.ts</code> ได้ทันทีโดยไม่ต้อง Build ก่อน</p>
+      <p>เอาเป็นว่าถ้าจะสรุปให้สั้นที่สุด — <strong>Vitest เร็วกว่า รองรับ TypeScript และ ESM มาแต่กำเนิด และตั้งค่าน้อยกว่ามาก</strong> ส่วน Jest กับ Mocha ยังใช้ได้อยู่ เพียงแต่ต้องออกแรงกับการตั้งค่ามากกว่า</p>
+
+      <h2>แยก Database สำหรับ Test ก่อนเป็นอย่างแรก</h2>
+      <p>ก่อนจะรัน Test แม้แต่ตัวเดียว เราต้องมีฐานข้อมูลอีกตัวหนึ่งเสียก่อน เพราะ Test ของเราจะ <strong>สร้าง ลบ และล้างตารางทิ้ง</strong> ตลอดเวลา ถ้าปล่อยให้มันวิ่งบนฐานข้อมูลที่เราใช้พัฒนาอยู่ ข้อมูล Seed ที่เรานั่งเตรียมไว้ในบทที่ 19 จะหายเรียบในรอบเดียว</p>
+      <p>ขั้นตอนเหมือนบทที่ 18 ทุกอย่าง เข้าไปที่ <code>neon.new</code> สร้างฐานข้อมูลใหม่อีกอัน แล้วก๊อบ Connection String ออกมา ต่างกันแค่ครั้งนี้เราจะเอาไปใส่ไว้ในไฟล์ <code>.env.test</code> ที่ Root ของโปรเจกต์ ไม่ใช่ <code>.env</code></p>
+      <pre><code>PORT=3001
+DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require
+JWT_SECRET=test-secret-key-for-testing-only</code></pre>
+      <p>ค่าที่ใส่ต้องผ่าน Schema ของ <code>env.ts</code> ในบทที่ 6 เหมือนกันทุกประการ <code>JWT_SECRET</code> จึงยังต้องยาวอย่างน้อย 32 ตัวอักษร ส่วน Connection String ของ Neon ต้องมี <code>?sslmode=require</code> ติดมาด้วยเสมอ สังเกตว่าเราไม่ได้ใส่ <code>APP_STAGE</code> ไว้ในไฟล์นี้ เพราะคนที่ตั้งค่านั้นคือคำสั่งรัน Test ซึ่งเราจะไปทำกันตอนท้ายบท</p>
+      <p>อย่าลืมว่า <code>.env.test</code> ต้องอยู่ใน <code>.gitignore</code> ด้วย นักพัฒนาแต่ละคนในทีมควรมีฐานข้อมูลทดสอบเป็นของตัวเอง จะได้ไม่ไปล้างตารางใส่กันเองตอนรัน Test พร้อมกัน</p>
+
+      <h2>vitest.config.ts</h2>
+      <p>ก่อนอื่นติดตั้งเครื่องมือที่บทนี้ต้องใช้</p>
+      <pre><code>npm install -D vitest cross-env</code></pre>
+      <p>สร้างไฟล์ <code>vitest.config.ts</code> ไว้ที่ Root ของโปรเจกต์ ไฟล์นี้ปกติ CLI ของ Vitest สร้างให้ได้อยู่แล้ว คุณไม่จำเป็นต้องจำวิธีเขียนมันขึ้นมาเองจากศูนย์ แต่เราควรรู้ว่าแต่ละบรรทัดหมายถึงอะไร</p>
+      <pre><code>import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    globals: true,
+    globalSetup: ['./tests/setup/globalSetup.ts'],
+    // Automatically clean up after each test to ensure isolation
+    clearMocks: true,
+    restoreMocks: true,
+    // Ensure tests run sequentially to avoid database conflicts
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: true
+      }
+    }
+  },
+  plugins: [],
+})</code></pre>
+      <ul>
+        <li><strong><code>globals: true</code></strong> — ยัด <code>describe</code>, <code>test</code>, <code>it</code>, <code>expect</code>, <code>beforeAll</code>, <code>afterEach</code> เข้าไปไว้ใน Global Scope ให้เลย เราจะได้ไม่ต้อง Import มันในทุกไฟล์ Test ซึ่งน่ารำคาญมาก ส่วนฝั่ง TypeScript เราใส่ <code>"types": ["vitest/globals"]</code> ไว้ใน <code>tsconfig.json</code> ให้แล้วตั้งแต่ต้นคอร์ส เอดิเตอร์จึงรู้จักฟังก์ชันพวกนี้เอง</li>
+        <li><strong><code>globalSetup</code></strong> — "ก่อนจะรัน Test ทั้งหมด ให้รันไฟล์นี้ก่อนหนึ่งครั้ง" เดี๋ยวเราจะไปสร้างมันกัน</li>
+        <li><strong><code>clearMocks</code> และ <code>restoreMocks</code></strong> — ล้าง Mock ที่สร้างไว้ให้อัตโนมัติทุกครั้งที่จบ Test แต่ละตัว เพราะการปล่อยให้ Mock ค้างข้ามไปยัง Test ตัวถัดไปคือ <strong>Anti-pattern</strong> ที่ทำให้ Test ผูกกันเอง หลักการคือผมต้องหยิบ Test ตัวไหนมารันเดี่ยว ๆ ก็ได้ แล้วผลต้องออกมาเหมือนตอนรันพร้อมกันทั้งชุด</li>
+        <li><strong><code>pool</code> และ <code>singleThread</code></strong> — อันนี้คนละเรื่องกับ Connection Pool ของฐานข้อมูลนะครับ โดยปกติ Vitest รัน Test พร้อมกันหลายตัวเพื่อความเร็ว แต่ Test ของเราทุกตัวใช้ฐานข้อมูลตัวเดียวกัน ถ้าสามตัววิ่งพร้อมกันแล้วต่างก็ Insert User อีเมลเดียวกัน มันจะชน Unique Constraint หรือตัวหนึ่งอาจลบข้อมูลที่อีกตัวเพิ่งสร้าง <strong>ผลคือ Test พังบ้างผ่านบ้างแบบไม่มีเหตุผล</strong> เราจึงสั่งให้รันทีละตัวเรียงกันไป</li>
+        <li><strong><code>plugins: []</code></strong> — ว่างเปล่าเพราะเราไม่ต้องการอะไรเพิ่มเลย Vitest ทำงานกับโปรเจกต์ TypeScript ของเราได้ตั้งแต่แกะกล่อง</li>
+      </ul>
+
+      <h2>Global Setup — เตรียมฐานข้อมูลให้พร้อมทุกครั้ง</h2>
+      <p>สร้างไฟล์ <code>tests/setup/globalSetup.ts</code> หน้าที่ของมันมีสองอย่างคือ <strong>ล้างตารางเก่าทิ้ง</strong> แล้ว <strong>Push Schema ล่าสุดลงไปใหม่</strong></p>
+      <pre><code>import { db } from '../../src/db/connection.ts'
+import { users, habits, entries, tags, habitTags } from '../../src/db/schema.ts'
+import { sql } from 'drizzle-orm'
+import { execSync } from 'child_process'
+
+export default async function setup() {
+  console.log('💾 Setting up the test db')
+  try {
+    await db.execute(sql`DROP TABLE IF EXISTS ${entries} CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS ${habits} CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS ${users} CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS ${tags} CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS ${habitTags} CASCADE`)
+
+    console.log('🚀 Pushing schema using drizzle-kit...')
+    execSync(
+      `npx drizzle-kit push --url="${process.env.DATABASE_URL}" --schema="./src/db/schema.ts" --dialect="postgresql"`,
+      {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+      }
+    )
+
+    console.log('✅ Test DB created')
+  } catch (e) {
+    console.error('❌ Fail to setup test db', e)
+    throw e
+  }
+
+  return async () =&gt; {
+    try {
+      await db.execute(sql`DROP TABLE IF EXISTS ${entries} CASCADE`)
+      await db.execute(sql`DROP TABLE IF EXISTS ${habits} CASCADE`)
+      await db.execute(sql`DROP TABLE IF EXISTS ${users} CASCADE`)
+      await db.execute(sql`DROP TABLE IF EXISTS ${tags} CASCADE`)
+      await db.execute(sql`DROP TABLE IF EXISTS ${habitTags} CASCADE`)
+      process.exit(0)
+    } catch (e) {
+      console.error('❌ Fail to clean up test db', e)
+      throw e
+    }
+  }
+}</code></pre>
+      <p><strong><code>db.execute</code> กับ Tagged Template <code>sql</code></strong> คือการเขียน SQL ดิบ ๆ ผ่าน Drizzle ซึ่งเป็นอีกวิธีหนึ่งของการคุยกับฐานข้อมูลที่เรายังไม่เคยใช้ในคอร์สนี้ ข้อดีคือเราแทรกตัวแปรตารางอย่าง <code>${entries}</code> ลงไปได้ตรง ๆ แล้ว Drizzle จะแปลงเป็นชื่อตารางจริงใน SQL ให้เอง ไม่ต้องพิมพ์ <code>entries</code> เป็นสตริงเองให้เสี่ยงพิมพ์ผิด ส่วน <code>CASCADE</code> คือให้ลบความสัมพันธ์ที่ผูกอยู่ไปด้วย</p>
+      <p><strong><code>execSync</code></strong> จาก Node.js คือการสั่งรันคำสั่ง Terminal จากในโค้ด เราใช้มันเรียก <code>drizzle-kit push</code> เพราะฐานข้อมูลทดสอบของเราคงไม่ได้ตามทันการแก้ Schema ล่าสุดเสมอ แทนที่จะต้องมานั่งจำว่าต้อง Push เอง ก็ให้สคริปต์นี้ทำให้ทุกครั้งที่รัน Test เลย</p>
+      <p><strong>ทำไมใช้ <code>process.env.DATABASE_URL</code> ไม่ใช่ <code>env.ts</code></strong> ที่เราอุตส่าห์ทำไว้ในบทที่ 6 คำตอบคือไฟล์ <code>env.ts</code> มีหน้าที่โหลดและตรวจ Environment ของ <em>ตัวแอป</em> ซึ่งบังคับว่าต้องมีตัวแปรครบทุกตัว แต่สคริปต์เตรียมฐานข้อมูลตัวนี้ต้องการแค่ค่าเดียว เราจึงไม่อยากลากการตรวจทั้งชุดเข้ามา ส่วนโค้ดของแอปที่ถูกทดสอบยังใช้ <code>env.ts</code> ตามปกติทุกประการ</p>
+      <p><strong>Flag ที่ส่งให้ <code>execSync</code></strong> — <code>stdio: 'inherit'</code> แปลว่า "เอา Output ของ Terminal ลูกมาแสดงใน Terminal ของเราด้วย" เราจะได้เห็นว่า Drizzle ทำอะไรอยู่ ส่วน <code>cwd</code> คือบอกว่าให้รันคำสั่งจากโฟลเดอร์ไหน</p>
+      <p><strong>ค่าที่ Return ออกไปเป็น Function</strong> — Vitest จะเก็บฟังก์ชันที่เรา Return ไว้แล้วเรียกมันตอน Test ทั้งหมดจบลง นี่คือจังหวะเก็บกวาด เราล้างตารางทิ้งซ้ำอีกรอบด้วยหลักคิดง่าย ๆ ว่า <strong>มายังไงก็ทิ้งไว้อย่างนั้น</strong> เผื่อวันหนึ่งมีโปรแกรมอื่นมาใช้ฐานข้อมูลนี้โดยไม่ผ่านสคริปต์ของเรา ปิดท้ายด้วย <code>process.exit(0)</code> ไม่งั้นโปรเซสจะค้างอยู่อย่างนั้น ทั้งที่ Test จบไปแล้ว</p>
+
+      <h2>Helper Functions สำหรับสร้างข้อมูลทดสอบ</h2>
+      <p>เกือบทุก Test ของเราต้องมี User สักคนก่อนถึงจะทำอะไรได้ ถ้าต้องเขียนโค้ดสร้าง User ใหม่ในทุกไฟล์ Test คงไม่ไหว สร้างไฟล์ <code>tests/helpers/dbHelpers.ts</code> ขึ้นมาเก็บงานพวกนี้ หน้าตาของมันคล้ายสคริปต์ Seed ในบทที่ 19 อยู่พอสมควร</p>
+      <pre><code>import { db } from '../../src/db/connection.ts'
+import {
+  users,
+  habits,
+  entries,
+  tags,
+  habitTags,
+  type NewUser,
+  type NewHabit,
+} from '../../src/db/schema.ts'
+import { hashPassword } from '../../src/utils/password.ts'
+import { generateToken } from '../../src/utils/jwt.ts'
+
+export const createTestUser = async (userData: Partial&lt;NewUser&gt; = {}) =&gt; {
+  const defaultData = {
+    email: `test-${Date.now()}-${Math.random()}@example.com`,
+    username: `testuser-${Date.now()}-${Math.random()}`,
+    password: 'adminpassword1234',
+    firstName: 'Test',
+    lastName: 'User',
+    ...userData,
+  }
+
+  const hashedPassword = await hashPassword(defaultData.password)
+  const [user] = await db
+    .insert(users)
+    .values({
+      ...defaultData,
+      password: hashedPassword,
+    })
+    .returning()
+
+  const token = await generateToken({
+    id: user.id,
+    email: user.email,
+    username: user.username,
+  })
+
+  return { token, user, rawPassword: defaultData.password }
+}
+
+export const createTestHabit = async (
+  userId: string,
+  habitData: Partial&lt;NewHabit&gt; = {}
+) =&gt; {
+  const defaultData = {
+    name: `Test habit ${Date.now()}`,
+    description: 'A test habit',
+    frequency: 'daily',
+    targetCount: 1,
+    ...habitData,
+  }
+
+  const [habit] = await db
+    .insert(habits)
+    .values({
+      userId,
+      ...defaultData,
+    })
+    .returning()
+
+  return habit
+}
+
+export const cleanupDatabase = async () =&gt; {
+  await db.delete(entries)
+  await db.delete(habits)
+  await db.delete(users)
+  await db.delete(habitTags)
+  await db.delete(tags)
+}</code></pre>
+      <p><strong>รูปแบบ "ค่าตั้งต้นบวกค่าที่ส่งมาทับ"</strong> คือหัวใจของไฟล์นี้ ทุกฟังก์ชันรับ Object มาแบบ <code>Partial</code> ของ Type ที่เรา Export ไว้ในบทที่ 17 แล้ว Spread ทับค่าตั้งต้น ผลคือ Test ที่ไม่สนใจรายละเอียดก็เรียก <code>createTestUser()</code> เปล่า ๆ ได้เลย ส่วน Test ที่อยากได้อีเมลเจาะจงก็ส่งเฉพาะ Field นั้นมา รูปแบบนี้มีชื่อเรียกว่า Test Data Builder และคุณจะเจอมันในโปรเจกต์อื่น ๆ อีกเยอะ</p>
+      <p><strong><code>Date.now()</code> กับ <code>Math.random()</code></strong> ต่อท้ายอีเมลและ Username เพื่อไม่ให้ข้อมูลชนกันเอง ถ้าฮาร์ดโค้ดเป็น <code>test@example.com</code> ไว้ Test ตัวที่สองจะพังทันทีเพราะอีเมลซ้ำ</p>
+      <p><strong>เรา Hash รหัสผ่านเองในนี้</strong> เพราะฐานข้อมูลจริงไม่เคยเก็บรหัสผ่านดิบ ถ้า Insert ดิบ ๆ ลงไป Test เรื่องการ Login จะพังทันทีเพราะ <code>comparePassword</code> เทียบไม่ผ่าน แล้วเรา Return <code>rawPassword</code> กลับออกไปด้วย เพราะ Test ที่จะลอง Login ต้องใช้รหัสผ่านตัวจริงส่งขึ้นไป</p>
+      <p>อาจมีคนสงสัยว่าทำไมไม่เรียก Controller <code>register</code> ที่เขียนไว้แล้วให้จบ ๆ ไป <strong>เพราะเรากำลังจะเขียน Test เพื่อทดสอบ Controller ตัวนั้นอยู่ไงครับ</strong> ถ้าเครื่องมือที่ใช้เตรียมข้อมูลเป็นตัวเดียวกับสิ่งที่กำลังถูกทดสอบ พอมันพัง เราจะแยกไม่ออกเลยว่าใครพัง</p>
+      <p><strong>ลำดับการลบใน <code>cleanupDatabase</code> ปลอดภัย</strong> เพราะ Foreign Key ทุกตัวใน Schema ของเราตั้ง <code>onDelete: 'cascade'</code> ไว้ตั้งแต่บทที่ 16 การลบแถวฝั่งแม่จึงพาแถวลูกหายตามไปด้วยเสมอ ไม่มีทางค้าง Foreign Key Constraint</p>
+
+      <h2>บอก Vitest ว่าให้ใช้ .env.test</h2>
+      <p>เหลืออีกชิ้นเดียว เปิด <code>package.json</code> แล้วแก้สคริปต์ <code>test</code></p>
+      <pre><code>"scripts": {
+  "test": "cross-env APP_STAGE=test vitest run",
+  "test:watch": "vitest",
+  "test:coverage": "vitest run --coverage"
+}</code></pre>
+      <p><code>cross-env</code> คือ Package ที่ช่วยตั้ง Environment Variable ก่อนรันคำสั่ง โดยเขียนได้เหมือนกันทุกระบบปฏิบัติการ สิ่งที่เกิดขึ้นคือ <code>APP_STAGE</code> ถูกตั้งเป็น <code>test</code> ก่อน แล้ว <code>vitest run</code> ค่อยเริ่มทำงาน</p>
+      <p>จำ <code>env.ts</code> ในบทที่ 6 ได้ไหมครับ ที่มันดู <code>APP_STAGE</code> แล้วเลือกว่าจะโหลด <code>.env</code> หรือ <code>.env.test</code> — <strong>บรรทัดนี้แหละคือเหตุผลที่เราทำมันไว้ตั้งแต่ต้นคอร์ส</strong> ประเด็นสำคัญคือคนที่ต้องอ่านค่าให้ถูกไฟล์ไม่ใช่ตัว Vitest แต่เป็น <em>โค้ดของแอปที่กำลังถูกทดสอบ</em> ต่างหาก เพราะมันคือคนที่ Import <code>env.ts</code> เข้าไปใช้เชื่อมต่อฐานข้อมูลจริง ๆ</p>
+
+      <h2>ทดสอบว่าที่ตั้งค่ามาทั้งหมดใช้ได้จริง</h2>
+      <p>ก่อนจะไปเขียน Test จริงในบทหน้า เรามาพิสูจน์กันก่อนว่าทุกชิ้นต่อกันติด สร้างไฟล์ <code>tests/setup.test.ts</code> ที่ไม่ได้ทดสอบอะไรเลยนอกจากตัว Setup เอง</p>
+      <pre><code>import { createTestUser, cleanupDatabase } from './helpers/dbHelpers.ts'
+
+describe('Test Setup Verification', () =&gt; {
+  test('should connect to test database', async () =&gt; {
+    const { user, token } = await createTestUser()
+
+    expect(user).toBeDefined()
+    expect(user.email).toContain('@example.com')
+    expect(token).toBeDefined()
+
+    await cleanupDatabase()
+  })
+})</code></pre>
+      <p>สังเกตว่าเราไม่ได้ Import <code>describe</code>, <code>test</code> หรือ <code>expect</code> เลยสักตัว เพราะ <code>globals: true</code> จัดการให้แล้ว จากนั้นสั่งรัน</p>
+      <pre><code>npm test setup.test.ts</code></pre>
+      <p>คำที่ต่อท้าย <code>npm test</code> ไม่จำเป็นต้องเป็นชื่อไฟล์เต็ม ๆ นะครับ Vitest ใช้มันเป็นคำค้นแล้วรันทุกไฟล์ที่ชื่อตรงกับรูปแบบนั้น พิมพ์แค่ <code>npm test setup</code> ก็ได้ผลเหมือนกัน ส่วน <code>npm test</code> เปล่า ๆ จะรันทุกไฟล์</p>
+      <p>สิ่งที่ควรเห็นใน Terminal คือข้อความว่ากำลังเตรียมฐานข้อมูล ตามด้วย Output ของ <code>drizzle-kit push</code> ที่สร้างตารางให้ แล้วจบด้วย Test สีเขียวหนึ่งตัว ถ้าเห็นครบแปลว่าทั้ง Config, Global Setup, Helper และการโหลด <code>.env.test</code> ทำงานถูกต้องหมด</p>
+      <p>ลองรันซ้ำอีกรอบก็ได้ ผลจะเหมือนเดิมทุกครั้ง เพราะตารางถูกล้างแล้วสร้างใหม่ตั้งแต่ต้นเสมอ — <strong>ความคาดเดาได้แบบนี้แหละคือสิ่งที่เราลงทุนตั้งค่ากันมาทั้งบท</strong> บทหน้าเราจะเอาพื้นฐานนี้ไปเขียน Test ที่ยิงเข้า API ของเราจริง ๆ</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="28_error_handling.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="30_integration_testing.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="พา Habit Tracker API ขึ้น Production จริงด้วย Render ตั้งแต่การสร้าง Production Database บน Neon รัน Migration ครั้งแรก เตรียม Checklist ก่อน Deploy ไปจนถึงสร้าง Web Service ใส่ Environment Variables ในหน้า Dashboard และยิงทดสอบ URL ที่ได้มาจริง" />
+  <title>Deploy ขึ้น Production ด้วย Render — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Deploy ขึ้น Production ด้วย Render</h1>
+      <p>ถึงเวลาเอา API ของเราออกไปให้คนอื่นใช้ได้จริงเสียที ที่ผ่านมาทุกอย่างวิ่งอยู่บนเครื่องเราคนเดียว บทนี้เราจะย้ายมันขึ้นไปอยู่บนอินเทอร์เน็ต แล้วได้ URL จริงที่ยิงจาก Postman ที่ไหนก็ได้</p>
+
+      <h2>ทำไมเลือก Render</h2>
+      <p>เจ้าที่รับ Deploy แอปให้เรามีเยอะมาก Railway ก็คล้าย ๆ กัน ฝั่ง Serverless มี Vercel, Netlify และ Cloudflare ส่วน Fly.io ก็เป็นอีกทาง และถ้าอยากลงไปใกล้เครื่องมากขึ้นก็มี AWS, Google Cloud, Azure หรือ DigitalOcean</p>
+      <p>ทั้งหมดทำงานบนตรรกะเดียวกัน คือรับโค้ดจาก Git แล้วรันให้ ผมเลือก <strong>Render</strong> ไม่ใช่เพราะมันดีที่สุด แต่เพราะมันเริ่มต้นง่ายที่สุด (คนที่เคยใช้ Heroku จะรู้สึกคุ้นมาก) พอเข้าใจภาพรวมจากที่นี่แล้ว ย้ายไปเจ้าอื่นก็ไม่ยาก ก่อนกดปุ่ม Deploy มีของที่ต้องเตรียมอยู่เจ็ดข้อ ทำให้ครบก่อนแล้วขั้นตอนหลังจากนั้นจะราบรื่นมาก</p>
+
+      <h2>1. สร้าง Production Database</h2>
+      <p>Database บนเครื่องเราไม่มีใครเข้าถึงได้จากข้างนอก เราจึงต้องมีอีกตัวสำหรับ Production ตอนนี้เราจะมีสามตัวแล้ว คือตัวสำหรับ Development ตัวสำหรับ Test (จากบทที่ 29) และตัวสำหรับ Production วิธีสร้างเหมือนบทที่ 18 ทุกอย่าง กลับไปที่ Neon Launchpad กดสร้างอันใหม่แล้วเก็บ Connection String ไว้</p>
+      <p>อย่าลืมว่า Database ที่ได้จาก Launchpad จะหายไปใน <strong>72 ชั่วโมง</strong> ถ้าไม่สมัครบัญชี Neon แล้ว Claim มันไว้ ถ้าอีกสามวันแอปที่ Deploy แล้วเริ่ม Error ขึ้นมาเฉย ๆ นี่แหละคือสาเหตุ</p>
+      <p>ในทีมจริง แต่ละสภาพแวดล้อมมักมี Database ของตัวเอง ทั้ง Staging และบางทีคนละตัวต่อคนในทีมด้วยซ้ำ ซึ่ง Neon ทำได้แบบอัตโนมัติผ่าน Database Branching</p>
+
+      <h2>2. รัน Migration ครั้งแรกเข้า Production</h2>
+      <p>Database ที่เพิ่งสร้างมันว่างเปล่า ไม่รู้จัก Schema ของเราเลย ถ้า Deploy ตอนนี้แอปพังแน่นอน เราต้องส่ง Schema เข้าไปก่อน ที่ผ่านมาเราใช้ <code>npm run db:push</code> ยัด Schema เข้า Database ของเครื่องเราแบบตรง ๆ ซึ่งทำได้เพราะข้อมูลในนั้นพังก็ไม่มีใครเดือดร้อน แต่กับ Production <strong>ห้ามใช้ <code>db:push</code> เด็ดขาด</strong> มันเทียบเท่ากับการ Force Push ทับ Branch หลัก มีสิทธิ์ล้างข้อมูลของผู้ใช้จริงทิ้งได้ ต้องไปทาง Migration เท่านั้น</p>
+      <p>เปิดไฟล์ <code>.env</code> แล้วคอมเมนต์ <code>DATABASE_URL</code> ตัวเดิมไว้ ใส่ของ Production ลงไปแทนชั่วคราว (ใส่ใน <code>.env</code> นะครับ ไม่ใช่ <code>.env.test</code>) จากนั้นสั่ง</p>
+      <pre><code>npm run db:generate</code></pre>
+      <p>คำสั่งนี้ <strong>ไม่ได้คุยกับ Database เลย</strong> มันแค่อ่าน <code>src/db/schema.ts</code> แล้วเขียนไฟล์ SQL ออกมาในโฟลเดอร์ <code>migrations/</code> ตามที่เราตั้งค่า <code>out</code> ไว้ใน <code>drizzle.config.ts</code> ข้างในจะมีสองอย่าง</p>
+      <ul>
+        <li><code>0000_xxxx.sql</code> — SQL จริงที่จะถูกรัน นี่คือสิ่งที่เราต้องนั่งเขียนเองถ้าไม่มี Drizzle</li>
+        <li><code>meta/</code> — มี <code>_journal.json</code> กับไฟล์ Snapshot ที่เป็นภาพแทน Schema ของเราในรูปแบบ JSON เอาไว้ให้ Drizzle เทียบ Diff ในครั้งถัดไป</li>
+      </ul>
+      <p>สังเกตเลขนำหน้าชื่อไฟล์ Migration ต้องถูกรันตามลำดับเสมอ เลขจึงเป็นตัวบอกลำดับ (บางทีมใช้วันที่แทนเลขก็ได้เหมือนกัน) และ <strong>ไฟล์ Migration ต้องถูก Commit ขึ้น Git</strong> เพราะทุกคนในทีมและเครื่องที่ Deploy ต้องใช้มัน จากนั้นค่อยสั่งรัน Migration เข้า Database</p>
+      <pre><code>npm run db:migrate</code></pre>
+      <p>Drizzle จะไล่รันไฟล์ในโฟลเดอร์ <code>migrations/</code> จากเก่าสุดไปใหม่สุด ถ้าไม่มี Error แปลว่าเรียบร้อย ตรวจซ้ำได้ด้วย <code>npm run db:studio</code> แล้วดูว่าตารางทั้งห้าตัวขึ้นครบใน Production Database</p>
+      <p>พอเสร็จแล้ว <strong>เอา Connection String ของ Production ออกจาก <code>.env</code> ทันที</strong> แล้วเอาของ Development กลับมา การรัน Migration จากเครื่องตัวเองใส่ Production แบบนี้เราทำเพราะเป็นการเรียนการสอน ในงานจริงจะไม่ทำกัน เขาจะรันผ่านสคริปต์บนเครื่องที่ Deploy แล้ว หรือผ่านเครื่องมือจัดการ Migration ที่บริษัทซื้อมาโดยเฉพาะ</p>
+
+      <h2>3. ทำให้ Port เป็น Dynamic</h2>
+      <p>เราทำข้อนี้ไปแล้วตั้งแต่บทที่ 5 แต่ขอย้ำอีกครั้งเพราะมันทำให้ Deploy ล้มเหลวได้ง่ายที่สุด <strong>ห้าม Hardcode เลข Port</strong> เพราะบน Production เราไม่ได้เป็นคนเลือก Port ผู้ให้บริการเป็นคนกำหนดมาให้ผ่าน Environment Variable ชื่อ <code>PORT</code> ซึ่งใน <code>env.ts</code> ของเรามี <code>PORT: z.coerce.number().positive().default(3000)</code> อยู่แล้ว แปลว่ามันอ่านจาก Environment ก่อน ถ้าไม่มีค่อยตกไปที่ 3000 และ <code>src/index.ts</code> ก็ใช้ <code>env.PORT</code> ตรง ๆ</p>
+      <pre><code>app.listen(env.PORT, () =&gt; {
+  console.log(`Server running on port ${env.PORT}`)
+  console.log(`Environment: ${env.APP_STAGE}`)
+})</code></pre>
+
+      <h2>4. เตรียม Environment Variables</h2>
+      <p>รวบรวมให้ครบว่า Production ต้องใช้ตัวไหนบ้าง ของเราคือ <code>DATABASE_URL</code>, <code>JWT_SECRET</code>, <code>APP_STAGE</code>, <code>NODE_ENV</code> และ <code>BCRYPT_ROUNDS</code> โดยกฎเหล็กคือ <strong>สร้างค่าใหม่ที่ปลอดภัยสำหรับ Production เสมอ อย่าใช้ Secret ตัวเดียวกับ Development</strong> ถ้า Secret ของเครื่อง Dev หลุด (ซึ่งหลุดง่ายกว่ามาก) เท่ากับ Production หลุดตามไปด้วยทันที</p>
+      <p>อีกเรื่องที่ต้องเข้าใจคือบน Render <strong>ไม่มีไฟล์ <code>.env</code></strong> ซึ่งไม่เป็นปัญหา เพราะ <code>env.ts</code> ของเราเรียก <code>loadEnv()</code> เฉพาะตอน <code>APP_STAGE</code> เป็น <code>dev</code> หรือ <code>test</code> เท่านั้น พอเป็น <code>production</code> มันจะอ่านจาก <code>process.env</code> ที่ Render ฉีดเข้ามาให้โดยตรง</p>
+
+      <h2>5. แทนที่ URL ที่ Hardcode ไว้</h2>
+      <p>ไล่หาในโค้ดว่ามี <code>localhost</code> โผล่อยู่ตรงไหนบ้าง เพราะ URL บน Production ไม่ใช่ Localhost แน่นอน จุดที่คนลืมบ่อยคือ CORS Configuration, Email Template, Webhook URL, เอกสาร API และโค้ดฝั่ง Frontend ที่เรียก API</p>
+      <p>โปรเจกต์เราไม่มีปัญหานี้ เพราะเราเปิด <code>cors()</code> แบบอนุญาตทุก Origin ไว้ จึงไม่มี URL ให้แก้ (ถ้าจะจำกัด Origin ค่อยเพิ่มตัวแปรแบบที่แนะนำในบทที่ 11) ส่วนถ้าที่ไหนต้องรู้ URL ของตัวเอง Render มี Environment Variable ชื่อ <code>RENDER_EXTERNAL_URL</code> ให้ใช้</p>
+      <pre><code>const apiUrl = process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000'</code></pre>
+      <p>ผู้ให้บริการทุกเจ้าจะฉีด Environment Variable ชุดหนึ่งเข้ามาบอกสถานะของระบบให้เรา แต่ชื่อตัวแปรต่างกันไป ต้องไปอ่านเอกสารของเจ้านั้น ๆ เอง</p>
+
+      <h2>6. ระบุเวอร์ชันของ Node</h2>
+      <p>ข้อนี้สำคัญมากสำหรับโปรเจกต์เรา เพราะ Render จะเลือกเวอร์ชัน Node เก่ากว่าที่เราต้องการถ้าเราไม่บอก แล้วโค้ด TypeScript ที่รันตรง ๆ ด้วย <code>node src/index.ts</code> จะทำงานไม่ได้เลย เพิ่ม Field <code>engines</code> ลงใน <code>package.json</code></p>
+      <pre><code>{
+  "name": "habit-tracker-api",
+  "type": "module",
+  "engines": {
+    "node": "&gt;=24.3.0"
+  },
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "start": "node src/index.ts"
+  }
+}</code></pre>
+      <p>ตัวเลข <code>&gt;=24.3.0</code> ตรงนี้สูงกว่า <code>23.6.0</code> ที่เราตั้งเป็นขั้นต่ำไว้ตอนต้นคอร์ส ซึ่งไม่ได้ขัดกัน — <code>23.6.0</code> คือเวอร์ชันต่ำสุดที่รัน TypeScript ตรง ๆ ได้ ส่วนบน Production เราขอเผื่อขึ้นไปที่ LTS ที่ใหม่กว่าเพื่อความสบายใจ ถ้าเครื่องคุณเป็น 23.x อยู่ก็เรียนจบคอร์สได้ตามปกติ</p>
+
+      <h2>7. เตรียม Branch แล้ว Push ขึ้น GitHub</h2>
+      <p>Render ดึงโค้ดจาก GitHub ดังนั้นโค้ดที่จะ Deploy ต้องอยู่บน GitHub ก่อน โดยทั่วไปจะเป็น Branch <code>main</code> แต่ไม่จำเป็นต้องเป็น เพราะเราบอก Render ได้ว่าให้ดู Branch ไหน บางทีมมี Branch <code>production</code> แยกต่างหากก็มี เลือก Branch ที่มีโค้ดครบตามที่ต้องการ (อย่าลืมว่าโฟลเดอร์ <code>migrations/</code> ต้องอยู่ในนั้นด้วย) แล้ว Push ขึ้นไป</p>
+      <pre><code>git add .
+git commit -m "Prepare for deployment"
+git push origin your-branch</code></pre>
+
+      <h2>สร้าง Web Service บน Render</h2>
+      <p>สมัครบัญชีที่ Render ด้วยการ Sign In with GitHub ไม่ต้องใส่บัตรเครดิต จากนั้นกดสร้างของใหม่ เลือก <strong>Web Service</strong> (ไม่ใช่ Static Site ไม่ใช่ Background Worker) แล้วเลือก Repository ของเราที่มันดึงมาให้จาก GitHub อยู่แล้ว</p>
+      <ul>
+        <li><strong>Name</strong> — ชื่อนี้ <strong>ต้องไม่ซ้ำกับใครทั้งแพลตฟอร์ม</strong> ไม่ใช่แค่ในบัญชีเรา เพราะมันจะกลายเป็น URL ให้เรา ถ้าโดนคนอื่นจองไปแล้วต้องเปลี่ยนชื่อ</li>
+        <li><strong>Language</strong> — เลือก Node</li>
+        <li><strong>Branch</strong> — Branch ที่เพิ่ง Push ขึ้นไป</li>
+        <li><strong>Root Directory</strong> — ปล่อยว่างไว้ถ้า <code>package.json</code> อยู่ที่รากของ Repository</li>
+        <li><strong>Build Command</strong> — เปลี่ยนเป็น <code>npm install</code> (ค่าเริ่มต้นอาจเป็น Yarn ซึ่งเราไม่ได้ใช้มาตลอดทั้งคอร์ส)</li>
+        <li><strong>Start Command</strong> — Render อ่าน <code>package.json</code> เจอ Script <code>start</code> แล้วเดาให้เองว่าเป็น <code>npm start</code></li>
+        <li><strong>Instance Type</strong> — เลือก Free ได้เลย</li>
+      </ul>
+
+      <h2>ใส่ Environment Variables ในหน้า Dashboard</h2>
+      <p>เลื่อนลงมาที่ส่วน Environment Variables แล้วใส่ค่าที่เตรียมไว้ในข้อ 4 ทีละตัว หรือจะกดปุ่มอัปโหลดไฟล์ <code>.env</code> ทั้งไฟล์ให้มันแตกออกมาเป็นตัวแปรให้เองทีเดียวก็ได้</p>
+      <pre><code>DATABASE_URL=postgresql://...   # ของ Production ที่สร้างในข้อ 1
+JWT_SECRET=...                  # ค่าใหม่ ยาวอย่างน้อย 32 ตัวอักษร
+APP_STAGE=production
+NODE_ENV=production
+BCRYPT_ROUNDS=12</code></pre>
+      <p>ที่เหลืออีกสองช่องที่น่าสนใจคือ <strong>Health Check Path</strong> ใส่ <code>/health</code> ได้เลยเพราะเรามี Route นั้นอยู่ใน <code>src/server.ts</code> แล้ว Render จะยิงเข้าไปเป็นระยะเพื่อดูว่ายังมีชีวิตอยู่ไหม (มันดูแค่ว่าได้ Status 200 กลับมาหรือเปล่า ไม่สนใจ Body) และ <strong>Pre-Deploy Command</strong> ซึ่งเป็นที่ที่เหมาะที่สุดสำหรับสั่งรัน Migration ตอน Deploy แต่ต้องใช้แพ็กเกจแบบเสียเงิน</p>
+      <p>ส่วน <strong>Auto-Deploy</strong> ตั้งเป็น On Commit ไว้ก่อน หมายความว่าทุกครั้งที่มีโค้ดใหม่เข้า Branch นั้น (จะ Push ตรงหรือ Merge Pull Request ก็ตาม) Render จะ Deploy ให้อัตโนมัติ</p>
+
+      <h2>Deploy จริงและอ่าน Log</h2>
+      <p>กด Deploy แล้วนั่งดู Log ได้เลย สิ่งที่เห็นคือหน้าจอของเครื่องที่กำลัง Build ให้เรา มันทำแบบเดียวกับที่เราทำบนเครื่องตัวเองเป๊ะ ๆ คือดึงเวอร์ชัน Node ตาม <code>engines</code> ที่เราระบุไว้ รัน Build Command แล้วย้ายไฟล์ขึ้น Server จากนั้นสั่ง Start</p>
+      <p>ครั้งแรกของผมพังครับ Log บอกว่าค่าหนึ่งต้องมากกว่า 10 ซึ่งคือ <code>BCRYPT_ROUNDS</code> ที่ผมเผลอใส่ 8 ลงไป แล้ว Zod Schema ใน <code>env.ts</code> กำหนดไว้ว่า <code>.min(10)</code> นี่คือประโยชน์ของการ Validate Environment ตั้งแต่ตอนแอปเริ่มทำงานตามที่คุยกันในบทที่ 6 — <strong>มันพังทันทีพร้อมบอกเหตุผลชัดเจน</strong> ดีกว่าไปพังตอนผู้ใช้คนแรกกดสมัครสมาชิก แก้ง่ายมาก กลับไปที่แท็บ Environment แก้ค่าเป็น 12 กด Save แล้ว Render จะ Deploy รอบใหม่ให้เอง</p>
+      <p>รอบนี้ผ่าน สังเกตว่าจะเห็น 404 โผล่มาหนึ่งครั้งตอนแรก นั่นเป็นเรื่องปกติ ผู้ให้บริการส่วนใหญ่จะยิง GET ไปที่ <code>/</code> เพื่อดูว่าแอปตอบกลับมาไหม ได้ 404 ก็ถือว่าตอบแล้ว แปลว่า Server ทำงานอยู่</p>
+
+      <h2>ยิงทดสอบ URL จริง</h2>
+      <p>คัดลอก URL ที่ Render ให้มาแล้วเปิด Postman ขึ้นมา ลอง <code>GET /health</code> ก่อนเพื่อดูว่า Server ตอบไหม แล้วต่อด้วยตัวที่ต้องใช้ฐานข้อมูลจริง</p>
+      <pre><code>POST https://habit-api.onrender.com/api/auth/register
+
+{
+  "email": "user@example.com",
+  "username": "user",
+  "password": "adminpassword1234"
+}</code></pre>
+      <p>ได้ <code>201 Created</code> พร้อม Token กลับมาเมื่อไร แปลว่าครบวงจรแล้ว ทั้ง Server, Route, Middleware, Validation, Auth และ Production Database ทำงานร่วมกันได้จริงบนอินเทอร์เน็ต</p>
+
+      <h2>Continuous Deployment กับเรื่องที่ Render ไม่ได้ทำให้</h2>
+      <p>จากนี้ไปทุกครั้งที่โค้ดเข้า Branch ที่เราผูกไว้ Render จะ Deploy ใหม่ให้เอง นี่คือ Continuous Deployment แบบพื้นฐานที่สุด</p>
+      <p>แต่สิ่งที่ Render <strong>ไม่ได้</strong> ทำให้คือรัน Test ให้ก่อน Deploy นั่นเป็นงานของ CI ซึ่งต้องหาเครื่องมืออื่นมาเสริม ตัวที่ง่ายที่สุดคือ <strong>GitHub Actions</strong> (สั่งให้รัน <code>npm test</code> ทุกครั้งที่มี Push หรือ Pull Request) ส่วนเจ้าอื่นก็มี Jenkins กับ CircleCI ที่อยู่มานาน พอ CI ผ่านแล้วให้ GitHub ไฟเขียว เราค่อยตั้ง Render ให้ Deploy ตามหลัง ซึ่งตั้งได้ที่ตัวเลือก Auto-Deploy นั่นเอง</p>
+
+      <h2>Checklist หลัง Deploy</h2>
+      <ul>
+        <li>ยิงทดสอบ Endpoint ให้ครบทุกตัว</li>
+        <li>ยืนยันว่าเชื่อมต่อ Database ได้จริง</li>
+        <li>เช็คว่า Environment Variables ถูกโหลดครบ</li>
+        <li>ไล่อ่าน Log ว่ามี Error แปลก ๆ ไหม</li>
+        <li>ทดสอบ Flow ของ Authentication ตั้งแต่สมัครจนถึงเข้า Route ที่ล็อกไว้</li>
+        <li>ตรวจว่า CORS ตั้งค่าถูกต้องสำหรับ Domain ที่จะเรียกใช้จริง</li>
+      </ul>
+      <p>การ Deploy มีรายละเอียดมากกว่านี้อีกเยอะ ทั้งการทำ Staging Environment แยก การให้ทุกคนในทีมมีสภาพแวดล้อมของตัวเอง หรือการทำ Rollback แต่จุดเริ่มต้นมันง่ายแค่นี้จริง ๆ ครับ API ของเราขึ้น Production เรียบร้อยแล้ว บทหน้าเป็นบทสุดท้าย เรามาทบทวนกันว่าตลอดคอร์สนี้เราผ่านอะไรมาบ้าง</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="30_integration_testing.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="32_recap.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

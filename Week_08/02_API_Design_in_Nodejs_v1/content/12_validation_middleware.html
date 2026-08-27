@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เขียน Middleware ของเราเองที่ src/middleware/validation.ts เพื่อตรวจสอบ Body, Params และ Query ด้วย Zod Schema พร้อมตอบ 400 กลับไปในรูปแบบที่ Client เอาไปใช้ต่อได้จริง" />
+  <title>Validation Middleware ด้วย Zod — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Validation Middleware ด้วย Zod</h1>
+      <p>สิ่งแรก ๆ ที่ผมทำเสมอเวลาสร้าง API คือ<strong>ตรวจสอบข้อมูลขาเข้า</strong> เพราะผมไม่อยากนั่งเขียน <code>if</code> เช็คว่าค่านี้มีไหม ค่านั้นเป็น String หรือเปล่า ซ้ำแล้วซ้ำอีกในทุก Handler ผมอยากให้ Handler ของผม<em>สมมติได้เลย</em>ว่าทุกอย่างที่ต้องใช้มาครบและถูกต้องแล้ว</p>
+      <p>วิธีที่ดีที่สุดที่จะได้แบบนั้นคือเขียน Middleware มาคั่นไว้ก่อนถึง Handler ซึ่งเราจะทำกันในบทนี้ ถ้าให้พูดตรง ๆ คือ <strong>ผมไม่มีวันสร้าง API โดยไม่มีตัวตรวจ Input</strong> มันเหมือนการทำ Database โดยไม่มี Schema ซึ่งไม่มีใครทำกัน</p>
+
+      <h2>ทำไมต้อง Validate</h2>
+      <p>นอกจากความสบายในการเขียนโค้ดแล้ว การไม่ตรวจ Input เปิดช่องให้ปัญหาตามมาเป็นพรวน</p>
+      <ul>
+        <li><strong>SQL / NoSQL Injection</strong> — ข้อมูลที่แต่งมาเพื่อหลอกให้ Query ทำสิ่งที่เราไม่ได้ตั้งใจ</li>
+        <li><strong>XSS</strong> — Script ที่แอบฝังเข้ามาแล้วไปโผล่ใน Response</li>
+        <li><strong>Input ขนาดมหึมา</strong> ที่ส่งมาเพื่อทำให้ Server ล่ม</li>
+        <li><strong>Type Confusion</strong> — ได้ String ตอนที่โค้ดคาดว่าจะได้ Number แล้วพังกลางทาง</li>
+        <li><strong>ข้อมูลสกปรกลง Database</strong> ซึ่งเป็นปัญหาที่แก้ทีหลังยากที่สุด</li>
+      </ul>
+      <p>ของแถมคือ Schema ที่เราเขียนกลายเป็นเอกสารของ API ไปในตัว และ Error ที่ตอบกลับไปช่วยให้คนเรียกใช้ API ของเรา Debug ได้เร็วขึ้นมาก</p>
+
+      <h2>สร้าง src/middleware/validation.ts</h2>
+      <p>สร้างโฟลเดอร์ <code>src/middleware</code> แล้วสร้างไฟล์ <code>validation.ts</code> ในนั้น เริ่มจาก Import</p>
+      <pre><code>import type { Request, Response, NextFunction } from 'express'
+import { type ZodSchema, ZodError } from 'zod'</code></pre>
+      <p>สังเกตคำว่า <code>import type</code> — ของจาก Express ทั้งสามตัวเป็นแค่ Type ที่ TypeScript ใช้ตอน Compile ไม่มีตัวตนตอน Runtime การเขียนแบบนี้บอก TypeScript ให้ถอดบรรทัดนี้ทิ้งตอนแปลงเป็น JavaScript ส่วนฝั่ง Zod เราเอา <code>ZodSchema</code> มาเป็น Type แต่เอา <code>ZodError</code> มาเป็นค่าจริง เพราะเราต้องใช้มันกับ <code>instanceof</code></p>
+
+      <h2>validateBody</h2>
+      <p>ตัวแรกไว้ตรวจ Payload ที่ถูกส่งขึ้นมาพร้อม POST หรือ PUT ซึ่งก็คือ <code>req.body</code></p>
+      <pre><code>export const validateBody = (schema: ZodSchema) =&gt; {
+  return (req: Request, res: Response, next: NextFunction) =&gt; {
+    try {
+      const validatedData = schema.parse(req.body)
+      req.body = validatedData
+      next()
+    } catch (e) {
+      if (e instanceof ZodError) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: e.issues.map((err) =&gt; ({
+            field: err.path.join('.'),
+            message: err.message,
+          })),
+        })
+      }
+      next(e)
+    }
+  }
+}</code></pre>
+      <p>ไล่ดูทีละจุด</p>
+      <p><strong>มันคือ Higher-Order Function</strong> เหมือน <code>helmet()</code> และ <code>cors()</code> ในบทที่แล้ว คือฟังก์ชันชั้นนอกรับ Zod Schema เข้าไป แล้ว Return Middleware ตัวจริงที่มีครบสามอาร์กิวเมนต์ <code>(req, res, next)</code> ออกมา เราจึงใช้ Middleware ตัวเดียวกับ Schema กี่แบบก็ได้</p>
+      <p><strong>ทำไมต้อง <code>try/catch</code></strong> เพราะ <code>schema.parse()</code> จะ<em>โยน Error</em> ทันทีเมื่อข้อมูลไม่ตรง Schema กฎเหล็กของงานฝั่ง Server คือ <strong>ต้องจัดการ Error ทุกตัว ไม่งั้นโปรเซสตาย</strong> — <code>try/catch</code> ไม่ได้ช่วยเราจากทุกอย่าง แต่เป็นจุดเริ่มต้นที่ดี</p>
+      <p><strong>ทำไมต้องยัดค่าที่ผ่านการตรวจกลับเข้า <code>req.body</code></strong> เพราะ Schema อาจมี <code>.default()</code> หรือมีการ Coerce ชนิดข้อมูล ซึ่งผลลัพธ์จาก <code>parse()</code> รวมการเปลี่ยนแปลงพวกนั้นไว้แล้ว ถ้าไม่ยัดกลับ <code>req.body</code> เดิมก็ยัง "ผ่าน" อยู่ก็จริง แต่จะไม่มีค่า Default และชนิดข้อมูลที่แปลงแล้ว สุดท้ายสิ่งที่ Handler คาดหวังกับของจริงจะไม่ตรงกัน</p>
+      <p><strong>ทำไมเป็น 400 และทำไมยังมี <code>next(e)</code></strong> — <code>4xx</code> แปลว่า "ฝั่งคุณส่งมาผิด" ไม่ใช่ <code>5xx</code> ที่แปลว่า "ฝั่งเราพัง" ส่วน <code>next(e)</code> ท้ายสุดมีไว้เผื่อกรณีที่ Error ไม่ใช่ <code>ZodError</code> ซึ่งแปลว่าเป็นเรื่องที่เราไม่ได้คาดไว้ ก็โยนต่อให้ Error Handler กลางจัดการ (บทที่ 28) อีกทางเลือกคือตัด <code>if</code> ทิ้งแล้วเรียก <code>next(e)</code> อย่างเดียว ไปแยกแยะที่ Error Handler กลางแทน ก็ทำได้ แต่ผมเลือกจบตรงนี้เพราะรูปแบบ Error ของการ Validate เฉพาะเจาะจงพอที่จะอยู่ใกล้ ๆ กันดีกว่า</p>
+      <p>และย้ำตามบทที่ 10 — <strong>ตรงที่ตอบ Response เราใส่ <code>return</code> นำหน้า</strong> เพื่อไม่ให้โค้ดหลุดไปเรียก <code>next()</code> ต่อหลังตอบไปแล้ว</p>
+
+      <h2>เอาไปใช้ที่ Route</h2>
+      <p>เปิด <code>src/routes/habitRoutes.ts</code> แล้วนิยาม Schema กับเสียบ Middleware เข้าไปคั่นระหว่าง Path กับ Handler</p>
+      <pre><code>import { Router } from 'express'
+import { z } from 'zod'
+import { validateBody } from '../middleware/validation.ts'
+
+const createHabitSchema = z.object({
+  name: z.string(),
+})
+
+const router = Router()
+
+router.post('/', validateBody(createHabitSchema), (req, res) =&gt; {
+  res.status(201).json({ message: 'created habit' })
+})</code></pre>
+      <p>ตรงนี้แหละที่เราเรียกว่า <strong>Local Middleware</strong> คือ Middleware ที่นั่งติดกับ Route ที่มันใช้จริง ๆ ต่างจาก Global Middleware ที่นั่งอยู่บนสุดของแอป ข้อกำหนดมีแค่ข้อเดียวคือ<strong>มันต้องมาก่อน Handler</strong> (เรายังไม่ได้ต่อ Database จึงยังไม่รู้ว่า Habit ตัวจริงต้องมี Field อะไรบ้าง ตอนนี้สมมติไว้แค่ <code>name</code> ก่อน)</p>
+      <p>ที่ได้กลับมาคือ Handler ข้างใน<strong>ไม่ต้องมี <code>if</code> เช็คอะไรอีกเลย</strong> เพราะถ้าโค้ดในนั้นได้รัน แปลว่า Payload ผ่านการตรวจมาแล้วแน่นอน ถ้าไม่ผ่าน Middleware จะไม่เรียก <code>next()</code> และ Handler จะไม่มีวันได้ทำงาน</p>
+
+      <h2>ลองยิงดู</h2>
+      <p>เปิด Postman แล้วยิง <code>POST /api/habits</code> โดยไม่ส่ง Body อะไรเลย</p>
+      <pre><code>{
+  "error": "Validation failed",
+  "details": [
+    { "field": "", "message": "Invalid input: expected object, received undefined" }
+  ]
+}</code></pre>
+      <p>ค่า <code>field</code> ว่างเพราะยังไม่มี Object เลย ไม่ใช่ว่า Field ไหนผิด ทีนี้ลองส่ง Object เปล่า <code>{}</code> ดูบ้าง</p>
+      <pre><code>{
+  "error": "Validation failed",
+  "details": [
+    { "field": "name", "message": "Invalid input: expected string, received undefined" }
+  ]
+}</code></pre>
+      <p>ชัดมาก และเราได้มันมาฟรี ๆ แค่เขียน Schema กับส่งเข้า Middleware (เกร็ดที่มักพลาดกัน — Path คือ <code>/api/habits</code> มี s ต่อท้าย ถ้าลืมจะได้ <code>Cannot POST /api/habit</code> ซึ่งไม่เกี่ยวกับ Validation เลย)</p>
+
+      <h2>validateParams — Route Parameter</h2>
+      <p>ตัวถัดไปเหมือนกันแทบทุกตัวอักษร ต่างแค่ตรวจ <code>req.params</code> แทน</p>
+      <pre><code>export const validateParams = (schema: ZodSchema) =&gt; {
+  return (req: Request, res: Response, next: NextFunction) =&gt; {
+    try {
+      schema.parse(req.params)
+      next()
+    } catch (e) {
+      if (e instanceof ZodError) {
+        return res.status(400).json({
+          error: 'Invalid params',
+          details: e.issues.map((err) =&gt; ({
+            field: err.path.join('.'),
+            message: err.message,
+          })),
+        })
+      }
+      next(e)
+    }
+  }
+}</code></pre>
+      <p>ข้อแตกต่างสำคัญคือ <strong>เราไม่ยัดค่ากลับเข้า <code>req.params</code></strong> เพราะ<strong>อะไรก็ตามที่อยู่ใน URL เป็น String เสมอ</strong> ไม่มีทางหนีความจริงข้อนี้ได้ ไม่เหมือน Body ที่เป็น Object และแปลงชนิดข้อมูลได้ จึงไม่มีอะไรให้แก้ เรื่องนี้เป็นเหตุผลที่ผมไม่ชอบ ID แบบนับเลขเพิ่มขึ้นเรื่อย ๆ ใน Database เพราะสุดท้ายต้องมานั่ง Parse String เป็น Number ที่ไหนสักแห่งเสมอ ผมเลยเลือกใช้ UUID ซึ่งก็มีปัญหาของมันเองเรื่องความเร็วในการทำ Index แต่เป็นปัญหาที่ผมยอมรับได้</p>
+
+      <h2>validateQuery — Query String</h2>
+      <p>ตัวสุดท้ายตรวจ <code>req.query</code> ซึ่งก็คือ Object ที่มี Key เป็นชื่อตัวแปรใน Query String ตรงตามที่คุณคิดเลย</p>
+      <pre><code>export const validateQuery = (schema: ZodSchema) =&gt; {
+  return (req: Request, res: Response, next: NextFunction) =&gt; {
+    try {
+      schema.parse(req.query)
+      next()
+    } catch (e) {
+      if (e instanceof ZodError) {
+        return res.status(400).json({
+          error: 'Invalid Query Params',
+          details: e.issues.map((err) =&gt; ({
+            field: err.path.join('.'),
+            message: err.message,
+          })),
+        })
+      }
+      next(e)
+    }
+  }
+}</code></pre>
+      <p>ที่จริงเราเขียนทั้งสามตัวรวมเป็นฟังก์ชันเดียวแล้วส่งเข้าไปว่าจะตรวจ <code>body</code>, <code>params</code> หรือ <code>query</code> ก็ได้ ต่างกันแค่บรรทัดเดียวเอง แต่ผมอยากให้คุณเห็นมันสามรอบเต็ม ๆ จะได้จำโครงสร้างได้</p>
+
+      <h2>ซ้อน Middleware หลายตัว</h2>
+      <p>เราใส่ Middleware กี่ตัวก็ได้ในบรรทัดเดียวกัน มันจะเรียก <code>next()</code> ส่งไม้ต่อกันเองตามลำดับซ้ายไปขวา อย่าง Route <code>POST /:id/complete</code> ของเรามีทั้ง Parameter และ Body ก็ตรวจทั้งคู่ได้เลย</p>
+      <pre><code>const completeParamsSchema = z.object({
+  id: z.string().max(3),
+})
+
+router.post(
+  '/:id/complete',
+  validateParams(completeParamsSchema),
+  validateBody(createHabitSchema),
+  (req, res) =&gt; {
+    res.status(201).json({ message: 'completed habit' })
+  }
+)</code></pre>
+      <p>ลองยิง <code>POST /api/habits/1/complete</code> ดู ตัว Params จะผ่านสบาย ๆ เพราะ Express การันตีอยู่แล้วว่า <code>id</code> ต้องมีและเป็น String แต่พอยิง <code>POST /api/habits/1234/complete</code> จะติด <code>.max(3)</code> ทันที</p>
+      <p>มีคนแย้งว่าการตรวจ Params ดูซ้ำซ้อน ในเมื่อ Express การันตีให้อยู่แล้ว ซึ่งก็จริงในตัวอย่างง่าย ๆ แบบนี้ แต่<strong>Express ไม่ได้การันตีความยาว รูปแบบ หรือว่ามันเป็น UUID ที่ถูกต้องหรือเปล่า</strong> พอ Validation ของคุณซับซ้อนขึ้นมันจะคุ้มมาก</p>
+      <p>อีกลูกเล่นคือส่ง Middleware เป็น <strong>Array</strong> ก็ได้ เช่น <code>router.post('/:id/complete', habitGuards, handler)</code> เมื่อ <code>habitGuards</code> คือ Array ของ Middleware ประโยชน์คือเราแยกชุด Middleware ไปนิยามไว้อีกไฟล์แล้วเอามาใช้ซ้ำได้หลาย Route โดยไม่ต้องพิมพ์ใหม่ เหมือนทำให้ Middleware ของเราพกพาได้</p>
+
+      <h2>สรุประดับของ Middleware</h2>
+      <p>ตอนนี้เราเห็นครบทุกระดับแล้ว</p>
+      <ul>
+        <li><strong>Global</strong> — <code>app.use(helmet())</code> อยู่บนสุดของแอปทั้งในเชิงตำแหน่งและเชิงความหมาย</li>
+        <li><strong>Router-level</strong> — <code>router.use(authenticate)</code> ครอบทุก Route ในไฟล์ Router นั้น เราจะใช้จริงตอนล็อก Route ในบทที่ 24</li>
+        <li><strong>Local / Route-level</strong> — เสียบไว้บนบรรทัดของ Route ตัวนั้นตัวเดียว อย่างที่เราเพิ่งทำ</li>
+        <li>ที่จริง <strong>Route เองก็คือ Middleware</strong> แค่มันไปจบที่ Route อื่นเท่านั้น</li>
+      </ul>
+      <p>และถ้าจะพูดให้สุด <strong>Handler กับ Controller ก็คือ Middleware</strong> เพราะมันรับ <code>next</code> เป็นอาร์กิวเมนต์ที่สามได้เหมือนกัน เราแค่ไม่ใช้ — และผมแนะนำอย่างยิ่งว่า<em>อย่าเรียก <code>next()</code> ใน Handler</em> เพราะมันจะสับสนมาก ถ้าคุณรู้สึกว่าจำเป็นต้องทำ แปลว่าคุณเขียน Route ผิดที่แล้ว มีวิธีที่ดีกว่านั้นเสมอ</p>
+      <p>บทหน้าเราจะปิดท้ายเรื่อง Middleware ด้วยกับดักที่เจอบ่อยที่สุดเวลาโค้ดของเราเริ่มเป็น Async</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="11_global_middleware.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="13_async_middleware.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="รู้จักเทคนิค asyncHandler ที่ห่อ Middleware ให้จัดการ Error อัตโนมัติ พร้อมกับดักสี่ข้อของ Async Middleware ตั้งแต่ลืม next, ลำดับผิด, Unhandled Rejection ไปจนถึงการแตะ Response หลังส่ง Header ไปแล้ว" />
+  <title>ข้อควรระวังกับ Async Middleware — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>ข้อควรระวังกับ Async Middleware</h1>
+      <p>Middleware ในโลกจริงแทบทุกตัวเป็น Async เพราะมันต้องคุยกับ Database หรือยิงไปหา Service อื่น และของพวกนั้น<em>จะพังสักวัน</em>แน่นอน บทนี้เราจะเก็บกับดักที่เจอบ่อยที่สุดให้ครบก่อนจะเข้าสู่เรื่อง Database ในบทหน้า</p>
+
+      <h2>เบื่อ try/catch ไหม — Middleware Factory ช่วยได้</h2>
+      <p>ตัวผมเองเขียน <code>try/catch</code> ในทุก Handler จนเบื่อ เพราะข้างใน Handler ผมคุยกับ Database ตลอด ถ้าไม่ Catch ไว้ Server ผมตาย วิธีแก้ที่ผมใช้จริงคือเขียน<strong>ตัวห่อ</strong> ที่รับ Middleware เข้าไปหนึ่งตัว แล้วคืน Middleware ที่จัดการ Error ให้เสร็จสรรพออกมา</p>
+      <pre><code>import type { RequestHandler } from 'express'
+
+export const asyncHandler =
+  (fn: RequestHandler): RequestHandler =&gt;
+  (req, res, next) =&gt; {
+    Promise.resolve(fn(req, res, next)).catch(next)
+  }</code></pre>
+      <p>อ่านจากข้างในออกมา — มันเอาผลลัพธ์ของ Middleware ของเราไปห่อด้วย <code>Promise.resolve()</code> เพื่อให้แน่ใจว่าได้ Promise ออกมาเสมอ แล้วต่อ <code>.catch(next)</code> ท้ายไว้ ซึ่งแปลว่า<strong>ถ้ามันพังเมื่อไร Error จะถูกส่งเข้า <code>next()</code> ทันที</strong> และตามที่เราเรียนไปในบทที่ 10 อะไรก็ตามที่ส่งเข้า <code>next()</code> ถือเป็น Error และจะวิ่งไปหา Error Handler</p>
+      <p>เวลาใช้ก็แค่ห่อทับเข้าไป</p>
+      <pre><code>const loadHabit: RequestHandler = async (req, res, next) =&gt; {
+  await someAsyncOperation(req.params.id)   // คุยกับ Database
+  next()
+}
+
+router.get('/:id', asyncHandler(loadHabit), getHabit)</code></pre>
+      <p>ผลคือเราเขียน Logic การจัดการ Error<strong>ครั้งเดียว</strong> แทนที่จะก๊อปวาง <code>try/catch</code> ไปทุกไฟล์ นี่คือโค้ดที่ผมยกมาจากโปรเจกต์จริงของผมเองเลย</p>
+      <p>คอร์สนี้เราจะยังไม่ใส่ตัวนี้ลงโปรเจกต์ เพราะ Express 5 มีของแบบนี้ให้ในตัวแล้ว (เดี๋ยวอธิบายในกับดักข้อ 3) แต่คุณควรรู้จักมันไว้ เพราะโค้ดที่คุณจะเจอในโลกจริงเต็มไปด้วยรูปแบบนี้</p>
+
+      <h2>กับดักที่ 1: ลืมเรียก next()</h2>
+      <p>ย้ำอีกครั้งเพราะเจอบ่อยที่สุด <strong>ถ้าไม่ตอบ ไม่โยน Error และไม่เรียก <code>next()</code> Request จะค้าง</strong> ไม่มี Error ไม่มีอะไรทั้งนั้น Express แค่นั่งรอเฉย ๆ ซึ่งหาเจอยากกว่า Error จริง ๆ เสียอีก</p>
+      <pre><code>// แย่ — Request ค้างตลอดกาล
+const badMiddleware = (req, res, next) =&gt; {
+  console.log('Processing...')
+}
+
+// ดี
+const goodMiddleware = (req, res, next) =&gt; {
+  console.log('Processing...')
+  next()
+}</code></pre>
+
+      <h2>กับดักที่ 2: เรียงลำดับ Middleware ผิด</h2>
+      <p>ตัวอย่างคลาสสิกคือพยายามอ่าน <code>req.body</code> ก่อนที่ <code>express.json()</code> จะทำงาน</p>
+      <pre><code>// แย่ — body ยังไม่ถูก Parse
+app.use((req, res, next) =&gt; {
+  console.log(req.body.name)  // undefined
+  next()
+})
+app.use(express.json())       // สายไปแล้ว
+
+// ดี — Parser มาก่อน
+app.use(express.json())
+app.use((req, res, next) =&gt; {
+  console.log(req.body.name)  // ใช้ได้
+  next()
+})</code></pre>
+      <p>ประเด็นทั้งหมดของ <code>express.json()</code> คือมันเป็นคนสร้าง <code>req.body</code> ขึ้นมา ถ้ามันยังไม่ได้รัน <code>req.body</code> ก็ไม่มีอยู่จริงสำหรับ Route นั้น ไม่ใช่ว่าว่างเปล่า แต่คือไม่มีเลย <strong>ลำดับสำคัญเสมอ</strong></p>
+
+      <h2>กับดักที่ 3: ไม่จัดการ Error ของ Async</h2>
+      <p>สมัยก่อนข้อนี้เป็นปัญหาใหญ่มาก ตอนนั้นเรายังไม่มี <code>async/await</code> ไม่มีแม้กระทั่ง Promise ทุกอย่างเป็น Callback หมด การลืมจัดการ Error จึงเกิดขึ้นง่ายมาก</p>
+      <pre><code>// แย่ — Unhandled Promise Rejection
+const badAsyncMiddleware = async (req, res, next) =&gt; {
+  await someAsyncOperation()  // ถ้าตัวนี้โยน Error ไม่มีใครรับ
+  next()
+}
+
+// ดี — ห่อด้วย try/catch แล้วส่งต่อให้ Error Handler
+const goodAsyncMiddleware = async (req, res, next) =&gt; {
+  try {
+    await someAsyncOperation()
+    next()
+  } catch (error) {
+    next(error)
+  }
+}</code></pre>
+      <p>สาเหตุคือ Express 4 ไม่รู้จัก Promise มันเรียก Middleware ของเราแบบธรรมดา ไม่ได้ <code>await</code> ผลลัพธ์ พอ Async Function โยน Error สิ่งที่เกิดคือ Promise ถูก Reject โดยไม่มีใครรับ กลายเป็น <strong>Unhandled Promise Rejection</strong> ที่ Express ไม่รู้เรื่องด้วย Request ก็ค้าง และใน Node.js รุ่นใหม่ Unhandled Rejection ทำให้โปรเซสตายไปเลยด้วย นั่นคือเหตุผลที่เกิดรูปแบบ <code>asyncHandler</code> ขึ้นมา</p>
+      <p><strong>Express 5 แก้เรื่องนี้ให้แล้ว</strong> ถ้า Handler หรือ Middleware ของเราเป็น Async แล้ว Promise ถูก Reject Express 5 จะรับมันไปส่งให้ Error Handler ให้อัตโนมัติ เหมือนกับที่เราเรียก <code>next(error)</code> เอง ทุกวันนี้ข้อนี้จึงเป็นปัญหาน้อยลงมาก ส่วนหนึ่งเพราะ <code>async/await</code> เป็นสิ่งที่เราคุ้นมือกันอยู่แล้วจากงานฝั่ง Frontend</p>
+      <p>แต่ก็อย่าเพิ่งชะล่าใจสองเรื่อง — Express 5 จับได้เฉพาะ Promise ที่ Reject ออกมาจากตัว Middleware โดยตรง ถ้าคุณยิง Promise ทิ้งไว้เฉย ๆ โดยไม่ <code>await</code> มันก็ยังหลุดอยู่ดี และโค้ดเก่าที่ยังอยู่บน Express 4 กติกาเดิมยังใช้อยู่ทุกข้อ</p>
+
+      <h2>กับดักที่ 4: แตะ Response หลังส่ง Header ไปแล้ว</h2>
+      <p>ที่ผ่านมาผมบอกว่า "ตอบซ้ำไม่ได้" ซึ่งพูดให้ตรงเป๊ะกว่านั้นคือ <strong>ส่ง Header ซ้ำไม่ได้</strong> ซึ่งความหมายเดียวกัน เพราะทุก Response เริ่มต้นด้วยการส่ง Header ไปก่อน</p>
+      <pre><code>// แย่ทุกบรรทัด
+const problematicMiddleware = (req, res, next) =&gt; {
+  res.json({ message: 'First response' })
+
+  setTimeout(() =&gt; {
+    res.json({ message: 'Second response' })  // Error: headers already sent
+  }, 1000)
+
+  next()  // ตอบไปแล้วยังเรียก next() อีก
+}</code></pre>
+      <p>ทางแก้คือกฎข้อเดิม — <strong>ถ้าจะตอบ ให้ใส่ <code>return</code> นำหน้าและจบตรงนั้น</strong> การตอบ Response แปลว่างานเสร็จแล้ว ก็ไม่ควรมีโค้ดอะไรวิ่งต่ออีก</p>
+      <pre><code>return res.status(400).json({ error: 'Validation failed' })</code></pre>
+
+      <h2>โค้ดยังวิ่งต่อได้จริงหลังตอบไปแล้ว</h2>
+      <p>ลองพิสูจน์ด้วยตัวเองสักครั้ง ใส่ <code>console.log</code> ต่อท้าย Handler ของ <code>/health</code> แล้วยิงดู</p>
+      <pre><code>app.get('/health', (req, res) =&gt; {
+  res.status(200).json({ status: 'OK' })
+  console.log('ยังทำงานอยู่นะ')   // บรรทัดนี้รันจริง
+})</code></pre>
+      <p>คุณจะเห็น Log โผล่ใน Terminal ทั้งที่ Client ได้ Response ไปเรียบร้อยแล้ว ซึ่งพิสูจน์ว่า Node.js ทำได้ในทางเทคนิค แต่<strong>ผมไม่คิดว่ามันเป็นแนวปฏิบัติที่ดี</strong></p>
+      <p>เหตุผลคือคุณจะไม่มีทางรู้เลยว่างานนั้นเสร็จเมื่อไร เสร็จแล้วจะทำอะไรต่อ ถ้ามันพังจะ Retry อย่างไร และกี่ครั้ง เพราะทุกอย่างอยู่ในขอบเขตของ Handler ที่ปิดไปแล้ว คุณเข้าไม่ถึงมันอีก สิ่งที่คุณได้มาคือ Race Condition ล้วน ๆ</p>
+      <p>สิ่งเดียวที่ผมยอมทำแบบนี้คืองานเล็ก ๆ ที่ไม่กินทรัพยากร ไม่ Block อะไร และถ้าพลาดไปบ้างผมก็ไม่เดือดร้อน เช่นยิง Analytics หรือส่ง Log ขึ้น Dashboard เท่านั้น</p>
+
+      <h2>เมื่อไรที่ "ตอบก่อน ทำต่อทีหลัง" ถึงจำเป็นจริง</h2>
+      <p>มีกรณีที่รูปแบบนี้ถูกต้องจริง ๆ คือ <strong>Webhook</strong> ธรรมชาติของ Webhook คือ Service ปลายทางอย่าง Stripe หรือ Google ยิงเข้ามาหาเรา แล้วเขาคาดหวังให้เราตอบ <code>200</code> กลับไป<em>เร็วที่สุด</em> ถ้าเราช้าเกิน SLA ของเขา เขาอาจยิงซ้ำเหตุการณ์เดิม อาจคิดเงินเราเพิ่ม หรือถึงขั้นตัดบริการ</p>
+      <p>แล้วถ้างานที่ต้องทำเพื่อตอบสนอง Webhook นั้นใช้เวลานานล่ะ จะรอให้เสร็จก่อนค่อยตอบ Stripe เหรอ — ทำไม่ได้ ทางแก้แบบดั้งเดิมคือ<strong>สร้าง Job ยัดเข้า Queue แล้วตอบกลับทันที</strong> จากนั้นมี Service อีกตัวคอยอ่านงานจาก Queue ไปทำ ส่วนแพลตฟอร์มยุคใหม่อย่าง Vercel มีคำสั่งชื่อ <code>waitUntil</code> ที่แปลว่า "อย่าเพิ่งปิด Serverless Function นี้ รอจนงาน Async ตัวนี้เสร็จ แต่ระหว่างนี้ตอบ Response กลับไปได้เลย" คิดง่าย ๆ ว่ามันคือ Queue แบบไม่ต้องมี Queue</p>
+      <p>ทั้งหมดนี้เป็นคนละเรื่องกับสิ่งที่เราทำใน Express และผมไม่แนะนำให้ทำแบบนั้นบน Express ด้วยเหตุผลข้างบน แต่ยกมาให้เห็นว่ามีคนคิดเรื่องนี้จริงจังจนสร้างเครื่องมือมารองรับ</p>
+
+      <h2>สรุปแนวปฏิบัติของ Middleware</h2>
+      <ul>
+        <li><strong>ลำดับสำคัญ</strong> — ความปลอดภัยก่อน Parse ข้อมูลตาม Business Logic ท้ายสุด</li>
+        <li><strong>จัดการ Error เสมอ</strong> — Async ต้องมี <code>try/catch</code> หรือมีตัวห่อที่ทำแทน</li>
+        <li><strong>ตอบหรือไม่ก็ <code>next()</code></strong> — อย่าปล่อยให้ Request ค้าง และอย่าทำทั้งสองอย่าง</li>
+        <li><strong>ทำอย่างเดียวให้ดี</strong> — Middleware หนึ่งตัวควรมีหน้าที่เดียว</li>
+        <li><strong>ใช้ Factory</strong> — Higher-Order Function ทำให้ Middleware รับ Option และเอาไปใช้ซ้ำได้</li>
+        <li><strong>เขียน Test</strong> — Middleware ที่เราเขียนเองควรมี Unit Test (เราจะทำกันในบทที่ 29)</li>
+        <li><strong>บอกให้ชัดว่าแก้อะไร</strong> — ถ้า Middleware ไปแตะ <code>req</code> หรือ <code>res</code> ควรมีคอมเมนต์บอกไว้</li>
+        <li><strong>ระวังเรื่องความเร็ว</strong> — Global Middleware รันทุก Request อย่าเอางานหนักไปใส่</li>
+      </ul>
+      <p>เท่านี้เรื่อง Middleware ก็จบครบแล้ว คุณเข้าใจกลไกที่เป็นหัวใจของ Express และของ Framework ฝั่ง Node.js เกือบทั้งหมด บทหน้าเราจะเปลี่ยนเรื่องไปทางฝั่งข้อมูลกันบ้าง เริ่มจาก Database Schema และ ORM เพื่อให้ Habit Tracker ของเรามีข้อมูลจริง ๆ เก็บสักที</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="12_validation_middleware.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="14_database_schemas_and_orms.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

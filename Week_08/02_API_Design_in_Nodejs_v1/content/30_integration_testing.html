@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เขียน Integration Test ให้ API ด้วย SuperTest ตั้งแต่ความต่างระหว่าง Unit, Integration, E2E และ Snapshot Test ไปจนถึงการทดสอบ Endpoint สมัครสมาชิกและเข้าสู่ระบบจริง พร้อมแนวปฏิบัติเรื่องความเป็นอิสระของแต่ละ Test" />
+  <title>Integration Testing — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Integration Testing</h1>
+      <p>พื้นพร้อมแล้ว บทนี้เรามาเขียน Test ที่ยิงเข้า API ของเราจริง ๆ กัน แต่ก่อนอื่นขอคุยเรื่องประเภทของ Test สักหน่อย เพราะมันจะอธิบายว่าทำไมเราถึงเลือกเขียน Test แบบที่กำลังจะเขียน</p>
+
+      <h2>Test มีกี่แบบ แล้วแต่ละแบบให้อะไรเรา</h2>
+      <ul>
+        <li><strong>Unit Test</strong> — ทดสอบฟังก์ชันเดียวโดด ๆ เช่นเช็กว่า <code>hashPassword</code> คืนค่าที่ไม่ใช่รหัสผ่านดิบ เร็วมาก แต่ให้ความมั่นใจน้อย เพราะ <strong>Unit Test ไม่ได้ทดสอบ Business Logic</strong> มันทดสอบแค่ว่าชิ้นส่วนแต่ละชิ้นทำงานของตัวเองได้ ซึ่งชิ้นส่วนที่ผ่านหมดทุกตัวก็ยังประกอบกันแล้วพังได้อยู่ดี</li>
+        <li><strong>Integration Test</strong> — ทดสอบหลายชิ้นส่วนที่ทำงานร่วมกัน สำหรับ API ก็คือยิง Request เข้าไปแล้วดูว่าได้ Status และ Body ตามที่คาดไว้ไหม ผ่านทั้ง Middleware, Validation, Auth, Controller และฐานข้อมูลจริง</li>
+        <li><strong>End-to-End Test</strong> — ทดสอบทั้งระบบจากมุมผู้ใช้ ขับ Browser จริงให้คลิกและพิมพ์ ให้ความมั่นใจสูงสุดแต่ช้าที่สุด</li>
+        <li><strong>Snapshot Test</strong> — เก็บภาพของ UI ไว้แล้วเทียบกับของเดิมว่าเปลี่ยนไปไหม เป็นเรื่องของฝั่งหน้าจอ ไม่เกี่ยวกับ API ของเรา</li>
+      </ul>
+      <p>ประเด็นคือ <strong>โปรเจกต์ของเราไม่มี UI</strong> ไม่มีหน้าจอให้คลิก ดังนั้น Integration Test ก็คือ End-to-End Test ของเราไปในตัว เพราะมันเริ่มจากจุดเดียวกับที่ Client ตัวจริงจะเข้ามา คือ Request แล้วจบที่ Response</p>
+      <p>ถ้าคุณจะเขียน Test ได้แค่แบบเดียวในชีวิต สำหรับ API ให้เลือกแบบนี้ครับ มันให้ความมั่นใจต่อโค้ดหนึ่งบรรทัดที่เขียนสูงที่สุด แค่ไล่ทดสอบทุก Endpoint คุณก็ครอบคลุมทั้ง Route, Middleware และงานฐานข้อมูลไปพร้อมกันแล้ว</p>
+
+      <h2>เขียน Test เพื่อความมั่นใจ ไม่ใช่เพื่อตัวเลข Coverage</h2>
+      <p>หลายคนคิดถึงการเขียน Test เป็นเรื่องของ "ทำยังไงให้ครอบคลุมโค้ดครบ 100%" ซึ่งผมมองคนละมุม <strong>ผมเขียน Test เพื่อจะได้นอนหลับ</strong> เพื่อให้รู้ว่าของที่ปล่อยขึ้น Production ไปแล้วยังทำงานอย่างที่ตั้งใจไว้จริง ๆ</p>
+      <p>Coverage 100% ที่ยังตอบไม่ได้ว่าทำไมผู้ใช้ Login ไม่ได้นั้นไม่มีค่าอะไรเลย ในขณะที่ Test เพียงตัวเดียวที่ยืนยันว่า "สมัครสมาชิกแล้วรหัสผ่านไม่หลุดออกไปกับ Response" มีค่ามหาศาล ยิ่งถ้าโค้ดส่วนนั้นเกี่ยวกับเงิน ยิ่งต้องมี Test</p>
+
+      <h2>SuperTest ยิง Request โดยไม่ต้องเปิด Server</h2>
+      <p>เครื่องมือที่ทำให้เรื่องนี้เป็นจริงคือ <strong>SuperTest</strong> มันขับ Express App ของเราผ่านโค้ดได้เหมือนเป็น Client คนหนึ่ง โดยที่ไม่ต้องสั่ง <code>listen</code> เปิด Port จริง ๆ เลย ในสายตาของ Express มันคือ Request ที่วิ่งเข้ามาตามปกติ Middleware ทุกตัวทำงาน Controller ถูกเรียก และข้อมูลลงฐานข้อมูลจริง</p>
+      <p>นี่คือเหตุผลที่เราแยก <code>src/server.ts</code> ออกจาก <code>src/index.ts</code> ตั้งแต่บทที่ 3 — <strong>ไฟล์ที่ประกอบ App ไม่ได้สั่งเปิด Server เอง</strong> เราจึง Import <code>app</code> เข้ามาในไฟล์ Test ได้ตรง ๆ ตอนนั้นอาจดูเป็นการแยกไฟล์ที่ไม่จำเป็น วันนี้คือวันที่มันได้ใช้</p>
+      <p>ประโยชน์ที่ตามมาคือเราไม่ต้องยุ่งกับ Network เลย ซึ่งดีแล้ว เพราะเราไม่ได้ต้องการทดสอบว่าเน็ตเร็วแค่ไหน นั่นเป็นคำถามคนละข้อกัน</p>
+      <pre><code>npm i -D supertest @types/supertest</code></pre>
+
+      <h2>โครงของไฟล์ tests/auth.test.ts</h2>
+      <p>เริ่มจาก Endpoint ที่เรามีอยู่แล้วคือ Authentication สร้างไฟล์ <code>tests/auth.test.ts</code></p>
+      <pre><code>import request from 'supertest'
+import app from '../src/server.ts'
+import { createTestUser, cleanupDatabase } from './helpers/dbHelpers.ts'
+
+describe('Authentication Endpoints', () =&gt; {
+  afterEach(async () =&gt; {
+    await cleanupDatabase()
+  })
+
+  describe('POST /api/auth/register', () =&gt; {
+    // Test จะมาอยู่ตรงนี้
+  })
+})</code></pre>
+      <p><strong><code>describe</code> คือกล่องจัดกลุ่ม</strong> ยังไม่ใช่ Test และซ้อนกันได้หลายชั้น ผมชอบให้ชั้นนอกเป็นชื่อกลุ่มของ Endpoint แล้วชั้นในเป็น Method บวก Path ที่กำลังทดสอบ พออ่าน Log ตอน Test พังจะได้รู้ทันทีว่าพังที่ไหน</p>
+      <p><strong><code>afterEach</code> ทำงานหลังจบ Test แต่ละตัว</strong> ไม่ใช่หลังแต่ละ <code>expect</code> นะครับ Test หนึ่งตัวมี <code>expect</code> ได้หลายบรรทัด เราเรียก <code>cleanupDatabase</code> ตรงนี้เพื่อให้ Test ตัวถัดไปเริ่มจากฐานข้อมูลว่างเปล่าเสมอ</p>
+
+      <h2>ทดสอบการสมัครสมาชิก</h2>
+      <p>ใส่ Test ตัวแรกลงไปในกล่อง <code>POST /api/auth/register</code></p>
+      <pre><code>it('should register a new user with valid data', async () =&gt; {
+  const userData = {
+    email: `test-${Date.now()}@example.com`,
+    username: `testuser-${Date.now()}`,
+    password: 'adminpassword1234',
+    firstName: 'Test',
+    lastName: 'User',
+  }
+
+  const response = await request(app)
+    .post('/api/auth/register')
+    .send(userData)
+    .expect(201)
+
+  expect(response.body).toHaveProperty('message')
+  expect(response.body).toHaveProperty('user')
+  expect(response.body).toHaveProperty('token')
+  expect(response.body.user).not.toHaveProperty('password')
+})</code></pre>
+      <p><strong>ชื่อ Test คือเอกสาร</strong> อ่านว่า "ควรสมัครสมาชิกใหม่ได้เมื่อส่งข้อมูลที่ถูกต้อง" แล้วโค้ดข้างในก็ทำตามนั้นเป๊ะ ๆ จะใช้ <code>it</code> หรือ <code>test</code> ก็ได้ทั้งคู่ ทำงานเหมือนกันทุกอย่าง ต่างกันแค่ว่า <code>it</code> ถูกออกแบบมาให้อ่านต่อกับคำว่า should ได้ลื่นกว่า ส่วน <code>test</code> อ่านเป็นประโยคบอกเล่า เลือกแบบที่คุณชอบแล้วใช้ให้เหมือนกันทั้งโปรเจกต์</p>
+      <p><strong>ลูกโซ่ของ SuperTest</strong> — <code>request(app)</code> คือหยิบ App ของเรามา ตามด้วย <code>.post(path)</code> คือ Method และ Route ที่จะยิง <code>.send(body)</code> คือ Body ที่ส่งไป และ <code>.expect(201)</code> คือ Assertion ตัวแรกที่เช็ก Status Code ให้เลยในตัว ถ้าไม่ตรง Test พังทันที</p>
+      <p><strong>Assertion ที่เหลือ</strong> เราตรวจว่ามี <code>user</code> และ <code>token</code> กลับมาครบตามที่ Controller ในบทที่ 21 สัญญาไว้ สังเกตว่าเราตรวจแค่ว่า <em>มี</em> Field <code>message</code> โดยไม่ตรวจข้อความข้างใน เพราะข้อความพวกนี้เปลี่ยนบ่อยและการไล่แก้ Test ทุกครั้งที่แก้คำไม่คุ้มค่าเลย</p>
+      <p>บรรทัดสุดท้ายคือบรรทัดที่ผมชอบที่สุด <code>expect(response.body.user).not.toHaveProperty('password')</code> — <strong>ตราบใดที่ Test ตัวนี้ยังเขียวอยู่ ไม่มีทางที่รหัสผ่านจะหลุดออกไปกับ Response ได้เลย</strong> นี่คือความมั่นใจที่จับต้องได้จริง</p>
+
+      <h2>ทดสอบ Edge Case ด้วย</h2>
+      <p>Happy Path อย่างเดียวไม่พอ ทุกจุดที่ Route มีเงื่อนไข มีการตัดจบ หรือมีโอกาสโยน Error ควรมี Test ของมันเอง</p>
+      <pre><code>it('should return 400 when password is missing', async () =&gt; {
+  const userData = {
+    email: `test-${Date.now()}@example.com`,
+    username: `testuser-${Date.now()}`,
+  }
+
+  const response = await request(app)
+    .post('/api/auth/register')
+    .send(userData)
+    .expect(400)
+
+  expect(response.body).toHaveProperty('error', 'Validation failed')
+  expect(response.body.details[0].field).toBe('password')
+})</code></pre>
+      <p>Test ตัวนี้ไปไม่ถึง Controller ด้วยซ้ำ มันถูก <code>validateBody</code> จากบทที่ 12 สกัดไว้ก่อน ซึ่งนั่นแหละคือสิ่งที่เรากำลังยืนยัน ว่า Middleware ยังยืนอยู่ในลำดับที่ถูกต้องและตอบด้วยรูปแบบ <code>{ error, details }</code> ที่ตกลงกันไว้</p>
+      <p>ที่น่าสนใจกว่านั้นคือ <strong>Edge Case ที่ Test แบบนี้จะ<em>ไม่</em>จับให้</strong> ลองเปลี่ยนไปส่ง <code>email: 'invalid-email'</code> ที่ครบทุก Field ดูสิครับ คุณจะได้ <code>201</code> พร้อม User ที่ถูกสร้างจริง ไม่ใช่ <code>400</code> อย่างที่หลายคนเดา เพราะ <code>insertUserSchema</code> ที่เราเสียบไว้หน้า Route ในบทที่ 22 ถูกสร้างจากตาราง <code>users</code> มันจึงรู้แค่สิ่งที่ Database รู้ คือชนิดข้อมูล ความยาว และ Not Null ตามที่บทนั้นบอกไว้ตรง ๆ ว่ามันตรวจไม่ได้ว่า Email มี <code>@</code> จริงหรือเปล่า</p>
+      <p>นี่คือคุณค่าอีกอย่างของ Integration Test — <strong>มันบอกคุณว่า Validation ของคุณกันอะไรได้จริง ไม่ใช่สิ่งที่คุณคิดว่ามันกันอยู่</strong> ถ้าอยากให้ Email ถูกตรวจจริง ๆ ก็ <code>.extend()</code> Schema ตัวนั้นเพิ่มด้วย <code>z.email()</code> เสียก่อน แล้วค่อยกลับมาเขียน Test ยืนยันว่ามันได้ <code>400</code> ลำดับต้องเป็นแบบนี้เสมอ</p>
+
+      <h2>ทดสอบการเข้าสู่ระบบ</h2>
+      <p>คราวนี้ต่างออกไปนิดหนึ่ง เพราะก่อนจะ Login ได้ต้องมี User อยู่ในฐานข้อมูลก่อน ซึ่งคือจังหวะที่ Helper จากบทที่แล้วได้ใช้งาน</p>
+      <pre><code>describe('POST /api/auth/login', () =&gt; {
+  it('should log in with valid credentials', async () =&gt; {
+    const testUser = await createTestUser()
+
+    const credentials = {
+      email: testUser.user.email,
+      password: testUser.rawPassword,
+    }
+
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send(credentials)
+      .expect(200)
+
+    expect(response.body).toHaveProperty('message')
+    expect(response.body).toHaveProperty('user')
+    expect(response.body).toHaveProperty('token')
+    expect(response.body.user).not.toHaveProperty('password')
+  })
+})</code></pre>
+      <p><strong><code>rawPassword</code> คือกุญแจของ Test นี้</strong> ในฐานข้อมูลมีแต่รหัสผ่านที่ Hash แล้ว แต่ Client ตัวจริงย่อมส่งรหัสผ่านดิบขึ้นมา Helper ของเราจึงคืนค่าตัวนี้ออกมาให้ใช้พอดี</p>
+      <p>ระวังเรื่อง Status Code ให้ดีครับ Login ของเราตอบ <code>200</code> ไม่ใช่ <code>201</code> เพราะเราไม่ได้สร้างอะไรใหม่ในฐานข้อมูล ตอนสอนสด ๆ ผู้สอนเผลอเขียน <code>.expect(201)</code> แล้ว Test พังทันทีพร้อมข้อความว่า expected 201 got 200 <strong>ซึ่งก็คือ Test ทำงานถูกต้องแล้ว</strong> อีกเรื่องที่ควรจำคือถ้า Controller เรียก <code>res.json()</code> เฉย ๆ โดยไม่ได้ระบุ <code>status</code> Express จะตอบ <code>200</code> ให้เองเสมอ Test ต้องเขียนตามสิ่งที่ Route ตอบจริง</p>
+
+      <h2>Route ที่ต้อง Login ก่อน</h2>
+      <p>Endpoint ส่วนใหญ่ของเราถูกล็อกด้วย <code>authenticateToken</code> ไว้ตั้งแต่บทที่ 24 แต่การทดสอบมันแทบไม่ต่างจากเดิมเลย เพิ่มแค่ Header เดียว เหมือนกับที่เราเคยแปะ Token เองใน Postman</p>
+      <pre><code>it('should create a new habit', async () =&gt; {
+  const { token } = await createTestUser()
+
+  const response = await request(app)
+    .post('/api/habits')
+    .set('Authorization', `Bearer ${token}`)
+    .send({
+      name: 'Exercise daily',
+      description: 'Daily exercise routine',
+      frequency: 'daily',
+      targetCount: 1,
+    })
+    .expect(201)
+
+  expect(response.body.habit).toBeDefined()
+  expect(response.body.habit.name).toBe('Exercise daily')
+})</code></pre>
+      <p>เพราะ <code>createTestUser</code> คืน Token ที่เซ็นไว้เรียบร้อยมาให้ด้วย เราจึงไม่ต้องยิง Login ก่อนทุกครั้ง และอย่าลืมทดสอบด้านกลับด้วยว่า <strong>ยิงโดยไม่แนบ Token แล้วต้องได้ <code>401</code></strong> เพราะนั่นคือหลักฐานว่าประตูล็อกอยู่จริง</p>
+
+      <h2>แนวปฏิบัติที่ควรถือไว้</h2>
+      <ul>
+        <li><strong>ทดสอบพฤติกรรม ไม่ใช่วิธีการ</strong> — อย่าไปสอดส่องว่า <code>bcrypt.hash</code> ถูกเรียกหรือยัง นั่นคือรายละเอียดการทำงานภายในที่เปลี่ยนเมื่อไรก็ได้ สิ่งที่ควรทดสอบคือ "Login ด้วยรหัสผ่านผิดแล้วต้องเข้าไม่ได้"</li>
+        <li><strong>Test ต้องเป็นอิสระต่อกัน</strong> — ทุกตัวเริ่มจากสถานะสะอาดและเก็บกวาดของตัวเองเมื่อจบ ห้ามมี Test ที่ทำงานได้ก็ต่อเมื่อ Test ตัวก่อนหน้ารันไปแล้ว</li>
+        <li><strong>ตั้งชื่อให้บอกทุกอย่าง</strong> — <code>'habits endpoint'</code> ไม่ได้บอกอะไรเลย ส่วน <code>'GET /api/habits returns only habits for authenticated user'</code> บอกครบทั้ง Method, Route และสิ่งที่คาดหวัง</li>
+        <li><strong>Mock บริการภายนอกทิ้งไป</strong> — ถ้า Endpoint ไปคุยกับ API ของเจ้าอื่น เราไม่มีหน้าที่ทดสอบระบบของเขา เขามีทีมทดสอบของเขาอยู่แล้ว และการยิงจริงทุกครั้งที่รัน Test ทั้งช้าและอาจมีค่าใช้จ่าย</li>
+        <li><strong>ทดสอบทุกทางแยกใน Route เดียว</strong> — เจอ <code>if</code> เจอการตัดจบ เจอจุดที่โยน Error ก็เขียน Test ให้มันสักตัว Route หนึ่งอันอาจต้องมี Test สี่ห้าตัว และนั่นคือเรื่องปกติ</li>
+        <li><strong>Side Effect อยู่นอกขอบเขตของ Test แบบนี้</strong> — งานที่ยิงทิ้งไว้แล้วไม่ได้รอผล เช่นส่งอีเมลแจ้งเตือน จะไม่ถูกครอบคลุมโดย Test ที่ดูแค่ Response เพราะถ้าเรารอผลของมัน มันก็ไม่ใช่ Side Effect ตั้งแต่แรก อย่างมากที่ทำได้คือตรวจว่ามันถูกเรียกจริงหรือไม่</li>
+        <li><strong>ระวัง Race Condition</strong> — ถ้า Test สองตัวแตะข้อมูลชุดเดียวกันพร้อมกัน ผลจะไม่เหมือนเดิมทุกรอบ เราจึงสั่งให้ Vitest รันทีละตัวไว้ตั้งแต่บทที่แล้ว</li>
+      </ul>
+      <p>Test ของ Endpoint อื่น ๆ ที่เหลือก็หน้าตาแบบนี้ทั้งหมด คำถามมีอยู่แค่สามข้อเสมอ — <strong>ยิง Route ไหน ส่งอะไรขึ้นไป และคาดว่าจะได้อะไรกลับมา</strong> ลองเขียนต่อให้ครบทั้ง <code>GET</code>, <code>PATCH</code> และ <code>DELETE</code> ของ Habit ดูครับ</p>
+      <p>ตอนนี้ API ของเราครบทุกอย่างแล้ว ทั้งโค้ดและ Test ที่คอยเฝ้าให้ เหลืออย่างเดียวคือเอามันออกไปให้คนอื่นใช้ได้จริง บทหน้าเรา Deploy กัน</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="29_testing_with_vitest.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="31_deploying_to_render.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

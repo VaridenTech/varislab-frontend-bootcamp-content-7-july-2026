@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ตั้งต้นโปรเจกต์ Habit Tracker API ติดตั้ง Express กับ TypeScript สร้าง src/server.ts และ src/index.ts แล้วรัน Server ด้วย npm run dev" />
+  <title>สร้างแอป Express ด้วย TypeScript — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>สร้างแอป Express ด้วย TypeScript</h1>
+      <p>ถึงเวลาลงมือแล้ว บทนี้เราจะตั้งต้นโปรเจกต์ Habit Tracker API ติดตั้งของที่ต้องใช้ แล้วสร้าง Server ตัวแรกที่มี Route เดียวคือ Health Check</p>
+      <p>เริ่มจากอยู่บน Branch <code>main</code> ของโปรเจกต์ หรือจะแตก Branch ของตัวเองออกมาก็ได้ตามสะดวก แล้วรัน <code>npm install</code> ให้เรียบร้อยก่อนเสมอ</p>
+
+      <h2>ติดตั้งของที่ต้องใช้</h2>
+      <p>ถ้าเริ่มจากศูนย์จริง ๆ ให้สร้าง <code>package.json</code> แล้วติดตั้งแพ็กเกจตามนี้</p>
+      <pre><code>npm init -y
+npm install express
+npm install -D typescript @types/node @types/express</code></pre>
+      <p><code>express</code> คือตัว Framework ส่วนอีกสามตัวเป็น Dev Dependency ที่ใช้เฉพาะตอนพัฒนา คือ <code>typescript</code> เอาไว้ให้ Editor ตรวจ Type ให้ และ <code>@types/node</code> กับ <code>@types/express</code> คือชุดคำบรรยาย Type ของ Node.js และ Express ซึ่งทำให้ Editor รู้ว่า <code>req</code> กับ <code>res</code> มี Method อะไรให้เรียกบ้าง</p>
+      <p>จากนั้นเปิด <code>package.json</code> แล้วปรับให้มีส่วนสำคัญเหล่านี้</p>
+      <pre><code>{
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "start": "node src/index.ts"
+  }
+}</code></pre>
+      <ul>
+        <li><code>"type": "module"</code> บอก Node.js ว่าไฟล์ในโปรเจกต์นี้เป็น ES Modules ทำให้ใช้ <code>import</code> และ <code>export</code> ได้</li>
+        <li>Script <code>dev</code> คือคำสั่งที่เราจะใช้ตอนพัฒนา จุดสำคัญคือ Flag <code>--watch</code> ซึ่งสั่งให้ Node.js เฝ้าดูไฟล์ พอเราเซฟไฟล์ไหนก็ตาม มันจะรีสตาร์ท Server ให้อัตโนมัติ ถ้าคุณเคยเขียน React คุณได้ของแบบนี้มาฟรี ๆ โดยไม่รู้ตัว ส่วน Script <code>start</code> ใช้ตอนรันบน Production ที่ไม่ต้องเฝ้าดูไฟล์</li>
+        <li>สังเกตว่าเราสั่ง <code>node src/index.ts</code> ไปที่ไฟล์ <code>.ts</code> ตรง ๆ ได้เลย ไม่มีขั้นตอน Build เพราะ Node.js เวอร์ชัน 23.6.0 ขึ้นไปรันไฟล์ TypeScript ได้เอง</li>
+      </ul>
+
+      <h2>ตั้งค่า tsconfig.json</h2>
+      <p>สร้างไฟล์ <code>tsconfig.json</code> ที่รากของโปรเจกต์</p>
+      <pre><code>{
+  "compilerOptions": {
+    "noEmit": true,
+    "target": "esnext",
+    "module": "nodenext",
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "types": ["vitest/globals"]
+  }
+}</code></pre>
+      <ul>
+        <li><code>noEmit</code> คือหัวใจของไฟล์นี้ เราไม่ให้ TypeScript สร้างไฟล์ JavaScript ออกมาเลย เพราะ Node.js รันไฟล์ <code>.ts</code> เองได้อยู่แล้ว TypeScript จึงเหลือหน้าที่เดียวคือตรวจ Type ให้เรา ส่วน <code>module: "nodenext"</code> คือให้ใช้ระบบ Module แบบเดียวกับ Node.js รุ่นใหม่</li>
+        <li><code>allowImportingTsExtensions</code> และ <code>rewriteRelativeImportExtensions</code> ทำให้เราเขียน <code>import app from './server.ts'</code> โดยใส่นามสกุล <code>.ts</code> ไปตรง ๆ ได้</li>
+        <li><code>erasableSyntaxOnly</code> ห้ามใช้ไวยากรณ์ TypeScript ที่ลบทิ้งเฉย ๆ ไม่ได้ อย่าง <code>enum</code> เพราะ Node.js แค่ลบ Type ออกแล้วรัน ไม่ได้แปลงโค้ดให้ ส่วน <code>verbatimModuleSyntax</code> บังคับให้เขียน <code>import type</code> ให้ชัดเจนเวลา Import เฉพาะ Type</li>
+        <li><code>types: ["vitest/globals"]</code> มีไว้สำหรับตอนเขียน Test ในบทที่ 29 ตอนนี้ยังไม่ต้องสนใจ</li>
+      </ul>
+
+      <h2>สร้าง src/server.ts</h2>
+      <p>สร้างโฟลเดอร์ <code>src</code> ขึ้นมา ชื่อนี้ไม่ใช่ข้อบังคับของ Node.js หรือ Express แต่เป็นธรรมเนียมที่คนนิยมใช้ เพื่อบอกว่าไฟล์ในนี้คือ Source Code ที่เราเขียนเอง แยกจากผลลัพธ์ที่เครื่องสร้างขึ้น</p>
+      <p>แล้วสร้างไฟล์ <code>src/server.ts</code></p>
+      <pre><code>import express from 'express'
+
+const app = express()
+
+// Health check endpoint
+app.get('/health', (req, res) =&gt; {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    service: 'Habit Tracker API',
+  })
+})
+
+export { app }
+
+export default app</code></pre>
+      <p>มาไล่ดูทีละส่วน</p>
+      <ul>
+        <li><code>express()</code> เรียกใช้แล้วได้ App กลับมาหนึ่งตัว จะตั้งชื่อตัวแปรว่าอะไรก็ได้ แต่ธรรมเนียมคือเรียกว่า <code>app</code></li>
+        <li><code>app.get('/health', ...)</code> คือการลงทะเบียน Route ว่าถ้ามีใครส่ง GET Request มาที่ Path <code>/health</code> ให้รันโค้ดก้อนนี้ สังเกตว่าการจับคู่ใช้ทั้ง Path และ HTTP Verb คู่กันเสมอ ส่วน <code>/health</code> เป็นธรรมเนียมที่ Server ส่วนใหญ่มี เอาไว้ให้ระบบภายนอกยิงเข้ามาเช็คเป็นระยะว่า Server ยังไม่ตาย</li>
+        <li>Callback ที่เราส่งเข้าไปจะได้ Argument สองตัวเสมอ คือ <code>req</code> ซึ่งเป็น Request ขาเข้า (มีข้อมูลของ Client ที่ยิงมา เช่น User Agent และ Header ต่าง ๆ) และ <code>res</code> ซึ่งเป็นตัวที่เราใช้ตอบกลับ</li>
+        <li><code>res.json(...)</code> ส่ง JSON กลับไป ส่วน <code>res.status(200)</code> คือการกำหนด Status Code ซึ่งเป็นตัวเลขสามหลักที่บอก Client ว่าเกิดอะไรขึ้นบน Server โดย 200 แปลว่าสำเร็จ จริง ๆ ถ้าไม่ระบุ Express จะใช้ 200 ให้อยู่แล้ว แต่การเขียนให้ชัดช่วยให้อ่านง่ายขึ้น</li>
+        <li>บรรทัดสุดท้ายเรา Export ทั้งแบบ Named และแบบ Default เพื่อให้ไฟล์อื่นเลือก Import ได้ตามสะดวก ไม่ได้เปลี่ยนพฤติกรรมอะไร แค่เพิ่มทางเลือกให้ตัวเอง</li>
+      </ul>
+      <p>สังเกตว่าไฟล์นี้<strong>ไม่มี</strong> <code>app.listen()</code> เลย เพราะเราจงใจแยกหน้าที่ "นิยาม App" ออกจาก "สั่งให้ Server เริ่มทำงาน" ประโยชน์ที่ได้คือตอนเขียน Test เรา Import <code>app</code> เข้าไปทดสอบได้โดยไม่ต้องเปิด Server จริง และย้ายไปใช้ในบริบทอื่นได้ง่าย</p>
+
+      <h2>สร้าง src/index.ts</h2>
+      <p>ไฟล์นี้คือ Entry Point ของแอปเรา มีหน้าที่เดียวคือสั่งให้ Server เริ่มฟัง</p>
+      <pre><code>import app from './server.ts'
+
+app.listen(3000, () =&gt; {
+  console.log('Server running on port 3000')
+})</code></pre>
+      <p>Port คือช่องทางที่โปรแกรมเปิดไว้รับการเชื่อมต่อบนเครื่อง ทุกเว็บไซต์ก็มี Port เหมือนกัน (เว็บทั่วไปคือ 80 หรือ 443) เพียงแต่ Browser ตัดมันออกจาก URL ให้เราไม่เห็น สำหรับงานพัฒนา Port ยอดนิยมคือ 3000</p>
+      <p>กฎเหล็กคือ <strong>หนึ่ง Port เปิดฟังได้ทีละโปรแกรมเท่านั้น</strong> และจริง ๆ แล้วเครื่องคุณตอนนี้น่าจะมี Server รันอยู่หลายตัวโดยที่คุณไม่รู้ตัว เช่น TypeScript Plugin ใน Editor ก็เปิด Server ของตัวเองไว้คอยตรวจโค้ดทุกครั้งที่คุณพิมพ์</p>
+      <p>ส่วน Callback ตัวที่สองไม่ใส่ก็ได้ แต่แนะนำให้ใส่ เพราะถ้าไม่มี Log อะไรเลย เวลารันแล้วเทอร์มินัลค้างนิ่ง ๆ เราจะไม่รู้เลยว่ามันทำงานอยู่หรือพังไปแล้ว (ในบทที่ 5 เราจะเปลี่ยนเลข 3000 ที่ Hardcode ไว้ตรงนี้ให้มาจาก Environment Variable แทน)</p>
+
+      <h2>รัน Server</h2>
+      <pre><code>npm run dev</code></pre>
+      <p>ถ้าทุกอย่างถูกต้องคุณจะเห็นข้อความที่เรา Log ไว้</p>
+      <pre><code>Server running on port 3000</code></pre>
+      <p>ถ้าเจอ Error ว่า <code>EADDRINUSE</code> แปลว่ามีโปรแกรมอื่นใช้ Port นั้นอยู่แล้ว ให้เปลี่ยนไปใช้ 3001 แล้วไล่เลขขึ้นไปจนกว่าจะได้</p>
+      <p>สิ่งที่ต่างจากโค้ดฝั่ง Browser อย่างชัดเจนคือ คำสั่งนี้จะ<strong>ไม่จบเอง</strong> Function ทั่วไปทำงานเสร็จแล้วก็จบ แต่ Server มีหน้าที่อยู่ให้ได้นานที่สุด มันจะรันไปเรื่อย ๆ จนกว่าเราจะสั่งหยุดด้วย <kbd>Ctrl</kbd> + <kbd>C</kbd> หรือมันพังไปเอง</p>
+      <p>ตอนนี้ Server ของเราพร้อมแล้ว แต่เรายังไม่ได้ลองยิง Request เข้าไปดูเลย บทถัดไปเราจะใช้ Postman ทำสิ่งนั้นกัน</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="02_nodejs_servers_overview.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="04_testing_apis_with_postman.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

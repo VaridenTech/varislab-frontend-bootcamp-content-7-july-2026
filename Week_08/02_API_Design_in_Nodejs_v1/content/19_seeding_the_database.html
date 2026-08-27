@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เขียน src/db/seed.ts เพื่อใส่ข้อมูลตัวอย่างลง Database ทั้งการล้างข้อมูลตามลำดับ Foreign Key การใช้ .returning() การสร้างความสัมพันธ์ผ่านตารางกลาง และทริก import.meta.url ก่อนรัน db:seed แล้วตรวจผลด้วย Drizzle Studio" />
+  <title>การ Seed ข้อมูลลงฐานข้อมูล — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การ Seed ข้อมูลลงฐานข้อมูล</h1>
+      <p>เรามีตารางครบแล้วแต่ยังว่างเปล่า บทนี้เราจะเขียน Seed Script ซึ่งก็คือไฟล์ที่รันแล้วใส่ข้อมูลลง Database ให้เรา</p>
+
+      <h2>ทำไมต้อง Seed</h2>
+      <p>Seed ไม่ได้แปลว่าข้อมูลปลอมเสมอไป มันคือการเติมข้อมูลลงฐานข้อมูลเพื่อให้เราทำงานต่อได้ ซึ่งมีหลายสถานการณ์</p>
+      <ul>
+        <li><strong>ทำฟีเจอร์ที่ต้องพึ่งความสัมพันธ์</strong> — บางฟีเจอร์เขียนไม่ได้เลยถ้าไม่มีข้อมูลที่เชื่อมโยงกันอยู่จริง</li>
+        <li><strong>งานฝั่ง Frontend</strong> — ถ้าคุณทำ Full-stack แล้วอยากเริ่มจากหน้าจอก่อน คุณจะ Mock ข้อมูลบนหน้าบ้านก็ได้ แต่เดี๋ยวต้องกลับมารื้อใส่ Logic การยิง Network ทีหลังอยู่ดี สู้ต่อหลังบ้านให้ครบแล้ว Seed ข้อมูลปลอมลงไปเลยดีกว่า จากมุมของหน้าบ้านมันไม่มีทางรู้เลยว่าข้อมูลนั้นปลอม เพราะรูปร่างเหมือนกันทุกอย่าง</li>
+        <li><strong>ทุกคนในทีมได้ข้อมูลชุดเดียวกัน</strong> — คนเข้าใหม่โคลนโปรเจกต์ รัน Seed แล้วทำงานได้เลย</li>
+        <li><strong>ไล่ปัญหา</strong> — บางทีเราอยากดึงข้อมูลรูปแบบเดียวกับที่ Production มีลงมาไว้บนเครื่อง เพื่อทำซ้ำอาการที่ผู้ใช้เจอ</li>
+      </ul>
+      <p>วิธีสร้างข้อมูลก็มีหลายทาง จะใช้ Library อย่าง Faker สร้างข้อมูลปลอมเป็นร้อยแถวก็ได้ จะเลือกเขียนข้อมูลเองทีละตัวให้ตรงกับสถานการณ์ที่อยากทดสอบก็ได้ หรือจะ Export ข้อมูลจาก Database อีกตัวมา Import ก็ได้ ซึ่งฐานข้อมูลส่วนใหญ่มีความสามารถนี้ติดมาให้อยู่แล้ว ของเราจะเขียนเองแบบง่าย ๆ</p>
+      <p>ก่อนไปต่อ ขอเตือนหนึ่งข้อ <strong>ห้ามรัน Seed Script ใส่ Database ของ Production เด็ดขาด</strong> เพราะสิ่งแรกที่มันจะทำคือล้างข้อมูลทิ้ง</p>
+      <p>จริง ๆ แล้วคุณไม่ควรมี Credential ของ Production อยู่บนเครื่องตัวเองตั้งแต่แรกด้วยซ้ำ ถ้าบังเอิญมี ให้ถามตัวเองว่าใครให้มาและทำไมถึงให้ได้ บริษัทส่วนใหญ่จะไม่ให้ใครเข้าถึง Production Database ง่าย ๆ อยู่แล้ว มีทีมดูแลเรื่องนี้โดยเฉพาะทั้งด้วยเหตุผลทางกฎหมายและทางเทคนิค ผมเองก็เคยเผลอลบ Database ของ Production เพราะนึกว่าเป็นของตัวเองมาแล้ว โชคดีที่ Neon สำรองข้อมูลถี่มากจนกดกู้กลับมาได้ แต่ก็ไม่อยากให้ใครต้องเจอ</p>
+
+      <h2>เขียน src/db/seed.ts</h2>
+      <p>สร้างไฟล์ <code>src/db/seed.ts</code> เริ่มจาก Import และโครงของ Function</p>
+      <pre><code>import { db } from './connection.ts'
+import { users, habits, entries, tags, habitTags } from './schema.ts'
+
+const seed = async () =&gt; {
+  console.log('🌱 Starting database seed...')
+
+  try {
+    // โค้ดทั้งหมดของเราจะอยู่ในนี้
+  } catch (e) {
+    console.error('❌ seed failed', e)
+    process.exit(1)
+  }
+}</code></pre>
+      <p>ผมชอบ Log เยอะ ๆ ใน Seed Script เพราะเวลารันแล้วพัง เราจะรู้ทันทีว่าพังตรงขั้นไหน และการครอบด้วย <code>try/catch</code> ทำให้เราคุมได้ว่าจะจบยังไงตอนมีปัญหา</p>
+
+      <h3>ล้างข้อมูลเดิมก่อน และลำดับสำคัญมาก</h3>
+      <pre><code>console.log('Clearing existing data...')
+await db.delete(entries)
+await db.delete(habitTags)
+await db.delete(habits)
+await db.delete(tags)
+await db.delete(users)</code></pre>
+      <p>เราล้างก่อนเพื่อให้ Seed Script <strong>รันกี่ครั้งก็ได้ผลเหมือนเดิม</strong> ไม่ใช่ว่ารันสามรอบแล้วได้ข้อมูลซ้อนกันสามชุด</p>
+      <p>สังเกตลำดับให้ดี เราลบจาก<em>ลูกไปหาแม่</em>เสมอ คือลบ <code>entries</code> กับ <code>habitTags</code> ที่ถือ Foreign Key ก่อน แล้วค่อยลบ <code>habits</code> และ <code>tags</code> ปิดท้ายด้วย <code>users</code> ถ้าสลับลำดับ ฐานข้อมูลจะไม่ยอมให้ลบเพราะยังมีคนอ้างถึงอยู่</p>
+
+      <h3>สร้าง User และรู้จัก .returning()</h3>
+      <pre><code>console.log('Creating demo users...')
+
+const [demoUser] = await db
+  .insert(users)
+  .values({
+    email: 'demo@habittracker.com',
+    username: 'demouser',
+    password: 'demo123',
+    firstName: 'Demo',
+    lastName: 'User',
+  })
+  .returning()</code></pre>
+      <p>รูปแบบคือ <code>db.insert(ตาราง).values(ข้อมูล)</code> ส่วนที่สนุกคือ <code>.values()</code> ถูก Type Check ตามตารางที่เรากำลังใส่ ลองพิมพ์ในเอดิเตอร์ดูจะเห็นรายชื่อ Field ทั้งหมดของ User โผล่มา และ<strong>ตัวที่มีเครื่องหมายคำถามคือตัวที่ไม่ต้องใส่ก็ได้</strong> เหลือที่บังคับจริง ๆ แค่ <code>email</code>, <code>username</code> และ <code>password</code> ตรงกับ Type <code>NewUser</code> ที่เรา Export ไว้ในบทที่ 17 พอดี</p>
+      <p><code>.values()</code> รับ Object เดียวถ้าจะใส่แถวเดียว หรือรับ Array ของ Object ถ้าจะใส่ทีละหลายแถว</p>
+      <p>ส่วน <code>.returning()</code> สำคัญมาก <strong>ถ้าไม่ใส่ Drizzle จะคืนแค่ Metadata ของการ Insert</strong> เช่นใส่ไปกี่แถว ไม่ได้คืนข้อมูลจริง แต่เราต้องการ <code>id</code> ที่ฐานข้อมูลเพิ่งสุ่มให้ เพื่อเอาไปผูกกับตารางอื่น จึงต้องใส่</p>
+      <p>และเพราะ <code>.returning()</code> คืนเป็น Array เสมอไม่ว่าจะใส่กี่แถว เราเลยใช้ Destructuring ครอบด้วย <code>[ ]</code> เพื่อหยิบตัวแรกออกมาตั้งชื่อว่า <code>demoUser</code> ในบรรทัดเดียว</p>
+      <p>เรื่อง <code>password</code> ตอนนี้เรายังใส่เป็นข้อความธรรมดาไปก่อน เพราะเรายังไม่ได้เรียนเรื่องการ Hash รหัสผ่าน ซึ่งจะอยู่ในบทที่ 21 หลังจากบทนั้นเราจะกลับมาแก้ตรงนี้ให้เป็นแบบนี้แทน</p>
+      <pre><code>import { hashPassword } from '../utils/password.ts'
+
+const hashedPassword = await hashPassword('demo123')
+// แล้วส่ง hashedPassword เข้าไปใน values() แทนข้อความดิบ</code></pre>
+      <p>บนเครื่องเราเองตอนนี้ไม่มีปัญหาอะไร แต่บน Production ห้ามเก็บรหัสผ่านเป็นข้อความธรรมดาเด็ดขาด</p>
+
+      <h3>สร้าง Tag และ Habit</h3>
+      <pre><code>console.log('Creating tags...')
+
+const [healthTag] = await db
+  .insert(tags)
+  .values({ name: 'Health', color: '#10B981' })
+  .returning()
+
+console.log('Creating demo habits...')
+
+const [exerciseHabit] = await db
+  .insert(habits)
+  .values({
+    userId: demoUser.id,
+    name: 'Exercise',
+    description: 'Daily workout routine',
+    frequency: 'daily',
+    targetCount: 1,
+  })
+  .returning()</code></pre>
+      <p>ตรงนี้คือจุดที่ความสัมพันธ์เริ่มทำงานจริง <code>userId: demoUser.id</code> คือการผูก Habit เข้ากับ User ที่เราเพิ่งสร้าง และถ้าเราลืมบรรทัดนี้ ฐานข้อมูลจะปฏิเสธทันที เพราะเราตั้ง <code>.notNull()</code> ไว้ตั้งแต่บทที่ 16</p>
+      <p>สังเกตด้วยว่า <code>frequency</code> เราใส่ <code>'daily'</code> ได้ตามใจเพราะยังเป็น <code>varchar</code> อยู่ ซึ่งเป็นข้อจำกัดที่เราคุยกันไปแล้วในบทที่ 17</p>
+
+      <h3>ผูก Habit เข้ากับ Tag ผ่านตารางกลาง</h3>
+      <pre><code>await db.insert(habitTags).values({
+  habitId: exerciseHabit.id,
+  tagId: healthTag.id,
+})</code></pre>
+      <p>นี่คือการใช้ตารางกลางจริง ๆ ครั้งแรก เราแค่จับ <code>id</code> ของทั้งสองฝั่งมาวางคู่กัน แค่นั้น Habit ชื่อ Exercise ก็ถูกติดป้าย Health เรียบร้อย และตรงนี้เราไม่ต้องใส่ <code>.returning()</code> เพราะไม่ต้องเอาผลลัพธ์ไปทำอะไรต่อ แค่ต้องการให้แถวนั้นมีอยู่</p>
+
+      <h3>ใส่ Entry ย้อนหลังเจ็ดวัน</h3>
+      <pre><code>console.log('Adding completion entries...')
+
+const today = new Date()
+today.setHours(12, 0, 0, 0)
+
+for (let i = 0; i &lt; 7; i++) {
+  const date = new Date(today)
+  date.setDate(date.getDate() - i)
+
+  await db.insert(entries).values({
+    habitId: exerciseHabit.id,
+    completion_date: date,
+    note: i === 0 ? 'Great workout today!' : null,
+  })
+}</code></pre>
+      <p>เราปักเวลาไว้ที่เที่ยงวันด้วย <code>setHours(12, 0, 0, 0)</code> เพื่อไม่ให้ผลลัพธ์เปลี่ยนไปตามเวลาที่เรารัน Script แล้ววนถอยหลังเจ็ดวันเพื่อสร้างประวัติการทำ Habit</p>
+      <p>อยากให้สังเกตจุดสำคัญตรงนี้ <strong>Insert ชุดนี้ไม่ได้สร้าง Habit ใหม่</strong> มันสร้าง Entry ให้กับ Habit ที่มีอยู่แล้ว โดยชี้ผ่าน <code>habitId</code> ทุกแถวจะมี <code>habitId</code> เป็นตัวเดียวกันหมด นั่นแหละคือหน้าตาของ One-to-Many ในข้อมูลจริง</p>
+      <p>และย้ำอีกครั้งว่าชื่อ Field คือ <code>completion_date</code> ไม่ใช่ <code>completionDate</code> ตามที่เราประกาศไว้ใน Schema</p>
+
+      <h3>ปิดท้ายด้วยการบอกรหัสเข้าระบบ</h3>
+      <pre><code>console.log('✅ Database seeded successfully!')
+console.log('\n🔑 Login Credentials:')
+console.log(`Email: ${demoUser.email}`)
+console.log(`Username: ${demoUser.username}`)
+console.log('Password: demo123')</code></pre>
+      <p>ทริกเล็ก ๆ ที่มีประโยชน์มาก เพราะเดี๋ยวเราจะต้องเอา User ตัวนี้ไปทดสอบใน Postman การพิมพ์ออกมาให้เห็นเลยช่วยประหยัดเวลาไม่ต้องเปิดไปหาในฐานข้อมูล</p>
+
+      <h2>ทริก import.meta.url ให้ไฟล์รันได้สองแบบ</h2>
+      <p>ท้ายไฟล์ให้ใส่โค้ดนี้</p>
+      <pre><code>if (import.meta.url === `file://${process.argv[1]}`) {
+  seed()
+    .then(() =&gt; process.exit(0))
+    .catch(() =&gt; process.exit(1))
+}
+
+export default seed</code></pre>
+      <p>สิ่งที่เราต้องการคือ<strong>ถ้ารันไฟล์นี้จากเทอร์มินัลตรง ๆ ให้ Seed ทันที แต่ถ้ามีใคร Import ไปอย่าเพิ่งรันเอง</strong> เพราะบางทีเราอยากเรียก <code>seed()</code> จากโค้ดอื่น เช่นในไฟล์ Test</p>
+      <p>ถ้าไม่มีเงื่อนไขนี้ วินาทีที่ใครก็ตาม Import ไฟล์นี้ มันจะล้าง Database แล้ว Seed ใหม่ทันทีโดยไม่ได้ตั้งใจ</p>
+      <p>ไล่ดูทีละส่วน <code>import.meta.url</code> คือ Path ของไฟล์ที่โค้ดบรรทัดนั้นอยู่ (ใน ES Module เราใช้ <code>__dirname</code> แบบสมัยก่อนไม่ได้แล้ว จึงต้องใช้ตัวนี้แทน)</p>
+      <p>ส่วน <code>process.argv</code> คือ Array ของทุกคำที่คั่นด้วยช่องว่างตอนเราสั่งรันจากเทอร์มินัล เรียงจากซ้ายไปขวา ถ้าเราสั่ง <code>node src/db/seed.ts</code> ก็จะได้ว่า <code>argv[0]</code> คือ <code>node</code> และ <code>argv[1]</code> คือไฟล์ที่เราสั่งให้ Node.js รัน</p>
+      <p>เพราะฉะนั้นเงื่อนไขทั้งบรรทัดอ่านว่า "ไฟล์ที่ถูกสั่งให้รัน คือไฟล์เดียวกับไฟล์นี้ใช่ไหม" ถ้าใช่ก็คือมีคนรันมันจากเทอร์มินัล ให้ Seed เลย ถ้าไม่ใช่ก็แปลว่ามีคน Import เข้าไป ก็แค่ Export Function ออกไปเฉย ๆ ให้เขาเรียกเอง ได้ทั้งสองทางในโค้ดสี่บรรทัด</p>
+      <p>ปิดท้ายด้วย <code>process.exit()</code> พร้อม Exit Code เหมือนที่เราทำใน <code>env.ts</code> คือ <code>0</code> แปลว่าจบดี <code>1</code> แปลว่าจบเพราะพัง</p>
+
+      <h2>รันแล้วตรวจผล</h2>
+      <pre><code>npm run db:seed</code></pre>
+      <p>คุณควรเห็น Log ไล่ตามลำดับที่เราเขียนไว้จนถึงบรรทัดสุดท้ายที่บอกว่าสำเร็จ ถ้ามี Error ก็ย้อนกลับไปดูว่าพังที่ Log บรรทัดไหน</p>
+      <p>วิธียืนยันว่าข้อมูลลงจริงคือเปิด Drizzle Studio</p>
+      <pre><code>npm run db:studio</code></pre>
+      <p>กด Refresh แล้วไล่ดูทีละตาราง คุณจะเห็น Entry ทั้งเจ็ดแถวที่ผูกกับ Habit ตัวเดียวกัน เห็น Habit ที่ผูกกับ User ของเรา เห็น <code>habit_tags</code> หนึ่งแถวที่มี <code>habit_id</code> กับ <code>tag_id</code> ชี้ไปหาของจริงทั้งคู่ ถ้าครบทั้งหมดนี้ก็แปลว่า<strong>ความสัมพันธ์ที่เราออกแบบไว้ทำงานได้จริง</strong></p>
+      <p>อีกอย่างที่ควรรู้ Drizzle Studio ไม่ใช่เครื่องมือแยกส่วน มันมาจาก <code>drizzle-kit</code> ทีมเดียวกันกับ ORM และมัน<strong>อ่าน Schema ของเราตรง ๆ</strong> เพราะฉะนั้นตารางที่เห็นในนั้นคือสิ่งที่เราเขียนเป๊ะ ๆ มีหน้าที่ให้ดูเวอร์ชัน SQL ของ Schema ได้ด้วย ซึ่งจะละเอียดกว่าที่เราเขียนนิดหน่อย เช่นตอนเราใช้ทางลัด <code>.unique()</code> ในนั้นจะแสดงเป็นคำสั่งสร้าง Unique Constraint แบบเต็มรูป และถ้าเปิด Drizzle Runner ในนั้น คุณจะเขียนโค้ดอย่าง <code>db.insert(entries).values(...)</code> ยิงเข้า Database ได้ทันทีพร้อม Type ครบเหมือนที่เขียนใน Editor</p>
+
+      <h2>เมื่อข้อมูล Seed เริ่มเยอะ</h2>
+      <p>มีคนถามว่าถ้าข้อมูลที่ต้อง Seed เยอะมาก ควรยัดไว้ใน <code>seed.ts</code> ไฟล์เดียวไหม คำตอบคือแล้วแต่ว่าคุณ Seed ไปเพื่ออะไร</p>
+      <p>ที่เราทำวันนี้เรียกว่า Generic Seed คือแค่อยากให้มีข้อมูลอยู่ ไม่ได้เจาะจงว่าจะทดสอบอะไร กรณีแบบนี้ไฟล์เดียวก็พอ ถ้าอยากได้เยอะ ๆ ก็สร้างโฟลเดอร์เก็บ JSON ไว้ หรือให้ Faker สร้างให้</p>
+      <p>แต่วิธีที่ผมใช้จริงคือ<strong>แบ่งตาม Scenario</strong> ผมจะมีโฟลเดอร์ <code>seed</code> ที่ข้างในมีไฟล์ละสถานการณ์ เช่นตอนผมทำ Pagination บนหน้าจอที่แสดงทีละ 10 แถว ผมอยากทดสอบว่าเลื่อนได้สามหน้า ผมก็เขียน Scenario ที่ Seed User หนึ่งคนที่มี 30 Habit พอดี ไม่มีอะไรมากกว่านั้น</p>
+      <p>อีกทางที่ง่ายมากคือถ้าคุณใช้บริการที่มี Database Branching อย่าง Neon แค่แตก Branch ออกมาก็ได้ข้อมูลจริงมาทั้งชุดโดยไม่ต้อง Seed อะไรเลย แต่ต้องดูนโยบายของบริษัทว่าเอาข้อมูล Production ลงเครื่องได้หรือไม่</p>
+      <p>สรุปคือเรื่องนี้ไม่มี Best Practice ตายตัว วิธีที่เราเขียนกันวันนี้ไม่มีอะไรผิด ถ้าวันหนึ่งมันเริ่มรกค่อยหาทางแตกออกไป</p>
+      <p>อ้อ อีกเรื่องที่อยากฝากไว้ การให้ AI ช่วยสร้างข้อมูลปลอมเป็นงานที่มันเหมาะมาก เพราะสิ่งที่เราอยากได้คือข้อมูลมั่ว ๆ ที่ดูสมจริงพอดี</p>
+
+      <h2>เวิร์กโฟลว์จากนี้ไป</h2>
+      <p>คุณอาจสังเกตว่าเราไม่เคยรัน <code>db:generate</code> กับ <code>db:migrate</code> เลยสักครั้ง ถูกแล้ว เพราะเรายังไม่จำเป็นต้องใช้ เราจะได้ใช้จริงตอน Deploy ขึ้น Production ในบทที่ 31</p>
+      <p>จังหวะการทำงานที่ถูกต้องคือแบบนี้ ระหว่างที่ทำฟีเจอร์อยู่และยังเปลี่ยน Schema ไปมา ให้ <code>db:push</code> รัว ๆ ได้เลย ตราบใดที่ไม่ใช่ Destructive Change มันจะไม่มีปัญหาอะไร</p>
+      <p>ถ้าเป็น Destructive Change เช่นเปลี่ยนชื่อคอลัมน์ที่มีข้อมูลอยู่แล้ว Drizzle จะเตือนและอาจเสนอให้ล้างข้อมูลทิ้งแล้ว Push ใหม่ บนเครื่องเราเองก็ยอมได้เพราะเดี๋ยว Seed ใหม่ก็จบ แต่ถ้าใครไปทำแบบนั้นกับ Production คือการลบข้อมูลของคนอื่นทิ้ง ซึ่งถึงขั้นติดคุกได้จริง ๆ อย่าทำ</p>
+      <p>พอฟีเจอร์เสร็จและพร้อมเปิด PR ค่อยรัน <code>db:generate</code> <strong>ครั้งเดียว</strong> เพื่อให้ได้ไฟล์ Migration ไฟล์เดียวที่สรุปทุกการเปลี่ยนแปลง แล้วให้ Production รัน <code>db:migrate</code> ตอน Deploy ถ้าคุณ Generate ทุกครั้งที่เปลี่ยนใจ PR ของคุณจะมี Migration หกไฟล์และไม่มีใครกล้า Merge ให้</p>
+      <p>เรื่อง Database จบครบแล้ว เรามี Schema มี Database จริง มี Connection และมีข้อมูลให้เล่น บทหน้าเราจะเริ่มเรื่องใหญ่เรื่องถัดไป คือ Authentication ว่าจะรู้ได้อย่างไรว่าคนที่ยิง Request เข้ามาเป็นใคร และเขามีสิทธิ์แตะข้อมูลชุดไหนบ้าง</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="18_hosted_postgresql_with_neon.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="20_authentication_strategies.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

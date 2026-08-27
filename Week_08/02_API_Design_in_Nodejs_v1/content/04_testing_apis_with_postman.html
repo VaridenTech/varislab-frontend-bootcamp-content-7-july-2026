@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ติดตั้ง Postman แล้วยิง GET และ POST Request เข้า Habit Tracker API อ่าน Status Code, Header, Body และเก็บ Request ไว้เป็น Collection" />
+  <title>ทดสอบ API ด้วย Postman — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>ทดสอบ API ด้วย Postman</h1>
+      <p>ตอนนี้ Server ของเรารันอยู่แล้วที่ <code>http://localhost:3000</code> แต่เรายังไม่มีหน้าจอไว้กดเรียกมันเลย และเราก็จะไม่สร้างด้วย เพราะการสร้าง UI แค่เพื่อทดสอบ API เป็นการเสียเวลาโดยใช่เหตุ</p>
+      <p>สิ่งที่เราจะใช้แทนคือ REST Client ซึ่งเป็นโปรแกรมที่ทำหน้าที่เป็น Client ปลอม ๆ ให้เรากรอก URL เลือก HTTP Verb ใส่ Body แล้วกดส่ง จากนั้นมันจะโชว์คำตอบทั้งหมดที่ Server ส่งกลับมาให้เราดูแบบละเอียด</p>
+
+      <h2>ติดตั้ง Postman</h2>
+      <p>ค้นหาคำว่า Postman ใน Google แล้วเข้าเว็บทางการ ตรงนี้มีจุดที่ต้องระวังนิดหนึ่ง คือหน้าเว็บจะมีปุ่มสีส้มเด่น ๆ ชวนให้ Sign Up ฟรี <strong>อย่ากดปุ่มนั้น</strong> ให้มองหาปุ่ม Download สีเทาที่กลมกลืนไปกับพื้นหลัง แล้วเลือกเวอร์ชันที่ตรงกับระบบปฏิบัติการของคุณ วิธีนี้จะได้ตัวโปรแกรมมาใช้โดยไม่ต้องสมัครบัญชี</p>
+      <p>ฟีเจอร์ที่ต้องเสียเงินของ Postman เป็นฟีเจอร์สำหรับทำงานเป็นทีม ซึ่งเราไม่ได้ใช้ในคอร์สนี้</p>
+      <p>ถ้าคุณมีเครื่องมือที่ถนัดอยู่แล้วก็ใช้ตัวนั้นได้เลย ทางเลือกอื่นที่นิยมกันได้แก่ Insomnia, Extension สำหรับยิง Request ที่ติดตั้งใน VS Code ได้ หรือจะใช้ <code>curl</code> ในเทอร์มินัลก็ได้เหมือนกัน</p>
+      <pre><code>curl http://localhost:3000/health</code></pre>
+      <p>ทุกตัวทำงานเหมือนกันหมด ต่างกันแค่หน้าตา เนื้อหาบทนี้อธิบายด้วย Postman เป็นหลัก</p>
+
+      <h2>ยิง GET Request ตัวแรก</h2>
+      <p>ตรวจให้แน่ใจก่อนว่า <code>npm run dev</code> ยังรันอยู่ในเทอร์มินัล แล้วใน Postman ให้ตั้งค่าตามนี้</p>
+      <ol>
+        <li>เปิด Request ใหม่ แล้วเลือก Verb เป็น <strong>GET</strong> จากช่อง Dropdown ด้านซ้ายของช่อง URL</li>
+        <li>ใส่ URL ว่า <code>http://localhost:3000/health</code></li>
+        <li>กด Send</li>
+      </ol>
+      <p>คำว่า <code>localhost</code> คือชื่อเล่นของเครื่องคุณเอง เขียนเป็น <code>127.0.0.1</code> ก็ได้ผลเหมือนกัน ส่วน <code>:3000</code> คือ Port ที่เราเปิดไว้ใน <code>src/index.ts</code> ข้อนี้ห้ามลืมใส่ เพราะ Browser ที่เราใช้กันทุกวันมันซ่อน Port ให้ จนหลายคนไม่ชินว่าต้องระบุ</p>
+      <p>สิ่งที่ควรได้กลับมาคือ JSON ก้อนนี้</p>
+      <pre><code>{
+  "status": "OK",
+  "timestamp": "2026-01-15T10:30:00.000Z",
+  "service": "Habit Tracker API"
+}</code></pre>
+      <p>ถ้าได้แบบนี้แปลว่า API ตัวแรกของคุณทำงานแล้วจริง ๆ และนี่ก็คือแก่นทั้งหมดของการทำ API เรื่องที่เหลือในคอร์สนี้เป็นเพียงส่วนประกอบที่มาเสริมให้มันแข็งแรงขึ้นเท่านั้น</p>
+
+      <h2>อ่านคำตอบจาก Server ให้เป็น</h2>
+      <p>อย่ามองแค่ Body ที่ตอบกลับมา เพราะ Postman บอกเราได้มากกว่านั้น ให้สังเกตสามจุดนี้</p>
+      <ul>
+        <li><strong>Status Code</strong> — ตัวเลขสามหลักที่มุมขวาบน ในกรณีนี้คือ <code>200 OK</code> ตัวเลขนี้คือสิ่งที่ Client และซอฟต์แวร์อื่น ๆ ดูเพื่อตัดสินว่าเกิดอะไรขึ้น เราจะเรียนเรื่อง Status Code แบบเต็ม ๆ ในบทที่ 7</li>
+        <li><strong>Headers</strong> — เปิดแท็บ Headers ในส่วนของ Response คุณจะเห็น <code>Content-Type: application/json; charset=utf-8</code> ซึ่ง <code>res.json()</code> ตั้งให้เราอัตโนมัติ Header คือข้อมูลกำกับที่บอกว่า Body ที่ส่งมาเป็นข้อมูลชนิดไหน</li>
+        <li><strong>Body</strong> — เนื้อข้อมูลจริง Postman มีปุ่มให้สลับดูแบบ Pretty, Raw และ Preview นอกจากนี้ยังบอกเวลาที่ใช้และขนาดของ Response ให้ด้วย ซึ่งมีประโยชน์มากตอนไล่หาว่า Route ไหนช้า</li>
+      </ul>
+
+      <h2>Server ส่งอะไรกลับได้บ้าง</h2>
+      <p>Object <code>res</code> มี Method ให้เลือกใช้หลายตัว ไม่ได้มีแค่ <code>res.json()</code> ลองแก้ Route ชั่วคราวเป็นแบบนี้ดู</p>
+      <pre><code>app.get('/health', (req, res) =&gt; {
+  res.send('&lt;button&gt;click me&lt;/button&gt;')
+})</code></pre>
+      <p>กด Send อีกครั้ง คุณจะเห็นว่า Postman แสดงผลออกมาเป็น HTML ที่เรนเดอร์เป็นปุ่มจริง ๆ เพราะ <code>res.send()</code> เดา Content-Type ให้ตามชนิดข้อมูลที่เราส่งเข้าไป</p>
+      <p>บทเรียนตรงนี้คือ Server ส่งอะไรกลับก็ได้ ไม่ได้จำกัดอยู่แค่ JSON แต่มีเงื่อนไขข้อเดียวคือ <strong>ของนั้นต้องแปลงเป็นข้อมูลที่วิ่งข้ามเครือข่ายได้</strong> พูดง่าย ๆ คืออะไรที่เขียนลงไฟล์ได้ก็ส่งได้</p>
+      <ul>
+        <li>ส่ง Function ไม่ได้ เพราะส่งของที่รันได้ข้ามเครือข่ายไม่ได้ (ส่งเป็น String ที่หน้าตาเหมือน Function ได้ แต่ปลายทางก็ได้แค่ String)</li>
+        <li>ส่ง Object ที่อ้างถึงตัวเองวนไปมา (Cyclic) ไม่ได้ เพราะแปลงเป็น JSON ไม่ได้</li>
+        <li>Date Object จะถูกแปลงเป็น String โดยอัตโนมัติ ซึ่งเป็นเหตุผลที่ใน Route จริงของเราเขียน <code>new Date().toISOString()</code> ไว้ชัดเจน เพื่อควบคุมรูปแบบเอง</li>
+      </ul>
+      <p>ลองเล่นเสร็จแล้วอย่าลืมแก้ Route กลับไปเป็น <code>res.status(200).json({ ... })</code> เหมือนเดิมนะ</p>
+
+      <h2>ลองยิง POST Request</h2>
+      <p>เปลี่ยน Verb เป็น <strong>POST</strong> โดยที่ URL ยังเป็น <code>http://localhost:3000/health</code> เหมือนเดิม แล้วกด Send คุณจะได้ Status <code>404 Not Found</code> พร้อมข้อความประมาณว่า</p>
+      <pre><code>Cannot POST /health</code></pre>
+      <p>นี่ไม่ใช่ความผิดพลาด แต่เป็นหลักฐานยืนยันสิ่งที่พูดไปในบทที่แล้วว่า Express จับคู่ Route ด้วย Path <em>และ</em> Verb คู่กันเสมอ เราลงทะเบียนไว้แค่ <code>app.get('/health', ...)</code> ดังนั้น POST ที่มาที่ Path เดียวกันจึงไม่ตรงกับ Route ไหนเลย</p>
+      <p>ตอนที่เรามี Route แบบ POST จริง ๆ ในบทถัด ๆ ไป การส่งข้อมูลแนบไปกับ Request ทำได้โดยเปิดแท็บ <strong>Body</strong> เลือก <strong>raw</strong> แล้วเลือกชนิดเป็น <strong>JSON</strong> จากนั้นพิมพ์ข้อมูลลงไป เช่น</p>
+      <pre><code>{
+  "email": "somchai@example.com",
+  "password": "supersecret123"
+}</code></pre>
+      <p>Postman จะตั้ง Header <code>Content-Type: application/json</code> ให้อัตโนมัติเมื่อเลือกชนิดเป็น JSON ซึ่งจำเป็นมาก เพราะฝั่ง Server เราต้องมี Middleware คอยแกะ Body ก้อนนี้ออกมา เรื่องนั้นจะได้เรียนกันในบทที่ 11</p>
+
+      <h2>เก็บ Request ไว้ใช้ซ้ำด้วย Collection</h2>
+      <p>อย่าปล่อยให้ Request หายไปทุกครั้งที่ปิดโปรแกรม เพราะตลอดคอร์สนี้เราจะยิง Route เดิมซ้ำ ๆ อีกหลายสิบครั้ง</p>
+      <ol>
+        <li>สร้าง Collection ใหม่ ตั้งชื่อว่า <code>Habit Tracker API</code></li>
+        <li>กด Save ที่ Request ที่เพิ่งยิงไป แล้วเลือกเก็บลง Collection นี้ ตั้งชื่อให้สื่อความ เช่น <code>GET Health Check</code></li>
+        <li>ในหน้าตั้งค่าของ Collection ให้เพิ่ม Variable ชื่อ <code>baseUrl</code> ค่าเป็น <code>http://localhost:3000</code></li>
+        <li>กลับมาแก้ URL ของ Request ให้เป็น <code>{{baseUrl}}/health</code></li>
+      </ol>
+      <p>ประโยชน์ของ Variable คือวันไหนที่เราย้าย Port หรือ Deploy ขึ้น Production ในบทที่ 31 เราแก้ค่าที่เดียวจุดเดียว แล้วทุก Request ใน Collection ก็ชี้ไปที่ใหม่ตามทันที</p>
+      <p>ขอย้ำคำหนึ่งไว้กันสับสน การใช้ Postman แบบนี้เราเรียกว่า "ลองยิงดู" ไม่ใช่การ Test ที่แท้จริง เพราะมันต้องมีคนนั่งกดเอง Test ตัวจริงที่รันอัตโนมัติได้เราจะเขียนกันด้วย Vitest ในบทที่ 29 ถึง 30</p>
+      <p>บทถัดไปเราจะกลับมาแก้เลข Port ที่ Hardcode ไว้ใน <code>src/index.ts</code> ให้อ่านค่ามาจาก Environment Variables อย่างถูกวิธี</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="03_create_express_app.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="05_environment_variables.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

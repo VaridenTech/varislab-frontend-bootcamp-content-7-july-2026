@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="สรุปทบทวนเนื้อหาทั้งหมดของคอร์ส API Design in Node.js ตั้งแต่การสร้าง Server, Routing, Middleware, Validation, Database, Authentication, CRUD, Error Handling, การทดสอบ ไปจนถึงการ Deploy พร้อมแนวทางเรียนรู้ต่อไป" />
+  <title>สรุปทบทวนเนื้อหาทั้งหมด — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>สรุปทบทวนเนื้อหาทั้งหมด</h1>
+      <p>มาถึงบทสุดท้ายแล้วครับ ตอนนี้ Habit Tracker API ของเราขึ้น Production ไปเรียบร้อย มีคนอื่นยิงเข้ามาใช้ได้จริง ก่อนจะปิดคอร์ส มาไล่ดูกันอีกรอบว่าเราผ่านอะไรมาบ้าง</p>
+      <p>สิ่งที่อยากให้สังเกตคือทุกบทมันต่อกันเป็นเส้นเดียว เราไม่ได้เรียนหัวข้อกระจัดกระจาย แต่เราเริ่มจาก Server เปล่า ๆ แล้วค่อย ๆ ประกอบชิ้นส่วนขึ้นมาจนกลายเป็น API ที่ใช้งานได้จริงหนึ่งตัว</p>
+
+      <h2>Server และเครื่องมือพื้นฐาน</h2>
+      <ul>
+        <li>Node.js ทำให้ JavaScript รันนอก Browser ได้ พอเปลี่ยนมาอยู่ฝั่ง Server มุมมองก็เปลี่ยนจาก "คนเรียก" เป็น "คนรับ" — เราคือคนที่ต้องคอยฟัง Request แล้วตัดสินใจว่าจะตอบอะไรกลับไป</li>
+        <li>เราสร้าง Server ด้วย <code>http</code> Module ล้วน ๆ ได้ แต่พอต้องแยก Path แยก Method เอง โค้ดจะบวมเร็วมาก นั่นคือช่องว่างที่ <strong>Express</strong> เข้ามาเติม</li>
+        <li>เราตั้งโปรเจกต์ TypeScript แล้วแยกไฟล์เป็นสองส่วนตั้งแต่วันแรก คือ <code>src/server.ts</code> ที่ประกอบ App กับ <code>src/index.ts</code> ที่สั่ง <code>listen</code> การแยกนี้ดูเกินจำเป็นในตอนนั้น แต่มันคือเหตุผลที่บทที่ 30 เราเขียน Test ได้โดยไม่ต้องเปิด Server จริง</li>
+        <li>เราใช้ <strong>Postman</strong> เป็นเครื่องมือคุยกับ API ทั้งการยิง Request ทุก Method อ่าน Status Code กับ Body ที่ได้กลับมา และเก็บ Request ไว้ใช้ซ้ำใน Collection</li>
+      </ul>
+
+      <h2>Environment Variables</h2>
+      <ul>
+        <li>ค่าที่เปลี่ยนไปตามสภาพแวดล้อมและค่าที่เป็นความลับต้องอยู่นอกโค้ดเสมอ เราอ่านมันผ่าน <code>process.env</code> โดยมีไฟล์ <code>.env</code> เป็นแหล่งค่าบนเครื่องเรา ซึ่ง <strong>ห้ามขึ้น Git เด็ดขาด</strong> และใช้ <code>.env.example</code> เป็นคู่มือบอกทีมว่าต้องมีตัวแปรอะไรบ้าง</li>
+        <li><code>process.env</code> แบบดิบ ๆ เป็น <code>string | undefined</code> เสมอ เราจึงห่อมันด้วย <strong>Zod</strong> ในไฟล์ <code>env.ts</code> แล้วสร้าง Type ออกมาด้วย <code>z.infer</code> ได้ทั้งการตรวจค่าและ Type Safety ในคราวเดียว</li>
+        <li>หลักคิดสำคัญคือ <strong>Fail Fast</strong> — ถ้าตัวแปรขาดหรือผิดรูปแบบ ให้แอปตายตั้งแต่ตอนเริ่มทำงานพร้อมบอกว่าตัวไหนผิด ดีกว่าปล่อยให้ไปพังกลางทางตอนมีผู้ใช้จริง (ซึ่งเราได้เห็นของจริงตอน Deploy ในบทที่ 31)</li>
+      </ul>
+
+      <h2>REST และ Routing</h2>
+      <ul>
+        <li>HTTP Verb ห้าตัวที่ใช้บ่อยคือ <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>PATCH</code> และ <code>DELETE</code> ซึ่งจับคู่กับงาน CRUD ได้ตรง ๆ ส่วน <strong>REST</strong> คือข้อตกลงที่ทำให้ทุกคนเดา Route ของกันและกันได้ถูก</li>
+        <li>Express ให้ข้อมูลจาก Client มาสามทาง คือ Route Parameter (<code>req.params</code>), Query String (<code>req.query</code>) และ Body (<code>req.body</code>)</li>
+        <li>เราแยก Route ออกเป็นไฟล์ในโฟลเดอร์ <code>src/routes/</code> ด้วย <code>express.Router()</code> ได้แก่ <code>authRoutes.ts</code>, <code>habitRoutes.ts</code>, <code>userRoutes.ts</code> และ <code>tagRoutes.ts</code> แล้ว Mount เข้า App ด้วย <code>app.use('/api/habits', habitRoutes)</code></li>
+        <li>Path จริงเกิดจาก <strong>Mount Path + Route Path</strong> และ <strong>ลำดับการลงทะเบียนสำคัญเสมอ</strong> Express จะไล่จากบนลงล่างแล้วหยุดที่ตัวแรกที่ตรง ดังนั้น Route ที่เฉพาะเจาะจงต้องมาก่อน Route ที่มี Parameter</li>
+      </ul>
+
+      <h2>Middleware และ Validation</h2>
+      <ul>
+        <li>Middleware คือฟังก์ชันที่รับ <code>(req, res, next)</code> แล้วยืนขวางอยู่ระหว่าง Request กับ Handler มันจะอ่าน แก้ไข ตอบกลับเลย หรือส่งต่อด้วย <code>next()</code> ก็ได้ กฎเหล็กคือ <strong>ถ้ายังไม่ตอบ ต้องเรียก <code>next()</code></strong> ไม่งั้น Request จะค้าง</li>
+        <li>Global Middleware ที่เราติดตั้งไว้ใน <code>src/server.ts</code> ได้แก่ <code>helmet()</code> สำหรับ Security Header, <code>cors()</code> สำหรับอนุญาต Origin, <code>express.json()</code> ที่ทำให้ <code>req.body</code> ใช้งานได้, <code>express.urlencoded()</code> และ <code>morgan</code> สำหรับ Log</li>
+        <li>เราเขียน Validation Middleware ของตัวเองใน <code>src/middleware/validation.ts</code> เป็น <strong>Higher-Order Function</strong> คือ <code>validateBody</code>, <code>validateParams</code> และ <code>validateQuery</code> ที่รับ Zod Schema เข้าไปแล้วคืน Middleware ออกมา เสียบใช้กับ Route ไหนก็ได้</li>
+        <li>กับดักของ Async Middleware ที่ต้องระวังคือลืม <code>next()</code>, เรียงลำดับผิด, ไม่จัดการ Error ของ Promise และการแตะ Response หลังส่ง Header ไปแล้ว</li>
+      </ul>
+
+      <h2>Database</h2>
+      <ul>
+        <li>เราออกแบบ Schema โดย <strong>เริ่มจาก Feature ไม่ใช่เริ่มจากตาราง</strong> แล้วจึงได้ตารางห้าตัวคือ <code>users</code>, <code>habits</code>, <code>entries</code>, <code>tags</code> และ <code>habit_tags</code> ที่เป็นตัวเชื่อมความสัมพันธ์แบบ Many-to-Many</li>
+        <li>เราเลือก PostgreSQL กับ <strong>Drizzle ORM</strong> ที่เขียน Schema เป็น TypeScript แล้วได้ทั้ง Type และ SQL ที่คุมได้ พร้อมประกาศความสัมพันธ์ด้วย <code>relations()</code></li>
+        <li><strong>Migration คือประวัติการเปลี่ยนแปลงของ Database</strong> เราใช้ <code>db:push</code> ได้เฉพาะกับเครื่องเราเท่านั้น ส่วนที่อื่นต้อง <code>db:generate</code> แล้ว <code>db:migrate</code> เสมอ และต้องแยกให้ออกว่าการเปลี่ยนแปลงไหน Destructive ไหน Non-destructive</li>
+        <li>เรา Export Type จากตารางด้วย <code>$inferSelect</code>/<code>$inferInsert</code> และสร้าง Zod Schema จากตารางด้วย <strong>drizzle-zod</strong> ทำให้ Schema ของ Database กับ Schema ที่ใช้ Validate เป็นแหล่งความจริงเดียวกัน</li>
+        <li>เราใช้ <strong>Neon</strong> เป็น PostgreSQL บนคลาวด์ เชื่อมต่อผ่าน Connection Pool ใน <code>src/db/connection.ts</code> ส่องข้อมูลด้วย Drizzle Studio และเติมข้อมูลตัวอย่างด้วย <code>src/db/seed.ts</code></li>
+      </ul>
+
+      <h2>Authentication และ Authorization</h2>
+      <ul>
+        <li>สามคำที่ต้องแยกให้ออกคือ <strong>Identity</strong> (คุณคือใคร), <strong>Authentication</strong> (พิสูจน์ว่าคุณคือคนนั้นจริง) และ <strong>Authorization</strong> (คุณทำสิ่งนี้ได้ไหม) ซึ่งสะท้อนออกมาเป็น Status Code <code>401</code> กับ <code>403</code> คนละความหมาย</li>
+        <li>เราเลือกใช้ <strong>JWT</strong> เพราะมันเป็น Stateless เราเขียน <code>generateToken</code> กับ <code>verifyToken</code> ไว้ใน <code>src/utils/jwt.ts</code> ใส่เฉพาะข้อมูลที่ไม่เป็นความลับลงใน Payload และตั้งวันหมดอายุเสมอ</li>
+        <li>รหัสผ่านต้องผ่าน <strong>bcrypt</strong> เท่านั้น เพราะ Hash เป็นทางเดียว มี Salt อยู่ในตัว Hash เอง และ <code>bcrypt.compare</code> เทียบแบบ Constant Time เพื่อกัน Timing Attack — ทั้งหมดอยู่ใน <code>src/utils/password.ts</code></li>
+        <li>เราสร้าง <code>src/controllers/authController.ts</code> ให้ครบทั้งสมัครสมาชิกและเข้าสู่ระบบ โดยตอบ <code>401</code> ด้วยข้อความเดียวกันไม่ว่าอีเมลผิดหรือรหัสผ่านผิด และไม่ส่ง Object ของ User ทั้งก้อนกลับไป</li>
+        <li><code>src/middleware/auth.ts</code> อ่าน Token จาก Header ตาม <strong>Bearer Token Pattern</strong> ตรวจสอบแล้วแปะข้อมูล User ไว้บน <code>req</code> ให้ Handler ถัดไปใช้ต่อ เราเสียบมันที่ระดับ Router เพื่อล็อกทั้งกลุ่ม Route ในบรรทัดเดียว</li>
+        <li>เรื่อง Security ที่ต้องติดหัวไว้คือห้าม Log Token, อย่าใช้ Secret ร่วมกันระหว่าง Development กับ Production, ใช้ HTTPS เสมอ, ตั้งอายุ Token ให้สมเหตุสมผล และห้ามเชื่อข้อมูลจากฝั่ง Client</li>
+      </ul>
+
+      <h2>CRUD และ Error Handling</h2>
+      <ul>
+        <li>เราเขียน <code>src/controllers/habitController.ts</code> ครบทั้งสี่ตัว โดยแต่ละตัวหน้าตาเหมือนกันหมด คือรับข้อมูลที่ผ่าน Validation มาแล้ว คุยกับ Database แล้วตอบด้วย Status Code ที่ถูกต้อง (<code>201</code> ตอนสร้าง, <code>200</code> ตอนอ่านและแก้ไข, <code>404</code> เมื่อไม่เจอ)</li>
+        <li>Error Handler ของ Express คือ Middleware ที่มี <strong>สี่อาร์กิวเมนต์</strong> คือ <code>(err, req, res, next)</code> ต้องลงทะเบียนไว้ล่างสุดเสมอ และ Error จะเดินทางไปหามันได้ก็ต่อเมื่อเราส่งผ่าน <code>next(err)</code></li>
+        <li>เรามีตาข่ายรับ Error หลายชั้น ตั้งแต่ <code>errorHandler.ts</code>, ตัวจับ Route ที่ไม่มีอยู่จริงที่ตอบ <code>404</code> ไปจนถึงตัวจับระดับ Node.js อย่าง <code>uncaughtException</code></li>
+      </ul>
+
+      <h2>การทดสอบ</h2>
+      <ul>
+        <li>เราใช้ <strong>Vitest</strong> คู่กับ <strong>SuperTest</strong> ซึ่งยิง Request เข้า App ของเราได้โดยไม่ต้องเปิด Port จริง Middleware ทุกตัวทำงานครบเหมือน Request จริงทุกประการ</li>
+        <li>สิ่งแรกที่ต้องทำก่อนเขียน Test คือ <strong>แยก Database สำหรับ Test ออกมาต่างหาก</strong> ผ่าน <code>.env.test</code> แล้วล้างข้อมูลด้วย Helper ใน <code>afterEach</code> เพื่อให้ Test แต่ละตัวเป็นอิสระต่อกัน</li>
+        <li>สำหรับ API แล้ว <strong>Integration Test คุ้มที่สุด</strong> เพราะยิงทีเดียวได้ทดสอบทั้ง Route, Middleware, Controller และ Database ไปพร้อมกัน และเราเขียน Test เพื่อความมั่นใจ ไม่ใช่เพื่อไล่ตามตัวเลข Coverage</li>
+      </ul>
+
+      <h2>การ Deploy</h2>
+      <ul>
+        <li>ก่อน Deploy ต้องเตรียม Production Database แยกอีกตัว รัน Migration เข้าไป ทำให้ Port เป็น Dynamic เตรียม Environment Variables ชุดใหม่ ไล่เก็บ URL ที่ Hardcode ไว้ และระบุเวอร์ชัน Node ผ่าน Field <code>engines</code></li>
+        <li>บน <strong>Render</strong> เราสร้าง Web Service ที่ผูกกับ Repository บน GitHub ใส่ Environment Variables ในหน้า Dashboard ตั้ง Health Check Path เป็น <code>/health</code> แล้วเปิด Auto-Deploy ไว้</li>
+        <li>จากนั้นทุกครั้งที่โค้ดเข้า Branch ที่ผูกไว้ Render จะ Deploy ให้เอง ส่วนการรัน Test ก่อน Deploy เป็นงานของ CI ซึ่งต้องเสริมด้วยเครื่องมืออย่าง GitHub Actions</li>
+      </ul>
+
+      <h2>ตอนนี้คุณสร้างอะไรได้แล้วบ้าง</h2>
+      <p>ถ้ามองภาพรวม คุณสร้าง <strong>Backend ที่ครบวงจรของแอปหนึ่งตัว</strong> ได้แล้วครับ คือมีระบบสมาชิกที่ปลอดภัย มีข้อมูลของแต่ละคนที่คนอื่นแตะไม่ได้ มีการตรวจข้อมูลก่อนบันทึก มีการจัดการ Error ที่เป็นระบบ มี Test คอยเฝ้า และมีที่อยู่บนอินเทอร์เน็ตจริง</p>
+      <p>เปลี่ยนจาก Habit เป็น Task, Post, Order หรือ Booking โครงสร้างก็ยังเป็นชุดเดิมทั้งหมด นี่คือสิ่งที่ทำให้ความรู้ชุดนี้ใช้ต่อได้กับแทบทุกโปรเจกต์ และมันคือฝั่งที่รอ Frontend มาเชื่อมต่อพอดี</p>
+
+      <h2>ก้าวต่อไป</h2>
+      <p>เมื่อเข้าใจ REST API ดีแล้ว โลกฝั่ง Backend ยังมีอีกหลายเส้นทางให้เดินต่อ</p>
+      <ul>
+        <li><strong>GraphQL</strong> — Query Language สำหรับ API ที่ให้ Client ขอข้อมูลเท่าที่ต้องการผ่าน Endpoint เดียว เกิดมาเพื่อแก้ปัญหา Over-fetching และ Under-fetching ของ REST เหมาะกับงานที่มี Client หลายแบบและข้อมูลซ้อนกันหลายชั้น</li>
+        <li><strong>gRPC และ Protocol Buffers</strong> — โปรโตคอลแบบ Binary ที่เร็วและเล็กกว่า JSON มาก มี Contract ที่มี Type ชัดเจนระหว่างบริการ นิยมใช้คุยกันระหว่าง Microservice</li>
+        <li><strong>Serverless</strong> — เขียนเป็นฟังก์ชันแล้วให้ผู้ให้บริการจัดการ Server ให้ทั้งหมด เช่น AWS Lambda หรือ Vercel Functions ได้ Auto-scaling และจ่ายตามการใช้งานจริง แลกกับ Cold Start และการผูกกับผู้ให้บริการ</li>
+        <li><strong>Edge Functions</strong> — รันโค้ดที่จุดกระจายสัญญาณใกล้ผู้ใช้ที่สุด เช่น Cloudflare Workers หรือ Deno Deploy เหมาะกับงานอย่างการตรวจสิทธิ์ การ Redirect หรือ Rate Limiting</li>
+        <li><strong>WebSockets</strong> — เปิดการเชื่อมต่อค้างไว้ให้คุยกันได้สองทาง ต่างจาก HTTP ที่เป็น Request/Response เหมาะกับ Chat, การทำงานร่วมกันแบบ Real-time, เกม และข้อมูลที่อัปเดตตลอดเวลา</li>
+        <li><strong>Docker และ Kubernetes</strong> — แพ็กแอปพร้อม Dependency ทั้งหมดไว้ใน Container ให้รันที่ไหนก็เหมือนกัน แล้วให้ Kubernetes ดูแลเรื่อง Scaling, การกู้คืนอัตโนมัติ และการอัปเดตแบบไม่มี Downtime</li>
+        <li><strong>CI/CD ด้วย GitHub Actions</strong> — ก้าวต่อไปที่ใกล้ตัวที่สุดจากบทที่แล้ว ตั้งให้รัน Test และ Linter ทุกครั้งที่มี Push หรือ Pull Request แล้วค่อยปล่อย Deploy เมื่อทุกอย่างผ่าน</li>
+      </ul>
+      <p>ขอบคุณที่เรียนมาจนจบครับ ของที่ดีที่สุดที่จะทำต่อจากนี้คือหยิบไอเดียแอปสักตัวที่คุณอยากใช้เองจริง ๆ แล้วสร้าง API ของมันขึ้นมาตามเส้นทางเดียวกับที่เราเพิ่งเดินผ่านมาด้วยกัน</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="31_deploying_to_render.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+    </nav>
+  </main>
+</body>
+</html>

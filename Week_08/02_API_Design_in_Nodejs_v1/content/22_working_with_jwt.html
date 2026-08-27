@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ทำความเข้าใจโครงสร้างสามส่วนของ JWT แล้วเขียน src/utils/jwt.ts ด้วย jose สร้าง Token จริง เสียบ Route สมัครสมาชิกพร้อม Validation และทดสอบทั้งเส้นทางใน Postman" />
+  <title>การสร้างและตรวจสอบ JWT — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การสร้างและตรวจสอบ JWT</h1>
+      <p>บทที่แล้วเราค้างไว้ที่ <code>generateToken</code> ที่ยังไม่มีตัวตน บทนี้เราจะสร้างมันขึ้นมา แล้วยิงทดสอบให้เห็นกับตาว่าสมัครสมาชิกได้จริง</p>
+
+      <h2>JWT คืออะไรกันแน่</h2>
+      <p>วิธีคิดที่ง่ายที่สุดคือ <strong>JWT คือ Object ที่ถูกแปลงเป็น String ด้วย Algorithm และ Secret</strong> เท่านั้นเอง</p>
+      <p>ผมแปลง Object เป็น String แล้วส่งให้ Client เก็บไว้ พอ Client อยากใช้ API มันส่ง String นั้นกลับขึ้นมา แล้วผมแปลงกลับเป็น Object เดิมเพื่อดูว่าคนนี้เป็นใคร กระบวนการนี้ย้อนกลับได้ ต่างจากการ Hash รหัสผ่านที่ย้อนไม่ได้เลย</p>
+      <p>ตัว String ที่ได้จะหน้าตาแบบนี้ คือมีจุดคั่นสามส่วน</p>
+      <pre><code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjU1MGU4NDAwIn0.SflKxwRJSMeKKF2QT4</code></pre>
+      <ul>
+        <li><strong>Header</strong> — Metadata ที่บอกระบบปลายทางว่าใช้ Algorithm อะไรในการเซ็น เช่น <code>HS256</code></li>
+        <li><strong>Payload</strong> — Object ที่เราใส่เข้าไปเอง บวกกับ Field มาตรฐานอย่างเวลาที่ออกและเวลาหมดอายุ</li>
+        <li><strong>Signature</strong> — ลายเซ็นที่คำนวณจากสองส่วนแรกรวมกับ Secret ของเรา</li>
+      </ul>
+      <p>จุดที่ต้องเน้นให้ชัด — <strong>Header กับ Payload ไม่ได้ถูกเข้ารหัส</strong> มันแค่ถูก Encode แบบ Base64 ใครก็ตามที่ได้ Token ไปสามารถอ่านเนื้อในได้ทันที ของที่ป้องกันคือ <em>Signature</em> ซึ่งทำให้ใครก็แก้ Payload แล้วส่งกลับมาโดยที่เราไม่รู้ตัวไม่ได้ เพราะลายเซ็นจะไม่ตรงทันที</p>
+      <p>ผลที่ตามมาคือกฎเหล็กข้อหนึ่ง — <strong>ห้ามใส่ของลับใน Payload</strong> ไม่ใส่รหัสผ่าน ไม่ใส่เลขบัตรเครดิต ไม่ใส่อะไรที่คุณไม่อยากให้คนอื่นอ่าน ใส่แค่ของที่ใช้ระบุตัวตนก็พอ</p>
+
+      <h2>จะใส่อะไรลงใน Payload</h2>
+      <p>คำถามที่ต้องตอบคือ "ตอน Request วิ่งกลับเข้ามา ผมอยากรู้อะไรเกี่ยวกับคนนี้บ้าง" คำตอบของเราคือสามอย่างที่ Unique บนตาราง <code>users</code> พอดี คือ <code>id</code>, <code>email</code> และ <code>username</code></p>
+
+      <h2>สร้าง src/utils/jwt.ts</h2>
+      <p>เราจะใช้ Library ชื่อ <strong>jose</strong> ซึ่งเป็นตัวที่ทันสมัยและรองรับ Promise เต็มรูปแบบ สร้างไฟล์ <code>src/utils/jwt.ts</code> ข้าง ๆ <code>password.ts</code></p>
+      <pre><code>npm install jose</code></pre>
+      <pre><code>import { SignJWT } from 'jose'
+import { createSecretKey } from 'crypto'
+import { env } from '../../env.ts'
+
+export interface JwtPayload {
+  id: string
+  email: string
+  username: string
+}
+
+export const generateToken = (payload: JwtPayload): Promise&lt;string&gt; =&gt; {
+  const secret = env.JWT_SECRET
+  const secretKey = createSecretKey(secret, 'utf-8')
+
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(env.JWT_EXPIRES_IN || '7d')
+    .sign(secretKey)
+}</code></pre>
+      <p><code>crypto</code> เป็น Module ที่มากับ Node.js อยู่แล้ว ไม่ต้องติดตั้งเพิ่ม เกร็ดเล็ก ๆ คือเราเขียน <code>node:crypto</code> ก็ได้และทำงานเหมือนกันเป๊ะ ข้อดีของ Prefix <code>node:</code> คือมันบอกชัดเจนว่าเราหมายถึงของที่มากับ Node.js เผื่อวันหนึ่งมีใครเผลอติดตั้ง Package ชื่อ <code>crypto</code> จาก npm เข้ามาจะได้ไม่หยิบผิดตัว</p>
+      <p>ไล่ทีละบรรทัด</p>
+      <ul>
+        <li><code>createSecretKey()</code> แปลง Secret ที่เป็น String ธรรมดาให้เป็น Key Object สำหรับการเข้ารหัสแบบ Symmetric (HMAC) เอกสารบอกไว้แค่นั้น ถ้าจะให้พูดตรง ๆ คือมันไม่ได้จำเป็นขนาดนั้น แต่ก็ไม่เสียหายอะไรที่จะทำ</li>
+        <li><code>setProtectedHeader({ alg: 'HS256' })</code> คือการบอกระบบที่จะมาถอด Token นี้ในอนาคตว่าเราเซ็นด้วย Algorithm อะไร ค่านี้เป็น Default อยู่แล้ว แต่เขียนไว้ให้ชัดดีกว่า</li>
+        <li><code>setIssuedAt()</code> ใส่ Field <code>iat</code> ที่บอกเวลาที่ Token ถูกสร้าง มีประโยชน์มากตอนไล่ปัญหา</li>
+        <li><code>setExpirationTime()</code> ใส่ Field <code>exp</code> ที่บอกวันหมดอายุ เราดึงมาจาก <code>JWT_EXPIRES_IN</code> ใน <code>env.ts</code> โดยมี <code>'7d'</code> เป็นค่าสำรอง</li>
+        <li><code>.sign(secretKey)</code> ปิดท้ายด้วยการเซ็น แล้ว Return String ออกมา</li>
+      </ul>
+
+      <h2>วันหมดอายุไม่ใช่ของตกแต่ง</h2>
+      <p>จำที่คุยกันบทที่ 20 ได้ไหมว่า <strong>JWT ยกเลิกไม่ได้</strong> Server ไม่ได้เก็บมันไว้ที่ไหนเลย ถ้าเราไม่ใส่วันหมดอายุ แล้ววันหนึ่ง Token ของใครสักคนหลุดออกไป คนที่ได้มันไปจะเข้าถึงข้อมูลของเขาได้<em>ตลอดไป</em> และเราทำอะไรไม่ได้เลยนอกจากเปลี่ยน Secret ทั้งระบบซึ่งจะเตะทุกคนออกพร้อมกัน</p>
+      <p>ใส่วันหมดอายุเถอะครับ ต้นทุนเป็นศูนย์</p>
+
+      <h2>ทำไม Secret ต้องอยู่ฝั่ง Server เท่านั้น</h2>
+      <p>Secret คือสิ่งเดียวที่พิสูจน์ว่า Token ใบนี้ออกโดย Server ของเราจริง ๆ ใครก็ตามที่มี Secret สามารถ<strong>ปลอม Token เป็นใครก็ได้</strong> รวมถึงปลอมเป็น Admin โดยที่ระบบตรวจไม่เจอเพราะลายเซ็นถูกต้องทุกประการ</p>
+      <p>ฉะนั้นห้ามส่ง <code>JWT_SECRET</code> กลับไปใน Response ห้าม Log ออกมาดู ห้ามฝังใน Bundle ของ Frontend และห้าม Commit ขึ้น Git เด็ดขาด นี่คือเหตุผลที่เราลงแรงทำ <code>env.ts</code> กันตั้งแต่บทที่ 6 พร้อมเงื่อนไขว่าต้องยาวอย่างน้อย 32 ตัวอักษร เพราะ Secret สั้น ๆ ถูกไล่เดาได้จริง</p>
+
+      <h2>เสียบเข้ากับ Route</h2>
+      <p>กลับไปที่ <code>src/controllers/authController.ts</code> เพิ่ม Import ที่ยังขาดอยู่</p>
+      <pre><code>import { generateToken } from '../utils/jwt.ts'</code></pre>
+      <p>เส้นแดงในเอดิเตอร์จะหายไป ทีนี้เปิด <code>src/routes/authRoutes.ts</code> แล้วเอา Handler ชั่วคราวที่เราเขียนไว้ตั้งแต่บทที่ 8 ออก แล้วแทนที่ด้วย Controller ตัวจริง</p>
+      <pre><code>import { Router } from 'express'
+import { register } from '../controllers/authController.ts'
+import { validateBody } from '../middleware/validation.ts'
+import { insertUserSchema } from '../db/schema.ts'
+
+const router = Router()
+
+router.post('/register', validateBody(insertUserSchema), register)
+
+export default router</code></pre>
+      <p>อย่าลืม <code>validateBody</code> เด็ดขาด เพราะ Controller ที่เราเขียนไป<strong>ตั้งสมมติฐานไว้เต็มไปหมด</strong>ว่า Body มี <code>email</code>, <code>username</code> และ <code>password</code> ครบแน่นอน สมมติฐานพวกนั้นจะเป็นจริงก็ต่อเมื่อมี Middleware ยืนเฝ้าอยู่ข้างหน้า</p>
+      <p>ส่วน <code>insertUserSchema</code> เราได้มาฟรีจาก <code>drizzle-zod</code> ตั้งแต่บทที่ 17 ซึ่งสร้าง Zod Schema จากตาราง <code>users</code> ให้เลย ไม่ต้องเขียนเอง</p>
+      <p>ข้อจำกัดที่ควรรู้คือ Schema ตัวนี้รู้แค่สิ่งที่ Database รู้ คือความยาวและ Not Null แต่<strong>ตรวจไม่ได้ว่า Email มี <code>@</code> กับ Domain จริงหรือเปล่า หรือรหัสผ่านซับซ้อนพอไหม</strong> เพราะ Database ไม่ได้ละเอียดขนาดนั้น (และไม่ควรละเอียดขนาดนั้น เพราะจะช้ามากตอน Insert) แต่ Zod ทำได้สบายเพราะมันทำงานตอน Runtime ถ้าอยากได้เพิ่มก็ใช้ <code>.extend()</code> ต่อยอดจากตัวนี้ หรือเขียน Schema ใหม่เองทั้งอันก็ได้ ตอนนี้ผมขอใช้ตัวที่ได้มาฟรีไปก่อน</p>
+
+      <h2>ทดสอบใน Postman</h2>
+      <p>รัน <code>npm run dev</code> ถ้าไม่มีอะไรพังตอนสตาร์ทถือเป็นสัญญาณที่ดี เปิด Postman ตั้ง Method เป็น <code>POST</code> แล้วยิงไปที่ <code>http://localhost:3000/api/auth/register</code></p>
+      <p>รอบแรกลอง<strong>ไม่ส่ง Body อะไรเลย</strong> เพื่อดูว่า Validation ทำงานไหม</p>
+      <pre><code>{
+  "error": "Validation failed",
+  "details": [
+    { "field": "", "message": "Invalid input: expected object, received undefined" }
+  ]
+}</code></pre>
+      <p>รอบสองลองส่ง Object เปล่า <code>{}</code></p>
+      <pre><code>{
+  "error": "Validation failed",
+  "details": [
+    { "field": "email", "message": "Invalid input: expected string, received undefined" },
+    { "field": "username", "message": "Invalid input: expected string, received undefined" },
+    { "field": "password", "message": "Invalid input: expected string, received undefined" }
+  ]
+}</code></pre>
+      <p>สวยงามมาก และสังเกตว่านี่คือ Error ที่<strong>เอาไปแสดงบนฟอร์มของ Frontend ได้ตรง ๆ เลย</strong> เพราะมันบอกทั้งชื่อ Field และสาเหตุ</p>
+      <p>รอบสามใส่ให้ครบ</p>
+      <pre><code>{
+  "email": "user@app.com",
+  "username": "user",
+  "password": "super-secret-password"
+}</code></pre>
+      <p>คราวนี้จะได้ <code>201 Created</code> กลับมาพร้อม Object User (สังเกตว่า<strong>ไม่มี <code>password</code></strong> ตามที่เราออกแบบไว้) และ Token ยาว ๆ หนึ่งเส้น</p>
+      <pre><code>{
+  "message": "User created",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "user@app.com",
+    "username": "user",
+    "firstName": null,
+    "lastName": null,
+    "createdAt": "2026-01-15T09:30:00.000Z"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}</code></pre>
+      <p>เก็บ Token เส้นนี้ไว้ก่อนนะครับ เดี๋ยวเราได้ใช้ในบทที่ 24 และถ้าอยากเห็นกับตาว่า User ถูกสร้างจริง เปิด Drizzle Studio ขึ้นมาดูตาราง <code>users</code> จะเห็นสองแถว คือคนที่มาจาก Seed Script กับคนที่เพิ่งสมัครไป</p>
+
+      <h2>แล้ว Refresh Token ล่ะ</h2>
+      <p>คำถามที่ต้องมีคนถามแน่ ๆ คือ "พอ Token หมดอายุแล้วจะทำอย่างไร" ให้ผู้ใช้ล็อกอินใหม่คือประสบการณ์ที่แย่ ทางออกที่นิยมคือ <strong>Refresh Token</strong></p>
+      <p>หลักการคือตอนล็อกอินเราออก Token ให้สองใบ ใบหลักอายุสั้นไว้ใช้งานจริง กับใบ Refresh ที่อายุยาวกว่ามาก พอใบหลักหมดอายุ Client ส่งใบ Refresh ขึ้นมาแทน Server ตรวจว่าใบ Refresh ยังใช้ได้ก็ออกใบหลักใบใหม่ให้ Client แค่เอาไปเขียนทับใน Local Storage แล้วใช้งานต่อได้เลยโดยผู้ใช้ไม่รู้สึกอะไร OAuth เองก็ทำงานคล้าย ๆ กันแบบนี้</p>
+      <p>เราจะไม่ทำ Refresh Token ในคอร์สนี้ แต่รู้ไว้ว่ามันมีอยู่ และมันคือคำตอบมาตรฐานของปัญหานี้</p>
+      <p>บทหน้าเราจะทำอีกครึ่งที่ขาดอยู่ คือให้คนที่มีบัญชีอยู่แล้วเข้าสู่ระบบได้</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="21_user_registration.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="23_user_sign_in.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

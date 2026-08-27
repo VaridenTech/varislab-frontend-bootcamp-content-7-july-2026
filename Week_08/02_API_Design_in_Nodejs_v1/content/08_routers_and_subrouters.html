@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="แตก Route ออกเป็นไฟล์ย่อยด้วย express.Router สร้าง authRoutes, habitRoutes และ userRoutes ในโฟลเดอร์ src/routes พร้อมเข้าใจ Export และ Status Code ที่เหมาะสม" />
+  <title>Router และ Subrouter — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Router และ Subrouter</h1>
+      <p>ถึงเวลาสร้าง Routing ของแอปจริง ๆ แล้ว สิ่งแรกที่เราจะทำคือสร้าง <strong>Subrouter</strong> ซึ่งก็คือ Router ย่อยที่เราจะเอาไปแปะ (Mount) ไว้บน Router ตัวบนสุดอีกที</p>
+      <p>บทนี้เราจะเขียนแต่ตัว Router และ Route ก่อน ส่วนการเอาไปแปะกับ App เก็บไว้บทหน้า</p>
+
+      <h2>ทำไมต้องมี Router</h2>
+      <p>ถ้าเราเขียน Route ทุกตัวของทุก Resource ลงใน <code>src/server.ts</code> ไฟล์เดียว พอโปรเจกต์โตขึ้นไฟล์นั้นจะยาวเป็นพันบรรทัดและไม่มีใครกล้าแตะ Express จึงมี <code>Router</code> มาให้ ซึ่งให้ประโยชน์หลายอย่าง</p>
+      <ul>
+        <li><strong>จัดกลุ่ม</strong> — Route ที่เกี่ยวข้องกันอยู่ด้วยกัน หาง่าย แก้ง่าย</li>
+        <li><strong>ใช้ซ้ำได้</strong> — Router ตัวเดียวเอาไปแปะที่ Path ไหนก็ได้ หรือแปะหลายที่พร้อมกันก็ยังได้</li>
+        <li><strong>กำหนดขอบเขต Middleware ได้</strong> — เช่น สั่งให้ทุก Route ในไฟล์นี้ต้อง Login ก่อน โดยเขียนแค่บรรทัดเดียว (เราจะทำจริงในบทที่ 24)</li>
+        <li><strong>แบ่งงานกันในทีมได้</strong> — คนละคนดูแลคนละไฟล์ ลดโอกาส Conflict</li>
+        <li><strong>ทดสอบง่ายขึ้น</strong> — แยกทดสอบทีละกลุ่มได้</li>
+      </ul>
+
+      <h2>สร้างโฟลเดอร์ src/routes</h2>
+      <p>สร้างโฟลเดอร์ <code>src/routes</code> ขึ้นมา แล้วสร้างไฟล์หนึ่งไฟล์ต่อหนึ่ง Resource</p>
+      <pre><code>src/routes/
+├── authRoutes.ts
+├── habitRoutes.ts
+├── tagRoutes.ts
+└── userRoutes.ts</code></pre>
+      <p>เรื่องชื่อไฟล์ ขอให้เลือกแบบใดแบบหนึ่งแล้วใช้ให้เหมือนกันทั้งโปรเจกต์ ในคอร์สนี้เราใช้ <code>userRoutes.ts</code> ไม่ใช่ <code>userRouter.ts</code> ปนกันไปมา</p>
+      <p>ทุกไฟล์จะมีโครงเหมือนกันหมด คือ Import <code>Router</code> แบบ Named Import จาก Express แล้วเรียกใช้เพื่อสร้าง Router ของตัวเองขึ้นมาหนึ่งตัว</p>
+      <pre><code>import { Router } from 'express'
+
+const router = Router()</code></pre>
+      <p>จากตรงนี้ <strong>เราใช้ <code>router</code> ได้เหมือนกับที่ใช้ <code>app</code> เลย</strong> มันมี <code>.get()</code>, <code>.post()</code>, <code>.put()</code>, <code>.patch()</code>, <code>.delete()</code> ครบเหมือนกันทุกตัว</p>
+
+      <h2>authRoutes.ts</h2>
+      <p>Route ชุดนี้ไม่ใช่ CRUD เต็มรูปแบบ เพราะ Auth ไม่ได้เป็น Resource แบบที่ User เป็น มันเป็นแค่<em>กลไก</em> สิ่งที่เราต้องการมีแค่สมัครสมาชิกกับเข้าสู่ระบบ</p>
+      <pre><code>import { Router } from 'express'
+
+const router = Router()
+
+router.post('/register', (req, res) =&gt; {
+  res.status(201).json({ message: 'user signed up' })
+})
+
+router.post('/login', (req, res) =&gt; {
+  res.status(201).json({ message: 'user logged in' })
+})
+
+export default router</code></pre>
+      <p>ตอนนี้เรายังไม่เขียนของจริง เราแค่ทำ Placeholder ไว้ก่อนเพื่อให้ยิงทดสอบได้ว่า Routing ทำงานถูกต้องหรือไม่ ส่วนตรรกะจริงจะมาเติมตอนทำ Controller ในบทที่ 21 เป็นต้นไป</p>
+      <p>เรื่อง Status Code คือถ้าไม่ระบุอะไร Express จะใช้ <code>200</code> ให้อัตโนมัติเมื่อเราส่ง Response ที่ไม่ใช่ Error ส่วน <code>201</code> แปลว่า "สร้างสำเร็จ" ซึ่งเป็นคู่หูของ POST ในทางปฏิบัติสองตัวนี้แทบไม่ต่างกัน แต่การใส่ให้ชัดทำให้ API ของเราสื่อสารได้ดีขึ้น ในโลกจริงคุณจะเห็นแค่ <code>200</code> กับ <code>201</code> เป็นหลัก ส่วนที่คนให้ความสำคัญจริง ๆ คือกลุ่ม <code>4xx</code> เพราะมันคือสิ่งที่ผู้ใช้เห็นเวลาส่งข้อมูลผิด ตอนนี้ผมใส่ <code>201</code> ให้ Login ไปก่อนเพราะมันเป็นแค่ Placeholder เดี๋ยวตอนทำ Login จริงในบทที่ 23 เราจะเปลี่ยนมาใช้ <code>200</code> เพราะการเข้าสู่ระบบไม่ได้สร้างอะไรใหม่ขึ้นมา</p>
+      <p>สังเกตบรรทัดสุดท้าย <code>export default router</code> ถ้าลืมบรรทัดนี้ไฟล์อื่นจะ Import ไม่ได้เลย ให้นึกภาพว่า <strong>Module ก็คือ Closure และ Closure ก็คือ Function</strong> — Function ข้างนอกเอื้อมเข้าไปหยิบของข้างใน Function อื่นไม่ได้ นอกจากว่า Function นั้นจะ Return อะไรออกมาให้ การ Export ก็คือการ Return ของออกจากไฟล์นั่นเอง</p>
+
+      <h2>habitRoutes.ts</h2>
+      <p>อันนี้เป็น CRUD เต็มรูปแบบ</p>
+      <pre><code>import { Router } from 'express'
+
+const router = Router()
+
+router.get('/', (req, res) =&gt; {
+  res.json({ message: 'habits' })
+})
+
+router.get('/:id', (req, res) =&gt; {
+  res.json({ message: 'got one habit' })
+})
+
+router.post('/', (req, res) =&gt; {
+  res.status(201).json({ message: 'created habit' })
+})
+
+router.delete('/:id', (req, res) =&gt; {
+  res.json({ message: 'deleted habit' })
+})
+
+router.post('/:id/complete', (req, res) =&gt; {
+  res.status(201).json({ message: 'completed habit' })
+})
+
+export default router</code></pre>
+      <p>จุดที่สำคัญที่สุดของไฟล์นี้คือ <strong>เราไม่ได้เขียน <code>/habits</code> ไว้ข้างหน้าเลยสักที่</strong> เราเขียนแค่ <code>/</code> กับ <code>/:id</code> เท่านั้น นั่นเพราะ Path ใน Router เป็น Path <em>สัมพัทธ์</em> ที่นับต่อจากจุดที่ Router ถูกเอาไปแปะ ซึ่งเราจะกำหนดกันในบทหน้า</p>
+      <p>ประโยชน์คือไฟล์นี้ไม่จำเป็นต้องรู้เลยว่าตัวมันเองจะไปอยู่ที่ URL ไหน มันจึงถูก Decouple ออกมาอย่างสมบูรณ์</p>
+      <p>Route ตัวสุดท้าย <code>POST /:id/complete</code> คือจุดที่เรา<strong>แหกกฎ REST</strong> อย่างจงใจ เพราะการ "ทำ Habit สำเร็จ" ไม่ใช่การ Create หรือ Update ตรง ๆ มันเป็นคำสั่งให้ทำอะไรบางอย่างกับ Habit ตัวนั้น จำที่เราคุยกันไว้ได้ไหมว่า REST เป็นแค่ข้อตกลง ไม่มีใครบังคับ ถ้าการออกแบบแบบนี้อ่านเข้าใจง่ายกว่าก็ทำได้เลย</p>
+
+      <h2>userRoutes.ts</h2>
+      <p>ไฟล์นี้หน้าตาคล้ายไฟล์ก่อนหน้ามาก แต่แนะนำให้พิมพ์เองอีกรอบ การเขียนซ้ำคือวิธีที่ดีที่สุดวิธีหนึ่งในการจำโครงสร้าง</p>
+      <pre><code>import { Router } from 'express'
+
+const router = Router()
+
+router.get('/', (req, res) =&gt; {
+  res.json({ message: 'users' })
+})
+
+router.get('/:id', (req, res) =&gt; {
+  res.json({ message: 'got user' })
+})
+
+router.put('/:id', (req, res) =&gt; {
+  res.json({ message: 'user updated' })
+})
+
+router.delete('/:id', (req, res) =&gt; {
+  res.json({ message: 'user deleted' })
+})
+
+export default router</code></pre>
+      <p>สังเกตว่า<strong>เราไม่มี <code>POST /</code> สำหรับสร้าง User</strong> ทั้งที่ตำรา CRUD บอกว่าควรมี ลองคิดดูว่าจะมีใครสร้าง User โดยไม่ผ่านการสมัครสมาชิกในกรณีไหนบ้าง คำตอบคือกรณีที่มี Admin Dashboard ใช้ API ตัวเดียวกันแล้วอยากสร้าง User ให้เลย ซึ่งถ้ามีจริงก็ต้องใส่ระบบสิทธิ์กำกับให้แน่นหนา ในระบบปกติเราไม่ควรเปิด Route ที่ใครก็ได้สร้าง User ขึ้นมาโดยข้าม Business Logic ของ Authentication ทั้งหมด เพราะฉะนั้นเราจะไม่ใส่มัน</p>
+
+      <h2>tagRoutes.ts</h2>
+      <p>ในโค้ดตัวอย่างจะมีไฟล์ <code>tagRoutes.ts</code> ติดมาด้วย แต่เนื้อหาข้างในซ้ำกับที่เราเพิ่งทำไปเกือบทั้งหมด เราจึงยกให้เป็น<strong>การบ้านเสริม</strong> ใครอยากลองเขียน CRUD Routes ของ Tag เองก็ทำได้ และมันจะไม่กระทบกับบทเรียนที่เหลือ</p>
+
+      <h2>ข้อควรระวังที่เจอบ่อยที่สุด</h2>
+      <ul>
+        <li><strong>ลืม <code>export default router</code></strong> — เขียน Route ครบสวยงามแล้วแต่ Import ไปใช้ไม่ได้ ข้อนี้เกิดขึ้นกับทุกคน</li>
+        <li><strong>ลืมใส่ Handler</strong> — เขียน <code>router.get('/users')</code> เฉย ๆ หรือส่ง <code>undefined</code> เข้าไป Express จะโยน Error ออกมาบอกทันทีตอนสตาร์ท ซึ่งถือว่าดีเพราะเรารู้ตัวเร็ว</li>
+        <li><strong>ลำดับ Route ผิด</strong> — เรื่องนี้สำคัญมากจนต้องคุยกันยาวในบทหน้า</li>
+      </ul>
+      <p>ตอนนี้เรามี Router สามตัวที่พร้อมใช้งานแล้ว แต่ถ้าลองรัน <code>npm run dev</code> แล้วยิงไปที่ <code>/api/habits</code> จะยังได้ 404 อยู่ เพราะ App ของเรายังไม่รู้จัก Router พวกนี้เลย บทหน้าเราจะเอามันไปแปะเข้ากับ App กัน</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="07_http_verbs_and_rest.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="09_mounting_and_routing_strategies.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>
