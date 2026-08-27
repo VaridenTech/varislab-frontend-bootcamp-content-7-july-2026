@@ -1,0 +1,181 @@
+Let's make one, so what we'll do.Is we'll make an Error Handler and then
+we'll register it in our Express server.So the simplest way to do that is go to
+our middleware.Like a new one here, we'll call it error,Handler. That's yes, like this.We'll import our types from Express.Requests and response.We will export a. Error Handler,
+middleware, so what'scalled Error Handler. It's got to take
+those 4 arguments,so error for now you could just put error
+class if you wanted to type this out.Our request is our requestresponse. And then Next Isthe Next function, there we go.Cool, so we got all those.First thing is if you want you can just
+log the entire stack trace of this error
+if you wantedto. That's just something that's helpful.
+I mean this is not something you would do
+in Production.I think you would have like a logger that
+you're logging to,but this is just something I'm doing in
+Development.And then There's no wrong answer here.Like what we're doing right now at this
+point is all opinion based, right?This is like how do you handle your
+errors?Do you report to entry right here? Do you
+have something like a bug snag?Do you have, are you logging with
+something like Pino?Are you writing to a file? Are you sending
+off a Slack to alert somebody?Like what are you doing here? There's no
+wrong answer. You do whatever you want.This is saying, hey, there was an error in
+one of the middlewares or the Controllers
+somewhere.And I'm letting you know it also depends
+on what does your errors,you know, what do they look like? Do you
+have like custom errors that you've
+created that have differentyou know, error codes onthem that do specific things and inside of
+here you do a switch statement on those
+error codes and dependingon that error code you do something else,
+there's no wrong answer here.So everything I have right here is just me
+showing you what's possible.It's not a right or wrong here it's really
+just based on opinions.So what I have here is just like.Oh, I'll look at the name of the error.Depending on the name of the error, I'll
+set a different status and a message,and that's why I send back to the clients.That's a very simple way of doing it. You
+could do, you can literally do whatever
+you want here.There's no wrong answer. Does that make
+sense?It's mostly the fact that the error was
+handled, right,cause if you don't handle the error, then
+your server will break.What you do with the error is up to you.
+The lesson is handling the error to begin
+with andhow to handle the error.So in this case, I'm just setting a
+status.I'll default to, if there is an error.Dot status, I'll default to that otherwise
+I'm just gonna assume we messed up
+somewhere and I'm gonnado 500. And then I'll default to a
+message.Hey, if there is a message on the error,
+you know, I'll use that one,otherwise I'll just say, yeah, you know,
+internal.Server error. And then iferror.name. Equals validation error.So in this case, something happened on the
+validation like input validation,and I'll say the status equals 400 and the
+message equals.Validation error, right, so this would
+free up our Validation middleware for
+like,for instance, we go look at that
+Validation middleware right now.They automatically do that themselves,
+right?They're like, oh I know what the error is.
+I'm just gonna go ahead and respond with
+the error handlingthat we're gonna set globally in our app
+this middleware no longer has to do this.All it has to do is throw an error now.It doesn't even, I'm sorry, it doesn't, it
+has to call Next now.I'm sorry, so it would make an error and
+it would call Next.So instead of returning here, it would
+say,oh snap, there's an error, I'll just call
+Next.With that with that error object that I
+want to pass in that satisfies this so inthis case I'm making like a custom error
+object that can have a name and a status
+and amessage. Right, so I would have to make
+that,which I do believe I go over making.I know, I got rid of that because I
+thoughtit was silly making a custom error one,
+but like you could we maybe we can make
+one right nowjust to show you what it looks like, but.There there's just no wrong way of doing
+it. Like I'm trying to explain like it's
+very,there's a million ways to how you wanna
+handle your errors.It's mostly just that like you have a
+system.Is it custom errors? Is it?Based off messages is it based off of
+codes that you do,special use cases, things from the
+database, you know,how you wanna do it is totally up to you.
+You have the freedom you can check
+whatever you wannacheck here, right? But in that case that's
+what would happen.So if I said that, you know, this is what
+will happen,let's say there was a.Let's say the name was.If error.name. Was unauthorized error, so
+this is an error that mightbe thrown. If you try to Access to API and
+didn'thave it you had it invalid JSON Web token
+or something like that so I would say
+status is 404or 401 and the message is unauthorized.So I can do something like that.And then ultimately, once I'm done
+handling all the different types of error
+messages or names that Isupport, I can then finally set the
+status.I start status to whatever status is.And then I can finally send back a message
+here.And I can say, hey, the error in this case
+is the message.And then if I'm in Development mode, maybe
+I wanna do something special to help me
+debug this.I can say, OK, if env.What did you just import, OK, not from
+there.There we go from there, so I can say ENV.App stage equals. Dev, so we'rein Development. Then I might wanna Go
+ahead and add some extra stuff here.Show me the error stack. Which will be,you know, error. Stack, show me some more
+details here.I wanna see the error. Message.Something extra while I'm in Development
+mode maybe.And we haven't incorporated this anywhere.
+I'm not throwing any errors that satisfies
+these constraintsso like this is none of these statements
+are gonna get triggered because I'm not
+throwing anything thatmatches this. And this is why you gotta
+figure out what is your system because
+whatever you decidehere you didn't have to go back and
+implement this everywhere there's a
+potential error.Right, so in this scenario, I would make
+like a custom error class,right, let's say I call this a.Class, you know, API. Error and it
+extends.The error class, right? I could do that.I can say super. Oops, I'm sorry.I can do that and then.You know, whatever Error whatever like
+message you pass in here.I could, I could do whatever I want. So in
+this case, I can say that like, yeah,these things have like a status, you know,it's gonna be a number, they have a.What else did I haveyeah, I was just likea name, I guess. That's a stream and then
+you can just pass all those in here,right? Like it also has a message which is
+a stream and you just pass those in you
+can sayhere's a message, here's a name.Here's the status. Then youwould just find those just that message.Do all that. The nameand then status. So you do that and then
+this would be like my customerror class, right? So then down here.Assuming everywhere there was an error, I
+would be throwing this API error downhere. I will be catching that AI API error
+and then in that caseright, if I change thisto API error. I do have an error that
+status nowright? I do have.Error message now, so, but then now I
+would, I would have to be instead of
+throwing a new errorlike I might be doing like.Somewhere like here, am I even throwing
+one somewhere?Let me see. I don't I don't even throwing
+one anywhere,but instead of throwing an error, a
+regular error,I would throw an API error and I would
+pass in its status, its name,and its message. And that's just one of
+many ways to do this.There's literally no. Yeah, there's like I
+don't have a strong opinion onhow to do this because I really think it
+comes down to.How is your debug how is your Production
+Debugging?Like how do you debug when things are
+live?Do you have like an on call system and
+pager duty?Do you have alerts? All that is gonna
+matter here,so it's really hard to walk you through
+what that might look like, but this is
+just an idea ofwhat it would be like if that makes sense,
+right?So Now that you have this, all you gotta
+do is just add it,To our server, so we'llGo down to our server.And we just need to add this at the
+bottom.So we'll just say, cool, let's just do a
+app.use and then we can just say Error
+HandlerBoom, done. Long as itis at the bottom, this is a global Error
+Handler so if anywhere we call Next and we
+throw this willwork so we can test this by.I'll go here. I'll say app.use.I'll make a middleware function in line.And I'm just gonna Do that.I want this 3rd argument here, which is
+Next.And then I'll say Next new.API Error, oh, did I export that?Let me see, let me export this.New API error. And Igotta give it a message like this is, or I
+guess I should just.Get this thing to trigger, so I'll give it
+a message.I'll give it a name of validation error.And I can give the message like whatever I
+want, so.I'll say For the message is like,
+validationerror, and then for the name is literally
+that.And for the status. I'll put a 400.Cool. So I'm just gonna put that error
+there, right,and this is gonna happen no matter what I
+hit. This is this is gonna throw cause I
+just,I just put this here. Now this should
+handle it.So now if I go.And just literally run anything. Let's see
+what happens.Boom, Validation error. Right, that's the
+error that I just threw,and here's the stack and the details
+because we're in dev mode and I said
+show me the stack indetails in dev mode. So you can see it's
+skipped over.Where did I put it?Oh yeah, here we go. It skipped over all
+of this.It didn't care. I didn't even try to
+process this because I called Next with an
+error.Everything got skipped and it found the
+closest Error Handler, which is here.Right, so as you see, you can get pretty
+creative of what you want to put here.What if your error handler throws an error?If your Error Handler throws an error,
+which is actually very common,This is why what youwanna do is. You wanna put a try catch in
+here if you're doing anything
+asynchronous.If you're doing anything synchronous, it's
+gonna break.On every you like you you'll find it, but
+it's doing something asynchronous like I'm
+reporting the centuryor whatever, yeah, you wanna put a try
+catch in here and then you wanna catch
+that error.And you know, Do whatever you need to do
+to be notified about that,but yes, your Error Handler can also throw
+an error.There is something you know that you can
+do.To potentially catch unhandled errors, and
+that's processDot, process that.On No, what is it?Processed dots. Oh, I forgot what it is.I see. Remove all now, processeddots, maybe you don't have this in a later
+version of Node anymore, but there was
+something where youcan like. Handle on or process that on.On there it is, OK, I'm like, I know it's
+something there it is, unhandled
+rejection,or unhandled or uncaught exception.These would be errors that are thrown on
+your server that you've never caught.But errors. Inside of Express.Might not bubble up to this because
+Express itself might be doing some
+catching and doingstuff, so. Yeah, that's one thing, but.It won't harm you to put this here.Unhandled. Or what is it?Uncaught exception and things like that
+you can run a call back here and you could
+do a thing.It just can't be an asynchronous thing
+cause it's shutting down at this point,I think, so this is where you can like
+restart the server or,you know, do something else, so.So there really is no 100% safe way of
+stopping your server from crashing if it
+was gonna break otherthan writing good code, and then you know
+when you deploy this you wanna make sure
+you have somethingthat restarts the server if it ever
+crashes if the thing is recoverable and
+that's the other thing likeis this a recoverable error or not or is
+this like yeah this is a note this is a
+errorthat we can't recover from and even
+restarting it it's just gonna crash it
+again then you gotta fix your code

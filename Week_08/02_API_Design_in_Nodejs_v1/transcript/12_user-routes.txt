@@ -1,0 +1,39 @@
+And then we will do the same one for the
+User Routes.Let's do that. Sounds very much the same,honestly. But it's a good exercise to
+write it again,so. Oops ports.Router from. Express. Constant router.And I mean honestly just writing stuff
+over and over again.There used to be this app a long time ago
+where it was a it was it was an appthat taught you how to type, but the way
+that they did it was they would take an
+Open Source projectlike jQuery. And you had to type along all
+the charactersif you GOT one character wrong it wouldn't
+move forward and it would like highlight
+the code as you typeso you were technically writing code, but
+you didn't know how to,you didn't need to know how to code to do
+this.It was just teaching you how to type by
+writing code and taking your Open Source
+project and I used todo that a lot and that's how I learned a
+lot of the Open Source projects and
+learned how to typewas just doing that. So Router.Git, so let's say we wanna get,All the users, so we'll do that.And that's gonna be a 200, so we GOT all
+the users.And then let's say we want to get a user
+with a specific ID, so we'll say giving
+that userwith that ID. GOT user.We have the ability tolike create users, but then you gotta
+think like when would you ever create a
+user that wasn't signingup? This would be like if you GOT like an
+admin dashboard that was also using this
+API and forsome reason you wanted to like create a
+user inside that admin dashboard without
+that user having toGo and Sign Up for whatever reason, this
+is what that Route would be for.And you might add extra permissions and
+stuff, so only the admin dashboard can
+access this Route andthings like that, but. Yeah, in a
+traditional cut out,you wouldn't have a Route where anybody
+can just make a user and bypass all your
+business logic for Authenticationthat just. Yeah, good luckthat's not gonna happen, butYeah, I'm not gonna putthat. We can put that on, but I'm not
+gonna put it cause we're not gonna use
+that.I'm gonna say, do be able to update a userthough, so I'll say put.And I'll take this. These are updated.Cool. And then yeah, you could delete a
+user, why not.Cool. I mean that's Export this.I have some extra ones that's like in the
+code, you don't have to add those.Those are just there to show you a
+complete example of.CRUD, we're not, you can write them, but
+it's not gonna hurt you,but when we go do like the handlers, we
+probably won't write handlers for all that
+stuff cause we would

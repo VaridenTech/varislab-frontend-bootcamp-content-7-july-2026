@@ -1,0 +1,86 @@
+OK, well, let's actually make the Routing
+for the app then.So let me scroll to it,The first thing we're going to do.Is we're going to create Some sub routers,these are routers that we can mount on a
+top level router, so.We're gonna go into our source file, our
+source folder,we're gonna make a new route, or new
+folder, I'm sorry, we're gonna call it
+Routes,and then for each one of the resources
+that we're gonna have, we're gonna make a
+file for it,which is gonna be our router. So we're
+gonna say user router.Dots here inside the routes or I'll say
+User routes,let's just call it that, be consistent.User routes, we're gonna have habit
+Routes.We're going to have what else do I have
+here, have a user.A, yeah, and then we'll.Have all the routes. Cool.And the way this is gonna look for each
+one of these is they're gonna be their own
+router,individual sub router that we can mount
+onto the top-level router.So the way that we do that is we can
+import.A named import from Express called Router
+from Express,and then what we can do is we can make a
+router from router.I don't know, I don't know why they still
+haven't changed this.It's 2005. Express V5 and they still have
+you doing.Stuff like this, but I digress, so let's
+set up our routes.We're basically gonna set up like.The CRUD, the CRUD routes for this, right,
+so for in this case aFor the alt routes, this was a little
+different because it's not like entirely
+CRUD because Al is mostlyjust like signing up and signing in. It's
+not alt itself is not a resource,where it's like users would be a resource,
+but A itself is not really a resource,it's a mechanism I guess.So in this case we would just say
+router.post.So we treat the router just like we would
+treat the app. It has the same methods, so
+dotpost.git,do patch, do put. It's the same thing. So
+we're gonna say post,we wanna register. This is basically our
+Sign Up route.So we wanna do that, Reres.And then for now we're just gonna mock
+everything out, right? We're not making
+this stuff right now.I was gonna say status 201.Remember anything in the 200 means good,
+201 technically means successful post.That means your post request was good. 200
+would mean your GET request was good.In practice, it doesn't really matter. So,
+and you can put whatever you want.Again, this is just placeholder, so I'm
+just gonna put like, you know, user signed
+up.Cool. And then we need another one for
+signing in,so write it our post and we'll just call
+this.You can call it login, you can call to
+Sign In, call whatever you want.I'll just call it log in.And same thing. Copy thatbring that down here.There we go, and then I'll say user.Logged in. And they just need to export
+this router.So like most Module systems if I didn't
+talk about this already,if you wanna import a Module, you have to
+export it first, right, otherwise you
+can't get access to itA Module is just a closureA closure is just afunction. Functions can't reach inside of
+functions unless the function returns
+something in the firstplace. That's what this is. When you
+export a Module, you're returning
+something out of you gonna getthis whole file as a function that nobody
+can reach into.And when you export something, you're
+returning something out of this function
+that anybody can get accessto if they choose. OK, and for the habit
+thing,we'll do something similar, but we will
+make CRUD stuff from this one, so this
+will be from Express.Cost router equals router. And then we'llsay router.git, so let's say I want to get
+all my habits,so I'll just say slash.Notice I didn't put slash habit here.We'll talk about that in a second. We'll
+talk about mounting, so I'll do slash.And yeah. Let's do a placeholder.Right. I like JSON.And we'll say, you know, message, you
+know, here's your habits.Habits. Cool. So that'll give you all your
+habits,then we need to get one habit.So I'll just say slash ID.I will say, got one habit.I'll say router. Gets let's do a post,I'm sorry, so now we want to create a
+habit that's just gonna be to slash.With the post instead of a Git, so
+router.post just to slash.Same thing. Right crust.Great. Have it, if we wanted to do,a delete, you wanna deletea habit, we can say delete.Come here, but in this case, this will
+need an ID to know which one to delete,so we can put that there and we could say
+delete it, have its.So on the off routes you did a status 201
+on these,is it there must be a default then?Oh yeah, they're all, they're all for each
+one of these they're gonna default to 200
+cause it'll yousent anything non error back, it's always
+gonna default to 200,but yeah, I mean to be, youcan put a 201 on the post if we want to
+be.You know, consistent, but yeah.There's also like a specific status code
+for a successful delete too.It's 2 something. I don't know my guess
+tells me it's like 209 maybe,I don't know, but anything 2 is success.You typically won't see anything other
+than 201 and 200.I almost never seen anything else unless
+someone who's like.Really locked in on like getting their
+servers down right,they're just like. I'm gonna do everything
+right,like you almost will never see it, in my
+opinion.Usually the one that people really focus
+on is the 400s.They get those very specific because those
+are user facing.That means your request is jacked up, so
+they really want to nail those down,but like everything else is like they
+don't really care.You got another one inhere for this is where I kind of break
+free of.REST for a little bit, so I want to be
+able to complete.A habit, so I can say for this habit with
+this ID.I want to run this command, the complete,
+so I'll say.Slash compete and I can do that, you know,
+whatever I want here.That's the whole point of working on
+servers like.There really are no rules, like, I just
+make this up.

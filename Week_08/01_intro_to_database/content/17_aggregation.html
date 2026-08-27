@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="วิเคราะห์ข้อมูลด้วย Aggregation Pipeline และ Stage เช่น match sort group และ bucket" />
+    <title>Aggregation ใน MongoDB — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Aggregation ใน MongoDB</h1>
+
+      <p>MongoDB รองรับทั้ง Aggregation Pipeline และ MapReduce แนวคิดของ MapReduce คือใช้ฟังก์ชัน Map แปลงข้อมูลแต่ละรายการ แล้วใช้ Reduce รวมผลให้เป็นชุดข้อมูลที่เล็กลง แต่สำหรับงานทั่วไป Aggregation Pipeline มักทำงานได้ดีและดูแลโค้ดง่ายกว่า</p>
+      <p>MongoDB มี Aggregation Pipeline สำหรับกรอง แปลง จัดกลุ่ม และสรุปข้อมูลเป็นขั้นตอน วิธีนี้มักอ่านง่ายและดูแลต่อได้สะดวก เพราะแต่ละ Stage มีหน้าที่ชัดเจน</p>
+      <p>จะเป็นอย่างไรถ้าเราต้องการทราบว่าเรามีลูกสุนัข สุนัขโตเต็มวัย และสุนัขสูงอายุจำนวนเท่าใดในคอลเลคชันสัตว์เลี้ยงของเรา? มาลองกันดูครับ</p>
+      <pre><code class="language-javascript">db.pets.aggregate([
+  {
+    $bucket: {
+      groupBy: &quot;$age&quot;,
+      boundaries: [0, 3, 9, 15],
+      default: &quot;very senior&quot;,
+      output: {
+        count: { $sum: 1 },
+      },
+    },
+  },
+]);</code></pre>
+      <ul>
+        <li>ด้วยไปป์ไลน์การรวม คุณจัดเตรียมขั้นตอนของสิ่งที่ต้องทำ ในกรณีนี้ เรามีขั้นตอนเดียวเท่านั้น ได้แก่ สัตว์เลี้ยงในถังอายุ 0-2 ปี 3-8 ปี 9-14 ปี (ขอบเขตสุดท้ายไม่รวมอยู่ด้วย ดังนั้นจึงไม่รวม 15 ตัว) และ &quot;อาวุโสมาก&quot; (ซึ่งเป็นที่เก็บข้อมูลเริ่มต้น)</li>
+        <li>ด้วยผลลัพธ์ คุณกำลังกำหนดสิ่งที่คุณต้องการส่งผ่านไปยังขั้นตอนถัดไป ในกรณีนี้ เราเพียงต้องการสรุปผลโดยเพิ่ม 1 ในการนับทุกครั้งที่เราเห็นสัตว์เลี้ยงที่ตรงกับถัง</li>
+      </ul>
+      <p>นี่คือสัตว์เลี้ยงทั้งหมด เราต้องการแค่สุนัข มาเพิ่มอีกขั้นกัน</p>
+      <pre><code class="language-javascript">db.pets.aggregate([
+  {
+    $match: {
+      type: &quot;dog&quot;,
+    },
+  },
+  {
+    $bucket: {
+      groupBy: &quot;$age&quot;,
+      boundaries: [0, 3, 9, 15],
+      default: &quot;very senior&quot;,
+      output: {
+        count: { $sum: 1 },
+      },
+    },
+  },
+]);</code></pre>
+      <p>Stage <code>$match</code> กรองให้เหลือเฉพาะ Pet ที่เป็นสุนัขก่อนส่งต่อไปยัง Stage ถัดไป</p>
+      <p>สุดท้าย จะเป็นอย่างไรหากเราต้องการเรียงลำดับผลลัพธ์ตามกลุ่มที่มีสัตว์เลี้ยงมากที่สุด?</p>
+      <pre><code class="language-javascript">db.pets.aggregate([
+  {
+    $match: {
+      type: &quot;dog&quot;,
+    },
+  },
+  {
+    $bucket: {
+      groupBy: &quot;$age&quot;,
+      boundaries: [0, 3, 9, 15],
+      default: &quot;very senior&quot;,
+      output: {
+        count: { $sum: 1 },
+      },
+    },
+  },
+  {
+    $sort: {
+      count: -1,
+    },
+  },
+]);</code></pre>
+      <p>เราต่อ Stage เพิ่มทีละขั้นจนได้ข้อมูลสรุปที่ต้องการ Aggregation ทำได้อีกหลายรูปแบบ ดูรายการ Stage ทั้งหมดได้จาก <a href="https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/">เอกสาร MongoDB</a></p>
+      <p>Aggregation เป็น Feature ที่ทรงพลังมาก ใช้ได้ตั้งแต่ทำรายงานทั่วไปไปจนถึงวิเคราะห์รูปแบบผิดปกติ เช่น ตรวจพฤติกรรม Fraud ในระบบ Marketplace</p>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="16_indexes_in_mongodb.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="18_nodejs_app_with_mongodb.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

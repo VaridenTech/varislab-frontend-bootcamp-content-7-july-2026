@@ -1,0 +1,248 @@
+{
+  "questions": [
+    {
+      "prompt": "เมื่อรันคำสั่งด้านล่าง ค่าใน process.argv สองตำแหน่งแรกคืออะไร?",
+      "body": "<pre><code>node script.js arg1 arg2</code></pre>",
+      "choices": [
+        "arg1 และ arg2",
+        "Path ของ Node.js และ Path ของไฟล์ script.js",
+        "ชื่อ Environment Variable และค่าของมัน"
+      ],
+      "correctChoice": 2,
+      "explanation": "process.argv เริ่มด้วย Path ของ Node.js และ Path ของสคริปต์ จากนั้นจึงตามด้วย Argument ที่ผู้ใช้ส่งเข้ามา"
+    },
+    {
+      "prompt": "หากรันคำสั่ง NODE_ENV=production node script.js โค้ดใดใช้ดึงค่า production ได้?",
+      "choices": [
+        "process.argv.NODE_ENV",
+        "process.pid.NODE_ENV",
+        "process.env.NODE_ENV"
+      ],
+      "correctChoice": 3,
+      "explanation": "Node.js เก็บ Environment Variables ของ Process ปัจจุบันไว้ใน process.env ในรูปคู่ Key-Value"
+    },
+    {
+      "prompt": "ข้อใดอธิบายความแตกต่างระหว่าง Flag และ Argument ของคำสั่ง CLI ได้ถูกต้อง?",
+      "choices": [
+        "Flag ปรับพฤติกรรมของคำสั่ง ส่วน Argument คือข้อมูลที่ส่งให้คำสั่ง",
+        "Flag ใช้ตั้งชื่อคำสั่ง ส่วน Argument ใช้ติดตั้งคำสั่งแบบ Global",
+        "Flag ใช้ได้เฉพาะใน Node.js ส่วน Argument ใช้ได้เฉพาะใน Bash"
+      ],
+      "correctChoice": 1,
+      "explanation": "Flag เป็นตัวเลือกที่ปรับพฤติกรรม เช่น -a ของ ls ส่วน Argument คือข้อมูลที่คำสั่งต้องใช้ เช่น ชื่อโฟลเดอร์ของ mkdir"
+    },
+    {
+      "prompt": "การตั้งค่าใดทำให้ชื่อ todo กลายเป็นคำสั่ง CLI ที่รันไฟล์ index.js?",
+      "body": "<pre><code>{\n  \"name\": \"todo\",\n  \"type\": \"module\",\n  \"bin\": {\n    \"todo\": \"./index.js\"\n  }\n}</code></pre>",
+      "choices": [
+        "Field name เพราะ npm ใช้ชื่อแพ็กเกจเป็นคำสั่งเสมอ",
+        "Field type เพราะ module เป็นชื่อมาตรฐานของ CLI",
+        "Field bin เพราะจับคู่ชื่อคำสั่งกับ Path ของไฟล์ที่จะรัน"
+      ],
+      "correctChoice": 3,
+      "explanation": "ชื่อใต้ Field bin จะกลายเป็นคำสั่งใน Terminal และค่าที่จับคู่กันจะบอก Node.js ว่าต้องรันไฟล์ใด"
+    },
+    {
+      "prompt": "ข้อใดจับคู่ประเภทของ Node.js Module กับตัวอย่างได้ถูกต้อง?",
+      "choices": [
+        "http เป็น Internal Module, math.js ที่เราเขียนเองเป็น User-created Module และ axios เป็น Third-party Module",
+        "http เป็น Third-party Module, math.js เป็น Internal Module และ axios เป็น User-created Module",
+        "ทั้ง http, math.js และ axios เป็น Internal Module เพราะเรียกใช้ใน Node.js ได้"
+      ],
+      "correctChoice": 1,
+      "explanation": "http ติดมากับ Node.js, math.js เป็นไฟล์ที่ผู้ใช้สร้างเอง และ axios เป็นแพ็กเกจภายนอกที่เผยแพร่ผ่าน npm"
+    },
+    {
+      "prompt": "หากโปรเจกต์เลือกใช้ ES Modules คู่คำสั่งใดสอดคล้องกันสำหรับ Export และ Import ฟังก์ชัน hello?",
+      "choices": [
+        "module.exports = { hello } และ import { hello } from './module.js'",
+        "export { hello } และ import { hello } from './module.js'",
+        "export { hello } และ require('./module') เท่านั้น"
+      ],
+      "correctChoice": 2,
+      "explanation": "ES Modules ใช้ export คู่กับ import ส่วน CommonJS ใช้ module.exports หรือ exports คู่กับ require"
+    },
+    {
+      "prompt": "เหตุใด Module เชื่อมต่อฐานข้อมูลจึงไม่ควรรวม Data Validation และ Business Logic ไว้ด้วย?",
+      "choices": [
+        "เพราะ Module หนึ่งไฟล์ห้ามมีมากกว่าหนึ่งฟังก์ชัน",
+        "เพราะ Node.js จะไม่ยอม Import Module ที่ทำงานหลายอย่าง",
+        "เพราะการแยกหน้าที่ให้ชัดช่วยให้แก้ไข ทดสอบ และนำ Module กลับมาใช้ซ้ำได้ง่าย"
+      ],
+      "correctChoice": 3,
+      "explanation": "Module ที่ดีควรมีหน้าที่หลักชัดเจนและไม่ผูกกับส่วนอื่นแน่นเกินไป เพื่อให้ดูแลและนำกลับมาใช้ซ้ำได้ง่าย"
+    },
+    {
+      "prompt": "Prefix node: ในคำสั่ง import fs from 'node:fs' มีประโยชน์อย่างไร?",
+      "choices": [
+        "ช่วยระบุให้คนอ่านเห็นชัดว่า fs เป็น Core Module ที่มากับ Node.js",
+        "ทำให้ fs เปลี่ยนจาก Synchronous เป็น Asynchronous โดยอัตโนมัติ",
+        "สั่งให้ npm ดาวน์โหลด fs เวอร์ชันล่าสุดก่อนใช้งาน"
+      ],
+      "correctChoice": 1,
+      "explanation": "Prefix node: ไม่ได้เปลี่ยนวิธีทำงาน แต่สื่ออย่างชัดเจนว่า Module นี้เป็น Core Module ไม่ใช่แพ็กเกจภายนอก"
+    },
+    {
+      "prompt": "หลังรัน npm install cowsay แบบ Local จะเกิดอะไรขึ้น?",
+      "choices": [
+        "cowsay จะติดตั้งให้ทุกโปรเจกต์ในเครื่องโดยไม่แก้ package.json",
+        "โค้ดของ cowsay จะอยู่ใน node_modules และถูกบันทึกเป็น Dependency ใน package.json",
+        "npm จะคัดลอก cowsay เข้าไฟล์ JavaScript ทุกไฟล์ในโปรเจกต์"
+      ],
+      "correctChoice": 2,
+      "explanation": "การติดตั้งแบบ Local เก็บแพ็กเกจไว้ใน node_modules ของโปรเจกต์และเพิ่มรายชื่อไว้ใน dependencies ของ package.json"
+    },
+    {
+      "prompt": "เมื่อรัน todo add \"ซื้อนม\" โค้ดต่อไปนี้กำหนดค่าให้ command และ arg อย่างไร?",
+      "body": "<pre><code>const [command, arg] = process.argv.slice(2)</code></pre>",
+      "choices": [
+        "command เป็น 'todo' และ arg เป็น 'add'",
+        "command เป็น 'ซื้อนม' และ arg เป็น undefined",
+        "command เป็น 'add' และ arg เป็น 'ซื้อนม'"
+      ],
+      "correctChoice": 3,
+      "explanation": "slice(2) ตัด Path สองตำแหน่งแรกออก แล้ว Array Destructuring นำ Argument แรกใส่ command และตัวถัดไปใส่ arg"
+    },
+    {
+      "prompt": "ถ้าลืมใส่ break ท้าย case ใน switch ของ CLI จะเกิดอะไรขึ้น?",
+      "choices": [
+        "โปรแกรมอาจไหลไปทำ case ถัดไปต่อ ซึ่งเรียกว่า Fall-through",
+        "โปรแกรมจะย้อนกลับไปรัน case แรกเสมอ",
+        "Node.js จะเติม break ให้อัตโนมัติเมื่อจบ Block"
+      ],
+      "correctChoice": 1,
+      "explanation": "break ใช้หยุดการทำงานของ switch ใน case ปัจจุบัน หากไม่มี โค้ดจะทำ case ถัดไปต่อแม้เงื่อนไขจะไม่ตรง"
+    },
+    {
+      "prompt": "เมื่อ Promise ถูก Rejected ควรใช้ส่วนใดรับและจัดการ Error?",
+      "choices": [
+        "เมธอด then เท่านั้น",
+        "เมธอด catch หรือบล็อก try/catch เมื่อใช้ await",
+        "คำสั่ง process.exit ก่อนเริ่ม Promise"
+      ],
+      "correctChoice": 2,
+      "explanation": "Promise chain ใช้ catch รับกรณี Rejected ส่วนโค้ด Async/Await ใช้ try/catch เพื่อจัดการ Error"
+    },
+    {
+      "prompt": "เพราะเหตุใดแอป Node.js ทั่วไปจึงควรเลือกเมธอด FS แบบ Asynchronous เป็นหลัก?",
+      "choices": [
+        "เพราะอ่านได้เฉพาะไฟล์ JSON เท่านั้น",
+        "เพราะไม่ต้องระบุ Path ของไฟล์",
+        "เพราะไม่บล็อกโปรแกรมระหว่างรอและรองรับงานจำนวนมากได้ดีกว่า"
+      ],
+      "correctChoice": 3,
+      "explanation": "งานระบบไฟล์ต้องใช้เวลารอ เวอร์ชัน Asynchronous เปิดให้โปรแกรมทำงานอื่นต่อได้แทนที่จะหยุดรอไฟล์"
+    },
+    {
+      "prompt": "เหตุใดจึงสร้าง DB_PATH ด้วย import.meta.url แทนการใช้ './db.json' ตรง ๆ?",
+      "choices": [
+        "เพื่อให้ Path อ้างอิงจากตำแหน่งไฟล์ todos.js ไม่ใช่โฟลเดอร์ที่ผู้ใช้รันคำสั่ง",
+        "เพื่อให้ Node.js สร้าง db.json ใหม่ทุกครั้งที่เปิดโปรแกรม",
+        "เพื่อเข้ารหัสข้อมูลใน db.json ก่อนอ่าน"
+      ],
+      "correctChoice": 1,
+      "explanation": "โฟลเดอร์ที่รัน CLI อาจเปลี่ยนได้ แต่ import.meta.url บอกตำแหน่งของ Module จึงใช้สร้าง Path ไปยัง db.json ได้แน่นอนกว่า"
+    },
+    {
+      "prompt": "readTodos และ saveTodos ใช้ JSON.parse และ JSON.stringify ทำหน้าที่ใดตามลำดับ?",
+      "choices": [
+        "ทั้งสองคำสั่งแปลงข้อความ JSON ให้เป็น Array",
+        "JSON.parse แปลงข้อความเป็นข้อมูล JavaScript ส่วน JSON.stringify แปลงข้อมูล JavaScript เป็นข้อความ",
+        "JSON.parse เขียนไฟล์ ส่วน JSON.stringify อ่านไฟล์"
+      ],
+      "correctChoice": 2,
+      "explanation": "ข้อมูลที่อ่านจากไฟล์เป็นข้อความจึงต้อง parse ก่อนใช้ และก่อนเขียน Array กลับลงไฟล์ต้อง stringify ให้เป็นข้อความ JSON"
+    },
+    {
+      "prompt": "ถ้า Todo เดิมมี ID เป็น 1 และ 3 ฟังก์ชัน nextId จะคืนค่าใด?",
+      "body": "<pre><code>const nextId = (todos) =&gt; {\n  if (todos.length === 0) return 1\n  return Math.max(...todos.map(todo =&gt; todo.id)) + 1\n}</code></pre>",
+      "choices": [
+        "3 เพราะใช้ todos.length + 1",
+        "2 เพราะเลือก ID ที่ว่างน้อยที่สุด",
+        "4 เพราะนำ ID ที่มากที่สุดมาบวกหนึ่ง"
+      ],
+      "correctChoice": 3,
+      "explanation": "ฟังก์ชันหา ID สูงสุดด้วย Math.max แล้วบวกหนึ่ง จึงได้ 4 วิธีนี้ช่วยเลี่ยง ID ซ้ำหลังมีการลบรายการ"
+    },
+    {
+      "prompt": "ข้อใดอธิบายเหตุผลที่ addTodo ใช้ [...todos, todo] แทน todos.push(todo) ได้ดีที่สุด?",
+      "choices": [
+        "เพื่อคืน Array ใหม่โดยไม่แก้ไข Array เดิม ทำให้ฟังก์ชันเข้าใจและทดสอบได้ง่าย",
+        "เพราะ push ใช้ได้กับ String เท่านั้น",
+        "เพื่อให้ Todo ใหม่ถูกเพิ่มไว้ตำแหน่งแรกของ Array"
+      ],
+      "correctChoice": 1,
+      "explanation": "ฟังก์ชัน CRUD ชุดนี้ออกแบบเป็น Pure Function ที่รับ Array แล้วคืน Array ใหม่ โดยไม่เปลี่ยนข้อมูลเดิม"
+    },
+    {
+      "prompt": "เหตุใดคำสั่ง done และ remove จึงต้องใช้ Number(arg) ก่อนส่ง ID ให้ฟังก์ชัน CRUD?",
+      "choices": [
+        "เพราะ Number ทำให้ process.argv อ่าน Argument ได้มากกว่าสองตัว",
+        "เพราะ Argument จาก process.argv เป็น String แต่ ID ในข้อมูลเป็น Number และ === ตรวจชนิดข้อมูลด้วย",
+        "เพราะ Number ทำให้ Todo เรียงตาม ID โดยอัตโนมัติ"
+      ],
+      "correctChoice": 2,
+      "explanation": "ค่า '3' จาก Command Line ไม่เท่ากับตัวเลข 3 เมื่อเปรียบเทียบด้วย === จึงต้องแปลง arg เป็น Number ก่อน"
+    },
+    {
+      "prompt": "ลำดับการทำงานของคำสั่งที่เปลี่ยนข้อมูล Todo คือข้อใด?",
+      "choices": [
+        "เขียนไฟล์ → อ่านไฟล์ → แสดงผล",
+        "แปลงข้อมูล → ปิด Process → อ่านไฟล์",
+        "อ่านข้อมูล → แปลงข้อมูล → เขียนกลับ"
+      ],
+      "correctChoice": 3,
+      "explanation": "CLI อ่านรายการเดิมด้วย readTodos ส่ง Array ให้ฟังก์ชัน CRUD สร้างค่าใหม่ แล้วใช้ saveTodos เขียนค่ากลับลงไฟล์"
+    },
+    {
+      "prompt": "ถ้าต้องการตรวจว่า Module สองตัวส่งข้อมูลหากันถูกต้อง ควรเลือกการทดสอบประเภทใด?",
+      "choices": [
+        "Integration Testing",
+        "Unit Testing",
+        "End-to-End Testing เท่านั้น"
+      ],
+      "correctChoice": 1,
+      "explanation": "Integration Testing ตรวจว่าส่วนต่าง ๆ ทำงานร่วมกันได้จริง และจับปัญหาที่อาจไม่เห็นเมื่อตรวจแต่ละส่วนแยกกัน"
+    },
+    {
+      "prompt": "เหตุใด addTodo, markDone และ removeTodo จึงเขียน Unit Test ได้โดยไม่ต้องเตรียมหรือล้างไฟล์?",
+      "choices": [
+        "เพราะ Jest จำลองไฟล์ให้ทุกเทสต์โดยอัตโนมัติ",
+        "เพราะฟังก์ชันเหล่านี้รับและคืน Array โดยไม่ทำงานกับระบบไฟล์",
+        "เพราะ npm test จะลบ db.json ก่อนรันเสมอ"
+      ],
+      "correctChoice": 2,
+      "explanation": "Logic จัดการ Array ถูกแยกจาก readTodos และ saveTodos จึงส่งข้อมูลทดสอบเข้าไปและตรวจผลลัพธ์ได้โดยตรง"
+    },
+    {
+      "prompt": "ข้อใดอธิบายบทบาทของ Server และ Client ได้ถูกต้อง?",
+      "choices": [
+        "Server แสดง UI เท่านั้น ส่วน Client จัดเก็บข้อมูลส่วนกลางเสมอ",
+        "Server และ Client ต้องทำงานอยู่ในเครื่องเดียวกัน",
+        "Client ส่ง Request ส่วน Server รอรับ ประมวลผลหรือดึงข้อมูล แล้วส่ง Response กลับ"
+      ],
+      "correctChoice": 3,
+      "explanation": "Client เป็นฝ่ายขอข้อมูลหรือบริการ ส่วน Server เปิดรอ Request และตอบกลับ โดยมักดูแลงานประมวลผลและข้อมูลส่วนกลาง"
+    },
+    {
+      "prompt": "เหตุใด buildHtml จึงใช้ join('') หลังจาก map รายการ Todo เป็นแท็ก li?",
+      "choices": [
+        "เพื่อเชื่อมสมาชิกของ Array เป็นข้อความเดียวโดยไม่มีเครื่องหมายคอมมาคั่น",
+        "เพื่อเรียง Todo ตามสถานะ done",
+        "เพื่อแปลงข้อความ HTML ให้เป็น JSON"
+      ],
+      "correctChoice": 1,
+      "explanation": "map คืนค่าเป็น Array หากแปลง Array เป็นข้อความโดยไม่ใช้ join('') จะเห็นเครื่องหมายคอมมาคั่นระหว่างแต่ละรายการ"
+    },
+    {
+      "prompt": "เมื่อเรียก todo web โดยไม่ระบุ Port นิพจน์ Number(arg) || 3000 เลือกใช้ Port 3000 เพราะเหตุใด?",
+      "choices": [
+        "เพราะ Number(undefined) ได้ค่า 0 ซึ่งเป็น Port เดียวที่ Server ใช้ได้",
+        "เพราะ Number(undefined) ได้ NaN ซึ่งเป็นค่าเท็จ จึงเลือกค่าด้านขวาของ ||",
+        "เพราะ server.listen แปลงทุก Port ให้เป็น 3000 อัตโนมัติ"
+      ],
+      "correctChoice": 2,
+      "explanation": "เมื่อไม่มี arg ค่า Number(undefined) คือ NaN ซึ่งเป็น Falsy Value ดังนั้น Operator || จึงคืนค่า 3000 มาใช้เป็น Port เริ่มต้น"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+OK, so locking down the routes with the
+JSON Web Token authentication.We already implemented the first side of
+JSON Web Tokens,which is creating them when someone signs
+up and signs in.Cool. Now what do we do with that
+information? Like I said, our API is super
+skeptical.It doesn't trust anyone ever. It knows no
+one.You have to send up your credentials every
+time.You could think of our APIs like a
+bouncer.They let you in the club the first time
+you left to hear something out of your
+car.If you come back, they don't remember you.
+You gotta do the same thing you did to get
+in thefirst time. There's no special access.You gotta show your ID again. You're gonna
+get frisk for weapons again,everything all over again and if you leave
+and come back, it's gonna be the same
+thing no matter whatEven every day for a year if you go to
+that same club,they're gonna do the same thing.That's how our server is gonna be. There's
+just, it doesn't trust anyone.So we're gonna do something called the
+bearer token pattern.It basically is. Where it's a pattern in
+which we can attach a JSON Web tokento a header, typically the Authorization
+header.If you don't know what a header is, a
+header is a set of,it's a, it's an object that gets sent with
+every single request that's just a set of
+metadata.It's just a key value object that tells
+the server and the client more information
+about thisrequest, like where it came from, Caching
+strategies, things like Authorization,things like Cres, and custom, you can do
+custom headers.There's really nothing you can't put on
+the header and they might be like one of
+the most powerful thingsin HTTP, but it's just a key value object.So we're gonna add Authorization header on
+all of our requests to our API and the
+value is gonna bethe word bearer space, our token.And that's the strategy and then on our
+Server we need to check for that,decode it, identify and authenticate, and
+keep moving.So we can just hop right into it. We
+already have the other part of the code
+where we aregenerating, so we're just gonna add some
+more code Next to that.So let's hop right into.Our JWT code here. And we already have our
+generate tokenNext thing we're gonna dois the inverse of that. We're going to
+verify.A token. So to verify a token, we're gonna
+need the actual tokenitself. Right. And we could even typethis response to be. It's gonna return a
+promise of type.What do I call itJFT payload. Why is itnot, but I mean. Use that for some reason.I don't know why that thing's freaking
+out. Oh, I haven't returned anything,it's like, yeah. That's cool.I actually returned something. Let me save
+them.That solves it, that what you want?I don't know what that thing was.Let me see, I think my syntax is off.OK, there we go, and then I can say.I think it's here. There we go.I had it wrong. Like I said, I could do
+the hard stuff in entire script with the
+easy stuffI'm like, huh?There we go. OK. So now here we need to
+make the same secret key that we used to
+signit, so we'll say. Give me that secret key
+or I guess create another secret key.From the Ev.JWT Secret. And the encoding is UTF 8,same thing we did before, which means we
+should probably make this its own function
+since we alreadydid it twice. And thenWe can verify the token which not only
+validates the token that it's not expiredit used the same signingsecret, which means it's from this server.All those things, it will then also decode
+the token and turn it back into an objectSo that means this payloadright here is gonna be the same payload
+that we passed in when we created it,which is an object
+that looks like this.So we're gonna get back an object that has
+an ID, email, and username on it, assuming
+it's all validHAWT. Verify from Jose.Are we passing the token.And the secret key. From here we can just
+return.The entire payload, you justsay payload. This thing's freaking out
+because.Something to do with. Type script stuff
+that I don't feel like figuring out,but that's the payload. I could force it
+to be like as.JWT payload, no, it's like as.Unknown As, yeah, look at that, see.

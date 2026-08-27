@@ -1,0 +1,89 @@
+That's the validate schema. Validate
+perams and validate,Query are quite literally thesame thing and the only reason I didn't
+just combine them into one function.So that you can just see them 3 different
+times, but we could have just combined
+them into one functionand changed just one line, it would have
+been just fine, but I want you to see them
+3 timesI'm just gonna copy that oneand paste it and change it from Validate
+body to let's just,let's see the paras on this one.So Validate forams. It is quiteliterally the same thing, except we're not
+gonna be validating on the request.body,we're gonna be validating on the request.
+Programs, and instead of doing a
+wreck.body attachmentWe're not gonna do thatat all. We're not actually going to attach
+anything here.The reason why we're not attaching
+anything here is because parameters are
+always strings no matter whatIt's not like, it's notlike an object like a payload that we're
+pushing up on a post request and we can
+modify fields anddo stuff and coerce them. A parameter in a
+URL is always a string no matter what you
+do.It's always gonna be a string, so I don't
+need to.Modify anything. Anything in a URL is
+always a string.You can't escape that fact. It's always
+gonna be a string.Now you can take a query parameter.And try to parse that out as like JSON to
+do something and that's what the validate
+query might dobut as far as likea parameter and I'm specifically talking
+about this part,it's always a string. This is why I hate
+usingincremental IDs. In my database because I
+know at some point I'm gonna be doing a
+parsein somewhere to get a number from a string
+in the URL and I hate doing it,so I always just try to use.UUIDs which come with their own problems
+around indexing speed and stuff like that,stuff that I don't care about, but am
+aware about.So that's Validate for Rams.Validate query. All right, I guess we
+should just change the change this error
+message to likeInvalid For rams, I guessthat would be useful. Cool.Develoras, whatever you want to put there,
+and then for the query,quite literally the same thing.Validate. Query Instead of peramsit's gonna do this othercalled query. We didn't really talk about
+query,but query is the reason I talk about is
+it's the same thing you already use and
+React.It's what you think it is, it's.An object with all the query variables on
+them as keys.That's it literally what it is.And key value, right, so.So we'll do the same thing, and then here
+we will say.Invalid. Query perhaps.Or whatever you wanna put.Same thing. Great. And now we have these 3
+helper middleware functionsthat we can use, and we can stack these,
+right? Like, for instance, if I Go back to
+I have it route, I can be like, OK, cool, but
+before we validate them,or actually let's let me see.Here's a delete. Let's try to delete, so I
+can say.Validate. Was it Validates for rams, so
+let'sdo that. And then Wecould also say like validate, well I guess
+delete doesn't have a body that's not a
+good use case.There really isn't like 100 here we go,post this one, this one, this one has
+both, so this one has.Validate pers cause it has an ID and then
+it also has like a validate a body because
+it's apost, so you could do both of those
+really, so.For the Paris, the way that would work is
+basicallyyou would just pass in because paras
+itself is gonna be an object with the
+parameters on there as keysright? So the object willhave an ID property on it. I'm expecting
+that to be the case.So what I could do is I can Go up here and
+I can say,cons.Complete. Peram's schema, andI could say Z object.And I could say it's an ID and it's gonna
+be Z.String. You might even say this is
+somewhat redundant because Express pretty
+much guarantees that likeif somebody passes something in here, it's
+gonna be there and it's gonna be a strain.It has to, otherwise this would be a
+feature no one would ever use,but I think it's still good to use it,in my opinion, so, andalso like. Express my guarantee that it's
+there,but what if I said like there was like a
+min length or a max length or something
+like thatExpress won't do that.So, in our example, it might seem
+redundant, but if you got more advanced
+with your.Validation, then, you know, it's a lot
+better,so. Validates and then you can just say.Complete RAM schema and then begins
+passing the other one we did here,which is like. The create Habit schema, we
+do that.So if you Go back and post, you say
+habits.We put in an ID here.And we put in Complete.Run that and then we get the body one that
+filled because the ID is there so that
+didn't failbecause Express pretty much guarantees
+that in this case and then we get to
+complete but if we wannaget the ID one to fill I can say.Dot Min would be, or I'm sorry, let's say
+dot Max.That'll be 3. So that's got 4 on it,so I did that and Vance.Cool. Any questions on creating custom
+Middleware?And using it. Right, so this is circleback. We got local, I call this local
+Middleware as in it's right on the route
+in which it's.Being used, so literally touching the
+handler or controller, whatever you wanna
+call it.We have Global middleware, which sits at
+the top of the app,literally and symbolically, but it's
+global.And then technically, these routesare middleware, they just resolved to
+other routes.You might even Go asfar as to say that Controllers themselves
+are middleware because guess what,they actually do have a next function
+here, we just don't use it.I don't ever recommend doing that.You can, but I promise you it get so much
+more confusing if you do that.Like that's when you take control away
+from Express about.When it thinks, like, just don't do that.If you're doing that, I think you you
+wrote your routes wrong.There's a better way to do what you're
+doing. Please do not add it next inside of
+your handler.

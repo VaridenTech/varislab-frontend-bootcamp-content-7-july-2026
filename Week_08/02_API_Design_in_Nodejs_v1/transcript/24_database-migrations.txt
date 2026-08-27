@@ -1,0 +1,189 @@
+We all know what version control is,
+right? Git, right?We all use git some version of that, OK.Databases have their own version control.
+They're called migrations, and they suck.They're really bad. All right, I'm just
+gonna tell you right now they're really
+bad.I think 2 years ago is when I finally it
+finally clicked for me how migrations
+actuallywork and like I finally understood them.This was 2 years ago. I've been writing
+code for 15 years.It's 2 years ago it finally clicked for
+me, OK, so maybe you're a genius or maybe
+I'm slow ormaybe it's both. But this is they suck,
+but I'm gonna make it really easy for you
+all,OK? I simplified it. I'm gonna.Bring it down to my simple level of how
+Migrations work,when you use them, and why to use them,
+OK? So basically,Migrations are how you version your
+database.You might ask, why do I need to version my
+Database?Well, let's think about what a Database
+is.It's a contract. Right, it's essentially a
+contract of like,hey, I promise that all my data is gonna
+look like this.Promise, guarantee it. Go ahead.Build your apps, do whatever you want. I
+promise it's always gonna like this and
+the clients are likeyou sure? And you're like, yeah, Ipromise, for sure. So they go build their
+apps.And then you come back and you're like,
+actually, I'm gonna change the shape to
+look like this now,you know, it's not that big of a deal. I
+know this was this, but I'm gonna change
+it andthen all the clients like, but wait, we
+already made all these changes to look
+like this.That was the contract. Why did you change
+it? Oh, because I wanted to.So, OK. Do we have to do it?Yeah, we have to do it. OK, well then, how
+do I make sure that my app doesn't break?Because I'm expecting it to look like this
+and you're telling me it looks like this.So do I just need to like fix that on my
+end and just do if statements and figure
+thatout and figure out like a history on my
+end?That would be gross. So, no, definitely
+not.That's where migrations come in.
+Migrations their job.Are to migrate the old state of a databaseto the suggested state of a database.So whatever state of database that you're
+suggesting, whatever that change is,not only do you need to migrate the
+schema, so the contract over,you're also trying to migrate the data
+that's already there, that's abiding to
+the previous contractover to this new contract. So it's a
+schema migration and it's a data
+migration.That's where this gets really bad, OK?But essentially, the workflow goes like
+this.Let's assume you already have a Database
+out in production and there's data and
+people are using it.This is not something you just made.First, you'll make a scheme of changes in
+the code.You'll create some migration files, either
+by hand or through some tool.Your ORM might allow youto do that. You might write raw SQL or
+something in between.You should just like a PR you would
+inspect that generated plan that SQL
+beforeattempting to apply, which in this case
+would be like merging some code into main
+before you apply thisPR you could think of it like that before
+you apply this PR into the main database,you wanna review that and make sure it
+looks good.And then you want to run the migrations
+against the database,so you want to go ahead and merge it
+against the database and migrate all those
+changes overall the index changes thatyou had in this new change, all the data
+that now needs to be changed because you
+got a newcontract, you want to run those
+Migrations,And then you want to deploy that in
+production, the same thing, but you
+probably wanna test it outsideof production before you do it, right?
+That's typically how you would do it,I'm not doing it like that.That's not how I do it.I don't wanna do it that way. Most people
+do it that way,but there are ways around this workflow.There's no way of avoiding it entirely,
+but there are definitely ways to like
+pretty much get it closeto zero, where you have to do what I just
+described, and we'll talk about that.We talked about why migrationsmatter, Yeah, like without migrations,
+essentially we lead to like
+inconsistencieslike it's basically like what I talked
+about earlier with the with the NPM
+packages as soon as that SimVersionbumps up and as you saw with Zod,
+we got like a new version and it broke,right? OK, that's what's gonna happen to
+your app.Essentially the database is on a new
+version and your app is not.It's expecting something else and guess
+what?When your code looks at that data that is
+getting back from the API assuming it even
+gets that farit's gonna break, it's gonnabreak somewhere, whether it's on your
+server that's querying the database,
+whether it's on the clientthat's requesting from the server,
+somewhere it's going to break,I promise you, your code is not generic
+enough not to break.And if your code is generic enough to
+break.Why do you have so many if statements in
+your code, cause that's the only way you
+could have donethat, and like. Defaults, so absolutely
+not.We talked about schema migrations again,
+this is where you change the fields on theobjects and the arrays, right? So the
+tables, the columns,the rows. You wanna add a new index, you
+wanna rename something,you wanna add a new field, you wanna
+remove a field, you wanna change the type
+of a field.All these things are schema migrations.The key here is that not all those changes
+require.A migration. These are, there's
+destructive changes and non-destructive
+changes,and this is where the sweet sauce is.If you can find a way.To only do non-destructive changes, your
+life will be so much easier.If you constantly do destructive changes,
+I don't know why you're playing on game
+plus,like, that's just too hard. Why are you
+doing that?Right, so Non-destructive changes would be
+like adding a new field.I'm gonna add a new field and I'm gonna
+make it optional.That's non-destructive. It's an optional
+field that's brand new.That means nobody has written code for it
+yet and it's optional,so I don't have to migrate any data over
+to put a default there because it's
+optional.It doesn't have to exist.That's a non-destructive change. A
+destructive change would be,I'm gonna Rename this field, which if you
+think about it,renaming a field is actually two things.
+It's deleting a field and then adding a
+new one with a differentname. That's what renaming a field is.It's actually two things. So that's very
+destructive.People are relying on that field and
+they're relying on that type.So like, if you change that it's not gonna
+happen.So maybe instead of doing that, what you
+could do is you can add the new field.With a different name, with the type that
+you want to be.Make it optional Migrate all the code over
+to use this optional field.With another PR whenever you want to do
+that, just literally go and change your
+code to use this optionalfield instead. And then introduce another
+PR that slowly migrates the dataaway from the old field to the new field.This will cause no downtime, you don't
+have to do.Any of the other stuff that I talked
+about, yes, it requires like two PRs
+instead of one,but it's so much better just doing
+non-destructive changes in my opinion,so. Data migrations are when your scheme
+of migrationsinflict damage on your dataright? So again, if IAdd a new field and it's required. I gotta
+do a data migration.I have to take all the data that's there
+that don't have that required field and
+now add it tothat data or if I rename a field or if I
+do,I guess if I delete a yeah if I delete a
+field, things like that, these are all
+things thatrequire data migration as well. And I'm
+showing you like how to do this in raw
+sequel to scare youWe will not be doingany of this stuff on raw sequel, by the
+way, this is just.You know, my version of a nightmare.This is what it will look like without an
+ORM. Which I guess is not bad,but it's terrifying because you're mess
+that the scary part about immigration is
+you're messing withreal data, Real people's data, and if you
+mess it up bad enough without backups,there's no recovering it. So that's the
+scary part.And then, yeah, eventually you putboth of those together, you do like a
+schema plus a data migration every time
+you change the DatabaseYeah, that's migrations.We'll cover it more in our workflow, but I
+just want to give you that precursor.So why are we're using Drizzle over
+Prisma? Drizzle is the ORM that I'm
+choosing.Prisma is another one that I actually like
+and Used for years.But I switched to Drizzleabout, I don't know, 1 year and a half
+ago, 2 years ago, and I've never looked
+back.The reason why we're gonna use Drizzle if
+anyone's curious oreven cares, it's just because in my
+opinion, it's just easier to write stuff
+in TypeScript than it islearning a new language. Prisma has its
+own, DSL that you need to learn,which is very much based off of GraphQL
+since Prisma was a GraphQL company,it makes sense why they would have done
+that. And it's just not that flexible
+specifically when it comesto migrations. I got off Prisma
+specifically when it came to migrations
+because The naturein which Prisma has to generate its
+clients to make sure that it's types safe,it literally has to generate it.Makes it almost impossible to do
+Migrations because whenever you migrate,you generate a new client.But when you, if you know how databases
+work, when you run a migration, you Go
+through every single migrationyou ever had in the order in which it was
+created, but if you only ever have the
+latest Prismaschema. How do you get the schema for the
+previous migrations?You can't, so you end up having to do
+Migrations in pure SQL.And I'm not doing that, so I got off
+Prisma and I went to Drizzle,which allows me not to do that. So pure
+TypeScript, no DSL,no code-gen setup. Super easy predictable
+queries, yeah,I just like it. That's why I'm picking it.All right, here is a sketch of our data
+that we're gonna do today, so we have
+these.5 tables, think of thoseas arrays, right? And each one of these
+will have tons of rowsobjects, and here are thefields on each one. So PK means Primary
+Key,right? That's the key for that thing.Foreign Key is the key associated to the
+relation in which it's pointing toright? And you can seeusers is gonna have a relationship with
+habits, so habits will have a User ID on
+them.That's a one too many relationship. One
+user can have many habits,but a habit can only have one user, it's a
+one to many, and then habits can have
+entries,and entries can have one habit. That's
+also a one to many.So that's why we put the Foreign Key on
+the many side.Then we have many to many relationships,
+so habits can have many tags and tags can
+belong to many habitsso, Typically in a manyto many relationship, you create a You
+create a separate table to join those
+together versus tryingto store Foreign Keys, so that's what
+habit tags is.Habit tags is that table. It's a table
+whose purpose is literally just to havethe ID of the two tables, Foreign Keys
+joined in one place,so you can query that table to get an
+instance.Of a relationship. So if I wanna get all
+theHabits for a certain tag, I would query
+habit tags with the tag ID and theywill return back a list of habit tags with
+habit IDs which I can then.Populate and get all the habits for.It sounds complicated, but many
+relationships you gotta make another
+table.And then we have tags. I can't talk about
+that here, OK, cool.

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ใช้ insert update upsert delete findAnd และ bulkWrite เพื่อจัดการ Document" />
+    <title>การเพิ่ม แก้ไข และลบข้อมูลใน MongoDB — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>การเพิ่ม แก้ไข และลบข้อมูลใน MongoDB</h1>
+
+      <h2>insertOne และ insertMany</h2>
+      <p>เราเคยใช้คำสั่ง Insert ไปแล้ว แต่ควรแยกให้ชัดระหว่าง <code>insertOne</code> กับ <code>insertMany</code> แบบแรกต้องรับ Object หนึ่งตัว ส่วนแบบหลังต้องรับ Array การใช้ Method ที่เฉพาะเจาะจงช่วยให้ SDK แจ้ง Error เมื่อส่งชนิดข้อมูลผิด ส่วน Method เก่าอย่าง <code>insert</code> เลิกใช้และถูกนำออกจาก SDK แล้ว จึงไม่ควรใช้ในโค้ดใหม่</p>
+      <p>แนวคิดเดียวกันใช้กับ <code>deleteOne</code>/<code>deleteMany</code> และ <code>updateOne</code>/<code>updateMany</code> เลือก Method ให้ตรงกับจำนวน Document ที่ตั้งใจแก้เสมอ</p>
+      <h2>Update</h2>
+      <p>การ Update ต้องส่งสองส่วน: Filter สำหรับเลือก Document และ Update Object ที่บอกว่าจะเปลี่ยนอะไร</p>
+      <pre><code class="language-javascript">db.pets.updateOne(
+  { type: &quot;dog&quot;, name: &quot;Luna&quot;, breed: &quot;Havanese&quot; },
+  { $set: { owner: &quot;Varis Dara&quot; } },
+);</code></pre>
+      <p>Object แรกเป็น Filter รูปแบบเดียวกับ <code>.find()</code> ส่วน Object ที่สองระบุการ Update ผ่าน Operator ต่าง ๆ สมมติว่าวันนี้เป็นวันเกิดของ<strong>สุนัขทุกตัว</strong> เราเพิ่มอายุทั้งหมดด้วยคำสั่งเดียวได้ดังนี้</p>
+      <pre><code class="language-javascript">db.pets.updateMany({ type: &quot;dog&quot; }, { $inc: { age: 1 } });</code></pre>
+      <p>คำสั่งนี้เพิ่มอายุของสุนัขทุกตัวขึ้น 1 ปี MongoDB มี Update Operator อีกหลายแบบ ดูรายการทั้งหมดได้จาก <a href="https://www.mongodb.com/docs/manual/reference/mql/update/#fields">เอกสาร Update Operator</a></p>
+      <p>น่าสังเกตว่ามีพารามิเตอร์พิเศษที่คุณสามารถ updateOne และ updateMany พร้อมตัวเลือกเพิ่มเติมได้ เรากำลังจะพูดถึงหนึ่งในนั้นในหัวข้อถัดไป ตื่นเถอะ</p>
+      <p>MongoDB ยังมี <code>replaceOne</code> ซึ่งคล้าย <code>updateOne</code> แต่แทน Document ทั้งก้อน Field เดิมที่ไม่ได้ส่งมาในข้อมูลใหม่จะถูกลบออก</p>
+      <h2>Upsert</h2>
+      <p>Upsert มาจาก Update + Insert หมายถึงถ้าพบ Document ให้ Update แต่ถ้าไม่พบให้ Insert ใหม่ เช่น สร้าง User จากอีเมลเมื่อยังไม่มี หรืออัปเดตข้อมูลของ User เดิมเมื่อมีอยู่แล้ว</p>
+      <p>มาดูวิธีการทำกัน สมมติว่าคุณต้องการค้นหาสุนัขชื่อ &quot;Sudo&quot; และอัปเดตเจ้าของเป็น &quot;Sarah Drasner&quot; หากมีอยู่ (ในกรณีของเราไม่ใช่) และสร้างบันทึกใหม่หากไม่มี</p>
+      <pre><code class="language-javascript">db.pets.updateOne(
+  {
+    type: &quot;dog&quot;,
+    name: &quot;Sudo&quot;,
+    breed: &quot;Wheaten&quot;,
+  },
+  {
+    $set: {
+      type: &quot;dog&quot;,
+      name: &quot;Sudo&quot;,
+      breed: &quot;Wheaten&quot;,
+      age: 5,
+      index: 10000,
+      owner: &quot;Sarah Drasner&quot;,
+    },
+  },
+  {
+    upsert: true,
+  },
+);</code></pre>
+      <p>ในงานจริง Filter ของ Upsert ควรอ้างถึง Key ที่ไม่ซ้ำ เพื่อไม่ให้ไปแก้ Document ผิดตัว และต้องเตรียมข้อมูลให้ครบสำหรับกรณีที่ MongoDB ต้อง Insert ใหม่ ไม่เช่นนั้นจะได้ Document ที่มี Field ไม่ครบ</p>
+      <h2>Delete</h2>
+      <p>การ Delete ใช้ Filter แบบเดียวกับการค้นหา แต่ลบ Document แทนการคืนผลลัพธ์ เลือก <code>deleteOne</code> หรือ <code>deleteMany</code> ตามจำนวนที่ต้องการ ส่วน <code>delete</code> แบบเก่าเลิกใช้แล้ว ตัวอย่างต่อไปลบข้อมูลที่ชนิดเป็นสัตว์เลื้อยคลานแต่สายพันธุ์เป็น Havanese ซึ่งเป็นข้อมูลที่ไม่สมเหตุสมผล</p>
+      <pre><code class="language-javascript">db.pets.deleteMany({ type: &quot;reptile&quot;, breed: &quot;Havanese&quot; });</code></pre>
+      <h2>findOneAnd*</h2>
+      <p>บางครั้งเราต้องแก้ข้อมูลและรับ Document กลับมาใน Operation เดียว เพื่อเลี่ยง Race Condition ระหว่างคำสั่งค้นหากับคำสั่งแก้ไข MongoDB มี <code>findOneAndUpdate</code>, <code>findOneAndReplace</code> และ <code>findOneAndDelete</code> ซึ่งทำงานคล้าย Method แบบ <code>One</code> ปกติ แต่คืน Document กลับมาด้วย</p>
+      <blockquote><p>โดยค่าเริ่มต้น Method กลุ่มนี้คืน Document เดิมจากช่วง<em>ก่อน</em> Update, Replace หรือ Delete ไม่ใช่ค่าหลังแก้ไข</p></blockquote>
+      <h2>BulkWrite</h2>
+      <p>เวลาเขียนแอป เราอาจต้องส่งหลาย Operation พร้อมกัน ทั้ง Insert, Update และ Delete แทนการส่งทีละคำสั่งแล้วรอผล <code>bulkWrite</code> รับ Array ของ Operation และส่งให้ MongoDB ประมวลผลเป็นชุด รูปแบบเหมือนคำสั่งที่เรียนมา เพียงรวมหลาย Object ไว้ใน Array เดียว</p>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="14_querying_mongodb.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="16_indexes_in_mongodb.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

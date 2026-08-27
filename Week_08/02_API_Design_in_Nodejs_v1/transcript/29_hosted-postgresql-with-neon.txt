@@ -1,0 +1,122 @@
+The Next thing we wanna do is. We wanna
+set the DB up,Actually get a database, setit up, connect to it, and do all that
+stuff. So let me make sure I'm on the
+right branchI'm on The right branchhere, so. You can stay on your branch.You don't need to check out to whatever
+Branch I am. If you want to be where I am,you can check out to the, I believe it's
+live-lesson-3.And then I just made a new branch for 4where I'm gonna start writing this code,
+but you can, you can start there if you
+want.So following along with me here.What we wanna do is we wanna create a
+database. So like I said before,it's just Postgres. So if you have
+Postgres on your computer, you can use
+that if you want if you'refamiliar with it gonna be the same
+experience.I believe it's probably Postgres 16 or
+so,yeah, 16. So if you already have that and
+that's what you're familiar with,feel free. For everyone else who don't
+wanna do that or don't have that,I already figured it out for you. So the
+first thing you're gonna do is you're
+gonna click here andyou're gonna go to neon.new.And this is gonna bring you to this
+website.So Neon is a company that, basically
+provides Postgres databaseshost it for you, completely managed.
+They're just one of many.They just happen to be one of one of my
+favorite. They have this cool product
+called Launchpad.I think it was called something else
+before, but now it's called Launchpad.So if you get to this website, all you
+gotta do is just click this button that
+says Try inthe Browser, OK, click that button.Thing's gonna verify that you're a human.I am indeed a human.And it's gonna set up a database for you.
+You can see right now it says, hey, this
+is anunclaimed database. It will expire in 72
+hours unless you make an account.So that's more enough time than what we
+need so you can just copy that or keep
+this page openso that's gonna be your database URL.So there you go, free database, no
+account, no nothing, ready to go,just have that ready. So let's take that
+database and putit in our code. So the first thing we
+wanna do is make sure we have our.env right? And we wanna set up that
+database URL so that's what we're gonna
+do.I already have it, but I'm just gonna.Set up a new one from scratch so we could
+all do this together, so.And here I'm gonna say database, URL and
+then equals set to thatdatabase that I copied hereI was gonna paste thatin. That's it. And our .env, not to be
+confused with the.env example or the env test, just the
+.env.Right. Simple enough. So theNext thing is we want to create the
+connection to the database.So before we do that, I wanna talk a
+little bit about like pooling.It's a simple concept, but basically when
+we connect to the database because of our,we're making a long livetraditional server, We don't wanna have to
+connect to the database every time a new
+request comes intoour server. We wanna reuse different
+connections because there's a limit on how
+many connections thedatabase can have. Creating connections is
+quite expensive computationally,so we wanna reuse as many connections as
+we can across requests, so we'll create a
+pool.So we're gonna do what's called pooling.
+So it's a simple concept.It's just essentially I just wanna reuse
+the this connection that I already
+established for my DatabaseSo we'll be doing that.Some of the problems with pooling though.There's a lot of problems with pooling,
+but one of the biggest problems we're
+gonna have is because ifwe're using like Node watch for
+development, which reloads our server
+whenever we change a file,what ends up happening is we'll get memory
+leaks for those pooling connections
+because the server willrestart and we'll lose. The connection to
+the connection that we have,although that previous pool is still open,
+so eventually you're running to an error
+locally saying you'vereached the limit of how many connections
+you can have on a pool.So we need to solve for that. So what
+we're gonna do.I make our connection and we're gonna
+solve for all of that.So what we wanna do is go to source DB wedon't have that, we need to make it.Oh, I'm sorry, we already made it because
+we did the schema, so in that same folder,
+we're gonna makea new one called connection.ts.And we're gonna import Drizzle.From, drizzle-orm/node-postgres.There's many Node Postgres packages.I'm just using the Node Postgres one.
+We're gonna import pool from PG,which stands for Postgres. We're gonna
+import our entire schema and the way we do
+that is we just sayimport star as schema, that means import
+everything from the schema file.Put it in an object and call it schema.That's what import star means.We're gonna import our ENV object from our
+.env file.This helper called is prod to let us know
+if we're in production or not.And that's gonna be from .envAnd we're gonna import this other thing
+that I'll talk about in a little bit.It's called Remember. It's from@epic-web slash remember. We'll talk about
+that in a sec.Cool. Once we have all those, let's create
+our pool, so I'll make a function called C
+create pool.It's just gonna be a function that when
+called returns a new pool.And that pulls is gonna have a connection
+string.If this thing can go away.Connection stream and it's gonna be set to
+Ev.database URL.That's all that's gonna do?And then we need to make an instance of
+it.So I'll create a variable here.Let's call it client. And then I'm gonna
+say, hey, if we're in production.I don't wanna do, I don't need to account
+for.That hot reloading, watching potentialMemory leak error that wemight have developed in development mode
+so I'm just gonna say hey the client is
+gonna be,you know, just go ahead and create a new
+pool essentially because this is only ever
+gonna run on startup, but otherwise if we're not in
+production and we're running it locally,then I want it to be I wanna use this
+thing called Remember.All member is doing, like, honestly we
+don't even really need to use this
+Package.I just don't want us to have to write the
+code. All it's doing is it's just
+attaching the it'screating a singleton. So what is a
+singleton?A singleton is essentially like a Cache
+version of some value.It's just to make sure you never recreate
+the value, you always reuse the same
+value.All Remember is doing is just adding it to
+global.It's the same thing you would do in a
+Browser if you wanted to like add
+something to the windowAnd reuse it everywhere, you would just
+attach it to thewindow. That's all remember is doing. It's
+not, it's not really doing anything, so
+I'm pretty sure it'slike 5 lines of code,But you know, why not? So I'm gonna call
+this my DB pool, you can call it whatever
+you wantThis is just what it's gonna be called on
+a global object.And then I'm gonna say Yeah, create a
+pool.Like that. So this is just going to
+remember that if it's not.And then now all we wanna do is actually
+make the database client.This is the actual ORM so we'll call
+Drizzle.Drizzle takes in an object, it takes in
+the client in this case it's that client
+there,and then it takes in our schema and all
+we're gonna do,we'll export it that way and we'll also
+just export it default as well.That's it. That's our ORM.There's a million ways to optimize this
+and in production you'll probably do a lot
+more things I wouldimagine, but this is more than good enough
+to get started.Any questions on this? And again, we're
+only doingthis because of development and watching.That is the only reason we're doing this.
+Otherwise we wouldn't even need to do it.If you're using a service database, you
+wouldn't need this at all.A service database would be HTTP based.And would not have any connections
+whatsoever, you'd just be making HTTP
+calls.Which Neon does supporter databases. I
+just didn't feel like doing that.

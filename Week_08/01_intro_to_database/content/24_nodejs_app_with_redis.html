@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="สร้างตัวนับ Page View และรูปแบบ Cache ด้วย Express และ Redis SDK" />
+    <title>สร้างแอป Node.js ด้วย Redis — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>สร้างแอป Node.js ด้วย Redis</h1>
+
+      <p>มาสร้างโปรเจกต์ Node.js ขนาดเล็กเพื่อย้ายทักษะจาก Command Line มาใช้ในโค้ด สามารถดู <a href="https://github.com/btholt/db-v2-samples">ตัวอย่างทั้งหมดของโปรเจกต์</a></p>
+      <p>สร้าง Directory ใหม่แล้วรันคำสั่งต่อไปนี้</p>
+      <pre><code class="language-bash">npm init -y
+npm pkg set type=module
+npm i express redis@5.11.0 express@5.2.1
+mkdir static
+touch static/index.html server.js
+code . # or open this folder in VS Code or whatever editor you want</code></pre>
+      <p>สร้าง Frontend ง่าย ๆ ที่เรียก Backend โดยใส่โค้ดนี้ใน <code>static/index.html</code></p>
+      <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot; /&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+    &lt;title&gt;Redis Sample&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1 id=&quot;visitors&quot;&gt;…&lt;/h1&gt;
+    &lt;script&gt;
+      async function registerPageView() {
+        const res = await fetch(&quot;/pageview&quot;);
+        const { views } = await res.json();
+        document.getElementById(&quot;visitors&quot;).innerText = `${views} visitors!`;
+      }
+      registerPageView();
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+      <p>จากนั้นสร้าง <code>server.js</code></p>
+      <pre><code class="language-javascript">import express from &quot;express&quot;;
+import redis from &quot;redis&quot;;
+const client = redis.createClient(); // defaults to localhost:6379, but you can also change that here
+
+async function init() {
+  await client.connect();
+  const app = express();
+
+  app.get(&quot;/pageview&quot;, async (req, res) =&gt; {
+    const views = await client.incr(&quot;pageviews&quot;);
+
+    res.json({
+      status: &quot;ok&quot;,
+      views,
+    });
+  });
+
+  const PORT = process.env.PORT || 3000;
+  app.use(express.static(&quot;./static&quot;));
+  app.listen(PORT);
+
+  console.log(`running on http://localhost:${PORT}`);
+}
+init();</code></pre>
+      <p>เราได้ Page View Counter ที่เรียบง่าย ตัวอย่างนี้แสดงวิธีเชื่อมต่อ Redis SDK และเพิ่ม Counter ทุกครั้งที่ Browser เรียก Endpoint</p>
+      <p>ต่อไปเพิ่มฟังก์ชัน Cache ใน <code>server.js</code></p>
+      <pre><code class="language-javascript">// under the client = redis.createClient() line
+function cache(key, ttl, slowFn) {
+  return async function (...props) {
+    const cachedResponse = await client.get(key);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    const result = await slowFn(...props);
+    await client.setEx(key, ttl, result);
+    return result;
+  };
+}
+
+async function verySlowAndExpensiveFunction() {
+  // imagine this is like a really big join on PostgreSQL
+  // or a call to an expensive API
+
+  console.log(&quot;oh no an expensive call!&quot;);
+  const p = new Promise((resolve) =&gt; {
+    setTimeout(() =&gt; {
+      resolve(new Date().toUTCString());
+    }, 5000);
+  });
+
+  return p;
+}
+
+const cachedFn = cache(&quot;expensive_call&quot;, 10, verySlowAndExpensiveFunction);
+
+// inside init, under app.get pageviews
+app.get(&quot;/get&quot;, async (req, res) =&gt; {
+  const data = await cachedFn();
+
+  res.json({
+    data,
+    status: &quot;ok&quot;,
+  });
+});</code></pre>
+      <p>เปิด <code>localhost:3000/get</code> เพื่อทดลอง Endpoint ที่ทำงานช้า</p>
+      <ul>
+        <li>ตัวอย่างนี้รวมทุกอย่างไว้ไม่กี่ไฟล์เพื่อให้อ่านง่าย ระบบจริงควรแยกหน้าที่เป็นหลายไฟล์</li>
+        <li>ให้คิดว่า <code>verySlowAndExpensiveFunction</code> คือ Query ขนาดใหญ่หรือ API ราคาแพงที่เราไม่อยากเรียกบ่อย ตัวอย่างจงใจรอห้าวินาทีเพื่อจำลองงานนั้น</li>
+        <li><code>cache</code> เป็นฟังก์ชันทั่วไปที่รับ Redis Key, ระยะเวลาที่เก็บ และฟังก์ชันที่จะเรียกเมื่อไม่พบ Cache จากมุมผู้เรียกจะได้รับค่าจาก Cache ทันที หรือรอผลจากฟังก์ชันที่ช้าโดยไม่ต้องรู้รายละเอียด</li>
+        <li>โค้ดนี้ยังมีโอกาสเกิด Thundering Herd วิธีที่ดีกว่าคือสร้าง Lock Key อีกตัวเพื่อบอกว่ามีงานกำลังคำนวณคำตอบอยู่ Backend อาจ Poll Lock จนได้คำตอบ หรือส่ง 503 ให้ Frontend แล้วให้ Frontend ลองใหม่ภายหลัง</li>
+      </ul>
+      <p>Redis ใช้ในโค้ดได้อีกหลายรูปแบบ สองตัวอย่างนี้เน้นงานหลักคือ Cache และข้อมูลปริมาณสูงที่ไม่ใช่ข้อมูลวิกฤต เช่น Telemetry</p>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="23_more_redis_concepts.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="25_conclusion.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

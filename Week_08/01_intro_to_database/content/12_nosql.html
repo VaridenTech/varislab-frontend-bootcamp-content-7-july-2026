@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เข้าใจฐานข้อมูลแบบเอกสาร ข้อดีข้อจำกัด และกรณีที่เหมาะกับ NoSQL" />
+    <title>รู้จักฐานข้อมูล NoSQL — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>รู้จักฐานข้อมูล NoSQL</h1>
+
+      <p>ต่อไปมาดู Database อีกกลุ่มที่เรียกรวม ๆ ว่า NoSQL คำนี้กว้างมากและบอกเราเพียงว่า “ไม่ใช่ Relational Database แบบ PostgreSQL, MySQL หรือ SQL Server” เท่านั้น ที่ชวนสับสนคือ NoSQL บางตัวยังรองรับ SQL ด้วย ถึงคำนี้จะไม่แม่นนัก แต่เราจะเจอบ่อยในเอกสารและบทสนทนาทั่วไป</p>
+      <p>การแยกแยะว่าฐานข้อมูล NoSQL ประเภทใดที่เราจะพูดถึงจะมีประโยชน์มากกว่า ในส่วนนี้ เราจะพูดถึงฐานข้อมูล <strong>ตามเอกสาร</strong> กับ MongoDB มีฐานข้อมูล NoSQL อื่นๆ มากมาย และหลายฐานข้อมูลมีความแตกต่างกันค่อนข้างมาก แต่ยังคงรวมเป็นฐานข้อมูล &quot;NoSQL&quot;</p>
+      <h2>เหตุใดจึงเลือกฐานข้อมูลตามเอกสาร</h2>
+      <p>Database แต่ละแบบมีจุดเด่นต่างกันและหลายกรณีก็ใช้แทนกันได้ ตัวที่เราจะเรียนเป็น Database แบบ Workhorse คือรองรับงานทั่วไปได้กว้าง ไม่จำเป็นต้องมี Use Case เฉพาะทางมากจึงจะคุ้มค่า</p>
+      <p>จุดเด่นของ Document Database คือข้อมูลไม่จำเป็นต้องมีโครงสร้างเหมือนกันทุก Document ต่างจาก Relational Database ที่ต้องกำหนด Column และ Data Type ล่วงหน้า เราสามารถเขียน Object ลงไปได้เลย และแต่ละ Document มี Field ต่างกันได้ ความยืดหยุ่นนี้มี Trade-off เช่น ถ้าสะกดชื่อ Field ผิด Database อาจยอมรับเป็น Field ใหม่โดยไม่แจ้ง Error</p>
+      <p>Document Database อย่าง MongoDB มักคุ้นมือสำหรับนักพัฒนา JavaScript เพราะข้อมูลมีหน้าตาคล้าย Object ที่เราใช้ในโค้ด สามารถเก็บแล้ว Query กลับมาได้โดยไม่ต้องแปลงเป็น Row และ Column ก่อน</p>
+      <h2>ฐานข้อมูล NoSQL อื่นๆ ที่ควรรู้</h2>
+      <p>มีฐานข้อมูล NoSQL ประเภทอื่นๆ อีกมากมายที่มีการเขียนใหม่ค่อนข้างบ่อย วันนี้เราจะเน้นไปที่ MongoDB แต่คุณควรลองดูฐานข้อมูล NoSQL ที่ยอดเยี่ยมอื่นๆ เช่น Cassandra, Couchbase, Firebase Firestore และอื่นๆ</p>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="11_nodejs_app_with_postgresql.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="13_mongodb.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

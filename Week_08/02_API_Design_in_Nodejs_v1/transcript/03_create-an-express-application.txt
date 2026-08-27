@@ -1,0 +1,159 @@
+Let's do it. So main branch, you can stay
+on that branch,create your own branch. You do not have to
+create the branches that I'm creating.That's just for me to stay consistent with
+the lessons that I planned out.This is me trying tostay on track and not get off track.So yeah, fill whatever branch you want as
+long as it's off of the main branch.So first thing is let's create. A server,
+right?I mean, that's seems, that seems
+appropriate.So let's do that. So what we wanna do, if
+you don't already have one,you wanna make a source directory here,
+SRC.Why do we have a source directory? Does it
+matter?No, it doesn't matter. This is not like
+Next.js where there's like file based
+conventions and names matterThis is just a conventionthat people use, typically. In most
+projects you might see something like
+this,you might see source, you might see app,
+and the reason you would see something
+like that is becausethere is, an opposite of this, which might
+be like disk,which would be the output of the source if
+it had to be built or it might be output
+orsomething like that. So source just means
+this is the raw source files that we're
+gonna be writing soSRC is short for source, but you put
+whatever you want in another project for
+this project we're gonnause source. And then what we're gonna do
+is we're gonna make a server.ts.Like that. OK. And oh, I need to make
+sure.Did I do NPM install? I think I did.And double check, yeah, cool.When you pull down someone's project on
+GitHub and it's another project,you always do NPM install.When you update your Git branch with a
+rebate or a merge locally,you always do an NPM install.Whenever you get new code on your branch,
+you always do an NPM install.Just remember that. I'm gonna walk you
+through Express.We're just gonna make a Hello world,
+health check, simple thing here.So first thing is let's import.I'll make this bigger. Import Express from
+Expressagain if you don't know.What this crazy syntax is that I wrote,
+going back to the notes,this is ESM modules. It works the same way
+in TypeScript as it does ESM.If you want more deep dive, go check out
+the Intro to Node.JS, and then.The way that Express exposes its
+interfaces typically the way that we do
+this is we create an appyou can call it server you can call it
+whatever you want, but the convention is
+we call it anapp we just invoke the Express function
+and we go from there so I'm gonna say app
+equalsExpress like that.And like I was saying earlier, a server is
+a router that routes URLs to code,so we need to define those URLs. There's
+also a missing piece cause it's not just
+URLs.Sometimes there's also something called a
+verb, an HTTP verb,and we'll talk more about those soon, but
+a verb is essentially.It's exactly what it sounds like it's like
+some type of action that you wanna take,that you want to indicateto the system that you wanna do. So in
+this case I wanna do a.I want to register a GET request, so I'll
+say app.get.So when someone does a GET request to this
+app,and right now I'll just say for the route
+of slash health.This is a common convention in servers is
+to make like a slash health route that you
+can hit atany point to see if your server is still
+alive.So you might see something like on an
+interval of it just like somethingpinging slash health slash health on some
+interval to make sure your server is not
+dead.So you'll do that, and thenwhat code do we run to run when someone
+makes a request to,slash health GET, well, we passed a call
+back, so if you've written JavaScript,you know callbacks, we're gonna pass a
+call back here.For now this callback is always gonna get
+to arguments and we'll talk about that
+later.It's gonna be a request and a response.
+Typically we just call them wreck and Res.OK. And what we wanna do is we want to
+respond back tothis request. This req object is the
+incoming request object.If you were to log it, you would see all
+the information about the client that made
+the request likewhat was their, user agent, like if it was
+coming from Chrome it'll say Chrome and
+any headers they sentanything related to the incoming request
+you'll see that.And then the response object is what you
+would use to respond back to the request.So we're just gonna do. And this health
+one is you can put whatever you want here,but just to show youthe flexibility of this, let's say I
+wanted to send back some JSON.I could say res.json here I could pass in.Actually, let's not, let's not do the JSON
+right now. Let's do, so I just remembered,oh, actually no, let's do it. Let's do the
+JSON and you'll see what happens.So I'll say res.json and I can pass in a
+JSON message.I can say message. Hello.I could do that. Passing whatever JSON
+you want.In the notes, I have something like, you
+know,a little more sophisticated, like, you
+know, a better JSON object.Also note that like I'm able to.Change the status of this. By default it's
+going to do a 200,but let's say I want to change the status
+of this, and again we'll talk about
+statuses later.I can change a method called status and
+change the status code,but we'll get into the statuses later.
+Just know that this is a number that a
+client and some othersoftware is looking at to indicate.What? What happened on theserver, essentially. This 3 digit number
+tells a client what happened on the
+server.200 just means like good.200 means green check. But by default, it
+do that.So now we have that. Now what I wanna do
+is I wanna just exports.Default app. I also have been lately get
+in the habit of doingthis as well, so why do both?It introduces like people doingstuff in different ways butI actually think it's pretty good
+basically this allows me to import this
+either as a default and nameit whatever I want but also import it as a
+named export or import it as a named
+import,so I can do Ican do either, so just give myself more
+options when I import this later there's
+no,it doesn't change the behavior of anything
+it's just.Yeah, I noticed by only doing default
+exports sometimes.I always find myself looking, going into
+that file I'm like,OK, but what are like the named exports or
+like what do I call this, but if you do anamed export, you can only use that name.But then sometimes I do wanna do default,
+so let's give myself the option.The Next.js thing I'll do is I'll make a
+new file here called index.tsThis will be the entryto our application. I'm gonna import app,
+you can import it names like this if you
+want.You can import it. Unnamed, and then you
+can call it literally whatever you want,but I'm gonna import it named.And then what I'm gonna do here is I'm
+going to start the server.I'm gonna say A. Listen, so we call the
+listen method on the app.We have to pass in a port. What is a port?How do I describe a port, you've been
+using a port your whole life.You just didn't know it. Every website has
+A port of I guess technically it's 8080but shortened to 80. It's just the browser
+drops it off and doesn't show you on the
+URL,but every website is on port 8080 or 80 on
+your computer if you're gonna start a
+server on yourcomputer, you have to open up a port, to
+be able to have that be exposed.You can't have two servers using the same
+port.There's commands you can run in your
+terminal orlook at your activity monitor to see what
+is using what port, but.A lot of apps that you install, believe it
+or not actually spin up servers in the
+background and dothings like for instance if you like if
+you right now I'm using TypeScript
+inside the editor,the TypeScript plugin in this editor spins
+up a TypeScript server that watches this
+code everytime I type something. And that's on a
+different port,so you probably have a lot of servers
+running your computer right now you don't
+even know about.So we gotta pick a port, the usually the
+default port is 3000.That's like the default he world 3000.So I'm just gonna put 3000 if you run this
+and you get an error saying it's already
+being usedChange to 3001 and keepgoing up until it doesn't break. You might
+see 5 digit portssometimes as well, but typically it's 4
+digit ports.And then this is just a call back.You don't have to do this. This is just
+something that we can do once the server
+is on,so I'm just gonna log, hey, got the log
+server running onport 3000. So you gonna do that.Your photo. Alright, so let's try to start
+thisWe have two different waysto start this. We're going to start in dev
+mode.Dev mode basically starts the server and
+watch.If you've ever built anything modern and
+React, you've gotten this for free and
+don't even know you hadit. It's when you save a file and then the
+app reloads to get your new changes.OK, that's what this watch does. We have
+to do watch.The way you run that is you can do NPM run
+and then the name of the command in thiscase it's dev, so I'm gonna say NPM run
+dev.And then, I didn't spell running, right,
+but this,that's what I lost. So now you can see.Whatever you logged, you should see that.
+If you don't see that,then you probably see an error.If you see an error, let me know what the
+error is.If you don't see an error and you don't
+see this at all.I'm guessing you didn't put a lock here,
+right?If I just got rid of this, then The
+servers running,but I don't see a log other than that
+reset, and this is why I log, right, let
+me runthis again, it's just sitting here.I have no indication on like whether or
+not this is running, right?So that's why that log is kind of
+important because you know what's
+happening,right? Any questions on that?And this will stay on until I either stop
+it breaks,or I close my computer.So that's the other thing like if you when
+you written code in the browser used to
+like calling itfunction, the function doing its thing and
+then stopping,right? Not this. This is always on the and
+the entireobjective of a server is to keep it alive.That's the whole point. There's people who
+make millions of dollars a year.And their job is to keep a server alive.

@@ -1,0 +1,187 @@
+We have read a single habit, which is
+mostly what we just did,but instead of find many, it's just find
+first.It's literally the same thing, so let's do
+something a little more interesting.And let's Update a habit.Let's do that. So if we go back to our
+habit controller.We'll say export const update.Habit Same thing, req andresponse. Dedicated requests.First responses, OK, so for this one.Pretty much similar to inserting, but
+instead of callingit insert, we're gonna call it set, which
+set is basicallyHow you would up essentially update I
+guess that's like the best way I can
+describe it.So, and because of tags we're gonna do a
+transaction because if something fails,one of those things we wanna make sure we,
+Undo all of it,so. First thing is we wanna get the.Parameter and the ID becausethis is going to be updating a habit we're
+assuming this is gonna be mounted on a
+route that hasa slash ID in it, so I can get the ID get
+req.params.ID. Like that, I could type this if I want
+if I go to res therequest, well, I would have to make this
+take in a, generic.I'm not doing all that it's too much work.So I'll just assume that the ID is there
+and then.Let's go ahead and we wanna separate out
+tag IDs from the req.body from
+everythingelse. And the reason we're doing that is
+because we don't,our habit in the database has no concept
+of tag IDs.But we're allowing you to send up some tag
+IDs that you might now want to associate
+with an existinghabit. So we spread, we take those two
+things out because they're gonna be
+operated on two differenttables. So you can send us tag IDs,everything else is gonna be considered
+what updates you want to apply to this
+habit.So this will be  req.body.And let's start our Transactions, so
+result he goes await.DB. Transaction. Get our transactionobject here. And it's just the same thing
+we've been doing.So in this case, we'll say this will be
+the updated habit.And it's gonna await this transaction.Update, so we want to update on the habits
+table.And what we wanna do is we're gonna call
+set, so set will.Set will just apply thepartial stuff that you that you want here
+and not override what was there,so. We'll say set We say we wanna set
+whatever these updates arehere. And then we wanna update the updated
+at fields to be now.So we got that, and let me put a sync
+here.But we don't wanna do this to every habit,
+only the habits that match.This call, so it needs to be an and cause
+we're gonna do a multiple equals check,so we wanna check to see not only is this
+the habit,not only do we wanna only update the habit
+with this ID.But the user also has to own this habit ID
+so that way I couldn't just get your habit
+IDand then hit the API of like Update this
+habit ID even though it doesn't belong to
+me.So this would be. This would be
+authorization.Right, are you authorized to update this?
+Habit,yes, because I'm the User ID on this habit
+User ID field and you know my User ID
+because the authentication middlewareI told you that because I gave you my
+JSON Web token, so.In this case, the first one is the easy
+one, which is like habit.ID equals whatever the ID was that was on
+this route param.That makes sense. This thing is just Let's
+do that or.Or what do you want?Strange I have a type.SQL wrapper. I don't even know what
+that means,oh, I'm sorry, I forgot to put and or
+equals.There we go, cool, all right, so the first
+one is this equals.The second one, and the way you do it in
+and is you just put a second thing in hereit also has to equalhey, this habit also thisUser ID also has to equal whatever
+req.user.ID is. So not only is it a habit whose ID
+matches the ID that was passed on the
+routeparams, but that habit's User ID also is
+the signed in user's ID.So they can only update this if it is in
+the database and it belongs to them.If you did not do this second part.Anybody can update anybody's habit if they
+knew the ID.That's a big security flaw.If you don't do that one that one check
+will leave your app vulnerable.Like, imagine you were in Twitter, and
+anybody can post on anybody's account as
+them.You're like, I'm just gonna post something
+as whoever I want.And they could do anything about it
+because they don't do this check right
+here to make sure you ownit first. So, if you have the ID of this
+person's,you know, feed, you can post whatever you
+want, ask them, Oh no, that's not good.So don't want that. Whatever reason this
+fails.Or I'm sorry, for whatever reason this is
+not found because the update.Decided that, like, hey, there's nothing
+that matches this where clause.There's nothing here and I forgot I gotta
+do a returning so we can return this.So if the where clause fails, and then.Which would not cause an error, by the
+way. Some database ORMs will throw an error
+if you try todo like a find or an update and it doesn't
+find anything,it'll error out. Drizzle won't do that by
+default.It'll just return undefined or null like,
+oh, I just didn't find anything,so we're checking for that case. That's
+what we're checking for right now cause
+it's not gonna throwan error. If it was gonna throw an error,
+we would have to check and it'll just be
+down herein the catch. It's just gonna return
+undefined if it couldn't find anything
+that matched this where clauseSo in that scenario, wecan say, oh well, we're gonna throw an
+error because.You know, habit not found.You could also, if you want it, which
+might be more appropriate,you could just return here and say res
+status.Technically it's be a 401. Well, it could
+or could not be,right, cause it's like, was it not found
+because you gave us an invalid habit ID or
+was it notfound because the habit ID was right, but
+it's not yours.Don't know, so I'm just gonna say 401.And then I'm just gonna say end. So end is
+something End is just like I don't have
+anything leftto send. I'm just gonna end this request.
+I'm gonna put a 401.I don't need to send a message. You don't
+always have to send like a JSON message
+or anything.You can just end it.And 401 is enough. Or it's just, it's just
+another example I wanted to show you,so it's not a habit, I'll just end it.And then now we gotta handle the tags. So
+if tag IDs.Does not equal on definedso you actually pass andtag IDs up. Then I can spell.Undefined, there we go, tag IDs are not
+undefined,then. Yes, we want to delete these tag IDs
+from the habit tagsIf tag IDs has alength, then we wanna add them back, we
+wanna add them,we wanna associate them with this habit
+that we're updating, so.It's because of that join table in the
+middle, it's just makes it really
+difficult cause you gotta likemove around all this stuff, so we gotta
+remove these existing tags so we'll say
+Tx.Delete. habitTags. Where, equals Habittags. Habit ID is equal to the ID here.So we're basically, when you pass up new
+habit tags on this update,we're going to remove all the tags that
+are already associated with this habit
+because we're assumingthe tags that you're passing are all the
+new tags that you want us to associate
+with this habit,which very well might be the ones that
+were already there, but we're gonna delete
+them first,so this is more of a replace than it is an
+update, and this.This isn't the right way, this isn't the
+wrong way, this is just what the person
+who wrote the serverdecided to do. So we'll do that, andthen if there are tag IDs.Tags. Length is greater than 0.Then we're gonna add some new ones, so
+we'll say habits.Tag values equals tag IDs.Map. We'll get a tag ID here.And then we'll just make a new object in
+line and I'll say cool,all we need is a habit ID I know what that
+is, that's gonna be,oops, whatever ID is from the params and
+then the tag ID is the tag ID that we're
+currently iteratingover. And all I gotta do is just insert
+all of these.habitTags.valuehabitTags values. Easy. And finally, returnout of this transaction, the updated
+habit.And then outside of the transaction, We
+can say,all right. Res. JSON. Let's get you back
+what you asked for.Here's a message. Habit was updated.Whatever you wanna say, and then.Here's the habit. Which is the result that
+I have up here.Which is the updated habit.Otherwise, an error happened. Let's Go
+ahead and Catch that errorUpdate habit error, failed toUpdate, habit.And the example that I have here in the
+catch, I threw an error.Whenever I was like, yeah, there's no
+habit.I threw an error here instead and then
+down here I caught it.I looked at the error message, depending
+on that error message, I decided to either
+send back a 404 or500. Up here I just decided I'm just gonna
+just send it here,so there's no wrong way.Do you need to handle a transaction at
+all, like committed or roll back or?It does that by itselfbut you can manually doit, if you wanted to, like, for instance.Let's say there's some asynchronous stuff
+that you're doing inside the transaction
+that has nothing todo with your database, but you want that
+to be committed.So like for instance, let's say part of
+what you're doing in here is like you
+gotta go update Stripeor you gotta go update some other thing
+and if that fails, if that API call fails
+you want toroll back. Drizzle would not know about
+that,so you would have to manually say, hey,
+roll back, there was a failure.The easier way to do it is you just throw
+an error.So if you just throw error anywhere in the
+transaction, it automatically roll back.Yeah, if it gets to if it and if it
+returns, it'll just commit.So you could do it manually like that, but
+typically it's either just throw an error
+or get to theend of the function. Yeah, good question.Great, so where do we add this into our
+habit route that's gonna be.And an update, so on the habit route, let
+me see,do we have one for that?We don't, so let's just add one, we'll
+just say.Router. Dot In this case, this would be a
+patch,I believe. And we need an ID here,so we'll patch that, and then we'll say
+update habit.We need a schema of validation to validate
+this cause there's a lot of assumptions
+here.This is. Well I guess we could, we could
+not,but the thing is because it's an update, a
+partial update, that means it can be any
+one of thefields that exists on the habit because we
+don't know what you're updating, like what
+are you actuallyupdating? It could be any one of those
+fields, so it would be a partial.Of partial just means take all these
+fields and make them optional,right? So we could write that, but I'm not
+gonna write that cause this is gonna be,if you try to update it and it breaks
+then.I'm fine with that because that's your
+fault and it'll it's gonna,it's gonna break anyway so I'm totally
+fine with that, not failing.The reason I, the reason I would write an
+input validation here is so I can
+specifically tell you it'syour fault and what field you messed up
+on.So if I wanted better error messaging, I
+would do that,but for the sake of like the server
+breaking or not.It's gonna break regardless, so I'm fine
+with that.I also don't feel like writing a partial
+Schema with Zod,so that's the real that's the real reason.
+So I think that's enough CRUD stuff.There's so much more we can do, but if you
+just scroll through.The notes that I have, I mean that's
+probably not even 1/3 of all the stuff
+that I have,but it's mostly all the same, it's some
+version of this just on a different
+resource,either getting something, deleting
+something, updating something or.Creating something, right? So it's mostly
+all the same across different resources,it's actually so similar thatyou could just write a function that takes
+in a resource and generates a lot of this
+for you.It's that similar. I wanted to write it
+out so you can get that practice in.But it's also it's all very similar, so.I'll leave all this here for you all to
+play around with, but.We can definitely move on to.Handling errors and writing tests and
+getting this thing deployed.

@@ -1,0 +1,72 @@
+error handling, this is pretty
+straightforward because it's mostly
+middleware,but it's a little special, so we've
+already been kind of handling our errors.Somewhat, responsibly doing our try
+catches and things like that,but if you want to format or report your
+errors to like third party things,log them and other services, it's best to
+probably do that in one centralized place.So very similar to how we had like a
+centralized place to authenticate.Our routes we can dothe same thing with error handling using
+middleware.So error handling, just like middleware
+can be used in different places in the
+code level,on the route level, on the router level,
+on the app level, we're gonna talk about
+the middleware versionwhich can be applied to pretty much all
+that except for the code level.The code level is what the try catch is for
+So how does error handle middleware
+work and Express?It's literally the exact same thing as
+regular middleware,except it's it takes 4 arguments, and its
+first argument is always an error.Express will look at the signature of the
+function to determine.If this is an error handle middleware or
+not.I think that's called what the What's the
+word called arity of a function maybe
+something like that whereyou can just how many arguments a function
+takes so if you register a middleware that
+takes 4 argumentsexpressive like oh that's an Error
+Handler.I'm not sure if I would do that today, but
+back then it was OK to do stuff like thatThat's just like it's like one of those
+thingsthat feels magical, but why are you doing
+that?Just let me register an Error Handler
+that's explicitly an Error Handler,but I digress. So the other thing about it
+is that to trigger the Error Handler.Throwing an error won't do that. Throwing
+an error in your middleware or your
+controller will just killyour server. If you want to trigger the
+Error Handler.You have to call Next.And pass it in error.So technically you can call Next inside
+your Controllers, although I said you
+should never do that,but technically you can and have your
+error handle it.You definitely will call Next inside of
+your middleware, otherwise you'll just
+hang if you're not returningSo it's mostly for likefor that, but yeah, you could call Next
+inside of your Controllers.The problem with that in my opinion.Is that you're assuming that these
+Controllers are being registered to some
+route somewhere that underneaththose routes there's an Error Handler.But maybe that's fine and you handle that,
+but that's what the assumption is,because if you call Next with an error
+inside of a controller.There it's not gonna run another route
+that's a terminal route like once you're
+inside of a controllerit's resolved, it's not gonna go tosomewhere else unless there's an Error
+Handler, so you have to know that the
+Error Handler is there.It's almost like writing a component.And React. And you put some assumptions in
+that component because you know what it'sparent component's gonna look like and you
+know how it's gonna be rendered so you did
+some stuff in thatcomponent whether it's like UI wise style
+wise or logic wise like oh I just know
+that like the parenthas to look like this so that makes your
+component not that flexible anymore you
+can't really move itaround and put it in different places like
+you know like some libraries will have
+like.They'll have like a table component and
+then that table component will have a
+table.Row component and then that.Table might have like a table. Column
+component and those row and column
+components can't work unlessthey're inside the table component so
+those components are assuming that they're
+gonna be in a tablecomponent so they're not that flexible
+anymore. That's the same thing here if you
+put like a Next insideof. A controller that controller is not
+that flexible anymore and maybe it didn't
+need to be in the firstplace, but that's what you're giving up.The error will skip any middleware, so
+like once you call Next with an error,everything after that gets skipped, no
+middleware, nothing else is gonna run it's
+gonna go straight toyour the nearest Error Handler. Right, and
+error handlers can also call Next and Go
+to the Next Error HandlerIf you have multiple error handlers
+registered at different places.

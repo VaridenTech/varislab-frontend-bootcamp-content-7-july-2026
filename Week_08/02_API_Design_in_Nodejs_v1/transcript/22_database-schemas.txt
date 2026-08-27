@@ -1,0 +1,117 @@
+I want to get started with the database,
+and get some of that set up.Let's do that. But before we get into the
+code,like always, I'm going to talk, so, letme go here. We're gonna do the DB setup
+and schema.So, let's talk about database scheme of
+design and whenit comes to scheme and design, I can
+guarantee you.I have seen most of the common patterns,but I am by no means an expert when it
+comes to database design.Like I get humbled every time I see
+there's literally a subreddit ofpeople sharing database designs and every
+time I look at some of that stuff I'm
+like.It's like the Lego of database designs.It's like they did like the, you know,
+they get like one of those Star Wars ships
+and build itwith Legos, but it's like that equivalent
+but for like schemas and it's like,OK, I'm never gonna do that. That's
+insane.I never even thought of that, so there's
+definitely levels to it,but I also am in the boat of the simpler
+the better,so I like to simplify. My database,
+schemas and,you know, I'm gonna give you some insight
+into how I think about.Modeling data in general, so we'regonna explore some relational Database
+concepts. We're gonna understand ORMs and
+their benefits,and we're gonna dive deep into, not really
+deep,but deep enough into migrations and build
+a complete schema for our habit tracking
+APIusing Drizzle ORM. So understanding the
+Relational Databases.First need to understand like the
+relational model. So relational Database
+is basically.The way that I think about Relational
+Databases are, is when,well, let's just think about relational
+data. When I think about relational data,I think about data that have dependencies
+on each other, right?Like, for instance, specifically around
+like.Ownership. I think of ownership models and
+you know,the obvious one is that like users can own
+pieces of data but other data can own
+other pieces ofdata as well, right? So when I think of
+relations I think of like,OK, what is the data that I need and what
+data owns other data and to get to that
+conclusionI always think about thefeatures that I'm making, you know, I
+think some people call this like domain
+driven development wherethey think about the domains which are
+basically like.The different parts of the app, the way
+that I like to think about is like
+critical user journeys,which are basically like, if I were to
+break apart the app that I'm making.Into different user journeys as in like
+different experiences that have a a
+defined start andend. What is the data that I need to
+complete that user journey and how did
+that how did thethose data, whatever plural fordata is relate to each other? What the
+hell is plural for data?Is it just data? OK, all right,Data, OK. I mean, I like, I know that,but like when you think about it like, And
+it doesn't sound right,but it is, it is right, damn, OK,I confirmed that, so. I think, I think of
+the features so if we think about our app,we got habit tracking. I mean, obviously
+we don't have a GUI, so I'm just, I have
+to imagine whatthe GUI would be. You can imagine what the
+GUI would be, but I wanna be able to like.I'm a user and I wanna see one critical
+user journey is like,I wanna log in and see my habits.So that means an ownership model would be
+a user.Owning multiple habits. So that's a one
+user owning multiple habitsThat's a one to manyrelationship, right? That's how I think
+about data model.It's easier for me to think about it from
+that perspective when I know that's why
+like even sometimesbefore I even do data modeling.I'll sketch out a design first because
+visually if I can see what the app is
+trying to do Ican model the data around that it's really
+difficult for me to just be like,I just, I just know how to put this data
+together,like I can't do that. I really need like a
+purpose for what I'm doing,so that's relational data I think about is
+like what data owns what,But as how it pertainsto relational database. Relational
+database, in my opinion,I don't know like the correct way of
+talking about Relational Databases,but to me it's just like a database that
+has like fixed columns.So you think of like a column.As like a field in adjacent object I guess
+and the object as a table orI guess the table would be a list of those
+objects in a in a column would be one ofthe fields on the objects they're like
+fixed width so like they can't expand
+beyond the set widthin which you define them in most cases,
+but there's ways to like go beyond it but
+basically.They are very strict, very well defined,
+and they use,unique keys and indexes toshow relationships amongst each other's so
+typically you'll have something called
+like a Primary KeyYou can think of thatas like this is the unique identifier that
+identifies this piece of data like a User
+ID that isa user's ID would be their Primary Key for
+the user's table,right? A Foreign Key would be a key from
+another table,hence the name Foreign. That exists on
+some other table.This is a reference. This is how I can
+say, let's say I had a 1 to 1
+relationship.Let's say this was a I don't know, a vet,no, she had many dogs. I let let's say
+this was like a.Yeah I don't know, some something that's 1
+to 1, I don't know, maybe you have one
+house,so this was like a neighborhood app and
+you wanted to match.People to where they live, one person can
+have one house, so that's a 1 to 1
+relationship.Well, that would also mean a house can
+only have one person, so just go with me
+there,follow me on that, And in that regard,depending on where you want to query from
+the home side or the user side,you would put the Foreign Key on that
+table, right?So you're like, oh, based off of my app,
+I'm always querying from the user's table,so I'm gonna put the Foreign Key of the
+home on the user's table,or maybe I'm querying from the home table,
+so I'm gonna put the user's key.User's key is the user's Primary Key is a
+Foreign Key on the home table,or maybe I'm just going to denormalize it
+and put it on both, because why not?And that's also fine too, right? So up to
+some point.These are all the things that I think
+about when I'm thinking about data, so
+just give you some insightinto my head. But yeah, tables, you could
+think of those as like collections of
+objects.These objects are called rows, columns are
+the fields on these objects.They're called columns, but really in your
+JavaScript brain,think about tables as arrays, rows as
+objects,columns as fields. That's literally what I
+see.I don't know if anybody I've seen that
+show Mr. Robot, like in the first season
+of that show,like he sees that company and every time
+the company name comes up.He blurs it out and he sees it as evil
+company because they're an evil company.Every time I see tables, rows and columns,
+I just see arrays,objects and fields. That's all I see. I
+don't, I don't even see tables, rows and
+columns.They don't even make sense to me. So
+that's all I see.Primary Keys, that's the ID, Foreign Key,
+that's somebody else's ID and a
+relationship is.How you know that it's the type of union,many to many, one to many, or 1 to 1.

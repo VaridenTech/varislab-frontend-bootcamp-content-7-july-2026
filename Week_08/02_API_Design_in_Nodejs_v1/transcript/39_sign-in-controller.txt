@@ -1,0 +1,271 @@
+Let's go ahead and make the Sign In stuff.So very similar to sign up as far as
+implementation.So what we wanna do is in our control or
+in our AuthController,we're just gonna make another method here
+and this one's gonna be called log in.So we'll say. export const login.It's gonna be async.It's a handler or controller, so it's
+gonna be a request and a response here,we can add the type.Response We're gonna try catch this.And then what we want to do is, let's get
+the email, let's get the body.req.body got those things.And then we wanna get the first thing we
+wanna do right if we go back and look at
+theThe approach here is we wanna getAny user in the Databasewho has this email, and we could do that
+because emails are unique, so there can
+only ever be oneuser with this email, so we'll see if
+there's a user, so they'll say,oh wait, DB. There's a couple ways you can
+do this.You can do dB.select and then pass in.From the user's table. That's one way you
+can do it and that's fine,and you can do. Where. You can also do
+dB.query.Users that find. First, this works too.And I'll just do this one since the I have
+the other way of doing it in the docks sothat way you can see both examples.So you can say find first and then inside
+of here you can put where and then you can
+putan object. And then you can say, or I'm
+sorry,not an object, that's Prisma, and then
+inside of here you can put EQ,which we can import from Drizzle ORM.EQ is just gonna be a function that's
+short for equals, so we wanna find the
+first user.Where the user's table field calledemail equals the email that was passed up.So the email filled on the user table.Equals this email that was passed up.
+That's what equal means.So we wanna do that.And this will, actually find if you do
+find first you don't need to destructure
+becausefind first always returns if it finds
+something you'll just find the one thing
+and it'll be that onething or it won't be anything but if you
+do the select from that always returns in
+array soRemember that. So then you'relike, oh OK, cool. Well, if there is no
+user, guess what,you know, get out of here.res.status You know this is up to
+you how you wanna do this,you know, if this was for an app, this API
+is for an app,you, and it was like server render or
+something, you could just redirect them
+back to Sign In or sign upYou can send a messageor an error code that the Frontend will
+look at like, oh snap, this person typed
+in the wrong emailDuring Sign In, I'm gonna redirectthem to sign up or You know, show some
+other message,what you I guess you technically you
+might,you could show them like, hey, this email
+already exists, but that could be a
+security breach in my opinionto let someone know that this email
+already exists and I still see apps doing
+that today,but That's kind of crazy. Like if I don't
+know,was doing if I wanted to like steal
+someone's identity and I had their email
+and I wanted to knowif they had if they were members of this
+bank, I could go to this bank and try to
+Sign Inwith their email and if the bank sends me
+a message back on the form.Or I try to sign up with their email and
+the message and the bank sends me back a
+message onthe form saying oh this email already
+exists that would not be good because then
+that just confirms tome that oh they are a user of this bank.Now I just gotta figure out how to get
+their password, right? So probably don't
+wanna do that.But in this case onSign In, if there is no user with this
+email.It's, that just means it's the opposite.The opposite is like, oh, there is no user
+in the database with this email.So, in this case, I mean you could you
+could be really smooth about it too,like I've seen some apps where someone
+tries to Sign In with an email and a
+password.There is no email in the past or so they
+automatically just created an account for
+them.Because it's like, oh, you try to Sign In,
+don't worry, we signed you up instead,here you go, you know, somaybe that's good, maybe that's not, but
+in this case.There is no user with this email, and I
+think that's not really a security threat
+to say that thisdoes not exist is way less vulnerable than
+to say that like this email does exist in
+my opinion,so. You just put whatever you want here.Invalid credentials. And that's probably,
+I would say this is the approach that most
+productstake, they'll just say like.We couldn't find a user with that email
+and password combination,so you don't know which one it was. Was it
+the email that was wrong or was it the
+passwordthat was wrong? They don't tell you. It's
+just the email and password combination
+that you gave us,there's no user with that, so you can't
+really guess which one it was wrong.So invalid credentials is very much in
+that vein, so.We have that. And then, so if we do have a
+userif we go back tothe notes, this is where we want to
+compare the passwords of those users,so what we can do.As we can say const isValidatedPassword.And we could just use bcrypt natively
+and do that,but let's actually just gonna make a
+helper for it.So we'll go back to passwords and we'll
+add a new helper function in here, we'll
+export it,so we'll say export, compare passwords.And it's gonna be exactly what we said it
+was gonna be.It's just gonna return bcrypt.comparePassword, which. will be here, so
+password, which is a stringWith the hashed password.Which is a string, so we'll say password.Hashed password. I would just return that,
+very simple.And just random JavaScript programming
+architectural tip, if you haven't likedeveloped in like a bit code base.The reason it was obvious to me to
+separate this out into its own file versus
+just writing the bcryptthing in here is because one, I can't
+individually test that piece of logic if
+it's just implementedin this function, so that's the biggest
+reason if I wanna be able to test.Just this logic, it's best to make it in
+its own file that I can export and test.If I just typed in bcrypt.compare right
+here,how would I ever test just that piece of
+logic?I couldn't do it. So that's the one thing.
+The second thing is what if there's
+somewhere else in mycode beyond this function, beyond Testing,
+which I also need to do the same logic.I'm gonna have to write it twice, and you
+might be thinking, well, writing it twice
+is not that bigof a deal was just one line. OK, cool, but
+what if You have to change it to
+something.Now you gotta change it in both places,
+which doesn't really sound that bad
+either.The worst part is you have to remember
+that there, it exists somewhere else.That's the worst part. As your code gets
+bigger, you're not gonna remember that
+like,yeah, we wrote bcrypt.compare and all these
+different places.And when we ever have to change it for
+some reason, be sure to go change them.Like someone might be smart enough to hit
+command shift F and go find all the
+instances,but like why do that? So just put it in
+one place,export it. You only gotta change it once
+if you need to change it, you can test it.That's how I knew to do that. So like as
+you write code more, you start getting
+more of allthe bigger code bases, little things like
+that would like make your senses go off
+and you'll start tohave like anxiety and flashbacks or about,
+you know, PRs that took a month to get
+merged in.And then there's a 1000 comments on the PR
+and things like that,so, yeah, that's what triggered me.That's why I did that.OK, cool, so now we can say await.Compare. Passwords. We need to pass in the
+plaintext password first, which I don't know
+why I put the body, but that's password
+there,so password. And then we can pass in the
+hash password,which should be user. Password.Like our user password. There we go.So then we could say, all right, well.If this is not a valid password, what
+should we do?What do you all think?If we don't get a validated password, what
+does that mean?If we get to this point, what can we
+assume so far?We should send the same errors before
+invalid credentials.What, I guess what could we assume about
+the user right now?There's two different potentials for the
+user right now if we get to this part.What are those two potentials, those two.States the user might be or the two
+versions of a user, I guess.Exists. OK, so this is the right user,and this is their email, butThey entered the wrong. They entered the
+wrong password. OK, that's one scenario.What's the other scenario if we get here?A hacker, a hacker got someone's email and
+is trying to figure out what their
+password is.Yeah, so if we get here, it's one of those
+two scenarios, right.And this is, and the reason I'm asking you
+is because you would do additional checks
+here.You'd be like, oh, you attempted to type
+the password in 5 times.I'm gonna lock you out now, right?To prevent against that second scenario
+because if you didn't think of that second
+scenario and you onlyever assumed it was always the first
+scenario, you would never lock them out.You will let them try as many times they
+wanted to get their password right,but if you thought about the second
+scenario, you're like, wait, but what if
+it's not them?I gotta stop them before they figure this
+out, right?They're doing a brute force attack and
+they're just looping over and hitting in
+on the form and or inthis case the API. I need to stop this, so
+that's why it's important to think of the
+other scenarioCool, so yeah, if notwe're not gonna do thatbut. If not, the rightpassword, you know, let's go ahead and
+pretty much do the same thing,like get out of here.You don't know what you're talking about.Cool. All right. And I prefer to write
+code this way.I think there's like a way to describe
+this where like you terminate early versus
+the alternativeis like. Checking if there was a validated
+password,because if you keep doing it this way,
+you'll have all these nested if
+statements,right, if I say like if user.Then all this code would be inside this
+statement.So you get all these nested if statements.
+I prefer to check the inverse.And then that way I could just return
+early.And keep my code flat.And then I can just keep going down
+because yeah the other way around
+everything is nested inside ofthe if statement and then all the things
+that did not satisfy the if statement will
+be sprinkled at differentthere'll be different return statements at
+different levels sprinkled all around the
+app and that isjust dizzying to look at so I prefer to do
+it this way,just check for the negative and return
+early.Cool, OK. If we get to this point,
+congrats,you have logged in or you have
+successfully hacked this person.Either way, we don't know.So, let's go ahead and generate a token.And we'll do, you know, the same thing.We got our user. ID.We have our email. And we have ournot password, username.There we go. And we will go ahead and
+respond here and send this backSo I'll just say returnJSON. To the status of201. Send back pretty much the same thing
+I did before for theSign Up, which is just like, hey, log in
+success.Send back the user, youmight just be tempted just to send the
+user.Like this, which is, did I do that on Sign
+Up?Let me see. Let's see if I did that on
+Sign Up.I did. Well, hold on.Oh that's fine. I did it on, I did it on
+Sign Up because I didn't have the password
+here becauseI did this returning thing, so that's
+fine, but I could not do that and at least
+in my casecause I did a.What did I do? I did this find first which
+returns the entire user as you can see,also has the password on it.So if I just return the user like I did on
+Sign Up right here, the hash password will
+also beon the user object sent across the wire.That is I can't tell you how bad that is.That's so bad, so I couldn't just put the
+user here.So instead I need to construct my own user
+objects very much the same way I did.Up here, right? In fact, I could literally
+just copy this whole object right here.And just bring it down here.And instead of saying users, which
+referenced the table of users,I could reference the individual user that
+we just queried for.So now we got that. The last thing we need
+to do is just handle our error,which is this, you know, there's no wrong
+answer here.Log in error.And again, you want to think about, what
+are all the potential errors here?And why might they happen?Well, if we just looked at this, potential
+errors would be.This database query breaking for some
+reason.This bcrypt compare breaking for some
+reason.I need to send the tokenback, I forgot about that. This generate
+token breaking for some reason.That's it. Those are allthe errors, so like which one of those are
+our responsibilities.So this database broke, that's our
+responsibility, that's a 500.If this broke for some reason, that's our
+responsibility, that's a 500.If this generate token broke for some
+reason, that's our responsibility,that's a 500. So I can safely assume that
+almost any error that happens here.It's gonna be a 500, so I could just Go
+ahead and set that.And that's literally how I think when I
+think of error handling and messages is
+like,whose fault is this? And then you gotta
+think about that,so, but anyway, let me add the token here.Boom, all right, now we have that. We all
+we need to do is go back to ourAuth route and we need to add this to.The login route here, so we can get rid of
+this controller.You can add login. I called it logging.I'll rename it to log in and not logging.There we go, and then let's add some
+validation because again we're assuming
+that there's gonna be anemail and password here. I'm not doing
+username,so I can't take this insert schema one
+here because this one assumes other stuff
+on it.This one assumes you have a an email, a
+password and a username.But I'm only logging you in with email and
+password, so I can't take this one without
+some type ofmodification. So I'm just gonna go and
+make a new scheme of using Zod for this
+one.I'm gonna say import Z from Zod.And I'm gonna say log in, schema.
+
+23.6
+00:17:04.348 --> 00:17:06.019
+It's gonna be a Zod object.And it's gonna be an email with the Z.String like that. For now, this is
+deprecated.You can do dot email and it will try to
+validate that this is a the string it
+actually is,it's basically gonna do a rejex on the
+string to make sure it actually is an
+email.So. But that's deprecated.There's other ways to do it now, and then
+password.And if there was like some way I wanted to
+enforce.Like length and complexity, we could do
+that if I could look at the Database
+Schema.I know passwords have a max width a length
+of 255.That's a crazy long password, butI could do that. I'm not. If I could spell,there we go. It's put a, you could put
+them in here to make sure like you at
+least haveto put something there, you know.I thought there was a dot.Let me see. No, oh yeah, not empty.I mean I'm not gonna, I'm not playing
+around with that. I don't know what that
+does, will get mein trouble. So then we can just add that
+here,that's gonna be on the body, so we'll use
+the validate body,we'll do the login schema.And then boom, we are for sure going to
+have,if this login controller runs, that means
+there is an email and a password on the
+bodywhich means they posted itso. Let's give that atry. I'm gonna go to Postman.And I'm just gonna use the, we already
+signed up here, so I'm just gonna use the
+same credentials.We have this email, it's gonna copy this
+whole object actually.And well, I guess I could just keep it
+there, and I was gonna log in.And then I'll get rid of the username
+since we're not using that, and I'll.I'll mess up the email right quick. I'll
+get rid of one of the ps and then we'll
+send thisAnd I get Invalid credentialswhich Makes sense.That actually checks out because this
+means it passed our validation.Cause we have an email and a password, so
+passed our input validation,that's correct, but there is no email in
+the database with that email,so it said invalid credential, that
+totally makes sense.So let's see if we can trigger the input
+validation. So let me get rid of this
+email.And there we go, input validation got
+triggered.Hey, you gotta add an email, get rid of
+the password.Hey, you got an email and a password. OK,
+I have both of those back.I'll fix the email to the email that's
+actually in the database, then I'll send
+this.And there we go, log in success.If you want to fix that email method
+deprecation warning,just get rid of the string before it.Oh, really? Yeah, it's now a subclass of
+strings, so,oh, that's. How did they come up with this
+stuff?Thank you. I guess thatmakes sense. But Yeah, I prefer, Iprefer it. Cool. Any questions on that?So that was the JWT token that was passed
+in that in subsequent wewould include that. We haven't passed
+JSON Web tokens up to the API at all yet.We haven't even, we're not even enforcing
+them yet. That's Next.Right now we're only generating them.Yeah, we're not doing anything with the
+tokens. So when you Sign In and you Sign
+Up, you get a tokenand it's expected that you take thistoken and save it in your local storage or
+your SQLite database if you're on mobile
+or somethinglike that. You just, you, the client, it's
+your job to keep this JSON Web token,and you gotta send it up with every single
+API request because the server is super
+skeptical and trustsno one. By default. Let's keep it moving
+then.Let me just commit this.All right, and then we will move on to,locking down routes with JSON Web
+tokens, so you can't access certain
+routes,Without having a JSON Webtoken, and then we'll actually add those
+routes, so.

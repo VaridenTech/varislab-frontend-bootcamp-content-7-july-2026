@@ -1,0 +1,56 @@
+Park the repo, pull it down. I'm gonna Go
+through.The complete version of it right now, it's
+not gonna work for you if you try to go to
+thecomplete version because you're gonna need
+like a database and environment variables
+and stuff like thatSo if you're gonna try to go through thiscomplete version, cool, so just wanna give
+you a tour of the app.So 13 right now is the final solution and.Everything you see here, you're we're
+gonna do in this course.I don't think there is outside of these
+like configuration files,I don't think. I don't think I'm did
+anything for you.You'll be doing most of this stuff from
+scratch, so there gonna be a lot of stuff
+we're gonna bedoing, but just give you a high level,We're gonna be talking about controllers,
+databases, middleware, routes, things like
+that,and, you know, just to run this, let me
+make sure I have.My database set up, I do. It's gonna Go
+ahead and you know.On dev. Cool, so I'll have a server
+running on 3000.I'm gonna use a tool called Postman. Don't
+worry, we'll talk about this,In a second, but it's basicallyjust a way for, it's a GUI for our API.It's how we can test our API. So, for
+instance,if I want to log into this API.I have an email andpassword for a user that I already seeded.I think it's already in this Database. If
+not, I'll, we'll see in a second.Let me hit send here.And boom we got a successful log in so
+this is showing off our off this user
+logged in,we get a JSON Web Token so if you ever
+wonder about JSON Web Tokens we'll be
+covering stuff likethat we can sign up, we could do all
+different types of stuff here soif I see like register I put like.Some other person, let's see.If that works, oh yeah, I need a username.I forgot I had that validation working.To One. Do that.What else? Password. Oh, at least 8
+characters,come on. Killing me. At leastI got get error messages and then boom,
+now signed up, got a user,everything's there. So this is essentially
+what we're gonna be building.We're gonna be using Postman totest our API.Well, not test because we're gonna write
+tests, but for us to interact with our API
+so we don't haveto build a UI, in the future if you wanna
+like take this repo and build a GUI for itthat's a great project towork on, but we won't be covering that,
+but yeah,this is essentially the app some more
+things I can show you that you're gonna be
+doing here is wehave, for instance, if I run some of these
+tests right now.No files found because whyis that? Source tests. Tests.Oh, that's right, they're in the.The solution branch. There you go.So, now if we run some of these tests.Couple of things happening here.Is that gonna work? OK, that did work.Bunch of tests here that we'll be running
+for essentially doing like integration
+tests just to make surethat like our routes do the thing they're
+supposed to do and respond with the.Status code they're supposed to respond
+with so you'll be writing pretty much all
+these tests here wehave the ability to do things like.Seed the DB, so if I wanted to.Put in some fake data.Into this DB I can do that. This will
+allow us to have an API that's already
+ready to Gowith some data that we can work with,
+which is great for something like Postman.If you don't have datait's really hard to likeYou know it's like whenyou're building a frontend app if you
+don't like hacks sometimes you gotta knock
+out the data soyou can actually put the things on the
+screen, and you wanna see the database so
+you can actually,interact with it and figureout like, you know what the schema might
+be data model, different things like that
+so we have like aseed script. So we're gonna cover all
+that, in this course, like I said,if you just try to do any stuff that I
+just tried to do, you probably won't be
+able todo it unless for some reason you just know
+how to set up databases and you did that
+already it'sprobably not gonna work because you need
+to set up an environment variable, but
+this is what we're gonna

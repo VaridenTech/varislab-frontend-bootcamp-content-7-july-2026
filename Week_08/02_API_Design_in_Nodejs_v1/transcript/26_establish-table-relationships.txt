@@ -1,0 +1,171 @@
+Now we gotta set up the relationships, so
+let's do that.So set the relationships we'll say export,
+cons, user.Relations, user relations and the way this
+works is we use this relationshelper here. It's pretty simple. We said
+we want to use, we must have relations on
+the user's table.And then we get this callback function
+here.Where we can destructure some things that
+give us access to what type of
+relationship this is so forthe users we know user can have many
+habits and that's the only relationship it
+has,so we wanna get the mini helper right here
+and then what we wanna do is I'm just
+gonna returnin objects like that and I'm gonna say,hey, for habits. I want Do you have manyHabits. So this is basicallysaying, hey, if you query the user, you
+now get a new field called habits.Which is going to be all the habits that
+belong to the user.And we know how to do that because habits,references, the user, right? So we don't
+do that.It's kinda denormalizing it a little bit.And then we'll do it the other way on the
+other, on the other side of the
+relationship,so let's say habits. Relations His
+relations.Habits That and then thisone has two different types of
+relationships for different things, so it
+has a 1 to 1 and then ithas a many to many, so we're gonna use
+both of those and then let's set that up.So for the One to many, which is the user,right, or this is the mini side, so.I'm sorry, this is, yeah, habits are the
+many side users the one side.So for the user that's, you can only have
+one user for our habit,so we're gonna use one, and we're gonna
+say it's a user table,and then we're gonna define. The
+relationships there,so for the fields in this case, the fields
+that show the link between a user and a
+habit isgonna be on habits.userID.That's the field and it's going to
+ReferenceThe users.id. Alright, so what this is
+saying is.On the habits table, I want to add a new
+field called user.That is a one that can only basically can
+only have one user.And you know what user I'm referring to,
+because I have a field on habit called
+habits User IDThat should match the fieldon User ID. That's what this is saying,
+this is how it finds our relationship.So Again, I wanna set a relationship on
+habits.I wanna make a new field if you go look on
+habits, we don't have a field called user,right? We have User ID, but we don't have
+user here.There's nothing called user. We want that
+to exist though.I want to be able to say habits. User and
+get back a user object.Right, so that's what this is doing.This is saying, oh, you wanna make a new
+field called user? What is it?Well, it's a one sided relationship, so
+it's a habits is the mini side,User is the one side, so that means habits
+can have one user.And the matching fields are on the habit
+side it's habits.User ID which is referring to a User ID.And then for the many side we have entries
+because a habit can have many entries so
+this is supereasy we just have many entries and then
+same thing for the habits tag.Habits can have many habit tags, so we
+will also say that.Cool, I will say const.Entries, relations. So the relationsand it will be. Entries.There we go. got a call back.This is gonna be a many to many cause an
+entry can only belong to one habit,but I haven't got many entry, so this will
+for sure be a one.Cited relationship here, one tomany, with entries being on the many side.
+And then All we have to do is say,yeah, I'm gonna add a new field here to
+the entries called Habit, it's gonna be
+one.Of habits. All right, it'sfields, it's gonna be entries.Habit ID. And it's references, it's going
+to be habits,not habitats, habits. ID like that.Same thing we did our favorite users.OK. Are we gonna make the tagsrelationship. This is going to be on tags.This is a many to many.Cause one tag can have many habits and a
+habit can have many tags.So this one's pretty simple, many stuff is
+super simple, it's just.Just go here and then we say, oh yeah.You can have habits. Or I guess in this
+case habit tags cause we have that table,so the habit tags and then it's many.
+HabitatsAnd lastly, let's make ourinto, so. Or our relationship for the
+table habittags relations. And this one'sBasically just a one sided on both, right,
+cause You can only have,they can only be one habit and one tag
+pair,so it's a it's a it's 1 to 1 relation,
+right on.As far as like this is concerned, but
+that's because we have this join table
+without the join tableit's many to many, rightIt would be.Habits can have multiple tagsand tags and belong to multiple habits if
+we were referring just those tables two
+together,but that's a bad practice so we made this
+table.That joins a single habit to a single tag
+instead.So in that case it's a 1 to 1
+relationship.You can only have one tag to one habit, to
+1 to 1.You can't have many here, it's just one,
+it's just one.So that's what we're doing, but if we were
+referring to this table toThis table, it would be many to many.But that introduces other problems. This
+is best practice for many to many just to
+make this tertiarytable. So Habit tags.It's only gonna be one.And then we'll say, OK, cool, for the
+habit side.Singular, we'll call it habits cause it's
+only one.We're gonna refer to the habits table.And then what field on the habit tags
+table are we referring to?We're referring to the habit tags.Habit ID. And then what is that
+referencing?That is referencing. The Habits table.ID. We're the same thing for tagsSo tags For the orsingular one tag. For the tag table, the
+fieldis habit tags. Tag ID and we want to
+reference the tags tableID. Yes. Yeah, just trysomething out where I, like in a
+relationship, I would just put some random
+column name in fields anddoesn't. I don't think it flags it right,
+so you could.Say that again.Like, like a line 105, I just give some
+random column name.It wouldn't complain, right? So you have
+to kind of be careful.Oh yeah, for sure, yeah, I mean, it'll
+give you any valid column name that's on
+this table,so like I could do that and they're like,
+cool, yeah, that works.Yeah, so I thought Drizzle would be
+magical enough they're like,oh you can't do that. No, it's not, it's
+not, yeah,that requires logic. I don't think it, I
+mean.They, in order for them to do that, they
+would have to assume thatThey would have they would have to make a
+standardization around Foreign Keys that
+your Foreign Key isalways gonna be the name of the table
+singular and then camel case ID or like
+there have to belike a very specific way for them to know
+that because otherwise yeah they could
+infer that but whatyou just described. Is something I've done
+so many times and have been stuck so many
+times trying tofigure out like why is this not showing up
+in the database,so totally get that. It's so easy to mess
+up and the only reason I even know that
+other thanthe notes that's literally telling me what
+to do, that I wrote.So I've done this so many times, but I can
+promise you the first time I used Drizzle,I was just like, I should've went back to
+Prisma. Nah, I don't know.I don't know about this. I don't know
+about this, but like.It's so much better. It's so good, like
+it's really is so good.I can't think of a better ORM, and it
+makes sense now,so I guess probably like.The 200 schema I've written in like the
+last year and a half,so like I just got a lot of time on it,
+but it is easy to mess up.I will say that 100%.Gotta be careful. It seems like clumsy or
+like overly verbose to have to write these
+relationslike methods here as wellLike, I wonder why whenthey were making this ORM.They didn't just have you like when you
+write references up in like the schema and
+just assumed thatright like one or something like that
+yeah, that's a good question.The question was why do we even need these
+extracurricular relations helper methods
+when we kind of alreadytalked about the relationships. That we
+had here,it's a, it's a good point. So I think
+Prisma kind of does it that way because
+the alternative wouldbe instead of like because essentially
+what you're doing is you're defining new
+fields that you wantto exist and you're trying to tell Drizzle
+how to populate those fields,the alternative would be so let's say for
+entries if I go look at the entries
+relation right hereI want to associate ahabit with the entry, right? So the
+alternative would be I would go here and
+then I would say,oh I want a habit. And then I want its
+type to be like.Habits, right? Something like thatand then it should justinfer, right? Or it'd be like you could do
+like some type of like relations here andthen it's like. Habits And then like what
+is the fieldon this Thing that you want, so you could
+say like.Fields and in this case it would be.Entries. Have it ID it'd be something like
+that,so that would be the alternative of how
+they would do this.I'm guessing they probably didn't do this
+because one,I'm referring to a thing, referring to a
+table in its own definition,so that's one thing that's tough to beat.I guess they could get around this by.Passing a function that gets evaluated
+later, but yeah, I don't know that that's
+a,that's a good call out and I remember
+thinking that when I first started using
+Drizzle.I was like wait, why can't I just add the
+thing here?I can only add the reference. I can only
+add the Foreign Key,but I can't actually add the like computed
+field that I want that eventually will be
+the object,so. I'm sure they have their reasons, but
+yeah,I think the other way it's a better
+experience.Yeah. I was curious about this schema
+because you know in the routes folder we
+broke out habitsand users into their own separate one for
+the schema do should it be broken out to
+its own separateschema and a schema. That's a great
+question.Should we break out the schema into its
+own stuff?Yeah, there's nothing stopping you from
+doing that. In some projects I have
+because like some projectsthat have like you know 50+ tables to
+where it's like all right I just I just
+can't look atthis it's making me sick I'm gonna break
+this out yeah you could totally do that.There's nothing stopping you from making
+that happen to me this is just like a
+basic simple scheme that'slike barely 100 lines, so I kept it in
+here but you don't lose any functionalityby putting everything in their files. I do
+think you'll probably have to figure out
+how to deal withlike potential circular dependencies. If
+some tables.Rely on me see, yeah, like in like in this
+case right here, like we're calling
+references and there'susers, so. But what if in the users it's
+also using something with habits and
+they're both importingeach other, so like you might run into
+circular dependencies there, so you have
+to deal with that,but there's nothing stopping you from a
+feature perspective in which that would
+change their behavior

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="เตรียม PostgreSQL MongoDB Redis Node.js และเครื่องมือที่ใช้ตลอดคอร์ส" />
+    <title>การติดตั้งเครื่องมือฐานข้อมูล — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>การติดตั้งเครื่องมือฐานข้อมูล</h1>
+
+      <p>คอร์สนี้จะพาเราใช้งาน MongoDB, PostgreSQL และ Redis เครื่องมือทั้งหมดติดตั้งได้บน macOS, Windows และ Linux โดยเนื้อหาจะอธิบายขั้นตอนสำหรับ macOS และ Windows เป็นหลัก ส่วนผู้ใช้ Linux สามารถปรับคำสั่งให้เข้ากับ distro ที่ใช้อยู่ได้</p>
+      <p>ถ้าระหว่างเรียนเจอผลลัพธ์ไม่ตรงกับตัวอย่าง ให้เช็กเวอร์ชันของเครื่องมือก่อน เพราะ syntax และพฤติกรรมของ Query อาจเปลี่ยนไปในแต่ละเวอร์ชัน คอร์สนี้ใช้เวอร์ชันต่อไปนี้</p>
+      <ul>
+        <li>MongoDB เวอร์ชัน 8.2.5</li>
+        <li>PostgreSQL เวอร์ชัน 18.1</li>
+        <li>Redis v8.6.0</li>
+      </ul>
+      <p>ไม่จำเป็นต้องตรงกันทุกเลขเวอร์ชันย่อย แค่ใช้เวอร์ชันใกล้เคียงกันก็เพียงพอแล้ว โดยเลือกวิธีติดตั้งได้ดังนี้</p>
+      <h2>Docker</h2>
+      <p>ตัวอย่างในคอร์สจะใช้ Docker เราจะมีคำสั่งให้รันตามในแต่ละบท ดังนั้นแม้ยังไม่คุ้นเคยกับ Container ก็เริ่มได้ เพียงติดตั้ง <a href="https://www.docker.com/products/docker-desktop">Docker Desktop</a> แล้วทำตามคำสั่ง หากอยากปูพื้นฐานเพิ่มเติม ดูได้จาก <a href="https://frontendmasters.com/courses/complete-intro-containers-v2/">คอร์ส Container นี้</a></p>
+      <h2>Package Manager</h2>
+      <p>อีกทางเลือกคือใช้ Package Manager เช่น <a href="https://brew.sh/">Homebrew</a> บน macOS หรือ <a href="https://docs.microsoft.com/en-us/windows/package-manager/winget/#install-winget">winget</a> และ <a href="https://chocolatey.org/">Chocolatey</a> บน Windows ขณะที่เขียนบทนี้ winget มีเฉพาะ MongoDB และ PostgreSQL ส่วน Homebrew กับ Chocolatey มีเครื่องมือที่เราต้องใช้ครบกว่า</p>
+      <p>บน Linux ให้ใช้ Package Manager ของ distro ที่ใช้อยู่ได้เลย</p>
+      <h2>ดาวน์โหลด Binary มาติดตั้งเอง</h2>
+      <p>ถ้าไม่อยากใช้ Docker หรือ Package Manager ก็ดาวน์โหลดจากเว็บไซต์ของแต่ละโครงการได้โดยตรง พยายามเลือกเวอร์ชันให้ใกล้กับรายการด้านล่างเพื่อให้ผลลัพธ์ตรงกับบทเรียน</p>
+      <ul>
+        <li><a href="https://www.mongodb.com/try/download/community">MongoDB</a> – เวอร์ชัน 8.2.5</li>
+        <li><a href="https://www.postgresql.org/download/">PostgreSQL</a> - เวอร์ชัน 18.1</li>
+        <li><a href="https://redis.io/download">Redis</a> - v8.6.0</li>
+      </ul>
+      <h2>Cloud</h2>
+      <p>ถ้าเครื่องรันฐานข้อมูลเองไม่ได้ เช่น ใช้ Chromebook หรือ iPad คุณสามารถเลือกบริการ Cloud ที่มี Free Tier แล้วเชื่อมต่อจากระยะไกลแทนได้ วิธีนี้ต้องตั้งค่า Connection String, Firewall และ Network เพิ่มเติม จึงอาจซับซ้อนกว่าการรันในเครื่องเล็กน้อย</p>
+      <h2>เวอร์ชัน Node.js</h2>
+      <p>ตัวอย่างบางส่วนจะรันด้วย Node.js คอร์สนี้ใช้ LTS เวอร์ชัน 24.13.1 แต่เวอร์ชันใหม่ใกล้เคียงกันก็น่าจะใช้ได้ ติดตั้งได้จาก <a href="https://nodejs.org/en/download">เว็บไซต์ Node.js</a> หรือใช้ Version Manager อย่าง <a href="https://github.com/nvm-sh/nvm">nvm</a></p>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="02_why_we_need_databases.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="04_terminology.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

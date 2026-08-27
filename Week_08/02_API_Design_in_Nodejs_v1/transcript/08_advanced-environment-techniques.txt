@@ -1,0 +1,56 @@
+We already talked about some of the
+benefits of this.As far as like having this environment
+variable file, it's just so that we can
+have it typed and youknow everything is nice and tidy and
+predictable and most importantly when we
+start the server up wewill get errors if the required
+environment variables aren't set which
+might not seem like a big dealnow, but I promise you it's such a big
+deal.That's gonna save you so much time, and I
+just wrote some more stuff in here,just talking about that, you know, the
+benefits of that,you know, setting up an.env file which we already walked through.We talked about, the health check.I do have some examples here of like how
+you might test some of these routes.You can do this if you want, but we're not
+gonna do this because we're just gonna get
+into testlater. I just put this in here as a
+reference for.You to go back to see if you would have,
+how would you have known if you've done
+this rightYou could just write a test for it and see
+if thisis how you would have done it, but if I
+were to walk through that now, I would
+have toshow you how to set up tests, and I don't
+wanna do that right now.Another step, another more intricatestep is what you can do is You can make
+some.Environment variables optional or
+non-optional dependingon what environment you're in, right, or
+what app stage you're in.So like if it's in production, maybe I
+want a different default or maybe this is
+only going to berequired if we're in production but in
+development it it's not required so you
+can just turn area orboolean off of those helper functions as
+well to set different defaults or
+different validations on yourschema, right? So that's where it can get,
+it can also get super powerful so.Few things to note. I talked about this a
+little bit, but never commit .env files to.GitHub, I know that's probablycounterintuitive to what I think NextJS
+wants you to do. I think they do want you
+to commit..env files to GitHub, and they expect you
+not to put Any secrets in those .env filesI think that's the expectationI don't recommend ever doingthat. Don't ever commit .env files to
+GitHub, so that's the best thing I can
+say.This other stuff is justlike advanced type of stuff, basically.You know, if you really wanna be super
+safe for things that are like secrets that
+you generate,you might wanna rotate those things, which
+basically means like on some interval you
+Go generate newones and. You know, phase out, cancel out
+the ones that you already have,just in case something leaked and someone
+has something to it.It's like changing your password on a on a
+frequency.So you can do stuff like that.You can use the Secrets Management,
+HashiCorp Vault is one.This is basically like you take all your
+ENVs, put it into this one app,and then this app gives you just like one
+SDK or one URL that you can load in,and then that will load in all your
+environment variables.So it's basically the same thing as having
+like.That settings panel inside of a hosting
+provider where you can add all your
+environment variables it'slike that but it's not attached to any
+hosting provider it's you can use it
+anywhere,even locally it's probably thecleanest way to get on board to an app
+it's just to put it into a Vault in which
+someonedoesn't need to know all the values they
+can just import this Vault and use it.

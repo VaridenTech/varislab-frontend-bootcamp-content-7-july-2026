@@ -1,0 +1,96 @@
+OK, let's do our global test set up to set
+up some things,and I'll talk about why we're setting
+these things up, the way that we're doing
+them.But it's mostly just sothat we have a clean. Separation.Amongst our tests, so.Let's do that, we're gonna make a new
+folder.Called Test. Pluralized and then in this
+folder we'll make a newfolder called. Set up and in that folder.We will make a globalSetup.tsHere we go. So what we want to do in this
+global setup is a few things.So we're gonna import our DB.From source. Or it's onemore, there we go. So slash, oh wait,how far did I go into this?Where am I at? Oh, am I, am I in?Am I in source? Oh yeah, I'm in Source.I need to. Put that on the root, sorry,
+there we go.I'll say, why is that so far back?Cool, OK, so we're gonna import DB.From ../src/db/connection, there we go.And then we're going to import all our
+tables,so we have users, habits.I'll just go ahead and from. source/db/schema Get all those we have our
+habits,we have our entries, we have our tags,we have our habit tags.You got all that, and then Next what we
+wanna do is.We're gonna write some raw SQL here.So don't get nervous. We import SQL from
+Drizzle ORM.And then we're gonna import execSync
+from Node.Which basically allows us to run.Bash commands inside of Node, that's the
+best way I can describe it,so. Inside of a child process, so we'll
+have that.And we're just gonna export a setup file,
+so let's say export default,Async setup. Like this, no setfunctions are. So I like thatAnd we'll just do somelogs here, say, hey, we're setting up the
+database.The Test DB here. Add some emojis if you
+want.There we go. And then one of the first
+things we well first let's trycatch cause it might break, we're doing
+anything related to the database.Or anything Async really just might break.
+The first thing we wanna do is drop
+everything in the Databasethere's a lot of waysto do this in Drizzle. I chose to do it
+this way just to show you a different way
+ofinteracting with the database. So with the
+database you can do something called exec,which takes in a raw SQL.Well, you can then use this template
+tagged SQL object that's really cool
+because it's.You can substitute your tables and it will
+infer the SQL names and things from
+them withoutyou having to write them yourselves, so
+it's pretty cool.So this template tag SQL, I can just
+say cool,drop. Table if exists.This entries table. And then Cascade,Any relationships. I do the same thing for
+all of these,so that's entries. This is habits.This is users. This is Tag Andthis one is habitTags. Cool, so we're gonna
+drop the database.As soon as we startthe test, so whatever's in the database is
+gonna get dropped, so this is why you want
+your own Databasefor tests. The Next thing is Because our
+test Databaseis probably not gonna be up to date on the
+latest Schema,we want to go ahead and push whatever the
+latest Schema is right now to the test
+database as soonas we run test every single time,
+otherwise you'll have to manually keep
+your test Databases Schemaof the day, whatever Schema changes you
+have.You can just wait till you run the test
+and have this script do it for you, so
+that's whywe have that, so I'm gonna say.Let's run that command. I can.Get my rocket ship, so I'll say pushing.Schema using Drizzle Kit.There we go, and what we wanna do is we
+just say exec sync.This takes in whatever you would run in
+the terminal,so in this case I'll say.npx Drizzle Kit. Push, but insteadof using The configuration that we have
+from the Drizzle config thatI set up for you that takes in this
+database URL we're gonna supply our own
+database URL with a flagso I'll say URL isgonna be whatever. The process.env. database. URL is you might be asking
+why don't I just importenv and use that instead of process.env since we made that file to do this.Well, that's because that ENV is for
+loading up the ENV for the app.I'm just loading up test.This might have a different set of, I
+don't wanna do all that validation like I
+don't wanna have torequire. All those env environment
+variables.Just to run tests. Now, if the tests
+import files that have their own
+requirements,that's fine, but I don't wanna like.That .env file that we made is not.It's not switching on a test environment
+or whether or not in a in a specific
+environment variable isrequired or not if you're in testing so I
+don't wanna import that whole file so I'm
+just gonna useprocess.env here. So we got that.Oh, I need to wrap this in a string too,
+so.Put that in the string and then the other
+flag I wanna pass is.Hey, this is where my Schema is, so don't
+forget about that,so I'll say, And this is like from the
+root of our project,so this will be source DB.Schema.ts like that. And then the lastflag I wanna pass in is dialect.To tell Drizzle that hey, we are indeed
+using postgres.Cool. And then I can pass an option here
+ofstandard in out, which basicallymeans. I want So a child process is like
+opening up another terminalIn the background and Iwant that terminals, output. To be
+inheritedby this process that's running it so
+basically show me it's terminal in this
+terminal.I wanna see all of its logs here in this
+terminal too, so inherit that.And then what is the current working
+directory?It is process. Current working directory,
+the one that I'm in when I ran this
+command.Cool, so then we can just say console.logtest database created.There we go. If something failed.we'll just log that. Failedto. Set up test DBCool, and then the erroritself. Got it, and then I'll still throw
+an error.I wanted to lock down.And then, lastly, what I wanna do is.I can return a function in this setup
+script, and then Vitest will run that
+function,When the when the allthe tests are done essentially, it's the
+it's the clean up.So what do I want to do when I clean up
+and it's basically the same thing,you could, you could just copy.Pretty much everything we did here, like I
+wanna do, I'm gonna do the same thing.I mean, technically I guess you don't have
+to since you clean it up when you started
+it, but Ijust wanna also clean it up when it's
+done, just be religious about it,just in case I use the test Databasefrom another program that doesn't have
+this startup process for some reason,I wanna also leave the test database clean
+when I'm done with it.Leave it as I got it, so I'll return a
+function here.Like this. And I mean, you can just do the
+same thing.I'm not gonna try and catch it, try catch
+it, but You would want to try catch it and
+justdo literally do the exact same thing,
+right.Well, now it's bothering me because now I
+have to try catch it cause I was like I
+can't dothat and this is I've been burned too many
+times.Do that. Cool, I'll just do the same thing
+here.Here we go, boom, OK.And then, lastly, process. Exit.Zero, otherwise this will just hang, and
+you're like, why is this not,it's done, but it's not done. You gotta
+stop it.

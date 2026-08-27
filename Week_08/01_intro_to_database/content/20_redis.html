@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ใช้คำสั่งพื้นฐาน Redis เช่น SET GET INCR MSET EXISTS และ DEL" />
+    <title>เริ่มต้นใช้งาน Redis — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>เริ่มต้นใช้งาน Redis</h1>
+
+      <p>เริ่ม Redis ผ่าน Docker ด้วยคำสั่งต่อไปนี้</p>
+      <pre><code class="language-bash">docker run -dit --rm --name=my-redis -p 6379:6379 redis:8.6-trixie
+docker exec -it my-redis redis-cli</code></pre>
+      <p>คำสั่งที่สองจะพาเข้าสู่ Interactive Shell ของ Redis จากนั้นเริ่มด้วยการเขียนและอ่านค่าพื้นฐาน</p>
+      <h2>SET และ GET</h2>
+      <pre><code class="language-redis">SET name &quot;Varis Dara&quot;
+GET name</code></pre>
+      <p>คำสั่ง Redis ส่วนใหญ่เรียบง่ายในลักษณะนี้ เราส่งชื่อคำสั่ง เช่น <code>GET</code> หรือ <code>SET</code> ตามด้วย Key เช่น <code>name</code> และ Value เช่น String <code>&quot;Varis Dara&quot;</code></p>
+      <h2>การตั้งชื่อ Key</h2>
+      <p>การใช้ชื่อแบน ๆ อย่าง <code>name</code> ไม่เหมาะกับระบบจริง PostgreSQL มี Table และ MongoDB มี Collection สำหรับแยกกลุ่มข้อมูล แต่ Redis รวมทุกอย่างไว้ด้วยกันและใช้ Key เป็นตัวแบ่ง เราจึงต้องออกแบบระบบชื่อที่ทั้งแยกข้อมูลและค้นคืนได้ง่าย</p>
+      <p>แนวทางมาตรฐานคือใช้ <code>:</code> แบ่ง Namespace เช่นข้อมูลผู้ใช้ <code>btholt</code>, <code>sarah_edo</code> และ <code>scotups</code> อาจอยู่ที่ <code>user:btholt</code>, <code>user:sarah_edo</code> และ <code>user:scotups</code> ส่วนข้อมูลการชำระเงินใช้ <code>payment:scotups</code> หรือเพิ่มหลายระดับเป็น <code>user:address:btholt</code> Redis มองทั้งหมดเป็น String Key และไม่บังคับรูปแบบให้เรา</p>
+      <p>บางระบบใช้ <code>/</code> เป็นตัวแบ่ง แต่ควรใช้ <code>:</code> ตามมาตรฐานชุมชน เพราะเครื่องมือบางชนิดอาศัยรูปแบบนี้ Key ของ Redis รองรับ Binary และยาวได้ถึง 512 MB แต่ไม่ควรใช้ Binary ขนาดใหญ่โดยตรง เพราะเปรียบเทียบช้า หากจำเป็นอาจ Hash รูปภาพด้วย MD5 แล้วใช้ผล Hash เป็น Key</p>
+      <h2>INCR, DECR, INCRBY และ DECRBY</h2>
+      <p>การเพิ่มหรือลดตัวเลขอย่างรวดเร็วเป็นงานที่พบบ่อย เช่น การนับ Page View</p>
+      <pre><code class="language-redis">SET visits 0
+INCR visits
+INCR visits
+INCR visits
+DECR visits</code></pre>
+      <p>ทุกครั้งที่ผู้ใช้เปิดหน้าเว็บ แอปส่ง <code>INCR</code> ไปยัง Redis ได้ทันทีโดยไม่ต้องอ่านค่าปัจจุบันก่อน ส่วน <code>DECR</code> ใช้ลดค่าทีละหนึ่ง</p>
+      <p>ถ้าต้องเพิ่มหรือลดมากกว่าหนึ่ง ให้ใช้คำสั่งที่ลงท้ายด้วย BY</p>
+      <pre><code class="language-redis">INCRBY score:seahawks 6
+DECRBY score:broncos 3</code></pre>
+      <h2>MSET และ MGET</h2>
+      <p>เราสามารถเขียนหรืออ่านหลาย Key ในคำสั่งเดียว</p>
+      <pre><code class="language-redis">MSET score:seahawks 43 score:broncos 8
+MGET score:seahawks score:broncos</code></pre>
+      <p>หากต้องทำงานหลายรายการพร้อมกัน Redis ยังมี <a href="https://redis.io/docs/latest/develop/clients/jedis/transpipe/">Pipeline</a> และ <a href="https://redis.io/docs/latest/develop/using-commands/transactions/">Transaction</a> ซึ่งอยู่นอกขอบเขตบทนำนี้</p>
+      <h2>EXISTS</h2>
+      <p><code>EXISTS</code> ตรวจว่า Key มีอยู่หรือไม่ จึงช่วยป้องกันการทำงานซ้ำ ตัวอย่างเช่นโปรแกรมสำรวจเขาวงกตที่ต้องจำว่าเคยผ่านพิกัดใดแล้ว</p>
+      <pre><code class="language-redis">SET plane:0:0 visited
+EXISTS plane:1:0
+SET plane:1:0 visited
+EXISTS plane:0:0
+EXISTS plane:1:1
+SET plane:1:1 visited</code></pre>
+      <p>โปรแกรมตรวจแต่ละตำแหน่ง หากเคยไปแล้วก็ลองตำแหน่งถัดไป <code>EXISTS</code> จะคืนค่าจริงหรือเท็จตามการมีอยู่ของ Key</p>
+      <h2>DEL</h2>
+      <p>เมื่อต้องลบข้อมูลออกจาก Cache อย่างชัดเจน ให้ใช้ <code>DEL</code></p>
+      <pre><code class="language-redis">SET greeting hello
+EXISTS greeting
+DEL greeting
+EXISTS greeting</code></pre>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="19_key_value_store.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="21_redis_command_options.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

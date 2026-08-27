@@ -1,0 +1,201 @@
+Cool, let's do some Routing, so.We talked about Routing a little bit, it's
+essentially just a combination of a verb
+and a pattern,right? So first let's understand these
+verbs or what you might also hear as
+methods,so. ACTP itself has a few methods.It's actually in the spec. You can ACT
+spec.Oh God, it's gonna be one of those, oh,
+yeah, I'm not reading that, oh.I'm not reading that, Here we go.They have it in here somewhere. Let's see,
+that that's.Oh, Here we go, HTTP request methods.So this is in the spec of HTTP so we're
+not gonna talk about all these methods
+because they don'treally relate into what we're doing with
+an API, but the ones that matter,we will talk about. So let me go back to
+thatWherever that There we GoSo the ones that reallymatter are gonna be Gitque. So if you ever
+typed in a URL into a browserand hit
+enter,you did a Gitque. That's literally what a
+GET request is.Going to a website is doing a Gitque. It's
+the same thing.So for that reason, most Gitques typically
+return HTML statistically because most
+people just go to websitesThose things return HTML, butthey can also return JSON. They can return
+anything. Our API is a JSON API,so we're returning JSON, but statistically
+I would say most get requests probably
+return H HTML.It's purpose is to getthings. That's why it's called Git.
+Typically get many things,not get one thing. Well, I guess it really
+depends on the URL,but so it could, it could indicate either,
+but it's typically meant to like,I want to get something from the server.Post is I want to create something on the
+Server.So I wanna sign up. I wanna create a new
+habit.I want to log a new thing.I want to make a new post on LinkedIn.Those are, that's why posts on social
+networks.Are probably called posts because they're
+doing a post in the API, you you're
+literally posting somethingto the Database. A put Is a type of update
+so a put isit it's more of a replace a put is like I
+wanna find this thing on your server and
+replaceit entirely with this new thing.That's basically what a put is.I wanna, I wanna replace something, so
+pretty much everything but the ID is gonna
+change.That's essentially what a put would be.A patch is what you would probably think
+of update is, which is like I partially
+want to update somefields on this thing in your database so I
+wanna change my username.I want to change my email. I want to
+update a time stamp that would be like a
+patch anda delete is exactly what it sounds like it
+is to delete something.It is to remove something, some resource
+from a Database,and I'm using database here.Data you don't need a database for any of
+this stuff to make sense.This is just typically what.I mean the whole point of an APIs is to
+sit in front of a Database.I'm assuming you have a Database, and
+that's why I'm mentioning Database,but like none of this has anything to do
+with the Database.It's just These are verbs to describe
+intent,right? This is so how your system and
+other clients and other servers can
+understand the intent of therequest just by having these verbs that's
+what they do they describe intent and a
+lot of softwareassume that you know theymake a lot of assumptions based off that
+intent, right?So. You know, browsers would do specific
+things for like Git and post and put andpatch and delete as far as like how they
+show you stuff, what status codes they
+expect to get backstuff like that so it'shard, it's hard grain into most of the
+software that we use today,these verbs, so all you really gotta
+remember is like.These 5, there's probably another one that
+might make sense,which is called the. Options header that
+has to do with C,but we'll talk about that later. But for
+the most part, this is it.This is really if you do GraphQL.You really only care about?One of them, that one, maybe Git, you can
+do get with Graph kill too, but really you
+only careabout that, you don't care about anything
+else, because You don't have to follow it
+if you don't wantto. Like I said, they're just there to
+help you describe intent, but you don't
+have to do any ofthis. No nothing stopping you from saying,
+you know, I'm gonna make a post request.That acts like a GET request. Yeah, I
+guess you could, but that's really hard
+to.Understand, you know, it's not a common
+thing, so.You know, you're gonna, you're going to
+have to explain that in a certain way and
+that's what Graphidoes. Graphih does that, but they own like
+the whole stack so they can get away with
+stuff like thatAny questions on that?Oh OK, so let's talk about Res.Anybody here knows what REST is?Ever heard of that? Oh, it's good cause I
+actually don't know what it is like I've
+been using RESTmy whole life and I still don't know what
+it is like people it.Yeah, I know there's a REST speck out
+there and like it came from Ruby and rails
+and all thatbut like. There are somany flavors of this. There's so many ways
+people do this,and eventually you get to the point.Specifically around relational data that
+all this just breaks down.So let's just assume we're not doing crazy
+relational highly nested data.And then the REST is fine. So how does it
+work?It typically is for every resource that
+you have,you could think of a resource as like
+something that a client can access.So on our app a resource would be like a
+user, a habit, an entry,you know, a tag. Those are all resources
+that a client can get access to.For each one of those resources you will
+have a.You would have what I would call CRUD
+Routes.So CRUD stands for. Create, read, update,
+and delete ordestroy. Those are CRUD routes, so those
+are 4 things that you can do on a
+resource.So typically that doesn't mean you'll just
+have 4 routes.It just means those are the 4 things you
+wanna do. You'll probably have more
+Routes.So in this example here are the CRUD
+Routes for the user's resource.So we have 2 routes for Git this one.Just based off of the URL I can tell you
+it's trying to get all the users,and I know that because it doesn't specify
+a specific user with an ID.And if you wanted to get just one of those
+instances of the user you would have to
+add anID as the following path to that resource.So this first one is giving me all the
+users. This next one is like give me the
+user whoseID is 123. According to REST, that's how
+you would do that.This, so those two are theare the, the R ofCRUD Re. They both read, one gets all, one
+gets one.Post, this would be the create the C of
+CRUD.This is how you create a new user. You
+don't have to.Have an ID here because you're creating a
+user you don't know what the ID is so you
+notsending an ID here but you are sending the
+payload.So for instance if you wanted to create a
+user in someone's Database, let's say that
+Sign Up,this is where you would send your email
+and your password so you can sign up.So they're typically. Typically on any
+request that modifies a Databaseyou're sending up data tooSo if you look atthese types of requests, which of these
+requests do some type of modification?It's gonna be post, it's gonna be put,
+it's gonna be patch.Technically, delete does do a
+modification, but you really only need an
+ID to delete something.You don't need to send like a payload, so
+I'm gonna say delete's probably the only
+one,but post, put and patch, the ones that all
+start with a P,you will be sending something up because
+otherwise how would the server know what
+to put.How would it know what to modify? How
+would it know what to modify and modify
+with if you didn'tgive it that payload? So whenever you see
+any of these methods that start with a p
+think payload.Post, payload, put, payload, Patch
+payload.You gotta send a payload up as well. The
+Git, you will almost never send anything
+with a Git,OK? So, this next one put this is saying I
+want to update the entire userat, location 123, so find user whose ID is
+123 andreplace it with this payload that I gave
+you.This next one is patch find user 123 and
+just update the specific fields on that
+userRight, and the last oneis find user 123 and delete them.And that's the, for the most part, that's
+REST.It does get a little more complicated with
+like curry strings and like nested
+resources and stuff,but Oh boy, just pray you never have to do
+this.Just pray you never have to do that.It's just, this is where people just start
+making up stuff.This is where people start making their
+own query languages,and you'll see tons of different query
+languages that people will try to push as
+a religionAnd it's all bad, sothis is why Graph Fiel was created. I'm
+not saying Graphfield is great, it solves
+one problem,but this is the problem that it solves is
+that like how do I get a user and then
+jointhe habits table to that user and then
+like the habits also has tags and then how
+do I getwhat's the URL for thatAnd it's like, oh wellhow would I just makelike a query string and you can pass me a
+JSON object describe like,OK, you're making a query language, you
+know, at that point you're making your
+queer and now I have tolearn it and it it's not gonna be useful
+anywhere other than this one example in
+this companyso it's not worth melearning. So again things like GraphQue
+will come out to help solve that,but for the most part it's just thisjust remember this.Everything else is elsewhere, yes.So for REST, are we using REST then
+primarily for the course?We will be following this highlighted
+implementation, yes.OK. Yeah. Would you say is really just to
+follow a standard and to easily recognizewhat your APIs are doing? Exactly.E itself
+is just like a promise but amongst usall that we'll play nicely and do this,
+but there is no Framework,there is no Validation, there is no.Anything outside of like I promised to do
+this.And you better hope I did it, you know,
+that's it.That's so there is no, there's none of
+this is like codified anywhere,if that makes sense, right? It's just.A way that we do things, and it's because
+of that it gets interpreted just likeyou know, like for instanceof the law, people interpret the law in
+different ways, right?They read the Constitution they read this
+and it's like, well this is how I
+interpret it.Same thing, you might read the respect and
+like, well, the way that I interpret that
+is that like I'mgonna make a query language and it's like,
+OK, that's not what that said,but I get it, but you have other things
+that are actually like codified like a
+graph QLor You know, a tRPC or something like that
+where it's baked intothe code itself and it's enforced where
+like if you don't actually follow this
+either a it won't workorb you'll get an error that's not how it
+works in REST.You could make it work that way, but you
+gotta build that so.Yeah. Do you, do you think we'll get into
+like giving me a user with his habits and
+his tagskind of a.We will get into that.The way that I do that now, if I were to
+do this and the way that we're gonna doit here, is I'm just gonna assume that you
+do want that.I'm gonna error on the side that you
+always want that populated.I'm just gonna give it to you versus,
+right,versus you asking for it. I'd rather just
+send you more than you ever wanted.Then having to figure out a way for you to
+ask only for what you need.In this example, in a production example,
+obviously that's like very costly and it
+can lead to like issuesand stuff like that, or you could just do
+that and just like.Go absolutely berserk on an insane Caching
+strategy, and it doesn't matter,but Yeah, I don't know.RE is one of those things where I just, I
+just not a fan, not a fan of BES inmy opinion. It's just like, I don't know
+if I was gonna build an API for developers
+to consume,I'd probably use GraphQL. If I was gonna
+build an API for my app to consume,I would make very specific routes just for
+that app and nothing else.I would make REST like I don't want my
+Frontend app to consume these little
+pieces and putthem together on the front end. I wanted
+to say, give me everything for this page.And then I get everything for this page.I don't, I don't need to be broken down
+like this. I'm making both the front end
+and the backend. Just give me everything for this page
+and one request and I can Cache that
+versus how do Iput all 6 of these requests together in
+one page to get everything for this?Why? Like you making both just make one
+request, so that's how I think about it.

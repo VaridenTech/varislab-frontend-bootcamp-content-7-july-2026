@@ -1,0 +1,108 @@
+We left off on signing users up, with the
+controller that we created for the
+register route andthe validation tested that everything
+looked good and now we need to sign folks
+in,which is very similar to signing up just
+slightly different.So, for signing in the strategy is
+basically a user givesus their email and their password, and you
+could do username too if that's something
+you wanna do.We will then try tolocate a user in the database by that
+email.If we do, we will then retrieve their
+hashed password from the database and then
+we willcompare the hash password to the password
+they sent upon Sign In tosee if those values are the same and if
+they are,we will generate them a JSON Web token
+and sign them in and send that back.And that's Sign In, it's pretty simple. So
+a lot of places in which that can short
+circuit,the first place is we look in the Database
+to see if this email exists.If this email doesn't exist, then you are
+not a user in our database and you can't
+Sign In,so we'll just redirect you to sign up. If
+there is a user database with that email,but the passwords don't match, that when
+we compare the hash versions,then Maybe this is you, we don't know,but at least there's for sure is an email
+in the database with this email, but the
+passwords don't matchEither you just forgot your password or
+this is someone elsetrying to log in as you and guessing the
+password.Either way, we're not letting you in. And
+then Yeah,those would be the only two short circuits
+here in this example, so.But before we do that, let's take a little
+quick trip of password verification.So I talked a little bit about it. We know
+what hashing is from what I told you.Comparing is just a little different, but
+basically,It's a way that we can hash a password
+without really knowing what the original
+valueof the password is. So what we did like
+during sign up was right,we would. Take a password we would hash it
+we add some rounds or Salt hereand we get back this hash thing, right?So if I go look at.This user here, I can see.They have this hash value right here, OK?What we want to do for the compare during
+login is we wanna take the plaintext password that they send up when they
+log in.And we wanna compare that to the hashed
+password to the users whose email matches
+the emailthat they sent when they signed in and
+it's gonna return true if they were so
+diving a little moreinto the anatomy of that Bcrypt hash, I
+talked a little bit about this, but if we
+were to breakthis down and you do not need to, I
+promise you will never have a job where
+you need tounderstand this unless you are working
+security.So if you think you need to know this,
+what I'm about to say you don't.I just learned this like a year ago, so
+it's not that useful.It's just like. Something you can put in
+Slack to make yourself sound smart,but you're never gonna, you don't need,
+you don't need to know this.I just thought it was cool, so I like to
+share things.So if we break this down.The first, these first two parts here,
+with the dollar signs,those are called parameters, right? And
+the first one is the,algorithm version, that's the first partso this dollar sign, tothe dollar sign. And then the Next one is
+the cost factor,so which basically determines. How
+expensive this process is going to be,so like you wanna find a high enough
+number to be hard against brute force
+attacks,but like not too hard, to where it's slow.So it depends on what computer you're
+doing, you're running on and things like
+that.The Next one. Is the Salt, so the Next 22
+characters,this is basically like. The reason we have
+a salt is because if two people have the
+same passwordwhich is fine, we don'thave any restriction in our database from
+two people having the same password,but we don't want their hashed passwords
+in the database to be exactly the same
+because.That's giving that's telling me as an
+attacker that like OK maybe I don't know
+these passwordsbut I know all 10of these people have the same password
+because their hash passwords are exactly
+the same.So if their hash passwords are exactly the
+same, all I gotta do is figure out what
+that one passwordis and I have access to 10 accounts.Right, so to prevent people from having
+the same hash value even though their
+passwords are the samewe introduced something called a saltA salt is just a uniquething that gets generated for every hash
+that gets added to your hash password no
+matter what your passwordis. So that way, even if you and I have
+the same password,our hash password in the database won't be
+the same because our salts are different.Does that make sense? OK.So, basically, yeah, the Salt just ensures
+that two users have the same password,their stored hashes will be completely
+different.And then and then and then the last part,
+the remaining characters is the actual
+result of hash of theuser's password with the Salt, because if
+we don't use the Salt to make this hash,the Salt is. Kind of useless because then
+as an attacker I'll just look at the
+characters after the Next22 characters like oh cool you got
+different Salt but all your characters
+after those other 22 charactersare the same so you still have the same
+password. So the Salt actually is like you
+could think aboutit as like a randomness factor that goes
+into hashing your password.So hashing in and it's in its sense is
+deterministic,but you can introduce entropy or
+randomness or RNG.Random number generator into that factor
+to get some bit of randomness from it and
+that's what the Saltis, and then that Salt itself is
+randomized.Yeah, that's the best way I can describe
+it.Yeah, there's something like called a
+timing attack.It's basically when, I cantell how long I can measure how long it
+takes,you know, the comparison function to work
+and then that would tell me like how many
+rounds it might havewhich helps me guess the SaltSo to get around thatbcrypts compare function isconstant time. It's the same time no
+matter what, so it doesn't matter how many
+charactersmatch, it's gonna take the same amount of
+time it's a constant time so nobody can
+time that and tryto figure out what that is. It's always
+gonna be the same amount of time during
+the compare.Now that's different than the hashing
+where if you have a higher Salt there's
+many rounds it could take longer the compare is always gonna be the
+same time.

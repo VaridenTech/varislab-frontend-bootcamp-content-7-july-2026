@@ -1,0 +1,317 @@
+So then we'll make a schema using Zod.It's kinda cool how Ido this. I still to this day think this is
+kind of clever and basically what I wanna
+do isI wanna put the keys here of the
+environment variables.That I expect to have, so I expect to have
+no the and V.And then I put the Zod schema here.So in this case I expect Node EV to be an
+enum.If you don't know what enum means, it just
+means one of these.That's all it means it's gonna be one of
+these. That's what I know means, it's.It's short for enumeration we're
+enumerating over a select amount of
+options.I think they could have they could have
+called it something else. I don't know,
+it's called a enum it'spredates all of us, but that's what it's
+called.I think Node EV, thethree values that No EV typically are
+developments.Test And, Production very similar to our
+appstage, which is why it's misleading that a
+lot of people use it,so we'll do that, but we'll also set a
+default to for now,we'll just default to. Oh my god, it's so
+hard to type those computer Develop.And then I wanna do my a stage, which is
+pretty much like the same thing,so I'm just gonna copy that, put it down
+here, change this to a stage.And I think the only thing I do here is I
+change this to dev and not Deve, and Ialso just default to dev here.Got a bunch of other environment variables
+that I expect to have and I'll talk about
+them as I do themSo port right now we hardcoded a port,but when you deploy this, you get assigned
+a port.You don't get to pick what port you have
+when you deploy this, so.We need to, not hardcode our ports and
+instead dynamically use them from the
+environment variables.That's the number one environment rebel
+you'll use when you deploy a server is a
+port.You're never gonna be able to. Deploy
+anywhere.So what I wanna do here though is I can
+use this cool thing called coerce because
+port should bea number, but technically every single
+environment variable ever is gonna be a
+string no matter whatyou put in it because it's just text.It's always gonna be a string, so I can
+use Zo to coerce it to the type that I
+wantit to be. So I'm going to coerce this
+port.To be a number causeExpress expects a number ormaybe expresses. OK, it's fine with the
+string,but you probably wanna pass in a number.Gonna say positive number and I'mgonna default to what we hardcoded, which
+was 3000.There's some other ones on here like Hosts
+and things like that.You could do those, we're not really gonna
+use those, depending on what.Provider you have, you might have to puta host or not, I'm just gonna put the ones
+that I know we're for sure gonna use,that's gonna be database URL.We are for sure going to use that and
+that's just going to be a string like this
+and thenI'm gonna add some extra validation on
+it's gonna start with and it's gonna start
+with this post.Grass QL. Protocol or would this be a
+protocol or a scheme,I guess. Technically it's a protocol, so
+if you're looking at this like.What is this? HTTP and file aren't the
+only protocols forURLs. Anybody can make any protocol they
+want for any type of URL.If you've ever done mobile development,
+every single app on your phone has their
+own version of thisThis is how they open upURLs on your phone with deep links and
+universal links, databases,as we'll get to have their own protocols
+for their databases using like TDP or.That's no use TCP. I'm sorry.I'm pretty sure databases use TCP unless
+it's like a service database for Postgres
+they have their ownprotocol URL and it's prefixed with
+posttress QL.This is how you know it's a postgress
+database,So yeah, it's like HDP, but it's not that
+protocol,it's a different protocol, but they're all
+URLs.We're gonna use posttress, so whatever
+stream you pass in for the database he has
+to start with thatotherwise it's gonna break.Is that just like a validation thing?
+Yeah, it's a validation thing.We're gonna write the code that validates
+this against the environment all the
+environment variablesand then when we startthe server up, we're gonna import this
+file and it's gonna run in validation and
+if any one of thesethings fail, we'll get an error and our
+server will stop.That way we literally cannot run the
+server without.The proper environment variables which as
+someone who's ran into that problem for
+years,it is a common beginner problem to not set
+the right environment variables just to
+find out like theworst part is you set an environment
+variable.But it was the wrong value and that caused
+some issues down the line that you don't
+figure out untilmuch later so this doesn't help you with
+setting the wrong value but it doesAt least eliminate a lotof this stuff. Cool, JWBT Set, we're gonna
+need that,cause we're gonna do some JWBT stuff,This is just a string It has a minimum of
+32,like that. And then you can pass a custom
+error message.I'm gonna say it must be 32 characters
+long.So that way when error is out, you know,
+it'll tell you, so you do that.JWT. Expires in.Oh my God. There we go .This is just a stringIt's just like, it's a special syntax that
+describes like how many hours,days. Whatever, You want this state of tea
+to expireI'm gonna say 7 daysDon't worry if you knowwhat JWTs are, we'll get there, it's just
+how we're gonna do off.The other thing we'll use is.Decrypt rounds. The crypt.Rounds, is that something to do with like
+hashing passwords?We'll talk about this as well. It's gonna
+be a number, so I want to coerce it.It's a great number. And a minimum of 10
+and a max of20. How did I come up with those numbers?I didn't. I actually asked AI want some
+good.Mein and Mac for decrypt rounds cause I'm
+not a crypto expert.Cool. There's some other ones in here, we
+don't really need them, but I put them in
+there as anexample of different things that we could
+do. All right, so the last thing we wanna
+do is,Validate this, right?So, first thing I wanna do is I wanna make
+a type, so I'm gonna export this type
+here.I'm gonna call it ENv and I'm just gonna
+say Z.Infer. This is where Zo gets really cool
+because you can.Create a TypeScript type by.Inferring the type of aZod schema. Which I actually need to dothat. So what does that actually mean?Let me, let me walk through this. So Z.Infer takes These things are this is this
+is called like a generic essentiallythis is the best way I can describe this
+is like passing in an argument to a type.It's the equivalent of passing an argument
+to a function but you're passing it into a
+type because thistype takes in. A type as an argument and
+it does something with it.We'll actually make some code. Well, we'll
+write some code to you that does a similar
+thing.This is the advanced stuff of TypeScript
+that I say I know how to do.The other stuff I don't really know how to
+do. So this is really cool so.I've actually gotten to thepoint now where I actually almost never
+even write TypeScript types and TypeScript
+anymore.I almost always write them in Zod, and I
+just infer them this way that way I can
+still getthe benefit of having the TypeScript type
+checking at dev time and build time,but also get the additional benefit of
+type checking with Zod at runtime with
+just one schema.So that's something I've been doing a lot
+lately, but maybe it's just overkill.So then I'm gonna sayENV which is gonna be our final object.
+It's gonna be this type of ENV.And then we need to build up our objects.
+So first I'm gonna, I'm gonna try catch
+this because ifwe wanted to throw an error and we wanna
+like catch that error.Zod's gonna throw error if any of these
+validations failSo what we wanna dois we just wanna say ENV equals we can run
+this function called parse.I'm sorry, in these schemaparse. Like this and thenthe cool thing is we can just pass in this
+whole object right here process.ed.That's an object. Like I said, I'm not
+gonna log it. You can log it if you want
+if youwanna see what it looks like it's gonna
+log every environment variable on your
+computer right now.And it's just a it's just an object, it's
+a key value object.It looks very similar to this.It's got these keys and then it has not,
+you know, obviously not these definitions,but it has like values.So we're gonna pass that whole object into
+here and parse it and it's gonna validate
+whether or not thisis true. If any of that fails, it's gonna
+land here in this catch and then we only
+wanna handlethis if it failed because of a Zod issue
+and not some other issue that's going on
+with your computerSo first we say if error is likean instance of a Zod error.So error like that, then we know that
+like,this was. Validation issues, so then what
+we can do is we can just you can justlog it. You can do whatever you want. I'm
+gonna log it. I'm gonna say invalid,Eviva, I'm gonna do thatand then. What you can do is you can
+flatten it completely because what I've
+noticed with theZod errors that they're heavily nested
+like array of errors so you can just
+flatten them,and log it so I'llsay console. Error and I'll say JSON.This is a cool trick right here. So if you
+string ay.An object Or an array.You can, you know, likewhen you, when you log stuff and notde
+sometimes if it's more than 3 levels deep,it won't show you the third level. It'll
+just abbreviate like,oh, here's an array or here's an object.
+If you stringify it it'll show you all of
+it.So string ofify it helps you get past
+heavily nested things,then I'm gonna flatten this array.Actually, that's got to be E.And then That's gonna have something
+called field errors on it.And then null 2 is something you can do in
+string of 5.This basically means, formatted with
+spaces of 2,intent of 2. So it's otherwise it'll just
+be like printed on one straight line and
+look like somebodyminiified it look bad. Reality you want it
+to look like.This indented, you know, each property is
+on a new line,everything's spaced out proportionally,
+that that's what No too is gonna do inside
+a string of 5.OK, so we got that.And then, for each one of these we'll say
+for each,we'll grab the error. And we'll get the
+pathOK. Yeah and in caseof path that we're not talking foul paths,
+we're talking.The path that's on this object because
+this object could have been nested so Zo
+just given us the pathon this object and where like which field
+actually failed essentially that's what
+it's telling us soWe'll get that path.He thoughts. Have to join those back up if
+we need toand then we'll just logthis console. Log. And thenthe actual message, so the way it'll read
+it will say like.What the error was andthen. What message for the error, like for
+instance we have a custommessage here it must be 332 characters
+long, so the path for this might have
+been.You know, invalid men length, and then the
+message will be this.That makes sense, so. Message.And then after that, Here's a cool little
+trick,we could do this thing called pro.exit.And we can pass it at number one. What
+does this mean? This is, this is how you
+kill yourserver. So remember I said the only way to
+stop a server is if it throws an error,
+you closeyour computer or you stop the terminal by
+hitting.On a Mac, it's ControlC to stop it on Windows.I think it's. Might be Alt C.I don't know what it is on Windows, but on
+Mac it's Control-C to stop it.Well, if you also do process.exit in your
+code, you will stop it and depending on
+what number you passin here, this will tell the terminal.Whether or not it closed with an error or
+not.1 means it closed with an error, 0 means
+it closed with no error.So as you process that exit 1, that means
+this thing died,and then otherwise if this was not a Zod
+error.Just throw it like youwere gonna throw it anyway.Of course. I'll just mention that if
+anybody's new to Zod or wants to learn
+more about scheme of ValidationSteve Kinney just released a coursea full stack type scriptwith Zod course that covers kind of scheme
+of validation in that case between client
+and serverapplications but goes pretty deep into Zo
+Odd.I should watch that course.I can learn a lot. The last thing is I
+like to include these other helpers here
+which are functionsthat I might use throughout the app. So
+like it's very similar to what we had at
+the top,but these are gonna be based off of the
+ENV once it gets solidified,so now I can say app stage equals
+production and I'm gonna do the same thing
+for.It's deaf. Upstage is deaf.Because in our app we'll be doing
+different things like in testing or
+there's so many different thingsthat we might do depending on what
+environment we're in, so I don't wanna
+have to.Oh wait, did I already have something
+here? Oh yeah, let me change that to this
+testing.There we go . I don't wanna have to write
+this every single time this is gross
+because likewhat if this changes? What if it's
+something else we want a single source of
+truth.And then to my standard exports, soENV export, default, ENV. Cool, so we got 
+that.Let's head over back to our index.Instead of putting port here, we're gonna
+import our ENV.And I'm gonna say ENv.Aha, look at that port.It's there. Type check, ready to go .All right, so let me clear out myLet me clear up my .env file and let me try
+to start this server and yeah,if you, if you change your .env file, you
+will have to restart your server that
+won't trigger a rebuildfor Dvmode. So you can see I got rid of
+everything in my .env file,so I got those two errors. The Database
+URL is required,so it broke. JDFT secret is required, so
+it broke,and you can, you can see right there is
+saying database you're required, JDFT
+secret required.You can just write stuff for thosefor now. It doesn't matter. I have a
+database URL for JTT Secret.You can just literally put any 32 length
+string that you want or you can just.Comment that out here wherever you wanna
+do it, you can do whatever you want we
+haven't gotten to ityet. I just wanted to show you that it
+works.
+
+23.6
+00:16:31.830 --> 00:16:34.169
+OK, so I got that.Go back to our index.We got our port here. I'm gonna change
+this to also say.PMV.port change that to Interpolate.There we go , and Oh yeah, I gotta savethat file. Here we go .Cool, and there we go , I'm back.I got a log here that says no ENV fault
+present for the current environment,so it is default to the .env and that's
+just what,This thing is doing righthere. I didn't pass in a name, so it
+always just default to .env.Did you run NPM install and then Zod.That's it. And then that will show up in
+your pack if youever see. Error saying cannot find a
+Package and that's a package that youare expected to have been downloaded then
+just NPM install that package.You you're gonna run into that for the
+REST of your life.I don't think a day goes by where I don't
+see that issue.Does everybody understand environment
+variable? When and how did they get set?When and how they get set? That's a great
+question.So when and how do environment variables
+get set?Locally they can get set in many ways, but
+the one way that you will most likely set
+them locallyIt's through an .env fileso we write them into an .env file like
+this.I think the thing that's magical or like
+OK well how does something like this in
+the .env file whichis let's just, let's just be honest, it's
+just a text file, how does this get.Enabled To be used In our code like this,where is that happening? Yeah, so there's
+a little magic.And that's what this is doing this load
+ENV, what it does is.It will synchronously. Go and look at,
+let's say in this example on Develop,it will go look at this file, it will read
+the file,it'll actually read the file, take the
+contents of this file.Iterate over each one of these variables,
+and essentially we'll doIt'll set them for us, right? So like if
+it's, it'll take each one of those
+variables,let's say we have a database, right, so
+database.I'll take David URL, it'll say.process.env. Davis URLs equals to whatever
+that was in here and it'll setit for us because that's how we would set
+it that you can set environment variables
+yourself and yourcode by doing that followed by equal sign.
+So this package is doing that for us.It's just looping over each one of those
+and setting it for us synchronously.So that means, and that's important
+because that means by the time we get to
+the next line all theenvironment variables are already set. If
+it did asynchronously.You might run some code before the
+environment variables are set and you're
+screwed,right, so. That's how you do it locally in
+production.You will, you'll see when we deploy it,
+tomorrow you're gonna wherever we deploy
+there's gonna be a settingspanel and they're gonna have a place where
+you can add these environment variables.You can put the name and then the value
+and then you can say,you know, for production or for staging or
+for whatever app stage you have deployed,you can set those there and.Because when you do that, those will be
+assigned to your process.Ev automatically so therefore we don't
+need to do this.Because the hosting platform already put
+them on the process.Ev for us, so when we get down to here.And we parse the process at ENV those
+environment variables that we added in the
+settings are alreadyon this object. And then this is what
+loads them into that ENV object that we
+use in our codeso. I want to addressone issue that I still don't know how it
+happened, but for some reason,I had a cached older version of Zod that
+was working,and then when Someone indicated to me that
+Zod was not in package.jsonthat then went and downloaded the latest
+version of Zod which has some breaking
+issues.So how did I havean older version of Zod in my Node modules
+folder where it didn't exist in my package.json.Couldn't tell you, but, the fix is make
+sure you have the latest version of Zod.I have, I'll tell youhow you can check what version you have by
+the way, so.Once you install Zod with NPM install Zod,you can do that. That will install this
+will always install the latest released
+version.You could always Fix it to a specific
+version if you know it with the at sign,but let's just say you want to install Zo,
+that'll install the latest released
+version.That will put it in yourpackage.json you can see it says 4.0.17,
+but that might not be the version you
+actually haveIt might be now becauseyou just installed it, but it could drift
+later. The way you can actually determine
+what version youhave is two ways. One, if you go look in
+your pack.Lock and you search for Zod.And actually I'm gonna search for Node.Modules Slash Zod there we go and this is
+the actual version thatit resolved to so it did reserve resolve
+to that latest version because I literally
+just installed itbut as time goes on, you mightcome back to this project.And you'll see that there is a newer
+version of Zod that's out, but the version
+you have is stillalways gonna be 4.017, no matter how many
+times you hit NPM install,it'll always be that version because the
+lock locks it in there.That's one way the other way you can do it
+is if you just go into your Node Module
+folderand you go into Zod and then you go to
+package.json and then you can see what
+version isthere. So that's the other way you can
+Determine what version you're rockingso we're on 4.017 which I'm guessing was a
+broken change from the version that I had
+cached somewherethat does introduce some differentchanges. So here inside of our parsing
+logic and the ENV this is no errors,is no longer a thing. You can see we get
+this type script thing.I was informed by some really smart peoplethat it is now issues, just a different
+name,same. Same stuff, And then this flattened
+one is deprecwhich basically means.You could probably use it for now, but if
+you upgrade it not guaranteed to be there,so. This is their warning. This is how
+they warn people of breaking changes by
+deprecating stuff andthen type scripts, IDEs, language parsers.Do things like putting a strike through it
+to let you know that it's deprecated.But deprecated means it's still here but
+planned to be removed,so you're safe for now if you don't ever
+update, but if you ever update this will
+break too.Or at least that's what I would assume. I
+would assume this is still in here, but.

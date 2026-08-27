@@ -1,0 +1,140 @@
+Talk about the middleware factories. Oh
+yeah, actually, here was a really cool
+example.I was looking through my code that I
+actually do a lot, which is like an AC
+handler.I personally find myself doing try catch a
+lot inside of all my handlersbecause again and typically inside of my
+handlers I'm talking to a database or I'm
+like hitting anotherservice anything async that's gonna fail
+at some point and that's gonna break my
+Server so Itry catch it. I get sick of having to do
+the try catch all the time,so instead I make a.A rapper that will wrap a middleware.And resolve it in a promise, so therefore.I don't need to do a tricach, right?So this is like. I think this will be
+function curing in this case,so this is a function that takes in a
+function.And the function that it takes in.Is the middleware. Right, so it would take
+Middleware.As a function, and it then will then
+resolve that middleware and catch any
+error and immediatelyforward that to the next function.That's what this is doing.So that way I don't have to try catch and
+for the error myself.I just do this. So now if I wanted, so
+let's say I have a middleware called Fetch
+user thatwhenever somebody tries to go here it gets
+the user first before it gets user it
+actually gets it fromthe database and I'm guessing this would
+just send it back immediately.Instead of doing like a try catch andall that stuff inside of here and then
+passing it to Next, I can just call ay
+Handler and passingmy middleware and I'm done.All the errors are handled, it's good to
+go.I don't have to write that Error Handling
+logic.More than one time. Literally exact code
+that I had in arebuild that I was working on so pitfalls,
+like I said,forgetting to call next please call Next,
+it will hang if you don't.Wrong middleware order, so for instance if
+you're trying to parse JSON.Before the body parts are one, so for
+instance if you're trying to do like,let me get this wrecked outbody.na before
+you did the JSON,yeah, it's probably not gonna work out.You won't be able to see that. That's the
+whole point of this.Is that this allows you to look at the
+erectile body if you do not have this
+before this.It does not exist for this route. It's
+literally not there,so order does matter, not handling async
+errors, this is less of a problem.Only reason I put this here is because it
+was a problem.And that was only because back in the day
+we didn't have async a we didn't have a
+sync,we didn't even have promises. Everything
+was a callback, so it was really easy to
+forget to handle asyncerrors because everything was just a call
+back, but now like Ayn away is like.You kinda, you kinda, you're already doing
+that already on the front end, so it's not
+that big of adeal. And then, yeah, modifying your
+response after headers were sent.I guess that's the technical term.It's not that you can't respond more than
+once, you can't send headers more than
+once,which is quite literally the same thing,
+but again, if you already responded.You can't respond again. You also can't
+and should not call next.So this is what I've been saying the whole
+time. If you responded,please end it all here. Put a, put a
+return in front of this.Put a return in front of your response, so
+therefore your code does not keep going.Right, if you're gonna respond, it means
+you're done. That means you don't want any
+of the code runningin most cases. There are other frameworks
+and Runtime.In which you can actually respond and
+still continue to run in which you might
+want to,specifically talking about like Web hooks
+and stuff.But we're not talking about that here and
+I wouldn't do that in Express for other
+reasons,but I know like Verscel has a new thing
+that actually.Allows you to do that versus wait.Let me see, wait until, I believe, is what
+it's called,yeah, so they allow you to like.Do a thing, right, so like, you know, you
+can do whatever you want,you can wait until this async thing is
+done,but in the meantime, go ahead and respond
+back to the request.This is the reason they have this is
+because they'reerless and this essentially
+is saying,hey, don't spin down thiserless function
+yet, wait until this asynchronous thing is
+done,but in the meantime go ahead and respond
+back to the request because, you know,I'm just doing a side effect over here
+that has nothing to do with me responding
+back likeyou might think of this as like.You hitting an API in which you are
+registering some task to be done,but the task just enters a queue somewhere
+so the API immediately responds back,Cool, I received your request. I
+acknowledge you, but then it actually just
+goes and does the task inthe background, right? So it responds back
+to you to let you know that it got you.But it's still gonna do the work. This is,
+in my opinion, a great use case for Web
+hooks becauseif you don't know how, if you don't know
+how webhooks work without getting too far
+into them,you typically wanna respond back as fast
+as you can to a webhook request because
+that's thatservice, Has its own constraints and
+things that it's putting on you might evenbe paying for that API depending on what
+API it is, but you want to respond back as
+quickly asyou can. To a Web an incoming Web hook
+with a 200 to let them know that you
+itotherwise they might keep attemptingto send you the same event depending on
+what the product is or maybe they'll
+charge you or maybe you'llget, you know, denied service because you
+took too long, whatever the SLA is for
+that product,you wanna get back to them as quickly as
+you can, but what if you gotta do a bunch
+ofwork in response to that Web hook? What if
+the work you have to do is gonna take a
+longtime? So what you're gonna do all the
+work?Hopefully it doesn't out and then you
+respond back to like Stripe or Google or
+whatever is sending youNo, you can't do thatThis solves that problem.This allows you to go like do the work.In the background, while also immediately
+responding.It's also just like. I guess the best way
+I can think about is like.It's like an inline queue, I guess, where
+it's like traditionally instead of doing
+this,you would send you would create a job, put
+it into a queue and you have another
+service reading offof that queue. This is like, I don't wanna
+send it to a queue,but I do wanna do it in the background. I
+wanna. It's like a serviceless queue I guess like
+I wanna do this right now, but without
+having to wait forit, so I get the benefits of doing it in
+the background but without having to wait
+in a lineessentially. So can can Nodedo that then with that, is that what you
+should say?Technically, yes, technically there's
+nothingstopping you from You know, running more
+code here,right? Like, just to show you, I'll do a
+log here.I'll do a log here and then, you know.I'll go back To health and do a get and.Do that and then You know, here's my log.So like it will run the code after I
+responded.I don't think that's a good practice to do
+is what I'm saying.I think you could, I think outside of
+doing like simple things like I'mjust gonna do like a you know a log to our
+log dashboard I'm gonna do like an
+analytics callor I'm gonna do something like that's non,it doesn't require a lot of compute it's
+not gonna block anything it's super simple
+outside of that Idon't think it's a good practice because.How do you know when that's done?And then what do you do when it's done?
+Like if there's some work that you're
+doing in the backgroundthat you're doing after the response is
+done, how do you keep track of that work?Because it's inside of this handlers so
+you don't have access to it anymore.The request is closed. How do you know
+it's done?So that is the main reason why I wouldn't
+do that. You have, you're just creating
+race conditions oflike, I don't know, this will be done when
+it's done and it's like, well how do you
+know thatAnd then what happens if that error is
+out?How do you retry that? And how many times
+do you retry it and like.Yeah, well there's a trend like there's
+just so many things you just lose if you
+do that.That's why I would only do like.I don't know, very simple things that if
+they didn't work, I probably wouldn't
+care,and it's not big enough for me to do a
+queue. And you know,I don't really care if it breaks
+sometimes.

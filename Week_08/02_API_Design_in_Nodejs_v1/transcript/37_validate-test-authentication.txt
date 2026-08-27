@@ -1,0 +1,129 @@
+OK, so then what we can do.As we can go to our auth routes, we have
+this register here,right? You can just get rid of that
+register.And we can say, all right, let's just Go
+ahead and add.The register Control that we just made
+like that.The last thing we wanna do before we do
+this because remember this register thing
+that we wrote is makinga lot of assumptions about the input we
+need to validate that input.Luckily we already created that middleware
+yesterday that allows us to validate stuff
+so we can justGo ahead and import that from our
+Middleware.It's called, in this case, this is gonna
+be on the body, so we want to validate the
+body.So we'll come here and we'll say validate
+body and then we need to pass in a schema.We can make a schema from scratch
+using zod here.That's totally fine, but we can also just
+get the ones from.Our database Schema that we can create
+down here.So for instance, if you're going to insert
+a user already this right here creates a
+Zod schemafrom the user's table based off insert, so
+I don't have to make it this already is it
+right hereI could I could just use thisThe difference would be thoughis I might still want to make my own if I
+want validations beyond what the Database
+is doinglike for instance.I have a length here that's fine.I have a length on the username that's fine,
+a length on the password, but what if I
+wanted likea regex check for a password and I wanted
+to check that the email was actually an
+email with theat and a domain and all that stuff. I
+couldn't do that on the database level.Database at least Postgres and Drizzle,
+it's not that granular where you can be
+checking it that wouldbe too inefficient for a database to check
+that on every insert.It would be too slow, but Zod can do that
+at runtime.So in that case, I probably wouldn't use
+this because that would not check for
+that,and then I would make my own Zod schema
+that followed this schema plusthose additional checks. You can make that
+from scratch.I also believe If I'm not mistaken, you
+could do something like dotextend. And extend those yourself,
+although I've never done that,but I think you can do that, I'm pretty
+sure. I might even have that in the dock
+somewhere.But I'm just gonna use the one that we
+have.I'm gonna say insert user schema here as
+our validation.And then validate the body.So, let's try to run this and see.What breaks, I guess, so NPM run dev.That's always good when nothing breaks on
+startup. It's a good sign.Go to Postman. I'm gonna go to API/auth/register. I'm gonna change that to a
+post.I'm gonna go to, well, I'm not gonna send
+anything up just to see if it hits the
+validation.And it does, so our validation is there.It says you don't even have an object, OK,
+cool.I'll add an object and then we'll keep
+going.So now I'll add an object, let's see what
+it says now.OK, cool. You did add an object, but you
+need an email, you need a username and you
+need apassword. That's helpful. That's perfect.That's these are errors that I can show in
+my app to my user on the form if they cameback from the server. Super useful.OK, cool, let's try that. I'll do that.So for an email, I'll do that.I'll just say user at app.com, and then it
+says I need a username.I'll do that too, just call myself user.This is I need a password. I'll do that as
+well.And I'll just say this is my admin
+password.Super secret. Let's see what happens, so I'll
+do that.And boom, user created. So user was
+created,here's the user, here's their ID.Here's there all the other things.And here's that JSON Web token that I can
+use.And to visualize, to visually see that
+user, I can go back into Drizzle Studio.Let this load up. I'll click on users, and
+now I have 2.I have the one that I did when I ran my
+seed, then I have the one I just signedup with right here. CoolAny other questions?About the input validations, bcrypts,
+JSON Web tokens.Each one of those topics individually is
+worth years of research.So, I'm just giving you enough to be,
+What's the wordI'm looking for? I'm giving you enough to
+be productive.There's one word I can describe myself as
+I'm productive.I wouldn't say I am what most people would
+consider the most talented engineer on the
+planetbut I know a lotof engineers that have way more talent and
+knowledge than me.And that usually is why some of them
+aren't as productive because they like to
+Go really deep,really deep dives on stuff that really
+matter, but a lot of that research can
+lead to like lessproductivity and not finding that balance
+is where it's hard.I knew out the gate that I wasn't that
+smart, so I focused on just being
+productive.So for me, I'm just focused on getting
+things done.So I'm only gonna learn the thing that I
+need to do to, I'm only gonna learn what I
+needto learn to do the thing that I need to
+do. So I get really good at understanding
+what itis that I need to do.And breaking those questions down as small
+as I can.And only learning the thing that I need to
+do to answer that question.It's very equivalent to like taking an
+open book test and looking in the glossary
+after you already readthe question. Whereas I think most people
+when they think of like a super talented
+engineer,they think of someone who knows the whole
+book.I don't know the whole book. I just know
+how to look at a question and go to the
+glossaryand look through the book to find the
+answer and then move on to the Next
+question and not getdistracted by everything else in the book.
+So that's just my way of telling you.Everything that I taught you might be
+surface level,but that's just because I've only ever had
+to stay there.There are things that I'm very
+knowledgeable and deep on.That I can, you'll probably hear me talk
+about sometimes,but that's because also I had to be get
+very deep on those things because I was
+doing something.There was some expected outcome of me to
+do it, so that's just how I work.Do you have any insights on refreshing
+tokens or the best way to implement that?We have like these giga chads in the chat
+that I swear like know this stuff and they
+just liketaking the course cause I think they just,
+I don't know, they just they wanna hear it
+like who'stalking about refresh tokkens? Like yes,
+great question.So refresh tokens, that's a concept of,
+hey, what happens when this JSON Web
+token expires,a really bad experience would like for
+someone to log in again,a really good experience would just auto
+log them in the first place.So yeah, you could make refresh tokens.There's many ways to do that. I think I
+did have some part of in here where I
+talked aboutthat, maybe I deleted it, but the way that
+would work is when you go and validate a
+JSONWeb token, which we're gonna do next, and
+you can see that the validation failed for
+the only reasonof it being expired and not because it's
+an invalid JSON Web Token from another
+service,but it's it it's actually it is a valid
+JSON Web token, it's just expired.You can ignore that expiration of like,
+don't worry about it.As long as you send me a Refresh Tokenas well, which basically does not have the
+expiration date on it,I'll use that Refresh Token to then just
+generate you a new token and just sign you
+back in and sendyou that new one, and then your client can
+just update, you know, their local storage
+with that new tokenand that way you're notforced on the client-side to like Go
+through another form and Sign In.So yeah, refresh tokens is basically just
+another JSON Web token that doesn't
+expire.OAuth also does something similar to
+refresh tokens.

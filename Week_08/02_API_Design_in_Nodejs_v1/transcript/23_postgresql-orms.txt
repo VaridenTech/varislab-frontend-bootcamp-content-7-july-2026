@@ -1,0 +1,55 @@
+Postgres or PSQL or PostgreSQL, no,
+plus Node JS,yeah, I think it's, I mean, Postgres is
+probably the most popular database in the
+world depending onwho you ask, it's definitely the most
+sought after, I guess technically SQLite would be the most useddatabase in the world, but.People are doing different things with
+that than they are with Postgres.It, has tons of differentdata types. It has JSON arrays, custom
+types.You got like full text search GIS that's
+like Geospatial search,so like you can put in like a longitude
+and a latitude and it'll triangulate.It'll do math. It'll do Geospatial math on
+where those things are to be fair,a lot of databases do that too. It's
+pretty good for complex queries if you,if you're into that stuff. And it's Open
+Source, that's the,that's the, that's the great thing, and,
+you know, no one really owns it,And then, yeah, with no, there's just somany integrations to integrate with
+Postgres, it's insane.Async/Await makes it really good and the
+reason I'm putting thathere is because Using a database with a
+not Node,like using a Python without something like
+async/await.Just feels bad. Very strong ecosystem,
+like I said,tons of options for ORMs. And TypeScript
+support in my opinion.It's really good like just be able to have
+typed support for your database is just,it's just so good like I just, I would
+never trade that up so really love that.What is an ORM? ORMI guess technically stands for object
+relational mapping.It's just some old term. It's the SDK for
+your database,OK? That's what the ORM is. It's the SDK
+for your database.This is how you talk to your database in
+your code, is by using your ORM.OK, there are tons of them. There are tons
+of ORMs that support tons of different
+databases,they all had to do it very differently.And there's always gonna be more of them.But that's all an ORM is. In fact, I
+almost never wanna call it an ORM again
+cause I don'tactually understand object relational map.I mean, I get it, but why? It's an SDK for
+your database,OK? Without that, this is what it will
+look like on the left to interact with
+your database.You would get like some super low level
+Client and you would just pass in your
+vanilla SQL.Yeah, I'm never doing that.
+That's never gonna be me.I'm not gonna be that person. If I had to,
+I would, but then I'll complain about it,OK? And I don't wanna do it again.I don't want to do this either. This is
+not something I ever wanna do.I'd rather do something like this. This
+feels good,OK? This is what an ORM will give you.Type Safe, super easy functions to use.Everything's good to go. You don't need to
+know this stuff.Which is pure sequel, by the way. Youknow, and then It does help with things
+like potential SQL injection and stuff
+like that,but honestly, why would you stick.You know, raw. SQL queries from users into
+your database without sanitizingit's like I don't know why would you do
+that anyway? I mean you could technically
+could do that onthe ORM too you could put raw SQL here too
+and solve the same problems you're not
+actually safe,but I think for me it's mostly just the
+fact that I don't need to know this
+because I reallythink that if you wanted to.You could go really deep on SQL and become
+a sequel god and like go charge millions
+of dollars tojust do SQL queries for a living cause
+that's how deep this goes and I know
+enough SQL to getthe job done, but I don't wanna know more
+than that and I refuse to learn more.So I think it just saves you from thatand obviously the Type Safety, theType Safety is just OD like it's just,
+it's too good, so we'll be using that,Super easy and it alsohelps us with our schema. We'll talk about
+that a little bit.

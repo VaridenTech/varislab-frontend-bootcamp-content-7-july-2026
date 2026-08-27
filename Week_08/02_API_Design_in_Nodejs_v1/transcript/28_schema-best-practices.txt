@@ -1,0 +1,161 @@
+I have some best practices here for
+schemas basically, always at time stamps
+for trackingthe creation and modification times. This
+is very useful, more useful than you
+think.Always enforce those constraints onthe database level, so use like unique,
+not no Foreign Keys,things like that. As far as like indexing,that's a whole different game. That's
+literally someone's job.Databases have like query plans where like
+you can give it your queries and it can
+see the queries thatyou've been doing and then it'll give you
+like recommendations on what indexes you
+need to optimize thosequeries, and that's just a start. It goes
+deeper from there,so. GGs on indexing, use descriptive
+names.This is very helpful. I can't stand like
+looking at a database scheme and like the
+field name is likeTG like what's that? What's TG?What the hell does that even mean? I don't
+even know what that means. I can't even
+infer that,Definitely consider how the likeSchema will evolve because it will like
+just think ahead about like if you know
+that like there's thingson the road map related to design or new
+features, think about how that might
+reflect the Schema as you'rewriting it now and how you might prepare
+for it because.Those migrations are coming. So think
+about it now.Normalize appropriately. What does itmean to really normalize? So you know how
+like I was saying, you can put the Foreign
+Key on this sideor you can put it on that side, really
+depending on where you query from.That's Normalization, essentially, right,
+so like, well, I guess that's the opposite
+norm,that's the normalization is like.Picking a side essentially like, oh I'm
+just gonna put it on this side.I'm always gonna query this side and
+that's way it's normalized,and that is like the optimum way for sure
+you want to get to that world,but don't do that so much where you're
+like, oh, we gotta change this entire back
+end logic becauseWe got to query thistable, even though. There's a way for us
+just to query this table if we just set up
+another keyover here. Probably just do that.That's probably easier than to like spend
+the Next 3 months like refactoring, so
+don't do it too muchAnd we didn't do thisbut like, yeah, use enumswhen you can remember Enums are just like
+one of these, so like there's so many
+examples in our Schemawhere. Where did I have this, was a text?No. Maybe it was, yeah, like frequency, so
+frequency oops,oh you put whatever you want, but maybe
+it's best to use an enum here,as in like it's gotta be one of these
+values, and it could be like weekly,daily, monthly, yearly, biweekly,
+whatever, you have to pick one of these
+intervals versus just put whateveryou want. That's a lot better in my
+opinion,that way you have. Some normalization
+around the data,it's gonna be easier for the person on the
+Frontend to expect like, oh these are the
+only types thatI can have? Cool, I'll also make it, you
+know, I'm in TypeScript for that, and I'll
+make sure ourforms only allow you to select those
+things and it just makes it easier so
+think through that.So we use these database Schemas in our
+controller layer to use as checksagainst the user input. Should I think
+what they're asking is,should we use these schemas right here
+that we created that are based off of our
+Drizzle schemas tocheck the inputs in our middleware that we
+wrote,and the answer is yes.That's exactly where you would use them,
+100%.We had to make those schemas from scratch
+in the example that I have, even though
+we're gonna be talkingabout. Those later and maybe like 4 or 5
+lessons.I just wanted to show you guys to show you
+what it looks like, but we will be
+covering thatBut yeah, you could just, you should notonly could you, not only is it, you know,
+you could, but you should use these
+instead.The only reason you wouldn't use these is
+if.You needed like some partial version of
+this, of like, oh yeah,this input validates what the user sends
+up.But what the user sends up is not exactly
+what the database expects because maybe
+one or two of thosefields are we provide. We don't ask the
+user to provide those fields,we provide those fields. So if I were to
+validate that against the user,they would always fail because the
+database is expecting these 5 fields,but we only expect the user to pass these
+3 fields because we provide the other 2
+fields.So validating all 5 of those fields
+against the user would literally break the
+app for them,so. You would only do this if every single
+field that satisfies the constraintsof this Schema is going to be supplied by
+the user,then yeah, 100%. Did you have a question?Yeah, I was kind of curious, and it's OK
+if this is too long of a question to
+answer,but like, in your experience, what are the
+hardest types of Schema or data migrationsto handle? Like, what are the ones that
+introduce the most headaches and how do
+you avoid them from theget-go? Oh my God, like I'm like, yeah,just thinking back to all the first job I
+had,we spent like. 2 months on the Database
+Migration,it was so bad, it was so bad,It's a good question, good question.
+Hardest database migration things and how
+to avoid them.I think the number one thing is kind of
+what I talked about earlierwhich is like destructive changesright? So there specifically aname for this. So like, for me, in my
+experience it has been like.Introducing breaking database changes,
+right?So like. Basically the way you avoid
+breaking or destructive change to the
+database is everything youdo is additive. If you're only adding to
+the scheme or you're not breaking it
+because if you introducesomething new without taking away
+something that was there or modifying
+something that was there,you're not breaking the database. There's
+no code relying on a new thing that you
+just added.So it's not gonna break anything. So
+typically what I would do is I would,if I want to change something or remove
+something, I would first add something.And then I would get that and I would just
+create the migration just to add this
+field that'sa simple, easy Migration. You're not gonna
+have any conflicts, boom, that's in
+Production.Then I'll come with another PR that then
+migrates let's say I'm missing,let's say I added a field because what I'm
+ultimately trying to do is get rid of this
+old fieldand replace it with this new field that I
+just added that's optional, by the way.So then I'll introduce. Some code changes
+that stop using theold field and start using the new field,right? And because the new field is
+optional I can start using it,but because I made that change I now then
+have to migrate all the data from the old
+fieldto the new field and because it's in this
+case a simple, it's literally the same
+type,I just added a new field that's optional
+with a different name because I'm just
+changing the name that'sa simple data migration it's like take it
+off this field and put it on this field.Can't get any simpler than that so I
+introduced that migration as well so it's
+like a two-phase changeversus trying to do it in one sweep.So like, yeah, you have to like go through
+your whole pipeline from Development to
+Staging to Productionwith your initial optional migration field
+and you gotta do it again with the actual
+data Migration,but I would much rather do that than.The alternative which is introducing
+breaking changes, so that's one way
+there's also like differenttechnologies now and actually the Database
+that we're gonna be using has the same
+technology,but I'm just gonna show you a different
+one. So Plant scale, yes,this is their website it's not broken,Plant scale has. Oh my God, let me see if
+they talk,they don't even talk about this feature
+anymore cause it's like everybody's doing
+it,but they have what's called like
+branching, and the database that we're
+using our branching too.This is really cool.It's kind of like git, you can branch your
+database and you know,do all different types of things there so
+it also doesn't prevent you from having to
+do.Migrations, but they. They part of their
+product is to handle those migrations foryou. So what they'll do is when they
+detect the change in your Schema, they can
+see the drift andbe like, oh wait, no, this is gonna cause
+a breaking change, can't do it,and then they'll help you, they'll
+recommend what you can do to change that,right? Like creating a branch or something
+like that. So I like services like this
+because it makes itreally easy for you and it also like even
+if you messed up like you're on another
+Branch so it'slike not that big of a deal. You can
+Branch the data in the database too so you
+could literallycopy over all your data like it makes it
+really simple to do stuff so I think
+database branching inmy opinion, made, migrations not that
+difficult anymore but obviously likejumping onto a new database platform for
+something that's in Production is probably
+like a nonstarterfor any company and that's, you know,
+making money right now but you know if you
+were to start somethingfrom scratch, yeah, I would use something
+like this or Neon and other platforms I
+think like.God, I don't know, I'll never use data,
+but I think they also do.OK, I don't want to go to that website.I, oh, it's. I, oh my God, I typed in.com.I think they do something similar to with
+branching, yeah,they have branching, stuff like that, so
+yeah, I think that's kind of like the
+future.

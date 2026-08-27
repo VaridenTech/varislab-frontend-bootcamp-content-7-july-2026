@@ -1,0 +1,116 @@
+So this Drizzle studio is using our ORM.It's yeah, it's the same thing. Drizzle
+studio.Is a it's built by the same team, so it's
+from Drizzle Kit which is their COIwhich accompanies the Drizzle ORM.They're both one and the same, yeah, they
+work together.And those are the are the tables, it'sliterally reading our schema, right? So if
+I go toHere it'll show us our schema. Where is
+it?Right here. Here's our schema, we define
+this.This is the sequel version of our schema.It's everything that we made,If I go into a Drizzle Runner, I get types
+like everything we just wrote in our seed
+script,I can write here, right? If I wanted to
+DB.Insert Entries. Values.I can make a new entry here. I can run
+this.Directly into the database. And thenI guess here's the actual code that we
+wrote for our schema.It's a little more explicit because this
+actually addsthe indexes like for instance, we did the
+shortcut.t unique on the end of thethings that we wanted to be unique, but
+the long kind of version would actually
+look like this,so it just it did that instead, but yeah,
+this is the same schema that we wrote,this is the exact same code.Yes. Your experience, what's the best way
+to manage large amounts of seed dataDo you just stick itall in seed.ts or do you have another
+solution?It depends, right? I mean, if we look at
+the notes,I kind of talk about it about a little
+bit. I think it depends on like the type
+of datayou're trying to see, like, is it fake
+data like we just did where we're
+specifically WellI guess in our caseit's a generic seed we're just like we're
+just generically Seeding the database we
+don't actually havelike an intention or a use case that we're
+trying to solve.So in that case, you know, yeah, you
+literally might have a directory where you
+just have like a bunchof fake data that you add, you know, that
+could be a JSON file that someone made
+somewhere that couldbe something that you generate with faker,
+however you wanna do that,but like in my experience, I typically.We'll have different scenarios that I
+wanna see the database with so I'll have
+like a folder called andlike I'll have like a seed folder that
+I'll have like scenarios and each file is
+a different set ofdata for a different scenario that I'm
+trying to test for so I might have one
+scenario where it's likeI am building a feature for when someone
+has more than 30 habitsso I might see the database with one user
+who has 30 habits and nothing else so I
+can.Do that scenario because I'm building
+something on the UI that is addressing
+that we'rebuilding like pagination and maybe a table
+only has 10 rows so I wanna test out
+pagination against3 pages so I see the database with 1 user
+and 30 habits so I can paginate against 3
+pagesright? So I might havedifferent scenarios that I'm sitting with
+so that's how I do it,but you know you verywell might do it another way. You might
+just have JON files, you might.Again, do an export from a database and
+import into yours,if you're using something like weare Neon or Planet Scale, you can, branch
+off of a database andthen therefore it already is seeded so
+depending on like the app and the company
+that you're workingat, you know, working with production
+data.On your, on your localmachine may be OK, it may not be OK.Let's assume it is OK. Yeah, you could
+just like make a branch from production.And get that URL attach it to your local
+machine and now you have a copy of the
+Production database andyou have the same data that's in
+production you can.Now it's a real database and it's a real
+application so there really is no one way
+to do itThere isn't like a bestpractice. It really is one of those things
+where it's like it depends what like what
+are you trying todo, but there's nothing wrong with just
+writing stuff the way that we did.If that becomes hairy because you got too
+much stuff,then yeah, figure out, you know, what are
+some ways you can scale that out,but there there's no wrong way I think.This is actually like fake generating fake
+data is a really great use case for AI
+because it alreadyhallucinates so bad. So like having AI
+generate seed stuff for you is actually a
+really great usecase. Cool. Any other questions?Yeah. Is that little check we wrote at the
+end it was like ARGV 10yeah, is that just to prevent.The file from being run directly outside
+of the terminal like exactly because like
+imagineif I imported this file from another file
+it'll immediately run.Oh, I don't, I don't want that. I wanted
+to import it so I can call it once
+programmatically sothis gives me the best of both worlds.
+This allows me to run it from the terminal
+and immediately executeAnd then this also savesme from it immediately executing it if I
+were to import this somewhere else,yeah. Cool. Any other questionsNo. Cool, what else Ihave on here, so yeah, we got that.That was all there is to get the Database
+started now we do have.These other commands here, the Generate
+and the migrate that we did not run.Don't worry, we'll run those when we get
+to production.So if you're wondering like, hey, we
+didn't do that, it's because we didn't
+need to.So the flow going forward is, let's say we
+have we have our schema,right? Let's say I wanted to, I don't
+know.Change something, do something. Right now,
+as long as I don't make a destructive
+change,I can keep doing push and I won't get any
+problems.I will run into a problem if I try to do a
+destructive change and try to do a pushright? So if I try to, if I try to renameone of these fields that's required or
+something, and that data exists in the
+database alreadyI'll get into trouble, butBecause we're just pushing and because I
+see that this data anyway.I could just tell Drizzle to like yeah I
+know just blow out the data.I don't care so Drizzle just reset the
+database and push up my changes anyway
+that's not something youwanna do in production. You don't wanna
+just delete everybody's data and force
+push or schema you couldliterally go to jail, so like don't do
+stuff like that.The way we get around that in production
+is with generating migration and then
+running the migrationbut for development.The flow you wanna do is like if you're if
+you're you know you're working on this PR
+and maybeyou're making tons of changes to the
+schema or even just a little bit of change
+in the schema justkeep pushing, just keep pushing and then
+once you get to the point you're like,alright, I'm done with this feature I'm
+ready to do a PR that's when you generate
+your migration becauseif you have to make a migration for every
+change that you do as you're figuring it
+out,let's say you made 6 migrations.You're gonna make a PR into production
+with 6 migration files.No one's gonna merge that. It's not gonna
+happen. You only want one migration file
+for all your changesversus 6 migrations for all 6 of your
+changes.So use DBPush as a way to test your
+database until you're like,right, it's ready. I'm ready to do this
+migration now and when we get to
+deployment later today we'll

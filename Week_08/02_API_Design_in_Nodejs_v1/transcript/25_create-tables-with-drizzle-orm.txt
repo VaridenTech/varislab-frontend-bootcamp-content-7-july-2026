@@ -1,0 +1,173 @@
+All right, so in our source, we're gonna
+make a new folder.And here we go. We're gonna call it.DB and inside of DB we're gonna have.Our schema.ts like thisCool, let's make some schemaSo the first thing iswe're gonna import a bunch of stuff from
+Drizzle ORM.So we're gonna say, let's import from
+Drizzle ORMslash pg-core. And we'll get a bunch of
+stuff,so we're gonna get pgTable. This is how
+we make our tables.We're gonna get a uuid.This is how we make our UUID Primary Keys,varchar. We'll talk about that in a
+little bit.Text, it's exactly what you think it istimestamp, pretty self explanatory, boolean,
+same thing.integer, same thing. Cool. So, we'll have
+all those and then we're going to import.The relation. From drizzle-orm, this will
+help us make thoseend to end tables andother relation tables. So first, let's
+make our user tables.So we'll say export const. Always want to
+export your Drizzle tables so we can,cause we have to reference them when we
+query inside the code, so always export
+them.I always pluralize them and then I'll say
+pg table.First argument is always gonna be the
+name. I just keep it the same as the
+variable in most casesso in this case users, andthen the second argument is an object in
+which we will add our fields or columns I
+guess.So I'll say I want ID. I want this to be
+UUID that's gonna be a function.Most column functions take in a first
+argument here,that's a string, and that's the.So, what you call it here is what the ORM
+will refer it to it as.What you call it here is what will be in
+the database.So I typically keep those the same.So I'm gonna say I wanna call it an ID in
+my ORM and I also wanna call it anID in my database. So, and I want this to
+be the Primary Key, so I'm gonna say
+Primary Key.And I'm gonna say default random, so
+default create a random UUID.Email, I want to do varchar.So what is varchar? It's literally just
+text.If you don't add any limits to it the same
+thing as text.varchar is text with the ability to
+constrain the length.So I'm just putting this here not because
+I actually believe this is good practice,but just because I just wanna show you
+what it can do. I don't think you need to
+constrain people'semails. I don't know, maybe you wanna do
+that, maybe you don't.I don't know, but varchar is the same
+thing as text with the ability to
+constrain the length,essentially. So I'm gonna say, length of
+225,this is not null by default, everything
+that's not a Primary Key.It's optional. Unless you put not null on
+it.OK. And then I also want to put a unique
+index on this.This is a shortcut to put a unique index.What is an index, I'm trying to describe
+index without explaining what I thinkI know about databases. An index is a
+separate place in a database in whichValues and locations are stored.Which can be quickly retrieved to then.Locate. Well, I'm sorry, notvalues and locations. Keys and locations
+are stored in which you can then quickly
+locate the valuefor that key. It's the, it's like the
+database equivalent of a hash table which
+in JavaScript is aan object. So an index just, without an
+index,I'll say this, without an index, if you
+want to find something, you have to scan
+the whole database tofind it. Right, so to avoid scanning a
+whole database, you create indexes to help
+you quickly locatethe position of a piece of data so you can
+Go straight to it,in constant time after youscan the index table. So you basically
+trade off scanning the whole table and
+multiple tables in a Databaseto just quickly scanning this index thing
+which for some databases are in memory,and you quickly find.You know, the key that you're looking for,
+the key in this case would be.This ID and for the email would be the
+email because it's a unique ID and then
+that will pointto a location in the user's table where
+this user is and then the database can Go
+straightto that because now it has the index
+that's why it's called an index and they
+can return it soit's just way quicker, so putting a unique
+index on it just means.Hey, there can't be any other users.Two users can't have the same email,
+essentially.And you have to index that so it can
+quickly determine once a new user creates
+anemail if that email already exists without
+having to scan the whole database or the
+whole user's tableat this point. That makes sense.That's my limited knowledge of indexes.So username. Same thing, part are.His name. Length of, Idon't know, you put whatever you want, so
+about 50.And technically you don't need an email
+and or username, but you know, whatever
+password.varchar password. And you know for
+password things like this,you know, password username, this is where
+like you can do validation across many
+different locationsright? You're doing like validationon the form level, you're doing validation
+on the middleware level that we just did.You're doing validation on the Database
+level, so a lot of this stuff can match
+up,so that way it's like enforcedeverywhere, so you really can't get past
+it, right?So like it's obviously easy to bypass a
+form, but it's hard to bypass something on
+a server.OK, 255, and oops I forgot to make these.Not null and also unique on the username,same thing, and then the password is not
+know.We don't want the password to be unique,
+that would be stupid.Two people can have the same password is
+ridiculous.Imagine sign up like somebody has that
+password.Yeah, thank you. All I gotta do now is
+figure out their email and I'm in.Oh my goodness. First name, varchar, I'mgonna put first underscore name. The
+reason I'm putting state case because
+typically in Relational Databasesit's snake case, so I'm just following
+best practices.There's nothing stopping you from not
+doing that, at least I don't think so.If anybody has a better answer, please let
+me know, but.I'm just doing that length and yeah, you
+do what you want.I'll do 50. I'll do last name.Created at. It's gonna be a time stamp.Like this. And I just say it's created
+that.Default to now. And it's also not null and
+then updated atPretty much the same thing.Cool. OK. We have our user's table.It's Pretty simple, right? Like it's not,
+it's something crazy, it's like kind of
+like Zod,it's not it's like if you use any schema
+before, this is probably not too shocking,I would say. So, through our habits table.I'll say habits. Same thingLet's get our ID.I'm actually just gonna just give me that,
+bring that over here.Same thing. Got that. We are gonna add a
+Foreign Key here though,so we're gonna say User ID.And we gotta give it the same type that it
+is on the user table, it's a UUID.And we're gonna call it User ID here as a
+Foreign Key.And we're gonna say this references.This takes a function. We're gonna say the
+user's table,so it's gonna reference users. ID like
+this.And then We can define what to do on
+certain things,so like on delete, as in hey, if the user
+that this thing is referencing gets
+deleted,what do you want to do with this habit
+that's connected to it?Oh, I want to cascade those changes so as
+in delete this habit too.So if the user that is connected to this
+habit gets deleted,also delete this habit. That's what that
+means.So we're gonna cascade those changes and
+this is not no,so you cannot create a habit.Without associating it with a user.It's not possible. OK, we have a name.varchar and 50 all rightI'm sorry, let's do 100. Long day,
+I guess.And then not know, can't create a habit
+without a name.And then we'll do description.What is the description of this habit?In this case I'll use text cause I don't
+have any constraints.Make the description as long as you want,
+so I'll just put text.Frequency, Yeah, it's like you can
+describea frequency in which you want to track
+this habit.We could use like enums here, but I'm not,
+so we'll just say frequency.And yeah, limit this to a length of 20
+then we'll saythis also is not null.got to put a frequency in here.Target counts So like what basically what
+is your goal for this?This will be an integer.Account, and we could default to.One, it's a low bar, I wouldn't consider
+that a habit if you did it one time,but you know. We gotta start somewhere.Is this an active habit or notSo we can set thisto a boolean, we can say, is active.And, The default to true.It's also why I like Drizzle, cause I can
+just do JavaScript in here,I can write functions, I couldn't do that
+in Prisma cause it's not JavaScript, it's
+its own thing,so. That got really frustrating, not gonna
+lie.And then we got that created that and
+updated that I'm just gonna copy.Cool. Let's do our entries tableEntries. PG table entries.And same thing, let's grab our UUID
+noticing a trend here,pretty much all the same with that.We do have a Foreign Key here of a habit
+ID because.It's a One-to-Many entry. Belongs to a
+habit to have many entries,so same thing, your ID.habit ID and this references.habits dot ID and then on delete, we want to
+cascade andthis is. Not non no like that.There you go. Simple enough, and then
+completion.Completion date. Time stampsyep, default, yeah, if youtrack this initial default now as in you
+just completed it, that's why this entry
+was created becauseyou just completed it, so that makes
+sense.And Yeah, a note on maybe why you would
+have done it,you leave a text, leave a note if you want
+to do that.And create it up. It's very similar to.This Cool. All right.Entries. All right, let's make our
+Many-to-Many relationship withtags and habits. So first we need to make
+tags,so let's say export const tags equals pg table.Tags. It's got an ID.Super easy and then name.For our name. Length, what did I put there50, so 50.Not no And unique, can't have tags with
+the same name.So, Let's do that. Well, technically what
+this would do,this would make it to work globally, no
+matter what user.Would not be able to have tags with
+duplicate names, so what you would want to
+do is not putthe unique index here because if I make a
+tag on my account.That's called like fitness and then
+somebody else makes a tag on their account
+called fitness,this will get blocked. Cause it's global.I only want to put a unique index on the
+combination of.a User ID and a tag ID and the
+name,right, a User ID and a name and not so
+much the tag by itself,so. But I'm just gonna keep that there for
+now because that's getting advanced,but you could do that, you could do like
+compound indexes down here, it's just.It's a lot more to think about, color.varchar are Color. Like those are the things
+that like you have to think aboutlike it's still gotchas whereyou're like, oh yeah, you know, like I
+can't tell you the first time.I created a server And thought I was doing
+so good and it turns out there was a hugesecurity risk where anybody can see
+anybody else's data.And this is being used by people, so.That actually happened, and then we 
+our created and updated that.I'll just take these two.You live and you learn.OK. Now it's made our end to end table.Promise we're almost done with tables.Habits, pg table. And againthis is the job ofthis table is just to join two keys
+together and create its own key,right? So we just want to take the habit.ID And you know, get its type.I'm actually just gonna copy already have
+it.What I'm here, it's gonna copy this, take
+that habit ID.And I also want to get the tag ID so I'm
+just gonna paste that again and say tag IDThat's a tag ID andthen this will be tags so I'm just saying
+hey I wanna create a union between thisone habit has this one tag so if I ever
+wanna see how many tags a habithas, I could query this table with a habit
+ID and it will return all the instances of
+where thishabit ID exists and then I would then see
+all the tag IDs for them and then I could
+getall the tags and the same goes for tags in
+the other order.That's how this works, it's so mean to me.
+Right, so, got that.So for every one relationship you have,
+there will be one instance of this in the
+database if that makessense. So if a if a habit has 20 tags,there will be 20 of these in the database,
+each one having the same habit ID but a
+different tagID. If a tag had 20 habits, there would be
+2 of these in the database.All with the same tag ID but with 20
+different habit IDs.

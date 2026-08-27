@@ -1,0 +1,102 @@
+Let's go protect some routes, so.What are some routes that we can protect,If we go and look should weShould we protect the auth routes?What do you all think?No? So we should let anybody sign up.Imagine if you couldn't sign up unless you
+were already signed up.That wouldn't make any damn sense. So
+yeah, we don't wanna protect the auth
+Routes.I mean there might be certain in
+situations where you would want to protect
+the auth.I was like this is an admin dashboard that
+we deployed only for internal.You know, people at the company, there's
+many other ways to get past that.It's not this, but yeah, you probably
+don't want to protect public routes or
+publicpages with. Authentication requirements,
+so we don't want to do that here.And that introduces a whole another thing,
+because we don't want to do this here,that means we can't do it globally.Cause if we do it globally, it would protect this as well.So that means now we have to do it on a
+more local level.So that's another thing. So if there was
+ever like, I'll just put this at the top
+and server.ts I'lljust add a middleware here that locks the
+whole server down, well, then no one can
+Sign Up ever.So you can't do it globally because
+there's at least one route here that
+should not be blocked,so that's another thing to think about.
+OK, well, let's look at some other routes.So we have a habit route, we have a user
+route.I mean, these things do nothing right now,
+but they will eventually.Yeah, I would say we don't want anybody
+doing anything with a habit or auser. Unless they're signed in.Would you all agree with that?Yeah, I would say, I mean, you really
+can't do anything without a, I mean,even if we wanted you to do something with
+the habit.You couldn't because habits belong to
+users. So if we don't even know if we
+can't even identify you,how do we know what to associate.What habits to associate you with other
+than give you access to every single habit
+in the database.Well, at that point, you know what?Anybody can use our database. We'll use
+plain text passwords and they're all admin
+123 like that that'swhat you're saying. So yeah, we wanna, we
+wanna stop that so the easiest way to do
+that.If we could put them on each we could put
+that middleware on each single one.Like that. Or we could just.Up here we can just be like, oh, you know
+what, or where am I making the router?Here we go, right here where I make the
+router, I can say router.use and then I can
+just sayAuthenticate token. So that meanseverything below this, but only on this
+router.Has to run through this middleware first.Does that make sense? Right, let's give it
+a try.So I go to Postman, and I'm gonna
+try to just use this one to get all habitsSo I go to Postmanand I say. I'm gonna get all habits,so local host. API. Habits It's just that,it's give me, it's giving me all the
+habits, if I hit send.I get a bad request.What is this, oh yeah, there we go, 401, I
+wanna say, where's the status code, yeah,
+so that workedI got a 401, right?If I get rid of this.I send it again. I'll get back all the
+habits.It works. If I put it back, I'll get back
+a 401.You see that, right? Now to test that are,we know that right now it's working from
+blocking, but can we test that it works
+from actually findingthe user? Well, I don't know, I have some
+users,I have a JWT right here. Let's test it.So I'm gonna grab this JWT.Gonna go back to this habit. I'm gonna Go
+to authorization.You can also do this manually in headers,
+but and.And Postman, they have one specifically
+for authorization.I'm gonna click this drop down. Don't pick
+JWT bearer.That one's different. That is.Yeah, that's different. We want bearer token
+and then here you can just pace in your
+JSON Web Token.I'm just gonna paste mine in like that.And then now if I send this, assuming this
+token is good, which maybe it is,maybe it's not, let's see. Cool, it's
+good, so it passed.Right, and then just to verify that this
+is the right user, I got this token from
+this user righthere, user at app whose username is user.Let's verify that, so I'm going to go in
+here.And I'm just gonna log this user right
+quick so we can see that is the actual
+user that thistoken belongs to. So let's try that, send
+that again.Oops, I didn't mean to log in again.I meant to do that.There we go, and then if I go look at the
+logs.Wherever my logs are. Yeah, it's that
+user.So it identified the correct user.You might notice these two extra things on
+here like what is this IAT?EXP These are the headers that we added
+when we signed the token.Remember the two values that we added, I
+was like, here's an expiration time,and then here's a created at time.So IAT I'm pretty sure stands for
+initialized that.And EXP means expires. So you could check
+these to see if this token was expiredYou could also, let's sayyou had a security breach and some somehow
+there's some.Some super hacker out there that's like
+grabbing all your JSON Web tokens from
+all your users,you can like, you know what?Every token that was initialized at this
+date or sooner,ignore them. And then issue new JWTs for
+all of our users when they Sign In.So that's you can't really just like pick
+one token like,oh, delete this one, you can't do that,
+but you could say based off these time
+stamps,I can allow these or not these, but you
+can't specifically.Block one unless you knew what that value
+of that token was through your logs,so it's not as simple as like delete this
+API key cause the server doesn't own them
+anywhere.Yes. Why wouldn't you just make a
+protected routes router and put everything
+in there?Why won't I just make a protected routes
+router?Well, I think that that's a great
+question. I think that comes down to like,
+what is,you know, it's just routes, but like even
+having that comes down to like the design
+of your routes,right? Like, you might say, all right.I will only mount things that need to be
+protected underneath one router,and I would say, yeah, it's probably the
+smart thing to do.Like for instance, in a real world
+example, I probably would not mount auth
+the routes underneath theslash API. I would probably just mount
+them underneath like slash auth and then I
+would mountI would have an APIrouter and then that API router will then
+have these two mounts for slash users and
+slash habits andthat way only gotta add the authenticated
+part to the API router once versus adding
+it to each one ofthese routers. So yeah, you could totally
+do that, but that's just like what
+strategy do you,what do you want your URLs to look like,
+essentially that's what it comes down to.
+So there's nothing wrong with that.

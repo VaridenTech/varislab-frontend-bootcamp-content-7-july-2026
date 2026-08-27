@@ -1,0 +1,121 @@
+All right, so we want to get this live, so
+somebody else other than us can actually
+interact with itand I decided to deploy this to an app
+called Render.com,which It's kind of like these Hirokku
+vibes,but before Hirokku got, I don't know, I
+don't know what happened to them,but it's kinda, it's kind of like that.
+It's a really great platform for deploying
+things very easilyand there's other ones outthere like railway, there is.You know, you got your jam stack serverless
+folks like the Versailles and Netlify
+and Cloud Flare andFly.io you got somany of those companies, they all do
+different things, but render just seems
+like the simplest easiestway to get started from my experience.
+That doesn't mean it's the best.It's just, it was just the easiest and it
+makes the it makes the most sense and they
+all havethe same. Logic they all do the same stuff
+and then you know you can go a little more
+closerto the metal and do like AWS or Google
+Cloud or Azure Digital OceanYou wanna get a littlemore closer to the metal you can do that
+too.There's just no reason to do that when
+these services exist until you start
+trying to save money in myopinion, so we're gonna use Render.And this is some things we need to do
+before we get deployed, so we're gonna Go
+through our pre-deploymentchecklist. So the first thing is.You're gonna create another database,
+right?You're gonna create a third one, cause we
+have a local one, we have a testing one,now we need a Production one.And if we were making Staging, you'd make
+a Staging one.And if you had a bunch of people on your
+team, you might make one each for
+everybody on yourteam gets one. So, or you can do that
+dynamically with database branching.So yeah, we're gonna make another
+database.It's super easy. We've done this before,
+we're gonna go back to Neon launchpad,we're gonna click this button again.And now that you're deploying this,
+remember these only last for 72 hours
+unless you claim it,so remember that. So if you start getting
+errors 72 hours from now on your deployed
+app.That's why, go make another database or Go
+claim it and make an account.So we have that. I'm just gonna keep it
+here, just take note of it.We're gonna be using it soon.So I created it. Whatwe're gonna do now is just a one-off thing
+because we created the Production
+database,it doesn't have our Schema.So if we try to deploy right now, even if
+we gave the app the right Production
+database,it would break because the database has no
+idea what our Schema is so we have to run
+the initialMigration thus far we've been doing DB
+push and Development to just force push
+our Schema recklesslyto our to our developer database.Well this Production database we can't do
+that. We have to do a PR which is
+essentially a Migration.We gotta generate that migration first,
+which is the, you know,the plus and minus of the changes that we
+want is the diff and then we want to.PR that into the database by running
+migrate.So we're just gonna do that locally right
+quick. So the simplest way to do that
+locally would be totake that new database that you have.Go to your .env file. I would comment out
+the one that you use locally.Comment it out. Or to make another one
+with the same name,database, URL. And set it to the one that
+you just got,the one that you just made.Put that in the dot env, not the env.test,
+but in the dot env.OK. Then what you wanna do is you wanna
+run NPM.OK, can you take that off. Thank you, NPM
+run.DB, generate this does not talk to the
+database.All this does is it looks at your Schema
+and generate the SQL Migrationfor that Schema. That's all it's doing. It
+doesn't talk to the database at all.It doesn't do anything. It just, it just
+creates a file in a migrations folder and
+on this project.So, oops, this thing's not either.Database that I misspell that? Oh
+data bae.That's funny. Like that's someone'sname on Discord somewhere. There you go,
+Cool,so I created my first, Migration, and you
+get,it's telling me that it's here. I can Go
+look at it.We now have a migrations folder.On your machine inside this repo, there
+should be two things in it.There's like a meta folder with like a
+journal.And then there's like this snapshot thing,
+snapshot.json.This is just basically telling you. All
+the things that you added.It's a, it's a JSON representation of
+your Schema,essentially, the best way I can describe
+it.Then over here, this random named SQL
+file,Complete Nomad zero or Complete Nomad SQL
+is the SQL migration thatyou would have had to wrote yourself,
+written yourself if we didn't have
+Drizzle.So this is, this is what Drizzle saves you
+from.This is what you gotta do with Prisma.Last time I use it.So we got that for free and notice these
+things have numbers on them that's because
+they need to bein a certain order. migrations have to be
+applied in a certain order so to make sure
+the files areordered. We put numbers on them.Sometimes people put dates as the prefix
+for the numbers on the migrations.That's also a good strategy too, but
+numbers is fine,and they only put 4 numbers because I'm
+guessing they think no one's ever gonna
+get to 10,000 migrationsso. That would be crazyAll right, so we didthat, and yes, your migrations do get
+checked into GitHub.You check your migrations into GitHub
+because everybody needs the migrations,so you check those in.And that way you can also run them, you
+can you can do what we're not doing right
+now,running them locally against the
+Production database.That's a no, you're never gonna do that in
+real life.Instead you would like. You know, Run like
+a script on a deployed version and you
+might getaccess through like SSH and maybe you'll
+like run it there or if your company
+really loves you they boughtsome program that helps you manage your
+Migrations visually and a lot better than
+doingwhat I just described so.All right, so we did that. The Next thing
+is we need to apply this migration to our
+Production Databaseso we still have that Production Databasein our .env file, so we'll just run the
+Next one, which is NPM.Run DB migrate.This is going to take all the migrations
+in the migration folder in the order in
+which they are createdfrom top to bottom, so oldest first to
+newest,and run the migrations in the order that
+you created them against the database.So, let's do that. Boom, no errorsso we're good to GoYou can verify this ifyou run NPM run DB studio.And it says it's already running, so I
+need to stop it.Try that again. You can go there and then
+you can go see.All your tables show up in your Production
+database,whenever this loads. There it is.So here's all my tables in my Production
+database,right? All right, now that I have that
+quickly before.Anyone finds out that you were just
+touching the Production database, get rid
+of this forever.I'll never put that in there again.Bring back your local database.Don't do it. OK, so we're good on that
+part.Now, let's keep chugging along.To get this deployment out, so now that we
+have that.Oh yeah, and I also say likeplease don't ever push.You might ask why didn't we just do push
+if you, if you just push a Schema, did you
+pushto your Production Database? I've talked
+about how dangerous that can be,it's like force pushing the master. You're
+gonna potentially blow out everything
+that's there.Data scheme like just don't ever do that.You always have to do a migration to get
+the Production database. You only push to
+your Development database.

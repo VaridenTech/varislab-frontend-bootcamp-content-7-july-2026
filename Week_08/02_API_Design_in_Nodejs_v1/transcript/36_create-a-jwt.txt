@@ -1,0 +1,199 @@
+OK, let's make the JSON Web token so
+while we're here.So in the same utilities folder we'll do
+JWT.Dot TS And we will importsome stuff, so we're gonna import
+something from something called Jose.And it's gonna be SignJWT like that.We're gonna import something from crypto,
+which is built into Node,so technically you could just do Node
+crypto.To be specific, just in case someone on
+NPM has something called crypto and you
+installed it.But either is fine. And we're gonna
+import,createSecretKey. And we're gonna
+import our ENV.Cool. Let's just make a type for the JSON
+payloadso we'll make an interfacehere. Interface and this will just be the
+JWT.Payload right there, so. I talked a little
+bit about JSON Web Tokens,but you can just think of JSON Web
+tokens as an object converted to a string
+based off some algorithmIt's also some level oflike. I guess technically it's not
+hashing, but it is some level of
+deterministic creation based offlike a secret and the algorithm and some
+other things, but Basically we can then
+takethat string and on the API side we can
+reverse that process and get back the
+object,right? So I'm gonna convert this object to
+a string that string is a JSON Web token
+whenever the clientwants to access the API they send me that
+string every single time and I convert it
+back to theobject that I used to create the string in
+the first place.So in that world, what on this object do
+you need to see so that you can validateIt later when it comesto your API, so like what do you, what
+would you need to know?So I would wanna know like who is this? So
+I wanna know their ID.What is the ID of this user, so I would
+want that.Maybe I want to know their email.So I'll put their email on here.That's useful. And then maybe I also want
+to know their username,so it's useful. So you notice these are
+all the three things on a user that's
+unique.This helps me identify the user and things
+like that.So that's what I wanna put on the JSON web
+token. You can put whatever you want.I wouldn't put sensitive things on there
+like don't put their password on here.Don't put their credit card number on the
+JSON Web token, but you wanna put like
+identifying traits soI can safely identify who this person is.Export const generate token, that's gonna
+be.Payload like this. We're gonna create our
+secret first or we'll get a referenceto our secret. That would just be
+env.JWT_SECRETAnd they're gonna create a secret key.Which just another level of security here.We don't, I guess technically we don't
+really need to do this, but it's not gonna
+hurt.What does this actually do? Well, this,
+according to the docs,createSecretKey creates and returns a new key
+object containing a secret key for
+symmetric encryptionor Hmac. What the hell does that mean?Hmac As far as I know, is an algorithm.It's the name of an algorithm specifically
+used for encryption.So this is just the algorithm that's used
+for encryption.Anybody else is an encryption expert,
+please let me know what that is, but Hmac
+is a is a encryptionalgorithm. So now what we can do is we can
+we can return a new.JSON Web Token and we can do that by say
+sign JWT pass in.Whatever that payload is, so I need the
+payload here,that's gonna be a JWT payload.So whatever that payload is here.I didn't want to Set the protected header
+here.This is just me and JSON Web Tokens
+along with the payload that we put,there will be other fields on it that's
+metadata to let the other part of the
+system that decodes thistoken, know what to do. So part of this is
+just me telling.That future system that's gonna look at
+this, what algorithm was used.To create this token, and by default, it's
+gonna be this HS 256We can do an issuethat. What this is gonna do is gonna put a
+header on this token or let's just say.Not header, but like another field on this
+token.With the time stamp ofright now to let you know when this token
+was created, which is helpful.We wanna know when this token was created
+if we're trying to like debug and figure
+things out.I also can set an expiration time, so
+yeah, having JSON Web Tokens live forever
+is probably not a goodthing because again you can't.You can't delete them. You can't get rid
+of them.They're not saved on a database anywhere.
+So if they just live forever and someone
+gets hold of yourJSON Web token. They're gonna have access
+to your stuff forever.And there's nothing you can do about it
+without completely changing your algorithm
+or somehowlogging the JSON Web the culprit JSON
+Web token and identifying which one it is
+and specifically writingcode to not allow that JSON Web Token to
+enter your API.Who wants to do that?So yeah, put an expiration time on these
+things.So I'm gonna put ENV. Expires in JWT
+expires in,or if you don't, if you didn't have that
+set cause it wasn't mandatory, you can
+just do something like7 days or whatever you wanna do. You could
+do 1 hour,whatever you wanna do. And then I need to
+sign it with that secret key.Cool. And yeah, don't worryabout that one, that's fine.Any questions on this? So this is gonna
+return to string, which is a JSON web token.A signed JSON Web Token.Oh, all right. Now that we have that,we can then go back to our auth controller
+and finish this out.So let's do that. What we want to do now
+is we do want to import the Generate
+token,so we can say generate.Token from there and then we can import
+the.Hash password from there. CoolSo inside of this trycatch, what we want to do is let's just
+destructure the body from the request,so we can say the req.body here.And we wanna get all the things that we
+are, we know for sure our owner,otherwise this function would not have ran
+because we're going to add input
+validation on the route forthis controller so we can safely say there
+will be an email here, there will be a
+username here,there will be a password here. Those three
+things for sure will be here on sign up.There might also be a first name because
+that's optional,but it maybe it's not there. They might
+also be a last name.If you wanted to type check this body, I
+believe this thing might take a,oh it does, params body, so yeah, this can
+take a generic,so if there was any parameters on this,
+you can add a type for those.Parameters, there are none, so I'm gonna
+say any, and then for the body.I could put an object here. I can say, oh
+yeah, this thing is going to take a Well,in this case I could just put.I could put user from the schema. I could
+do that, because if I go look at that a ohthat's an infer select, so I would need to
+infer.Insert, I would do something like this, I
+would say I'll make a new type,and I would say new user.And I would say infer the insert.And you don't have to do this types of
+stuff. I'm just showing you some type
+scripts though.This literally does not change how your
+code works.It's just TypeScript, but this is showing
+you if you wanted to type check the actual
+request body that'scoming in because we know what it is
+because we're gonna validate it, I can do
+that.I could have manually written it too,
+but this is just that way I keep it in
+sync withwhat the database Schema is without having
+to write it myself, so that way I could
+come here and sayoh yeah, this is gonna be a new usertype here. And then now if I.I did this right, I'll see req.Body. Oh wait, not there, let's see.Let's see requests. res.body, any
+req.body any,maybe it's the 3rd one too. It's one of
+these.Let's see, the user. There we go.So now if I do req.body, I could see all
+the stuff for that user on there.And that's the power of TypeScript, that's
+where it's really cool.So Let's go back to that, what I had
+before.With the destructuring and then I'll just.Do that. Cool. So we got that, all that's
+there.This is optional, I should say optional,
+maybe.I don't know. I guess not it doesn't
+really matter.So we got that. Then we want to create the
+hash password,so, in the example code of notes, I'm just
+doing it directly with bcrypt.You can do that too. I'm just gonna use
+our hash password helper function,so I'll just say this is the hashed.Password equals await hash passwordI gotta make sure thisis an async function, so I'll do that.This is gonna take in the password. It's
+gonna hash it.And now we are going to attempt to insert
+this in the database.So let's try to do that.I'll say constant user equals await.db.insert on the user's table with these
+values,the values that I wanna insert, and
+technically I could just pass in
+req.body here and that'swhat I would have done, but I wanted to
+show you all that these were the fields
+that are onhere so we can just.Type them out ourselves, so I'll say
+email.Well, I guess, no, I could not have put
+req.body.I could have put a destructured version of
+this minus the password because if I just
+put the passwordon here, it'll put the plain text
+password, so I wanna hash the password
+first,but I guess the simplest way to do that if
+I was to.Try to be clever just to show you all
+would be something like,I'll put an object here.I would say req.body like this,I spread over that and then I would say
+for the password though I want that to be
+a hashpassword and then. That would be like the
+same thing.This thing is saying. What I think you're
+saying.Hash password from a string, password, overload.The expected type comes from property
+password which is declared here on type
+email stream.Yeah, I don't know. I don't know what that
+TypeScript error is.Object literally may only specify on
+properties.Not sure, but pretty sure there is a
+password.On here, so Oh, maybeWell, you don't wanna dothat cause then it'll get overwritten, so
+don't do that has to go here.I don't know what that thing's talking
+about, but this, I'm pretty sure that'll
+work.Oh, is it because, oh yeah, I see.Past tense, yeah, so that will work,
+that's the simplest way to do that.And this is assuming there'snothing else in the req.body, so you
+have to be very strict in your Input
+validation,And then what I wanna do here, when I do
+my returning, I could just call and get
+back theuser, but I don't want the password on
+here so I'm going to basically select the
+fields that Iwant so I do wanna get the ID so I can say
+I want the I want I'm gonna,I'm basically creating an object that I
+wanna get back and I want an ID filled on
+it and Iwant its value to be the user.ID and then I want the email and I want
+that value to be.The user.email, right? I want the
+username.Users dot Username and I wantWhy would I do thatI want the first nameIf there is one.I want the last name, if there is one.Right, and then I'll take the createdAt
+that's helpful.Notice I did not get the password here.
+That's not something I would ever.The only time I would ever query for a
+password is when I'm logging someone in or
+changing their passwordThere's no other reason to query and showand get a password. There's no other
+reason.Cool. So now, assuming that works, what I
+wanna do now is go ahead and immediately
+sign the person inso I'll create a tokenSo I'll say token.Equals await. Generate token and I'm
+just gonna pass in the payloadwhich is gonna be an ID so that's gonna be
+that user.ID. And then I want the email, that's
+gonna be that user.email.And then I want the username, that's gonna
+be that user.Username. Cool. And then I'llrespond back. With the res.status,
+congratulations 201,you created a user. I'll send back some
+JSON here and what I'll do is I'll say
+message,you know, user created, sure, and then
+here's that new user,which is this user on this version.And then here's the token, so you can Go
+ahead and Sign In.Why did we have to create a newTypeScript type? Why couldn't we have just
+used the old user?Yeah, so the reason I created a new
+TypeScript type for new user is because if
+you go look atthis user, which is infer select.Selecting a user from a database, if I
+could look at the schema,that would mean. There would always be a
+created at,an updated at, there would always be an
+ID.So if I get something from the day if I if
+I select the user from the database,those things will always be there, but
+when I'm creating a user,those things won't be there.So if I would have used that type, that
+would have forced the user to not only
+send me upan email username and password, it also
+would be assuming that they also sent me
+an ID or created atand updated at like the code wouldn't
+break because it's just a TypeScript type,but TypeScript would have thought that's
+what was coming in when reality that's
+what not what was comingin. So I made a new type that's based off
+of the.Insert of a user and not the select of a
+user, because if we're inserting a user,the only thing that's actually expected
+are these 3 things.

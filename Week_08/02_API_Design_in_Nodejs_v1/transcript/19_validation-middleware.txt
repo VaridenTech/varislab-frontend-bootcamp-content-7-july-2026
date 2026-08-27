@@ -1,0 +1,155 @@
+One of the big things that we that I
+always do when I make an API is I like tovalidate the inputs, OK? So before I run
+my middleware,before I run my handler specifically, I
+want to protect.I don't want to have to be in my handlers
+doing a bunch of if checks if this exists,if this, if this, if this, like I just
+want to assume that everything I need for
+this handler torun is, has already been validated and
+given.So the best way I can do that is to
+validate the inputs that are passed to
+those handlers,so I don't have to write all those if
+statements.And the best way to do that in my opinion
+is the right middleware for it, so that's
+what we'lldo, we'll write some middleware to
+validate some inputs.For the handlers and Controllersthat we'll be writing later. So what we
+can do is we can create some middleware
+helper functions thatcan take in a Zod schema, any Zod schema,
+and then what it'll do is it'll Dependingon that function, whether it's validating
+the body, the parameters,or the or the query.It'll validate that object against the
+schema and it will log the errors,If there are any verysimilar to what we did in the .env file,
+so.Let's do that. So I'm gonna go to my
+source,I'm gonna make a new folder here, call it
+Middleware.Like that, make a new file, Validation.That's yes. And I'm going toimport. Some types from Express because
+they're all gonna be types Ican just say import type like that. I'm
+not sure if you could do that.You just say import type because these are
+all just gonna be types.I want the request. I want the response.I want the next function. So it's just
+type scripts you don't need to have it,but it just makes it easier.And then I'm gonna import some types or
+import some things from Zodd.This will be the Zod. Zo schema, waitis this one deprecated nowdeprecated use Zoy also useZod schema since it's still here, and then
+Zod.Error, there we go. Or they already
+removed the marksso the title and lesbian poison.Oh yeah, they just want me to do time, OK,
+cool.There we go. All right, so the first one
+we're gonna do is the one where wevalidate. A body, so this is a payload
+that you send up on like a put or a post
+requestso we want to validatethe body so the request our body.So we will export, cons, validate body,
+and thisis gonna be a middleware that takes in
+some option.The option is really just the schemema
+that you want to.Enforce, right? And because thisis a higher order function as in it's a
+function that returns a function,we need to return a middleware function.
+Remember, a middleware function is just a
+function that takesin three arguments Request response, and
+next.So we're gonna return a function that
+returns that has those three things as an
+argument.So we'll say oops, putting it right here.So here's the request, which is type
+request.Here's the response, which is type
+response.And then here's the next function, which
+is type next function.Right, we're gonna try to catch this
+because. Zod will throw an error if any of
+this fails,and we don't want that to break our
+server.We have to handle all errors.In our server, otherwise. It'll die.So Tricatch is a great way to do that it's
+a start.It's not gonna save you from everything,
+but it's a start.So first, let's try to validate this, so
+we'll say validate the body.Validated data equals the schema.Parse and we wanna pass in direct. Body.Cool, that's the first thing we wanna do.If that's good to go, we'll just add it
+right back to the body.We'll say cool, right, the body is gonna
+equal whatever the validated body is or.The validated data, validated. Data.The reason we reassign it back is because.Maybe this schema has like defaults on it,maybe it has coercions on it that modify
+the body,so we don't, and the result of parsing
+that schema would be.It would include those modifications so we
+would want to attach that to the body to
+really be truthfulto the schema, whereas if we just, we
+could just call next here and not attached
+to the body becausethe body that's on there was already
+validated, but then if again if that
+schema had coercions or defaultson it would not have those modifications
+and then you would run into your
+expectations will not lineup with what was actually happening.So we want to reattach it.And then we wanna call next with no errors
+cause hey,we're good, and that's the happy path, the
+sad path.Is oh, there's an error, right?So we wanna say same thing we did before
+instance of that error.We want to return. In this case, we do
+want to return a res status of 400as in that request. You messed up.Let's send back adjacent object to tell
+you where you messed up.We could say error. This will be a
+validation.Failed, we can call it whatever we want,
+nothing, no wrong answer there,details. We're gonna say error.Or issues, not errors, since we're in the
+latest version of Zo.Get the error. And thenwe're gonna put the field, which would be
+error.Path. Oh On the dock.And then we'll get the message, which is
+error message.Now if it's not an instance of a odd
+error, we just wanna call next and passing
+the error.Cause we want this to go to the error
+handler.The reason we're not doing that here is
+because we're just going to handle the
+error here.We could. Theoretically just get rid of
+this if statement here and just call it
+next E andbe done, and then in our error handler or
+somewhere else on the app, we would just
+have to dothis, we just have to do this.And maybe that's a strategy you wanna do
+as well, you don't have to handle it here,but we are handling it here, so we don't
+need to call.Next, We don't need to call, like I'm not
+gonna dolike do this and then say next, and then
+do like a E and thendo like a next year.I'm not gonna do that.I'm just gonna handle it here because I
+think it's specific to this use case,so I'm gonna, I'm gonna put it here.But you could handle it globally if you
+want it, but yeah, we're gonna stop it
+here,so. Any questions on this?Let me show you how we're gonna use it
+before we make the next one, so.The way this would work.Is we can pretty much go to, let's just
+let's just pick one,cause we're gonna we're gonna add these
+when we do the Controllers,but let's go to let's go to a habit route,
+right?So if I go to a habit route.And I say import. Validate body from
+there,right, so I'll say I'm gonna validate the
+body and I'm gonna import.Z From Zod, right? First thing islet's identify where we want to.Make an input. So here a post. So I know
+in this post there's gonna be a a payload.I want to validate that payload is
+correct, so before we haven't done the
+database stuff yet,so we don't actually know what needs to be
+on a payload to be able to create a habit,but let's just assume we know right now I
+would make a schema.I would say cons you know, create.Habit schema. Eals Z. Object.And I would just put, you know, the fields
+that I want to check on here again we
+haven't donethe database stuff so I'm just gonna make
+up one. Let's say a habit must have a name
+and itstype is Z. String, right? So that's the
+only thing I'm gonna put on there.That's it. Super simple. Basic, right?So then, because I want to validate that
+the payload for this is correct,what I can do, so I can add a middleware.Right, in between the route and the
+handler.Right here, I got it right here.So far we've only done the global
+middlewares, but you can add them just
+right here on the route.Long as long as they come before the
+handler, you're good.So in this case I'll say validate body.It's a higher order function, so I call
+it, and it takes in a schema as an
+argument,so I will pass in that.Create habit schema like that.There we go. So now this is saying.OK, before we can run this code.Which is safely assuming. That if this
+code is running that thepayload they got sent up must be good
+otherwise this code would not be running
+so that way I don'thave to do any if checks inside of this
+code anymore. I don't do any if checks in
+here.Which is what I hate doing.Because this middleware would not would
+not call next if the validation failedSo therefore, this would neverhappen. That makes sense? And that's an
+inputvalidation, right? And I can add as many
+Middleware as I want here.It doesn't matter. They are gonna call
+next to each other.And if I had a bunch, I could just put
+them all in an array like not that,I could just put them all in an array.Like this And this works too.You can, you can add an array of
+Middleware here if you wanted to.The reason this is helpful is because you
+can define.Different groups of middleware in a
+separate file as a raise and then bring
+them over to different routeswithout having to redefine them again.So it's like making your middleware
+portable if you have a bunch of them.Like, oh, I have this collection of
+Middleware that does this,does this, does this, and that's one
+variation.I have another variation, another
+variation. OK, save those in arrays and
+then pass those arrays aroundas middleware inside of your house.So this is how this is how you would use
+it, so let's give it a try,so, Let's do a post request to slash API
+slash habit.And let's not put a name on it and I don't
+know, let's see.Let's see if something See if it does what
+we think it's gonna do, which I should
+throw a Zoderror, so slash API slash.Have it, we're gonna do a post request. Is
+that right?Oops. Yep, OK, I'm not going to.Where is it at?There we go. Body Raw.JSON, OK, I'm not gonna do anything. I'm
+not gonna pass up any object.Let's see what happens if I just do that.Cannot post. Is it pluralagain habits? Oh yeah, why do I do that?It's a bad habit. Cool, so we got a
+validation failed.That's exactly what I thought was gonna
+happen. This is a Zod error validation
+field details filledso our logic is messed up on determining
+the fields,so we could probably fix that, but, as you
+can see,input invalid expected object receivedon oh no, actually the logic is right,
+there is no field.It's saying you never even gave us an
+object.So actually that's right. So let's give it
+an object and let's see what we, what it
+says now.Cool. So now that I gave it an object,
+it's like, OK, congrats, you gave me an
+object,but I still expected name to be a string,instead it's undefined. That's extremely
+helpful.And we get that For free, just by making a
+schema and passing it into that
+Middleware,so. Pretty dope in my opinion.I would never make an API without an input
+validator, I would, I would never do it.It's like making a database without a
+schema.She wouldn't do it. I don't care what
+Mongo tells you need a schema.

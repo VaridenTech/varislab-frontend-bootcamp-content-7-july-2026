@@ -1,0 +1,169 @@
+Anybody ever thought about what a
+JavaScript engine is or haven't
+experienced what a JavaScript engineis what that actually means? It's a
+compiler, right?Like it's compiling down to some C
+language that then compiles down to some
+machine codethat gets read by, the computer.So each browser is built on their own
+version of what that engine is so V8.It's Chrome's, Apple has. I don't even
+know what Apple hasanymore. I think Internet Explorer has an
+maybe V8 now or a WebKit.I don't know. I honestly, I can't keep up
+anymore, but these are engines that you'll
+never have to interactwith unless that's your job. Primary
+purpose of a JavaScript,in the browser is basicallylike do DOM stuff, do UI stuff, make HTTP
+calls, you know,we all know that global object is the
+window.We have DOM APIs, web APIs,We take this for granted, but we have free
+security in the browser.The browser protects us, right?I think that's the. That's the biggest job
+of a browser.Like, sure, a browser takes us to a
+website allows us to see HTML,but you can do that in your terminal. It
+just won't look good.What the what the browser actually does,
+the main workhorse in my opinion is.The security it keeps you safe like.If the browser wasn't doing what it was
+doing those specs were not created, you
+would have been.You would the first Chrome extension you
+were installed,your computer would have died. Because
+that's how easy it is to do stuff,so the browser sandboxes yourenvironment then today browsers do have
+module systems.I'm not sure if anybody's using them or
+not because we all still use bundlers like
+Vite Webpack that doit for us, but you can natively use ES
+modules in the browser today in most
+modern browsers,which is pretty cool, butno one's ever gonna use them because like
+how am I ever gonna turn my JPEG into a
+module?Yeah, you still need Vite or Webpack for
+that, so.These are just for JavaScript modules.Who the hell wants to go back into
+ordering what script tags, loading what
+order?I'm not doing that. Cool.No just JavaScript, It uses Chrome's V8
+engine,so it took the same engine we Not we,but some somebody threw it on your
+computer operating system level,so on your terminal, so you get the same
+JavaScript features.Notice I said features for JavaScript not
+APIs, just the features for JavaScript,but in your terminal in your runtime,
+right?So like if you go to your terminal you
+have Node installed,you can just type node, right? Then now
+you get this REPL,which you can do JavaScript thing so
+everything you could have done in
+JavaScript,you can still do here so.No, it's the same thing. Primarypurpose of Node.JS JavaScript build servers,
+access file systems,you know, be Edward Snowden, do stuff like
+that.Really cool They like the stuff that like
+if you told your folks,they just would not, they would think that
+like you were a wizard.This is what Node.js is for, like, this is
+truly what I think.Like when you start getting into like OS
+level OS level languages runtime
+environments,that's where like the power is. There's no
+window, but there is something called
+global or global thisthe literally the global is called global,
+like that's what it's called if I go here
+type global.It's a, it's a global.That's what it's called, it's not window.
+APIs available,file systems, networking, process
+management, crypto, not crypto coins,something else, security. G G's, you gotta
+roll your own,your own security. You're not gonna get no
+security in Node.Is that a flaw? Probably all the new
+JavaScript runtimes that are coming out
+like Bun or Deno,which Deno was created by the guy who made
+Node,have security built in very similar to the
+browser nowwhere you have to like opt in, but Node
+nah.You figure it out. You do your own
+security, so this is where I was like,you're gonna realize that like you got it
+for free with the browser then module
+system historically itwas CommonJS with the latest versions of
+Node we get ESM.So if you're on the version that I told
+you to, you'll have ESM.If you don't know what ESM is what
+CommonJS is.I don't want, I want you to have that
+innocence.I don't wanna take that from you.I don't wanna remind you what CommonJS
+is. Just continue on down your ESM track.We don't need a history lesson.So understanding servers from a front-end
+engineer's perspective, I think this is
+key,right? So like on the front-end, you'll do
+something like this.You'll fetch this API, right?Well, to handle that on the back-end you
+gotta, you gotta make a route for that.So this is what we're gonna be doing.We're gonna make a routes. That that's
+where this goes.So if you only ever did front-end it was
+like.You have no idea what the hell is
+happening with this calls.There you go. That's what's happening.That's a small part of what's happening,
+OK? The other thing is likethis sounds obvious now I'm sorry if it's
+very obvious, but to me when I was
+learning I did notunderstand this concept because I was just
+new to computer science in general was
+that.For a client app this could be a website
+this could be a mobile app,this could be a smart TV app this could be
+a desktop app we all have our own version
+ofthat running on our machine our machine is
+powering that client that client
+traditionallyfrom some central computer that we all
+share resources from that is a server,right? So if we both are on if we're all
+on the same notion website right now.That website is being served to us
+individually on our browsers on our
+computers eating our resourcesindividually. But the server that's
+serving this.I know it's a CDN, but let's assume it's a
+server.All of our clients are sharing that one
+server,so we're all sharing the resources from
+that server.So that's a big difference, right?Because like right now. If this website
+has an error,let's say they have like a scrolling
+animation, when I scroll, it crashes out.Cool, I'll just refresh my page like I'm
+good to go or maybe actually it'll
+probably continue to workeven though it crashed because it's not
+really doing anything.If the server crashes, well nobody can use
+it because we all share that one server,right, in the case of like not scaling
+things like that.That to me, I did not understand that.So if you, if you get that already, good
+for you.I was not some that was not intuitive to
+me.It took me a while to really understand
+that obviously there's like architecture
+around like scale scalingyou know, load balancing horizontal
+vertical scaling like all this stuff
+serverless,you know, but. The difference between a
+computer.You know that's a server a client that's a
+big difference.Types of backing services we have
+long-lived servers that's what we're gonna
+make today.I know everybody's doing serveless we're
+not doing serverless, I'll talk about
+service we're not gonnado it. We're doing long-lived traditional
+servers.This just means it's a program that's
+never off.You could think of like a loop that never
+ends. If you did an infinite loop on your
+computer rightnow, don't do that. You'll eat up all your
+RAM you won't be able to use your
+computer.You can think about it like that.It's a, it's a process that never shuts
+down until you tell it to or it crashes,so that's what a traditional long theserver is. Their service functions, these
+are like just think of like take a
+function.It's not active until you hit it with a
+with a route.It turns on, it executes your code, then
+it shuts down, right?So. You can still do the same things you
+could traditionally do on a long-lived
+server,you just don't have to pay for when it's
+not running.But you do have to trade off for like
+speed architecture.There's only you can't use. Long-lived
+things like WebSocketsstuff like that in a serverless
+environment. We have edge functions which
+are the same thing as serverlessbut on a CDN level, so we've gotten to the
+point now where we can run compute on a
+CDNyou know, 10 years agowe could not do that. That was fringe
+technology to be able to.Run like basic, like there was, you know,
+there was conditional logic at some point
+that you could havedone on a CDN with like Varnish or
+something I've never used because I was
+just notdoing stuff like that at that point.Now we got to the point where you can just
+write pure JavaScript on a CDN,which is insane if you don't know what a
+CDN is.It's just a network of computers that is
+copied all of its files all across the
+world,so you can get them faster. That's it.You're looking at this website on the CDN
+right now.That's what Edge function is. It's a
+programmable CDN background jobs.These are things that run in the
+background, you know, for instance,you try to go do something on a website
+it's like, hold on,we'll let you know when this is done. This
+is taking too long. That's a background
+job.They can't do it right now for whatever
+reason. Either it's gonna take too long
+they don't want you sittingthere looking at it a bad experience or
+they have to queue it up for whatever
+reasons,costs, computes. Whatever, that's a
+background job a lot of those,I would say most background jobs have
+nothing to do with the user.A lot of the background jobs are just for
+like.Architecture stuff like honestly sometimes
+just fixing problems that engineers
+createdthemselves. I've seen a lot of background
+jobs of being like we made a background
+job to like fix thisbug that we can't fix so we made a
+background job that just like resets this
+thing every day at9 o'clock because we don't know what the
+issue is it's like oh OK cool so.That kind of brings me to cron jobs, which
+is a type of background job that runs on
+some typeof interval so there is a spec specific
+Linux cron syntax that you can describehow long or what frequency you want this
+code to run.So, yeah, it's just scheduled tasks.So these are all like different backend
+types of things we're gonna be doing
+traditional long the servers

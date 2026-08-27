@@ -1,0 +1,251 @@
+So now that we have that, the next thing
+we wanna do is create a seed script.So what is a seed script?It's going to seed our database. It's
+going to put, and it's not always fake
+data.There's a lot of ways to see the Database
+and for different reasons,but essentially populating our Database
+with the data so we can do things.Most of the time you wanna see thedatabase, might be like for making a
+feature it might be easier to see some
+partof the database so you can make a feature
+because it relies on some type of relation
+or maybe ifyou're. Doing, you know, full stack,
+you're also working on the front end and
+you wanna work on the frontend first, but you don't have any data
+like you wanna work on this view that's a
+table,sure you can mock the data out on the
+front end and do all that, but then you
+have toGo back and add all the network logic when
+you finally figure out the back end.Instead you can just go ahead and hook up
+the back end, do everything, and then just
+see the Databasewith fake data. So from the front end's
+perspective,nothing will ever change because that data
+is the same shape and it doesn't know that
+the data is fakeit's just data so.There's many reasons why you wanna see the
+database, you know, you know, sometimes
+you might wanna pullin production data into your local
+database for whatever reason to try to
+replicate an error or an issuethat someone might be having and it's
+easier to do it that way.So, but at the end of the day, it's just
+putting data in the database,you know, fake data withsomething like faker JS, other ones out
+there that are like, you know,come up with fake data. You can curate the
+data yourself like hand create,hand select the data that you want to Go
+into the database.And make that.You can also, like I said, do a production
+data import,so if you have, you know, a dump of a
+database somewhere,whether it's proud or staging or some
+version of that.You can export that and then import that
+into your database.A lot of databases actually have that
+feature built in natively where you can
+export and import or youcan do it manually like this example is
+doing.What we're gonna do is create our own C
+script and we're just gonna use fake data,right? So. Let's do that.So what we're gonna do is head over to
+database folder,make a new file, call it CD.And we're gonna see the database.So the first thing is we need to import
+our DB from the connection.And then we need to import all of our
+tables that we need to use to create data,so that's our users, that's our habits,
+that's our entries,that's our tags and our habit tags.From, schema. And then we need to, we're
+gonna do somestuff with passwords here, so we're gonna.
+Import.Hash, did we do all yet? I don't think we
+did all yet, so actually I don't think
+we're gonnado that yet, and that's fine, so.The first thing we're gonna do, well,
+really the only thing we're gonna do is
+make this seed functionthat when called will see the database so.And there really is no right or wrong way
+to do this, so I'm just gonna do it this
+wayso we'll say exports, oractually let's just say. Constant see like
+this.So async function. Doesn't take any
+arguments and it's nice to run the C
+script and seelike exactly what it's doing so it's for
+me I like to do a lot of logging inside of
+aCD script so when I run again in terminal
+I can see where it is and what's happening
+so I'llyou know, do a loghere you can do whatever you want but I'll
+say.Let me see, what is that like, Bean or?Plants Beanstalk. I know, it's seedthere it is, OK, soI'm like, what is that? Starting Database
+seed,I'll do that, something like that, and
+then I'm gonna try to catch this just in
+case it breaks.I don't want, you know, everything to die.So, first thing you wanna do in the seed
+scripts.At least for in this example because it's
+just a It's just my database that I'm
+connecting to.I want to clear the all the data in the
+database.So Be careful not to run a seed script on your
+production database.First of all, you should never have
+production database credentials locally on
+your computer.That's just not good. If for whatever
+reason you have production Database
+credentialslocally on your computer. First of all,
+who gave them to you and why did they let
+you get themAnd two, don't do itYou, I can't tell youhow many times I've accidentally like, oh
+I just dropped the production database.I thought that was my local database, and
+thankfully like Neon has like backups like
+every minute I couldjust click a button and restore
+everybody's data, but yeah, it's bad,don't do that, and most companies won't
+even ever give you access to that anyway
+it's like a whole teamit's like dedicated to like making sure
+people can access the production Database
+for legal reasons andtechnical reasons. So, but anyway.We're gonna delete everything, so I'm
+gonna just write everything out.We could probably loop over this and do it
+quicker, but I'm gonna say DB.Delete and then just the name of.The table, so we want to delete the
+entries, we want to delete the habit tags,we wanna delete. The habits.Everything must go. We want to delete the
+tags, and we want to delete the users.So, drop all of that.And then now that everything is dropped,
+we want to create some demo users, so I'm
+just gonna log thatUsers. And you can.Have as many users as you want or not,
+it's totally up to you.I'm gonna say. I'll make, I meanI'll make at least oneobviously, but if we needto, I'll make 2, but first thing is I'm
+gonna say.Let's just say this. I'll say results and
+I'll talk about this in a minute.So I'll say results equals a weight the DB
+and then to do to put something in the in
+thedatabase, you can do the dot insert
+method, and then you can put the table on
+which you want toinsert into. In this case I wanna insert
+into the user's table that I imported from
+the schema.And then what do I want to insert? I can
+do values.Values can take an array of objects if I
+wanna insert many or I can just take one
+object ifI just want to insert one. This is gonna
+be type checked to the table that I'm
+inserting into soit knows what a user can have, right? So
+if I do this, you can see here are all thefields on the user. And all the ones with
+question marks are the ones that I don't
+have to addSo in this case I need anemail, I need a password, I need a
+username, right?So I'm gonna add those. So for email, you
+can put whatever you want.I'm just gonna put demo atApp.com. And then for the password for
+now.I know maybe in the notes I have like the
+hash password stuff.We haven't gotten to off yet, so just put
+whatever password you want.You can har. Right now we're gonna
+hardcode the password, and obviously for
+good reasons you don't wantto do that in production, but it's totally
+fine here.First name, put whatever you want.Demo Last name. Person Andthen you want to do returning like this.And then I need a username. I think that's
+why it's freaking out, yeah, username
+would just be demo.Cool, so I'm just putting one person in
+here, calling it this.Insert always returns an array, no matter
+what, that's why I have results.So JavaScript trick, you can just
+destructure this, right?By putting an array around that and then
+calling whatever you want, so I'll just
+call this the demo userSo this will, this isbasically saying grab the first thing from
+the array that's returned from here.And call it and make a variable called
+demo user to represent that first thing.That's what destructuring is. That's what
+this is.Now I have the demo user.The next thing I could do is I can create
+some tags, so I'll do that console a log,and I'm gonna say, creating tags like
+that.And then I will say, Same thing, I'm gonna
+sayhealth. Health. Health tag andI'm gonna say a wait D.Insert. Tags just like this.Take the values I say name, call whatever
+you want.I'm gonna say this is a health tag.Color But any hexadecimal color you want,
+I just put.Something like that. And then not
+returning.If you don't do dot returning, it'll
+return the metadata on the insert.It'll like, oh, I inserted this many rolls
+at this table.It'll give you all the metadata on that
+operation and not the not the data itself,not the rows itself. So if you don't do
+returning, you'll just get the metadata on
+the operation itselfand we don't want that, weactually want. The thing that we inserted,
+so we got that.Any questions so far? NoAll right. The next thingwe can do, and we can make more attacks
+and in my example,in the notes I have tons of attacks, tons
+of stuff.We don't have to make all of these. You
+can if you want, but I'm gonna move on to
+thenext thing, and I'm going to.Create a habit, so I'll say, let's make a
+new habit,we'll call it the exercise habit.Like that, same thing, DD.insert.For the habits. Top values.For this one. We need to associate.A habit. A habit cannot be created unless
+it has a user,so we gotta give it a User ID here, so we
+have our demo user and we can do the dotID of that demo user.Have it must have a name. You call
+wherever you want. I'm gonna call it
+exercise.got a description here which is not
+required.I'm gonna put one, you know, daily.Work out. And then frequency.There's no enum here, so you can put
+whatever you want.And target count because, you know, small
+wins,we'll put one. And also returning.So now we have our exercise habit.And then what we wanna do is we want to
+join theExercise habit to the. Health tag, so that
+means this habit istagged as health if that makes sense
+because that was the whole point of having
+tags that we can taghabits with different tags that we
+created, so we'll do that.By using the habit tag.Mini to mini table or joint table, however
+you wanna call it, so we'll just say wait,D. Insert, habit tags. Top values like
+this.You put an array or you can put an object
+of arrays, doesn't really matter either
+the same.And we'll say cool for this one, the habit
+ID is gonna be the exercise habit.ID and then the tag ID is gonna be the
+health tag.ID. And that's it.We don't need a result of this, we just
+need it to exist.So now we associate those two together.Now I'm gonna add some completion, some
+entries for our habits.So, adding completion entries.Let's just make one for today, so I'll say
+today equals new date.Set the hours. It's a lot to do.Today that's set hours. BasicallyLike midnight Cool.And then I have some code here that
+basically just addscompletions every day for up until today,
+like for a week,so that's basically what I'm doing here,
+so we can do the same thing,so I'll just make a for loop here.And I'll just say like I go 0.I'm minus 7 days for a week.Or I less than 7 days for a week.I Get the dates.Which is today. And then we want to
+subtractI'm sorry, they do.Set the date. It's gonna be whatever the
+date is today.Minus 1. So we're gonna go back I amount
+of days.And I'm gonna insert that, wait, D insert.Into the entries, the values.The habit ID, so for this habit, which is
+the exercise habit.I want to completion date.Is date And then for any notes.Basically, if I is notzero, I can put, you know, great workout
+or whatever,but you don't have to put a note, it's
+totally fine.And now we log some entries for this
+habit.Super simple. Notice that when we did this
+insert here,this is not creating an entry because we
+already have, I'm sorry,this is not creating a habit because we
+already have a habit it's creating a new
+entry for this habitright? That's the, that's therelationship right? This habit ID for
+this.This entry has this habit ID that relates
+to this exercise habit ID,so take note of that the relationship.We'll keep moving, so outside of the
+entries.Let me see.Oh, you know, all I really have here, I
+had an example of just like how you might
+be ableto query it, but we don't need to do that
+in a seed. That's just like a sanity check
+tomake sure that everything works, but
+that's fine.Here's where I'll just start adding some
+more of the logs of information about what
+happened becauseif you're gonna see the user with a an
+email and a password, sometimes it's nice
+just to print thatout so you can know what to log into when
+you go test it in Postman or your UI orsomething like that. So I'll just say
+database see it.To see it successfully if we got here.And then You can put whatever you want.I have some stuff here in the notes that
+are pretty good, but essentially, I just
+want to see likethat demo user, and I wanna see that
+password, so,I'll say demo user asJust some information here.User, whereas user with habits?Oh no, that's the query. Oh yeah, maybe I
+won't log that one then cause I didn't do
+that queryso I won't log that.I'll just go ahead and get those
+credentials. That's really all I care
+about.User credentials. Email will beWhatever that user's email isSo it is demo user.emailUsername, just in case Ineed that. And password.Which for now is plain text.Cool. And if it failsthen let's log that.Do that and then. Stir the error again or
+you could just say process.Exit. What? Either way. Andthe last bit here is a fun little trick
+for the latest version of Note,
+
+23.6
+00:17:26.409 --> 00:17:28.178
+and it just keeps the seed script
+flexible.What we can do is we can detect if this
+file is ran directly from the terminal or
+ifSomeone imported the seed functionand tried to run it. Either way we want it
+to work. If you ran this file directly
+from theterminal, we want the seed function to run
+immediately.If you, but otherwise you should just be
+able to import this seed function into
+another file and callit, and we want it to work either way so
+what we can do,we can do import.meta. URL which is
+essentially.That just gives you the you that gives you
+the file path of the current file that
+you're in andin previous versions of Node, the way
+you would have gotten this is doing like.You have used like the path import and you
+would have did like.God, I forgot what it wasI used to use itall the time, I forgot what it was, but
+you used to be, there was another way to
+to getthis. It was like oh yeah, dirname.And using the path, you'll be able to get
+like if you ever seen this.Like that their name and then using like
+path.join to get the current file you
+would have done.net.You can't do that in the latest version of
+Node when you're using ES modules.ES modules prevents that from working, so
+you have to do import.meta.URL, which is the current file that you're
+in. So if the current file that we're in
+equals thisfile path like this. Of Processand I'm gonna explain thispart in a minute. ARGV1.What does that mean? So process. ARGv when
+you run a command.From the terminal, every single thing that
+has a space in between it isgonna be added to an array called ARGV.And they're gonna be indexed from left to
+right. So whenever you run anything in
+Node space.Anything Node would be the first argument,
+so that would be process ARGVindex 0, that would be Node. The second
+thing would be the file that you're trying
+to tell Node torun. So basically if the file that we told
+Node to run is the same file that we're inautomatically call the seed scriptThat means somebody's running thisfrom the terminal. Does that make sense?So I'll go ahead and call the seed
+scripts.Then if that's successful. That process.Exit cleanly with a 0. Otherwise.I guess I could catch it hereWell, if I catch ithere, This is never really gonna matter
+cause I'm already catching it here,but sure, we'll just say catch it here.And process.exit. What? Cool.Otherwise. You can go ahead and.Programmatically use this seed function
+in your code and do it that way versushaving to do it from the terminal. So it's
+flexible. You can run it from the terminal
+and it'll runinstantly or you can import this and run
+it programmatically,however you want to do it.Cool, so let's run this and see.If we broke something. Bump this up.So now I'll say NPM Run DV.See There are my logs, looks good.So mine successfully seeded, if you had
+any errors.Might want to look at the code, see what
+went on.I can verify this by going to Drizzle
+Studio.Refreshing this and my data should be in
+here.There we go, here are my 7 days of
+entries.I can see that they're attached to these
+habits, so the relationships worked.Here's my habit. I only have one.I can see that, it should be attached to a
+habit tag somewhere.It is, it's attached to this habit tag,
+it's attached to this user, and it has all
+of these 7entries. I can look at this one habit tag,and it should have one habit ID.And one tag ID and they both should point
+to a habit in a tag,and they do. I got this one tag called
+health that should point to a habit tag,it does. And I have a user that has a
+bunch of habits, I believe, or one habit I
+guess.

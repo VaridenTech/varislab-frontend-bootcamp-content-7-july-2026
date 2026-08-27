@@ -1,0 +1,66 @@
+OK, now let's test our route. So, like I
+showed you earlier, I'm using something
+called Postman.You can download Postman just by googling
+Postman and downloading it and actually
+kind of justwanna show you. That part right quick
+because it was kind of tricky because they
+were like trying toget me to sign up and then they were like
+they had this one option I was like, whoa.Actually, you can kind of.Like cause if you click, I think if you
+click to sign it for free.Don't do that. Click the download button
+instead.Click the one for your platform, cause
+it's like, oh yeah, that's orange and it
+sticks out and it's freeall the things.No, click the gray button out here that
+they don't want you to see.So find your platform, do that. This is
+literally making an account and doing all
+the stuff and there'slike a trial and. The only paid features
+as of today that Postman has isfor teams. We're not working on a team
+right now.You don't need any of those features,
+you're just testing out APIs.If you have your own tool to test APIs,
+use that.I prefer to use tools in the terminal
+actually.There's also tools built in a VS Code that
+will let you test APIs,but Yeah, Postman, it's beenhere for a while, it's not going anywhere,
+so yeah,use Postman. There's other ones too.
+There's another one called Insomnia.Which I think is better than Postman, but
+I think they charge you now.Oh wait, no, they, OK.Yeah, I guess they saw that subreddit
+people complaining and they went back.They were charging people now they have a
+free one.I actually think this is better than
+Postman in my opinion, but they both do
+the same thing.It just allows you to like test your API.
+So it's a visual thing for API so.Regardless of what you're using, I'm in
+Postman, so now I'm gonna test my API,and it's gonna be localhostWhat's Also, the long wayof saying that is 121.127.0.0.1. That's also localhost for most
+people's computer,but you can just type in localhost.And then colon port 3000, right?Every website has this colon 8080 on it,
+but like I said,the browser drops it off, so make sure you
+got your port there and then for us.At least for me I put slash health. I did
+a GET request to slash health, so for me
+I'm PostmanI'm changing this verb to GET.And I'm making sure I put slash help.OK, I'm gonna hit send.And then I'm gonna get back my JSON
+message here.Any observations around servers. Anybody
+come in thinking that making an API was
+gonna be tougherthan what I just showed?Because honestly, it's literally. This is
+it.Everything else is just like supporting
+this.This is like an API. It's like done. Cool,
+so I mean.Play around, try some different things.
+You can send other things back here.It literally doesn't matter like what you
+send here,right? It'll. I'll go. It'll go here,
+right?We can also send back other things, notJSON, so for instance, you can do a do
+send,and this thing has likethese helper methods on it like send the
+file.We're not gonna, we're not gonna do all
+that, but.OK, I literally said don't do that, so we
+can do that send and then.I don't know, see if I put a button in
+here.Well, it Actually, well, I don't know if
+Postman handles HTML.I guess that depends on Postman or if I
+need to declare HTML dock or not,but let's see what happens if I do this.Yeah, I just it sent it back as a as a
+string, so,oh, there it is, it does render HTML. So
+you see I sent back.HTML, right, so you, a server can send
+back anything, you know,it's not just JSON it.Whatever you want it to be, because it's
+it as long as it's parsable over the
+network thresholdright? So the network barrieryou can't send like logicOver the network or, youknow, like you couldn't send like a
+function over the network.You could send a string that represented a
+function definition that might get ran.I don't know why you would want to do
+that, but you could, but you can't send
+anything executable overthe network. It can only be.You know, stuff that could be written to a
+file if that makes sense,Cool, and you can't send like recursive
+things by default either, so,or I'm sorry, cyclic things.So if you have like a like a date object
+is usually a big one, you can't typically
+send dateobjects over the wire without like.
+Converting them to a string or something
+like that.

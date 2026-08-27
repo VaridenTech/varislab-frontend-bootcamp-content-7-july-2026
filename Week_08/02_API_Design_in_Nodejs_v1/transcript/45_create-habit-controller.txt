@@ -1,0 +1,134 @@
+So what we want to do is go to our
+Controllers folder here,make a new controller, we'll say habit.Controller.ts and we'll get to work on
+this, so we'll say import typeResponse from Express, so weget that and we're gonna use our
+authenticated.Request from our middleware instead of
+Express's request.You need to get our database in here cause
+we're gonna be doing database things,
+that's the whole pointof a server or a whole point of the API I
+should say.Then we're going to import.The habits table. And because of
+relations, we might have.The entries table because you can create
+entries for a habit.You might also have habit tags if someone
+wants to create tag or associate a habit
+witha tag, and we're allowing them to do that
+through the habit resource,we might also allow them to do that
+through the tag resource because it's a
+many to many,so it's denormalized. You can do either on
+either side.You can say I'm gonna create a tag and
+assign it to these habits,but maybe I also wanna create a habit and
+assign it these tags,so either way. And then, yeah, tags for
+that.And then just some helper methods from
+Drizzle to help us with our querying.Not Drizzle Kit Drizzle ORM. We're gonna
+get the one that we used before equals,we'll get a and, we'll get a descending
+order for sorting,we'll get an array for checking.In an array. OK, so the first one we want
+to do is the C part of CRUD,which is create. So we'll export a
+function here called it create habit.And it's going to. Take a request, but
+it's gonna be an authenticatedrequest. We're gonna take a response.It's gonna be the response from Express.And we're gonna do a try catch.Like this. And then we're just gonna
+destructure the payload,the body, so we can say req.bodyAnd we're gonna get the name, we're gonna
+get the description.We're gonna get the frequency, we're gonna
+get the target count.Target count. And any tag IDs.If you have some tag IDs, you can send
+them up and we'll associate this new habit
+with these tagsso you can pass those up if you want.And then we'll get the User ID. Well, I'll
+just use req.user.ID so I'll have to make a new variable.And it's something new that if you've
+never worked with databases, you're gonna
+see something new hereis we're gonna make a transaction on the
+database.So what is a transaction?So what if you have to write to the
+database more than once for this function,right? And what if the first right
+operation worked,but then the second operation failed? Now
+your database is left in a broken state
+because you neededboth of those things to succeed in order
+to do your job.Like imagine transferring money from a
+bank account and then like there was 3
+database operations,2 of them succeeded, like the part where
+it took your money out of your account
+succeeded,but the part where it sent it to the other
+account failed.Now what? Where's that money?It's not in your account and it's not in
+the other account because it failed.OK, a transaction is there for that
+reason.A transaction will basically group a bunch
+of database right operations into onecall to the database and if one of them
+fail, it'll roll back all the other ones.So pretty much they all have to pass or
+none of them pass.It's essentially a git commit.It's the best way I can describe it is
+you're doing it git commit.But instead of to get, you're doing it to
+the database, so you're like, here's all
+the changes I wannado, commit them all at once.That's what a transaction is. Any asset
+compliant database has transactions.So we're gonna start a transaction here.The way this works is you just call
+transaction and you get this object right
+here.I'm just gonna call it TX for transaction,
+and it does the exact same thing as the DB
+up heredoes the exact same thingYou just treat it likeDB. That's it. So will createa new. Have it I actually just call it new
+habit,so I don't get confused.Equals await instead of using DB we use
+DB here, it will not be on this
+transaction.We have to use TX.TX.insert. On habits.But this value. In this case,Oh yeah, I'm sorry. In this case we want
+to just pass in.The User ID will be req.user.The name is nameWe already destructured that, thedescription is description, the frequency
+is frequency, and the target count is
+target countSo we already destructured allthose things, and then we're gonna say
+returning.Give me all the things.Cool. Once we have that new habit, we're
+gonna be like,did you pass up some tag IDs? So if you
+passed up some tag IDs.These are IDs of tags that you already
+created and you have the IDs for.Then, so if you did pass the tag IDs and.Which is just check and see if you have an
+array.But Does that array have a length?So are there some tag IDs actually in it?And this is something we could also do on
+the.Input Validation middleware it's like
+let's check if there is if there are tag
+IDs it must have at leastone in it and we can like write a Zod
+thing for that so we don't have to write
+thisif statement here that way we can get rid
+of all the if statements inside of this
+thing,which is what I'm always shooting for but
+for now let's just do this.So we can say habit tag.Habits, tag values is gonna be.Tag IDs. Map. So now we got a map over
+each one of these tag IDs.And we need to essentially create a on our
+many to many table our habittag, it's a tag ID and a habit ID so for
+each tag ID we gotta create one of thoseand insert into the database, right? So
+the habit ID.Habits ID. It's gonna be that new habit
+thatwe just created, right? And then we wanna
+associate this habit ID to any.Tag ID that we're currently on, so.These will be an array of objects that we
+can then.can insert into the habit tag.Table. Like this. Cool, so we'll insert
+all those that'll create any associationswith this new habit that we created with
+all the tag IDs that you sent up.And then lastly, still inside the
+transaction, we want to return,new habit. So the way the transaction
+works is whatever you return at the end,that's what you get up here.So this is the new habit.Now if any of this breaks, This will all
+be rolled back,this transaction with their own error. I
+try catch what catch that error,and we'll get down there.Cool, so if we get here, we can assume
+that everything is good.We'll say REST our status is 201.That was a successful post.We can say cool. Here's a message.Habits Created And then here's your habit.Or yeah. There you go.Otherwise, If anything failed here.It's because of us. It's definitely
+something on our side.It's a database issue, it's something
+because the inputs were validated,the user was authenticated and identified.Yeah, if so if something fails here, it's
+our fault, it's our system, so we have to
+just say thisis a 500. So, greatHave it E And thenREST status. 500 JSON EThat to create habit. Cool.So we have create habit here.And before we make new ones, we can just
+Go ahead and add this to our habit route.So let's go to where that is. That would
+be this one right here.The post to slash inside the habit route
+is where you would create a habit.So I will get rid of this controller right
+here.I would say, create. Habit, we already
+have this Validatebody with this create habit schema. I
+forgot what, is this the one I made in
+oops.It's the one I made in the DB. Let's see.
+Oh no, it's just like some fake one that Imade. So here's our create habit schema,
+it's like a fake one that I made as an
+example.I'm not gonna use that one instead.If I go to our database Schema.And go down to the bottom.I'll just export one from the Database
+Schema, so I'll say insert.Well, actually, no, I can't do this
+because I'm adding something special to
+our abilityto create habits, which is an array of tag
+IDs and the habits in the database.Don't take an array of IDs.Of tag ID so I couldn't use that one.I gotta make my own essentially. I could
+extend it, but I've never done that and I
+don't know ifit's gonna break, so. I guess I'll add
+that one back,but I'll just actually change it to what
+it's supposed to do.Which I can just go look at the controller
+that we just made.And it's expecting these, not that one,
+it's expecting these things.And if I look atthe database, I know for sure name is
+required.And what else is required? So name is for
+sure required, frequency is required.Everything else is either. Not required or
+default,so really only need to check for
+frequency.And name as far as like being required,
+all the other ones are just like.You know, doesn't really matter so.I'll go back to the.Habit routes I'll say name, this is a Z.
+String. I'll say description. Thisis also a Z string.Frequency This is a Zdot. Number Is that right?No, this is also a string. Oh yes, I don't
+know why I thought it was no.This is a string, not no target count,
+that's what it was, it was a number,we don't need that. Cool, so I'll go back
+to.This is a string. Target Countsa Z. String. And then we have tag IDs.Which is a Z string or I'm sorry, Z.Array. Which includes a bunch of strings.But some of these are optional, right? So
+tags is optional,so I'll mark that as optional,Description is optional. Frequency.It's not optional, so we gotta have that.The name is not optional, so I think we're
+good on those.Yeah, I think that's it, and then now we
+can take this.And oh yeah, it's already there, so that's
+good, so we posted that one's good to go.We can try it, or actually let's just keep
+moving and we'll try them all at the end
+just incase so we don't get through them all, so.That's our schema for that. That's how I
+would go about making that schema.Ideally I would just keep it in sync with
+the database, but,yeah, sometimes like I said, what you
+expect from the user and what the Database
+expects could be twodifferent things, yeah, it's a type of
+frequency.Oh yeah, thank you. Frequency.There we go. Oh, frequency.

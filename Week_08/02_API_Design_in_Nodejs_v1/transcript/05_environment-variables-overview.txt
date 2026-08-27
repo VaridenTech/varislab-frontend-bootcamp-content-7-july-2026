@@ -1,0 +1,80 @@
+I'm gonna introduce you to one of my first
+opinions that I don't think a lot of
+people solve verywell, but I do this with every single it's
+one of the first things I do with every
+single noteevery single Node JS project I make,
+whether it's an API or some script or some
+and these days it'smostly like an AI agent. Is standardizing
+andtyping out. My in my environment variablesso. What are  environment variablesLet's talk about that.Let me go back to the notes. And that's
+what you'll see like in these imports and
+stuff,but so environment variables, if you
+haven't taken the note course or you
+haven't done any system leveringsystem level OS programming, you might be
+wondering what an environment variable is,even though you've probably done them in
+React.But the way that they're done on the front
+and is very much simulated.They're not actually environment
+variables. I mean, they're injected
+through the environment,but they aren't read like environment
+variables when you use an environment
+variable on a build systemlike Vite or Webpack or something, what's
+actually happening is that so if you do
+like pro like in thecase of NextJS if you do like process.Ev. And the next JS makes you do like
+next_ public the name of the environment
+variablewhat actually happens if you use that on
+the front end is that gets substituted out
+forthe actual value of the environment
+variable.So if you were to go look at the output of
+that code.And you were to examine it, what you would
+see is the value of the environment
+variable,which could be dangerous because most of
+the time your environment variables are
+secrets that you don'twant people to see, so congratulations you
+did prevent GitHub and people on GitHub
+fromseeing it, but you didn't prevent anyone
+from looking at your source code from
+seeing it because that'snot how  environment variables work. That's not the
+case of the server.There is no. You know, the code, your
+server code isn't gonna be inspected
+unless someone gets accessto your server. So an environment variable
+is essentially a variable that gets
+injected into the environmentand it's a and it'sa great way to like change.Configuration and options within your
+server without having to change the code.Right, the equivalent of this on the front
+end would be like a feature flag.If you've ever done feature flags on the
+front end where you can be like, oh,you know, I wanna or if you do AB testing
+or anything like that where it's like I
+can dynamicallychange something about this front end
+without having to do a commit on git on
+GitHubor git and push it somewhere or like a
+headless CMS where you can go publish a
+new blog poston a headless CMS hit publish and your
+website immediately gets that because it's
+just dynamically pullingit in. environment variables are like the
+genesis of all of that.It's how we inject. Variables dynamically
+into our environment and this is useful
+becauseone things are secret that we don't want
+to expose in our code bases so we don't
+wanna write themand two we want to reuse the same code
+base but across many different
+environments,right? Like we wanna use this code base
+we're writing right now locally on our
+computers.And locally on like if we were all on the
+same team, working on the same app,we that's in the mountain of environments,
+so we want to be able to make sure we can
+have ourown values for our own environments.We're gonna use something probably staging
+will have its own environment variables,its own database, it's own URL, and then
+production will have its own stuff too.So how do we like swap out all those
+variables if they were hard coded?If I went into the app right now, so the
+database URL is this, and I put that right
+inthe TypeScript file, well what happens when
+it's on staging or what happens when it's
+on your computerthen what you gonna write all thosein the file like it's impossible.What if they change? With some of these
+variables are on a rotation and aren't
+set,they're dynamic in which most hosting
+providers, a lot of those variables are
+dynamic and they neverare set, especially if you have something
+like a low balancer or something.So an environment variable is a way for
+you to dynamically change some value or
+set of values in yourserver without any code changes
+whatsoever.You typically do need to do a server
+restart but you don't need to change any
+code.

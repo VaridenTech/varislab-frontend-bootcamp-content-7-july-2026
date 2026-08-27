@@ -1,0 +1,82 @@
+All right, so for Testing.Let's get to it. So this Next one is
+mostly just.Going through. All the necessary things we
+need to start writing tests.There's some set up we need to do, so it's
+gonna talk about that and the philosophy
+and everything.Like I said, early in the course you're
+gonna be using Vitest, I think it's just
+the best testing Frameworkout there. I have like a little chart here
+based off my experience using all these
+tools which ones.Are the best flight test is just the best
+in my opinion.Like I couldn't even get Jest to work on
+ESM modules and TypeScript and,and no just could notget it to work. So yeah, we're gonna use
+Vite test.I think it's great if anybody has any
+other opinions about other tools.Happy to hear them. The one thing we need
+to do,first, well, before we startrunning tests is that we want to create a
+different database to test in,right? Like we don't want to test.Our code against a database that we're
+using for any other reason like we don't
+wanna test our code againsta Development database that we're
+developing in that we spent so much time
+Seeding and working with becausethe test database is gonna. Dirty that
+state,so it's a good reason to have another test
+database, so probably gonna make another
+database.And yeah, we'll just dothe same thing we did before, you just Go
+here and.Get your Your Neon thing and get it so
+nothing new there.The only difference is we're going to add
+it to a different environment variable.env.test, right? So let's go ahead and do
+that.I'm gonna go back to neon.new.Click try in the Browser, check to see if
+I'm a human.Get my new database URL. Go backto my app. If I don't already have a..env.test, I'm gonna make it on the route
+of the project.I'm going to already have one in here, so
+I'm just gonna get rid of it and add a newone. I just copied, and there we go.Database underscore URL is that.Just the first thing we wanna do.Next, there is going to be some code and
+things that we need to set up,so. First it's gonna be the Vitest
+config.ts.So I'm walking through just what this is.This might already just be in the repo for
+us, and it is,but I put it here just in case, you know,you, if you change some things you wanna
+get back to what it was.I left this here because it's like you
+don't really need to know how to set this
+up because mostof the tooling and the CLI that Best gives
+you just sets this up for you,so like. I didn't even write this from
+scratch like that the CLI just made this
+for me so youdon't really need to know how to write
+this from scratch, but we can walk through
+what it is, soessentially. This configures just telling
+Vite test how to be set up what I'm doing
+here is I'm definingthis. Test environment, I'm saying global
+is true.Each testing suite and most JavaScript
+projects have functions like Describe
+beforeall Test it, these are all functions that
+it used to write test.If you don't feel like importing them all
+the time, you can just put global true
+and it'll justadd them to the global space. So that's
+what I have here so that way we don't have
+to importall those functions and all of our test
+files, which is, which is annoying in my
+opinion.So that's Global True. Global setup is
+like, hey, before you run any tests,run these files first. So we're gonna Go
+make those files.Clear mocks or store mocks are basically.If you create some mocks in your test,
+Automatically clean them up before andafter each test is ran, so which is a very
+common thing to do because if you're
+mocking somethingout. And you don't reset that mock or
+clear that mock,and then the Next thing is expecting that
+to be what it was before the mock was
+created.You're gonna, you're creating dependencies
+across tests and you should your test
+should be StatelessI should be able to pick onetest and run it by itself, and it should
+run the same way,even if I ran it with all the tests.Your test should never depend on each
+other, so sharing mocked things across
+tests is aanti pattern. Pool, not to be confused
+with database pools,this basically just means all of our tests
+will run sequentially to avoid Database
+conflicts becauseby default Vitest runs your tests in
+parallel at the same time,so it's super fast. But that could lead to
+database conflicts because iflet's say we ran 3 tests in parallel at
+the same time and they're all trying to
+insert the sameuser with the same email.It's gonna break. You're gonna have a
+constraint issue.This user already exists, right? So or one
+might run just a little faster and it
+might delete the userthat just got added by another one and
+then the test fails. You're gonna have
+some weird issues thataren't consistent. You're gonna be like,
+why is this so weird every time we run it?Well, because you're running them in
+parallel and they all rely on the same
+data source,so run them sequentially. So single thread
+running them one at a time,and no plug-ins here cause it's just it
+just works out of the box.

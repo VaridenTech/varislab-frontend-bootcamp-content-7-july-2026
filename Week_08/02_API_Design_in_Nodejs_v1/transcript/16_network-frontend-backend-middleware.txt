@@ -1,0 +1,194 @@
+But let's talk about middleware across
+different stack, different places in the
+stack.So we talk about for the route level on
+the network level, you have something
+called Edge Functions.A really good example of this if you use
+NextJS.NextJS has a middleware file that you can
+add on the route.If you've ever used that before, it's just
+a function and you can actually, I mean,I'll just, what am I talking about? I'll
+just show you.They have this middleware file here.If you look at it, this looks familiar,
+right?Next response, next request kinda familiar
+to Express.It kinda is they they do use the Spe now
+which is built into JavaScript,but it's still based off Express somewhat.
+But anyway, this metaware function that
+they have allows youto say, hey, whenever a route that comes
+in matches this,so slash about. Anything Run this
+function, and basically what this functiondoes is automatically redirect you to
+home, so they don't want anybody going to
+slash about.This is a middleware that automatically
+Redirects anyone to home if they try to Go
+to slash about anythingAnd this sits on thenetwork level. This is not something
+that's sitting on their server.This is something that's sitting on an
+Edge function before their server.So this is sitting on the CDN before their
+server.So it is, as far as middleware goes.It is technically still before the
+request, just like what we're describing.But that's because it's physically on a
+different computer that's running way
+before that server evenGets initiated. OK, cause theway it's gonna work is like a client's
+gonna hit this request, let's say a client
+goes to wherever thiswebsite is slash about slash team and hit
+enter.That's gonna do a GET request to the CDN,
+the closest CDN to them,which is their Edge. It's gonna match this
+route, it's gonna kick off this function
+and it's gonna redirectthem back to home, and that Edge function
+never would have went to origin,which is the actual server, which would
+have done something, so it's never gonna
+happen.That is middleware, but it's on the
+network level, but it's doing the same
+thing,right? So another example of that is a
+Cloud for a worker.Cloud for Workers is one of the first
+programmable Edge Functions out there.It's pretty the type ofstuff you can do on the edges and you can
+do some pretty crazy stuff.I had something when I, when I had a
+consultancy at one point we had Researchevery Fortune 500 company and the target
+customer that we were targeting in that
+companyto purchase our services. And we figured
+out how to like get some of their IP
+addressesfor the ones that we could get like going
+to their headquarters and like figuring
+that stuff out andthen if we determined that their IP
+address was the request coming in,we would change the title on the page to
+directly talk to that person.So they would see a different website for
+them if they visited our website while
+they were in theiroffice than if they did not and it was
+targeted just to that person so everybody
+in the company whowent to the website saw that we were
+trying to talk to this person and that's
+how we got likeconversations with a lot of these people
+to like do contracts and training and
+stuff like that becausewe did that on the Edge so you can do some
+pretty crazy and then all that is like.SCO index because it's happening on the
+Edge, it's like rewriting,right, so even a bot would trigger that if
+you wanted it to like a crawling spider or
+something likethat. Low balancers proxies, this is, I
+mean,you know, this is, this is some OG stuff.I remember having Engine X back in the
+day, and I'm not saying Engine X is bad.I don't know enough to know whether or not
+people still use this,but yeah, this is how you would have to
+set up things like on a CDN or reverseproxy before something like Cloud floor
+Worker came out.You would use something like Engine X, but
+this is still also middleware like this
+right here is basicallysaying like, hey. Here are all the
+upstream services that I'm sitting in
+front of.I have a server at this port.I have another server at this port.And when someone tries to go to slash, I
+want to,I wanna add these headers.Add this header, add this header, and then
+forward it.To this other Backend over here, right?So. That's also a middleware.It's not responding, it's not doing
+anything, it's just adding headers and
+keeping it moving,it's just like adding more stuff to it
+enhancing the request object.Yeah, so that's what we used to do, that's
+what we do now.Frontend middleware.If you've ever done HTTP interceptors,
+this is an example of Axios.I don't think anybody uses Axios on the
+Client anymore unless you inherited a
+project that has Axiosin it and for some reason there's somebody
+that works there who refuses to let you
+get rid of itI'm sorry, but there's tonsof other fetching libraries and stuff on
+the front end that has interceptors.I know if you ever worked with Graphki on
+the front end, like Apollo has the ability
+to intercept thingsI know. Even Fetch hasthe ability to interfetch stuff. I know
+that like using.Yeah, there there's so many I can't even
+like name them all, but this isn't a good
+example of thatlike this thing is saying like, heywhen a request.You know, goes out orcomes in this case this is a request
+that's going out before it goes out,add the off token to it so that way I
+don't have to do it every single in every
+singlefunction that I write to make a request. I
+don't wanna have to do that so I'll just
+make thisinterceptor which is technically
+Middleware that when whenever a request
+comes out of this client onmy front end, automatically add the JWT to
+it.And the off header, so I gotta write that
+once and this is an interceptor for a
+response coming backso whatever something comes back in before
+the code sees it,do this first and this is just like
+checking to see like,hey, did we get a 401? 401 means bad
+request,as in you're probably not signed in, so Go
+ahead and redirect the log in.This is an interceptor, so I gotta write
+that once, right?This is technically middleware. React Rout
+or middleware.This is, I mean, React router, you just
+gotta roll your own, but technically this
+is also middlewaretoo. I'm in a page. I'm gonna get this
+used off hook.I'm gonna see if there's a user. A, if
+there's not a user, navigate them to log
+in.This is middleware, this. This logic is
+sitting in the middle.Of where you wanna go.And what you're requesting, the request
+itself, the request is the browsertrying
+to go to this pageor the user trying to go to this page, the
+Middleware is this logic,and the resource is this is the handler,
+right?So it's really all the same, it's all
+Middleware.Our focus is backend middleware. This is
+what it looks like at ExpressJS.We've already talked about the use thing,
+but we didn't talk about it without using
+a path.If you do use without a path, this is, so
+using dotus with the path says usethis function, this route, whatever for
+anything that matches this path.Regardless of method or verb, using use
+without a path is like saying use this
+functionor router or whatever. Without a path and
+without a verb,so for everything, ever. So this is global
+Middleware inthis case, this will be attached to
+everything,and this is where in this case you wouldtypically. If you want global middleware
+across your whole server,you will put that first.So that way everything after it benefits
+from that middleware.Does that make sense? Like a good example
+would be like logging.If you wanna log every single request that
+comes to your server, which isThere, I mean, if you're not doing that, I
+don't know how you're know,good luck, but you pretty much have to do
+that. So middleware is really good at
+that's a really gooduse case for middleware's like I'll make a
+logging middleware that takes the request
+object,it gets the IP, it gets the origin, it
+gets like all this information and it logs
+it very prettyIt puts an ID onit traces it, and then I log that and
+then.Maybe I send that up to our logging
+software.I do like a log blob or you know or
+whatever however we're logging,maybe it's an HTTP log or maybe you're
+writing to a file or analytics is also a
+good use caseYou might have a middleway here that reports to your analytics
+every time you get a server hit every time
+every time someonehits your server, you just track this,
+send it to your analytics, keep the
+request going,right? That's also a really good use case.So these are really good use cases of like
+global middleware, so.That's how you would useMiddleware that like, Already existed
+whether we installed it,which we will use some of this or whether
+we it was already created by someone else
+on our teamand this is how we use this here but how
+would you make middleware?It's pretty much the same thing as a
+handler except there's a third argument
+here.This is the one thing that makes it
+Middleware.It's called Next. So the way I was gonna
+say React the way Express does middleware
+is it takes allYour functions that you addas middleware for a specific segment,
+whether it's a route,for the whole app, for a sub route,
+wherever it is.And it adds it to, let's say an array, it
+adds it to an array,OK? So, The middle word gets called in the
+order in which it's registered from left
+to right.So routes are, I guess technically top to
+bottom,even though sometimes it could be hard to
+tell the ordering because JavaScript is
+asynchronous,but If you're just doing, if you if you
+only ever write your routes the way that
+we did themtoday, it's always gonna be top to bottom.
+Middleware is left to right,so. Whatever middleware shows up first
+inside the queue,so left, that's what's gonna run and then
+by calling next you're saying go to the
+next middleware inthe stack, right? So whatever middleware
+is next, go to that one,and every time you call Next it'll go to
+the next middleware.If there is no middleware left, it'll Go
+to the handler that was identified to run
+for this route.That's what it'll do, And that's if you
+want the middle where to go next,but remember you could also just come here
+and say, REST out, JSON, stop right here.And this is where I was like, this is
+where the foot gun is because if you were
+to sayres.json stop right here. And on the very
+next line you hit next.OK, G Gs. Why wouldyou do that? Why would you respond and
+then continue on throughout this request?It's not smart, right? So.Don't do that. If you're gonna respond in
+a middleware,don't run next. And that's it, really next
+just like it sounds magical,but really you could make this yourself.
+It's really just like an array of
+functions,and each function is like wrapped in a
+function.That has a next. That when it's invoked
+just calls the next one.It's like, it's like a it's like a loop,
+it's like a controlled loop.You go to the next thing in the loop when
+you call next, that's it.First of all, I actually had to like make
+this for an interview.I don't know, like 1012 years ago at like
+Pinterest, they literally asked me to make
+this and I hadno idea what the hell they were talking
+about. I was like, what?I know what that is, but to me that's
+still magic, so I don't know how to make
+that,but the interviewer was very graciousenough. She walked me through it and
+taught it to me.They did not give me the job, but she
+taught me how to do it.

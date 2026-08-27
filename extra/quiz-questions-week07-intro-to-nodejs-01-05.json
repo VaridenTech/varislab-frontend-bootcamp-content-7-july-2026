@@ -1,0 +1,147 @@
+{
+  "questions": [
+    {
+      "prompt": "คอร์สนี้จะใช้แอปตัวอย่างแบบไหนในการฝึกฝนเนื้อหา Node.js ตลอดคอร์ส?",
+      "choices": [
+        "แอป Todo แบบ CLI พร้อมหน้าเว็บง่าย ๆ สำหรับดูผลลัพธ์",
+        "แอป E-commerce แบบเต็มรูปแบบ",
+        "แอปแชทแบบ Real-time"
+      ],
+      "correctChoice": 1,
+      "explanation": "บทเรียนแนะนำคอร์สระบุว่าจะค่อย ๆ นำทุกเรื่องมาประกอบเป็นแอป Todo แบบ CLI พร้อมหน้าเว็บง่าย ๆ สำหรับดูผลลัพธ์ตลอดทั้งคอร์ส"
+    },
+    {
+      "prompt": "ใครเป็นผู้สร้าง Node.js ขึ้น และในปีใด?",
+      "choices": [
+        "Ryan Dahl สร้างขึ้นในปี 2009",
+        "Brendan Eich สร้างขึ้นในปี 1995",
+        "Guido van Rossum สร้างขึ้นในปี 2009"
+      ],
+      "correctChoice": 1,
+      "explanation": "Ryan Dahl สร้าง Node.js ขึ้นในปี 2009 เพื่อให้พัฒนาแอปพลิเคชันเครือข่ายที่รองรับการเชื่อมต่อจำนวนมากได้ดีขึ้น"
+    },
+    {
+      "prompt": "Node.js ใช้ JavaScript Engine ตัวใดเป็นหัวใจหลักในการรันโค้ด?",
+      "choices": [
+        "V8 ซึ่งเป็น Engine ตัวเดียวกับที่ Google สร้างให้ Chrome",
+        "SpiderMonkey ซึ่งเป็น Engine ของ Firefox",
+        "Chakra ซึ่งเป็น Engine ของ Microsoft Edge"
+      ],
+      "correctChoice": 1,
+      "explanation": "Node.js เปิดตัวโดยใช้ V8 JavaScript Engine ที่ Google สร้างให้ Chrome เป็นหัวใจหลักตั้งแต่เวอร์ชันแรก"
+    },
+    {
+      "prompt": "เหตุผลหลักที่ Node.js เลือกใช้สถาปัตยกรรมแบบ Non-blocking และ Event-driven คืออะไร?",
+      "choices": [
+        "เพื่อจัดการงาน I/O จำนวนมากพร้อมกันได้โดยไม่ต้องหยุดโปรแกรมหลักไว้ระหว่างรอ",
+        "เพื่อให้เขียนโค้ดได้สั้นลงกว่าภาษาอื่น",
+        "เพื่อให้ Node.js ใช้งานร่วมกับหลายภาษาโปรแกรมมิ่งได้"
+      ],
+      "correctChoice": 1,
+      "explanation": "Node.js จัดการงาน I/O ได้ดีและรองรับการขยายระบบเพราะใช้สถาปัตยกรรมแบบ Non-blocking และ Event-driven ทำให้งาน I/O ทำแบบ Asynchronous โดยไม่หยุดโปรแกรมหลักไว้ระหว่างรอ"
+    },
+    {
+      "prompt": "โค้ดฟังก์ชัน getUserAsync ด้านล่างทำงานแบบใด และเพราะเหตุใด?",
+      "body": "<pre><code>const getUserAsync = (userId, callback) =&gt; {\n  const users = {\n    1: { name: 'John', age: 35 },\n    2: { name: 'Jane', age: 28 }\n  };\n  setTimeout(() =&gt; {\n    callback(users[userId]);\n  }, 1000);\n}\n\ngetUserAsync(1, (user) =&gt; {\n  console.log(user);\n});</code></pre>",
+      "choices": [
+        "Non-blocking เพราะใช้ setTimeout จำลองการรอ แล้วส่งผลลัพธ์กลับผ่าน Callback แทนการ return ทันที",
+        "Blocking เพราะฟังก์ชันคืนค่าผู้ใช้กลับมาทันทีที่เรียก",
+        "Non-blocking เพราะฟังก์ชันไม่มีการประกาศตัวแปรใด ๆ เลย"
+      ],
+      "correctChoice": 1,
+      "explanation": "getUserAsync ทำงานแบบ Asynchronous โดยใช้ setTimeout จำลองการรอหนึ่งวินาที แล้วเรียก Callback พร้อม Object ของผู้ใช้เมื่อข้อมูลพร้อม แทนที่จะ return ค่าให้ทันทีแบบ Blocking"
+    },
+    {
+      "prompt": "เมื่อ Call Stack ว่างลง Event Loop จะทำสิ่งใดต่อไป?",
+      "choices": [
+        "หยิบ Callback ที่รอในคิวอยู่มารันบน Call Stack",
+        "ปิดโปรแกรมทันทีเพราะไม่มีงานให้ทำแล้ว",
+        "สร้าง Thread ใหม่เพื่อรองาน I/O เพิ่มเติม"
+      ],
+      "correctChoice": 1,
+      "explanation": "Event Loop คอยเฝ้าดูว่า Call Stack ว่างหรือยัง เมื่อว่างแล้วจะหยิบ Callback จาก Callback Queue มารันบน Call Stack ต่อไป"
+    },
+    {
+      "prompt": "ข้อใดถูกต้องเกี่ยวกับความหมายของ Node.js แบบ Single-Thread?",
+      "choices": [
+        "โค้ด JavaScript ของเรารันบน Thread เดียว แต่เบื้องหลัง libuv ยังมี Thread Pool ขนาดเล็กช่วยทำงานบางอย่างให้",
+        "Node.js ทั้งระบบมีเพียง Thread เดียวเท่านั้น ไม่มีกลไกอื่นทำงานเบื้องหลังเลย",
+        "Single-Thread หมายความว่า Node.js รับ Request ได้ครั้งละหนึ่งคำขอเท่านั้น"
+      ],
+      "correctChoice": 1,
+      "explanation": "แม้โค้ด JavaScript ของเราจะรันบน Thread เดียว แต่เบื้องหลัง libuv ยังมี Thread Pool ขนาดเล็กไว้ทำงานบางอย่างให้ เช่น การอ่านเขียนไฟล์ โดยที่เราไม่ต้องจัดการ Thread เหล่านั้นเอง"
+    },
+    {
+      "prompt": "ถ้าเขียนโค้ดที่กินเวลาประมวลผลนาน ๆ ไว้ใน Callback ตัวเดียว จะเกิดอะไรขึ้นกับ Node.js?",
+      "choices": [
+        "Request อื่นทั้งหมดจะถูกบล็อกไปด้วย เพราะมี Thread เดียวที่รันโค้ดของเรา",
+        "ไม่มีผลกระทบใด ๆ เพราะ Node.js เป็น Non-blocking เสมอไม่ว่ากรณีใด",
+        "Node.js จะสร้าง Thread ใหม่ให้อัตโนมัติเพื่อรันงานที่หนักแทน"
+      ],
+      "correctChoice": 1,
+      "explanation": "เพราะมี Thread เดียวที่รันโค้ดของเรา การคำนวณหนัก ๆ ใน Callback ตัวเดียวจะบล็อก Request อื่นทั้งหมด จุดแข็งของ Node.js จึงอยู่ที่งานที่ต้องรอ I/O เป็นหลัก มากกว่างานที่ใช้ CPU หนัก"
+    },
+    {
+      "prompt": "หากมีไฟล์ index.js ต้องใช้คำสั่งใดใน Terminal เพื่อรันไฟล์นี้ด้วย Node CLI?",
+      "choices": [
+        "node index.js",
+        "npm index.js",
+        "run index.js"
+      ],
+      "correctChoice": 1,
+      "explanation": "เราใช้ Node CLI รันไฟล์ JavaScript ตาม Path ที่ระบุด้วยคำสั่ง node ตามด้วยชื่อไฟล์ เช่น node index.js"
+    },
+    {
+      "prompt": "เมื่อรันโค้ดด้านล่างด้วย Node CLI จะเกิดผลลัพธ์ใดใน Terminal?",
+      "body": "<pre><code>console.log('hello world')</code></pre>",
+      "choices": [
+        "แสดงข้อความ hello world ออกทาง Terminal",
+        "เกิด Error เพราะ Node.js ไม่มี Object console",
+        "ไม่มีผลลัพธ์ใด ๆ เพราะต้องรันผ่าน Browser เท่านั้น"
+      ],
+      "correctChoice": 1,
+      "explanation": "Console ของโปรแกรม Node.js จะแสดงผลข้อความที่ส่งเข้า console.log() ออกทาง Terminal จึงเห็นคำว่า hello world"
+    },
+    {
+      "prompt": "Global Object ใน Node.js เรียกว่าอะไร และต่างจาก Browser อย่างไร?",
+      "choices": [
+        "เรียกว่า global ส่วนใน Browser เรียกว่า window",
+        "เรียกว่า window เหมือนกับ Browser ทุกประการ ไม่มีความแตกต่าง",
+        "Node.js ไม่มี Global Object ให้ใช้งานเลย"
+      ],
+      "correctChoice": 1,
+      "explanation": "ใน Browser ตัว Global Object คือ window ส่วน Node.js ใช้ global ซึ่งเป็นคนละตัวกัน แม้จะทำหน้าที่คล้ายกัน"
+    },
+    {
+      "prompt": "ฝั่ง Node.js เราโหลด Module เข้ามาใช้งานด้วยวิธีใด?",
+      "choices": [
+        "ใช้ require หรือ import",
+        "ใช้แท็ก <script type=\"module\"> เท่านั้นเช่นเดียวกับ Browser",
+        "ต้องใช้ fetch เพื่อโหลด Module เสมอ"
+      ],
+      "correctChoice": 1,
+      "explanation": "ฝั่ง Node.js เราโหลด Module ด้วย require หรือ import ในขณะที่ Browser ใช้แท็ก script พร้อมกำหนด Attribute type เป็น module"
+    },
+    {
+      "prompt": "เพราะเหตุใด Node.js จึงไม่สามารถใช้ document.getElementById() ได้เหมือนบน Browser?",
+      "choices": [
+        "เพราะ Node.js ไม่มี Document Object Model (DOM) ซึ่งมีเฉพาะบน Browser",
+        "เพราะ document.getElementById() ถูกยกเลิกการใช้งานไปแล้วในทุกสภาพแวดล้อม",
+        "เพราะฟังก์ชันนี้ทำงานได้เฉพาะกับไฟล์ HTML ขนาดเล็กเท่านั้น"
+      ],
+      "correctChoice": 1,
+      "explanation": "Browser มี DOM ที่ช่วยให้โต้ตอบกับ HTML Element ได้ แต่ Node.js ไม่มี DOM จึงไม่สามารถเข้าถึงหรือแก้ไข HTML Element ได้"
+    },
+    {
+      "prompt": "โค้ดด้านล่างทำหน้าที่อะไร?",
+      "body": "<pre><code>const http = require('http');\n\nconst server = http.createServer((req, res) =&gt; {\n  res.write('Hello World!');\n  res.end();\n});\n\nserver.listen(3000);</code></pre>",
+      "choices": [
+        "สร้าง HTTP Server อย่างง่ายที่ตอบกลับด้วยข้อความ Hello World! แล้วเปิดฟังที่พอร์ต 3000",
+        "สร้างหน้าเว็บ HTML แบบ Static ให้ Browser เปิดขึ้นมาโดยตรง",
+        "เชื่อมต่อฐานข้อมูลเพื่อดึงข้อมูลผู้ใช้ชื่อ Hello World"
+      ],
+      "correctChoice": 1,
+      "explanation": "โค้ดนี้ใช้ Module http สร้างเซิร์ฟเวอร์ด้วย http.createServer แล้วตอบกลับทุก Request ด้วยข้อความ Hello World! ก่อนเปิดฟังการเชื่อมต่อที่พอร์ต 3000 ด้วย server.listen(3000)"
+    }
+  ]
+}

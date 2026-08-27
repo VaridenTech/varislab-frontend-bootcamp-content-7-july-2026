@@ -1,0 +1,88 @@
+Understanding that, so. Basically youYou only wanna call nextIn my experience, the onlytime you ever called Next.Is in the in the scenario where your
+Middleware is only like checking for
+somethingor like enhancing the request object, or
+like doing some side effect unrelated to
+the request,like doing an analytics log or something
+like that.That is like the only time you would ever
+really call next.Other than that, you probably won't be
+calling next because if you're not doing
+one of those things,you probably like, You know, doing a very
+Go no,what I call a go no go check, as in like
+either this value is true or false.And depending on that, I'm gonna stop the
+request right now, right?So if there's like a go no go check, then
+You either gonna,you're either gonna do a, you know, a
+res.json or arrest.send or if it's a goal
+you'll hit next,and those are like thereally only two scenarios that I think you
+would be doing this.There's obviously like more complicated
+things, but for the most part it's like
+you're either just likehey, I'm just a fly on the wall,checking out the request object. I don't
+really nothing that I do is ever gonna
+determine whether ornot I call next or not. I'm a side effect.I'm only inspecting, I'm only adding to.There's no scenario in which I will never
+call next and then there's the like.Yeah, depending on this value, I might
+call next or not.That's it. It's those two scenarios,
+right?And the scenario of like depending on the
+value,typically it's like Authorization,
+identification, access control, you know,our box, that type of stuff. It's usually
+that or even like, hey,you don't, your credit card is expired and
+your and your account is past due,so no, you know, it could be that too. So
+Middleware is really good for that.But like I said, this is key.If you are going to return, as you see
+right here.Remember, this is you returning on a
+network level.You are closing the request, but your code
+is gonna continue to run.This is not synonymous with a return
+statement.You could think of it as like the return
+statement for the ACCP request,but it is not the return statement for
+your code.That's still a return statement. So if
+there was no return statement here.Yeah, you're gonna have some problems or
+whatever's about to run next, you're gonna
+have some problemsCause you already responded.Right, so. The best thing I could tell you
+if you ever respond inside of a
+Middleware,always just hit return after it unless
+it's the last thing on the line, but yeah,the best thing I can tell you so.The other thing is, if you don't call next
+in a middleware, that's the equivalent of
+not calling a responsein a handler, it'll just hang forever.Because I won't know what to do, is I'm
+like, OK, here's a middleware.You're not responding, you're not calling
+next.There's no error being thrown. I'll just
+sit here and wait.It's the same thing, so you need to also
+make sure you either respond,throw an error, or call next.Otherwise it will hang. Andone of the last things about Next is that
+it does take An optional argumentonly one, and if youwhatever you pass the next, it is assumed
+that thing is an error.That is the only thing you can pass the
+next. If you call next and pass anything
+in it,even if it's not an error, even if it's
+just a string that says yes, Express will
+assume that that'san error. And we'll talk about that when
+we get into Error Handling.It's actually a brilliant system, how it
+works, but it's basically telling Express
+like,hey, something bad happened here, I need
+you to continue,but skip everything that's supposed to
+come after this and go tothe error handler middleware if there's
+one that's registered,and if there's not one that's registered,
+use the one that's built in.That's basically what calling next error
+will do.It's like, yeah, I need you to go next,
+but skip everything that's not an error
+handler,and we haven't talked about error handlers
+yet, so that might be.You know, confusing, but Surprise error
+handler is also just middleware,so. Everything in Express is middleware.OK, the only one note here that I wanna
+talk about is just like how dominant this
+pattern is.I really cannot emphasize. How much of a,like, honestly, I think this pattern
+single-handedly is what made NodeJS blow
+up.This at the time was significantly.Easier to use and understand than its
+contemporaries in other languages.Like if you ever had to build something in
+Java or Python or anything like that at
+thistime before this came out.Nah, it was not this simple. And to this
+day,even frameworks like Fastify or NJS or any
+other Framework.If they're not built on XJS, they
+definitely look at this as inspiration.One so they can remain compatible with all
+the middleware that I mean there was like
+you think there'stons of React packages now back in the day
+there was tons of Express middleware
+everywhere.There was Express malware to do anything
+so people wanted to maintain that
+backwards compatibility.So when they built new server frameworks
+or whatever they wanted to keep that so.Yes, lots of, lots of love for this.I think it's one of the best developer
+experiences for the for servers in
+general,and that's why I still use Node even
+though I know go, I know Rust,I know all these languages. I will still
+write a Nojazz API any day until itbecame very clear that I could no longer
+use it anymore, but I will always just use
+it because theexperience is so much better and I
+singlehandedly give kudos to this pattern,

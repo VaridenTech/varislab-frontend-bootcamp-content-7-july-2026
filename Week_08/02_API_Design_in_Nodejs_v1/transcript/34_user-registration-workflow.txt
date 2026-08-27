@@ -1,0 +1,109 @@
+User sign up with password, so.When we sign up a user, eventually kind of
+what we talked about those three things
+authentication,authorization, and identification. It's
+gonna cover identification and
+authenticationIt's not gonna cover authorizationbut we will be doinglike small authorization type stuff you'll
+see in the Controllers,but we're not being explicit about it with
+roles and things like that,so, cool. What is the sign up strategy?It's pretty simple. So what does sign up
+actually mean?Well, first we need to validate your
+input.And we know what a valid input is because
+we have a schema on the database that
+says,hey, to make a new user, you have to have.You know, these 3 things, these 3 things
+are not null,so you have to have them. These 2 things
+are also not null,but they have defaults, so we don't have
+to supply them.These 3 things are not null and they don't
+have defaults, so that means you literally
+cannot sign upif you don't supply these 3 things. So we
+can validate that.So the flow is validate that input.Let's check to make sure whatever wesay is unique is not already taken.Hopefully we get that for free because we
+set a unique constraint on our database.You do not want to have, if you are
+writing a query to go check to see if this
+emailexists in your database already, you're
+doing it wrong.The database should do that for you
+automatically. I promise you nobody's
+gonna merge that in.They might look at you funny. That is,
+that is, they'll do that.Imagine you had 100 million users and
+every time someone signs up,you gotta go check. Each one of those
+users to see if they have the same email
+yet.Yeah, you're probably gonna get fired, so
+like don't do that you need,you need to put a unique index which is
+what we did.We want to hash the passwords in our
+seed scriptwe didn't hash the passwords we put them
+in plain text.We'll talk about why that's a bad idea.You probably already know, and then we got
+want to create the user as in save it to
+the database.Once the user has been created because
+this is a sign up, we have to give them
+their token,their JSON Web token, which is what we're
+gonna use. This is essentially their key
+to the API,otherwise they won't be able to access the
+API without this key cause we don't do
+sessions.And then you know, optionally this is
+where you were like hey here's an email,you know, confirm your email or whatever
+you might send them an email or something
+like that.We're not gonna do that, but just give you
+an example of what would come next.We're gonna stop at generating a token and
+sending that backbecause the other thing about generating
+token, that's essentially auto logging
+them in.If we don't generate that token.The flow would be nasty. They would have
+to like sign up and then we would redirect
+them to the Sign Inscreen, and then they got to type in their
+credentials again to then get the token.And some apps do that and I hate it. I
+hate when apps do that, like, I just
+signed upjust sign me in.But now I have to Sign In after I signed
+up. Why?Well, you could have just made me the
+token or the session and redirected me.It's a bad experience. Cool, so why hash
+passwords and really what does thatmean? So hashing a password essentially is
+like we wanna obfuscate or we want toencrypt this password and in a way where
+no one knows what the valueof that password is, even the people like
+the engineers who are writing it.So if someone had access to our password,
+they couldn't see what the password was,it was encrypted. Some level of encryption
+protects people from potential from
+potential breachesWhich in our society.Has happened a lot. Here are just some few
+examples that I could find.A lot. You don't want, I mean, how many
+times do you know,heard, oh, someone stole hundredsof millions of passwords and leaked them
+on a black Web. OK, yeah, cause people
+store stuff in plaintext sometimes, so you don't want to do
+that.So we want to hash them in a way,but it has to be.You know, done in a way in which we can
+reproduce it so we can verify it later
+uponSign In, so it can't just be like some
+random thing that when used with the same
+inputs will give yousomething completely different than the
+first time you did it.That is not the definition of hashing.
+Hashing will be reproducible given the
+same ingredients.That's the definition of hashing. So if
+you think of like a hash table or object.And how that works, you know, depending on
+the size of the buckets that you have and
+the hashing algorithmthat you're doing, you'll always get the
+same key, or the same location cause that
+a hash table willtake a key and a value, right? It'll hash
+the key and it'll spit out an index and
+where youcan go store that key inside of let's just
+say an array for now and.No matter how many times I put that key in
+there, I'll always get the same index out.It's it's predictable, it's deterministic,
+so hashing is deterministic.Otherwise you could never sign anyone in.So, how does it work? Well, we're gonna do
+something called Bcrypt,it's basically gonna do something like
+this, so like,if this is your password, we're gonna hash
+it.We're gonna generate some random Salt,
+we'll talk about that.So we're gonna combine. This random Salt
+thing here plus your password.Plus some algorithm, this algorithm, in
+this case is called like a blowfish
+algorithm.It's gonna. Hash this combination of a
+password and salt this many times, so 4000 times,
+and that and that depends on how many
+rounds youput. So if you put 12 rounds, it'll be
+that time if it's 10 rounds,it's really about like finding the right
+number of times to do it where it's strong
+enough,but not computationally expensive, and I
+can promise you I'm not the person that
+knows that.I know nothing about any of the stuff
+outside of the what I'm telling you right
+now.So if you think I have, and I'm holding
+back, I'm not.This is where I tap off, this is it.I don't go beyond this, but you end up
+with something like this,basically the Salt right here that's like
+built into it at the beginning of the
+string,and then this right here, the second one
+would be the actual hashed passwordand then I think thisone is. I don't know what this one is.I also know like this part right here,
+these first four parts is something to do
+with which algorithmyou're using and how many rounds. So this
+right here is saying you're using this
+specific algorithm andthen this right here is saying you use 12
+rounds. That's some encryption for you.

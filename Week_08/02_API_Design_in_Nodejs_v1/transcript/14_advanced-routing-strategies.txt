@@ -1,0 +1,175 @@
+That was just one level. This example is
+showing you how you can go multiple
+levels,so I can mount another router on the
+router that was mounted.I can, I can go infinitely deep.There's really no nothing stopping you
+from doing that.This is really good if you wanna like
+segment your router, your API based off of
+like different versionsYou're using API was it'slike slash V1, you know, V2 like this is
+great for that.You can segment all that stuff off or
+maybe you segment them based off of.Microservices and different teams work on
+different Microservices so everybody gets
+their own sub routerand that's why you do it that way because
+it's an organizational thing maybe it's a
+technical thing itcould be any reason in which you might
+want to separate these things out.You can go infinitely deep if you want to.
+There really are no it I would say the
+deeper youGo, just realize at some point all these
+things coalesce into one registry of all
+your routes,so you have to be wary of possible
+collisions that we had that I that I
+discussed before about likewhich one's gonna run first. If you keep
+going deep and there's a potential
+collision with some othernested andset or, you know, great second
+cousin route over here that you don't know
+about and there'sa potential conflict, which I only got
+registered first, that's the one that's
+gonna happen.So if you have a sprawling router
+configuration that is like that could be
+nastyto debug, but yeah, in that case, I think
+that's where you will.Move on to better hygiene with registering
+Routes by like maybe instead of just
+writing strings likethis, you would have like enums and
+globals for your route names so therefore
+youcan reuse them and things like that versus
+just like somebody just type in whatever
+stream they wantso I dive into alittle more about just because it's just
+JavaScript and there's nothing stopping
+you do whatever youwant, you can conditionally make routes,
+right?So like, hey, if I'm in this environment,
+if I'm in dev mode.I wanna, I wanna add these Dv routes
+specifically for dev mode,you know, maybe there's like something you
+have on your Web app.That's like a deaf panel that shows
+certain stuff and it needs to get access
+to a specific thing inthe database so you only enable these
+Routes if you're in dev mode so you do
+that,right? Or maybe there's like feature flags
+that are powered by Environment Variables
+that you set insideyour hosting provider and that feature
+only gets enabled if that environment
+variable is set to trueso then you add the route for that
+feature, right?Same thing like AB test or things like
+that.He here's the versioning thing that I was
+talking about so you can have differen t
+versions of differentstuff. So there's many reasons why you
+might wanna do that.Also just talk about like how to organize
+your routes and in this app we're gonna
+organize them.There's a lot of waysto do it, but we're mostly gonna organize
+them by like resource based,so. What does that mean is like every
+resource, like a habit or a user or you
+know off inthis case, which is technically not a
+resource we're gonna separate each thing
+out by the resource bythat there's really no wrong way because
+I've also done this other approach where
+it's like feature basedso you could think of features as in like
+what someone is going to experience from auser's perspective and you can break
+everything out to those separate features.This might make sense if different teams
+are working on different features, stuff
+like that.You might also break it down by like
+different versions, you might also break
+it down by like.Like you might co-locate thingsright? Like, for instance, onthis resource based one, we have, we have
+a routes folder and then we have all the
+resources,but maybe instead of having a routes
+folder you might have a off folder and a
+user folder and ahabit folder and a tag folder, and each
+one of those folders has the routes for
+that resourcethe test for that resourceThe handlers for that resourcethe database queries for thatresource, everything for that one resource
+is in that one folder and then you find a
+way to combine themall collectively into some index file
+somewhere, right?So there really is no wrong way. These are
+just different examples that I personally
+have used in thepast for different reasons, but if it was
+just me and I'm just like getting stuff
+out the door,I'm just gonna do this cause it's simple,
+it's flat.Again, I talk about testing. This is just
+to give you an example of that.If you wanted to test some of the things
+we just did, we will be writing tests
+later so youdon't need to worry about that,And then I added this section here for
+just like common endpoints,so I talked about the health one
+initially, a lot of servers have slash
+health in which there's tonsof apps that you can go pay for right now
+that will literally just ping your like
+you been tolike a. What is it?Is it, is it just ping? There there's
+something called ping, but I guess Uptime
+robot might be more,OK, yeah, here what I'm looking for. I'm
+looking for this view right here.We've all seen like a graphic like this
+where it's like, here's the name of the
+service and there's likethis bar, and then like if there was like
+a drop in the service, maybe this bar
+would be likeslightly red or yellow or something like
+that.OK, part of how they're doing that is
+they're just pinging that server over and
+over and over again.And as long as they get a 200,
+everything's good.As soon as they don't get a 200, they log
+that at that time and that shows up in
+thisgraph. So and people get alerts and stuff
+like that.There's different thresholds like, oh if
+we get.If we get, you know, X amount of 500s in
+the span of X amount of minutesthen ping this person oncall or something like that, right? So.Pinging is a very effective way.Of determining not only is your service
+still up,but how long is it taking? Because if you
+keep pinging your website and it
+increasingly takes longerthat means. Something's not rightYou need to figure outwhat that is. Is it the traffic that
+you're getting and congrats, you found
+product market fit,or is it that code that so and so just
+pushed up and like killed the whole app?Like what is it? So.Health checks paying is a very well known
+thing that people do.You do like a more detailed one if you
+wanted to.API versioning I talked about, as well.There's also like catch all routes. I
+don't ever do this in practice.It's why I'm not really showing you, but I
+thought it'd be a crime.Well, that's why I'm not really putting it
+in the app, but I'm showing you because I
+thought it'd bea crime not for you to know how to do it.
+But yeah, you could do catch all routes
+whichis simply like. You know, In this case
+it's like if anybody goes to slash APIanything automatically 404 you might be
+thinking why would I ever do that?Well, remember order matters so if you put
+this at the bottom of all the API routes
+that you alreadydeclared that means any other route that
+isn't already declared that has API in it
+will then go hereSo you're overriding the default404 that Express would have gave anyway
+with your own custom 404 for any route
+that hasAPI in it that wasn't previously
+registered.Same here, like you could say, hey, if
+anybody.Oh man, hell yeah, I forgot I remember
+right, OK.Back in the day when you made a SPA app
+single page application with clientrouters like React Router and all that
+stuff,you still have to do this by the way, you
+just don't do it anymore manually, but
+there had tobe a server that when hit will always send
+back the index to HTML no matter what.That actually still has to happen today
+for a single page app.This is why your single page apps with
+Routes probably won't work.Without some type of server sending back a
+file and that's because that's why it's
+called a single pageapp. You only ever send back the index the
+HTML file and from there the JavaScript
+loads up andthe browserrouter, the HTML 5 push date
+router kicks off and it takes over Routing
+and it rememberseverything, so you have to make sure that
+when someone tries to go to.Some route on your site and which is going
+to for sure initiate a server request that
+the server justresponds back with the index HTL like
+look.Ask to ask to ask React the same me like
+I'm just gonna send back the index HTML.So you have to do this manually back in
+the day. Now you actually get this for
+free with anydev server that you've ever created like
+if you just use like Vite Dev server or
+anything they're doingthis for you automatically assuming you're
+not doing service side rendering,which is a whole another thing. So, yeah,and if you deploy like a single page
+application on like a What is it?What do they call themnow, like a jam stack deployable thing,
+like a netfly or something.This is what they're doing, they're doing
+this for you, so.Talk about orders, parameters. Just some
+common pitfallshere. People, you know, when I say people,
+I mean me.Sometimes I forget to export the router,
+be sure to do that.Route order We'll get you messed up.Oh, this is, this is a common one. I don't
+know why I forgot to actually show this
+one.This is so common. These are, these two
+are actually the exact same route.Do, does that make sense? Why these two
+would be the same route?Right, cause think about it, slash ID
+means slash anything.And then this is slash profile, which is
+technically slash anything.So these two are the exact same route.So that means if slash ID was first.As a GET request before slash profile, you
+would never hit this route.Cause if you did a GET request to slash
+literally anything,it will always go here.It will never go here.So you have to put this one first.Does that make sense? It's those things.I think I still run into that today. I
+might have ran into it in the code that I
+justwrote. I don't even know, but it's just,it happens. Missing route Handlers, you'll
+get an error from Express if you forget to
+put a route handlerhere. It'll say like, oh, I expected a
+thing, but that happens to me a lot.I don't worry about Ayn handlers, and
+yeah,

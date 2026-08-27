@@ -1,0 +1,101 @@
+The Next thing is we need to add our
+scripts, so there's a lot of things we're
+gonna be doingwith the database. The best way to
+interact with the database outside of the
+ORM,but like on the administration level as
+far as like syncing our database with our
+schema and runningdifferent tasks like Seeding, it's just to
+make some scripts in our package JSON.So if you have, if you're not too familiar
+with Node in a in a package JSON,you can add anything you want to the
+scripts object and then you can run it
+using NPM.So what we're gonna do is we're gonna add
+some scripts. For our database,so I like to prefix my scripts with the
+actual resource in which we're using.So in this case it's gonna be DB. So the
+first one I'm gonna do, I'm just gonna
+make ascript for Generate. We'll talk more about
+Generate soon,but this is essentially how you generate
+the SQL files for a migration that you
+planon running. So that's the Generate one and
+there's this thingcalled Drizzle Kit that we didn't talk
+about.Drizzle is everything. It's an ORM, you
+know, it allows you to make schemas.It also has a CLI to help you do
+Migrations and stuff.So Drizzle Kit is that CLI. It's already
+installed for you.It should already be in your.Dev dependencies here, so you already have
+it.So drizzle kit generate is gonna do
+that.The Next one we want is DB Push. You'll be
+using this one a lot, and we'll talk more
+aboutit, but basically, What this one does is.The best way I can describe it is like
+instead of doing a migration, like a
+migration would be theequivalent of in git in GitHub of like
+doing a PR and then merging it,whereas a push would be like pushing
+directly to main.It's like the same thing, right? So when
+you do a push to your database you're just
+saying take thisschema and push it to the database.I don't care what's in there.Which is bad. You don't wanna do that on
+the Production database, but it's perfect
+for development.Whereas a migrate is likeOK, don't do that, weneed to merge this in carefully and keep
+the data and everything,so. got the push, obviously one of the
+Next ones is migrate.This takes all your migrations that we
+will save in a folder.And run the migration. You only ever do
+this mostly on a.Production database, I mean, I guess you
+could do it locally, but you don't really
+need to.Studio, this generates this startsDrizzle comes with a Webapp, which is a visual.database Explorer that you can use to
+visualize your database and look at all
+the data.It's called Studio. Running this command
+creates that app and starts it on a port
+and gives you a URLthat you can go look at in your Browser
+and check it out.And then the last one that we're gonna use
+is Seed.This one actually is not a Drizzle
+command, it's just a.A command that's gonna run a file.That when executed will see our Database
+and we're gonna make that Next.Let's get our database going. So the first
+thing we wanna do, make sure my terminal
+is big enough,is we want to sync our database with our
+schema.So we're treating this database as our
+development database.So because of that you don't really need
+to do any migrations,just push it up. It's your database.
+You're the only one using it.It has no schema right now, so just do a
+push so I can do NPM run followed by thatcommand we just made DB Co and push. So if
+I do that,You'll see something like this. I have it
+in what's this mode,it's basically Forgot the verbose so it's
+in verbose mode so it's basically saying
+like ohyou are about to execute these current
+statements.This is basically the SQL statements that
+got generated from our schema and it is
+the differencebetween what our database has and what
+we're trying to push up because our
+database has nothing it'sactually everything. This is everything.This is the sequelized version of what we
+made in our schema.If we didn't have Drizzle to write our
+schema, this is what we would have
+written.And the initial migration. In fact, there
+is another way to like.Provide schemas to a database other than
+writing a schema it's just to write
+Migrations so your initialmigration is just creating tables, and
+that's what this is.So it's like, yeah, is this what you wanna
+add to the Database?Yes, I do so I'm gonna do that.And it's like cool, changes applied,
+right?If I try to push this up again, it'll
+probably say nothing,no changes detected. What you have on your
+database and what you're trying to push up
+is exactly thesame thing. Right, so Shouldn't have any
+problems there on a fresh database.So now that we have that, we can run NPM,
+run DB studio.This will give you a URL that you can Go
+to.I'm gonna come in and click on that and
+open it up, and yours might look different
+than mine.I've like customized the theme of it.
+Everybody's might look different.You can change the theme by going down
+here and picking a different theme if you
+want,so it might look different, but the
+important thing is that here are all the
+tables that we created.They're here and that's what I wanna see.
+I just wanna see that we have the tables
+there.This is Drizzle Studio. Oh, is it on a Web
+app or is it on?Yeah, so to get access to this app in the
+terminal, you run the command that we had
+MPmun.DB Studio. And it's gonna give you a URL
+that you can go toAnd it'll be this.Cool, and you can add data from here, you
+can run.Raw sequel, you can do, you can write
+Drizzle JavaScript in here that's bound toyour schema, you can see your schema.I guess you can edit your scheme in here
+too if you wanted to, pretty much do
+everything.There's a lot of stuff. This is, this is
+new. I don't, I don't know what this is.That's cool. So, but I'm just looking at
+this.I'm just like, oh OK, cool, I see my
+tables, everything sync'd, we're good to
+go.

@@ -1,0 +1,61 @@
+Now we need to make some authentication
+Middleware so that we can use on any
+route.Or set of routes or global wherever we
+want to lock down,so we're gonna make authentication
+Middleware that checks.For all of this, so we can go to our
+Middleware,we're gonna make a new one called auth.And yeah, we'll do that. So let's import
+some types.We'll get our requests, our.Response and our Next function.We import Verify. Token and we'll get that
+type.I had, we can create an interfacewhich, yeah, this will beI guess we could dothat, so we can make this interface.Called authenticated. Request, which is
+basically the same thingas the request. From Express, so it's
+gonna extend it.But when we authenticate and we get the
+user, we're going to attach the user to
+the request object andpass it along so that's essentially what
+this type is gonna do as well is that
+like,hey, if you use this authenticated request
+interface slash type.There may be a user on it and obviously
+again this doesn't change any behavior,this is just TypeScript, this is just so
+when you're in your Controllers, you could
+do req.User and you'll see a user there, and that
+user will be typed out for you.That's all this is for. You don't have to
+do any of this, it's all optional.So let's make the. It's like the routeso we'll say authenticate tokenAsync This is a middlewareso it's gonna take arequest, a response, and then Next you can
+type these out.Request. Response The Next functionWe'll do a try catchhere so we don't kill our server.And then the strategy here is one, check
+the header,the Authorization header to see if there's
+a bearer token.If there is, get the actual JWT from that
+value.And then try to verify that token. If it
+is verified, attach it to the req.user
+because that's theuser and then call Next. If any of that
+breaks, you are not,we, I don't trust you. Get out of here,
+right?So let's get the auth header first.This will just be req.Headers. And then we can look for the
+authorization header like that.And then we can try to get the token from
+this header, so we can say token equals.First of all, is there even an auth header?And if there is, It's gonna be auth Header.Split. On an empty space.Let me show you why we're doing this. You
+Go look at this bearer token.It's gonna, the value is gonna look like
+this, it's gonna be a, the string is gonna
+be a stringwith the word bearer, a space, and then
+the token.That's what's gonna come up from the
+Client, so we're splitting on this space
+right here.That's what we're calling split, and then
+we're gonna get the second thing,which is index 1. That's how we get the
+token.So we're gonna split on that.And then get the thing at index 1, which
+is the second thing,which is the token. Cool.If there is no token.Let's go ahead and short circuit right
+now.We're not even gonna take this any
+further. We're gonna say,cool, you just literally try to get access
+to this API and you didn't even send up a
+token,that's so lazy, at least you could have
+faked one.So, you know, access or.On Or I guess you could say this would be
+a bad request,so I guess you could say, yeah just say
+bad request, you don't, you know, get out
+here.If we get here, then there is a token.Let's go ahead and try to decode it, and
+we could say, await,it's gonna be even more explicit. This is
+actually a user, well,I guess technically it's not a full user,
+so I'll keep the payload.await, verify token. That takes in a
+token.If we get to this line, that means this
+did not break, so we can say req.user iswhatever that payload was. This thing's
+just freakingout because like hey there's no such thing
+as a user on the request that's fine it's
+just TypeScriptIf we get down herethat means one of thosethings broke, so we'll just say we don't
+really care what broke here.We don't trust you. Even if, even if it's
+our fault,get out of. This is a 403, you're
+forbidden.403 just means forbidden. And we're gonna
+say Errorinval or would just say forbidden.I'm not even gonna tell you why.And then lastly, make sure you call Next.So we can move on Iguess I should, I could put authenticated
+request here that will fix the req.user
+thing there we goI already forgot that I made that

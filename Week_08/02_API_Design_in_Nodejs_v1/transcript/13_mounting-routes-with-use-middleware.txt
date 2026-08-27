@@ -1,0 +1,105 @@
+All right, now let's mount these onto.Our server, so I keep talking about that.What does that actually mean and why
+haven't I added the full routes to these
+things,so. Basically, the way that we want to do
+this is we can say an app,we can say, hey, for.There's another method here that has
+nothing to do with HTP vers but a method
+associated with AI,there's a dot U. Us just means, hey,for this route. How do I describe use?U just means. No matter the verb, doesn't
+care with the like just this routewith no verb, right? Where it's like all
+of these are like a method slash verb like
+hey for thismethod and this route combination, do
+this, whereas U is just like not just for
+this routeI don't for every singleverb and this route, right?So what we're gonna do here is we're gonna
+say, hey, if anybody ever goes to slash
+API.Slash off what we want to do.As we want to show them the.The off router, so we need to import that,
+so what we'll do is we'll say,import off routes. From routesAuthor E dots. You have to do a dots if
+you've written note and you're like,wait, you don't have to do file extensions
+when you switch over to using ES modules
+and Node,you have to do the file extensions.And using TypeScript doesn't change that.
+So yes, you have to put the file
+extensions here.If you don't put the file extensions, it
+will not import it.So we'll get those all the routes, as
+import the other ones while we're up here.We got the User routes. User routes, and
+thenwe have the. Habit routes.Also I have another one here called like
+tags.I'm not gonna add that because I cause
+it's mostly the same as everything else,so I'm probably gonna leave that as.Extra credit that you guys can work on, it
+won't affect what we're doing here today.It's mostly just the same with everything
+else, but that's why it's in there cause
+it's just somethingI was gonna do and I was like, yeah, it's
+kind of repetitive, so.You don't have to add that.But anyway, so app.us, so if anybody goes
+to anything slash API/ off,I immediately want to load up the author
+Routes.Like that. Right, so now when I load the
+author routes, what's gonna happen is,so now we got slash API slash off. The
+author routes gets loaded up and then it's
+slash register.So that means if anybody goes to slash API
+Salt slash register and does a post
+request,then this will run. Right, so these, this
+router is mountedat this path. And this is a good way of
+doing this because now this routerdoesn't need to know where it needs to be
+registered as far as like what is the path
+before itthat's good because I can just change this
+hereif I ever need to change it and I never
+have to change anything in this code.It's decoupled. Right, so, Do the same
+thing for the other oneswe have. Users We'll say user router, andthen we have. Habits that we have yeah.Habit routes, I should, I should rename
+all these the same,be consistent, sorry about that.How it routes, there we go.So now we have all of those mounted at sub
+Route,so let's try to test them out and see if
+we broke anything.So looks like everything reloaded,
+nothing's broken.So now if I go to What do I have here?Do I still have, let's make sure our
+health still works, so if I do it.Health check, get requests, that should
+still send me back a button that does.Now if I go to API slash.Habit As a GET request.That should do is. Wait, did I put the
+wrong one in there?Hold on. Habit routes, oh, why did this
+import users twice?I was man. Those auto imports, there we
+go.So if I go here, that means it should load
+this one.I should see a JSON message that says
+message habits because That's gonna be
+slash APIslash habits. And slash means just the
+Route that I'm on.Don't add anything else. This just means
+whatever came before it,right? So the route, which in this case
+will be slash API slash habits and nothing
+else and this isa GET request, so I should see that,
+right? So.Let's run that and it's plural.Oh, it's plural in Postman.Oh, thank you.Boom, OK. And there we go.Now I see messages habits, so that's how
+you.Mount the servers, right? So let's check
+and make sure user works as well.So if I say slash API.Slash users. I should see that one.There we go, there's users and then if I
+do, what do I have for off,if I do post to slash register, so slash
+off slash registerand I change this toa post, I should see.User signed up. And thoseare routes, yeah, of course. Even though
+we're using like.These specific crowd or like RESTful
+methods like post,but because we're not doing anything in
+the response body,it doesn't have like anywhere to write to,
+right?Is there a reason that it's not like
+throwing an error being like, hey, you
+have a response,but this wasn't really getting anything.
+This is just like.This didn't like write anything to any
+database is just like a dummy.That's a great question. So the question
+was.Why are we not getting an error, even
+though inside of our Controllers we're notdoing what is intended based off of that
+verb,so in the case of like a post, the
+intention is that like in this case we are
+going tocreate a user a user register a user, but
+we're not, we're just sending anything we
+want back.So why is it not throwing an error? It's a
+great question and it's because going back
+to what Isaid before. REST and how all that is
+designed is just anagree it's a handshake amongst developers
+of like this is how we're gonna do things.There is really no Framework out there
+that enforces that including Express not
+onlydoes it have no idea what you're doing
+inside of this function other than when
+you actually callthe response object methods, it doesn't
+care, it doesn't need to know.All Express cares about is that you send
+back a response or you throw an error.That's it. Nothing else matters to
+Express.It knows nothing about the intent of post
+or what it's supposed to do.It just knows that these are possible
+status codes that are in the HTTP spec,which is codified. The HTTP spec is
+codified.The REST spec is not. The REST spec is
+just.Again, an agreement, but HTTP, yes, there
+are actual verbs like post putpa delete
+those are actuallyreal. So Express implements that on a code
+level,but it makes no opinions about what you do
+in that handler.It has no idea nor does it care as long as
+you send back a response,that's all it's concerned with, so that
+business logic that is what I would call
+business logic thatis something that like you as an engineer
+would implement yourself of like hm.I'm not gonna accept this Pull Request
+because in this post route that you made,you're not actually posting anything so
+I'm not gonna accept that that's not
+following specs,so you would do that, but they like
+Express is not gonna enforce that,

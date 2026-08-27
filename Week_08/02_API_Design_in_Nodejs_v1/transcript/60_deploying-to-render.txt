@@ -1,0 +1,150 @@
+Now that we're there, all we gotta do is
+just follow these directions on howto deploy Node.js to Express. I decided just
+to link to it versus just writing it in
+here because ifthey change it, you can just click on it
+to get the latest.If I put whatever they put in here, it
+might be dead tomorrow if they change
+their docs.So I decided to keep that live and
+honestly I think it's funny because the
+docs are just this.This is just the docs. It's just this,
+you're done.This, that's it. There's really nothing
+else.That's the docs. It's just, it's just Go
+here and click this button.I was like, oh, that's actually kind of
+easy, so that's what we're gonna do,we're gonna go there and click the button,
+but first, I need to push up my branch to
+GitHub thatI'm gonna deploy, which is just gonna be
+this live lesson branch, so.I'm gonna do that. I got my migrations.I do this. I'm gonna say,Yeah, sure. Origin in life lesson 13.Boom, OK, that is good to go.I'm now going to go to Render. I already
+have an account.But it takes like 2 seconds to make an
+account. Just Sign In with GitHub and make
+an account.You don't have to put any credit card, you
+don't have to do anything. It's super
+simple.And then what you're gonnado is you're gonna, you're going to make a
+new Web service.That's the thing you wanna make, not a
+static site, not a background worker,it's a Web service. Let's make a new Web
+service.It immediately for me brings me to my
+GitHub.This is why I signed in with GitHub
+because it automatically has my GitHub.I have Node V5 right here.I'm gonna pull that up.Cool, I actually deployed this already, so
+it's like I put a one next to it because I
+already havea version of this deployed here, so I'm
+actually just gonna call this habit.API, the thing is this is a globally
+unique.Name, so it's not just unique to my
+project or my account, it's for their
+whole platform.It's globally unique because they wanna
+give you a pretty URL.It's literally Hiroku. Hiroku did the same
+thing.So I don't know if somebody has this or
+not.I'm gonna call you already took it.Can I, can I get it back?I'll call it habit API,Yeah, I it's called habit api, hopefully
+nobody, hopefully nobody took it.We'll see. Project, if you were gonna do
+like bunch of like differentthings together like a background job, a
+cron, a Web service,some database, you can add all of them to
+a project, we're not doing that.Language is Node branch, this is where I
+said you can pick your branch.I'm gonna do live lesson live lesson 13,
+the one I just pushed up.I'll keep it on the west coast route
+directory is source.The only thing I'm gonna change here is
+I'm gonna change NPM install.I'm sure yarn will work fine, but we
+haven't tested it with yarn this whole
+time and I don't wantthat to go wrong. It already looked at my
+package JSON and saw that there was a start
+command andchose to use that as the start command, so
+it already inferred that.And then I'll pick free, and then I'm
+gonna go down here,I'm gonna add my environment variables, so
+the first thing I'm gonna do is add my
+database.URL Like so I already have it in my
+clipboardhere. And then I'm gonna add another
+environment variable.I know I need a JWT.Secret I'm actually just gonna go ahead
+and copy the one that's in or in my local
+host,the one that I told you never to do. I'm
+gonna do that right now.It's just a 32 character string. I don't
+feel like typing a new one.What else do we need?We can go look at, oh yeah, APP_STAGE, so
+I'm gonna say a stage is production.There we go. I know we have node env just to
+make sure.That is set. That's also gonna be
+production.What else do we needI think. I mean, Ican put the expires time. I think I'll do
+the Salt rounds too.Let's just do that just to make sure Salt
+rounds, I'll just put.12 or. Something like that.Like, hold on, let's see why I'm using
+this.I'm not using that. Reading something
+else.Let me see. We are using, oh, it just be
+there we go,bcrypt rounds. Which I'm using here.Which Yeah, you, oh, if you don't pass it
+then it has a default,I think that's what it is. Salt or round
+string number.The Salt to be used in encryption specified number
+then the Salt you that's another reason.OK, I guess I'll put rounds, so I'll say.bcrypt rounds and I'll just put I'll put 8.There's no right or wrong. You can also
+just like hit this button and drop a whole
+.env file inhere and I'll just take it, so.I think that's it, we'll find out. It'll
+break or it won't.Health Check, we do have a slash health.route that I think I still have inside a
+server,yeah, sending back a button so I should
+probably not do that instead of just,I mean it actually doesn't matter it's
+just looking at the status code to see if
+it's 200,that's all it cares about. Pre-deployed
+command, this would be really good to run
+like the migrationsbut you gotta pay forthat. And they know that. Oh, they even
+say database migrations,so yeah, this is a great place for that.Auto deploy, you could say like, oh, wait
+until the CI passes the tests andthen deploy this. For now we'll just say
+on commit.Any built filters, so.Exclude this, include that when we all
+deploy, we don't need any of that,so let's just try to deploy this in.See what happens. All right, so now it's
+gonna build. This is us looking at the
+output of the machinethat's building this and Deploying it so
+it's gonna do exactly on its machine that
+we do on ourmachines so I can see you got the latest
+version of Node based off of the engine
+that I putin there. It's running my build command,
+which for us we don't actually build
+anything,we just do an NPM install, so it's gonna
+do that.That shouldn't take too long and then I
+would imagine it would just it's gonna try
+to do a deploya NPM start maybe and then deploy it or
+probably deploy it first and then do an
+NPM start.Or I'm sorry, Node Source index dot ts,
+it'll just bypass the NPM start and run
+the commanddirectly. Cool, package is installed just
+fine, uploading thebuild. So it has it cached and can.Do rollbacks and things like that if it
+needs to, so.It's gonna deploy and once it deploys, as
+in, take these files,move them to our servers.It's gonna try to start it, and there it
+is.And this will work or not work.There we go. So we got invalid, expect it
+to be bigger than 10.So what I can do now.It's just go back into.The settings here.Go to Wait, did I pass ENVs?Or the ENVs. Built filters.Environment, oh, there we go. environment.There we go, so go here, edit this.So greater than 10, I'll just put 12,
+save, rebuild,deploy. And then now if I go back to.Events, you can see it's starting a new
+one already.Go check this one out.And it's just gonna do the same thing all
+over again.Is it running any integration tests during
+the deployment?No, right now, no. They only render right
+now only does the deployment.If you want something to do the testing,
+the CI.We would have to find another solution for
+that. I'm pretty sure render doesn't do
+CI.The solution for that, the easiest one
+would just use GitHub Actions.It's like, hey GitHub Actions run this
+command and be done with it, but you can
+use,you know, I mean we just Google CI.OK, why did I do that? So.GetUp Actions versus, and then yeah,
+you'll see a lot of them,you know, Jenkins is a popular one, you
+know,I would say GitHub Actions is probably the
+easiest one to do.Circle CI is the OG.So, you know, they're doing stuff, but no,
+it won't do that, but you would add all
+those checks toyour repo inside of GitHub and then When
+GitHub,when that CI gives GitHub the green light,
+then it would deploy it.Cool, OK, so.It looks like everything's good. We got
+this initial 404 because traditionally
+what most serviceswill do when they first deploy your repo
+is they'll do a GET request to slash just
+to make sureit works, and that's how they can tell if
+something happened or not.So it did it got back a 404 so to it was
+like,oh I got back something so this must have
+been successful, so I'm good.And then now it it's doing a health check
+pinging every interval to make sure our
+thing is up becauseif I go look at like logs or.Maybe metrics, I'll probably get like some
+up time.Metric somewhere that shows me that like,
+hey, this is still good.I don't know where that would be, but I'm
+guessing it's somewhere in here,let me see. Yeah, I don't know what it is,but I don't know, let's go give it a shot.
+So here's our URL it's right here.I'll copy that to Postman.We'll go here. We'll do slash health.Do a get. There's my button,
+although,oh I didn't push that up. I was like,
+well, I thought I changed that, no, I just
+didn't pushit up. I just remembered. So yeah, that's
+working,let's check to see if our database stuff
+is working,so if I say. API slash auth slash register.And then there's email password and then
+there is a.Username. I'll just say user.Make sure nothing's in here, I think we're
+good, change that to a post.And so that Cool, User created.So there we go. We're in production, we're
+deployed, our APIs working,our database is working. It's all good,
+so,it's that simple, and itreally makes it pretty simple and now
+whenever we push to that branch,Render will redeploy. So that includes
+merging in something from a PR as well.That's pretty much deployment. Obviously
+there's more stuff to it than that,but It starts off that simple, I'll say,you know, ideally you would set up
+different environments like staging and
+things like that.Maybe everyone on your team gets their own
+environment that they can mess around with
+and do stuff,so it really just depends, but for the
+most part.It's that simple, so yeah, big fan of
+that.

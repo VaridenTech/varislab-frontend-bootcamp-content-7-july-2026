@@ -1,0 +1,73 @@
+The last thing we wanna do before we start
+writing tests and running them is we need
+to go throughour package JSON. We have a test command here.We need to make sure that Vitest for sure
+uses our dot test.env and if we look at our ENV.We know that if app stages test.That ENV will be loaded up. So what we
+wanna do is here inside of this one,we can use this thing called Cross ENV
+that's already installed on your machine,and you can say Cross ENV and you can say
+app.Stage equals. Test like this, so this willset the environment variable of app stage
+equal to test before it executes vitest
+run which is gonnarun our test. And that way the code that
+we're testing when that code imports env.tsenv.ts will then load up the Testing ENV and not
+the development ENV.Vitest is gonna load up the Testing ENV
+regardless.But Viest itself isn't like using well
+outside of that database setupsthat we did it's not using the Database
+it's the code that we're Testing.That uses the env.ts file that I want to
+pull in the env.test environment variable
+file andnot the .env file so super complicated,but. That's why I made that at the
+beginning of the course was just for this.Cool, OK, let's just test that this works,
+so we'll write a test to test this,and then we'll actually write real tests
+when we, when we come back, so.How do we test to make sure? This worksWe actually can just writea simple test, so. We have all of that,I'll talk about the bestpractices with the setup and stuff, but
+essentially it's.You know, you can just use these hooks. We
+don't really have to do too much of this
+because theset up, the setup's gonna run before all
+the tests run, but then we still have to
+be responsible inbetween each test and how we wanna do
+that, and some of the ways we can do that
+is byusing some of these hooks that we get from
+viTest called like after each,before each, after all, before all we can
+do things like dropping the database,clearing mocks, stuff like that. So we'll
+have to be responsible in that way,we already did a lot of this.And yeah, let's go ahead and verify our
+setup works.So let's just make a quick test. We'll
+make a test called setup.test.ts which is
+literally just Testingwhether or not our setup works.So we're not actually testing anything
+crazy, we just wanna see if this works,right, so. What we can do isgot a test setup, we can make a new file
+here, we can call it.Set up. Test dot ts. We can import our
+helpersso I'm gonna say createTest user and create testhabit. Like that. And then I'm goingto go ahead and describe you should get
+that for free and you're autocomplete
+because.Already snuck it into your TS config, you
+didn't even know it right there.It's in your types. So we'll get the
+describe,and I'm just gonna say I just wanna test
+the setup.Just wanna test my setup, that's all I
+wanna do.Cool, so we'll do that and then I'll say
+test.Should connect to the Test DB.So we'll try this. I'm about,40% sure this will work. So we get
+the user, the token.Equals await, create testuser like that. And then I'm just going to
+say expect so I'lltalk about all this test and describe
+stuff when we actually get the testing so
+you can just follow alongright now but if you have questions, feel
+free. If you've written any tests in any
+of the JavaScriptlanguages, it's exactly the same as any
+other testing Framework.It's gonna say user to be.Defined, I suspect that to be there, and
+I'll just do that for now and I'll say,await, clean up database when I'm done,so. We can try to run that.I actually have like these things that
+when I click will run them, but I'm gonna
+run them in aterminal so we can. Actually see them, so.All we have to do is.In this case, We can type in NPM.Test Oh, What happened? And they can
+actually import itI messed something up.First of all, I saidI couldn't find any tests, so.Let's try this, so we say NPM test and
+then maybe if I put.Setup dot test. As a search to find that
+one,OK. OK, there it is.All right. OK, cool, I guess I just,I just assumed that it would find the test
+and run it, but it wanted me to
+specifically.Give it a hint of where the test was, so.By calling NPM tests. Whatever this is
+basically a search it's gonna do a regex and
+find anything thatmatches this so I don't have to put the
+full file name. It's just it's gonna look
+for any ifI just put set up this will run too so
+it's just looking for something that has
+that.I just thought it would find it, but looks
+like it worked, you can see that it
+actually.Pushed our Schema into theTo the test database thatwe had, so that was the part that I really
+wanted to check.It connected to the DB. It, installed a or
+I'm sorry,and it created a user. We tested that the
+user existed,which passed the test and then it stopped,
+so looks like it worked.And if you run this again, it'll just do
+everything all over again and doing it
+pushed to a Databasethat already has the same stuff won't
+cause any errors it'll just say good to Go
+so.

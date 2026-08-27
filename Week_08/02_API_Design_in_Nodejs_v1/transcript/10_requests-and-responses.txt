@@ -1,0 +1,275 @@
+So let's say I want to do a post request,
+right?So if I say let's do a post request to
+slash I don't know,you wanna create a cake, right? So I do
+this.And I'm gonna say actually I'm not gonna
+put anything here just I want you guys to
+see what's gonnahappen because I wanna talk about that
+too. So if I do that, start my server.And I'm gonna open up Postman and I'm
+gonna say.Cake, I'm gonna keep it a Git.I had it, I had it as a post here, but I'm
+gonna run it as a Git.Anybody know what's gonna happen if I do
+that?No, any guess? Or would you expect to
+happen?Maybe that's a better question. We've all
+interacted with servers before.What would you expect to happen if you
+tried to hit a server?You try to hit a server with a route anda verb combination that it does not listen
+for.What would you expect to happen?Yeah, I think you would expect a 404.
+Let's see what happens.Cannot get cake and if we look right here
+you can see we got a 404 not found,yeah, by default Express will just send
+back a 404 if you try to access a route inwhich you did not register for so by
+default you get a 404.404 is a status code.I know I have a section here about status
+codes, but 404 is a status code.That means whatever you're asking for
+doesn't exist.That's what that means. Anything in the
+400 range means your request is jacked up.That's what that means. Anything in the
+500 range means the server is jacked up.Anything in the 200 range means, yeah,
+this is probably good and anything in the
+300 range is like,yeah, this is probably good, but, and it's
+usually something like Caching or
+redirecting or somethinglike that. So 400 means that personmessed up, your server's good to go,
+assuming you wrote your code, right?So, let's change this to a post now.I put a function here, but I'm not
+responding.What do you expect to happen now if I were
+to do a post request to this route and aserver is handling the route, but it
+doesn't actually respond?What do you think would happen?And we've all seen this error before, a
+million times.I promise you you've seen this error.But now it's gonna click to you where why
+this error happens.You like watch YouTube? OK, it, yes, it
+will spin,that's called Hanging. Does it hang
+forever?Time out, exactly.We've all seen this error. Oh, service
+time out or there's a timeout issue.Yeah, that's eventually what's gonna
+happen here, so it's gonna do both,it's gonna hang, which is what we're
+seeing right now, this is called.A server hanging if you don't respond back
+to a request.This is called Hanging. It's just like,
+oh, OK, well.I'll just sit here and then depending on
+what defaults you have and what other
+configuration optionsyou set up, it'll eventually time out.I have no idea what the default timeout is
+for Express,or if there is one.But if you saw the timeout issue from a
+service, it's because they knew that
+eitherA, something was hanging, and they caught
+it and sent back a timeout issue,or B, It hit their threshold of just
+taking too long and that automatically
+triggersa time out but yeah we've all seen this
+issue if you're like Streaming anything on
+YouTube or sometimeseven Netflix, you know, you might see like
+a timeout issue that's because the service
+hanging is it becauseYouTube forgot to put aresponse in the handler? No, that's not
+why.It's for them it's probably, let's assume
+it's not some issue with your Internet.It's probably the fact that like, The Most
+likely would I wouldsay assuming nothing is wrong with their
+code.And nothing's wrong with the Internet. The
+most likely scenario there would be like,you hit them at a point where they started
+triggering auto scaling.And you just happen to land in that one.You know, bucket of servers that's
+overwhelmed.And They received your request.But they haven't handled it yet, so it's
+just hanging,but you know, the threshold just got 
+kicked to like spit up new computers and
+scale things,so it's probably gonna take like another,
+you know, minute or so, and you're already
+in this one serverthat's like overwhelmed. So you gotta time
+out and then when you hit refresh,oh, you get routed to one of the new
+servers and now you see it.So that's in a perfect world if nothing
+went wrong,that's probably why you would see that.But there's a million reasons why that
+could go wrong, but typically I would say
+for bigger companieswho have well established services, it's
+probably because you hit an overwhelmed
+server that literallycould not respond because it's being
+bombarded with traffic.This is literally the definition of DDoS,
+right?Like if you were to DOS direct denial of
+service,that's what DDOS stands for, whereas like
+the quick answer of that is like the quick
+TLDR of that islike I'm gonna do a 4 loop.I'm gonna do 10,000 for loops at a time.Each one of those go to 10,000, and I'm
+gonna do a GET request to your server.That's a DDoS essentially. I'm attacking
+your server so it gets overwhelmed and
+Becauseeverybody shares that same server, even if
+you scale things out at some point we're
+all sharing it.Everybody is going to be punished and have
+slower response times and time off and
+stuff like that.That's what DDoS means, is to do that.There's protections for that on the server
+level, on the CDN level,all types of stuff, but that's what a DDOS
+is, so yeah, I guess there is,there is no default time out here and
+Express right now, so it's just hanging
+forever.So you will run into this. I promise you
+if this is your first time making servers,if you ever been like, wow, why is that
+thing not responding?Are you sure you're responding?And if you are sure you're responding,
+it's probably another issue that we're
+gonna get into really soonthat's causing this, and we'll get into
+thatbut Make sure your serversare responding, you know. And I'm speaking
+from experience.This is actual pain that I'm talking to.
+This is not because I don't believe in
+you, this is becausethis is what I dealt with, OK?And it was it hurt, it really did hurt,
+so.And it's not something you have to deal
+with on the frontend, so yeah, just I got you there. So,
+all right, so let's solve that,so I can say, yeah.Let's get our requests. Let's get our
+response.And I'll say res dot.Not cookie. I'll just say, OK, right, so
+now,when I do that, and I do that, yeah, cool,
+OK,thank you. Easy. The thingabout HTTP and that's the transport that
+we're using.And this is just the other sideof it, you probably also understand this
+from working with clients is that HTTP.Is a client server relationship, right?And in this example, the client is
+Postman,but the client could be anything. The
+Client could be a browserthat you're
+using a website,it could be a mobile app, it could be your
+thermostat,it could be another server. It could be
+anything that's doing your request to the
+server,that's the client, OK? The way HTTP is
+gonna work.I'm not gonna dive in on the low level.Why? Because I don't know how. I I don't
+know it that well,but I know it well enough to know that.There is going to be a connection that's
+gonna be open between that client and the
+server,and it's not going to close unless there's
+a response.Or an error or a disruption in network,
+like a physical disruption,your Internet shut off or something like
+that, right? Those are the only times it
+is that connectiondoes not live forever though, it's not a
+two-way street.The server and the other constraint is the
+server cannot start that connection.Right, that's like a waiter at a
+restaurant serving food for someone who
+didn't order it.It wouldn't make sense. Or who are they
+who are they giving this food to?Nobody even came in and asked for
+anything. What are you doing?They wouldn't. They would have to wait for
+someone to ask for food first.That's why they're called a server. So I
+want you to remember that because there's
+other protocols thatdon't behave that way, like Web Sockets.And I guess TCP is slightly different too.I don't really know how that works.
+Somebody really knows, let me know.But mostly WebSockets.You know, there's like FTPand stuff that has nothing to do with
+this, but for HTTP I want you to
+understand the constraints ofthat because Those constraints will
+define.What will be a definingmechanism on certain experiences you can
+offer users,right? Like if you want to offer user
+something real time.You could do it with HTTP, but you're not
+gonna get it out the box because it's not
+two wayLike for something to be real time, you
+need the serverto tell the client that something has
+changed and ACTP that is not possible.Well, there is something in ADP that does
+allow it to happen, but not with this.There is something, I kinda lied, there is
+something, but not like this.You probably wanna use something like a
+Web socket or you can do polling,which is like you're making a new HTTP
+request on an interval over and over and
+over again just belike, hey, you got something new? Hey, you
+got something new?Do you have something new? Do you have
+something new? And you're checking your
+server over and over andover again asking for something new until
+it gives you something new.So I just wanted to bring that up before I
+forgot about it because that also was
+something that Idid not know when I was learning how to
+make servers a long time ago.I was like, yeah, I wanna make a
+multiplayer game. What do I do?HTTP and I was like, oh you can't. I'm
+like.Why, you know, and then I had to learn
+WebSockets and.Don't ever make soers from scratch, just
+don't do it.It's not worth it. OK, Whatelse did I watched, oh, yeah, so.The other thing we can do in Express which
+is really cool is that we can mount sub
+routers.So what does that look like?What we can do is we can say, let's say I
+wanna make another,I can make another router, so I'll say or
+actually before we get there,check this out. What do you think is gonna
+happen if I say cause,OK And I do thisone instead, so. OK, I have 2 routes.Same route, same verb, different handlers.If I do a poster request this la cake,
+which one's gonna run and why?The last one? OK. Last one.Anybody have any other opinions? Or why do
+you think it's the last one?It's probably the column like13 over, right, the one on 9, I guess that
+makes sense.Last one wins, yeah, that's how typically
+how merging works,so that would make sense.I would assume a router is probably some
+state machine like an object,so that would totally make sense or maybe
+it's a.A stack, I don't know.Any other objections or ideas?Well, all right. Let's test it.So I'm gonna do this.And it says, OK, it's the first one.It's the opposite. So in Express.The first one always wins, and when I say
+first one, I mean whichever one was
+registered first,whichever one was. Registered to Express
+first.Now I don't want that to mean that like
+whichever one comes first in the file
+because it's not alwaysgonna be that way cause you might break
+your routes out into many files, and one
+version of this courseI actually programmatically created
+routes.So I had like a tool thatwould look at your resources and generate
+the routes for you,so like in what order did those things get
+registered, so like there was a conflict,how would that happen? So it's not always
+the one that was written first,is the first one because we all know thatJavaScript is asynchronous in nature and
+it's not always gonna read top to bottom.So it's whichever one was registered to
+Express first.Which for most cases will be whichever one
+was written first,but you might not always, like I said, to
+be, you might not always be able to
+determine which onewas written first, if that makes sense.It's very complicated, Cause people do a
+lot of automation.It's like Express is like in the middle of
+like being good enough to where you don't
+have to buildon top of it, but also bare enough that
+people build stuff on top of it.So there's frameworks built on top of
+Express because it's just low level enough
+to build stuff on topof it. But by itself, it's easy enough to
+just use it alone,so that's why sometimes it's not really
+obvious what is.First or not, there used to be this crazy
+Framework back in the day called.Sales JS is that even a thing anymore?Oh my goodness. They still have a website.Is this real? I'm guessing they're just
+supporting legacy people at this point,but this was a framework that was built on
+top of like Express and there was a whole
+thing aboutthis, you know, but This is like this is
+like 2014,2015 type stuff so but yeah, Express was
+Express was doing pretty good back thenSo yeah, first one winsthis and that means thiswill never ever get hit ever. It'll never
+get hit no matter what you do,it'll never get hit for the most part
+right now with this syntax on this page,
+it won't get hitAlright and yeah for the for the other
+ones it's pretty simple,right? You do, you can do a delete, right?
+You do a put.You do a patch. Right.It's all pretty simple. Now, as far as
+like being able to do.This thing, so let's say I want to be able
+to say like ID, so the way this works isfor a dynamic path, you just put colon and
+then whatever you want, you can put
+whatever you want hereLiterally does not matter.And then how do you get access to this?
+You can just, well, first I can't do it
+here's Iliterally just said that's never gonna get
+called.So let's say I say a cake and then I want
+the cake's name, so I could put name hereright? And then what I can do is I'm gonna
+send backRecerams. Rec. Perams is gonna be an
+object and it's gonna be.Keyed with whatever you put here.So in this case I have name, so I'll have
+a name here.If I do another one, that's why like ID
+I'll also have.ID here. And because the reason type
+script it like type checks this,how does it do that in a string?I don't know, it's pretty damn good, not
+gonna lie.Whoever did that needs a raise, but you
+can add as manyas you want. They're all flat, right? So.Let's just, echo this and send it back,
+right?So I'll do this, I'll say cake, and I'll
+put a name.So if you look at this, right, the very
+next thing I put after cake is gonna be
+the nameright? So I'll say, I like, I like
+strawberrycake, that's actually my favorite.
+
+23.6
+00:15:37.500 --> 00:15:42.460
+And I got back in oh, let's read the,oh, this is cool, so.By default, Express sends back an HTML.File for the error cause they assume that
+like you're hitting this from like a Web
+app,so they want to they want to show up in
+your Browser, they want it to show up
+like.Or Oh, wait, what happened?It showed me that button before, and now
+it doesn'twant to show me, yeah, it just like, oh, I
+guess that was that was it.That's it. That's what shows up in your
+Browser that I thought it was pretty or
+it's not.So they said like HTML typically by deffo.We'll talk about error handling later, but
+anyway, why did this break?Let's go see so. It broke because I also
+need to put an ID here,right? So. Let's go do this, let's put I
+idea of like,I don't know. 2, let's see what happens.There we go, so now we got back
+strawberry.That's the name, right? So if I also
+wanted to get back to ID.I'll do a JSON here and I'll just say
+wreckerras.We'll just send the whole Prams object
+back.So I should see back an object that says
+strawberry that should say name strawberry
+ID too.Can you use query parameters on a postque?Absolutely. There's nothing stopping you
+from using query parameters wherever you
+want.I guess the question is.Given that it's a post request and you're
+most likely sending up a payload,why would you even need query strings?Why would you? Why would you hurt yourself
+that way when you can just add it to the
+payload?So unless there's just like.I don't know, some thing in your
+architecture where it was reallyhard to like, look at the request body,and it was way easier to like look at the
+query string,and the only thing I could think of that
+would With my feeble architecture of mind
+wouldbe logging. Logging might be easier to see
+things on a query string at a glancebut I would say upgradeyour logging, it's 2025, you can have
+better logging, or inenvironments where speed is an issue, so
+like Edge compute,it might be quicker to just Do things on a
+query string,like specifically like creating a Cache
+key so you can have a more deterministic
+Caching strategywhere the query string is part of the URL
+and typically the URL is part of the
+digestin which the Cache key is created, so that
+would make sense,But I probably still wouldn't do it. I
+probably still would just like create a
+Cache.I would still create a digest from the
+post body.I would just serialize that. I don't know,
+I've never run into the example where I
+needed to do thatbut again, that's the thingabout servers. You can do whatever the
+hell you want.There's nobody stopping you. And that's
+the mindset that you gotta get into for
+Frontend developers.You know, you prob, I, you know, I guess
+it depends on the relationship,but like for most of the time, you're at
+the beck and call of whoever's working on
+the server.If the people on the server say, these are
+the routes, and here are the names of
+them,this is what we're gonna do, then that's
+what you're gonna do.The only thing that you guys have between
+you is like the contract of like what is
+the shape ofthis? You might can agree on that so you
+can make some mock data, but you're
+usually at the beckand call, so. If you're making the server,
+you can do whatever the hell you want.

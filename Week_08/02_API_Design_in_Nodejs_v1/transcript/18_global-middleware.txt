@@ -1,0 +1,174 @@
+Let's just do some middleware then, so.Let's get into that. So let's go into our
+server.Jay asked me to pull up my notes over
+here, so I know what I'm doing.Where is this? Oh, there we go, so much
+stuff here.OK, so let's go to our server JS. We're
+gonna add our global middleware here.It should already be installed, but
+actually I'm just gonna check the packs
+just to make sure and I'llGo over right now, so yeah.One in the middle where we're gonna use is
+called CORS. Anybody here ever had a CORS
+error before?Yeah, I know what that is?Where you at, you're the server engineer
+now, so now you're about to implement
+course.Yeah, you're about to be that person that
+causes that error for that engineer when
+they see Coors.That's what you're about to do right now.COR stands for Cross origin Research
+Resource sharing.It's something that only exists in
+browsers, and basically it protects you as
+a user for havingsome script that's running in your Browser
+or on a website,try to access another resource on another
+origin other than the origin thatyou're currently on. So if I'm on.ESPN.com or wherever I am and there's like
+a Chrome extension or Chrome is alittle different, or there's like, let's
+say there's like a script on ESPN that
+they have and they'retrying to like, I don't know, mine Bitcoin
+or something, they're trying to go hit
+this other URL.Well, Chrome will block that.If the people who created the server for
+that Bitcoin one.Said hey, I don't want anyone accessing
+this server whose origin is not these
+allowedorigins. Typically the origin of the app
+that we have.So if any request that comes in isn't for
+our Bitcoin site.com,don't allow the request to go in and
+Chrome has to respect that.They do that automatically. Typically what
+would happen is.Chrome would send out or any Browser, I
+keep saying Chrome, but I'm using Arc
+would send out a optionsrequest. I mentioned that a little sooner
+or a little earlier.It's like, hey, there's another method
+it's called options. That's what the
+options request is or youwill hear it referred to as a pre-flight
+check.The browserwill do a preflight check.
+It's an options request, it sends it to
+the server and it's likehey. This person is tryingto access this URL, here's their origin,
+here's the headers they're trying to useAnd then the server canchoose to respond back with like, here are
+the allowed headers that we accept,here are the allowed origins that we
+accept, so if and then Chrome will
+determine if you're allowed todo that based on the rules of that server
+and based on your intent.If you are allowed to do that, Chrome will
+automatically then send your request.So sometimes when you send a request in a
+Browser, there's 2.There's an options request and then your
+request.But if Chrome determined based off that
+policy from that server, that Cres policy
+that you do not.You don't pass, you don'tyou know, you don't fitthat bill, you will get a Coors error on
+your console, saying like,oh, Coors error, you know, cross order
+research sharing can't do that,you can't use this. So, and there's
+nothing you can do, you can't do anything
+about that unless You'rethe one making the server, and you add the
+domain in which you're on, the origin of
+what you wantto that allow list. You can also just not
+use the Browser.So if it's just like an API that you're
+trying to get access to with data, then
+just like makethe call from the terminal or Postman or
+anything, because those things don't do
+course,it's only a browserthing.Only browsers do the options check for
+courses.It's a browserthing, given the fact that
+websites can run.Malicious scripts outside of your control,
+it's a protection mechanism,whereas like if you're in your terminal.If somebody's writing scripts in your
+terminal, you got other problems, so you
+know,nobody's concerned about that, that's how
+you get away from that.So Coors is only a browserthing,So, yeah, so we will have courses to
+define our policy on who can access our
+API as far aslike people in the browseris concerned,We will also use Helmet.Helmets is a, it's like a grab bag ofSecurity best practices for every server.To the point where I could even tell you
+all thethings that it's doing, but it's
+essentially like setting the appropriate
+headers and things that willbe needed to protect you from common
+attacks that you would typically be.You know, so typically you'd be vulnerable
+to,so like Helmet just does that for you, so
+it's like.I just always add that and you can go look
+at the docs to see exactly what it does,but I'm not interested in security, so I
+just use it for everything.Morgan is a logger, nota logger, as in the fact that It's a
+logger that we can use on a code level
+like aconsole log, although in APIs you do want
+to do that, we won't be covering that
+here.Morgan is a request logger, so it will log
+every single request that you have coming
+in,which is a super useful, so we're gonna
+use.Although, so let's go do that. So if we Go
+to our server, we can import cores from
+Coors.Yeah import Morgan from Morgan.And Helmets from Helmets. These middlewarewere made so long ago, and they're still
+used every single day.Like These are all well over 10 years old
+and still to this day super popularSo because these are globaland I want all this stuff to be registered
+before anything runs, I'm gonna put them
+here.So I'm gonna do this, I'm gonna say app.
+Use Helmet.I'm gonna call it. Typically the
+convention that I see formiddleware is to do a higher order
+function that way you can pass in options
+here.If there's ever any options you want to
+pass here.That's why these things are functions and
+that's why they're not like this.Like, you look at our routes, our routes
+are like that.They're just, they themselves are the
+function in this case the router,but if we ever wanted to pass an options
+here, we would return a function that
+returns the router.Right, it's a higher order function, most.Most middleware and plug-ins and things
+like that are typically higher order
+functions for that reasonso there's a potential topass in options, right? And then the by
+calling this function you actually get the
+middleware itselfThis returns a function essentiallyIs that is that ahigher order functions that a curry?I don't know. One of those things,
+highroid function.The Next thing we wanna do is, let'ssay chorus. You can just do this and be
+done.It's totally fine. This basically just
+says enable everything, enable everyone
+Ope open everything.I don't care, right? If you don't add a
+course policy by default,the browsers will block everything, so you
+typically have to have a course policy
+likethe Chrome or any browserwon't assume
+that because you don't have a Chrome
+policy or course policythat you're OK with everything, they'll
+actually assume the opposite.They're like, oh, they don't have a C
+policy so you can't get access to it.So you, it's better to, even if you don't
+really care who's getting access to this
+for whatever reasonit's still better to be like, youhave to be explicit about it, otherwise
+they can't use it.So, I'm gonna do that,If you wanted to configure this like I
+have in the docs you can do this thing
+called like originIt can take a bracket of domainsthat you can put here, just the localhost.
+I have it set up to do.Like the environment variables, like acores origin, but we're on localhos.It doesn't matter, and we're never gonna
+use a client for this.The other ones are actually built into
+Express, so I'm gonna say app.Use Express. JSON,The reason I have to do this, if I don't
+do this one,what's gonna happen is, if you try to post
+JSON.Up to this server without this middleware
+or something like it.You will not be able to access it as an
+object on the request stop body inside of
+your handlersor your middleware. You would just get
+like.The buffer implementation of it, the, you
+would get the raw binary,I believe it or at best you'd get just
+like a regular string that you might
+stringify.So this right here just ensures that when
+you get inside of your middleware and yourhandlers, you could do wreck out body and
+get access to the payload that was sent up
+on that requestand that's gonna be an object.Which is super helpful. We're also gonna
+do I useURL or Express. URL encoded.I'll pass in an option here called
+extended.True. What URL Encodeed does, it,
+basicallywell, I guess it doesexactly what it says here, but It's going
+to there,so a couple things, the query string.When you set up a query an API that URL
+has to be encoded in such a way.And sometimes those characters get
+replaced, right, so.This URL encoded thing understands how the
+URL gets encoded and it interpretsthat with the The given content type
+that's in the header,like for instance, you might have a
+content type that's like application JSON
+or XML form or differentthings like that. So it basically will try
+to match whateveris in the query stream or whatever the
+content type that you have.Without this, I've run into problems with
+curry strings, so I just add this every
+single time.I guess the extended option allows you to
+choose between parsing the URL encoded
+data with the currystring Library when false. Or the QS
+Library went true.I don't know the difference between those
+two libraries and why one is QS and one is
+Christian.It sounds like some classic Node.js fighting
+over names, but I've always done extended
+true,so that's why I put it.That is the reasoning behind it, because
+I've always done it and I couldn't tell
+you why I started doingit. Cool, and then for Morgan, let's dothat. So we can say app.us.Morgan, there's many different modes you
+can put here.I like to use Dv because it's colorful,
+but I'm gonna add an option hereI'm gonna say I wannaskip logging in general when we are, is.We are Testing. I make sure that I,you know, it's test, for me it's test, it
+might be.It's Test ENV for you or whatever you call
+your function that you had in env.ts.I want to I want to skip logging.I don't want to see all those damn logs
+and I'm Testing.It's annoying, right? We can test it out
+right now, so let's,the one that's easy to test is just the
+Morgan one, we can look, we can look at
+the logsso I'll do a health thingDo it do it afew times, send that again, do a couple of
+these,and there we go, that's Morgan logging.It'll tell you like, you know, how long
+this request took.You know, what the status code was, what
+the methodwas, what the route was, right, just to
+show you what something else if I do
+something like this,right, this should. Give me a 404 and then
+you can see I get a 404.Also, if you haven't noticed.The console For a servers is the terminal
+for the logs,yeah, so I remember when I was first
+working on a server, I was like, open up
+the Chrome consolelike where are the logs at?It's not in the Browser, it's in the
+Termo, so.

@@ -1,0 +1,118 @@
+And then yeah, let's do the same thing for
+the User routes, so we'll go in here for
+our router.Router.use, authenticate Token. Easy.Same thing, yes. So that protects
+everything underneath it,right? Yeah, it does. You could use
+Middleware for that too.Or would you Well, technically this is
+Middleware.We're just putting it globally for this
+router subset.Are you, are you asking, can I put it
+here?Yeah, I could. I would do the same thing.
+It depends on how granular you wanna get,right? So I'm saying I'm OK with every one
+of these things being locked down,so I'm just gonna do it up here. But if
+you're saying, well.All but one should be locked down, so I
+would put it.On each one instead. Except for the one
+that I don't think needs to be locked outAnd that's fine too.However you want to do it, but I think
+each one of these routes should not be
+accessed by someonewho's not authenticated, so I'm gonna lock
+this whole tree down.Middleware can be and actually that's part
+of my notes.Let me, let me go back to that.Where is that? Here we go, I talk about
+the different levels of where you wanna do
+that.Here we go, understanding, so we got like
+router level versus route level,right? So like our approach is a router
+level where we pick a router whether it's
+the global router ora sub router or even a grandchild router,
+we do it there.This will protect all the routes in the
+router, it's clean, it's consistent.You can't forget to protect their route.
+It's one single point of control.There's nothing wrong with doing it this
+way either. It's just, it's more of
+verbose.Sometimes you forget where it might be
+because it's in so many places and it's
+usefulfor mixed auth routes, I would say this is
+probably.This is a solution for a subpar Routing
+naming.Like if you didn't do a good job of
+creating good routes and segmenting them.And there was like a mix of like some has
+to be protected and some not kind of like
+whatwe have with auth. Then this would be the
+solution for that.It's putting them as local as you can, but
+if you did a really good job of segmenting
+your routesout to begin with, you could do them
+higher up in one place because you group
+the routes based offlike, yeah, all these routes have to be
+locked down, whereas if you just like just
+made routes willynilly, just everything is everywhere.Yeah, you're gonna have to get very
+granular.Yeah, I mean, you, I guess technically you
+could, there's another way you could do
+it,right, cause you could do whatever you
+want in middleware.It's nothing stopping you from.Adding that authentication thing,
+authentication middleware like globally
+like up here,I mean like you know I'm gonna lock the
+whole app down, right? So by default this
+will lock thewhole app down which we don't want for auth
+but what you could do is in this
+authenticate token,very similar to what you would do like in
+a middleware for Next.js you could just look
+at the requestobject. And be like, hey, req dot, you
+know,what is it, Origin URL or no, not origin,So as req.url, yeah, you can see what
+URL that this request is trying to go to.And then you could be like, oh, if it has
+like slash auth in it good,don't worry about it, and that way you can
+still put it at the top in one place.And then programmatically within here
+you'd be like, oh, ignore anything that
+has slash auth don't worryabout protecting that that's good. Or oh
+this one special route right here that's
+good,ignore that one too. So you basically make
+an allow list of routes right here that
+are fine,but that could introduce other problems
+too because now you have more than one
+place where a route isdefined. The route is defined itself on a
+router level and then you have a reference
+to that same routerinside some allowed list. If you ever
+change the name of that route, now you
+gotta change it in twoplaces. But you can get around that by
+like making constants,and like I made all my routes and constant
+variables where I can export them
+everywhere,so if I ever change the name of a route,
+only gotta change it in this one file,so. There's an answer for everything, but
+it depends on how complicated you want to
+get.Cool. And make sure I don't leave that in
+there.Cool. All right. Any other questions?No, I have some security best practices in
+here.Never log tokens.They're sensitive. The only time I've ever
+had to log a token is when I thought
+someone stole a tokenAnd I had to log it, soObviously use HTTPS in Productiontoken sent and plain textover HTTP can be intercepted.Like I said before, please set a
+reasonable expiration date,especially if you use something like
+refresh tokens, it's fine if they get
+expired,you can just refresh them, which is the
+Next one, just refresh the tokens.And then, yeah, validate on every single
+request.Don't cash. Something right because I
+could be authenticated today.My JWT could be good today and then it
+could be bad tomorrow, but if the Cache is
+still hittingthen you just sent someonewho's JSON Web token is bad for whatever
+reason is bad whether it's expired or not,some data. Even if it'sthe same data they might have had.So, you, that's the other thing about
+JSON Web Tokens,it makes things like, Accessing Caching
+and stuff difficult,but yeah, don't Cache, authentication
+state essentially.Don't be like, oh, I've seen this before,
+so you must be good.No, keep your server stingy. It's like.I've never seen you before. It's like you
+have to have amnesia.Like you literally can't remember what
+you've seen before because those
+assumptions are gonna.People will take advantage of those
+assumptions they wanted to.Cool. Some other pitfalls, sometimes, you
+forget to put the prefixbearer on Token. Don't forget to do to do
+that.Case sensitivity with the authorization.This one's weird cause it really depends
+on the server. Like technically it is,if you go look at the header, it is
+capital a authorization but like Express
+normalizes all headers andwants everything to be lower case to.So people don't get confused, but then it
+does confuse you,cause you're like, wait, aren't they
+always capital or something, so it
+depends.And then like not handlingasync errors, so. If you have some async
+stuff inside of aMiddleware, if you don't try to catch this
+or handle this somewhere and it breaks,your server is gonna crash, so that's why
+I haven't tried catching stuff.And then the thing we didn't do yet, but
+what we will do Next is now that The
+handlers orControllers that follow that
+authentication middleware, they now have
+access to.req.user Because if we get to this
+handler and this handleris benefiting from the authentication
+Middleware and Auth authentication
+Middleware attaches the userto req.user, that means this
+handler now can safely identify whothis person is. So now we can actually
+write methods for gettingthe habit for this user, or getting all
+the entries for this habit for this user,cause we know who the user is now. Before
+we didn't know, now we know.

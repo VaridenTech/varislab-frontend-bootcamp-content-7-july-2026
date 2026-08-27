@@ -1,0 +1,56 @@
+Let's see, how about we test for, oh yeah,
+let's just do a login one,that'll make sense. So let's go back to
+our auth test.We'll make a new Describe here.And we'll say let's do a post to.Slash API slash auth slash login.And. Let's test, it shouldlog in with valid credentials.And you'll want to get rid of that it on
+line 34.Like 34. Oh, I didn't even see that.Nice, good catch. Cool, soIt should log on tovalid credentials, so now we do want to
+create that test user.So we'll say test user equals await
+create that test user.And I'm not gonna overwrite anything.I'll just use. Whatever it gets back here
+and then.Credentials is it's just gonna be.Email test. User email. What'swrong with you? Oh, Test user user.email.And then password. Test user.Raw password. Yup. And let's make the
+request.So response equals await.Request app dot post.API slash auth slash login.And then we want to send up these
+credentials.And I expect a 200. I think I put a 200,it could be 200, 201, whatever we put
+here.Technically it should be a 201, so I'll
+put a 201 and if it's broken, we'll Go
+change it.So 201. And then somemore assertions we can expect, the
+response dot body.To have. Property, message andyou could put the value here too, but I'm
+not gonna.I'm not gonna check against strings. That
+message could be anything unless I have
+like an enum for thatmessage or a const for that message. I
+don't wanna, that's just gonna be so pain
+to like change allthe time. Response dot body, tohave property. User, for sure, and expect.The body to have. Token.For sure, otherwise, I'm not really signed
+in, am I?And then not to have password which I can
+just copy it.OK, so I think this might fail like a
+200, but we'll change it if we need toLet's see what happens.Cool, that one passed the first one, and
+then the second one,doesn't like me. Oh no, it did, it failed
+exactly where I thought I was gonna fail
+actually,so. Let's just change that one to a.To, what did I put?201 here, it's 201 here.Where is it getting a200 then? 200. Expected 201got 200. From login?that's 200, 201, no?Hm. Where are you getting that from?200. I don't even see the 200 anywhere.401. 201. I don't knowif I move it up.Try that. Is the default 200?Yeah, if, yeah, by default, if you, yeah,
+I guess you can't put it after you put
+like the JSONmethod, yeah, the default, it, yeah, if
+you don't,if you send anything back, it's always a
+200by default, so because I did a JSON it
+was like 200,so cool and this is why you test things,Great, any questions on these tests?It's pretty straightforward. I mean for
+the most part, every single route that you
+test will be someversion of this is like cool what route am
+I Testing?What do I need to send up if anything and
+what do I expect to get back from the
+responseobject? That's really it. It's not much
+else.This would not cover things like.Side effects, but for side effects because
+they are side effects and you don't really
+care you're notwaiting for them you're not waiting for a
+result or you don't really care the result
+of them you'd onlytest that side effect got called anyway
+you're not really expecting a result from
+a side effect,otherwise it wouldn't be a side effect,
+so.Outside of that, it pretty much tests the
+whole flow of,you know, what you wanna do, so.I think that's I think it's enough
+Testing.We got more, but even the habit itself is
+mostly the same.It's just, as you can see, it's pretty
+much the same thing.I guess the only thing that's different
+that I do wanna go over.Would be me.Go down here. And so far these routes were
+just for.Authorization, but what about a route that
+needs authorization, so what would that
+look like?That's, it's mostly the same.You gotta just pass a header and now
+that's it. You just that token that you
+get,you just pass it the same way we do in
+Postman. That's it.Everything else is the same, it's not, no
+different.That's all we do. So, Yeah, I would sayI'm satisfied with showing you this amount
+of Testing, everything else is mostly just
+the same and repetitiveso let's get on to deployment

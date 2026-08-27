@@ -1,0 +1,106 @@
+Middlewear. Anybody wanna give me their
+best guess of what middleware is?Heard that so many times because it like.Is a word that has many different, many
+different definitions and context.Like for instance, when you think of
+Middleware with React, anybody have it any
+examples there?What about, middleware for intercepting.HTTP requests on the client to do like
+Error Handling or Stufflike that, anybody ever done that before?Or what about on the network layer?You have middleware there and NextJS.I think there's like a middleware, yeah,
+it's definitely middleware and if you use
+NextJS you probablyuse middleware there. Everybody here is
+definitely, if you've built apps you've
+used middleware whetheryou knew it or not because it's literally
+what I call the backbone of Web apps.It's literally is one of those words thatmeans so many different things.Well, they, it means one thing but it's
+applied to like many different contexts.It's kind of like Caching almost where
+it's like.Caching is so generic it's like, well,
+what do you mean by Caching?Are we talking Database? Are we talking,
+you know,network? Are we talking local, you know,
+what are we what are we talking here?You know, there's so many ways and so many
+places to Cache a thing basically what is
+Middleware?So middleware is just, it's just code that
+sits in between two other pieces of code.It's in the middle. That's why it's called
+Middleware.You got two pieces of code and there's
+Middleware that sits in between it,and typically the way it works isin a good implementation of middleware, it
+would be either.A list of, you know, functions as
+Middleware that you can run in some order
+or would be likea very robust implementation of like you
+could do whatever you want in just this
+one function and it'llrun there, but that's usually how it
+works.So in the case of an API, the way that
+would look would belike a request comes in.And right now what we do, what we've been,
+what I've taught you so far is that we
+have arequest and then we get to this part,
+which is our callback,our handler, and then we shoot a response
+back.Whereas middleware would sit in between
+all of that.It would sit in between the handler that
+we've been writing and the response that
+we send back.And there's no shortage of amount of
+Middleware that we can use and add or
+create for different reasonsyou know, and they cando anything because these middleware have
+access to the same thing the Handle has
+access to,so that includes the request object and
+the response object.So that means they have the ability to
+inspect the request object and modify it
+or even use the responseobjects in the case of like short
+circuiting a request.But here's the other thing that I didn't
+tell you.That maybe you already knew, but you
+can't, we can't respond back to a request
+more than onceOnce a request has beenresponded to, that connection is closed.That is different than returning, and I'm
+gonna make sure you understand the
+difference.I can put, Like, these twothings are different. A return is not the
+same thing as a response,right? Like, if I do this, Am I actually
+responding back because I just said,hey, I wanna return out of this function?
+No.On the code level, yes, JavaScript will
+see this as this function is no longer
+doing anything and,you know. There's nothing else to execute,
+but on the network level,HTTP is like, where's my response, you
+know,so you're dealing with two different
+things here, you're dealing with the code
+itself and you're dealingwith the network itself and sometimes that
+can get really confusing,There's a lot of frameworksthat like make this even more confusing,
+but.That is something that you have to
+understand.You can't, if you try to respond to a
+request that was already responded tobecause for some reason youhave more code that's running after that
+initial response,like let's say for instance, let's do,
+let's do this. Let me go to an easy one.Let's go to the server.And I'll just Do this.Let's try this. So ifI go here. And I say localhos.Health, I run this. That, oh, I don't have
+the logsOh. I don't have theappropriate locks I have to show you what
+I want to show you, but essentially,I guess you still see the point though.
+I'm not getting back to buttons.Even though I'm not getting, I'm not
+getting the error that I want you to see.I'm not getting back another button.I'm only getting back that first but I
+can't respond again.And this Express is silently handling that
+this would be a big deal if you did this.If you This will lead to massive issues.Is that the same for the JSO method too,
+like in general,yeah, technically. Everything is a send.JSON is just a wrapper around send that
+automatically calls JSON stringy and adds
+the appropriateheaders to the response object to let the
+Client know that you're sending back
+JSON.It is the equivalent of like sending back
+is like doing red.JSON is like the same thing as doing
+something like JSON.String Fi,put some JSON in here, and then like.Man, where do I forgot how you said
+headers on a response object.I think it's like. RestsHeader No, that. Has getheader set headers. OK, yeah, I know it's
+on there and then I could set a header
+here and thenI could say. You know, application type,
+or content typeSomething like this.And then it'll be like.Application JSON. Something like that, I
+forgot the exact header,but that's what res.json is doing for
+you manually or automatically so you don't
+have to do that,because if you don't set that header.And stringified it not gonna go across the
+wire.You can't send back an object across the
+wire. It has to be, you know,you can only send back a string.A number or a bullet that's it's nothing
+else you can send back across the wire.I mean technically it's all really a
+string, but if you wanted to send back
+JSON and have it beparsed as JSON, then you have to tell the
+Client that, hey, this is JSson,so that's what red.JSON is doing for you so you don't have to
+do that because that's annoying as hell.Yes, while you're in there, do you wanna
+fix that closing tag on button.Make a button instead of click. Oh yeah.That'll work, yeah, so that'simportant to know becauseiddleware has the
+power to respond to your request and
+because they sit beforeyour request, that means your handler,
+which you wrote in order to respond to a
+request,might not be the thing that's actually
+responding to a request because the
+Middleware might have doneit already. And you have to protect your
+handlers from not executingIf a middleware already respondedIf you don't do itright, you'll end up in a position where
+your middleware responded.For some reason, your code kept running.And then all of a sudden your handler
+started running, assuming that.It it's allowed to run, that's assuming it
+doesn't break, and then it tries to send
+something again likeI can't tell you how bad that would be for
+certain routes.It would be so bad. You like it could be
+potentially bad,so I'm telling you that because it
+happened to me.Really bad, but it's also very powerful in
+that regard,

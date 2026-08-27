@@ -1,0 +1,67 @@
+All right, welcome back. So we just
+finished up locking down some of our
+routes with the authentication middlewarethat we did. Verifying the JSON Web
+tokens that we created upon log in andSign Up. Now let's create some of the CRUD
+Controllers for some of the resources that
+we have like habitsusers, things like that and then that way
+you get a better sense of just like how it
+all workstogether. Request comes in. It gets routed
+to the right place along the way.There's tons of middleware checking for
+authentication if that's what's needed,checking for input validation, and then
+finally reaching its destination to the
+controller to do theactual thing that it wants to do and then
+do the job and send back a response.So that's what we're about to do is do
+those jobs.So if we look at, I have this lesson here,lesson 10 for CRUD Controllers. Let me
+make sure I checked out to a new,did I check out to a new branch?Oh, I, yes, I did, OK, so.We already talked about like Restfuland things like that. You have my opinions
+on it, but I wrote a lot of that down
+here,so most of the stuff I've been saying in
+the course about REST and CRUD,it's all here, just written down for you,There's better resources to understand
+this. This is just how it comes out of my
+head and the way Ithink about it. Talked about like the
+route plus the verb,or you might hear method route plus method
+and how that maps.One thing we've been just kind of talking
+about over the place is just like status
+codes,so I wrote that down as well so you could
+think of HTTP Status Codes like this,and anything in the 200 is a success.
+Anything in the 400 isbasically a client error, so 400 is like,
+hey,invalid input 401 is like.You sent us or you didn't send anything
+that's required for us to authenticateyou, so you didn't add that bearer token
+or you didn't add that API key or you
+didn't add whateverit is, you just didn't send it up, it
+literally does not exist.403 might be you sent us something, but
+it's wrong,so you're just not allowed.404 is like whatever you're asking for it
+literally doesn't exist.That's not a route that we have and.409 might be like oh you're trying to
+create a user with an email that already
+exists so that mightbe a 409 that might be that's an example
+of a conflict but that might be the one
+conflict youwould never probably tell the user about
+so it might be a different conflict where
+you would say thatbut there's a status quo foreverything you can keep digging, you'll
+find more. I promise you nobody uses
+anything outside of.These, and even I would say 409 is like
+out there.So I would say it's mostly just like 200,
+201.You almost never see 204.You'll see these 400s here all the time,
+for sure,and you'll definitely see these.Right, 500 is your server just crashed.That's what 500 means. 502 means.Technically what that means is like, I'm a
+CDN I'm trying to access an origin.And that origin's dead, so it's not my
+fault.It's the it's the origin's fault. So don't
+get mad at me.I'm a CDN. That's kind of a 502 is because
+it's a gateway,a Edge function on a CDN is technically a
+gateway, so it's like, hey,I'm the gateway. I'm working, but the
+thing that you want me to talk to is not
+working.And then 503 is just like.Yeah, we know we're shut it down for a
+reason, it's just down for now,you know, we know that we're aware of
+that.Like we oops, we messed up a migration, we
+gotta shut the server down.Which happens a lot. Cool.Alright, let's make these, let's make
+these Controllers.So there's a lot in here. If you scroll
+and look at all this, I have a controller
+for everysingle resource we're not gonna do all
+these, but they're all mostly the same.That's why there's really no point of
+doing all of them, but we'll go through at
+least one of theone of the resources, soyou kind of get an idea of what that looks
+like and then the other stuff is there for
+youto, follow along and implement if you want
+to do that.So I say we do the habit one, I think that
+one.Makes sense because we already did the
+Sign In sign up,so technically we already have users, so
+now let's just allow users to like create,read, update, delete habits, and I think,
+I think that would be good.

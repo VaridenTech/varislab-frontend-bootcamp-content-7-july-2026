@@ -1,0 +1,78 @@
+The Next thing is make sure we configured
+our port to be dynamic.I know we already did this, but just in
+case someone didn't do it, here's your
+chance to do itMake sure you do that, soGo to your index fileand make sure this is dynamic.OK, make sure this is based off of
+process.env.Port. Which if I click on this.It is, it defaults to 3000, but it
+definitely reads it from the environment
+variable first.So if you hardcode it down and you never
+changed it, you're not gonna be able to
+deploy this appI promise you.You have to make that dynamic cause you
+don't know what port you're gonna get when
+you deploy it.You're assigned a port. So make sure
+that's dynamic,yeah, never hardcode the port number in
+Productionalways use processing.Port. Prepare your environment variables.
+This just means, you know,wherever your environment variables may
+be, you know you're gonna need them in
+Production, start collectingthem. You can put them in a separate file
+right quick because a lot of providers now
+allow you justto like add a dot ENV file and they'll add
+them all for you at once, which is kind ofcool, but just get all your environment
+variables that you need,you know, whoever you got Slack, whoever
+you, whatever you gotta do, go get your
+environment variablesget ready. We have the database URL.Whatever other ones we need, get those
+ready. Always,you know, create new secure values for
+Production, never reuse Development,Secrets. Never. There should never be
+anything that's a secret.That you use for Development and also
+Production that is just asking for it so
+don't do that alsoreplace any hard coded instances where you
+might have put localhost anywhere right?So I don't think we have that anywhere in
+our app. Nope,just an ENV and then some docs. So if like
+if you were doing like a redirect to like
+anotherroute and you put Localhost 3000 slash,
+OK, that's not gonna work anymore.You hard coded that whatever URL you get
+in Production is not gonna be Localhost,I promise you, so you need to make that
+dynamic.That provider in this case render will
+give you an environment variable that will
+tell you what yourURL is so you can access it in your app.You just gotta go read render docs to know
+what the name of that environment variable
+is.But they will give you one.Every, I guess it's that one, Render
+external url,every. Every hosting provider will inject
+several environment variables into your
+app tolet you know the state of things, so.Keep that in mind. These are just common
+places where you might have hardcoded the
+URL like course configurationemail templates is a bigone, webhook URLs, documentation, sure,
+front end API calls absolutely.This was important because render defaults
+to a previous version of,Node JS in our package JSON, which is just
+one way to do this, but the easiest way to
+doit is we need to add this engines field to
+our package JSON with Node and its value
+set toanything greater than 24.3. So you just
+want to copy this engine's part right
+here.And you wanna go to your package JSON?And anywhere on the route, you just wanna
+to paste that in there.If you don't do that, render's gonna
+default to like version I think it's like
+22 or something like thatwhich is below the minimumwhich I said you're gonna need. So if you
+don't do that, you this won't work cause
+TypeScript doesn'twork on Node at that version.Make sure you have that. The last thing is
+prepare your main branch,and I realized. It doesn't have to be your
+main branch.Like, obviously if you're going to
+Production and this is a real thing,yeah, you probably would have this on your
+main branch, but it doesn't have to be,and for the sake of this exercise, like
+you can put on any branch that you want,
+you can tellRender where you where you want to deploy
+from, but yeah,typically it's like main branch, but a lot
+of this comes down to like your process.Maybe your team has a Production branch,
+maybe your team has something else,but typically it is main. But you can put
+it wherever you want if you've been
+following along with meand having different branches you're like,
+oh, I don't wanna mess up main that's
+fine.You can make any branch that you want to
+be the branch that you want to deploy and
+then youcan tell render it's that branch.Me, I'm not gonna put it on main because
+I'm cutting branches all over the place.I'm probably gonna pick another branch to
+deploy what I'm about to deploy now,but just get whatever branch you're about
+to make ready with the code that you want
+tobe deployed, get that ready. Read that
+Branch, get ready to push up the GitHub.Open up a Pull Request or push it
+directly, however it is, just get it on
+github.

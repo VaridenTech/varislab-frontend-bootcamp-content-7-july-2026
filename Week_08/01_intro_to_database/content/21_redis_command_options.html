@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ใช้ NX XX และ TTL เพื่อกำหนดเงื่อนไข อายุ Cache และรับมือ Thundering Herd" />
+    <title>ตัวเลือกคำสั่ง Redis — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>ตัวเลือกคำสั่ง Redis</h1>
+
+      <h2>NX และ XX</h2>
+      <p>ตัวเลือกสองตัวนี้ใช้สั่ง Redis ว่า “ให้ล้มเหลวถ้า Key นี้มีอยู่แล้ว” หรือ “ให้ล้มเหลวถ้า Key นี้ยังไม่มี” ซึ่งมีประโยชน์เมื่อต้องเขียนข้อมูลแบบมีเงื่อนไข</p>
+      <p>Comment ที่ขึ้นต้นด้วย <code>#</code> ในตัวอย่างไม่ใช่ Syntax ที่ Redis รองรับ จึงไม่ควร Copy ไปพร้อมคำสั่ง</p>
+      <pre><code class="language-redis">SET color blue XX # fails because it doesn't exist yet
+SET color blue NX # succeeds because it didn't exist
+SET color blue XX # succeeds because it does exist
+SET color blue NX # fails because it does exist</code></pre>
+      <p>จำง่าย ๆ ว่า <code>NX</code> สำเร็จเมื่อ Key <strong>n</strong>ot e<strong>x</strong>ists ส่วน <code>XX</code> ทำงานในกรณีตรงกันข้าม เราจึงเขียนตัวสำรวจพิกัดจากบทก่อนหน้าใหม่ได้ดังนี้</p>
+      <pre><code class="language-redis">SET plane:0:0 visited NX # succeeds
+SET plane:1:0 visited NX # succeeds
+SET plane:0:0 visited NX # fails
+SET plane:1:1 visited NX # succeeds</code></pre>
+      <p>เพียงตรวจว่าการเขียนสำเร็จหรือล้มเหลวก็ทราบได้ว่าเคยผ่านตำแหน่งนั้นหรือยัง</p>
+      <h2>TTL</h2>
+      <p>TTL ย่อจาก <strong>t</strong>ime <strong>t</strong>o <strong>l</strong>ive หมายถึงอายุของ Key เมื่อครบเวลา Redis จะลบ Record ให้อัตโนมัติ MongoDB และ PostgreSQL ก็ทำได้เช่นกัน แต่ความสามารถนี้สำคัญมากกับ Cache</p>
+      <p>สมมติแอป Fitness ต้องคำนวณสถิติการออกกำลังกายที่ใช้ทรัพยากรสูง เราไม่อยากคำนวณซ้ำทุกครั้งที่ผู้ใช้ Refresh แต่ข้อมูลที่เก่ากว่าหนึ่งชั่วโมงก็ไม่ควรนำมาใช้ จึงเขียน Cache แบบนี้</p>
+      <pre><code class="language-redis">SET fitness:total:btholt 750kj EX 3600</code></pre>
+      <p>Key <code>fitness:total:btholt</code> จะหมดอายุหลัง 3,600 วินาที โดย <code>EX</code> กำหนดเวลาเป็นวินาที ในโค้ดให้ลองอ่าน Cache ก่อน ถ้าพบแปลว่ายังใช้ได้ ถ้าไม่พบจึงคำนวณใหม่ นอกจากนี้ยังมี <code>PX</code> สำหรับหน่วย Millisecond</p>
+      <p>ทดลองดูการหมดอายุภายในห้าวินาทีได้ดังนี้</p>
+      <pre><code class="language-redis">SET test_expire hi EX 5
+EXISTS test_expire</code></pre>
+      <p>หลังห้าวินาที <code>EXISTS</code> จะคืนค่าเท็จ เทคนิคนี้นำไปใช้กับกลยุทธ์ Cache ได้หลายรูปแบบ</p>
+      <h2>ปัญหา Thundering Herd</h2>
+      <p>ต้องระวังปัญหา <strong>Thundering Herd</strong> สมมติ Cache หมดอายุพอดีกับที่ผู้ใช้ 1,000 คนเปิดหน้าเดียวกัน Server จะ Cache Miss 1,000 ครั้งและเริ่มคำนวณคำตอบซ้ำพร้อมกัน 1,000 งาน การทำ Cache จึงมีความซับซ้อนกว่าที่เห็น</p>
+      <p>ตัวอย่างนี้ผูก Cache กับผู้ใช้รายเดียวจึงมีโอกาสน้อย แต่หากหลายคนอาจ Miss Key เดียวกัน ต้องออกแบบการป้องกัน วิธีหนึ่งคือให้ Server อ่านจาก Cache อย่างเดียว และใช้ Background Job แยกต่างหากคอยอัปเดต Cache ล่วงหน้า ซึ่งกรณีนี้อาจไม่ต้องใช้ TTL</p>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="20_redis.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="22_redis_data_types.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>

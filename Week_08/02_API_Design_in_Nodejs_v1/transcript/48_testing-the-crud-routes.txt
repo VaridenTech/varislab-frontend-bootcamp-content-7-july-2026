@@ -1,0 +1,41 @@
+Before we move on to the error handling,
+let's actually run them in Postman.So, let's do that. Let me make sure it's
+my server running.It is. OK, so for the first one that we
+did.got so many tabs. We have the.Let's create a user habitand then we can try to get them and then
+we can try to update them.So the first one for the create a user
+habit.Where is that one at? route.post.Here we go. So this will just be slash API
+slash habit post request,and we need to follow this Schema here, so
+let's do that.Go to Postman, make a new one here,so habits change that to post, go to the
+body,Go to raw. Go to JSON.And According to our Schema.I need a name, a description, a frequency,
+a target,and possible tag ID so I'll say name for
+this habit is stretchI wanna stretch and thendescription is optional, so I won't do
+that frequency.I'll say every. Or I would say daily.It is really the only Two things I know
+target count,so. Target count. 30 daysSo we got that TagIDs is optional. I think I still have a
+tokenhere, this token may not be good. If not,
+we'll Sign In and give it a try,so I'll send this. OK Oh, target count
+should be a stringI did put string.Is it a look at the scheme of the Database
+though.Target count is an integer, so.Let's fix that. This is a number.There we go, change that, send that again.So have it created.There it is, stretching target count of
+30.Everything's good to go. I'm gonna take
+this ID now so we can use this to update
+it later,but now let's try to get all the habits,
+so I'll change this to a get.And run it with the exact, I don't have to
+change anything cause nothing's gonna get
+sent up.And there we go. I got our habit, just
+one.So we got that one back, there's the
+stretch one.And then now let's try to update this one,
+so I gotta put the ID here,so I'll put the ID here.I'll change this to, I think we did Patch.Do you patch up, I did a patch.So I'll change this to a patch and then
+what I want to update is the name.So I'll change the name to Well, something
+more specific,so I'll say stretch hammies, so I'm gonna
+stretch my hamstrings.So I'll do that and aha, we did get an
+error.Error that we got was, let's see.Habits set name frequency targets I got
+stretch hey,what did it say? Missing from clause entry
+with table habit tags.I would say in that case.It's something here. So habit tag IDsID. Where, oh, I puthabit tags should be habits.That's what it was almost positive.Yeah, that was it. Cool.So there we go, stretching hammies.Good to go there. Like those are the only
+3 that we did,right, we did, yeah, like those are the
+only ones that we did.All right, so any questions on that, on
+those things,those CRUD routes? And just a note that
+you've convenientlyincluded. Several different requests.
+Payloads and everything inyour repo. The API docs Markdown file.You got lots of like copy and pasteable.Oh yeah, curls if people aren't using
+Postman or just JSON payloads and
+everything that they can copypaste. Yeah, I actually had AI generate
+this, so this was really nice. This is
+like one of the things that I did.

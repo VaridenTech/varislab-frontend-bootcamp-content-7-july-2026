@@ -1,0 +1,55 @@
+We want to export some types that's gonna
+help us do some stuff,so at the bottom, typically what I do iswell. Import some helpers first from Zod,
+I'm gonna say importlet's say from.I think it's what drizzle-zod, yeah.So that I'm gonna get to create insert
+schema and then I'm gonna get the.Create select schema. So let's do that and
+at the bottom,what I'm gonna do. I'm going to export
+some types and thenI'm gonna export some schemas.So what I'll do here is I'll say export
+cons type.I'm gonna make a capital user here. I'm
+gonna say type of.User's table of why the const.export type, I'm sorry. Users,And infer select, so. Orinfer select, there we go. So what is this
+actually saying?I'm basically making a TypeScript type.As you can see, it's already populated,
+whose fields will be the same fields as
+the user's table isand I'm inferring that typeby doing type of. This thing that's built
+into all Drizzle schemas infer select,this allows me to do type of it to infer
+what it is and create a TypeScript type
+so.That we can use the user type all over our
+app, which is super useful,so you do that for everything that we
+have, so I can say user.Say habit. We can sayentries. Or entry.And we can say tag.And then lastly it would be.Tag Or habit tag. I like that name better,Habit tag. Sounds like a. MarvelHave a tag, do your thing, go.Get him. Are Habit tags, there we go.So that will give us the types and then.We can also use schemas.To like validate different inputs and
+stuff like that using Zod, so what we can
+do is we can alsosay export. Const, let's say.I want to use a scheme like I want a
+schema that's based on the rules of the
+database inwhich a user. Needs in order to be
+created,right? So like for instance if I go look
+at the user, what does a user need to be
+createdIt has to have an ID that gets generated
+for us so we're goodYou have to pass inan email, it's gotta be unique. You have
+to pass in a username it's gotta be
+unique.You gotta pass in a password.And That's it. That's all the things you
+gotta pass on,so you gotta pass in an email and a
+password. These are optional.These get created for us because we have
+defaults. This is get it gets created for
+us.So I want to make.A enforceable schema that I can use at
+runtime based off of this table withouthaving to like write it myself, so that's
+what I'm gonna do so I can say expert and
+I cansay if you're trying to insert a user,I'm gonna make an insert user schema so
+whenever you have a function in which
+you're trying to createa user, you can use this schema to
+validate those inputs to make sure that it
+follows the database'sschema, right? So in that case I'll say
+create insert schema like this.And then I can pass in the user's table,
+and that will give me a insert user schemaDoes that make sense?This is now a Zod schema thing that I can
+use.To Validate. Anything at runtime, right,
+ifthat makes sense. I coulddo the same thing for. Select.User schema. And this would be greatSelect user schema. So what wouldbe the benefit of this? Well, what a user
+needs in order to be creative is way
+different than whatyou would get back if you were a query user
+user, right? If I were to query user user.I would see a bunchof different stuff. I would see an ID, I
+would see.Created that Up updated.I would see all that stuff, whereas
+inserting user, I wouldn't see any of
+that.So this is just giving me a schema to
+check that as well if I wanna do that at
+runtimeto make sure that like this object that
+I'm looking at follows the selected one,at runtime because I, you know, I still
+have this type here that I can do with
+TypeScript,but I wanna check it at runtime this will
+help me do that.Cool, and we could make all the things for
+that, but I wanna get to the Next part,cause everything else is just the same
+version of that.

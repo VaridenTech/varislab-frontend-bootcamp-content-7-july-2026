@@ -1,0 +1,205 @@
+Onto the Next thing which is gonna be
+authentication and authorization.So this Next session here, there is no
+code, but I just wanna go over high level
+and then we'llhop into the code with the auth and
+everything, but for the notes, this is
+just high level talking aboutlike. Authentication and authorization and
+what I would call identification.Let's talk about identification first. So
+identification is like who are you?Our API wants to be able to identify who
+you are,which is important, because I need to know
+who you are so I can understand where to
+send you asfar as the logic that we have depending on
+who you are, there might be different
+things that you haveaccess to, so, that's one thing that our
+API wants to be able to do.There's a lot of ways to do that.
+Obviously we have things like user names
+and emails and IDs,so we can put thosethings, inside of our authentication
+strategy whether that's a JWT or JSON Web
+tokenor Jot like we're gonna be using or it
+could be a session that's in memory that
+you might saveserver-side or put it in a cookie, but
+being able to store that information
+somewhere so yourserver can identify who this person is or
+who this company is that's accessing your
+API.Is really important, but identification by
+itself is not secure just because I know
+who you arethat doesn't tell me that you have access
+to what you're trying to ask and it
+doesn't tell me thatyou're authorized to do what you're trying
+to do so we still need authentication and
+authorization soauthentication is basically like, OK, well
+prove to me that you have theright of claims to do what you're trying
+to do, right?So basically. A good example of this is,how do I know that you have, been given
+access to this APIeven though I know who you are, you told
+me your name, how do I know that you've
+been grantedaccess to this API? That's what
+authentication is.So in the case of email and password
+authentication is,well, OK, you signed in and you got a
+password and an email match so that to me
+is proofthat you have access to whatever it is
+you're trying to access or I'm sorry you
+have access to theAPI as a whole because you signed in and
+those things match so therefore that must
+be you or someonewho stole your information and that's not
+my problem. You shouldn't have let your
+computer open or somethinglike that. So that's authentication and
+there's many ways to do that.Talk about passwords, there's token base,
+you might have heard like MFA or
+multi-factor,things like that.And then authorization is like, OK, I know
+who you are.You have authenticated with this this
+service, this API,but how do I know you can do that thing
+you're trying to do, right?I I'm aware that you have access to this
+API, but just cause you have access to the
+API thatdon't mean you can like do all the admin
+stuff on the API.That doesn't mean you can like talk to
+this other user's data and modify their
+data.So even though you do have the right to be
+here in this API,it doesn't give you the right to mess with
+User ID 123 data because you're not user,you know, that's not whoyou are. So I do know who you are.You have proved to me that you should be
+here.But what authorizations do you have for
+what actions?That's what authorization is. So you also
+need that as well, and this is where
+you'll get to somethinglike RBAC or R-B-A-C
+Role-based Access Control.This is like a very common way.So basically like define roles that you
+can assign to different identities.So when someone signs up and they do stuff
+like we've all used apps where you can
+invite somebody tothat app and give them a role. They're a
+member, they're owner, they're an admin,they're a teammate, like different levels,
+right?That's what RBAC is, that's
+Authorization.You are authorized to do just these things
+and on this resource and nothing else.By signing up, you have authenticated.And by providing your email, you have
+identified yourself.So that's how all three of those things
+work together. It's like way more
+complicated than you thinkit would, and then over time it becomes
+easy cause like,you're probably like, yeah, that's a lot
+to think about. Yeah, that's why there's a
+lot of,Auth services, auth apps as a service like
+Clerk or Auth Zero,because Auth can get really crazy and
+really difficult, especially for like
+Enterprise stuff,and also because people justdon't wanna be. People don't wanna be
+responsible for security breaches,so they're, it makes them feel better when
+they can go pay somebody else a bunch of
+money and geta SLA and a guarantee that nothing will
+happen to them because then they can like
+we paid you knowthat should have happened, whereasif you did it yourself and you guys got 
+hacked,who are you gonna blame the engineers that
+you hired, it's a lot harder.So you know, a lot of people just rather
+just pay somebody and blame them.So it's almost like insurance, honestly.
+So, yep,that's pretty much all three of those in
+this, in the, these notes here I go into
+code-based examplesof all these different things. We're
+definitely not gonna do all these
+different things today,but I jst wanted to put this stuff in
+here,the ones I did wantto talk about here though, which, I think
+it's kind of useful.It's just the different types of
+authentication flows because we're mostly
+just gonna be on authenticationand some identification we won't be doing
+authorization so for authentication flows
+they'resession based this is the more traditional
+way that you would see people log in,especially for anything like Web app
+related so you would have a session.A session is essentially some state that's
+tracked usually on the server-sidethat is active when youare signed in, right? And this is like how
+apps can determine.If you're signed in multiple placesright, like, and they cando different features like, hey, click
+here to log out of all the places that
+you've been logged intoif you change your password. They can do
+that because there's a session for each
+one of those placesin which you logged in and they can just
+delete those sessions.Now you're logged out, so everything's
+server-side, that's a session.You can store that in memory, which you
+shouldn't. Most people put it in Redis,you can put it in a well indexed database.
+That's a server-side thing.Pretty simple, that's pretty traditionaland typically you would storethose sessions like, you know, the storage
+for them would be like in a Redis,but then so that the client can send up,
+the session,key or identification, that wouldbe like in a cookie. That gets sent up
+every single time.This is why it works very well for like
+Web apps because Web apps and browsers
+send up cookies everysingle request. JSON Web Token or Jot or
+JWT is what we're gonna be using.This is a Stateless authentication.It's the, it's the opposite of a session
+where a session you have to store them
+somewhere.JWT gets stored nowhere, because it's
+just a string and.The server knows nothing about it. The
+consequence,I guess with the JWT is that the server
+just trusts,it's basically like having a skeptical
+server like your API is extremely
+skeptical of everybody.So every time you ask for something you
+have to send up a JWT even if you just didit It still doesn't trust you.You gotta, you gotta send it up every
+single time, and that's what a JWT is.Basically it's a long stream.Like it's like taking an object that
+identifies someone.And what claims they have and converting
+that to a string.That string is the JSON Web Token.The client stores that JSON Web Token
+wherever they want to store it.Typically on the Web it might be local
+storage.It might be a cookie, but then you have to
+deal with CSRF,attacks, but you could do that too, andthen they just have to send it on every
+single request themselves because the
+server trusts nobody.I would say JWTs are good, they're not
+perfect,but we're gonna use JSON Web tokens, andthen you have like API Keys, so if you
+integrate with like a third party API
+they're like,cool, here's your API key.That's another way to authenticate, right?
+It's very similar to JSON Web Tokens,but not really. The implementation of the
+API key.And how that's on the server can be
+different, but typically API Keys are good
+because they're well they'regood enough to like work for
+identification so you can do things like
+rate limiting and stuff like thatAPI Keys are great for whenyou're making a third party API because
+you don't want to do sessions because.You're not building a client, your product
+isn't API.There's no clients, so sessions really
+wouldn't work.You could do JSON Web tokens, but the
+problem with JSON Web Tokensis you can't revoke them because they're
+not stored on the server.When you make a JSON Web token, you're
+not saving it in a database anywhere.It literally only gets saved on the
+Client.So if someone. Accidentally pushes their
+JSON Web token up to GitHub and a repo,they can't go inside of the app. I'm like,
+can you revoke this JSON Web Token?You can't. You just gotta wait for it to
+expire.The server knows nothing about this JSON
+Webb token, but with an API key you can't
+because the servercreated the API key, saved a reference for
+it in the database somewhere without
+creating a session.And then gave it to you. So if you for
+some reason need to delete that API key,you can just go delete it and then they
+would delete it out their database, and if
+it tries toget used again, when they go look it up to
+see if it exists, it won't exist.I'm like, cool, you can't get in, there's
+no API key in our system.So API Keys are great for third party
+cause you can revoke them.Cool, we got some best practices, stuff
+like that.There's some really cool auth stuff in here, we
+don't need to cover all of it, but those
+are the thingsthat I wanted to cover,Any other questions on auth before we get
+in?I scare you, yes. What's probably the most
+common you think that you run into the
+session or the JWT?Well, because of single pageapplications, I would say everybody just
+started using JSON Web tokens, so I would
+say that's probablythe most common one today, but I don't
+think that's the,I would say I don't think that's like the
+one people who are like running huge large
+scale systems areprobably using, right? So like if I'm
+making like a, like for instance if I'm.You know, if I have multiple clients we
+have a, you know, a TV app, a mobile app,a Web app sessions mightbe better in that case, right? So I can
+track where you're logged in on what like
+for instance ifI'm YouTube, I'm probably using sessions
+because I wanna know where you're logged
+into,and that way I cansync states across different devices.I can log you out of many devices.I'm YouTube. I wanna have the best
+security in the world, so it's in my best
+interest to be ableto control. The state in which people are
+logged into,so for whatever reason if I detect some
+nefarious actions, I can log them out.I could alert them. Hey, I noticed someone
+tried to log in from like this other
+country was that youLike I can do things like thatbecause I'm in control of the sessions,
+whereas if it was JWT,I would, I would not know. I just, I
+don't, I couldn't even let you know that
+any of thatstuff was happening until you log back in
+maybe, so.Yeah, the things like that, I think you
+would probably still use sessions.I think in a perfect world sessions are
+probably the best, but they're also the
+most difficult to workwith in my opinion. But again, that's
+assuming that your product itself is not
+just an APILike if you're literally justselling an API as a product, you're not
+gonna use a session, you're gonna use an
+API key,you might do OAuth, maybe a
+JSON Web Token.Depends, hopefully not cause you can't
+revoke it, but sessions are usually
+because I also have a clientThat's the product and it'sinteracting with our API. The API itself
+is not the product, because like even with
+YouTube might havesessions. Or let's just say Google.Google might have sessions for all their
+clients like Gmail, YouTube,all this stuff, but when you go sign up to
+get the Gmail API,that's OAuth that eventually gives you an API
+key.You're not getting a session, you're
+getting an API key, right?So they picked the right one for the right
+strategy.

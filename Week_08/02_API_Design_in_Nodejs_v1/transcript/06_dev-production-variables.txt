@@ -1,0 +1,148 @@
+OK, the problem with environment variables
+is like.They're not typed and nobody knows which
+ones exist without having to lookat the .env file or if you have like some
+really cracked engineer on your team who's
+like who's beenburned before and like set up a Vault and
+like did all this stuff and like unless
+you got thatperson who's just like they live for this
+stuff.Yeah, nobody's gonna know any of the
+environment variables and like on a big
+project,I've worked on projects that's had like
+well over 100 environment variables,you know, tons of different things. So
+like how do you keep track of that stuff,
+so I like tomake a. Little helper to help me do that.So what I'm gonna do is we're gonna make a
+new file here and you can definitely
+follow along.This is something that you're gonna need.I typically make an env.ts on the route.And before we get thereI might have realized thatyou probably only have a .env.example.And yours, you want to also make a .env.And a .env.test You wanna make those
+two files.You don't have to put anything in them
+right now, but you wanna make those two
+files.The reason you don't have them is they're
+not checked into GitHub intentionally,
+otherwise our secretswill be on GitHub. And the pattern is like
+you typically make anexample file. That you do check in at
+GitHub to show the engineers,hey, these are the names of the
+environment variables that you will have
+and here are some examples ofthe values. So when you go make your own..env file. You could pretty much copy paste
+these examples and putthem into your .env file and then fill in
+your values.That's what the example file is for is to
+show you what environment variables you
+need to set up in yourown .env so you could do that if you like.We won't be using most of these. I just
+put them in here so you know,you feel official. When you make this API,
+you feel like you got some environment
+variables,you know, like the quality of an app is
+measured by how many environment variables
+it has.And that last one was a joke, it's not.But it makes you feel good.Cool, OK, so you make those files in env.ts.This is an actual type script file. It's
+not just some config file.What we're gonna do here is first we're
+going to the the whole point of this file
+is to basicallytype check our environment variables so
+when we get the nice autocomplete in our
+code because if youGo on your code and you just try to do
+this is how you access environment
+variables right now in yourcode, by the way you do process. Ev.The name of the environment variable,
+right?So for instance if I were to go into the
+server and at the top I were like
+console.log.process.env. Nodeenenv and I were to.It already says undefined because it's not
+set.That's how you access the environment. I'm
+not gonna log my whole environment because
+you're gonna seesome secret keys and stuff that I have in
+there that I don't wanna expose,but yeah, this is how you would logyour process, right? You noticed this
+wasn't really type check like there's this
+T Z thing on here Iguess it knows about time zones maybe
+that's built in the Node and it's Node
+types,but there's really nothing else here. It's
+also really annoying to have to type in
+process dot everysingle time. And I also would like to have
+some guarantees that theenvironment variables that are required
+are actually there before my app even
+starts up.I don't wanna find out at runtime that
+environment variable that I needed is no
+longer that is not setI wanna find out as soonas the app starts, right? And this is
+gonna help us during deployment.I can't tell you how many times I would
+deploy an app.Just to find out when I go do something
+else later that the environment variable
+was never set and thenthe app broke. I would like to have known
+that as soon as the app tried to start
+after deploymentso that's what we're makingwe're getting types and we're getting
+guarantees that the environment variables
+that have to be thereare there and defaults for the ones that
+aren't, so we know that,and I don't typically seea lot of people doing this, so we're gonna
+import.ENV as load ENV. I'm renaming this because
+I'm using ENV inthis file later somewhere else, so we're
+gonna use this thing called custom ENV.It's very similar to .env, which I
+think is like the standard that most
+people use,and I use. Ev too, but.As you can see, like we're gonna be using
+a .env file and an ENV test file,and that's because when we're testing, we
+wanna switch out the environment variable
+file to use thesedifferent variables for tests like a
+different database and stuff like that.So we wanna make a different test. Next
+year does the same thing.They have like ENV local ENV.Whatever, I don't know, they have, they
+have a different way of doing it.This allows us to switch between that.And then I'm gonna import Z from Zod.If you don't know what Zod is, it's
+basically.Think of it as like TypeScript, but at
+runtime.What does that mean? TypeScript is at build
+time and depth time,as in it checks our types.During build, we don't have a build system
+in this project and it checks our types as
+we're typing,so what I call dev time.But at runtime, TypeScript doesn't exist.It's not a language that actually is
+understood by V8,so. Those types mean nothing,What if you wanted to type check some
+actual value somewhere in your code at
+runtime?Zod is for that. Zod is to type check
+actual values and not type check your
+code.If that makes sense, so you could think of
+schemas at runtime.It's how we validate things. It's just one
+of many ways.So first thing I want to do is I like to
+use this thing called APP_STAGE.We'll talk about this when we get the
+deployment, so I'm gonna say process.Ev appstage equals process. Ev appstage or
+default to devWhat does this mean?It just means like, wellwhatever the app stage environmentvariable is, it's gonna continue to be
+that unless it's not set in the first
+place,set it to death, and I treat APP_STAGE as in
+the stage in which the app is running on.I know we have Node and Vite so you if you've
+written not before, you might be asking
+why don'tI just use this. Noting it is not a good
+practice to use Node ENV to.Switch on what environment you'rein because Node ENV is actually not meant
+for app environment,it's mostly meant for. Like productionoptimizations in most cases. You always in
+an ideal world you always wanna set Node
+ENVto production because then you opt into
+those optimizations unless those
+optimizations take so much timeduring development, you just don't wanna
+do it, but for the most of the time you
+almost always want Node ENVto be production and testing sometimes OK
+for it to be testing.But how do you, how do you?How do you know what environment you're
+running on? Like how do I know if I'm
+locally on my computerif I'm on staging, if I'm in production?This app stage environment is the one that
+I just made that's gonna help me determine
+that.Most hosting providers also injectdifferent environment variables into your
+app for you to let you know that like,hey, you're on for sale by the way, and
+here's your URL or hey,you're on render.com and here's your URL
+or hey,you're inside of GitHub Actions and here's
+a environment variable that says GitHub Actions
+true so you know you'rerunning in GitHub Actions so you can.
+Infer where you are and do different
+things,right? You could be like Volkswagen and
+change your emissions when the test is
+running and you know andGo back to spitting out smog when they're
+not looking and you know environment
+variables.So that's how Volkswagen did it. So the
+nextthing we wanna do is.Set up some little helpers, so I like to
+have these little helpers here at the,so I don't have to keep doing these
+booleans all over and over again.So I'll say like, it's production and its
+production is gonna be like,well, if process. Ev. Appstage.Triple equals production that we'rein production, and I'll do the same thing
+for is.Development And I'll have one for likeit's testing. Or this testI go. And then whatI wanna do is, hey, if I'm in development,
+what I wanna do is I want to load ENV.What this is gonna do by default, this is
+going to load up the ENV from.ENV, this file, it's gonna load up this
+one, which is what I want.That's the that's the local .env file that
+I want.But else if I'm in testing.Then I want to load up this ENV and I can
+pass in the name of the EV file thatI want, which is Test so it'll load up
+Ev.test and get those environment
+variables.Notice I don't load up any environment
+variables I'm production because in
+production all your environment variablesare typically added on the hosting
+provider inside of like a settings panel
+somewhere so you just putthem in there and then they get injected
+for you.And because when we're not local.There is never gonna be an .env file that's
+checked in that you can reference here.As soon as this code leaves your computer,
+if you're doing it right.You won't have any .env file that's checked
+in to GitHub, so there won't be any ENV
+file to evenreference. Off of your computer where this
+would even make sense,so when I'm in production. Yeah, I'm not
+loading any environment variables.My hosting provider and my CI CD my CI is
+doing that for me,that makes sense. Or if you got some third
+party thing like,you know, some vaults or something like
+that,

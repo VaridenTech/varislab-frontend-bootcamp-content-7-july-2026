@@ -1,0 +1,222 @@
+Now we're ready to make some tests for our
+code.Like with the CRUD Controllers, I pretty
+much have thought of all the tests that we
+were forever writeso we won't be writing allof those, but we will test the code for
+those Controllers that we wrote,but before getting to the test, itjust kind of wanna talk about.Testing in general and the types of tests
+and why we're doing the testing that we're
+doing,so let's get into thatSo, we're gonna be doingsome Integration Testing, I would say when
+it comes to Production rate APIs you
+pretty much haveto test your code. It's just like people
+are using stuff in Production and you're
+not testing it.I don't know how you sleep at night,
+especially if they're paying you know,
+like you,how do you know what things are working,
+you know, obviously you have like alerts
+for live things,but how do you know the code that you push
+is doing what it's supposed to do.Some of the code that you interact with
+directly affect the money that,you know, can affect the money that you
+make, you know, literally talking to like
+Stripe or somethinglike that, so you really wanna make sure
+that critical stuff is tested.You know, write tests forcover, you don't, you don't like a lot of
+people think about like,oh I just wanna cover all the code, but
+that's not like how I think about writing
+tests.I write tests for confidence. I wanna feel
+good that the thing that I built is
+working the way thatI intended it to work. Now if it if it's
+not working.I'm OK accepting the fact that I don't
+write good code and that's why it's not
+working,but I don't want is.It's not working because it's not doing
+what I intended.Which is way different than me having some
+intention that was just wrong in the first
+place,so I'm doing it for confidence. I wanna
+sleep at night.I wanna know that the things that are out
+there running are actually running the way
+they're supposedto run. Integration Tests, in my opinion,
+give you the most confidence per line of
+test code for APIscompared to all the other tests out there.
+So I have this little chart here that
+talks about that.So we have Unit Tests, Integration Tests,
+and end tests,and snapshot test. There's probably other
+different types of tests out there,but these are the main ones that you'll
+probably be doing.Unit Tests are for like testing single
+functional methods,super fast, don't really have a lot of
+confidence with those tests though,because a lot of those things you're
+Testing don't work individually, they're
+part of a whole systemso just cause they all work individually100% all the time.Combines, how do I know what's actually
+going on?So I think it's because Unit Tests don't
+actually test out your business logic they
+just testout that the things that you wrote that
+are part of your business logic are doing
+their jobs individuallySo for me things thattest out the business logic in the wider
+scope give me more confidence and Unit
+Tests do not test businesslogic. That is the whole point of unit
+test.Integration Tests do test business logic.They take a collection of many different
+systems, units,you know, Unit Testing. Implementing like,
+you know, what a client would do as far as
+interactingwith your with your API. So the confidence
+that I have is extremely high because it's
+literally Testingexactly what a client would do with my API
+from the start of the request to the end
+of therequest. So that entire system is tested,
+so I'm very confident.And integration test when it comes to API
+because the whole business logic was
+covered.End-to-End Tests, I would say is even
+higher degree of confidence.But in this case of like we're only making
+an API integration test wouldbe the End-to-End test because there's no
+UI there's no clients that I built that
+sits in front of thisAPI. Now if I had a Web app that consumed
+this API,the End-to-End test would start on the Web
+app and like click a thing,do a thing, scroll on a thing, and then
+that would call my API.So yeah, I would have super high
+confidence there.But I don't, we don't, we didn't make a
+GUI, so you can consider integration test
+the End-to-End testfor APIs and then Snapshot testing is
+essentially like unit testing but for thevisual aspects of your components.I wanna make sure that the UI looks
+exactly the way that it's supposed to
+look,so I'm gonna take a snapshot of it,
+whether it's a snapshot of the state of
+the output of theHTML or whether it's an actual picture of
+it and compare pixels and get a pixel diff
+however you wannado it. I would say you get some degree of
+confidence.It's definitely fast if you, if you do the
+non-pictureway where you snapshot the rendered HTML,
+it's just string matching,so it's pretty fast, it gives you some
+confidence, but I would say that stuff's
+really not that criticalin my opinion. I don't really care if like
+a pixel went over here and you know that
+to meis not as critical as like, yeah, you know
+that one route that like handles the event
+from Stripe thatreconciles refunds. Yeah, we don't have
+tests for that.OK, that's terrifying. I want some tests
+for that.Those are refunds. So unit test This would
+be like us testing like the hash passwordfunction. I just wanna make sure that it
+spits out a hash thing so you could test
+that individualintegration test, what we'll be doing is
+we're actually gonna take our whole
+server,which is why we export it.And we're going to Interact with it the
+same way we would in Postman,but without actually turning the server
+on, right?Like we're going to, from Express
+standpoint, ExpressJS's standpoint.There is some client interacting with it
+that's what this, that's how the
+integration test is gonna workExpress won't know that we'reinteracting with it, in such a way that we
+didn't like turn it on.We're just triggering the routes which
+caused the middleware to go off,which caused the Controllers to run and
+everything without actually having to
+start a server so we getthe same benefit without having to deal
+with network because we don't care about
+network we don't needto test network. At least not I mean you
+probably do wanna test network to see how
+your app respondsover different Internet speeds, but that's
+a different type of confidence for a
+different question tobe answered. So we wanna do integration
+test which is essentially like given this
+route,given the this body, this, these
+parameters, these query strings,these headers. I expect to get back this
+status and this payload.Which to me is the highest degree of
+confidence that is literally what the API
+does so that's what we'regonna be doing. End-to-End test again it's
+you're literally driving a Browser.Go here, click this, type this, feel this,
+let me see it all happen.We don't have a GUI, so we're not doing
+that. Snapshot testing again,let me render this component out, get back
+the output in this case probably HTML
+string,and I expect that HTML string to match the
+one that I took last time or whatever the
+baseline isCool, I wrote, I madethis little, graphic here, just to show
+you.In my opinion, like how much Testing, you
+might be doing,so for me, if it'sif it's just an APII'm probably, you know, like Integration
+Testing is gonna cover 70% of your code
+really justby doing Integration Tests you're gonna
+cover all your endpoints and you're gonna
+cover pretty much everythingdealing with the database just by doing
+Integration Tests all if you did
+End-to-End Testing.You're not, you're not really gonna cover
+everything because there's so much stuff
+on your server thatthe client never actually interacts with,
+like, maybe not,but it really just depends on what the
+That client is actually doing,like if you built the server just for that
+Client, maybe it's 1 to 1,but if you have an API that's serving as a
+developer API.And you built like some light client on
+top of that, it's probably not touching
+all those routes or doingall those things, so you're not gonna have
+a lot of that and then Unit Testing,yeah, if you're just testing pure logic,
+again, you're not testing business logic,
+you're not Testingworkflows or anything like that, you're
+really not getting good coverage there,so. Definitely integration testing is a
+sweet spot.If you're only ever gonna do one Testing,
+it would be Integration Testing,Cool, so we already talked about how you
+wanna make sure you don't leave leftover
+data from previoustest runs, which is why we wanna drop
+Databases and do stuff as best as we can
+in between eachtest. Sometimes you want to mock things
+out,like, for instance, if I'm interacting
+with a third party API.I don't wanna test that API. They already
+test their own API.Why do I need to test their API or if I'm
+importing an NPM package,I don't wanna test to make sure that thing
+is doing its job.They already tested that, so I can mock
+those things out, especially if they're
+expensive as far as likethey take a long time to run.So yeah you can mock out third party API
+calls mock out expensive modules thatyou don't need to test you can just assume
+that they work because you installed it or
+you're interactingwith it and there's a team of people or
+maybe Open Source there's someone that's
+already doing that.So again, don't test other people's code
+or other people's services mock them out.Authentication, and test because mostof our endpoints require authentication we
+created the helper function so we already
+solved that problemWe can just make a helperfunction that allows us to do that. So,
+super simple,not too hard to do, and here's just an
+example of how you can do that
+automatically with alittle helper that will take a method in a
+URL, create the test user for you,make the request to the app and set that
+token for you so you don't have to it's
+like alittle quick little helper if you wanted
+to make that.And yeah, race conditions. So again, if
+you have 2 tests running.At the same time and they're both hitting
+the same route.You can run them, Multiple times you'll
+get different results every singletime because it's a timing issue. So, be
+careful about that.You probably want to, I mean this is just
+like.One example I guess, but in reality.I just wouldn't have any test depending on
+any test and I would make sure that every
+single test leavesthe infrastructure that it touched in the
+state it was before it ran the test so
+therefore the Next testthat's gonna run sequentially can benefit
+from a clean state,a clean slate as well. So that's just my
+opinion but obviously like in reality once
+you start needingto like speed up tests and do things.It's like, OK, how do we rereuse some of
+this stuff so our tests can be faster and
+we canrun them in parallel, and then maybe you
+will introduce certain things like cues
+and stuff like thatbut that's just.Almost nobody has a problem,You do like test builders, which is kind
+of very similar to what we did with the.The the helper functions with the users
+and the habits where it's just like you
+pass in some overrideswe get some good defaults plus your
+overrides and now you can build a user,build a habit, build the entry it's a very
+common pattern that's why I used it.And yeah I got some best practices in here
+like for instance you wanna test the
+behavior and not theimplementation detail so in this case I
+don't wanna like spy on bcryptand expect bcrypt.Hash to have been called why that that's
+the implementation detail.I don't really care what I do wanna test
+is whether or not I can log in with the
+wrongpassword. That's a behavior. I wanna test
+that.How that got done, I don't care.I just wanna know that it it did get done
+so behavior not implementation.I think this type of testing is.Bad in my opinion, it doesn't give you any
+confidence.It's like, cool, I got 100% test coverage,
+yeah, but.How come people still aren't able to log
+in?Oh, OK, this would have told us that, so.Yeah, make tests isolated likeI said, clean up the database, start from
+scratch every single time,use descriptive test names, so in the case
+of integration test, maybe not just say
+habits Endpoint,but like put the method or the verb and
+then the route that you hit and what you
+expected sothat way when we're looking at the test
+logs, I know what I'm Testing,you know, like this is very ambiguous. And
+yeah,you know, test the happy path and the Edge
+cases.So when we're looking at like our routes,
+anywhere there's a conditional and if a
+short circuit,a potential error to be thrown, you wanna
+test all of that.So one route might have many different
+paths you might need to test.OK, what happens if everything works in
+this route? Test that.What happens if that first statement is
+triggered? Test that.Well, this thing might throw an error.
+Test that.Test every single conditional short
+circuit path inside of that business
+logic.For every single route, and you will have
+some pretty high confidence.

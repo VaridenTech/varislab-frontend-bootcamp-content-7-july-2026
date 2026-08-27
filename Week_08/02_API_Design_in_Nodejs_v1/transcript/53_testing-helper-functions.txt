@@ -1,0 +1,86 @@
+Why do we drop and recreate tables? Well,
+kinda like what I told you.I want each test to have the same state as
+all the other tests,so I wanna drop everything, make sure
+there's no leftover data from the previous
+test runs,you know, have a consistent starting
+state, and catch schema related bugs
+early on,not during the test, so. Yeah, that's why
+we're doing that,and then now we just need to make some of
+our database,helper functions. These are helper
+functions that are gonnahelp us like make mock data like. You
+know,putting a user in a database or creating a
+token or creating a habit,things that we'll use, inside of our test
+to get things done,that makes sense? Otherwise I have to
+rewrite this stuff every single time,so. Let's do that. So for the helper
+functionsPretty straightforward. We'll just Gointo the same. Wait, why did this put this
+here?How did, how did this not get in the test
+folder? What's going on?Oh, OK, I must say dragged the wrong
+thing. Hold on.Get it. There we go. OK.That's good now. I must say all these
+paths are gonna be broken, but it just
+auto fixed it.I kind of like one that works.OK. So yeah, same thing inside of test
+setup,we wanna add another file.And we want to call it DB helpers dot ts.And it's like this file again, it's just
+it's just it's almost like the seed script
+really,it's just a bunch of helpers.That we can use toInteract with the database a lot easier
+inside of our test versus having to write
+this logic all overagain, so. We're gonna write some tests
+for users,habits maybe and entries. I should
+probably just do some for habits since
+that's the only one we didRoutes for. And then You want to get the
+source DB.Schema we wanna get. Hash password from
+there cause we're gonna use that,or maybe not probably not gonna user
+stuff, but it's OK.And then generate. Token from there.Cool, OK. So the first thing is, we want a
+function that we can call.That will create a test user for us that
+we can then use inside of our test because
+almost everythingis gonna revolve around the user so let's
+just go ahead and make a function that
+creates that test userso const or export const create test userAsync. You can pass in some stuff to
+override it if you want.And this is where likeyou could do like apartial thing if you want, so you
+technically could do something like.You say like partial, and then you can put
+in a.New user like that, youdo that? Versus having to like write it
+all out and then that way everything is
+optional eventhough email username and password. But by
+default,what we'll do is we'll just say.It's an empty object. You didn't give us
+anything.Cool. So now I can say cool, default data
+for a user assuming you gave us nothing is
+all ofthis stuff, so email would just be test.Right, and I need to make this unique, so
+best way to make something unique is
+either math dot randomor a date, so I'll see.They got now. Minus Mathdot random. Like this. At Example.comCool, now we have hopefullyemails that don't conflict with each
+other, username.Yes test user. And you can put whatever you
+want here,pretty much just gonna do the same thing.It's gotta be oops. Date dot now.Minus math dot random. Cool, that'sthe username, password, doesn't matter if
+these are the same,so we're good here. Bestpassword in the world, first nameis Test, last name is user.And then any other user data that you
+might have passed it.Which will override anything that we
+offer.So Next thing I would do is I need to hash
+the password for whatever password is in
+here,cause we don't save. Plain text passwords,
+and if we test any of that all stuff,it would break if we didn't hash this
+passwords, so we'll go ahead and do that.Say default data that password, get that
+hash password,and then let's make a new user, so.Await, DB and you might ask why don't just
+use like some other thing somewhere like
+in a controller tocreate the user? Well, I'm probably, I'm
+writing test to test that so I couldn't
+use it in here inmy function. I'm gonna use for test, so I
+have to write it over.This is code that probably won't be tested
+because it's using it's to support test
+so.dot values. Default data.Password is the hash password.Cool. Start returning, get that user back.There we go. Create a token.And that's just gonna be generate token,
+pretty much what we did before we got our
+ID whichis our user. Dot ID our email.And our, Username. Cool.There's our token. And then we just wanna
+return the token.The user, and then the raw original
+password if you're gonna try logging in.Cool, so that's our helper function to
+create a user.Now we just want to write a helper
+function to create a habit,so let's do that. Gotthat. This is just going to take in, you
+know, pretty much something similar.We got a User ID cause all habits can't be
+created without that, and then we have
+habit data.Which again is a partial.Do I have an insert for a habit down
+here,let's see. This is inferSelect, so
+I'll makeone for infer Insert, I'll call it a
+new habit,and it will be. inferInsert.So now we have a new habit type that I can
+use.In here, I can say new.habit. Here we go. So now we have our
+habit data.And this is going to takeOh yeah, we need to default to empty
+object.There we go. So then we're gonna do the
+same thing, default data,it's gonna be some object, we're gonna
+give it a name.We're gonna say this is a test.Habits Like this. Collision free.But the date of now.And then we have our description, if we
+want to do that as a default.Like you say a test habit.And then we want to add a frequency if we
+want to here.And then we can do a target count,
+whatever we want.Here we go, and then. Have a data spreadacross to override all of our potential
+defaults.Like a habit. Insert intothe habits. With these values.The User ID of being thatand then whatever that defaultdata is returning. And nowwe have our habit. Cool.And lastly, just a program programmatic
+way to clean up the Databases.Clean up database. Thiswould just be await DB.Delete Entries. Db dot deleteHabits Users Tag.HabitTags. Cool.All right. Those are all of our helpers.

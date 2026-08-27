@@ -1,0 +1,87 @@
+All right, let's go back to our
+controller. So we have that.Now let's create one where you can get
+all.The habits for a user, so, go back here,collapse this. We'll say Export const get.User habits, so give me all the habits for
+this user.Now I'm gonna have this request, which is
+gonna be an authenticated request and a
+response,which is a response. Do I try catch?And what I wanna do here.As I can say, user habits with.Tag. So if there's any tags associated with
+this, even though I don't have a way
+outside of REST orI didn't invent a query language to allow
+you to tell me if you want me to get the
+tagsfor you or not, I'm just gonna go get the
+tags for you if there are any tags to getso you don't have to tell me soI'll just say DB. Query.Habits. Dot find many.And then I can do it where.Where equals. The habits table.User ID field is equal to req.user.ID. But I also wanna get anyassociated habits with this, so I'm gonna
+do a with clause.So with allows me to join a table so I can
+say with.Because we have that table that sits in
+between habits and tags called habitTags,so I'm gonna say with habitTags.And then on that table.There is a tag, so I can say with.Tag and then I can say true.So it's essentially, I guess it's like
+equivalent of doing.How does that work on a menu? I mean, I
+was gonna say left join, but I don't think
+that'sright for a many to many table. I don't
+know the sequel way of describing that,but we're just joining them.We're basically, we're starting on the
+habits table side which has a relationship
+to the habittags table which also has a relationship to
+the tags table.The only way to figure out what tags a
+habit has is to go through that
+intermediary table that wecreated called habit tags, and that's what
+I'm doing.So I'm saying find all the habits and then
+find all the habit tags for that habit,and then if you find any grab all the tags
+for those habit tags.Complicated, yes. So the true tag calling
+true that means there is a tag.True just means, get that.It just needs to get that field.That's all that it means include this
+field.Oh, because you don't want the other
+relationship IDs or you just want the tag.Yeah, I just want that one. Yeah, right.That's it, because on the habit tag
+there's also this will be recursive,but there's also a habit.And I'll put true on that The habit that
+would be on this habit tag would be the
+same habitthat is top level here, so that would be
+recursive, right?Yeah, so user with habit tags and then
+lastly,We can do a order by, so we wanna order by
+in a descending order,that's what this is, we can just order by
+when they were created,so. Habits created that in a descending
+order.Which means the newer the newest ones will
+be at top.So because of this is just like spaghetti,we can write a transform function and
+ideally you would do this on the Database
+level by the way,so what I'm doing is technically not the
+right way.But I don't have time for that so we're
+going to do it in JavaScript so what wewanna do is we want to transform the
+output of this to make it look cleaner
+because right now it'sthat table that's in the middle is kind of
+gross and it makes the object weird to
+work with sowe wanna just merge them together
+essentially so it's more flat we wanna
+flatten it that's essentiallywhat we wanna do so I'm gonna say.Habits with tags equals user habit tags.Map for each one of these habits.What we want to do is create a new object,
+and we want to get the whole habit.Right, and then. We want to create a new
+property on this object called tags because
+right now we don'thave that. We have something called
+habitag and each one of those will have a
+tag.I just want the tags. Just give me an array
+of tags, so I'm gonna say tags I'm gonna
+saytag is gonna be whatever this habit.habit
+tags is Map over each one of thoseGet the habit tag Andthen I want to return the habit tag. Tag.So now I have an array of tags.And then Yeah, just to make sure there is
+no habit tag ever on here.I'm just gonna set that to undefined,
+which when you send something undefined
+over the wire,it gets excluded or I guess technically
+when you JSON string or find anything
+undefined,it gets excluded. So this essentially
+removes this field from this object.Which It exists on this habit.This habit right here has a field on it
+called habit tags here.This is us removing it.So I was just cleaning it up.If you can find a way to do this on your
+database with like a materialized view or
+some typeof transform or even just a better query
+using a select,that's probably what you wanna do.But I'm not a SQL wizard, so I'm not
+doing that.So Res. JSON. You can just send back them
+habits.Just like this. Have it With tags Boom.And just like before, if there's an error,
+we'll just.Copy what we had here.So if there's error, we can just say, get
+habits.Error, and then we could just say failed
+to fetch habits.If we go back to our habit routes, that's
+gonna be for Getting all the habits for auser, so that would be.This one, router.get slash cause there's
+no ID here,so that means give me all the habits, so I
+will get rid of this.And I would just say good.Habits, user habits. There's no input
+validation here because you don't send
+anything up.So GET request, there's no payload, so we
+don't have to input any, we don't have to
+validate any inputbecause there is no input.Inputs are only for put post and patch,
+not get.There could be validation on the GET cause
+we do allow your our server to validate
+query parameters andyou can definitely add query parameters on
+the GET, but we not using query parameters
+here.If I were to use query parameters here, I
+would create my own query language and say
+you can adda query parameter that says tags true, and
+if I see tags true,then I'll do this. But again, You're just
+making your own stuff at that point.

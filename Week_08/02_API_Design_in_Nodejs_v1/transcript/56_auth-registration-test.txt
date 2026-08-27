@@ -1,0 +1,126 @@
+Let's write some tests. So I know we have
+authentication, so we can totally do some
+authentication Testingwe also have Habits, sowe can do some habit Testing,And oh yeah, those are the only ones I
+wrote anyway, so I guess I was already
+thinking ahead,so let's do that. Probly still won't write
+all of these.It's a lot of tests we'll just, we'll
+write a few of these, for the sake of,well, also I didn't implement all the
+habit Controllers so we couldn't test them
+all anyway so.Let's get to it. So what we're gonna do is
+write some tests inside of,let's try some of the auth stuff, so we'll
+Go and test.We'll say, auth.test.ts like thatThere we go.got our test here. And it just hit me that
+why.Viest probably didn't find this test
+because it's like in a subfolder inside of
+tests.I'm still bothering why I didn't find it,
+but I'm thinking it's that I just like it
+set me uplike one it wanted me to fail.I'm convinced that's what it was, so we're
+gonna import request lower case from
+something called SuperTestso SuperTest is that thing that will allow
+us to.Run our server without having to turn it
+on. Like we're programmatically gonna
+drive our API throughSuperest as if it is a client but without
+having to turn the server on and like hit
+it withendpoints. So because Express is just a
+Framework you can programmatically trigger
+the routes and theverbs and all that stuff without actually
+like having to expose a port and turn a
+server on SuperTestis gonna do that for us. So, imports.Our app, which is our server, right, so
+we're gonna import that.So. Server, there we Goand then. Let's get ourENV Like that and then we want, we don't
+have to importthese. I have them in the notes, but we
+can do like the after each,we don't need to import that it's a
+global, it's already here, if I just type
+after each,it's already there, it's global, we're
+good.But we do need to import our.Test helpers from. Helpers.There you go. So create test habit and
+clean up database.All right, let's try some tests, so.We'll say, let's describe. Authentication
+endpointsWe're gonna test some authendpoints. Nothing crazy. Super casual,
+andAfter each test, and I'lltell you exactly what this means after
+each, if it's not already obvious.After each touch, clean up the database,
+please, just clear it.And now I gotta go back. I'm missing one
+of these, aren't I?DB dot, which I'm not missing. Entries,
+habits,users, habit tags. I'm like, there's
+another one.There we go, cool. So after each, we want
+toclean up a database, but after each what?Pretty much after each actual test, so far
+we haven't written any tests.These are, these are called test suites.These are like placeholders for your tests
+that are organized in a way,but the actual test has not been written
+yet.So after each is describing after each
+test has ran,not after each assertion, cause one test
+can have several assertions,but after each test, I'll tell you when
+we're actually writing a test.So and then you can nest these so I can
+say I'm gonna describe the authentication
+endpoints and the onethat I actually want to describe now is
+gonna be a post request to slash API slash
+auth slash registerSo I want to testthis. But I'm still not writing the test.Now I'm writing a test when I put it.I'm writing a test, so.I can say it and there's really.No wrong way that you can do this. You
+can, typically when people put it,they'll follow by like should, and that's
+why it was made so you say like it should
+do whateverI'm about to say, and then your assertions
+in the test are testing for the thing you
+said it shoulddo. Another way you could do it, and I'm
+just guessing that Vitest has this is
+that you cancall test. And I believe that works as
+well,and if you were to do that, the way that
+most people do is like,test. Well how do they do it?They'll say test that this thing does, you
+know,this not toes this thing.Does that or something like that. I prefer
+it.It's just they both do the same thing,
+it's just a semantics, it's just a
+semantics.I just like to say it, so I'll say it
+should.Register a new user with validdata. So by reading this test, you can
+already tell what I'm about to do.I'm about to make a post request to slash
+API slash auth slash register with validdata and I expect the new users to be
+registered.That's what I'm about to test for, it's
+very clear.You can't, you can't mess that up.So let's do that. So I'm gonna say, OK.Well, Let's, Let's create a user first, so
+I'll say const userequals await, create. Then I have a, there weGo, create test user, so I'll say create.Test user, we'll get our user. There we
+go.And then I'll just go ahead and hit the
+API so I'll say let's make let's get our
+response backwhich is gonna be.Await and then we'll use the request from
+Super Test.Literally making a request
+programmatically to our to our Express app
+and what I wanna do is a postrequest. To API. Slash auth slash registerjust like it says and it describes.And I need to send some stuff here.I gotta send, you know, some user data
+here.So in this case, I'm going to send.This user, oh.Actually, no, oh wait, yeah, wait, sorry,
+I don't wanna create these we're Testing
+see the user justcreated. I'm tripping, sorry. Let's make a
+fake user object that we're sending out,so I'll say email. I say this is Test.Email Test.com and I know you need a
+username.So I'll do that and I'll just say test
+user, I know you need a password.So I'll test that as in admin 1234 and the
+other ones are optional,so I don't really care about that right
+now, so then I'll send out the user data.There we go. And I expect.I can actually do an assertion right here.
+I expect to get back a 201 successful
+post.So that's the first thing I could do, and
+I can write some more assertions on the
+response.I can then say. OK, let's dive into this.I can say I expect the response dotBody, so the thing it sends back to me.To have, to have propertyof a user. So let's say we expect you to
+send back an object that has a property
+called useron it. I also expect the body to have a
+property called Token on it,cause I signed up, so I want you to sneak
+back to Token.And I also expect body.User. To or not to havePassword on it.Right, I don't send down a password as you
+can see, this will give you a lot of
+confidence ifthis continues to pass. You already know
+that like there's no way somebody's
+getting a password thistest has never failed. Right, soLet's let's try to run this. I'm gonna try
+to run this here and see what happens.This thing said it already ran. I don't
+know, let's see.Setting up the DB. It's kind of cool.Pulling Schema, it's only showing it
+multiple times cause it can't show
+animation.Oh, ra. So I got a 400 validation error,so apparently I sent up something and it
+did not like it.I'm guessing it's because I didn't put a
+Sign In that.And put that Sign In onthe actual email and it's looking for an
+email, so I would imagine that was it.So we'll run that again.Oh, look, you can put the.You didn't put the Xs there, that's kind
+of cool.Let's try that again. Did it run it again?Now I can't tell if it ran it again or if
+that's just the previous result.Oh wait, it actually put that here. That's
+really cool.I've literally never seen that before.Damn. Oh Damn, OK, what was thisthough? This is like some source code
+somewhere,that's not my code, but oh, that's the,
+that's the actual super test.That's kind of cool though.I don't know how to restart it though, so
+I'm just gonna go back into my terminal
+run and youknow. I don't know if it if it reran it or
+not,so. That was, that wasa really cool tool. Cool, OK, yeah, so we
+still have another error here and that's
+why testing is goodSo we have another validationerror. So what does it want? It wants us
+to,oh wait, did I, I register something
+higher up like it's not even hitting this,it's like. Not even getting here, so that
+tells me,did I put something high up and forget to
+take it out somewhere.Oh yeah. I'm like it'snot even getting there. Yeahthat was the one thatI just stuck in there for error handling I
+forgot to take out, so it was doing its
+job.I'll say I'm pretty sure this is right.But you run that here so I can see that
+better.Cool, OK, so this thing, oh man, I locked
+the whole thing,oh, you passed here, OK, I'm not running
+from the.This thing, I mean, it's cool, but like I
+don't know what's going on right here,so I think it's like maybe not.Doing the test setup stuff, maybe, I don't
+know, I was going her,but it passed here, so.That's good. I get rid of this log of this
+whole response right here.

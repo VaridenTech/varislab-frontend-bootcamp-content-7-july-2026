@@ -1,0 +1,82 @@
+All right, now let's make our Controllers
+to sign people up,so. Let's do that. So what we're gonna do
+is go to our code,we're gonna make some Controllers, so
+inside of our source folder, we'll make a
+new folder called ControllersYou might hear these calledhandlers. I switched between the two.I just landed on Controllers. This time is
+for some reason that's what I was using
+the last few monthsso Controllers.We're gonna make a new one called the
+Auth Controller.And inside of here we're going to and
+these Controllers again these are the
+handlers that go inside ofour request our routes that we made an
+Express.So when this route happens run this
+function, this function is a controller.So we wanna make the one for sign up.So when someone goes to /API/auth/register
+and they do a post request to that,we want them we want this function to run,
+the one we're about to write, right?So let's do that. So we're gonna import
+types.From Express so we can say request.Actually, it's easier if you just do it
+like this and then you get some type
+stuff,request the response. Like that, we're
+gonna import bcrypt.Like this from bcrypt.We're going to import. Stuff from actually
+wewon't do the JWT stuff just yet, yeah, we
+haven't done that yet.I just remembered, so we won't import that
+yet.We're gonna import DB fromDB Connection. And then we'regonna import. The users from the DB
+schema.OK. And we're gonna say export, const,
+register.Because this is a handler for Express,
+it's gonna take in the request and the
+response.We can type check these as well, so I can
+say this is the request, this is the
+response.Here we go. Inside of here I'm going to do
+a try catch.We'll do the code in a second, but for now
+let's just go ahead and set up this error
+causewe need to go make the JSON Web token
+stuff, which I do have on here,and the and the password hashing and then
+we'll come back and finish this.But for now I'll just say, yeah, if there
+was an error, I'll just console the error
+this right quickso I can see it was a registration error.Here was the error and then for now I'm
+just gonna say.If something happens here, if this
+function ran and there was an error,I'm just gonna say that.That's our fault, so I'm gonna set this to
+a 500, as in there's something wrong with
+our system becauseit's probably not the inputs because we
+should have already done input validation,we should have already did all this stuff.There, the only other scenario where this
+is not our fault is if the database errored
+out because someonetried to sign up with a previous email
+that was already signed up.And then that would not be a 500, that
+would probably be a 400 if someone sent
+the wrong emailup. We can detect that because the
+database will throw a specific error code
+that says this is a duplicateerror and we can check for that here. Like
+we could literally be like, oh, if it's
+like error dowhatever, you know, once we log the error
+we'll see what type it is.So we can check for that and then in that
+case throw 400, but for now let's just say
+it'sgonna be a 500 for everything.But yeah, other than that, it should
+always be a 500 if you're here, assuming
+you do the validation andstuff ahead of time. And this is why like
+it's great to do that because you can get
+these assumptionsinside these Controllers. It's great to
+have assumptions like if this register
+function is running,that means all the other checks we had all
+the middleware passed,so I can make a bunch of assumptions in
+here and it makes this code so much easier
+to writeand so much lighter. If you didn't have
+any of that
+Middleware, and then you wentin here. You would be doing if statements
+everywhere.If they sent an email, and if the email
+was this length,and if the password like who wants to do
+that?I don't. Imagine writing tests for that.Yeah. Cool. So we'll come back to this.We gotta write our utility functions. We
+gotta get our hashing function and we
+gotta get our JSON Webtoken, going. So for the hashing it's
+pretty simple.We're just gonna make a new file called
+passwords and we're just going to make a
+function that hashesa password. So let's do that.Go into Source, we're gonna make a new
+folder here called utilsI usually have like autils folder. I might have a modules
+folder, I might have a helper's folder.This is just where I put like.Random functions that help me do things
+like they don't actually belong anywhere,they just are useful utilities, so I'm
+gonna say passwords.And inside of here I'll import bcrypt.And I'll import our ENV fromENV And I'll export a function called hashpassword. Be async, which is importantFor hashing. To.Not be To not be susceptible to what's
+called a timing attack,where people will literally measure how
+long it takes.For like The hashing work, which allows
+him to figure out what it might be,so. It's kind of scary to think about.And yeah, this is just going to returnbcrypt hash, and we want to hash this
+password,and then we gotta give it so many rounds,
+so I'm gonna put this bcrypt rounds here
+from our ENVand that's how many times it's gonna do
+it. It's pretty simple. And this is gonna
+return the hash password.
