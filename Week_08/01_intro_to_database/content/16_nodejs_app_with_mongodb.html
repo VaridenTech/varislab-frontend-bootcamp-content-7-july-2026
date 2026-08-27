@@ -53,8 +53,8 @@ code . # or open this folder in VS Code or whatever editor you want</code></pre>
     &lt;/script&gt;
   &lt;/body&gt;
 &lt;/html&gt;</code></pre>
-      <p>ปกติแล้วฉันจะบอกว่าอย่าใส่แท็กสคริปต์ขนาดใหญ่ลงไป แต่ตอนนี้เรากำลังมุ่งสู่ความเรียบง่าย คุณสามารถปรับโครงสร้างสิ่งนี้ใหม่ในภายหลังเพื่อให้ได้สิ่งที่ดีกว่า</p>
-      <p>ใน server.js ให้ใส่สิ่งนี้:</p>
+      <p>ตัวอย่างนี้รวม JavaScript ไว้ใน HTML เพื่อให้ตาม Flow ได้ง่าย ในโปรเจกต์จริงควรแยกไฟล์และ Refactor ให้เหมาะกับโครงสร้างแอป</p>
+      <p>จากนั้นสร้าง <code>server.js</code> แล้วใส่โค้ดต่อไปนี้</p>
       <pre><code class="language-javascript">import express from &quot;express&quot;;
 import { MongoClient } from &quot;mongodb&quot;;
 
@@ -92,12 +92,12 @@ async function init() {
   console.log(`running on http://localhost:${PORT}`);
 }
 init();</code></pre>
-      <blockquote><p>🚨 <strong>ปัญหาที่อาจเกิดขึ้นที่คุณอาจเห็น:</strong> หากคุณเห็นข้อผิดพลาด <code>UnhandledPromiseRejectionWarning: MongoError: text index required for $text query (no such collection 'adoption.pets')</code> แสดงว่าคุณอาจมีชื่อฐานข้อมูลที่ไม่ถูกต้องในรหัสของคุณ ในตัวอย่างของฉัน ฉันเรียกฐานข้อมูลของฉัน <code>adoption</code> หากคุณไม่ได้เปลี่ยนชื่อฐานข้อมูลของคุณ ฐานข้อมูลจะเรียกว่า <code>test</code> หากคุณไม่ทราบชื่อฐานข้อมูลของคุณ ให้รัน <code>db</code> ใน mongo shell ของคุณ แล้วระบบจะแจ้งให้คุณทราบ เมื่อคุณค้นพบชื่อฐานข้อมูลของคุณแล้ว ให้เปลี่ยนบรรทัด <code>const db = await client.db(&quot;&lt;the name of your database here&gt;&quot;);</code> เพื่อให้ตรงกับชื่อฐานข้อมูลของคุณ</p></blockquote>
+      <blockquote><p>🚨 <strong>ถ้าเจอ Error:</strong> ข้อความ <code>UnhandledPromiseRejectionWarning: MongoError: text index required for $text query (no such collection 'adoption.pets')</code> มักหมายถึงชื่อ Database ในโค้ดไม่ตรงกับที่สร้างไว้ ตัวอย่างใช้ชื่อ <code>adoption</code> แต่ถ้าไม่ได้สลับ Database ไว้อาจเป็น <code>test</code> ให้รัน <code>db</code> ใน MongoDB Shell เพื่อตรวจชื่อ แล้วแก้ <code>const db = await client.db(&quot;&lt;the name of your database here&gt;&quot;);</code> ให้ตรงกัน</p></blockquote>
       <p>มาดูบันทึกย่อบางส่วนที่นี่ เพื่อให้ชัดเจน นี่เป็นการแสดงให้คุณเห็นถึงวิธีเชื่อมต่อกับ MongoDB จากโค้ดเป็นส่วนใหญ่ และเพื่อแสดงให้คุณเห็นว่าข้อความค้นหาทั้งหมดที่คุณได้เรียนรู้ในส่วนที่แล้วนำไปใช้ได้เกือบจะโดยไม่มีการแก้ไขใดๆ (มีความแตกต่างเล็กน้อยอยู่บ้าง)</p>
       <ul>
-        <li>เราดึงสตริงการเชื่อมต่อ MongoDB ออกจากตัวแปรสภาพแวดล้อม (ดังนั้นคุณสามารถทำได้หากทำงานบนเซิร์ฟเวอร์บนคลาวด์) ไม่เช่นนั้นจะใช้สำเนาที่รันในเครื่องเหมือนที่เราทำตอนนี้</li>
-        <li>คุณต้องเชื่อมต่อกับ DB จากนั้นเชื่อมต่อกับ db (ฐานข้อมูล) จากนั้นจึงเชื่อมต่อกับคอลเลกชัน</li>
-        <li>คุณเรียกใช้แบบสอบถามทั้งหมดในระดับคอลเลกชัน</li>
+        <li>โค้ดอ่าน MongoDB Connection String จาก Environment Variable เพื่อรองรับ Cloud Server และใช้ค่าของ MongoDB ในเครื่องเป็นค่าเริ่มต้นสำหรับบทเรียน</li>
+        <li>ลำดับคือสร้าง Client เพื่อเชื่อม Server จากนั้นเลือก Database แล้วเลือก Collection ที่ต้องการ Query</li>
+        <li>ทุก Query เรียกผ่าน Collection ที่ต้องการ เช่น <code>db.collection(&quot;pets&quot;)</code></li>
         <li>ค้นหา, จัดเรียง, จำกัด, toArray, DeleteOne, findOneAndReplace ฯลฯ ทั้งหมดนี้ทำงานในแบบที่คุณคาดหวัง</li>
       </ul>
       <p>แค่นั้นแหละ! นั่นเป็นเซิร์ฟเวอร์ Node.js ที่รวดเร็วที่เชื่อมต่อกับ MongoDB!</p>
@@ -112,9 +112,9 @@ init();</code></pre>
       </aside>
 
       <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-        <a class="lesson-navigation__link lesson-navigation__link--previous" href="17_aggregation.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="15_aggregation.html" rel="prev">← บทก่อนหน้า</a>
         <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
-        <a class="lesson-navigation__link lesson-navigation__link--next" href="19_graph_databases.html" rel="next">บทถัดไป →</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="17_key_value_store.html" rel="next">บทถัดไป →</a>
       </nav>
     </main>
   </body>

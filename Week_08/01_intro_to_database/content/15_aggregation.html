@@ -11,8 +11,8 @@
     <main>
       <h1>Aggregation ใน MongoDB</h1>
 
-      <p>MongoDB มีฟีเจอร์สนุกๆ ที่เรียกว่า aggregation มีสองวิธีในการทำไปป์ไลน์การรวมและการลดแผนที่ Map-reduce เป็นสิ่งที่คุณคาดหวังอย่างแน่นอนหากคุณมาจากพื้นฐานการเขียนโปรแกรมเชิงฟังก์ชัน โดยคุณจัดเตรียมฟังก์ชัน map ให้กับ MongoDB ซึ่งจะเรียกใช้ทุกรายการในอาร์เรย์ จากนั้นจึงเพิ่มฟังก์ชันลดเพื่อรวมคอลเลกชันของคุณเป็นชุดข้อมูลที่เล็กลง</p>
-      <p>MongoDB ยังมีแนวคิดเกี่ยวกับไปป์ไลน์การรวมกลุ่มที่มีแนวโน้มที่จะทำงานได้ดีกว่าและยังสามารถบำรุงรักษาได้ง่ายกว่าอีกด้วย ด้วยสิ่งเหล่านี้ คุณจะจัดเตรียมอ็อบเจ็กต์การกำหนดค่าให้กับไปป์ไลน์ <code>aggregation</code></p>
+      <p>MongoDB รองรับทั้ง Aggregation Pipeline และ MapReduce แนวคิดของ MapReduce คือใช้ฟังก์ชัน Map แปลงข้อมูลแต่ละรายการ แล้วใช้ Reduce รวมผลให้เป็นชุดข้อมูลที่เล็กลง แต่สำหรับงานทั่วไป Aggregation Pipeline มักทำงานได้ดีและดูแลโค้ดง่ายกว่า</p>
+      <p>MongoDB มี Aggregation Pipeline สำหรับกรอง แปลง จัดกลุ่ม และสรุปข้อมูลเป็นขั้นตอน วิธีนี้มักอ่านง่ายและดูแลต่อได้สะดวก เพราะแต่ละ Stage มีหน้าที่ชัดเจน</p>
       <p>จะเป็นอย่างไรถ้าเราต้องการทราบว่าเรามีลูกสุนัข สุนัขโตเต็มวัย และสุนัขสูงอายุจำนวนเท่าใดในคอลเลคชันสัตว์เลี้ยงของเรา? มาลองกันดูครับ</p>
       <pre><code class="language-javascript">db.pets.aggregate([
   {
@@ -48,7 +48,7 @@
     },
   },
 ]);</code></pre>
-      <p>การใช้ขั้นตอนการรวมกลุ่ม <code>$match</code> ทำให้เราสามารถยกเว้นสัตว์เลี้ยงทุกตัวที่ไม่ใช่สุนัขได้</p>
+      <p>Stage <code>$match</code> กรองให้เหลือเฉพาะ Pet ที่เป็นสุนัขก่อนส่งต่อไปยัง Stage ถัดไป</p>
       <p>สุดท้าย จะเป็นอย่างไรหากเราต้องการเรียงลำดับผลลัพธ์ตามกลุ่มที่มีสัตว์เลี้ยงมากที่สุด?</p>
       <pre><code class="language-javascript">db.pets.aggregate([
   {
@@ -72,8 +72,8 @@
     },
   },
 ]);</code></pre>
-      <p>อย่างที่คุณเห็น คุณเพียงเพิ่มขั้นตอนเพิ่มเติมในการรวมกลุ่มจนกว่าคุณจะรวบรวมข้อมูลเชิงลึกที่คุณกำลังมองหา มีหลายสิ่งที่คุณสามารถทำได้ ดังนั้น <a href="https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/">นี่คือลิงก์ไปยังขั้นตอนการรวมกลุ่มที่มีอยู่ทั้งหมด</a></p>
-      <p>นี่เป็นหนึ่งในส่วนที่สนุกที่สุดเกี่ยวกับ MongoDB อย่างแน่นอน ฉันเคยใช้ฟีเจอร์การรวมกลุ่มของ MongoDB เพื่อจับผู้ฉ้อโกงในแอปคลาสสิฟายด์ของเรา!</p>
+      <p>เราต่อ Stage เพิ่มทีละขั้นจนได้ข้อมูลสรุปที่ต้องการ Aggregation ทำได้อีกหลายรูปแบบ ดูรายการ Stage ทั้งหมดได้จาก <a href="https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline/">เอกสาร MongoDB</a></p>
+      <p>Aggregation เป็น Feature ที่ทรงพลังมาก ใช้ได้ตั้งแต่ทำรายงานทั่วไปไปจนถึงวิเคราะห์รูปแบบผิดปกติ เช่น ตรวจพฤติกรรม Fraud ในระบบ Marketplace</p>
 
       <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
         <p>
@@ -85,9 +85,9 @@
       </aside>
 
       <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-        <a class="lesson-navigation__link lesson-navigation__link--previous" href="16_indexes_in_mongodb.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="14_indexes_in_mongodb.html" rel="prev">← บทก่อนหน้า</a>
         <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
-        <a class="lesson-navigation__link lesson-navigation__link--next" href="18_nodejs_app_with_mongodb.html" rel="next">บทถัดไป →</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="16_nodejs_app_with_mongodb.html" rel="next">บทถัดไป →</a>
       </nav>
     </main>
   </body>

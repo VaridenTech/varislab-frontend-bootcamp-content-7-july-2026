@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ใช้ find ตัวดำเนินการ เงื่อนไข การเรียงลำดับ และ Projection ใน MongoDB" />
+    <title>การสืบค้นข้อมูลใน MongoDB — บทเรียนฐานข้อมูล</title>
+    <link rel="stylesheet" href="lesson.css" />
+  </head>
+  <body>
+    <main>
+      <h1>การสืบค้นข้อมูลใน MongoDB</h1>
+
+      <p>เมื่อมีข้อมูลแล้ว ขั้นต่อไปคือ Query ออกมาใช้งาน เราอาจหา Document เดียว เช่น User สำหรับหน้า Profile หรือหาหลาย Document เช่น Pet ห้าตัวที่ตรงกับเงื่อนไขค้นหา</p>
+      <h2>findOne</h2>
+      <p>เริ่มจาก Query พื้นฐาน รันคำสั่งนี้ใน MongoDB Shell</p>
+      <pre><code class="language-javascript">db.pets.findOne();</code></pre>
+      <p><code>findOne</code> คืน Document แรกที่ตรงเงื่อนไข เมื่อไม่ใส่ Filter จึงมีความหมายว่า “ขอ Document หนึ่งรายการ” ตัวอย่างนี้มักได้ Luna สุนัขพันธุ์ Havanese ที่เพิ่มไว้ก่อน</p>
+      <p>สมมติว่าต้องการหา Document ลำดับที่ 1337 จากชุดข้อมูล ลองใช้ Filter นี้</p>
+      <pre><code class="language-javascript">db.pets.findOne({ index: 1337 });</code></pre>
+      <p>Query นี้หา Document ที่ Field <code>index</code> เท่ากับ 1337 ต่อไปลองหา Pet ที่เป็นสุนัขและชื่อ Spot</p>
+      <pre><code class="language-javascript">db.pets.findOne({ name: &quot;Spot&quot;, type: &quot;dog&quot; });</code></pre>
+      <h2>find</h2>
+      <p><code>findOne</code> คืน Document แรกที่ตรงเงื่อนไข ถ้าต้องการทุก Document ให้ใช้ <code>find</code> แทน</p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; });</code></pre>
+      <p>Shell แสดงผลครั้งละ 20 Document ผ่าน <strong>Cursor</strong> แทนการโหลดผลลัพธ์ทั้งหมดพร้อมกัน วิธีนี้ช่วยให้ไล่อ่าน Collection ขนาดใหญ่ทีละชุดโดยไม่ใช้ Memory มากเกินไป</p>
+      <p>ลองดึงผลลัพธ์ชุดถัดไปด้วยคำสั่งนี้</p>
+      <pre><code>it
+it
+it</code></pre>
+      <p>ทุกครั้งที่รัน <code>it</code> Cursor จาก Query ล่าสุดจะดึงผลลัพธ์ชุดถัดไปอีก 20 Document</p>
+      <h2>count, limit และ toArray</h2>
+      <p>ต่อไปลองนับและจำกัดจำนวนผลลัพธ์</p>
+      <pre><code class="language-javascript">db.pets.countDocuments({ type: &quot;dog&quot; }); // probably pretty big number
+db.pets.find({ type: &quot;dog&quot; }).limit(40);
+it; // after this the cursor will end</code></pre>
+      <p><code>countDocuments</code> นับจำนวน Document ที่ตรง Filter ส่วน <code>limit</code> จำกัดจำนวนที่ Cursor จะคืน ถ้าต้องการรับทั้งหมดเป็น Array ในครั้งเดียวให้ใช้ <code>toArray</code></p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; }).limit(40).toArray();</code></pre>
+      <p><code>toArray</code> โหลดผลลัพธ์ทั้งหมดมาไว้ใน Array เหมาะเมื่อรู้ว่าชุดข้อมูลมีขนาดไม่ใหญ่เกินไป เพราะต้องใช้ Memory เก็บทั้งหมดพร้อมกัน</p>
+      <h2>Query Operator</h2>
+      <p>ถ้าต้องการหาแมวสูงอายุทั้งหมด เราใช้ Operator เปรียบเทียบภายใน Filter ได้</p>
+      <pre><code class="language-javascript">db.pets.countDocuments({ type: &quot;cat&quot;, age: { $gt: 12 } });</code></pre>
+      <p>เราใช้ <a href="https://www.mongodb.com/docs/manual/reference/mql/query-predicates/comparison/">Query Operator</a> เหล่านี้ได้กับทุก Method ที่รับ Filter เช่น <code>findOne</code> และ <code>find</code> ตัวที่ใช้บ่อยมีดังนี้</p>
+      <ul>
+        <li>\$gt - มากกว่า</li>
+        <li>\$gte - มากกว่าหรือเท่ากับ</li>
+        <li>\$lt - น้อยกว่า</li>
+        <li>\$lte - น้อยกว่าหรือเท่ากับ</li>
+        <li>\$eq - เท่ากับ (ปกติไม่จำเป็น)</li>
+        <li>\$ne - ไม่เท่ากับ</li>
+        <li>\$in - ค่าอยู่ใน Array ที่กำหนด</li>
+        <li>\$nin - ไม่มีค่าในอาร์เรย์</li>
+      </ul>
+      <p>ถ้าต้องการ Pet ชื่อ Fido ที่ไม่ใช่สุนัข ให้เขียน Filter แบบนี้</p>
+      <pre><code class="language-javascript">db.pets.find({
+  type: { $ne: &quot;dog&quot; },
+  name: &quot;Fido&quot;,
+});</code></pre>
+      <h2>Logical Operator</h2>
+      <p>เรารวมหลายเงื่อนไขด้วย Logical Operator ได้ ตัวอย่างต่อไปหานกอายุระหว่าง 4 ถึง 8 ปี</p>
+      <pre><code class="language-javascript">db.pets.find({
+  type: &quot;bird&quot;,
+  $and: [{ age: { $gte: 4 } }, { age: { $lte: 8 } }],
+});</code></pre>
+      <p>Operator อื่นมี <code>$or</code>, <code>$nor</code> และ <code>$not</code> โดย <code>$not</code> เป็น Logical Operator ส่วน <code>$ne</code> หมายถึงค่าไม่เท่ากัน คล้าย <code>!==</code></p>
+      <h2>Operator อื่นที่ควรรู้</h2>
+      <p>นอกจากนี้ <code>$type</code> ใช้กรองตาม Data Type เช่น Number, Array หรือ Object และ <code>$exists</code> ใช้ตรวจว่า Document มี Field ที่ระบุหรือไม่</p>
+      <p>MongoDB ยังมี <a href="https://www.mongodb.com/docs/manual/reference/mql/query-predicates/geospatial/">Geospatial Operator</a> สำหรับ Query ตำแหน่ง เช่น ตรวจว่าสองจุดอยู่ใกล้กันหรือไม่</p>
+      <h2>sort</h2>
+      <p>สมมติว่ากำลังทำหน้าค้นหา Pet และผู้ใช้ต้องการดูสุนัขสูงวัยก่อน เราต่อ <code>sort</code> หลัง Query เพื่อเรียงอายุจากมากไปน้อยได้</p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; }).sort({ age: -1 });</code></pre>
+      <p><code>-1</code> หมายถึงเรียงจากมากไปน้อย ส่วน <code>1</code> เรียงจากน้อยไปมาก</p>
+      <h2>Projection</h2>
+      <p>Projection ใช้เลือกเฉพาะ Field ที่ต้องการให้ Query คืนกลับมา</p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; }, { name: 1, breed: 1 });</code></pre>
+      <p>ค่า <code>1</code> หมายถึงให้รวม Field นั้นไว้ ในตัวอย่างจึงคืนเฉพาะชื่อและสายพันธุ์ ส่วน Field ที่ไม่ระบุจะไม่อยู่ในผลลัพธ์ ยกเว้น <code>_id</code> ที่ MongoDB รวมมาโดยอัตโนมัติ ถ้าไม่ต้องการต้องตั้งเป็น <code>0</code> แนวคิดนี้เหมือน Projection ใน PostgreSQL</p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; }, { name: 1, breed: 1, _id: 0 });
+db.pets.find({ type: &quot;dog&quot; }, { name: true, breed: true, _id: false }); // note that true and false work too</code></pre>
+      <p>เรายังใช้ Projection แบบตัด Field ออกได้ โดยกำหนด <code>0</code> ให้ Field ที่ไม่ต้องการ แล้ว MongoDB จะคืน Field อื่นทั้งหมด</p>
+      <pre><code class="language-javascript">db.pets.find({ type: &quot;dog&quot; }, { _id: 0 });</code></pre>
+
+      <aside class="source-attribution" aria-label="ที่มาและสัญญาอนุญาต">
+        <p>
+          แปลและเรียบเรียงจาก <a href="https://databases-v2.holt.courses/lessons/nosql/querying-mongodb">Complete Intro to Databases v2</a>
+          โดย Brian Holt เนื้อหาต้นฉบับใช้สัญญาอนุญาต
+          <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>
+          และตัวอย่างโค้ดใช้ Apache 2.0
+        </p>
+      </aside>
+
+      <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+        <a class="lesson-navigation__link lesson-navigation__link--previous" href="11_mongodb.html" rel="prev">← บทก่อนหน้า</a>
+        <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+        <a class="lesson-navigation__link lesson-navigation__link--next" href="13_updating_mongodb.html" rel="next">บทถัดไป →</a>
+      </nav>
+    </main>
+  </body>
+</html>
