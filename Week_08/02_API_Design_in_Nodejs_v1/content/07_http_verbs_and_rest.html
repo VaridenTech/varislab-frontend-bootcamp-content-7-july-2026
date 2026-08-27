@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ทำความรู้จัก HTTP Verbs ทั้งห้าตัว หลักการออกแบบ RESTful Routes แบบ CRUD และการใช้งาน Object req กับ res ทั้ง params, query, body, status และ json" />
+  <title>HTTP Verbs และการออกแบบ RESTful Routes — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>HTTP Verbs และการออกแบบ RESTful Routes</h1>
+      <p>Route คือการจับคู่ระหว่างสองสิ่งเสมอ คือ <strong>Verb</strong> (หรือที่บางคนเรียกว่า Method) กับ <strong>Path</strong> เราเห็นตัวอย่างไปแล้วตอนเขียน <code>app.get('/health', ...)</code> ในบทที่ 3 บทนี้เราจะเจาะลงไปว่า Verb แต่ละตัวมีความหมายอย่างไร แล้วเราจะออกแบบ Path ให้คนอื่นเดาถูกได้อย่างไร</p>
+
+      <h2>HTTP Verbs ห้าตัวที่ต้องรู้</h2>
+      <p>HTTP Spec มี Method อยู่หลายตัว แต่ตัวที่เกี่ยวกับงาน API จริง ๆ มีอยู่แค่ห้าตัวนี้</p>
+      <ul>
+        <li><strong>GET</strong> — ขอข้อมูล ทุกครั้งที่คุณพิมพ์ URL ในช่อง Address Bar แล้วกด Enter คุณกำลังทำ GET Request อยู่ นั่นแปลว่าการเข้าเว็บไซต์ก็คือการทำ GET นี่เอง ด้วยเหตุนี้ GET ส่วนใหญ่ในโลกจึงคืน HTML กลับมา แต่มันคืนอะไรก็ได้ API ของเราเป็น JSON API ก็คืน JSON</li>
+        <li><strong>POST</strong> — สร้างของใหม่บน Server เช่น สมัครสมาชิก สร้าง Habit ใหม่ หรือโพสต์ข้อความ (คำว่า "โพสต์" บนโซเชียลมีเดียก็มาจากคำนี้ เพราะเบื้องหลังมันคือการยิง POST Request จริง ๆ)</li>
+        <li><strong>PUT</strong> — แทนที่ทั้งก้อน ให้นึกว่า "ไปหาของชิ้นนี้บน Server แล้วเอาก้อนใหม่นี้ทับลงไปทั้งหมด" ทุก Field เปลี่ยนได้หมดยกเว้น ID</li>
+        <li><strong>PATCH</strong> — แก้บางส่วน อันนี้ตรงกับคำว่า "อัปเดต" ที่คนส่วนใหญ่นึกถึงมากกว่า เช่น เปลี่ยนแค่ Username หรือแค่ Email</li>
+        <li><strong>DELETE</strong> — ลบทิ้ง ตรงตัวตามชื่อ</li>
+      </ul>
+      <p>ยังมีอีกตัวที่คุณจะได้เจอคือ <code>OPTIONS</code> ซึ่งเกี่ยวกับ CORS เราจะพูดถึงมันตอนทำ Middleware</p>
+      <p>สิ่งสำคัญที่สุดที่ต้องเข้าใจคือ <strong>Verb เหล่านี้มีไว้อธิบาย "เจตนา" เท่านั้น</strong> ไม่มีอะไรบังคับคุณเลย คุณจะเขียน POST Route ที่ทำงานเหมือน GET ก็ยังได้ แต่คนอื่นจะงงมาก และ Software จำนวนมาก เช่น Browser หรือ Cache ตั้งสมมติฐานไว้แล้วว่า Verb ไหนควรทำอะไร การทำตามธรรมเนียมจึงทำให้ทั้งระบบเข้าใจตรงกันโดยไม่ต้องอธิบาย</p>
+
+      <h2>REST คืออะไร</h2>
+      <p>REST ไม่ใช่ Framework ไม่ใช่ Library และไม่มี Validation ใด ๆ มันคือ<strong>ข้อตกลงร่วมกันในหมู่ Developer</strong> ว่าเราจะตั้งชื่อ Route แบบนี้นะ เท่านั้นเอง ไม่มีใครบังคับใครได้ และเพราะแบบนี้เองคนจึงตีความ REST ต่างกันไปคนละแบบ เหมือนคนอ่านกฎหมายฉบับเดียวกันแล้วตีความไม่เหมือนกัน</p>
+      <p>เทียบกับ GraphQL หรือ tRPC ที่ข้อตกลงถูกฝังลงไปในโค้ดจริง ถ้าคุณไม่ทำตามมันจะพังหรือขึ้น Error ทันที แต่ REST ไม่มีกลไกแบบนั้น ถ้าอยากได้ต้องสร้างเอง</p>
+      <p>หัวใจของ REST คือแนวคิดเรื่อง <strong>Resource</strong> ซึ่งหมายถึงสิ่งที่ Client เข้าถึงได้ ในแอปของเรา Resource ก็คือ User, Habit, Entry และ Tag แล้วสำหรับ Resource แต่ละตัว เราจะมีสิ่งที่เรียกว่า <strong>CRUD Routes</strong> (Create, Read, Update, Delete)</p>
+
+      <h2>หน้าตาของ CRUD Routes</h2>
+      <p>นี่คือชุด Route มาตรฐานของ Resource ชื่อ users</p>
+      <pre><code>GET    /api/users        // อ่านทั้งหมด
+GET    /api/users/123    // อ่านตัวเดียว
+POST   /api/users        // สร้างใหม่
+PUT    /api/users/123    // แทนที่ทั้งก้อน
+PATCH  /api/users/123    // แก้บาง Field
+DELETE /api/users/123    // ลบทิ้ง</code></pre>
+      <p>สังเกตว่า GET มีสองแบบ แค่ดูจาก URL เราก็บอกได้แล้วว่าอันไหนขอรายการทั้งหมด เพราะอันนั้น<em>ไม่ได้</em>ระบุ ID ต่อท้าย ส่วนอันที่อยากได้แค่ตัวเดียวต้องเติม ID ลงไปเป็น Path ถัดจากชื่อ Resource</p>
+      <p>ส่วน POST ไม่มี ID เพราะเรากำลังสร้างของใหม่ เรายังไม่รู้เลยว่า ID จะเป็นอะไร ตรงกันข้ามกับ PUT, PATCH และ DELETE ที่ต้องมี ID เพราะต้องบอกให้ได้ว่าจะไปยุ่งกับตัวไหน</p>
+      <p>คำว่า CRUD สี่ตัวไม่ได้แปลว่าจะมีแค่ 4 Route เสมอไป มันแปลว่ามี 4 <em>สิ่งที่ทำได้</em> กับ Resource นั้น ในทางปฏิบัติคุณมักจะมี Route มากกว่านั้น</p>
+      <p>มีเคล็ดจำง่าย ๆ อยู่ข้อหนึ่งคือ <strong>Verb ตัวไหนขึ้นต้นด้วยตัว P ให้นึกถึง Payload</strong> — POST, PUT, PATCH ทั้งสามตัวนี้ต้องส่งข้อมูลขึ้นไปด้วยเสมอ ไม่งั้น Server จะรู้ได้อย่างไรว่าให้บันทึกอะไร ส่วน GET แทบไม่เคยส่งอะไรขึ้นไป และ DELETE ก็ต้องการแค่ ID ก็พอ</p>
+      <p>REST เริ่มพังเมื่อเจอข้อมูลที่มีความสัมพันธ์ซ้อนกันลึก ๆ เช่น "ขอ User พร้อม Habit ทั้งหมดของเขา และ Tag ของแต่ละ Habit ด้วย" คำถามคือ URL ของสิ่งนี้ควรหน้าตาแบบไหน จุดนี้เองที่คนเริ่มประดิษฐ์ Query Language ของตัวเองขึ้นมา ซึ่งไม่มีใครนอกบริษัทนั้นได้ประโยชน์ด้วยเลย GraphQL เกิดมาเพื่อแก้ปัญหาข้อนี้โดยเฉพาะ ส่วนในคอร์สนี้เราจะเลือกวิธีที่ง่ายกว่า คือเราจะ<strong>สมมติว่าคุณอยากได้ข้อมูลที่เกี่ยวข้องอยู่แล้ว แล้วส่งให้ไปเลย</strong> ยอมส่งเกินดีกว่าต้องออกแบบวิธีให้ Client ร้องขอเป็นชิ้น ๆ</p>
+
+      <h2>ถ้ายิงไป Route ที่ไม่มีอยู่</h2>
+      <p>ลองยิง GET ไปที่ <code>/cake</code> ทั้งที่เราไม่เคยลงทะเบียน Route นี้ไว้ Postman จะได้ข้อความว่า <code>Cannot GET /cake</code> พร้อม Status Code <strong>404</strong> นี่คือพฤติกรรม Default ของ Express</p>
+      <p>ถือโอกาสจำช่วงของ Status Code ให้ขึ้นใจไปเลย</p>
+      <ul>
+        <li><strong>2xx</strong> — สำเร็จ (200 คือสำเร็จทั่วไป, 201 คือสร้างสำเร็จ)</li>
+        <li><strong>3xx</strong> — ส่วนใหญ่ก็โอเค แต่มีเรื่องของ Cache หรือ Redirect เข้ามาเกี่ยว</li>
+        <li><strong>4xx</strong> — <em>ฝั่ง Client</em> ทำผิด Request มาไม่ถูกต้อง (404 แปลว่าหาสิ่งที่ขอไม่เจอ)</li>
+        <li><strong>5xx</strong> — <em>ฝั่ง Server</em> พัง</li>
+      </ul>
+
+      <h2>ถ้าลงทะเบียน Route แต่ไม่ตอบกลับ</h2>
+      <p>ทีนี้ลองเขียน Handler ที่ไม่มี <code>res</code> อะไรเลยสักบรรทัด</p>
+      <pre><code>app.post('/cake', (req, res) =&gt; {
+  // ไม่ได้ตอบกลับอะไรเลย
+})</code></pre>
+      <p>สิ่งที่เกิดขึ้นคือ Postman จะหมุนค้างไปเรื่อย ๆ อาการนี้เรียกว่า <strong>Hanging</strong> และ Express ไม่ได้ตั้ง Timeout มาให้ Default มันจึงค้างอยู่แบบนั้นได้ตลอดไป</p>
+      <p>นี่คือคำอธิบายของข้อความ "Service Timeout" ที่เราเคยเห็นเวลาดู YouTube หรือ Netflix แล้วโหลดไม่ขึ้น มันคือมีบางอย่างฝั่ง Server ค้างอยู่ แล้วมีคนตั้ง Timeout ไว้ดักจับ (สาเหตุที่พบบ่อยของบริการใหญ่ ๆ ไม่ใช่ว่าเขาลืมเขียน Response แต่มักเป็นเพราะ Server ตัวที่รับ Request ของคุณกำลังโดนถล่มด้วย Traffic จนตอบไม่ทัน กำลังรอ Auto Scaling สร้างเครื่องใหม่มาช่วย พอกด Refresh อีกทีก็เข้าได้เพราะโดนสลับไปเครื่องใหม่แล้ว)</p>
+      <p>ถ้าคุณเพิ่งเริ่มเขียน Server แล้วเจออาการ "ทำไมมันไม่ตอบสักที" ให้ถามตัวเองก่อนเสมอว่า <strong>ตอบกลับหรือยัง</strong> เชื่อเถอะว่าคุณจะต้องเจอเรื่องนี้แน่นอน</p>
+
+      <h2>Client กับ Server และข้อจำกัดของ HTTP</h2>
+      <p>HTTP เป็นความสัมพันธ์แบบ Client-Server ในตัวอย่างนี้ Client คือ Postman แต่จริง ๆ Client เป็นอะไรก็ได้ ทั้ง Browser, Mobile App, เครื่องปรับอากาศในบ้าน หรือแม้แต่ Server อีกตัว</p>
+      <p>กลไกคือจะมี Connection เปิดค้างไว้ระหว่าง Client กับ Server และมันจะไม่ปิดจนกว่าจะมี Response หรือมี Error หรือเน็ตหลุดไปเลย และข้อจำกัดสำคัญคือ <strong>Server เป็นฝ่ายเริ่ม Connection เองไม่ได้</strong> เปรียบเหมือนพนักงานเสิร์ฟที่ยกอาหารไปให้คนที่ไม่ได้สั่ง มันไม่มีเหตุผล เขาต้องรอให้มีคนสั่งก่อน คำว่า Server จึงแปลตรงตัวว่า "ผู้ให้บริการ" ที่รอรับคำสั่ง</p>
+      <p>ข้อจำกัดข้อนี้กำหนดว่าเราทำอะไรได้บ้าง ถ้าคุณอยากทำฟีเจอร์ Real-time ที่ Server เป็นฝ่ายบอก Client ว่ามีของใหม่ HTTP ธรรมดาทำไม่ได้ คุณต้องไปใช้ WebSocket หรือไม่ก็ใช้วิธี <strong>Polling</strong> คือให้ Client ยิง HTTP Request ซ้ำ ๆ ตามช่วงเวลาเพื่อถามว่า "มีของใหม่ยัง" ไปเรื่อย ๆ</p>
+
+      <h2>ลำดับการลงทะเบียน Route</h2>
+      <p>ลองเขียน Route ที่ Verb และ Path ซ้ำกันเป๊ะ ๆ สองอัน</p>
+      <pre><code>app.post('/cake', (req, res) =&gt; {
+  res.json({ message: 'first' })
+})
+
+app.post('/cake', (req, res) =&gt; {
+  res.json({ message: 'second' })
+})</code></pre>
+      <p>หลายคนจะเดาว่าอันหลังทับอันแรก เพราะเราชินกับการ Merge Object แต่ผลลัพธ์คือ <code>first</code> ครับ ใน Express <strong>ตัวที่ถูกลงทะเบียนก่อนชนะเสมอ</strong> และอันที่สองจะไม่มีวันถูกเรียกเลยไม่ว่าจะทำอย่างไร</p>
+      <p>ขอย้ำคำว่า "ลงทะเบียนก่อน" ไม่ใช่ "เขียนไว้บนสุดของไฟล์" เพราะพอโปรเจกต์โตขึ้นคุณจะแตก Route ออกเป็นหลายไฟล์ บางทีมีเครื่องมือสร้าง Route ให้อัตโนมัติ ลำดับการลงทะเบียนจริงจึงอาจไม่ตรงกับลำดับที่ตาเห็น ในกรณีทั่วไปมันจะตรงกัน แต่อย่ายึดติดกับมันเป็นกฎ</p>
+
+      <h2>Route Parameters</h2>
+      <p>ถ้าอยากได้ Path ที่เปลี่ยนแปลงได้ ให้ใส่เครื่องหมาย <code>:</code> นำหน้าชื่อที่เราตั้งเอง จะตั้งว่าอะไรก็ได้</p>
+      <pre><code>app.get('/cake/:name/:id', (req, res) =&gt; {
+  res.json(req.params)
+})</code></pre>
+      <p>ยิงไปที่ <code>/cake/strawberry/2</code> แล้วเราจะได้ <code>{ "name": "strawberry", "id": "2" }</code> กลับมา</p>
+      <p><code>req.params</code> คือ Object ที่มี Key ตรงกับชื่อที่เราตั้งไว้หลังเครื่องหมาย <code>:</code> จะใส่กี่ตัวก็ได้และมันจะแบนอยู่ในระดับเดียวกันหมด สิ่งที่น่าทึ่งคือ TypeScript อ่าน String นั้นแล้วรู้ด้วยว่ามี Key อะไรบ้าง</p>
+      <p>ข้อควรจำคือ <strong>ค่าใน <code>req.params</code> เป็น String เสมอ</strong> ถ้าอยากได้เป็นตัวเลขต้องแปลงเอง และถ้ายิงไปที่ <code>/cake/strawberry</code> เฉย ๆ จะได้ 404 เพราะ Path นี้บังคับว่าต้องมีครบทั้งสองส่วน</p>
+      <p>อีกเรื่องที่จะได้เห็นตอนนี้คือ Express ตอบ Error กลับมาเป็นหน้า HTML ไม่ใช่ JSON เพราะมันสมมติว่าคุณเปิดจาก Web App เรื่องนี้เราจะแก้กันในบทที่ 28</p>
+
+      <h2>Query Parameters</h2>
+      <p>ส่วนที่อยู่หลังเครื่องหมาย <code>?</code> ใน URL คือ Query String ซึ่ง Express แยกให้เราไว้ใน <code>req.query</code></p>
+      <pre><code>// GET /api/users?page=1&amp;limit=10
+app.get('/api/users', (req, res) =&gt; {
+  const page = Number(req.query.page) || 1
+  const limit = Number(req.query.limit) || 20
+  res.json({ page, limit })
+})</code></pre>
+      <p>เหมือนกับ <code>req.params</code> คือค่าที่ได้เป็น String เสมอ เราจึงต้องแปลงและเตรียมค่า Default ไว้ให้ด้วย Query String เหมาะกับสิ่งที่เป็นตัวเลือกเสริม เช่น การแบ่งหน้า การเรียงลำดับ หรือการกรอง</p>
+      <p>คำถามที่มักเจอคือ ใช้ Query String กับ POST ได้ไหม คำตอบคือได้ ไม่มีอะไรห้าม แต่คำถามที่ควรถามกลับคือ ในเมื่อ POST ส่ง Payload ขึ้นไปอยู่แล้ว ทำไมไม่ใส่ลงไปใน Payload ให้จบ จะมีบางกรณีที่มีเหตุผล เช่น อยากให้ Log อ่านง่าย หรืออยากสร้าง Cache Key จาก URL บน Edge Compute แต่โดยทั่วไปแล้วอย่าทำให้ตัวเองลำบากเลย</p>
+
+      <h2>สรุป Object req และ res</h2>
+      <p>สองตัวนี้คือทั้งหมดที่เราจะใช้ในทุก Handler ตลอดคอร์สนี้</p>
+      <ul>
+        <li><code>req.params</code> — ค่าจาก Path Parameter เช่น <code>:id</code></li>
+        <li><code>req.query</code> — ค่าจาก Query String หลังเครื่องหมาย <code>?</code></li>
+        <li><code>req.body</code> — Payload ที่ Client ส่งขึ้นมา (ตอนนี้ยังใช้ไม่ได้ ต้องเปิด Middleware ก่อน ซึ่งเราจะทำในบทที่ 11)</li>
+        <li><code>res.status(code)</code> — กำหนด Status Code ต้องเรียก<em>ก่อน</em> <code>res.json()</code> เสมอ</li>
+        <li><code>res.json(obj)</code> — ส่ง JSON กลับ และปิด Request ให้เรียบร้อย</li>
+        <li><code>res.send(...)</code> — ส่งข้อมูลดิบ เช่น Text หรือ HTML</li>
+      </ul>
+      <p>ตอนนี้เรารู้แล้วว่า Route ควรหน้าตาแบบไหน แต่ถ้าเอา Route ทั้งหมดของทุก Resource ไปกองรวมกันใน <code>src/server.ts</code> ไฟล์เดียว มันจะยาวจนอ่านไม่ไหวแน่นอน บทถัดไปเราจะแตกมันออกเป็นไฟล์ย่อยด้วย Express Router กัน</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="06_type_safe_env.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="08_routers_and_subrouters.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>
