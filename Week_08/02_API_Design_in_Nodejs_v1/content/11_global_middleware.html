@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ติดตั้ง Global Middleware ชุดมาตรฐานลงใน src/server.ts ทั้ง helmet, cors, express.json, express.urlencoded และ morgan พร้อมเข้าใจว่า CORS ทำงานอย่างไรและทำไมลำดับถึงสำคัญ" />
+  <title>Global Middleware — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Global Middleware</h1>
+      <p>บทที่แล้วเราเข้าใจแนวคิดแล้ว บทนี้เราจะติดตั้งของจริงลงใน <code>src/server.ts</code> เป็นชุด Middleware ที่ผมใส่ให้ทุกโปรเจกต์โดยไม่ต้องคิด และคุณก็ควรใส่เหมือนกัน</p>
+
+      <h2>app.use() แบบไม่ใส่ Path</h2>
+      <p>ตอนทำ Routing เราใช้ <code>app.use('/api/users', userRoutes)</code> ซึ่งแปลว่า "ใช้สิ่งนี้กับทุก Request ที่ Path ตรงกับ <code>/api/users</code> ไม่ว่า Verb ไหน" แต่ถ้าเรา<strong>ไม่ใส่ Path เลย</strong> ความหมายจะกลายเป็น "ใช้สิ่งนี้กับทุกอย่าง ทุก Path ทุก Verb ตลอดกาล" — นั่นคือ Global Middleware</p>
+      <pre><code>app.use(helmet())   // ไม่มี Path = ทำงานกับทุก Request</code></pre>
+      <p>และเพราะ Middleware ทำงานตามลำดับที่ลงทะเบียน <strong>Global Middleware ต้องอยู่บนสุดเสมอ</strong> เพื่อให้ทุกอย่างที่มาทีหลังได้ประโยชน์จากมัน ถ้าเราวาง <code>express.json()</code> ไว้ใต้ Route ของเรา Route นั้นจะอ่าน <code>req.body</code> ไม่เจอ</p>
+
+      <h2>ติดตั้ง Package</h2>
+      <p>ก่อนอื่นตรวจใน <code>package.json</code> ว่ามีสามตัวนี้แล้วหรือยัง ถ้ายังก็ติดตั้งซะ</p>
+      <pre><code>npm install cors helmet morgan
+npm install -D @types/cors</code></pre>
+      <p>เกร็ดที่น่าทึ่งคือ Middleware สามตัวนี้อายุเกินสิบปีกันหมดแล้ว แต่ยังถูกใช้อยู่ทุกวันจนถึงวันนี้</p>
+
+      <h2>helmet — ชุดเกราะสำเร็จรูป</h2>
+      <p>Helmet คือถุงรวมมิตรของ Security Best Practice ที่ทุก Server ควรมี หน้าที่หลักของมันคือเซ็ต HTTP Header ต่าง ๆ ให้เหมาะสม เพื่อป้องกันการโจมตีรูปแบบพื้นฐานที่เราจะโดนได้ถ้าไม่ทำอะไรเลย</p>
+      <p>ผมไม่ได้จำได้ทุกข้อว่ามันเซ็ตอะไรบ้าง (ไปอ่านใน Docs ได้) แต่ผมใส่มันทุกโปรเจกต์เพราะมันคือของฟรีที่ได้ความปลอดภัยเพิ่มขึ้นทันทีจากโค้ดบรรทัดเดียว</p>
+
+      <h2>cors — และทำไมคุณเคยเจอ Error ตัวนี้</h2>
+      <p>CORS ย่อมาจาก <strong>Cross-Origin Resource Sharing</strong> และมันเป็นกลไกที่<strong>มีอยู่ใน Browser เท่านั้น</strong> หน้าที่ของมันคือปกป้องผู้ใช้ ไม่ให้ Script ที่รันอยู่บนเว็บหนึ่ง แอบไปดึงทรัพยากรจากอีก Origin หนึ่งได้ตามใจชอบ</p>
+      <p>วิธีทำงานคือก่อนจะส่ง Request จริง Browser จะยิงสิ่งที่เรียกว่า <strong>Preflight Check</strong> ไปก่อน ซึ่งก็คือ Request ด้วย Method <code>OPTIONS</code> เนื้อความประมาณว่า "คนนี้จะเข้าถึง URL นี้ Origin ของเขาคืออันนี้ Header ที่เขาจะใช้คืออันนี้ อนุญาตไหม" จากนั้น Server จะตอบกลับว่ารายชื่อ Origin และ Header ที่อนุญาตมีอะไรบ้าง แล้ว Browser ค่อยตัดสินใจว่าจะยอมส่ง Request จริงหรือไม่</p>
+      <p>ดังนั้นเวลาคุณยิง Request จาก Browser บางครั้งมันคือสองครั้ง คือ <code>OPTIONS</code> แล้วตามด้วยของจริง ถ้าไม่ผ่านคุณก็จะเห็นคำว่า CORS Error สีแดงใน Console</p>
+      <p>สองเรื่องที่ควรจำ</p>
+      <ul>
+        <li><strong>ถ้าไม่ตั้ง Policy เลย Browser จะบล็อกทุกอย่าง</strong> มันไม่ได้ตีความว่า "ไม่มีกฎแปลว่าอนุญาตหมด" แต่ตีความตรงกันข้าม ดังนั้นต่อให้เราไม่แคร์ว่าใครจะเข้ามาใช้ เราก็ยัง<em>ต้องเขียนให้ชัด</em> ไม่งั้นไม่มีใครใช้ได้</li>
+        <li><strong>Postman กับ curl ไม่โดน CORS</strong> เพราะมันไม่ใช่ Browser ไม่มีการทำ Preflight เหตุผลที่มีกลไกนี้เฉพาะใน Browser ก็เพราะ Browser คือที่ที่ Script ของคนอื่นรันอยู่นอกเหนือการควบคุมของเรา ส่วนถ้ามีคนรัน Script แปลก ๆ ใน Terminal ของคุณได้ คุณมีปัญหาที่ใหญ่กว่านั้นแล้ว</li>
+      </ul>
+      <p>ในคอร์สนี้เราจะเปิดกว้างไปก่อนด้วย <code>cors()</code> เปล่า ๆ ซึ่งแปลว่าอนุญาตทุก Origin</p>
+      <pre><code>app.use(cors())</code></pre>
+      <p>พอขึ้น Production จริงที่มี Client ของตัวเอง ค่อยเปลี่ยนเป็นแบบระบุรายชื่อ</p>
+      <pre><code>app.use(
+  cors({
+    origin: ['http://localhost:5173'],
+    credentials: true,
+  })
+)</code></pre>
+      <p>ในโปรเจกต์จริงคนนิยมเก็บรายชื่อ Origin ไว้ใน Environment Variable แล้วอ่านผ่าน <code>env.ts</code> ที่เราทำไว้ในบทที่ 6 จะได้เปลี่ยนตามแต่ละ Environment ได้โดยไม่ต้องแก้โค้ด</p>
+
+      <h2>express.json() — กุญแจสู่ req.body</h2>
+      <p>ตัวนี้ติดมากับ Express อยู่แล้ว ไม่ต้องติดตั้งเพิ่ม แต่<strong>ถ้าไม่ใส่ คุณจะอ่าน <code>req.body</code> ไม่ได้</strong></p>
+      <p>เหตุผลคือข้อมูลที่วิ่งเข้ามาบนสายเป็น Stream ของ Byte ล้วน ๆ ถ้าไม่มีใครมาอ่านและแปลงให้ สิ่งที่คุณได้ใน Handler จะเป็นข้อมูลดิบ ไม่ใช่ Object ที่ใช้งานได้ Middleware ตัวนี้ทำหน้าที่แปลง JSON Payload ให้กลายเป็น Object แล้ววางไว้ที่ <code>req.body</code> พร้อมใช้</p>
+      <pre><code>app.use(express.json())</code></pre>
+
+      <h2>express.urlencoded() — สำหรับ Form และ Query</h2>
+      <pre><code>app.use(express.urlencoded({ extended: true }))</code></pre>
+      <p>ตัวนี้จัดการข้อมูลที่ถูก Encode มาแบบ URL ซึ่งเจอได้ทั้งใน Query String และใน Body ของ Form แบบดั้งเดิม เพราะบางอักขระในกลุ่มนี้จะถูกแทนที่ด้วยรหัส Middleware ตัวนี้จึงอ่าน Content-Type ของ Request แล้วถอดรหัสให้ถูกวิธี</p>
+      <p>ส่วน Option <code>extended: true</code> เป็นตัวเลือกว่าจะใช้ Library ไหนในการ Parse ระหว่าง <code>querystring</code> (ถ้าเป็น <code>false</code>) กับ <code>qs</code> (ถ้าเป็น <code>true</code>) ผมใส่ <code>true</code> มาตลอดชีวิตเพราะเคยเจอปัญหากับ Query String ตอนไม่ใส่ ก็เลยใส่ไปตลอด</p>
+
+      <h2>morgan — Log ทุก Request</h2>
+      <p>Morgan ไม่ใช่ Logger แบบ <code>console.log</code> ที่เราเรียกเองในโค้ด แต่มันคือ <strong>Request Logger</strong> ที่ Log ทุก Request ที่วิ่งเข้า Server ของเราโดยอัตโนมัติ ซึ่งเป็นสิ่งที่ Server ทุกตัวควรมี</p>
+      <pre><code>app.use(
+  morgan('dev', {
+    skip: () =&gt; isTest(),
+  })
+)</code></pre>
+      <p>Morgan มีหลาย Mode ผมชอบ <code>'dev'</code> เพราะมันมีสี ส่วน Option <code>skip</code> คือบอกว่า "กรณีไหนไม่ต้อง Log" ตรงนี้เราเสียบฟังก์ชัน <code>isTest()</code> จาก <code>env.ts</code> เข้าไป เพราะเวลารัน Test เราไม่อยากเห็น Log เต็มจอ</p>
+
+      <h2>Higher-Order Function คือความตั้งใจ</h2>
+      <p>สังเกตไหมว่าเราเขียน <code>helmet()</code> ไม่ใช่ <code>helmet</code> เฉย ๆ ทั้งที่ตอนใส่ Router เราเขียน <code>app.use('/api/users', userRoutes)</code> โดยไม่มีวงเล็บ</p>
+      <p>นั่นเพราะ Router <em>เป็น</em> Middleware อยู่แล้วในตัวมันเอง แต่ Package พวกนี้ถูกออกแบบมาเป็น <strong>Higher-Order Function</strong> คือฟังก์ชันที่ Return ฟังก์ชันอีกที เหตุผลคือเพื่อเปิดช่องให้เราส่ง Option เข้าไปได้ อย่างที่เราทำกับ <code>cors({...})</code> และ <code>morgan('dev', {...})</code> การเรียกฟังก์ชันชั้นนอกจึงเป็นการ "ผลิต" Middleware ตัวจริงออกมา นี่เป็นธรรมเนียมที่ Middleware และ Plugin ส่วนใหญ่ใช้กัน และเป็นเทคนิคที่เราจะเอาไปเขียนเองในบทหน้า</p>
+
+      <h2>ประกอบร่างใน src/server.ts</h2>
+      <pre><code>import express from 'express'
+import cors from 'cors'
+import helmet from 'helmet'
+import morgan from 'morgan'
+import { isTest } from '../env.ts'
+import authRoutes from './routes/authRoutes.ts'
+import habitRoutes from './routes/habitRoutes.ts'
+import userRoutes from './routes/userRoutes.ts'
+
+const app = express()
+
+// Global middleware
+app.use(helmet())
+app.use(cors())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(
+  morgan('dev', {
+    skip: () =&gt; isTest(),
+  })
+)
+
+// Health check endpoint
+app.get('/health', (req, res) =&gt; {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    service: 'Habit Tracker API',
+  })
+})
+
+// Routes
+app.use('/api/auth', authRoutes)
+app.use('/api/habits', habitRoutes)
+app.use('/api/users', userRoutes)
+
+export { app }
+
+export default app</code></pre>
+      <p>ลำดับที่ใช้คือหลักการเดียวกับที่ใช้ได้ทุกโปรเจกต์ — <strong>ความปลอดภัยก่อน แล้วค่อย Parse ข้อมูล แล้วค่อย Log แล้วค่อยถึง Business Logic</strong></p>
+
+      <h2>ทดสอบ</h2>
+      <p>รัน <code>npm run dev</code> แล้วยิง <code>GET /health</code> จาก Postman สักสามสี่ครั้ง จากนั้น<strong>กลับไปดูที่ Terminal</strong> คุณจะเห็นบรรทัด Log ของ Morgan บอกว่า Method อะไร Path ไหน Status Code เท่าไร และใช้เวลากี่มิลลิวินาที ลองยิง Path มั่ว ๆ ดูบ้างก็จะเห็น <code>404</code> โผล่มา</p>
+      <p>อีกเรื่องที่คนเพิ่งเริ่มเขียน Server สับสนกันบ่อย — <strong>Console ของ Server คือ Terminal ไม่ใช่ Console ใน Browser</strong> ตอนผมเริ่มเขียน Server ใหม่ ๆ ผมก็นั่งเปิด Chrome DevTools หา Log อยู่นาน</p>
+      <p>ตอนนี้ทุก Request ที่เข้ามาผ่านด่านมาตรฐานครบแล้ว บทหน้าเราจะเขียน Middleware ของเราเองตัวแรก คือตัวที่คอยตรวจว่าข้อมูลที่ Client ส่งมาถูกต้องหรือไม่</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="10_express_middleware.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="12_validation_middleware.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>
