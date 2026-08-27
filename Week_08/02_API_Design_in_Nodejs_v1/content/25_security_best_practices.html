@@ -89,7 +89,8 @@ req.headers['Authorization']
 req.headers['authorization']</code></pre>
 
       <h3>ไม่จัดการ Error ของ Async</h3>
-      <p>ถ้า Middleware ของคุณมี <code>await</code> อยู่ข้างในแล้วไม่มี <code>try/catch</code> ครอบ Promise จะ Reject ลอย ๆ กลายเป็น Unhandled Rejection ตามที่คุยกันในบทที่ 13 นี่คือเหตุผลที่ทั้ง Controller และ Middleware ของเราถูกห่อด้วย <code>try/catch</code> ทุกตัว</p>
+      <p>ข้อแรกคืออย่าลืมใส่คำว่า <code>async</code> ถ้าข้างในมี <code>await</code> ฟังดูพื้นฐานมากแต่พลาดกันจริง</p>
+      <p>ข้อที่สองคือเรื่อง <code>try/catch</code> ซึ่งขอย้ำให้ชัดว่าเหตุผล<em>ไม่ใช่</em>เรื่อง Server ตาย ตามที่เราเรียนในบทที่ 13 Express 5 รับ Promise ที่ Reject จาก Async Middleware ไปให้ Error Handler กลางเองอยู่แล้ว เหตุผลจริงคือ<strong>ในเรื่อง Auth เราต้องคุม Status Code และรูปแบบ Response เอง</strong> ถ้าปล่อยให้ Error ทะลุไปถึง Error Handler กลาง คนที่ส่ง Token หมดอายุมาจะได้ 500 กลับไปแทนที่จะเป็น 403 ซึ่งทำให้ Client ฝั่งนั้นแยกไม่ออกว่าควรพาผู้ใช้ไปล็อกอินใหม่หรือควรแจ้งว่าระบบมีปัญหา นี่คือเหตุผลที่ทั้ง Controller และ Middleware ของเราถูกห่อด้วย <code>try/catch</code> ทุกตัว</p>
 
       <h3>สับสนระหว่าง 401 กับ 403</h3>
       <pre><code>// ผิด — ไม่มี Token คือยังพิสูจน์ตัวตนไม่ได้ ต้องเป็น 401

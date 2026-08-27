@@ -74,7 +74,8 @@ export const authenticateToken = async (
       <p><strong>ไม่มี Token ตอบ 401</strong> เพราะคนนี้ยังไม่ได้พิสูจน์ตัวตนเลยแม้แต่นิดเดียว</p>
       <p><strong>Token ใช้ไม่ได้ตอบ 403</strong> เพราะโค้ดจะหลุดมาที่ <code>catch</code> ก็ต่อเมื่อ <code>verifyToken</code> โยน Error ซึ่งแปลว่ามี Token แต่มันปลอม หรือมันหมดอายุแล้ว ให้ไปเอาใบใหม่มา และสังเกตว่า<strong>เราไม่บอกว่าเพราะอะไร</strong> เพราะไม่มีประโยชน์ที่จะบอกใบ้คนที่พยายามปลอม Token ว่าเขาพลาดตรงไหน</p>
       <p>เรื่อง Status Code นี้พลาดกันบ่อยมาก จำง่าย ๆ ว่า <strong>401 คือ "คุณเป็นใครไม่รู้" ส่วน 403 คือ "รู้แล้วว่าคุณเป็นใคร แต่ไม่ให้"</strong></p>
-      <p><strong>ทำไมต้อง <code>try/catch</code></strong> เพราะข้างในมี <code>await</code> ถ้าไม่ดักไว้ Promise จะ Reject ลอย ๆ กลายเป็น Unhandled Rejection ตามที่เราคุยกันในบทที่ 13 และย้ำอีกครั้งว่าฟังก์ชันต้องเป็น <code>async</code> ด้วย ไม่งั้น <code>await</code> ข้างในใช้ไม่ได้เลย</p>
+      <p><strong>ทำไมต้อง <code>try/catch</code></strong> ไม่ใช่เพราะกลัว Server ตายนะครับ ตามที่เราเรียนในบทที่ 13 Express 5 รับ Promise ที่ Reject จาก Async Middleware ไปส่งให้ Error Handler กลางให้เองอยู่แล้ว เหตุผลจริงคือ<strong>เราอยากคุมคำตอบเอง</strong> ถ้าปล่อยให้ <code>verifyToken</code> โยน Error ทะลุออกไป Express จะส่งมันไปให้ Error Handler กลางซึ่งไม่รู้เรื่องอะไรเกี่ยวกับ Auth เลย สิ่งที่ผู้ใช้ได้กลับไปจะเป็น 500 พร้อม Body หน้าตาแบบทั่ว ๆ ไป ทั้งที่ความจริงคือ Token ใช้ไม่ได้ซึ่งต้องเป็น 403 การ Catch เองตรงนี้คือวิธีเดียวที่จะตอบ Status Code และรูปแบบ Body ที่ถูกต้องสำหรับเรื่อง Auth โดยเฉพาะ — เหตุผลเดียวกับที่ <code>validateBody</code> ในบทที่ 12 เลือกจบ <code>ZodError</code> เองแทนที่จะโยนต่อ</p>
+      <p>และย้ำอีกครั้งว่าฟังก์ชันต้องเป็น <code>async</code> ด้วย ไม่งั้น <code>await</code> ข้างในใช้ไม่ได้เลย</p>
       <p><strong>อย่าลืม <code>next()</code></strong> บรรทัดสุดท้ายของทางที่สำเร็จ ถ้าลืมบรรทัดนี้ Request จะค้างอยู่กับ Middleware ตัวนี้ตลอดกาลโดยไม่มี Error อะไรฟ้อง</p>
 
       <h2>ล็อก Route ไหนดี</h2>
