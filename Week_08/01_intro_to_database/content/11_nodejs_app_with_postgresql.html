@@ -58,7 +58,8 @@ code . # or open this folder in VS Code or whatever editor you want</code></pre>
       <pre><code class="language-javascript">import express from &quot;express&quot;;
 import { Pool } from &quot;pg&quot;;
 const pool = new Pool({
-  connectionString: &quot;postgresql://postgres:mysecretpassword@localhost:5432&quot;,
+  connectionString:
+    &quot;postgresql://postgres:mysecretpassword@localhost:5432/message_boards&quot;,
 });
 
 async function init() {
@@ -108,7 +109,8 @@ init();</code></pre>
       <pre><code class="language-javascript">import express from &quot;express&quot;;
 import { Pool } from &quot;pg&quot;;
 const pool = new Pool({
-  connectionString: &quot;postgresql://postgres:mysecretpassword@localhost:5432&quot;,
+  connectionString:
+    &quot;postgresql://postgres:mysecretpassword@localhost:5432/message_boards&quot;,
 });
 
 async function init() {
