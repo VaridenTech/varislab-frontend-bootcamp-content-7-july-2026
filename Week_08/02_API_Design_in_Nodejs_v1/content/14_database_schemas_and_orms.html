@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="เข้าใจการออกแบบ Schema ของ Relational Database ผ่านมุมมองแบบ JavaScript รู้จัก Primary Key, Foreign Key และความสัมพันธ์แบบต่าง ๆ พร้อมเปรียบเทียบ Raw SQL, Query Builder และ ORM ก่อนเลือกใช้ Drizzle" />
+  <title>Database Schema และ ORM — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Database Schema และ ORM</h1>
+      <p>ถึงตรงนี้ Habit Tracker ของเรามี Route ครบ มี Middleware ครบ มี Validation ครบ แต่ยังไม่มีข้อมูลจริงสักชิ้น ทุกอย่างหายไปหมดทันทีที่รีสตาร์ท Server บทนี้เราจะเริ่มแก้เรื่องนั้น</p>
+      <p>ข่าวดีคือคุณเพิ่งเรียนคอร์ส Database ของ Week 8 มาแล้ว คุณรู้จัก SQL, PostgreSQL, การเขียน <code>SELECT</code> กับ <code>JOIN</code> และรู้ว่า Index ทำงานอย่างไร คอร์สนี้จะไม่สอนเรื่องพวกนั้นซ้ำ แต่จะพาคุณ<strong>เอาความรู้ชุดนั้นมาต่อเข้ากับ API</strong> โดยเขียนทุกอย่างเป็น TypeScript แทนที่จะเขียน SQL ดิบ</p>
+      <p>ก่อนจะแตะโค้ด ขอเตือนไว้ก่อนว่าการออกแบบ Schema เป็นศาสตร์ที่ลึกได้ไม่มีที่สิ้นสุด มีคนทั้งชุมชนที่แชร์ Schema สวย ๆ กันจนดูแล้วต้องยอมแพ้ แต่แนวทางที่ผมยึดคือ<strong>ยิ่งเรียบง่ายยิ่งดี</strong> และบทนี้จะพาคุณคิดแบบนั้น</p>
+
+      <h2>เริ่มจาก Feature ไม่ใช่เริ่มจากตาราง</h2>
+      <p>เวลาผมจะออกแบบข้อมูล ผมไม่เคยเริ่มจากการนั่งนึกว่าควรมีตารางอะไรบ้าง ผมเริ่มจากคำถามว่า<em>ผู้ใช้จะทำอะไรกับแอปนี้</em> บางคนเรียกวิธีคิดนี้ว่า Domain Driven Design ส่วนผมชอบเรียกว่า Critical User Journey คือการแตกแอปออกเป็นเส้นทางการใช้งานที่มีจุดเริ่มและจุดจบชัดเจน แล้วถามว่าเส้นทางนั้นต้องใช้ข้อมูลอะไรบ้าง</p>
+      <p>ของเรา Journey แรกคือ "ผมล็อกอินเข้ามาแล้วอยากเห็น Habit ของผม" แค่ประโยคเดียวนี้บอกเราแล้วว่ามี User และมี Habit และ User หนึ่งคน<em>เป็นเจ้าของ</em> Habit ได้หลายอัน นั่นคือความสัมพันธ์แบบ One-to-Many</p>
+      <p>หัวใจของการคิดเรื่อง Relational Data คือคำว่า<strong>ความเป็นเจ้าของ</strong> ถามตัวเองว่าข้อมูลชิ้นไหนเป็นเจ้าของข้อมูลชิ้นไหน แล้วโครงสร้างจะโผล่ออกมาเอง ถ้าคิดไม่ออกจริง ๆ ลองสเก็ตช์หน้าจอที่อยากได้ก่อนก็ช่วยได้มาก เพราะพอเห็นภาพว่าแอปจะทำอะไร การจัดข้อมูลรอบ ๆ ภาพนั้นจะง่ายขึ้นเยอะ</p>
+
+      <h2>แปลศัพท์ Database เป็นภาษา JavaScript</h2>
+      <p>Relational Database คือฐานข้อมูลที่มีคอลัมน์ตายตัว เข้มงวด และนิยามไว้ชัดเจน แต่ถ้าคุณอ่านคำว่า Table, Row, Column แล้วยังรู้สึกห่างตัว ให้แปลเป็นของที่คุณใช้ทุกวันแบบนี้</p>
+      <ul>
+        <li><strong>Table</strong> คือ Array</li>
+        <li><strong>Row</strong> คือ Object หนึ่งตัวใน Array นั้น</li>
+        <li><strong>Column</strong> คือ Field บน Object</li>
+        <li><strong>Primary Key</strong> คือ <code>id</code> ของ Object ตัวนั้น ห้ามซ้ำกับใคร</li>
+        <li><strong>Foreign Key</strong> คือ <code>id</code> ของคนอื่นที่เรามาแปะไว้บน Object ของเรา</li>
+        <li><strong>Relationship</strong> คือชนิดของการเชื่อม มีสามแบบคือ One-to-One, One-to-Many และ Many-to-Many</li>
+      </ul>
+      <p>ผมมองแบบนี้จริง ๆ จนทุกวันนี้ผมแทบไม่เห็นคำว่า Table, Row, Column แล้ว ผมเห็นเป็น Array, Object, Field ล้วน ๆ</p>
+      <p>เรื่องที่คนใหม่มักสงสัยคือ<strong>จะวาง Foreign Key ไว้ฝั่งไหน</strong> สมมติเป็นแอปชุมชนที่คนหนึ่งคนมีบ้านหลังเดียวและบ้านหลังหนึ่งมีคนเดียว นั่นคือ One-to-One คำตอบคือ<em>วางฝั่งที่เรา Query บ่อย</em> ถ้าแอปเราเริ่มจากตาราง User เสมอ ก็เอา Key ของบ้านไปแปะบน User ถ้าเริ่มจากบ้านก็ทำกลับกัน หรือถ้าขี้เกียจเลือกจะแปะทั้งสองฝั่งก็ได้ แบบนั้นเรียกว่า Denormalize ซึ่งก็ไม่ผิดอะไร</p>
+      <p>ส่วน One-to-Many กฎง่าย ๆ คือ <strong>Foreign Key อยู่ฝั่ง Many เสมอ</strong> Habit หนึ่งอันเป็นของ User คนเดียว เพราะฉะนั้น <code>user_id</code> ไปอยู่บนตาราง Habit</p>
+
+      <h2>ทำไมต้อง PostgreSQL</h2>
+      <p>คอร์สนี้ใช้ PostgreSQL ซึ่งถ้าถามคนส่วนใหญ่ก็จะบอกว่าเป็น Database ที่นิยมที่สุดในโลก (ถ้าวัดกันด้วยจำนวนเครื่องที่ติดตั้งจริง SQLite น่าจะชนะ แต่คนละงานกัน) เหตุผลที่มันเข้ากับงาน API ได้ดี</p>
+      <ul>
+        <li>รองรับ ACID เต็มรูปแบบ Transaction เชื่อถือได้</li>
+        <li>มี Data Type ให้เลือกเยอะมาก ทั้ง JSON, Array และ Custom Type ที่เราสร้างเองได้</li>
+        <li>มีของขั้นสูงติดมาให้ เช่น Full-text Search และ GIS ที่คำนวณระยะจากพิกัด Latitude/Longitude ได้</li>
+        <li>ทำ Query ซับซ้อนได้เก่ง และเป็น Open Source ไม่มีใครเป็นเจ้าของ ไม่มีค่า License</li>
+        <li>ฝั่ง Node.js มี Integration ให้เลือกมหาศาล และ Async/Await ทำให้การคุยกับ Database ไม่ Block งานอื่น</li>
+        <li>มี ORM ที่รองรับ TypeScript ดีมาก ซึ่งเป็นข้อที่ผมยอมแลกอะไรไม่ได้เลย</li>
+      </ul>
+
+      <h2>ORM คือ SDK ของ Database</h2>
+      <p>ORM ย่อมาจาก Object-Relational Mapping ซึ่งเป็นศัพท์เก่าที่ฟังแล้วไม่ค่อยสื่ออะไร ให้จำสั้น ๆ ว่า <strong>ORM คือ SDK ของ Database</strong> มันคือวิธีที่เราคุยกับฐานข้อมูลจากในโค้ด และมี ORM ให้เลือกมากมายทั้งของ Database แต่ละเจ้า</p>
+      <p>ถ้าไม่มี ORM ชีวิตจะหน้าตาแบบนี้ คือได้ Client ระดับล่างมาตัวหนึ่งแล้วยัด SQL ดิบเข้าไปเอง</p>
+      <pre><code>const result = await client.query(
+  'SELECT u.*, h.* FROM users u LEFT JOIN habits h ON u.id = h.user_id WHERE u.id = $1',
+  [userId]
+)
+
+// แล้วต้องมานั่งแกะผลลัพธ์เองทีละชั้น
+const user = {
+  id: result.rows[0].id,
+  email: result.rows[0].email,
+  habits: result.rows.map((row) =&gt; ({
+    id: row.habit_id,
+    name: row.habit_name,
+  })),
+}</code></pre>
+      <p>ปัญหาคือไม่มี Type เลย ต้องแปลงชนิดข้อมูลเอง ต้องแกะผลลัพธ์เอง และ SQL ที่เขียนก็ผูกกับ Database เจ้านั้นเจ้าเดียว ถ้ามี ORM เรื่องเดียวกันจะเหลือแค่นี้</p>
+      <pre><code>const user = await db.query.users.findFirst({
+  where: eq(users.id, userId),
+  with: {
+    habits: true,
+  },
+})
+
+user.email        // string
+user.habits[0].id // string
+user.nonExistent  // TypeScript ฟ้อง Error ให้ตั้งแต่ตอนพิมพ์</code></pre>
+      <p>สิ่งที่เราได้กลับมามีหลายชั้น</p>
+      <ul>
+        <li><strong>Type Safety</strong> — จับพลาดตั้งแต่ตอนเขียน ไม่ใช่ตอน Production พัง</li>
+        <li><strong>Query Building</strong> — ประกอบ Query ด้วยโค้ดได้ ทำ Filter หรือ Pagination แบบไดนามิกง่าย</li>
+        <li><strong>Relationship Loading</strong> — สั่ง <code>with</code> ทีเดียวแล้ว ORM จัดการ JOIN ให้</li>
+        <li><strong>Schema Management</strong> และ <strong>Migration</strong> — Schema อยู่ใน Git และเปลี่ยนแปลงได้อย่างเป็นระบบ ซึ่งเป็นหัวข้อของบทหน้า</li>
+      </ul>
+      <p>หลายคนบอกว่า ORM ป้องกัน SQL Injection ให้ด้วย ซึ่งจริงบางส่วน แต่อยากให้เข้าใจให้ถูก ถ้าคุณยัด String ที่ผู้ใช้ส่งมาเข้าไปเป็น Raw SQL ผ่าน ORM คุณก็โดนเหมือนเดิม ความปลอดภัยมาจากการที่เราไม่ต่อ String เอง ไม่ได้มาจากยี่ห้อของ ORM</p>
+      <p>สำหรับผมเหตุผลที่ใหญ่ที่สุดคือ<strong>ผมไม่ต้องรู้ SQL ลึกขนาดนั้น</strong> SQL เป็นศาสตร์ที่ลึกจนมีคนเก่งระดับรับงานเขียน Query อย่างเดียวกินเงินเป็นล้าน ผมรู้ SQL พอทำงานได้และผมพอใจแค่นั้น</p>
+
+      <h2>ทำไมคอร์สนี้เลือก Drizzle</h2>
+      <p>ORM ฝั่ง Node.js ที่ดังที่สุดคู่หนึ่งคือ Prisma กับ Drizzle ผมใช้ Prisma มาหลายปีและชอบมัน แต่เปลี่ยนมาใช้ Drizzle เมื่อประมาณสองปีก่อนแล้วไม่เคยคิดจะกลับ</p>
+      <p>ความต่างหลักคือ Prisma ให้เราเขียน Schema ด้วยภาษาเฉพาะของมันเอง (เรียกว่า DSL ซึ่งหน้าตาได้อิทธิพลมาจาก GraphQL) แล้วต้องรัน Code Generation เพื่อสร้าง Client ขึ้นมาก่อนถึงจะได้ Type</p>
+      <pre><code>// ฝั่ง Prisma — ไฟล์ schema.prisma เป็นภาษาของมันเอง
+model User {
+  id     String  @id @default(cuid())
+  email  String  @unique
+  habits Habit[]
+}</code></pre>
+      <p>ส่วน Drizzle ให้เราเขียน Schema เป็น TypeScript ธรรมดา ๆ</p>
+      <pre><code>// ฝั่ง Drizzle — เป็น TypeScript ล้วน
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey(),
+  email: varchar('email', { length: 255 }).unique(),
+})</code></pre>
+      <p>ข้อดีที่ตามมาคือ</p>
+      <ul>
+        <li>ไม่ต้องเรียนภาษาใหม่ และไม่มีขั้นตอน Code Generation ให้ลืมรัน</li>
+        <li>เขียน JavaScript ปนลงไปใน Schema ได้เลย เช่นเรียก Function เพื่อคำนวณค่า Default</li>
+        <li>API หน้าตาใกล้เคียง SQL ทำให้เดาได้ว่ามันจะสร้าง Query แบบไหน ไม่มีเวทมนตร์ซ่อนอยู่</li>
+        <li>ตัว Runtime เบา เพราะส่วนใหญ่คือ Type ที่หายไปตอน Build</li>
+      </ul>
+      <p>ยังมีเหตุผลอีกข้อที่ใหญ่กว่านี้อีก คือเรื่อง Migration ซึ่งเป็นสาเหตุที่ทำให้ผมย้ายค่ายจริง ๆ แต่ขอเก็บไว้เล่าในบทหน้า เพราะต้องอธิบายเรื่อง Migration ให้เข้าใจก่อน</p>
+      <p>บทถัดไปเราจะคุยเรื่อง Migration ซึ่งเป็น Version Control ของ Database และเป็นหัวข้อที่ผมกล้าพูดเลยว่าน่าปวดหัวที่สุดในคอร์สนี้ แต่ผมจะย่อยมาให้ง่ายที่สุดแล้ว</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="13_async_middleware.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="15_database_migrations.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>
