@@ -19,7 +19,7 @@
       <ul>
         <li>ระบบสมัครสมาชิกและเข้าสู่ระบบ พร้อมออก JSON Web Token (JWT) ให้ Client เก็บไว้ใช้ยืนยันตัวตน</li>
         <li>Route สำหรับ Habit แบบ CRUD ครบทั้งสร้าง อ่าน แก้ไข และลบ</li>
-        <li>Validation ที่ตรวจข้อมูลขาเข้าและตอบ Error Message ที่อ่านรู้เรื่อง เช่น บอกว่า Password ต้องยาวอย่างน้อย 8 ตัวอักษร</li>
+        <li>Validation ที่ตรวจข้อมูลขาเข้าและตอบ Error Message ที่อ่านรู้เรื่อง เช่น ถ้าลืมส่ง Field ชื่อ Habit มา API จะตอบว่า Validation failed พร้อมบอกว่าผิดที่ Field ไหน</li>
         <li>Database จริงบนคลาวด์ พร้อม Script สำหรับ Seed ข้อมูลตัวอย่างเข้าไป</li>
         <li>Integration Test ที่ยิง Request เข้า Route จริง แล้วตรวจว่า Status Code และข้อมูลที่ตอบกลับถูกต้อง</li>
         <li>การ Deploy ขึ้น Production ให้คนอื่นเรียกใช้ได้จริง</li>

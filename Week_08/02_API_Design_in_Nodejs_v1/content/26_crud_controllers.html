@@ -100,7 +100,7 @@ const createHabitSchema = z.object({
 })
 
 router.post('/', validateBody(createHabitSchema), createHabit)</code></pre>
-      <p><code>createHabitSchema</code> ที่เราใส่ไว้เป็นตัวอย่างในบทที่ 12 มีแค่ <code>name</code> ตอนนี้ถึงเวลาเขียนของจริง วิธีที่ผมทำคือเปิด Controller ดูว่ามัน Destructure อะไรออกมาจาก <code>req.body</code> บ้าง แล้วเปิด Schema ของ Database ดูว่า Field ไหนบังคับ — ได้ความว่า <code>name</code> กับ <code>frequency</code> บังคับ ที่เหลือ Optional หรือมี Default อยู่แล้ว</p>
+      <p><code>createHabitSchema</code> ที่เราใส่ไว้เป็นตัวอย่างในบทที่ 12 มีแค่ <code>name</code> ตอนนี้ถึงเวลาเขียนของจริง วิธีที่ผมทำคือเปิด Controller ดูว่ามัน Destructure อะไรออกมาจาก <code>req.body</code> บ้าง แล้วเปิด Schema ของ Database ดูว่า Field ไหนบังคับ — ได้ความว่า <code>name</code>, <code>frequency</code> และ <code>targetCount</code> บังคับ ส่วน <code>description</code> กับ <code>tagIds</code> เป็น Optional</p>
       <p>คำถามที่ควรถามคือ <strong>ทำไมไม่ Import Schema จาก Drizzle มาใช้เลย</strong> ในเมื่อบทที่ 17 เราก็ทำแบบนั้นได้ คำตอบคือเพราะสิ่งที่เรารับจากผู้ใช้กับสิ่งที่ Database เก็บ <em>ไม่เหมือนกัน</em> ตรงนี้ — ตาราง <code>habits</code> ไม่มีคอลัมน์ชื่อ <code>tagIds</code> เพราะความสัมพันธ์กับ Tag อยู่คนละตาราง แต่เราอยากเปิดให้ผู้ใช้ส่ง <code>tagIds</code> มาพร้อมกันในครั้งเดียว เมื่อสองฝั่งไม่ตรงกัน เราก็ต้องเขียน Schema ของตัวเอง</p>
       <p>อีกจุดที่ต้องระวังคือ <code>targetCount</code> เป็น <code>z.number()</code> เพราะในตาราง Database มันคือ <code>integer</code> ส่งมาเป็น String จะไม่ผ่านทันที (เดี๋ยวเราจะเจอกับดักนี้ของจริงในบทหน้า) ส่วน <code>frequency</code> ยังเป็น <code>z.string()</code> ตามคอลัมน์ที่เป็น <code>varchar</code> ซึ่งจุดอ่อนข้อนี้เราคุยกันไว้แล้วในบทที่ 17</p>
 

@@ -95,6 +95,7 @@ router.use(authenticateToken)
 // ทุก Route ใต้บรรทัดนี้ถูกล็อกหมด
 router.get('/', getUserHabits)
 router.post('/', validateBody(createHabitSchema), createHabit)</code></pre>
+      <p>ตอนนี้ Route ในไฟล์ยังเป็น Placeholder อยู่ ส่วนชื่อ Controller อย่าง <code>getUserHabits</code> กับ <code>createHabit</code> ที่ยกมาให้ดูจะมาถึงจริง ๆ ในบทที่ 26 ตรงนี้ขอให้โฟกัสที่บรรทัด <code>router.use(authenticateToken)</code> เป็นหลัก</p>
       <p><code>router.use()</code> ที่ไม่ใส่ Path หมายถึง "ใช้กับทุกอย่างใน Router ตัวนี้" เหมือน <code>app.use()</code> ในบทที่ 11 แค่ขอบเขตแคบลงมาเหลือแค่ Router เดียว ทำแบบเดียวกันกับ <code>src/routes/userRoutes.ts</code> ด้วย</p>
       <p><strong>ตำแหน่งสำคัญมาก</strong> Middleware คุ้มครองเฉพาะ Route ที่อยู่<em>ใต้</em>มันเท่านั้น ถ้าเผลอไปวางไว้ท้ายไฟล์คือไม่ได้ล็อกอะไรเลย</p>
 

@@ -49,7 +49,7 @@
 
       <h2>5. แทนที่ URL ที่ Hardcode ไว้</h2>
       <p>ไล่หาในโค้ดว่ามี <code>localhost</code> โผล่อยู่ตรงไหนบ้าง เพราะ URL บน Production ไม่ใช่ Localhost แน่นอน จุดที่คนลืมบ่อยคือ CORS Configuration, Email Template, Webhook URL, เอกสาร API และโค้ดฝั่ง Frontend ที่เรียก API</p>
-      <p>โปรเจกต์เราไม่มีปัญหานี้เพราะ CORS อ่านจาก <code>env.CORS_ORIGIN</code> อยู่แล้ว ส่วนถ้าที่ไหนต้องรู้ URL ของตัวเอง Render มี Environment Variable ชื่อ <code>RENDER_EXTERNAL_URL</code> ให้ใช้</p>
+      <p>โปรเจกต์เราไม่มีปัญหานี้ เพราะเราเปิด <code>cors()</code> แบบอนุญาตทุก Origin ไว้ จึงไม่มี URL ให้แก้ (ถ้าจะจำกัด Origin ค่อยเพิ่มตัวแปรแบบที่แนะนำในบทที่ 11) ส่วนถ้าที่ไหนต้องรู้ URL ของตัวเอง Render มี Environment Variable ชื่อ <code>RENDER_EXTERNAL_URL</code> ให้ใช้</p>
       <pre><code>const apiUrl = process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000'</code></pre>
       <p>ผู้ให้บริการทุกเจ้าจะฉีด Environment Variable ชุดหนึ่งเข้ามาบอกสถานะของระบบให้เรา แต่ชื่อตัวแปรต่างกันไป ต้องไปอ่านเอกสารของเจ้านั้น ๆ เอง</p>
 
@@ -66,6 +66,7 @@
     "start": "node src/index.ts"
   }
 }</code></pre>
+      <p>ตัวเลข <code>&gt;=24.3.0</code> ตรงนี้สูงกว่า <code>23.6.0</code> ที่เราตั้งเป็นขั้นต่ำไว้ตอนต้นคอร์ส ซึ่งไม่ได้ขัดกัน — <code>23.6.0</code> คือเวอร์ชันต่ำสุดที่รัน TypeScript ตรง ๆ ได้ ส่วนบน Production เราขอเผื่อขึ้นไปที่ LTS ที่ใหม่กว่าเพื่อความสบายใจ ถ้าเครื่องคุณเป็น 23.x อยู่ก็เรียนจบคอร์สได้ตามปกติ</p>
 
       <h2>7. เตรียม Branch แล้ว Push ขึ้น GitHub</h2>
       <p>Render ดึงโค้ดจาก GitHub ดังนั้นโค้ดที่จะ Deploy ต้องอยู่บน GitHub ก่อน โดยทั่วไปจะเป็น Branch <code>main</code> แต่ไม่จำเป็นต้องเป็น เพราะเราบอก Render ได้ว่าให้ดู Branch ไหน บางทีมมี Branch <code>production</code> แยกต่างหากก็มี เลือก Branch ที่มีโค้ดครบตามที่ต้องการ (อย่าลืมว่าโฟลเดอร์ <code>migrations/</code> ต้องอยู่ในนั้นด้วย) แล้ว Push ขึ้นไป</p>

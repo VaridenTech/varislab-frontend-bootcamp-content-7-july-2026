@@ -29,6 +29,8 @@ JWT_SECRET=test-secret-key-for-testing-only</code></pre>
       <p>อย่าลืมว่า <code>.env.test</code> ต้องอยู่ใน <code>.gitignore</code> ด้วย นักพัฒนาแต่ละคนในทีมควรมีฐานข้อมูลทดสอบเป็นของตัวเอง จะได้ไม่ไปล้างตารางใส่กันเองตอนรัน Test พร้อมกัน</p>
 
       <h2>vitest.config.ts</h2>
+      <p>ก่อนอื่นติดตั้งเครื่องมือที่บทนี้ต้องใช้</p>
+      <pre><code>npm install -D vitest cross-env</code></pre>
       <p>สร้างไฟล์ <code>vitest.config.ts</code> ไว้ที่ Root ของโปรเจกต์ ไฟล์นี้ปกติ CLI ของ Vitest สร้างให้ได้อยู่แล้ว คุณไม่จำเป็นต้องจำวิธีเขียนมันขึ้นมาเองจากศูนย์ แต่เราควรรู้ว่าแต่ละบรรทัดหมายถึงอะไร</p>
       <pre><code>import { defineConfig } from 'vitest/config'
 

@@ -113,8 +113,8 @@ export const errorHandler = (
       <pre><code>import { errorHandler } from './middleware/errorHandler.ts'
 
 app.use('/api/auth', authRoutes)
-app.use('/api/users', userRoutes)
 app.use('/api/habits', habitRoutes)
+app.use('/api/users', userRoutes)
 
 // Global error handler — ต้องอยู่ล่างสุด
 app.use(errorHandler)</code></pre>

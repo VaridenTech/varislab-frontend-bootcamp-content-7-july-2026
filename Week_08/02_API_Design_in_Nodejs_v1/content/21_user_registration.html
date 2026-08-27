@@ -58,6 +58,9 @@
 
       <h2>สร้าง src/utils/password.ts</h2>
       <p>ก่อนจะเขียน Controller เรามาทำเครื่องมือให้พร้อมก่อน สร้างโฟลเดอร์ <code>src/utils</code> ขึ้นมา ผมมักมีโฟลเดอร์ชื่อนี้ในทุกโปรเจกต์ (บางคนเรียก <code>helpers</code> หรือ <code>modules</code>) ไว้เก็บฟังก์ชันที่มีประโยชน์แต่ไม่รู้จะไปอยู่ตรงไหนดี แล้วสร้างไฟล์ <code>password.ts</code></p>
+      <p>ถ้ายังไม่ได้ติดตั้ง bcrypt ให้ติดตั้งก่อน</p>
+      <pre><code>npm install bcrypt
+npm install -D @types/bcrypt</code></pre>
       <pre><code>import bcrypt from 'bcrypt'
 import { env } from '../../env.ts'
 
