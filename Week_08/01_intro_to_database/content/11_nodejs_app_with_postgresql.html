@@ -97,6 +97,7 @@ init();</code></pre>
       <ul>
         <li>โครงสร้างแอปตั้งใจให้คล้ายตัวอย่าง MongoDB ในบทถัดไป เพื่อให้เห็นว่า Flow การเรียก Database จาก Node.js ไม่ได้ต่างกันมาก</li>
         <li>เราใช้ Connection Pool เพื่อเปิด Connection เท่าที่จำเป็นและนำกลับมาใช้ซ้ำ การเปิดและปิด Connection ใหม่ทุก Request ช้าและยังทำให้ PostgreSQL ใช้ Connection จนเต็มได้ง่าย</li>
+        <li>Connection String ต้องลงท้ายด้วยชื่อ Database เช่น <code>/message_boards</code> ถ้าไม่ระบุ <code>pg</code> จะเชื่อมต่อ Database ชื่อ <code>postgres</code> ซึ่งไม่มี Table <code>comments</code> จึงได้ error <code>relation "comments" does not exist</code></li>
         <li>ตัวอย่างใช้สอง Query ซึ่งเป็นเรื่องปกติ และยังเปิดให้ Optimize หรือ Cache ผลลัพธ์ของแต่ละ Query แยกกันได้</li>
         <li>ตัวอย่างใช้ <code>*</code> เพื่อให้โค้ดสั้น แต่ในงานจริงควรเลือกเฉพาะ Field ที่ต้องใช้</li>
         <li>ถ้า Comment มี <code>rich_content</code> หลายรายการ ผลลัพธ์จะมีหลาย Row เราต้องรวม Row เหล่านั้นในโค้ด หรือปรับ Query ให้ Aggregate ข้อมูลไว้ก่อน</li>
