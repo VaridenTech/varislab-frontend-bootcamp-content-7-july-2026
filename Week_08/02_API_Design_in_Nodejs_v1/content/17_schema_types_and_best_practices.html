@@ -75,7 +75,9 @@ router.post('/', validateBody(insertHabitSchema), createHabit)</code></pre>
       <p>แต่มี<strong>ข้อยกเว้นสำคัญ</strong>ที่ต้องรู้ Schema จากฐานข้อมูลใช้ตรงกับ Input ของผู้ใช้ได้ก็ต่อเมื่อ<em>ทุก Field ที่บังคับ ผู้ใช้เป็นคนส่งมาทั้งหมด</em></p>
       <p>ลองนึกถึงตอนสร้าง Habit ฐานข้อมูลบังคับให้มี <code>userId</code> แต่ผู้ใช้ไม่ได้ส่งค่านั้นมาใน Body เราต่างหากที่เป็นคนเติมให้จาก Token ถ้าเราเอา <code>insertHabitSchema</code> ไปตรวจ Body ตรง ๆ Request ที่ถูกต้องทุกอันจะถูกปฏิเสธหมด เพราะขาด <code>userId</code></p>
       <p>ทางแก้คือหยิบเฉพาะส่วนที่ต้องการ Zod มี Method อย่าง <code>.omit()</code>, <code>.pick()</code> และ <code>.partial()</code> ให้ตัดแต่งได้ หรือจะ <code>.extend()</code> เพื่อเพิ่มกฎที่ฐานข้อมูลไม่รู้จักก็ได้ เช่นบังคับความยาวขั้นต่ำของรหัสผ่าน ซึ่งเป็นกฎของแอปเรา ไม่ใช่กฎของฐานข้อมูล</p>
-      <pre><code>export const createUserSchema = insertUserSchema
+      <pre><code>import { z } from 'zod'
+
+export const createUserSchema = insertUserSchema
   .omit({ id: true, createdAt: true, updatedAt: true })
   .extend({
     password: z.string().min(8, 'Password must be at least 8 characters'),

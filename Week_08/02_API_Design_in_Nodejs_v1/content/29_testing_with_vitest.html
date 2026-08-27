@@ -185,6 +185,7 @@ export const cleanupDatabase = async () =&gt; {
       <p><strong><code>Date.now()</code> กับ <code>Math.random()</code></strong> ต่อท้ายอีเมลและ Username เพื่อไม่ให้ข้อมูลชนกันเอง ถ้าฮาร์ดโค้ดเป็น <code>test@example.com</code> ไว้ Test ตัวที่สองจะพังทันทีเพราะอีเมลซ้ำ</p>
       <p><strong>เรา Hash รหัสผ่านเองในนี้</strong> เพราะฐานข้อมูลจริงไม่เคยเก็บรหัสผ่านดิบ ถ้า Insert ดิบ ๆ ลงไป Test เรื่องการ Login จะพังทันทีเพราะ <code>comparePassword</code> เทียบไม่ผ่าน แล้วเรา Return <code>rawPassword</code> กลับออกไปด้วย เพราะ Test ที่จะลอง Login ต้องใช้รหัสผ่านตัวจริงส่งขึ้นไป</p>
       <p>อาจมีคนสงสัยว่าทำไมไม่เรียก Controller <code>register</code> ที่เขียนไว้แล้วให้จบ ๆ ไป <strong>เพราะเรากำลังจะเขียน Test เพื่อทดสอบ Controller ตัวนั้นอยู่ไงครับ</strong> ถ้าเครื่องมือที่ใช้เตรียมข้อมูลเป็นตัวเดียวกับสิ่งที่กำลังถูกทดสอบ พอมันพัง เราจะแยกไม่ออกเลยว่าใครพัง</p>
+      <p><strong>ลำดับการลบใน <code>cleanupDatabase</code> ปลอดภัย</strong> เพราะ Foreign Key ทุกตัวใน Schema ของเราตั้ง <code>onDelete: 'cascade'</code> ไว้ตั้งแต่บทที่ 16 การลบแถวฝั่งแม่จึงพาแถวลูกหายตามไปด้วยเสมอ ไม่มีทางค้าง Foreign Key Constraint</p>
 
       <h2>บอก Vitest ว่าให้ใช้ .env.test</h2>
       <p>เหลืออีกชิ้นเดียว เปิด <code>package.json</code> แล้วแก้สคริปต์ <code>test</code></p>
