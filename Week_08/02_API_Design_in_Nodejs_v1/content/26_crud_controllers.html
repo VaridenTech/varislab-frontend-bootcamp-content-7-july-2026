@@ -11,8 +11,7 @@
   <main>
     <article>
       <h1>เขียน CRUD Controllers สำหรับ Habit</h1>
-      <p>ทุกชิ้นส่วนที่เราสร้างมาตลอดคอร์สกำลังจะมาบรรจบกันในบทนี้ ลองไล่เส้นทางของ Request หนึ่งใบดู — Request วิ่งเข้ามา ถูก Route ไปยังที่ที่ถูกต้อง ระหว่างทางเจอ Middleware คอยตรวจว่าล็อกอินหรือยัง เจออีกตัวคอยตรวจว่าข้อมูลที่ส่งมาถูกรูปแบบไหม แล้วสุดท้ายถึงจะไปถึงปลายทางคือ <strong>Controller</strong> ที่ทำงานจริงแล้วตอบกลับ</p>
-      <p>บทนี้เราจะเขียนปลายทางนั้นให้ครบทั้ง Create, Read และ Update ของ Habit</p>
+      <p>ทุกชิ้นส่วนที่เราสร้างมาตลอดคอร์สกำลังจะมาบรรจบกันในบทนี้ ลองไล่เส้นทางของ Request หนึ่งใบดู — Request วิ่งเข้ามา ถูก Route ไปยังที่ที่ถูกต้อง ระหว่างทางเจอ Middleware คอยตรวจว่าล็อกอินหรือยัง เจออีกตัวคอยตรวจว่าข้อมูลที่ส่งมาถูกรูปแบบไหม แล้วสุดท้ายถึงจะไปถึงปลายทางคือ <strong>Controller</strong> ที่ทำงานจริงแล้วตอบกลับ บทนี้เราจะเขียนปลายทางนั้นให้ครบทั้ง Create, Read และ Update ของ Habit</p>
 
       <h2>ทบทวน RESTful สั้น ๆ</h2>
       <p>หัวใจของ REST ที่เราคุยกันไว้ในบทที่ 7 สรุปได้ประโยคเดียวคือ <strong>Route + Verb = ฟังก์ชันหนึ่งตัว</strong> ตัว Router แปลความหมายนี้ออกมาตรง ๆ เลย</p>
@@ -24,13 +23,12 @@ router.delete('/:id', deleteHabit)    // DELETE /api/habits/123</code></pre>
       <p>Path เดียวกันเป๊ะ แต่ Verb ต่างกันก็ไปคนละฟังก์ชัน นี่คือเหตุผลที่ API แบบ RESTful เดาง่าย — คุณเห็น <code>/api/habits</code> คุณก็เดาได้ทันทีว่าถ้าอยากสร้างต้องยิง POST มาที่นี่</p>
 
       <h2>Status Code ที่ใช้จริง</h2>
-      <p>เรื่องนี้เราพูดกันเป็นระยะมาตลอด บทนี้ขอรวบไว้ที่เดียว หลักคือดูตัวเลขหลักแรก</p>
+      <p>เรื่องนี้เราพูดกันเป็นระยะมาตลอด บทนี้ขอรวบไว้ที่เดียว หลักคือดูตัวเลขหลักแรก มีมากกว่านี้อีกเยอะถ้าไปไล่ดู แต่ในชีวิตจริงคุณจะเจอวนอยู่แค่กลุ่มนี้ ผมกล้าพูดว่า <code>409</code> เองก็ยังถือว่าหายากแล้ว</p>
       <ul>
         <li><strong>2xx สำเร็จ</strong> — <code>200</code> สำเร็จทั่วไป <code>201</code> สร้างของใหม่สำเร็จ <code>204</code> สำเร็จแต่ไม่มีอะไรจะส่งกลับ ซึ่งพูดตรง ๆ ว่าแทบไม่ค่อยเห็นใครใช้</li>
         <li><strong>4xx ฝั่ง Client ผิด</strong> — <code>400</code> ข้อมูลที่ส่งมาไม่ถูกต้อง <code>401</code> คุณไม่ได้ส่งอะไรมาให้พิสูจน์ตัวตนเลย ไม่มี Bearer Token ไม่มี API Key ไม่มีอะไรทั้งนั้น <code>403</code> ส่งมาแล้วแต่ไม่มีสิทธิ์ <code>404</code> สิ่งที่ขอไม่มีอยู่จริง <code>409</code> ชนกัน เช่นสมัครด้วยอีเมลที่มีคนใช้แล้ว</li>
         <li><strong>5xx ฝั่งเราผิด</strong> — <code>500</code> Server เราพังเอง <code>502</code> ตัวกลางอย่าง CDN บอกว่า "ผมทำงานปกตินะ แต่เครื่องต้นทางที่ผมต้องคุยด้วยมันตาย" ส่วน <code>503</code> คือเรารู้ตัวว่าปิดอยู่ เช่นกำลังแก้ Migration ที่พลาดไป</li>
       </ul>
-      <p>มีมากกว่านี้อีกเยอะถ้าไปไล่ดู แต่ในชีวิตจริงคุณจะเจอวนอยู่แค่กลุ่มนี้ ผมกล้าพูดว่า <code>409</code> เองก็ยังถือว่าหายากแล้ว</p>
 
       <h2>สร้าง habitController.ts</h2>
       <p>สร้างไฟล์ <code>src/controllers/habitController.ts</code> แล้วเริ่มจาก Import ที่จะใช้ทั้งไฟล์</p>
@@ -77,15 +75,13 @@ import { eq, and, desc, inArray } from 'drizzle-orm'</code></pre>
 }</code></pre>
       <p><strong><code>req.user!.id</code></strong> — เครื่องหมายอัศเจรีย์คือการบอก TypeScript ว่า "ตรงนี้มีค่าแน่นอน" เพราะเรานิยาม <code>user</code> ไว้เป็น Optional ในบทที่ 24 แต่เรารู้จากลำดับ Middleware ว่ามันผ่าน <code>authenticateToken</code> มาแล้ว</p>
       <p><strong>และนี่คือประเด็นด้าน Security ที่ห้ามลืม</strong> — <code>userId</code> มาจาก Token ที่ผ่านการตรวจลายเซ็นแล้ว <em>ไม่ใช่</em>จาก <code>req.body</code> ถ้าเราเชื่อ <code>userId</code> ที่ Client ส่งมา ใครก็สร้าง Habit ในชื่อคนอื่นได้ทันที</p>
-      <p><strong>ทำไมต้องตอบ <code>201</code></strong> เพราะ POST ที่สร้างของใหม่สำเร็จมี Status ของตัวเองอยู่แล้ว ไม่ใช่ <code>200</code> เฉย ๆ</p>
-      <p><strong>ทำไม <code>catch</code> ตอบ <code>500</code></strong> เพราะถ้าโค้ดวิ่งมาถึงตรงนี้ได้ แปลว่า Input ผ่าน Validation แล้ว และผู้ใช้ผ่าน Authentication แล้ว สิ่งที่พังได้จึงเหลือแต่ฝั่งเรา — Database ล่ม Query ผิด อะไรทำนองนั้น มันเป็นความผิดของเราล้วน ๆ</p>
+      <p><strong>ตอบ <code>201</code> ไม่ใช่ <code>200</code></strong> เพราะ POST ที่สร้างของใหม่สำเร็จมี Status ของตัวเองอยู่แล้ว ส่วน<strong><code>catch</code> ตอบ <code>500</code></strong> เพราะถ้าโค้ดวิ่งมาถึงตรงนี้ได้ แปลว่า Input ผ่าน Validation แล้ว และผู้ใช้ผ่าน Authentication แล้ว สิ่งที่พังได้จึงเหลือแต่ฝั่งเรา — Database ล่ม Query ผิด อะไรทำนองนั้น</p>
 
       <h3>Transaction คืออะไร</h3>
-      <p>ถ้าคุณไม่เคยทำงานกับ Database มาก่อน <code>db.transaction()</code> คือของใหม่ในบทนี้</p>
-      <p>ลองคิดตาม ถ้าฟังก์ชันหนึ่งต้องเขียนลง Database มากกว่าหนึ่งครั้ง แล้วครั้งแรกสำเร็จ แต่ครั้งที่สองพัง ข้อมูลของคุณจะค้างอยู่ในสภาพที่ไม่สมบูรณ์ ตัวอย่างคลาสสิกคือการโอนเงิน — ขั้นตอนตัดเงินจากบัญชีต้นทางสำเร็จ แต่ขั้นตอนเพิ่มเงินให้บัญชีปลายทางพัง <strong>แล้วเงินก้อนนั้นอยู่ไหน</strong> ไม่อยู่ทั้งสองบัญชี</p>
+      <p>ถ้าคุณไม่เคยทำงานกับ Database มาก่อน <code>db.transaction()</code> คือของใหม่ในบทนี้ ลองคิดตาม ถ้าฟังก์ชันหนึ่งต้องเขียนลง Database มากกว่าหนึ่งครั้ง แล้วครั้งแรกสำเร็จ แต่ครั้งที่สองพัง ข้อมูลของคุณจะค้างอยู่ในสภาพที่ไม่สมบูรณ์ ตัวอย่างคลาสสิกคือการโอนเงิน — ขั้นตอนตัดเงินจากบัญชีต้นทางสำเร็จ แต่ขั้นตอนเพิ่มเงินให้บัญชีปลายทางพัง <strong>แล้วเงินก้อนนั้นอยู่ไหน</strong> ไม่อยู่ทั้งสองบัญชี</p>
       <p>Transaction เกิดมาเพื่อเรื่องนี้ มันมัดคำสั่งเขียนหลายคำสั่งเข้าเป็นก้อนเดียว <strong>ถ้ามีตัวใดตัวหนึ่งพัง ทุกตัวจะถูกย้อนกลับหมด</strong> คำอธิบายที่ผมชอบที่สุดคือมันเหมือน Git Commit — คุณรวบการเปลี่ยนแปลงทั้งหมดแล้วสั่งให้มีผลพร้อมกันทีเดียว Database ที่รองรับ ACID ทุกตัวมีของสิ่งนี้</p>
-      <p>วิธีใช้ง่ายมาก เรียก <code>db.transaction()</code> แล้วจะได้ Object ที่ผมตั้งชื่อว่า <code>tx</code> ออกมา ซึ่ง<strong>ใช้เหมือน <code>db</code> ทุกประการ</strong> ข้างในนั้นต้องเรียก <code>tx</code> เท่านั้น ถ้าเผลอเรียก <code>db</code> คำสั่งนั้นจะหลุดออกไปนอก Transaction ทันที และสิ่งที่ <code>return</code> ออกมา คือสิ่งที่ <code>result</code> ข้างนอกจะได้รับ</p>
-      <p>ต้องสั่ง Commit หรือ Rollback เองไหม — <strong>ไม่ต้อง</strong> Drizzle จัดการให้ วิ่งจนจบก็ Commit มี Error โยนออกมาก็ Rollback ที่ต้องสั่งเองมีกรณีเดียวคือคุณไปทำงาน Async อย่างอื่นข้างในที่ไม่เกี่ยวกับ Database เช่นยิงไปอัปเดต Stripe แล้วอยากให้ Stripe พังเมื่อไรก็ Rollback ด้วย ซึ่ง Drizzle ไม่มีทางรู้ วิธีที่ง่ายที่สุดคือ <strong>โยน Error ออกมาเอง</strong> แล้วมันจะ Rollback ให้</p>
+      <p>วิธีใช้คือเรียก <code>db.transaction()</code> แล้วจะได้ Object ที่ผมตั้งชื่อว่า <code>tx</code> ออกมา ซึ่ง<strong>ใช้เหมือน <code>db</code> ทุกประการ</strong> ข้างในนั้นต้องเรียก <code>tx</code> เท่านั้น ถ้าเผลอเรียก <code>db</code> คำสั่งนั้นจะหลุดออกไปนอก Transaction ทันที และสิ่งที่ <code>return</code> ออกมา คือสิ่งที่ <code>result</code> ข้างนอกจะได้รับ</p>
+      <p>ต้องสั่ง Commit หรือ Rollback เองไหม — <strong>ไม่ต้อง</strong> Drizzle จัดการให้ วิ่งจนจบก็ Commit มี Error โยนออกมาก็ Rollback ที่ต้องสั่งเองมีกรณีเดียวคือคุณไปทำงาน Async อย่างอื่นข้างในที่ไม่เกี่ยวกับ Database เช่นยิงไปอัปเดต Stripe แล้วอยากให้ Stripe พังเมื่อไรก็ Rollback ด้วย ซึ่ง Drizzle ไม่มีทางรู้ วิธีที่ง่ายที่สุดคือ<strong>โยน Error ออกมาเอง</strong></p>
 
       <h2>เสียบเข้ากับ Route</h2>
       <p>กลับไปที่ <code>src/routes/habitRoutes.ts</code> เอา Handler ปลอมที่เราเขียนไว้ตั้งแต่บทที่ 8 ออก แล้วใส่ Controller ตัวจริงลงไป</p>
@@ -147,8 +143,7 @@ router.post('/', validateBody(createHabitSchema), createHabit)</code></pre>
       <p><strong><code>orderBy: [desc(habits.createdAt)]</code></strong> เรียงจากใหม่ไปเก่า อันที่เพิ่งสร้างจะอยู่บนสุด</p>
 
       <h3>แปลงหน้าตาข้อมูลก่อนส่ง</h3>
-      <p>ผลลัพธ์ดิบที่ได้จะมี <code>habitTags</code> โผล่คั่นกลางอยู่ ซึ่งเป็นรายละเอียดภายในของ Database ที่คนใช้ API ไม่ควรต้องรับรู้ เราจึงแผ่มันออกให้แบนลง เอา Tag ขึ้นมาไว้ที่ <code>tags</code> ตรง ๆ</p>
-      <p>ทริกที่น่าสนใจคือบรรทัด <code>habitTags: undefined</code> — เมื่อ <code>JSON.stringify()</code> เจอค่า <code>undefined</code> มันจะ<strong>ตัด Field นั้นทิ้งไปเลย</strong> เราจึงลบ Field ออกจาก Response ได้ด้วยวิธีนี้</p>
+      <p>ผลลัพธ์ดิบที่ได้จะมี <code>habitTags</code> โผล่คั่นกลางอยู่ ซึ่งเป็นรายละเอียดภายในของ Database ที่คนใช้ API ไม่ควรต้องรับรู้ เราจึงแผ่มันออกให้แบนลง เอา Tag ขึ้นมาไว้ที่ <code>tags</code> ตรง ๆ ทริกที่น่าสนใจคือบรรทัด <code>habitTags: undefined</code> — เมื่อ <code>JSON.stringify()</code> เจอค่า <code>undefined</code> มันจะ<strong>ตัด Field นั้นทิ้งไปเลย</strong></p>
       <p>ขอสารภาพตรง ๆ ว่า<strong>วิธีนี้ไม่ใช่วิธีที่ถูกที่สุด</strong> งานแปลงข้อมูลแบบนี้ควรทำที่ระดับ Database ด้วย Query ที่เขียนดีกว่านี้หรือด้วย Materialized View ผมทำใน JavaScript เพราะเร็วกว่าและผมไม่ใช่พ่อมด SQL ถ้าคุณทำที่ฝั่ง Database ได้ ทำเถอะครับ</p>
       <p>สังเกตว่า Route นี้<strong>ไม่มี Validation Middleware</strong> เพราะ GET ไม่มี Body ให้ตรวจ Input Validation มีไว้สำหรับ POST, PUT และ PATCH ที่จริงเรายังตรวจ Query Parameter ได้ด้วย <code>validateQuery</code> จากบทที่ 12 ถ้าเราจะทำระบบแบบ "ส่ง <code>?tags=true</code> มาแล้วค่อยแถม Tag ให้" แต่พอถึงจุดนั้นคุณก็กำลังประดิษฐ์ภาษา Query ของตัวเองขึ้นมาแล้ว</p>
 
@@ -221,8 +216,7 @@ if (!habit) {
     res.status(500).json({ error: 'Failed to update habit' })
   }
 }</code></pre>
-      <p><strong>แยก <code>tagIds</code> ออกมาก่อน</strong> ด้วย Rest Operator เพราะสองอย่างนี้จะไปลงคนละตาราง <code>tagIds</code> ไปที่ <code>habitTags</code> ส่วน <code>updates</code> ที่เหลือทั้งหมดคือสิ่งที่จะเอาไปอัปเดตตาราง <code>habits</code></p>
-      <p><strong><code>.set()</code> คือการอัปเดตแบบบางส่วน</strong> Field ไหนที่ไม่ได้ส่งมาก็ไม่ถูกแตะต้อง เราแอบใส่ <code>updatedAt: new Date()</code> เพิ่มเข้าไปเองทุกครั้งด้วย</p>
+      <p><strong>แยก <code>tagIds</code> ออกมาก่อน</strong> ด้วย Rest Operator เพราะสองอย่างนี้จะไปลงคนละตาราง <code>tagIds</code> ไปที่ <code>habitTags</code> ส่วน <code>updates</code> ที่เหลือทั้งหมดคือสิ่งที่จะเอาไปอัปเดตตาราง <code>habits</code> ผ่าน <strong><code>.set()</code> ซึ่งคือการอัปเดตแบบบางส่วน</strong> Field ไหนที่ไม่ได้ส่งมาก็ไม่ถูกแตะต้อง และเราแอบใส่ <code>updatedAt: new Date()</code> เพิ่มเข้าไปเองทุกครั้ง</p>
 
       <h3>บรรทัดที่ห้ามลืมเด็ดขาด</h3>
       <p>ดูที่ <code>where</code> ให้ดี มันเช็คสองเงื่อนไขพร้อมกันด้วย <code>and()</code></p>
@@ -233,23 +227,28 @@ if (!habit) {
       <p>ตอนสอนสด ผมเลือกตอบ <code>401</code> แล้วปิด Response ด้วย <code>res.status(401).end()</code> เฉย ๆ ตรงจุดนี้ (<code>.end()</code> คือ "จบ Request เลย ไม่มี Body จะส่ง" ซึ่งบางครั้งก็เพียงพอแล้ว) เหตุผลที่ลังเลระหว่างสอง Status คือเราแยกไม่ออกจริง ๆ ว่ามันไม่เจอเพราะ Id ไม่มีอยู่จริง หรือเพราะ Id มีอยู่แต่ไม่ใช่ของคุณ แต่โค้ดที่ลงเอยใน Repo ใช้ <code>404</code> ซึ่งผมว่าดีกว่า เพราะการตอบ <code>404</code> เหมือนกันทั้งสองกรณี<strong>ไม่เผยให้คนนอกรู้ว่า Id นั้นมีอยู่จริงหรือไม่</strong></p>
       <p><strong>เรื่อง Tag เป็นการแทนที่ ไม่ใช่การเพิ่ม</strong> ถ้าคุณส่ง <code>tagIds</code> มา เราลบความสัมพันธ์เดิมทั้งหมดทิ้งก่อนแล้วค่อยใส่ชุดใหม่ นี่ไม่ใช่วิธีที่ถูกหรือผิด มันคือการตัดสินใจของคนออกแบบ Server ว่าจะตีความคำว่า "อัปเดต Tag" อย่างไร และต้องเขียนไว้ในเอกสาร API ให้ชัด</p>
 
-      <h2>ต่อ Route ให้ครบ</h2>
+      <h2>ต่อ Route ที่เขียนในบทนี้</h2>
       <pre><code>router.get('/', getUserHabits)
 router.get('/:id', getHabitById)
 router.post('/', validateBody(createHabitSchema), createHabit)
 router.patch('/:id', updateHabit)</code></pre>
-      <p>ผมเลือก <code>PATCH</code> ไม่ใช่ <code>PUT</code> เพราะเราอัปเดตแค่บางส่วน ตามที่คุยกันไว้ในบทที่ 7</p>
-      <p>สังเกตว่า <code>PATCH</code> ไม่มี Validation ทั้งที่ควรมี เหตุผลตรง ๆ คือ Schema ของมันต้องเป็นแบบ Partial คือทุก Field เป็น Optional หมด (Zod มี <code>.partial()</code> ให้อยู่แล้ว) แต่ผมขี้เกียจเขียน และถ้าส่งข้อมูลผิดมาแล้วมันพัง ผมก็ยอมรับได้เพราะยังไงมันก็พังอยู่ดี แต่พูดให้เป็นธรรม <strong>เหตุผลจริง ๆ ที่ควรใส่ Validation ไม่ใช่เพื่อกัน Server พัง แต่เพื่อบอกผู้ใช้ให้ชัดว่าเขาพลาดที่ Field ไหน</strong> เวอร์ชันเต็มใน Repo จึงใส่ทั้ง <code>updateHabitSchema</code> และตรวจ Route Param ด้วย</p>
+      <p>สี่บรรทัดนี้เข้าไปแทนที่ Handler ปลอมที่เราวางไว้ตั้งแต่บทที่ 8 ส่วนอีกสองเส้นในไฟล์เดียวกันคือ <code>router.delete('/:id', ...)</code> กับ <code>router.post('/:id/complete', ...)</code> <strong>ให้คงไว้เป็น Handler ปลอมเหมือนเดิม</strong> เพราะคอร์สนี้ไม่ได้เขียน Controller ของสองตัวนั้น (ใน Repo มีให้ครบชื่อ <code>deleteHabit</code> กับ <code>completeHabit</code>) และผมอยากยกให้เป็นแบบฝึกหัดของคุณ — <code>deleteHabit</code> คือ <code>updateHabit</code> ที่เปลี่ยน <code>.update()</code> เป็น <code>.delete()</code> โดยยังต้องมี <code>and()</code> เช็คเจ้าของเหมือนเดิมเป๊ะ</p>
+      <p>ผมเลือก <code>PATCH</code> ไม่ใช่ <code>PUT</code> เพราะเราอัปเดตแค่บางส่วน ตามที่คุยกันไว้ในบทที่ 7 แต่สังเกตว่า <code>PATCH</code> ของเราไม่มี Validation ทั้งที่ควรมี เหตุผลตรง ๆ คือ Schema ของมันต้องเป็นแบบ Partial คือทุก Field เป็น Optional หมด (Zod มี <code>.partial()</code> ให้อยู่แล้ว) แต่ผมขี้เกียจเขียน และถ้าส่งข้อมูลผิดมาแล้วมันพัง ผมก็ยอมรับได้เพราะยังไงมันก็พังอยู่ดี แต่พูดให้เป็นธรรม <strong>เหตุผลจริง ๆ ที่ควรใส่ Validation ไม่ใช่เพื่อกัน Server พัง แต่เพื่อบอกผู้ใช้ให้ชัดว่าเขาพลาดที่ Field ไหน</strong> เวอร์ชันเต็มใน Repo จึงใส่ทั้ง <code>updateHabitSchema</code> และตรวจ Route Param ด้วย</p>
       <pre><code>const uuidSchema = z.object({
   id: z.uuid('Invalid habit ID format'),
 })
 
-router.get('/:id', validateParams(uuidSchema), getHabitById)</code></pre>
+router.get('/:id', validateParams(uuidSchema), getHabitById)
+router.patch(
+  '/:id',
+  validateParams(uuidSchema),
+  validateBody(updateHabitSchema),
+  updateHabit
+)</code></pre>
       <p>ประโยชน์ของการตรวจ Param คือถ้ามีคนยิง Id มั่ว ๆ ที่ไม่ใช่รูปแบบ UUID เขาจะได้ <code>400</code> พร้อมคำอธิบายตั้งแต่ก่อนถึง Controller แทนที่จะปล่อยให้ Database เป็นคนพังแล้วตอบ <code>500</code> กลับไป (และเขียน <code>z.uuid()</code> ไม่ใช่ <code>z.string().uuid()</code> ด้วยเหตุผลเดียวกับ <code>z.email()</code> ในบทที่ 23)</p>
 
       <h2>ทุก Controller หน้าตาเหมือนกันหมด</h2>
-      <p>เราไม่ได้เขียนครบทุก Resource ในคอร์สนี้ และไม่จำเป็นด้วย เพราะถ้าคุณเลื่อนดู Controller ของ Tag หรือ User ใน Repo คุณจะพบว่ามันคือรูปแบบเดียวกันซ้ำ ๆ บนคนละตาราง เหมือนกันจน<strong>เขียนฟังก์ชันที่รับชื่อ Resource เข้าไปแล้วผลิต Controller ออกมาให้ได้เลย</strong> ที่ผมให้เขียนมือก็เพื่อให้คุณได้ซ้อมจริง ๆ เท่านั้น</p>
-      <p>รูปแบบที่ซ้ำกันทุกตัวมีดังนี้</p>
+      <p>เราไม่ได้เขียนครบทุก Resource ในคอร์สนี้ และไม่จำเป็นด้วย เพราะถ้าคุณเลื่อนดู Controller ของ Tag หรือ User ใน Repo คุณจะพบว่ามันคือรูปแบบเดียวกันซ้ำ ๆ บนคนละตาราง เหมือนกันจน<strong>เขียนฟังก์ชันที่รับชื่อ Resource เข้าไปแล้วผลิต Controller ออกมาให้ได้เลย</strong> ที่ผมให้เขียนมือก็เพื่อให้คุณได้ซ้อมจริง ๆ เท่านั้น รูปแบบที่ซ้ำกันทุกตัวมีดังนี้</p>
       <ul>
         <li><strong>ห่อด้วย <code>try/catch</code> เสมอ</strong> — เพื่อคุม Status Code และรูปแบบ Response ของกรณีที่เราคาดไว้แล้ว</li>
         <li><strong>ตัวตนมาจาก <code>req.user</code> เท่านั้น</strong> — ไม่เอาจาก Body ไม่เอาจาก Query</li>
