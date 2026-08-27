@@ -79,11 +79,10 @@ describe('Authentication Endpoints', () =&gt; {
 
       <h2>ทดสอบ Edge Case ด้วย</h2>
       <p>Happy Path อย่างเดียวไม่พอ ทุกจุดที่ Route มีเงื่อนไข มีการตัดจบ หรือมีโอกาสโยน Error ควรมี Test ของมันเอง</p>
-      <pre><code>it('should return 400 for invalid email', async () =&gt; {
+      <pre><code>it('should return 400 when password is missing', async () =&gt; {
   const userData = {
-    email: 'invalid-email',
+    email: `test-${Date.now()}@example.com`,
     username: `testuser-${Date.now()}`,
-    password: 'adminpassword1234',
   }
 
   const response = await request(app)
@@ -92,8 +91,11 @@ describe('Authentication Endpoints', () =&gt; {
     .expect(400)
 
   expect(response.body).toHaveProperty('error', 'Validation failed')
+  expect(response.body.details[0].field).toBe('password')
 })</code></pre>
-      <p>Test ตัวนี้ไปไม่ถึง Controller ด้วยซ้ำ มันถูก <code>validateBody</code> จากบทที่ 12 สกัดไว้ก่อน ซึ่งนั่นแหละคือสิ่งที่เรากำลังยืนยัน ว่า Middleware ยังยืนอยู่ในลำดับที่ถูกต้องและตอบด้วยรูปแบบที่ตกลงกันไว้</p>
+      <p>Test ตัวนี้ไปไม่ถึง Controller ด้วยซ้ำ มันถูก <code>validateBody</code> จากบทที่ 12 สกัดไว้ก่อน ซึ่งนั่นแหละคือสิ่งที่เรากำลังยืนยัน ว่า Middleware ยังยืนอยู่ในลำดับที่ถูกต้องและตอบด้วยรูปแบบ <code>{ error, details }</code> ที่ตกลงกันไว้</p>
+      <p>ที่น่าสนใจกว่านั้นคือ <strong>Edge Case ที่ Test แบบนี้จะ<em>ไม่</em>จับให้</strong> ลองเปลี่ยนไปส่ง <code>email: 'invalid-email'</code> ที่ครบทุก Field ดูสิครับ คุณจะได้ <code>201</code> พร้อม User ที่ถูกสร้างจริง ไม่ใช่ <code>400</code> อย่างที่หลายคนเดา เพราะ <code>insertUserSchema</code> ที่เราเสียบไว้หน้า Route ในบทที่ 22 ถูกสร้างจากตาราง <code>users</code> มันจึงรู้แค่สิ่งที่ Database รู้ คือชนิดข้อมูล ความยาว และ Not Null ตามที่บทนั้นบอกไว้ตรง ๆ ว่ามันตรวจไม่ได้ว่า Email มี <code>@</code> จริงหรือเปล่า</p>
+      <p>นี่คือคุณค่าอีกอย่างของ Integration Test — <strong>มันบอกคุณว่า Validation ของคุณกันอะไรได้จริง ไม่ใช่สิ่งที่คุณคิดว่ามันกันอยู่</strong> ถ้าอยากให้ Email ถูกตรวจจริง ๆ ก็ <code>.extend()</code> Schema ตัวนั้นเพิ่มด้วย <code>z.string().email()</code> เสียก่อน แล้วค่อยกลับมาเขียน Test ยืนยันว่ามันได้ <code>400</code> ลำดับต้องเป็นแบบนี้เสมอ</p>
 
       <h2>ทดสอบการเข้าสู่ระบบ</h2>
       <p>คราวนี้ต่างออกไปนิดหนึ่ง เพราะก่อนจะ Login ได้ต้องมี User อยู่ในฐานข้อมูลก่อน ซึ่งคือจังหวะที่ Helper จากบทที่แล้วได้ใช้งาน</p>
