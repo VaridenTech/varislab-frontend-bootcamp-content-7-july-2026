@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ทำความเข้าใจ Environment Variables ใน Node.js ตั้งแต่เหตุผลที่ต้องมี ไฟล์ .env .env.test และ .env.example การ Gitignore ไปจนถึงการแยกค่าระหว่าง Development กับ Production" />
+  <title>การใช้งาน Environment Variables — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>การใช้งาน Environment Variables</h1>
+      <p>ตอนนี้ Server ของเรามีเลข <code>3000</code> Hardcode อยู่ใน <code>src/index.ts</code> ซึ่งใช้งานได้ดีบนเครื่องเรา แต่พอวันที่เราเอาโค้ดชุดเดียวกันนี้ไปรันที่อื่นเมื่อไหร่ เลขตัวนี้จะกลายเป็นปัญหาทันที</p>
+      <p>บทนี้เราจะมาทำความรู้จัก Environment Variables ซึ่งเป็นเรื่องที่นักพัฒนาฝั่ง Server ต้องทำเป็นตั้งแต่โปรเจกต์แรก และเป็นหนึ่งในสิ่งแรก ๆ ที่ควรตั้งค่าให้เรียบร้อยในทุกโปรเจกต์ Node.js ไม่ว่าจะเป็น API, Script หรือ AI Agent ก็ตาม</p>
+
+      <h2>Environment Variable คืออะไร</h2>
+      <p>Environment Variable คือตัวแปรที่ถูกฉีดเข้ามาใน Environment ที่โปรแกรมของเรารันอยู่ พูดง่าย ๆ คือค่าที่มาจาก<em>ข้างนอก</em>โค้ด ไม่ได้เขียนไว้ในไฟล์ <code>.ts</code> ของเรา แต่โปรแกรมอ่านมันได้ตอนรัน</p>
+      <p>ประโยชน์หลักคือมันทำให้เรา<strong>เปลี่ยนการตั้งค่าของ Server ได้โดยไม่ต้องแก้โค้ดเลยแม้แต่บรรทัดเดียว</strong> (ส่วนใหญ่แค่ต้องรีสตาร์ท Server เท่านั้น) ถ้าคุณเคยทำ Feature Flag หรือ A/B Testing ฝั่ง Frontend หรือเคยกด Publish บทความใน Headless CMS แล้วเว็บอัปเดตทันทีโดยไม่ต้อง Deploy ใหม่ นั่นคือแนวคิดเดียวกัน และ Environment Variable ก็คือต้นกำเนิดของแนวคิดเหล่านั้น</p>
+
+      <h2>ทำไมเราต้องใช้มัน</h2>
+      <p>มีเหตุผลใหญ่ ๆ อยู่สองข้อ</p>
+      <ul>
+        <li><strong>ข้อมูลลับต้องไม่อยู่ในโค้ด</strong> — รหัสผ่านฐานข้อมูล, API Key, Secret ของ JWT ถ้าเราพิมพ์ค่าพวกนี้ลงในไฟล์แล้ว Push ขึ้น GitHub เท่ากับเราแจกกุญแจบ้านให้ทุกคนที่เห็น Repository นั้น</li>
+        <li><strong>โค้ดชุดเดียวต้องรันได้หลาย Environment</strong> — โค้ดชุดนี้จะรันบนเครื่องคุณ บนเครื่องเพื่อนร่วมทีม บน Staging และบน Production โดยแต่ละที่มีฐานข้อมูลคนละตัวและ URL คนละอัน ถ้าเรา Hardcode <code>DATABASE_URL</code> ลงในไฟล์ TypeScript แล้วจะทำยังไงตอนขึ้น Staging เขียนเงื่อนไข if ไล่ทีละที่อย่างนั้นหรือ</li>
+      </ul>
+      <p>ยังมีอีกเหตุผลที่คนมักลืม คือค่าหลายตัว<strong>ไม่ได้ถูกตั้งไว้ล่วงหน้าตายตัว</strong> ผู้ให้บริการ Hosting ส่วนใหญ่จะสร้างค่าพวกนี้ให้แบบ Dynamic ตอน Deploy เช่น Port หรือ URL ที่มาจาก Load Balancer และบางค่าก็ถูกหมุนเปลี่ยน (Rotate) เป็นระยะเพื่อความปลอดภัย ค่าที่เปลี่ยนได้ตลอดเวลาแบบนี้จะเขียนตายตัวลงในโค้ดไม่ได้อยู่แล้ว</p>
+
+      <h2>ระวัง Environment Variable ฝั่ง Frontend</h2>
+      <p>ถ้าคุณเคยเขียน React มาก่อน คุณน่าจะเคยใช้ <code>process.env.NEXT_PUBLIC_XXX</code> หรือ <code>import.meta.env.VITE_XXX</code> มาแล้ว แต่ของพวกนั้น<strong>ไม่ใช่ Environment Variable จริง ๆ</strong> มันแค่ถูกฉีดเข้ามาผ่าน Environment ตอน Build เท่านั้น</p>
+      <p>สิ่งที่เกิดขึ้นจริงคือ Build System อย่าง Vite หรือ Webpack จะ<em>แทนที่</em>ข้อความ <code>process.env.NEXT_PUBLIC_XXX</code> ในโค้ดด้วยค่าจริงของตัวแปรนั้น แล้วส่งผลลัพธ์ไปให้ Browser ดังนั้นถ้าใครเปิด Source Code ของเว็บคุณดู เขาจะเห็นค่านั้นเต็ม ๆ พูดอีกอย่างคือคุณกันคนบน GitHub ไม่ให้เห็นได้ก็จริง แต่กันคนที่เปิดเว็บคุณไม่ได้ ฝั่ง Server ไม่เป็นแบบนั้น เพราะไม่มีใครมานั่งเปิดดูโค้ด Server ได้ นอกจากคนที่เข้าถึงตัวเครื่องได้จริง ๆ ค่าที่เก็บไว้ที่นี่จึงเป็นความลับได้อย่างแท้จริง</p>
+
+      <h2>อ่านค่าด้วย process.env</h2>
+      <p>ใน Node.js เราเข้าถึง Environment Variable ผ่าน Object ที่ชื่อ <code>process.env</code> ลองแทรกบรรทัดนี้ไว้บนสุดของ <code>src/server.ts</code> ดูก็ได้</p>
+      <pre><code>console.log(process.env.NODE_ENV)</code></pre>
+      <p>ถ้ายังไม่มีใครตั้งค่าไว้ คุณจะได้ <code>undefined</code> กลับมา ตรงนี้คือจุดที่ต้องจำให้ขึ้นใจ นั่นคือ <code>process.env</code> เป็นแค่ Object ธรรมดาที่มี Key เป็นชื่อตัวแปรและ Value เป็น String เท่านั้น</p>
+      <p>อย่าเผลอ <code>console.log(process.env)</code> ทั้งก้อนตอนแชร์หน้าจอหรือถ่ายวิดีโอ เพราะมันจะพ่นตัวแปรทุกตัวบนเครื่องคุณออกมา รวมถึง Secret Key ของงานอื่นด้วย</p>
+
+      <h2>ไฟล์ .env สำหรับเครื่องเรา</h2>
+      <p>บนเครื่องตัวเอง วิธีที่ใช้กันมากที่สุดคือเขียนค่าลงไฟล์ชื่อ <code>.env</code> ที่รากของโปรเจกต์ ตอน Clone โปรเจกต์มาคุณจะมีแค่ <code>.env.example</code> ให้สร้างอีกสองไฟล์เพิ่มเองตอนนี้เลย</p>
+      <pre><code>habit-tracker-api/
+├── .env          # ค่าสำหรับตอนพัฒนาบนเครื่องเรา
+├── .env.test     # ค่าสำหรับตอนรัน Test
+└── .env.example  # ไฟล์ตัวอย่าง อันนี้ Commit ขึ้น Git ได้</code></pre>
+      <p>เนื้อหาของ <code>.env</code> เป็นแค่ไฟล์ Text ธรรมดา หน้าตาแบบนี้</p>
+      <pre><code>PORT=3000
+DATABASE_URL=postgresql://postgres:password@localhost:5432/habit_tracker_dev
+JWT_SECRET=development-jwt-secret-key-32-characters-minimum</code></pre>
+      <p>ส่วน <code>.env.test</code> ใช้รูปแบบเดียวกัน แต่มีไว้ให้ตอนรัน Test สลับไปใช้ค่าอีกชุดหนึ่ง เช่น <code>PORT=3001</code> และชี้ <code>DATABASE_URL</code> ไปที่ฐานข้อมูลคนละตัว จะได้ไม่ไปลบข้อมูลที่เรานั่งกรอกไว้ตอนพัฒนา</p>
+
+      <h2>.env ห้ามขึ้น Git เด็ดขาด</h2>
+      <p>เหตุผลที่คุณไม่เห็นไฟล์ <code>.env</code> ตอน Clone โปรเจกต์มา ก็เพราะมันถูกกันไว้ตั้งแต่แรกด้วย <code>.gitignore</code> ซึ่งมีบรรทัดประมาณนี้</p>
+      <pre><code># Environment variables
+.env
+.env.*
+!.env.example</code></pre>
+      <p>สองบรรทัดแรกคือห้ามทุกไฟล์ที่ขึ้นต้นด้วย <code>.env</code> ส่วนบรรทัดที่มีเครื่องหมาย <code>!</code> คือการยกเว้นให้ <code>.env.example</code> ขึ้น Git ได้ตัวเดียว</p>
+      <p>กฎข้อนี้ไม่มีข้อยกเว้น <strong>อย่า Commit ไฟล์ <code>.env</code> ขึ้น GitHub</strong> ไม่ว่าจะกรณีไหน แม้บาง Framework จะบอกว่าให้ Commit ได้ถ้าไม่มีความลับอยู่ข้างใน แต่การตั้งกฎเดียวไปเลยว่า "ไม่เอาขึ้น" ปลอดภัยกว่าการต้องมานั่งตัดสินทีละไฟล์ว่าอันนี้ลับพอไหม</p>
+
+      <h2>.env.example คือคู่มือของทีม</h2>
+      <p>พอ <code>.env</code> ขึ้น Git ไม่ได้ ก็เกิดปัญหาใหม่ทันที คือคนที่เพิ่งเข้าทีมจะไม่มีทางรู้เลยว่าโปรเจกต์นี้ต้องการตัวแปรอะไรบ้าง ธรรมเนียมที่ใช้แก้ปัญหานี้คือทำไฟล์ <code>.env.example</code> ที่ Commit ขึ้น Git แล้วใส่<em>ชื่อ</em>ตัวแปรทั้งหมดพร้อมค่าตัวอย่างที่ไม่ใช่ของจริง</p>
+      <pre><code># Database Configuration
+DATABASE_URL=postgresql://username:password@localhost:5432/habit_tracker_db
+
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# JWT Configuration
+JWT_SECRET=your_super_secret_jwt_key_here
+JWT_EXPIRES_IN=7d</code></pre>
+      <p>คนใหม่ที่เข้ามาก็แค่ก๊อปไฟล์นี้ไปเป็น <code>.env</code> ของตัวเอง แล้วเติมค่าจริงลงไป จบ ไม่ต้องเดินไปถามใครทีละตัว</p>
+      <p><code>.env.example</code> ที่มากับโปรเจกต์นี้ใส่ตัวแปรมาให้เยอะกว่าที่คอร์สเราจะได้ใช้จริง ไม่ต้องตกใจ ให้ก๊อปเฉพาะตัวที่เราใช้ก็พอ</p>
+
+      <h2>ไฟล์ .env กลายเป็น process.env ได้ยังไง</h2>
+      <p>คำถามที่ควรสงสัยคือ ในเมื่อ <code>.env</code> เป็นแค่ไฟล์ Text แล้ว Node.js รู้จักมันได้ยังไง คำตอบคือ<strong>ไม่รู้จัก</strong> เราต้องมี Package มาช่วยอ่านไฟล์นั้นให้</p>
+      <p>Package ที่คนใช้กันมากที่สุดคือ <code>dotenv</code> ส่วนในโปรเจกต์นี้เราจะใช้ <code>custom-env</code> ซึ่งทำงานเหมือนกันแทบทุกอย่าง แต่สลับไฟล์ตามชื่อ Environment ได้ง่ายกว่า ซึ่งตรงกับที่เราต้องการ เพราะเรามีทั้ง <code>.env</code> และ <code>.env.test</code></p>
+      <pre><code>npm install custom-env</code></pre>
+      <p>สิ่งที่ Package พวกนี้ทำ ไม่มีเวทมนตร์อะไรเลย มันแค่</p>
+      <ol>
+        <li>เปิดอ่านไฟล์ <code>.env</code> แบบ Synchronous</li>
+        <li>ไล่อ่านทีละบรรทัด แยกชื่อกับค่าออกจากกันที่เครื่องหมาย <code>=</code></li>
+        <li>เซ็ตค่าให้เราด้วยการทำ <code>process.env.DATABASE_URL = '...'</code> ทีละตัว</li>
+      </ol>
+      <p>คำว่า Synchronous ตรงนี้สำคัญมาก เพราะมันการันตีว่าพอโค้ดวิ่งมาถึงบรรทัดถัดไป ตัวแปรทุกตัวถูกเซ็ตครบแล้วแน่นอน ถ้ามันทำงานแบบ Asynchronous เราอาจเผลอรันโค้ดที่ต้องใช้ค่าเหล่านั้นก่อนที่มันจะพร้อม ซึ่งจะกลายเป็นบั๊กที่หาสาเหตุยากมาก</p>
+
+      <h2>แยกค่าระหว่าง Development กับ Production</h2>
+      <p>ทีนี้ Server ของเราจะรู้ได้ยังไงว่าตอนนี้มันรันอยู่ที่ไหน คำตอบคือเราบอกมันด้วย Environment Variable อีกตัวหนึ่งนั่นแหละ</p>
+      <p>หลายคนคุ้นกับ <code>NODE_ENV</code> แต่ในคอร์สนี้เราจะไม่ใช้มันเป็นตัวตัดสิน เพราะโดยเจตนาดั้งเดิม <code>NODE_ENV</code> มีไว้เปิด/ปิด Optimization ของ Library ต่าง ๆ ไม่ได้มีไว้บอกว่าแอปรันอยู่ที่ไหน ในโลกอุดมคติเราอยากตั้ง <code>NODE_ENV=production</code> ไว้เกือบตลอดเวลาด้วยซ้ำ เพื่อให้ได้ Optimization เหล่านั้น</p>
+      <p>เราจึงสร้างตัวแปรของเราเองชื่อ <code>APP_STAGE</code> ขึ้นมาทำหน้าที่นี้โดยเฉพาะ โดยมีค่าที่เป็นไปได้คือ <code>dev</code>, <code>test</code> และ <code>production</code></p>
+      <p>โค้ดชุดนี้จะไปอยู่ในไฟล์ <code>env.ts</code> ที่รากของโปรเจกต์ ซึ่งเราจะสร้างกันเต็ม ๆ ในบทหน้า</p>
+      <pre><code>import { env as loadEnv } from 'custom-env'
+
+process.env.APP_STAGE = process.env.APP_STAGE || 'dev'
+
+const isProduction = process.env.APP_STAGE === 'production'
+const isDevelopment = process.env.APP_STAGE === 'dev'
+const isTesting = process.env.APP_STAGE === 'test'
+
+if (isDevelopment) {
+  loadEnv()
+} else if (isTesting) {
+  loadEnv('test')
+}</code></pre>
+      <p>อ่านทีละบรรทัดจะเห็นว่ามันตรงไปตรงมามาก</p>
+      <ul>
+        <li>ตอน Import เราเปลี่ยนชื่อ <code>env</code> ที่ <code>custom-env</code> ส่งออกมาเป็น <code>loadEnv</code> ด้วยคำว่า <code>as</code> เพราะเดี๋ยวเราจะใช้ชื่อ <code>env</code> กับ Object ของเราเองในไฟล์นี้</li>
+        <li>บรรทัดถัดมาแปลว่า "ถ้าใครตั้ง <code>APP_STAGE</code> มาให้แล้วก็ใช้ค่านั้น ถ้าไม่มีใครตั้งมาเลยให้ถือว่าเป็น <code>dev</code>" เพราะคนที่รันโดยไม่ตั้งค่าอะไรเลย ก็คือเราที่กำลังพัฒนาอยู่บนเครื่องตัวเองนั่นแหละ</li>
+        <li>ตัวแปร Boolean สามตัวมีไว้กันเขียนเงื่อนไขซ้ำ ๆ ทั่วทั้งไฟล์</li>
+        <li>ตอนพัฒนาโหลดจาก <code>.env</code> ตอน Test โหลดจาก <code>.env.test</code></li>
+        <li>สังเกตว่า<strong>ตอน Production เราไม่โหลดไฟล์อะไรเลย</strong> เพราะบน Production จะไม่มีไฟล์ <code>.env</code> อยู่แล้ว (เรากันไม่ให้มันขึ้น Git ไปตั้งแต่แรก) ค่าทั้งหมดจะถูกฉีดเข้ามาโดย Hosting Provider แทน</li>
+      </ul>
+      <p>เวลา Deploy จริง เราจะไปกรอกชื่อและค่าของตัวแปรทั้งหมดในหน้า Settings ของผู้ให้บริการ แล้วเขาจะเซ็ตลง <code>process.env</code> ให้เราเอง เราจะได้ลงมือทำจริงกันในบทที่ 31 นอกจากนี้ Hosting Provider ส่วนใหญ่ยังฉีดตัวแปรของตัวเองเข้ามาให้ด้วย เช่น Render บอก URL ของแอปเรามา หรือ GitHub Actions ตั้ง <code>GITHUB_ACTIONS=true</code> ไว้ให้ เราจึงเดาได้ว่าโค้ดกำลังรันอยู่ที่ไหน</p>
+
+      <h2>เอาเลข Port ออกจากโค้ดเสียที</h2>
+      <p>กลับมาที่ <code>src/index.ts</code> ของเรา สิ่งที่ทำได้ทันทีคือเปลี่ยนเลข 3000 ที่ Hardcode ไว้ให้มาจาก Environment Variable แทน</p>
+      <pre><code>import app from './server.ts'
+
+const PORT = process.env.PORT || 3000
+
+app.listen(PORT, () =&gt; {
+  console.log(`Server running on port ${PORT}`)
+})</code></pre>
+      <p>เรื่องนี้ไม่ใช่เรื่องความสวยงาม แต่เป็นเรื่องจำเป็น เพราะ<strong>ตอน Deploy เราไม่ได้เป็นคนเลือก Port</strong> ผู้ให้บริการจะกำหนดมาให้แล้วส่งมาทาง <code>PORT</code> ถ้าเรายัง Hardcode ไว้ Server จะไปเปิดฟังผิดช่อง แล้วก็จะไม่มีใครเข้าถึงมันได้เลย นี่คือ Environment Variable ตัวแรกที่ทุกคนต้องเจอเมื่อ Deploy Server</p>
+      <p>แต่โค้ดข้างบนยังมีปัญหาที่ซ่อนอยู่สามข้อ</p>
+      <ul>
+        <li>Type ของ <code>PORT</code> คือ <code>string | number</code> เพราะค่าจาก <code>process.env</code> เป็น String เสมอ</li>
+        <li>ไม่มีใครตรวจว่าค่าที่ได้มาสมเหตุสมผลไหม ถ้ามีคนพิมพ์ <code>PORT=abc</code> เราจะรู้ตัวก็ตอนที่มันพังไปแล้ว</li>
+        <li>Editor ไม่ช่วยเติมชื่อตัวแปรให้ พิมพ์ <code>process.env.PROT</code> ผิดไปตัวเดียวก็ได้ <code>undefined</code> เงียบ ๆ โดยไม่มีใครเตือน</li>
+      </ul>
+      <p>บทถัดไปเราจะแก้ทั้งสามข้อนี้ให้จบในไฟล์เดียว ด้วยการทำ Environment Variable ให้เป็น Type-safe ด้วย Zod</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="04_testing_apis_with_postman.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="06_type_safe_env.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>
