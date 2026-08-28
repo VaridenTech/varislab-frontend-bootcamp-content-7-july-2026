@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="เขียน Controller login ตั้งแต่การหา User ด้วย db.query.findFirst, การเทียบรหัสผ่านด้วย bcrypt.compare, การตอบ 401 Invalid credentials ที่ไม่บอกใบ้ว่า Field ไหนผิด ไปจนถึงการแยกส่วนของ bcrypt Hash ทีละชิ้น" />
+  <meta name="description" content="เขียน Controller login ตั้งแต่การหา User ด้วย prisma.user.findUnique, การเทียบรหัสผ่านด้วย bcrypt.compare, การตอบ 401 Invalid credentials ที่ไม่บอกใบ้ว่า Field ไหนผิด ไปจนถึงการแยกส่วนของ bcrypt Hash ทีละชิ้น" />
   <title>ระบบเข้าสู่ระบบ (Sign In) — API Design in Node.js</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -65,16 +65,15 @@ await bcrypt.compare('myPassword12', hash)   // ผิดแค่ตัวส�
       <p>ลำดับ Argument สำคัญมาก <strong>ตัวแรกคือรหัสผ่านข้อความดิบที่เพิ่งส่งขึ้นมา ตัวที่สองคือ Hash จาก Database</strong> สลับกันแล้วผลลัพธ์จะเป็น <code>false</code> ตลอดชีวิตโดยไม่มี Error อะไรฟ้องให้เห็นเลย</p>
 
       <h2>เขียน Controller login</h2>
-      <p>เปิด <code>src/controllers/authController.ts</code> เพิ่ม Import สองตัว</p>
-      <pre><code>import { comparePassword } from '../utils/password.ts'
-import { eq } from 'drizzle-orm'</code></pre>
+      <p>เปิด <code>src/controllers/authController.ts</code> เพิ่ม Import อีกหนึ่งตัว</p>
+      <pre><code>import { comparePassword } from '../utils/password.ts'</code></pre>
       <p>แล้วเขียนฟังก์ชันที่สองต่อจาก <code>register</code></p>
       <pre><code>export const login = async (req: Request, res: Response) =&gt; {
   try {
     const { email, password } = req.body
 
-    const user = await db.query.users.findFirst({
-      where: eq(users.email, email),
+    const user = await prisma.user.findUnique({
+      where: { email },
     })
 
     if (!user) {
@@ -111,17 +110,19 @@ import { eq } from 'drizzle-orm'</code></pre>
   }
 }</code></pre>
 
-      <h2>findFirst กับ select ต่างกันอย่างไร</h2>
-      <p>Drizzle มีสองวิธีในการหาข้อมูล และคุณจะเจอทั้งคู่ในโค้ดจริง</p>
-      <pre><code>// แบบที่ 1 — Query API คืน Object เดียวหรือ undefined
-const user = await db.query.users.findFirst({
-  where: eq(users.email, email),
+      <h2>findUnique กับ findFirst ต่างกันอย่างไร</h2>
+      <p>Prisma มีวิธีหาข้อมูลทีละแถวอยู่สองแบบ และคุณจะเจอทั้งคู่ในโค้ดจริง</p>
+      <pre><code>// แบบที่ 1 — findUnique ใช้ได้เฉพาะกับ Field ที่ Unique
+const user = await prisma.user.findUnique({
+  where: { email },
 })
 
-// แบบที่ 2 — Select API คืน Array เสมอ จึงต้อง Destructure
-const [user] = await db.select().from(users).where(eq(users.email, email))</code></pre>
-      <p><code>eq</code> ที่ Import มาจาก <code>drizzle-orm</code> ย่อมาจาก equals อ่านตรงตัวว่า "คอลัมน์ <code>email</code> ของตาราง <code>users</code> เท่ากับค่า <code>email</code> ที่ส่งขึ้นมา"</p>
-      <p>ที่กล้าใช้ <code>findFirst</code> ได้เพราะเราตั้ง <code>.unique()</code> ไว้ที่ <code>email</code> ตั้งแต่บทที่ 16 จึงเป็นไปไม่ได้ที่จะมีสองแถว</p>
+// แบบที่ 2 — findFirst กรองด้วยเงื่อนไขอะไรก็ได้ แล้วคืนแถวแรกที่เจอ
+const user = await prisma.user.findFirst({
+  where: { firstName: 'Demo' },
+})</code></pre>
+      <p>ทั้งคู่คืน Object เดียวถ้าเจอ และคืน <code>null</code> ถ้าไม่เจอ ส่วน <code>where: { email }</code> คือ Shorthand ของ <code>{ email: email }</code> อ่านตรงตัวว่า "คอลัมน์ <code>email</code> เท่ากับค่า <code>email</code> ที่ส่งขึ้นมา"</p>
+      <p>ที่ใช้ <code>findUnique</code> ได้เพราะเราตั้ง <code>@unique</code> ไว้ที่ <code>email</code> ตั้งแต่บทที่ 16 จึงเป็นไปไม่ได้ที่จะมีสองแถว TypeScript รู้เรื่องนี้ด้วยนะครับ ถ้าคุณลองใส่ Field ที่ไม่ Unique ให้ <code>findUnique</code> มันจะฟ้องตั้งแต่ในเอดิเตอร์เลย</p>
 
       <h2>ทำไม 401 ทั้งสองกรณีและทำไมข้อความเหมือนกัน</h2>
       <p>นี่คือส่วนที่สำคัญที่สุดของบทนี้ สังเกตว่าทั้งกรณี "ไม่มี Email นี้" และกรณี "รหัสผ่านผิด" เราตอบ <code>Invalid credentials</code> เหมือนกันเป๊ะ</p>
@@ -133,7 +134,7 @@ const [user] = await db.select().from(users).where(eq(users.email, email))</code
       <p>สังเกตรูปแบบของทั้งสอง <code>if</code> — เราเช็คกรณี<em>ที่ไม่ผ่าน</em>แล้ว <code>return</code> ออกไปเลย ไม่ใช่เขียน <code>if (user) { ... }</code> แล้วห่อโค้ดที่เหลือไว้ข้างใน เพราะถ้าเขียนแบบหลัง พอเงื่อนไขเพิ่มขึ้นโค้ดจะซ้อนกันลึกลงไปเรื่อย ๆ และ <code>return</code> ของกรณีที่ไม่ผ่านจะกระจายอยู่คนละระดับความลึกทั่วทั้งฟังก์ชัน อ่านแล้วเวียนหัว การเช็คด้านลบแล้วออกทันทีทำให้โค้ดแบนราบและไล่อ่านจากบนลงล่างได้ตรง ๆ</p>
 
       <h2>อย่าส่ง User ทั้งก้อนกลับไป</h2>
-      <p>คุณอาจสงสัยว่าทำไมไม่เขียนสั้น ๆ ว่า <code>res.json({ user })</code> ไปเลย คำตอบคือ <strong><code>findFirst</code> คืน User ทั้งแถวมาให้ ซึ่งรวมคอลัมน์ <code>password</code> ด้วย</strong> ถ้าส่งกลับไปตรง ๆ เราจะยิง Hash ของรหัสผ่านออกไปให้ทุกคนที่ดักดูสายได้เห็น ตอนสมัครสมาชิกเราไม่เจอปัญหานี้เพราะ <code>.returning()</code> กรอง Field ให้ตั้งแต่ระดับ Query แต่ตอนล็อกอินเราต้องดึงคอลัมน์ <code>password</code> มาจริง ๆ เพื่อเอาไปเทียบ จึงต้องประกอบ Object ที่จะส่งกลับด้วยมือ</p>
+      <p>คุณอาจสงสัยว่าทำไมไม่เขียนสั้น ๆ ว่า <code>res.json({ user })</code> ไปเลย คำตอบคือ <strong><code>findUnique</code> คืน User ทั้งแถวมาให้ ซึ่งรวมคอลัมน์ <code>password</code> ด้วย</strong> ถ้าส่งกลับไปตรง ๆ เราจะยิง Hash ของรหัสผ่านออกไปให้ทุกคนที่ดักดูสายได้เห็น ตอนสมัครสมาชิกเราไม่เจอปัญหานี้เพราะ <code>omit</code> ตัด Field ให้ตั้งแต่ระดับ Query แต่ตอนล็อกอินเราต้องดึงคอลัมน์ <code>password</code> มาจริง ๆ เพื่อเอาไปเทียบ จึงต้องประกอบ Object ที่จะส่งกลับด้วยมือ</p>
 
       <h2>ยังมีอะไรทำได้อีกที่จุดนี้</h2>
       <p>ตรงจุดที่รหัสผ่านไม่ตรงเป็นตำแหน่งที่ระบบจริงมักใส่ของเพิ่ม เพราะถ้าคุณคิดถึงแค่สถานการณ์ "เจ้าตัวลืมรหัสผ่าน" คุณจะปล่อยให้ลองกี่ครั้งก็ได้ตลอดชีวิต แต่ถ้าคิดถึงสถานการณ์ที่สองด้วยคือ "คนอื่นกำลังไล่เดารหัสผ่านอยู่" คุณจะรีบหยุดเขาก่อนที่เขาจะเดาถูก ของที่นิยมใส่กันคือนับจำนวนครั้งที่ล็อกอินพลาดแล้วล็อกบัญชีชั่วคราว หรือทำ Rate Limiting ที่ระดับ Route เราไม่ทำในคอร์สนี้ แต่ให้ติดไว้ในหัวว่าจุดนี้คือจุดที่มันควรอยู่</p>

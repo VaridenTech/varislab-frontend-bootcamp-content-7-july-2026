@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="สร้าง PostgreSQL ฟรีบน Neon ใส่ Connection String ลง .env เขียน src/db/connection.ts ด้วย Connection Pool และ Singleton เพิ่ม db Scripts ใน package.json แล้ว Push Schema ขึ้น Database ครั้งแรก" />
+  <meta name="description" content="สร้าง PostgreSQL ฟรีบน Neon ใส่ Connection String ลง .env เขียน src/db/connection.ts ด้วย Connection Pool และ Singleton ตั้งค่า prisma.config.ts เพิ่ม db Scripts ใน package.json แล้ว Push Schema ขึ้น Database ครั้งแรก" />
   <title>ใช้ PostgreSQL บนคลาวด์ด้วย Neon — API Design in Node.js</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -41,96 +41,100 @@ await client.end()
 // แบบมี Pool — ยืมและคืนให้เองอัตโนมัติ
 const pool = new Pool({ connectionString })
 const result = await pool.query('SELECT * FROM users')</code></pre>
+      <p>โค้ดข้างบนคือหน้าตาของ Package <code>pg</code> ซึ่งเป็น Driver มาตรฐานของ PostgreSQL ฝั่ง Node.js เราจะไม่ได้เรียกมันเองตรง ๆ แต่ Adapter ของ Prisma ที่เรากำลังจะใช้ก็เปิด Pool แบบนี้ให้ข้างในเหมือนกันเป๊ะ</p>
       <p>แต่ Pool มีปัญหาของมันเอง และตัวที่จะกัดเราตอนพัฒนาคือเรื่อง <strong>Hot Reload</strong> เพราะเรารัน Server ด้วย <code>node --watch</code> ทุกครั้งที่เราเซฟไฟล์ Server จะรีสตาร์ทและสร้าง Pool ใหม่ แต่<em>Pool เก่ายังเปิดค้างอยู่</em> เซฟสิบครั้งก็สิบ Pool สุดท้ายจะเจอ Error ว่า Connection เต็ม</p>
-      <p>วิธีแก้คือทำให้ Pool เป็น <strong>Singleton</strong> คือค่าที่ถูกสร้างครั้งเดียวแล้วใช้ซ้ำตลอด โดยเก็บมันไว้บน Global Object ซึ่งไม่ถูกล้างตอน Node.js โหลดไฟล์ใหม่ คิดง่าย ๆ ว่าเหมือนตอนที่เราแปะค่าไว้บน <code>window</code> ในเบราว์เซอร์เพื่อใช้ซ้ำ</p>
+      <p>วิธีแก้คือทำให้ Client เป็น <strong>Singleton</strong> คือค่าที่ถูกสร้างครั้งเดียวแล้วใช้ซ้ำตลอด โดยเก็บมันไว้บน Global Object ซึ่งไม่ถูกล้างตอน Node.js โหลดไฟล์ใหม่ คิดง่าย ๆ ว่าเหมือนตอนที่เราแปะค่าไว้บน <code>window</code> ในเบราว์เซอร์เพื่อใช้ซ้ำ</p>
       <p>เราจะใช้ Package เล็ก ๆ ชื่อ <code>@epic-web/remember</code> ทำงานนี้ให้ มันไม่ได้ทำอะไรมหัศจรรย์เลย โค้ดข้างในไม่กี่บรรทัด แค่แปะค่าไว้บน Global ให้เราเท่านั้น แต่ก็ไม่มีเหตุผลที่จะเขียนเอง</p>
 
       <h2>เขียน src/db/connection.ts</h2>
       <p>ติดตั้งของที่ยังขาด</p>
-      <pre><code>npm install pg @epic-web/remember</code></pre>
-      <p>แล้วสร้างไฟล์ <code>src/db/connection.ts</code> ข้าง ๆ <code>schema.ts</code></p>
-      <pre><code>import { drizzle } from 'drizzle-orm/node-postgres'
-import { Pool } from 'pg'
-import * as schema from './schema.ts'
+      <pre><code>npm install @prisma/adapter-pg @epic-web/remember</code></pre>
+      <p><code>@prisma/adapter-pg</code> คือ Adapter ที่เชื่อม Prisma เข้ากับ Driver <code>pg</code> ที่เพิ่งเล่าไป จากนั้นสร้างไฟล์ <code>src/db/connection.ts</code> ข้าง ๆ <code>types.ts</code></p>
+      <pre><code>import { PrismaClient } from '../generated/prisma/client.ts'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { env, isProd } from '../../env.ts'
 import { remember } from '@epic-web/remember'
 
-const createPool = () =&gt; {
-  return new Pool({
+const createClient = () =&gt; {
+  const adapter = new PrismaPg({
     connectionString: env.DATABASE_URL,
   })
+  return new PrismaClient({ adapter })
 }
 
-let client
+let prisma
 
 if (isProd()) {
-  client = createPool()
+  prisma = createClient()
 } else {
-  client = remember('dbPool', () =&gt; createPool())
+  prisma = remember('prisma', () =&gt; createClient())
 }
 
-export const db = drizzle({ client, schema })
-export default db</code></pre>
+export { prisma }
+export default prisma</code></pre>
       <p>ไล่อ่านทีละส่วน</p>
       <ul>
-        <li><code>drizzle-orm/node-postgres</code> คือ Driver ที่ Drizzle เตรียมไว้สำหรับ Package <code>pg</code> Drizzle รองรับ Driver ของ PostgreSQL หลายตัว เราเลือกตัวนี้เพราะเป็นตัวมาตรฐานที่สุด</li>
-        <li><code>import * as schema from './schema.ts'</code> อ่านว่า "เอาทุกอย่างที่ Export จากไฟล์นั้น ยัดใส่ Object แล้วเรียกมันว่า <code>schema</code>" เราต้องส่งทั้งก้อนให้ Drizzle เพื่อให้มันรู้จักทั้งตารางและ Relation ที่เราประกาศไว้</li>
+        <li><code>PrismaClient</code> Import มาจากโฟลเดอร์ <code>src/generated</code> ที่เรา Generate ไว้ในบทที่แล้ว ไม่ใช่จาก npm ตรง ๆ เพราะ Client ตัวนี้ถูกสร้างมาเฉพาะสำหรับ Schema ของเรา</li>
+        <li><code>PrismaPg</code> คือ Adapter สำหรับ PostgreSQL มันเปิด Connection Pool ของ <code>pg</code> ให้ข้างในตัวมันเอง Prisma มี Adapter แบบนี้ให้กับ Database หลายเจ้า เราเลือกตัวนี้เพราะเป็นตัวมาตรฐานที่สุด</li>
         <li>เราใช้ <code>env.DATABASE_URL</code> ที่ผ่านการตรวจแล้วจาก <code>env.ts</code> ไม่ใช่ <code>process.env</code> ดิบ ๆ</li>
-        <li>ถ้าอยู่บน Production เราสร้าง Pool ตรง ๆ ไปเลย เพราะไม่มี Hot Reload ให้ต้องกังวล โค้ดบรรทัดนี้จะรันแค่ครั้งเดียวตอน Server สตาร์ท ถ้าไม่ใช่ Production ค่อยห่อด้วย <code>remember</code></li>
-        <li><code>'dbPool'</code> คือชื่อที่ค่านี้จะไปนั่งอยู่บน Global Object จะตั้งชื่ออื่นก็ได้</li>
-        <li><code>drizzle({ client, schema })</code> คือตัว ORM จริง ๆ ที่เราจะ Import ไปใช้ทั่วแอป</li>
+        <li>ถ้าอยู่บน Production เราสร้าง Client ตรง ๆ ไปเลย เพราะไม่มี Hot Reload ให้ต้องกังวล โค้ดบรรทัดนี้จะรันแค่ครั้งเดียวตอน Server สตาร์ท ถ้าไม่ใช่ Production ค่อยห่อด้วย <code>remember</code></li>
+        <li><code>'prisma'</code> คือชื่อที่ค่านี้จะไปนั่งอยู่บน Global Object จะตั้งชื่ออื่นก็ได้</li>
+        <li><code>new PrismaClient({ adapter })</code> คือตัว ORM จริง ๆ ที่เราจะ Import ไปใช้ทั่วแอปในชื่อ <code>prisma</code></li>
       </ul>
       <p>ย้ำอีกครั้งว่าเรื่อง <code>remember</code> ทั้งหมดนี้มีอยู่<strong>เพราะ Hot Reload ตอนพัฒนาอย่างเดียว</strong> ไม่มีเหตุผลอื่นเลย และถ้าคุณใช้ Database ที่คุยผ่าน HTTP แทน (ซึ่ง Neon ก็รองรับ) ก็ไม่ต้องมีเรื่องพวกนี้เลยเพราะไม่มี Connection ให้ค้าง</p>
 
-      <h2>ตั้งค่า drizzle.config.ts</h2>
-      <p>Drizzle มี CLI ชื่อ <code>drizzle-kit</code> ที่รับงานฝั่ง Migration ให้เราตามที่คุยกันในบทที่ 15 แต่มันต้องรู้ก่อนว่า Schema อยู่ไหนและ Database อยู่ไหน นั่นคือหน้าที่ของไฟล์ <code>drizzle.config.ts</code> ที่รากโปรเจกต์</p>
-      <pre><code>import { defineConfig } from 'drizzle-kit'
+      <h2>ตั้งค่า prisma.config.ts</h2>
+      <p>CLI ของ Prisma รับงานฝั่ง Migration ให้เราตามที่คุยกันในบทที่ 15 แต่มันต้องรู้ก่อนว่า Schema อยู่ไหนและ Database อยู่ไหน นั่นคือหน้าที่ของไฟล์ <code>prisma.config.ts</code> ที่ <code>npx prisma init</code> สร้างไว้ให้ที่รากโปรเจกต์ตั้งแต่บทที่ 16 เปิดมันขึ้นมาแล้วแก้เป็นแบบนี้</p>
+      <pre><code>import { defineConfig } from 'prisma/config'
 import env from './env.ts'
 
 export default defineConfig({
-  schema: './src/db/schema.ts',
-  out: './migrations',
-  dialect: 'postgresql',
-  dbCredentials: {
+  schema: 'prisma/schema.prisma',
+  migrations: {
+    path: 'prisma/migrations',
+  },
+  datasource: {
     url: env.DATABASE_URL,
   },
-  verbose: true,
-  strict: true,
 })</code></pre>
-      <p><code>out</code> คือโฟลเดอร์ที่ไฟล์ Migration จะไปอยู่ <code>verbose</code> คือให้แสดง SQL ที่มันกำลังจะรันให้เราดูก่อนเสมอ และ <code>strict</code> คือให้ถามยืนยันก่อนลงมือ สองตัวหลังนี้เปิดไว้เถอะ เพราะการเห็นสิ่งที่กำลังจะเกิดกับข้อมูลของเราก่อนคือเรื่องที่ดีเสมอ</p>
+      <p>จำได้ไหมว่าในบทที่ 16 เราบอกว่า Connection String ไม่อยู่ใน <code>schema.prisma</code> — มันมาอยู่ที่นี่เอง และเพราะไฟล์นี้เป็น TypeScript ธรรมดา เราจึง <strong>Import <code>env.ts</code> ของเราเข้ามาใช้ได้ตรง ๆ</strong> แปลว่า CLI ของ Prisma ได้ค่าที่ผ่านการตรวจจาก Zod แล้วชุดเดียวกับตัวแอปเป๊ะ ๆ และถ้า <code>APP_STAGE</code> เปลี่ยน ไฟล์ <code>.env</code> ที่ถูกโหลดก็เปลี่ยนตามกลไกเดิมที่เราสร้างไว้ในบทที่ 6 ข้อนี้จะสำคัญมากตอนทำ Test ในบทที่ 29</p>
+      <p>ส่วน <code>migrations.path</code> คือโฟลเดอร์ที่ไฟล์ Migration จะไปอยู่เมื่อเราเริ่มสร้างมันจริง ๆ ในบทที่ 31</p>
 
       <h2>เพิ่ม db Scripts ใน package.json</h2>
       <p>วิธีคุยกับ Database ในระดับการดูแลระบบที่สะดวกที่สุดคือทำเป็น Script ไว้ใน <code>package.json</code> ผมชอบตั้งชื่อโดยขึ้นต้นด้วยชื่อ Resource ในที่นี้คือ <code>db:</code> เพื่อให้เห็นเป็นกลุ่มเดียวกัน</p>
       <pre><code>"scripts": {
   "dev": "node --watch src/index.ts",
   "start": "node src/index.ts",
-  "db:generate": "drizzle-kit generate",
-  "db:push": "drizzle-kit push",
-  "db:migrate": "drizzle-kit migrate",
-  "db:studio": "drizzle-kit studio",
+  "db:generate": "prisma generate",
+  "db:push": "prisma db push",
+  "db:migrate": "prisma migrate dev",
+  "db:deploy": "prisma migrate deploy",
+  "db:studio": "prisma studio",
   "db:seed": "node src/db/seed.ts"
 }</code></pre>
-      <p>สี่ตัวแรกเรียก <code>drizzle-kit</code> ซึ่งอยู่ใน <code>devDependencies</code> อยู่แล้ว ส่วนตัวสุดท้ายไม่ใช่คำสั่งของ Drizzle มันแค่สั่ง Node.js ให้รันไฟล์ ซึ่งเราจะเขียนกันในบทหน้า</p>
+      <p>ห้าตัวแรกเรียก CLI ของ Prisma ซึ่งอยู่ใน <code>devDependencies</code> อยู่แล้ว ส่วนตัวสุดท้ายไม่ใช่คำสั่งของ Prisma มันแค่สั่ง Node.js ให้รันไฟล์ ซึ่งเราจะเขียนกันในบทหน้า</p>
       <ul>
-        <li><strong><code>db:generate</code></strong> — สร้างไฟล์ SQL ของ Migration จากส่วนต่างของ Schema ใช้ตอนแก้ Schema เสร็จและพร้อมเปิด PR</li>
+        <li><strong><code>db:generate</code></strong> — สร้าง Prisma Client ใหม่จาก Schema (ตัวเดียวกับ <code>npx prisma generate</code> ในบทที่แล้ว) ใช้ทุกครั้งที่แก้ <code>schema.prisma</code></li>
         <li><strong><code>db:push</code></strong> — ยัด Schema ปัจจุบันเข้า Database ตรง ๆ ไม่สร้างไฟล์ Migration ใช้ตอนพัฒนา ตัวนี้จะใช้บ่อยที่สุด</li>
-        <li><strong><code>db:migrate</code></strong> — ไล่รันไฟล์ Migration ที่ค้างอยู่ ใช้ตอน Deploy ขึ้น Production</li>
+        <li><strong><code>db:migrate</code></strong> — สร้างไฟล์ Migration จากส่วนต่างของ Schema แล้วรันใส่ Database ใช้ตอนฟีเจอร์เสร็จและพร้อมเปิด PR</li>
+        <li><strong><code>db:deploy</code></strong> — ไล่รันไฟล์ Migration ที่ค้างอยู่โดยไม่สร้างอะไรใหม่ ใช้ตอน Deploy ขึ้น Production</li>
         <li><strong><code>db:studio</code></strong> — เปิดเครื่องมือดูข้อมูลแบบภาพ ใช้ตอนไล่ปัญหาหรืออยากส่องข้อมูล</li>
         <li><strong><code>db:seed</code></strong> — ใส่ข้อมูลตัวอย่างลง Database</li>
       </ul>
+      <p>ระวังจุดสับสนนิดหนึ่ง — <code>db:generate</code> ของเราสร้าง <em>Client</em> ไม่ใช่สร้างไฟล์ Migration คนที่สร้างไฟล์ Migration คือ <code>db:migrate</code> ตั้งชื่อตามงานที่ Prisma เรียกมันเป๊ะ ๆ จะได้ไม่งงตอนอ่านเอกสารของมัน</p>
 
       <h2>Push Schema ขึ้น Database ครั้งแรก</h2>
       <p>Database ที่เราเพิ่งได้มายังว่างเปล่า ไม่มีตารางสักตาราง และมันเป็น Database สำหรับพัฒนาของเราคนเดียว ไม่มีข้อมูลจริงของใคร เพราะฉะนั้นไม่ต้องทำ Migration ให้ยุ่งยาก Push ไปเลย</p>
       <pre><code>npm run db:push</code></pre>
-      <p>เพราะเราเปิด <code>verbose</code> ไว้ มันจะพ่น SQL ทั้งชุดที่กำลังจะรันออกมาให้ดูก่อน ซึ่งก็คือ <code>CREATE TABLE</code> ของทั้งห้าตารางพร้อม Constraint และ Index ทั้งหมด</p>
-      <p>ลองอ่านมันสักรอบ นี่คือ SQL ที่เราจะต้องเขียนเองถ้าไม่มี Drizzle และมันก็คือหน้าตาของ Migration ตัวแรกของทุกโปรเจกต์พอดี เพราะ Migration แรกก็คือการสร้างตารางนั่นเอง กด Yes เพื่อยืนยัน แล้วมันจะบอกว่าเปลี่ยนแปลงเรียบร้อย</p>
-      <p>ถ้าลองสั่ง <code>npm run db:push</code> ซ้ำอีกรอบ คราวนี้มันจะบอกว่าไม่พบการเปลี่ยนแปลง เพราะสิ่งที่อยู่ใน Database กับสิ่งที่อยู่ใน Schema ตรงกันเป๊ะแล้ว</p>
+      <p>Prisma จะเทียบ Schema ของเรากับ Database ที่ว่างเปล่า แล้วสร้าง <code>CREATE TABLE</code> ของทั้งห้าตารางพร้อม Constraint และ Index ทั้งหมดใส่เข้าไปในรอบเดียว เสร็จแล้วมันจะรัน Generate ให้ซ้ำอีกรอบด้วยเพื่อให้ Client ตรงกับของจริงเสมอ (ถ้าอยากเห็น SQL ที่มันสร้าง ลองคำสั่ง <code>npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script</code> ดูได้ นี่คือ SQL ที่เราต้องเขียนเองถ้าไม่มี ORM)</p>
+      <p>ข้อดีอีกอย่างของ Push คือมัน<strong>ระวังตัวเรื่องข้อมูลให้เรา</strong> ถ้าการเปลี่ยนแปลงไหนจะทำให้ข้อมูลหาย เช่นลบคอลัมน์ที่มีข้อมูลอยู่ มันจะหยุดถามก่อนเสมอ ไม่ลงมือเงียบ ๆ</p>
+      <p>ถ้าลองสั่ง <code>npm run db:push</code> ซ้ำอีกรอบ คราวนี้มันจะบอกว่า Database ตรงกับ Schema อยู่แล้ว เพราะสิ่งที่อยู่ใน Database กับสิ่งที่อยู่ใน Schema ตรงกันเป๊ะแล้ว</p>
 
-      <h2>ส่อง Database ด้วย Drizzle Studio</h2>
+      <h2>ส่อง Database ด้วย Prisma Studio</h2>
       <pre><code>npm run db:studio</code></pre>
-      <p>Drizzle มี Web App สำหรับดูข้อมูลแบบภาพติดมาให้ด้วย คำสั่งนี้จะเปิดมันขึ้นมาแล้วให้ URL มาเส้นหนึ่ง กดเข้าไปในเบราว์เซอร์ได้เลย</p>
-      <p>หน้าตาของแต่ละคนอาจไม่เหมือนกันเพราะเปลี่ยน Theme ได้ แต่สิ่งที่เราอยากเห็นตอนนี้มีอย่างเดียว คือ<strong>ตารางทั้งห้าที่เราเขียนไว้ปรากฏอยู่ครบ</strong> ถ้าเห็นครบก็แปลว่า Schema ของเราขึ้นไปนั่งอยู่บน Database เรียบร้อยแล้ว</p>
-      <p>ใน Studio ยังทำได้อีกหลายอย่าง ทั้งเพิ่มแก้ข้อมูลด้วยมือ รัน SQL ดิบ เขียนโค้ด Drizzle ที่ผูกกับ Schema ของเราจริง ๆ และดูโครงสร้าง Schema ในรูปแบบ SQL</p>
+      <p>Prisma มี Web App สำหรับดูข้อมูลแบบภาพติดมาให้ด้วยชื่อ <strong>Prisma Studio</strong> คำสั่งนี้จะเปิดมันขึ้นมาในเบราว์เซอร์ให้เลย</p>
+      <p>สิ่งที่เราอยากเห็นตอนนี้มีอย่างเดียว คือ<strong>ตารางทั้งห้าที่เราเขียนไว้ปรากฏอยู่ครบ</strong> ถ้าเห็นครบก็แปลว่า Schema ของเราขึ้นไปนั่งอยู่บน Database เรียบร้อยแล้ว</p>
+      <p>ใน Studio ยังทำได้อีกหลายอย่าง ทั้งไล่ดูข้อมูลทีละตาราง กรองและเรียงลำดับ เพิ่มแก้ลบข้อมูลด้วยมือ และกระโดดข้ามความสัมพันธ์ได้ เช่นเปิดแถว Habit แล้วกดดู User เจ้าของได้ทันที</p>
       <p>ตอนนี้ตารางมีแล้วแต่ยังไม่มีข้อมูลสักแถว บทหน้าเราจะเขียน Seed Script เพื่อใส่ข้อมูลตัวอย่างลงไปให้ครบทุกตาราง</p>
     </article>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">

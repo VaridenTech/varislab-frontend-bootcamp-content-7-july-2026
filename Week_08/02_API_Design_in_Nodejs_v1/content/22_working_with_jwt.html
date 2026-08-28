@@ -77,7 +77,7 @@ export const generateToken = (payload: JwtPayload): Promise&lt;string&gt; =&gt; 
       <pre><code>import { Router } from 'express'
 import { register } from '../controllers/authController.ts'
 import { validateBody } from '../middleware/validation.ts'
-import { insertUserSchema } from '../db/schema.ts'
+import { insertUserSchema } from '../db/validation.ts'
 
 const router = Router()
 
@@ -85,7 +85,7 @@ router.post('/register', validateBody(insertUserSchema), register)
 
 export default router</code></pre>
       <p>อย่าลืม <code>validateBody</code> เด็ดขาด เพราะ Controller ที่เราเขียนไป<strong>ตั้งสมมติฐานไว้เต็มไปหมด</strong>ว่า Body มี <code>email</code>, <code>username</code> และ <code>password</code> ครบแน่นอน สมมติฐานพวกนั้นจะเป็นจริงก็ต่อเมื่อมี Middleware ยืนเฝ้าอยู่ข้างหน้า</p>
-      <p>ส่วน <code>insertUserSchema</code> เราได้มาฟรีจาก <code>drizzle-zod</code> ตั้งแต่บทที่ 17 ซึ่งสร้าง Zod Schema จากตาราง <code>users</code> ให้เลย ไม่ต้องเขียนเอง</p>
+      <p>ส่วน <code>insertUserSchema</code> คือตัวที่เราเขียนล้อตาราง <code>users</code> ไว้ตั้งแต่บทที่ 17 กฎทุกข้อในนั้นตามกฎของ Schema เป๊ะ ๆ ไม่ต้องเขียนใหม่</p>
       <p>ข้อจำกัดที่ควรรู้คือ Schema ตัวนี้รู้แค่สิ่งที่ Database รู้ คือความยาวและ Not Null แต่<strong>ตรวจไม่ได้ว่า Email มี <code>@</code> กับ Domain จริงหรือเปล่า หรือรหัสผ่านซับซ้อนพอไหม</strong> เพราะ Database ไม่ได้ละเอียดขนาดนั้น (และไม่ควรละเอียดขนาดนั้น เพราะจะช้ามากตอน Insert) แต่ Zod ทำได้สบายเพราะมันทำงานตอน Runtime ถ้าอยากได้เพิ่มก็ใช้ <code>.extend()</code> ต่อยอดจากตัวนี้ หรือเขียน Schema ใหม่เองทั้งอันก็ได้ ตอนนี้ผมขอใช้ตัวที่ได้มาฟรีไปก่อน</p>
 
       <h2>ทดสอบใน Postman</h2>
@@ -126,7 +126,7 @@ export default router</code></pre>
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }</code></pre>
-      <p>เก็บ Token เส้นนี้ไว้ก่อนนะครับ เดี๋ยวเราได้ใช้ในบทที่ 24 และถ้าอยากเห็นกับตาว่า User ถูกสร้างจริง เปิด Drizzle Studio ขึ้นมาดูตาราง <code>users</code> จะเห็นสองแถว คือคนที่มาจาก Seed Script กับคนที่เพิ่งสมัครไป</p>
+      <p>เก็บ Token เส้นนี้ไว้ก่อนนะครับ เดี๋ยวเราได้ใช้ในบทที่ 24 และถ้าอยากเห็นกับตาว่า User ถูกสร้างจริง เปิด Prisma Studio ขึ้นมาดูตาราง <code>users</code> จะเห็นสองแถว คือคนที่มาจาก Seed Script กับคนที่เพิ่งสมัครไป</p>
 
       <h2>แล้ว Refresh Token ล่ะ</h2>
       <p>คำถามที่ต้องมีคนถามแน่ ๆ คือ "พอ Token หมดอายุแล้วจะทำอย่างไร" ให้ผู้ใช้ล็อกอินใหม่คือประสบการณ์ที่แย่ ทางออกที่นิยมคือ <strong>Refresh Token</strong></p>

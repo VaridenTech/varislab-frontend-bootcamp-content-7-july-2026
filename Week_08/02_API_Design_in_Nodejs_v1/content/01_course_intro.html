@@ -32,7 +32,7 @@
         <li><strong>Express 5</strong> — Framework สำหรับสร้าง Server ที่นิยมที่สุดในโลก Node.js</li>
         <li><strong>TypeScript</strong> — ช่วยให้เรารู้ตั้งแต่ตอนเขียนว่าข้อมูลแต่ละก้อนหน้าตาเป็นอย่างไร</li>
         <li><strong>Zod</strong> — ใช้ตรวจสอบ (Validate) ข้อมูลขาเข้าและ Environment Variables</li>
-        <li><strong>Drizzle ORM</strong> — ตัวกลางที่ให้เราคุยกับ Database ด้วย TypeScript แทนการเขียน SQL ดิบ</li>
+        <li><strong>Prisma ORM</strong> — ตัวกลางที่ให้เราคุยกับ Database ด้วย TypeScript แทนการเขียน SQL ดิบ</li>
         <li><strong>PostgreSQL บน Neon</strong> — Database จริงที่โฮสต์อยู่บนคลาวด์ ไม่ต้องติดตั้งลงเครื่อง</li>
         <li><strong>JWT และ bcrypt</strong> — สำหรับ Authentication และการเก็บ Password อย่างปลอดภัย</li>
         <li><strong>Vitest และ Supertest</strong> — สำหรับเขียน Test</li>
@@ -61,9 +61,12 @@
 │   ├── controllers/       # โค้ดที่ทำงานจริงเมื่อมี Request เข้ามาแต่ละ Route
 │   ├── middleware/        # auth.ts, validation.ts, errorHandler.ts
 │   ├── utils/             # jwt.ts, password.ts
-│   └── db/                # schema.ts, connection.ts, seed.ts
+│   └── db/                # connection.ts, seed.ts, types.ts, validation.ts
+├── prisma/
+│   ├── schema.prisma      # นิยามตารางทั้งหมดของ Database
+│   └── migrations/        # ไฟล์ Migration ที่ Prisma สร้างให้
 ├── tests/                 # Integration Test
-├── drizzle.config.ts      # ตั้งค่า Drizzle ORM
+├── prisma.config.ts       # ตั้งค่า Prisma CLI
 ├── vitest.config.ts       # ตั้งค่า Vitest
 ├── tsconfig.json          # ตั้งค่า TypeScript
 ├── .env.example           # ตัวอย่างรายการ Environment Variables ที่ต้องมี

@@ -3,109 +3,104 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Export TypeScript Type ด้วย $inferSelect และ $inferInsert สร้าง Zod Schema จากตารางด้วย drizzle-zod แล้วเอาไปใช้กับ Validation Middleware พร้อม Best Practices และกับดักที่พบบ่อยของการออกแบบ Schema" />
-  <title>Export Types และ Schema Best Practices — API Design in Node.js</title>
+  <meta name="description" content="Generate Prisma Client เพื่อให้ได้ TypeScript Type ของทุกตาราง สร้าง Zod Schema ที่ล้อกับ Schema แล้วเอาไปใช้กับ Validation Middleware พร้อม Best Practices และกับดักที่พบบ่อยของการออกแบบ Schema" />
+  <title>Generated Types และ Schema Best Practices — API Design in Node.js</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
 <body>
   <main>
     <article>
-      <h1>Export Types และ Schema Best Practices</h1>
-      <p>Schema ที่เราเขียนไปในบทที่แล้วมีข้อมูลครบทุกอย่างอยู่ในตัวมันแล้ว ทั้งชื่อ Field ชนิดข้อมูล ตัวไหนบังคับ ตัวไหนมีค่า Default บทนี้เราจะดึงข้อมูลชุดนั้นออกมาใช้ต่อ โดย<strong>ไม่ต้องเขียนอะไรซ้ำอีกเลย</strong></p>
+      <h1>Generated Types และ Schema Best Practices</h1>
+      <p>Schema ที่เราเขียนไปในบทที่แล้วมีข้อมูลครบทุกอย่างอยู่ในตัวมันแล้ว ทั้งชื่อ Field ชนิดข้อมูล ตัวไหนบังคับ ตัวไหนมีค่า Default บทนี้เราจะดึงข้อมูลชุดนั้นออกมาใช้ต่อในฝั่ง TypeScript</p>
 
-      <h2>Export TypeScript Type จากตาราง</h2>
-      <p>เติมโค้ดนี้ไว้ท้ายไฟล์ <code>src/db/schema.ts</code></p>
-      <pre><code>export type User = typeof users.$inferSelect
-export type NewUser = typeof users.$inferInsert
+      <h2>Generate Client จาก Schema</h2>
+      <p>จำได้ไหมว่าบล็อก <code>generator</code> ในไฟล์ <code>schema.prisma</code> บอกไว้ว่าให้สร้าง Client ออกมาที่ <code>src/generated/prisma</code> ตอนนี้ถึงเวลาสั่งให้มันสร้างจริง</p>
+      <pre><code>npx prisma generate</code></pre>
+      <p>คำสั่งนี้<strong>ไม่ได้แตะ Database เลย</strong> (เรายังไม่มี Database ด้วยซ้ำ ซึ่งไม่เป็นไร) มันแค่อ่าน <code>schema.prisma</code> แล้วเขียนโค้ด TypeScript ออกมาเป็นโฟลเดอร์หนึ่ง ข้างในคือ Client ที่รู้จักทั้งห้าตารางของเรา พร้อม Type ของทุก Model ครบทุกตัว ลองเปิดดูได้แต่<strong>อย่าไปแก้อะไรในนั้น</strong> เพราะมันจะถูกเขียนทับทุกครั้งที่ Generate ใหม่ และให้เติม <code>src/generated</code> ลงใน <code>.gitignore</code> ด้วย เพราะมันคือของที่สร้างขึ้นใหม่ได้เสมอ ไม่ใช่ Source Code ของเรา</p>
+      <p>ข้อควรจำมีข้อเดียว <strong>แก้ <code>schema.prisma</code> เมื่อไร ต้องรัน Generate ใหม่เมื่อนั้น</strong> ไม่งั้น Type ในเอดิเตอร์กับความจริงจะไม่ตรงกัน เดี๋ยวบทหน้าเราจะทำ Script ให้เรียกง่าย ๆ ด้วย</p>
 
-export type Habit = typeof habits.$inferSelect
-export type NewHabit = typeof habits.$inferInsert
+      <h2>Type ที่ได้มาฟรีจากการ Generate</h2>
+      <p>สร้างไฟล์ <code>src/db/types.ts</code> ขึ้นมา (สร้างโฟลเดอร์ <code>src/db</code> ก่อนถ้ายังไม่มี) เพื่อรวบ Type ที่เราจะใช้บ่อยไว้ที่เดียว</p>
+      <pre><code>import type { Prisma } from '../generated/prisma/client.ts'
 
-export type Entry = typeof entries.$inferSelect
-export type NewEntry = typeof entries.$inferInsert
+export type { User, Habit, Entry, Tag, HabitTag } from '../generated/prisma/client.ts'
 
-export type Tag = typeof tags.$inferSelect
-export type NewTag = typeof tags.$inferInsert
-
-export type HabitTag = typeof habitTags.$inferSelect
-export type NewHabitTag = typeof habitTags.$inferInsert</code></pre>
-      <p>คำว่า <code>$inferSelect</code> กับ <code>$inferInsert</code> เป็นของที่ Drizzle แถมมาให้กับทุกตาราง เราใช้ <code>typeof</code> ครอบเข้าไปเพื่อดึง Type ของมันออกมาแล้วตั้งชื่อใหม่</p>
-      <p>สองตัวนี้ต่างกันชัดเจนและเป็นจุดที่ควรเข้าใจ</p>
+export type NewUser = Prisma.UserUncheckedCreateInput
+export type NewHabit = Prisma.HabitUncheckedCreateInput
+export type NewEntry = Prisma.EntryUncheckedCreateInput
+export type NewTag = Prisma.TagUncheckedCreateInput
+export type NewHabitTag = Prisma.HabitTagUncheckedCreateInput</code></pre>
+      <p>Prisma สร้าง Type มาให้เราสองตระกูล ซึ่งต่างกันชัดเจนและเป็นจุดที่ควรเข้าใจ</p>
       <ul>
-        <li><code>$inferSelect</code> คือหน้าตาของข้อมูล<strong>ตอนที่ดึงออกมาจากฐานข้อมูล</strong> มีครบทุก Field ทั้ง <code>id</code>, <code>createdAt</code>, <code>updatedAt</code> เพราะของพวกนั้นถูกสร้างขึ้นแล้ว</li>
-        <li><code>$inferInsert</code> คือหน้าตาของข้อมูล<strong>ตอนที่จะยัดลงฐานข้อมูล</strong> Field ที่มี Default หรือถูกสุ่มให้จะกลายเป็น Optional หมด เหลือแค่ที่เราต้องกรอกจริง ๆ ซึ่งของ User คือ <code>email</code>, <code>username</code> และ <code>password</code></li>
+        <li>Type ที่ชื่อตรงกับ Model อย่าง <code>User</code> คือหน้าตาของข้อมูล<strong>ตอนที่ดึงออกมาจากฐานข้อมูล</strong> มีครบทุก Field ทั้ง <code>id</code>, <code>createdAt</code>, <code>updatedAt</code> เพราะของพวกนั้นถูกสร้างขึ้นแล้ว</li>
+        <li>Type ตระกูล <code>CreateInput</code> คือหน้าตาของข้อมูล<strong>ตอนที่จะยัดลงฐานข้อมูล</strong> Field ที่มีค่า Default หรือถูกสุ่มให้จะกลายเป็น Optional หมด เหลือแค่ที่เราต้องกรอกจริง ๆ ซึ่งของ User คือ <code>email</code>, <code>username</code> และ <code>password</code></li>
       </ul>
+      <p>ส่วนคำว่า <code>Unchecked</code> ขออธิบายหน่อยเพราะชื่อมันชวนกลัว Prisma มี Input สองแบบ — <code>UserCreateInput</code> แบบปกติจะให้เราผูกความสัมพันธ์ผ่าน Object ซ้อน (เช่นสร้าง Habit พร้อมระบุ <code>user: { connect: ... }</code>) ส่วน <code>UncheckedCreateInput</code> คือแบบที่ยอมให้เรากรอก Foreign Key เป็นค่าธรรมดาตรง ๆ อย่าง <code>userId</code> ซึ่งตรงกับสไตล์ที่เราจะเขียนในคอร์สนี้ คำว่า Unchecked หมายถึงแค่ว่า TypeScript ไม่ช่วยเช็คว่า Id นั้นชี้ไปหาของที่มีจริง — แต่<strong>ฐานข้อมูลยังเช็ค Foreign Key ให้เหมือนเดิมทุกประการ</strong></p>
       <p>พอมี Type สองชุดนี้ Function ที่คุยกับฐานข้อมูลจะเขียนได้สวยมาก</p>
       <pre><code>const createUser = async (userData: NewUser): Promise&lt;User&gt; =&gt; {
-  const [user] = await db.insert(users).values(userData).returning()
-  return user
+  return prisma.user.create({ data: userData })
 }</code></pre>
-      <p>อ่านแล้วเข้าใจทันทีว่ารับของที่ยังไม่ถูกสร้าง แล้วคืนของที่ถูกสร้างแล้ว โดยที่เราไม่ต้องเขียน Interface ไหนขึ้นมาเองสักบรรทัด และถ้าวันหนึ่งเราเพิ่มคอลัมน์ใน Schema Type ทั้งหมดนี้จะอัปเดตตามให้เอง</p>
+      <p>อ่านแล้วเข้าใจทันทีว่ารับของที่ยังไม่ถูกสร้าง แล้วคืนของที่ถูกสร้างแล้ว โดยที่เราไม่ต้องเขียน Interface ไหนขึ้นมาเองสักบรรทัด และถ้าวันหนึ่งเราเพิ่มคอลัมน์ใน Schema แล้วรัน Generate ใหม่ Type ทั้งหมดนี้จะอัปเดตตามให้เอง</p>
 
-      <h2>สร้าง Zod Schema จากตารางด้วย drizzle-zod</h2>
+      <h2>สร้าง Zod Schema ให้ล้อกับตาราง</h2>
       <p>Type ช่วยเราได้แค่ตอนเขียนโค้ด แต่ตอน Runtime มันหายไปหมด ถ้าอยากตรวจค่าจริงเราต้องใช้ Zod เหมือนที่ทำใน <code>env.ts</code> และใน Validation Middleware</p>
-      <p>คำถามคือ ในเมื่อ Schema ของ Drizzle รู้กฎทุกข้ออยู่แล้ว ทำไมเราต้องมานั่งเขียน Zod Schema ซ้ำอีกรอบ คำตอบคือไม่ต้อง มี Package ชื่อ <code>drizzle-zod</code> ที่แปลงให้</p>
-      <pre><code>npm install drizzle-zod</code></pre>
-      <p>เพิ่ม Import ไว้บนหัวไฟล์ <code>schema.ts</code></p>
-      <pre><code>import { createInsertSchema, createSelectSchema } from 'drizzle-zod'</code></pre>
-      <p>แล้วเติมส่วนนี้ก่อนหน้าส่วน Export Type</p>
-      <pre><code>export const insertUserSchema = createInsertSchema(users)
-export const selectUserSchema = createSelectSchema(users)
-
-export const insertHabitSchema = createInsertSchema(habits)
-export const selectHabitSchema = createSelectSchema(habits)
-
-export const insertEntrySchema = createInsertSchema(entries)
-export const selectEntrySchema = createSelectSchema(entries)
-
-export const insertTagSchema = createInsertSchema(tags)
-export const selectTagSchema = createSelectSchema(tags)
-
-export const insertHabitTagSchema = createInsertSchema(habitTags)
-export const selectHabitTagSchema = createSelectSchema(habitTags)</code></pre>
-      <p>สิ่งที่ได้คือ Zod Schema เต็มตัวที่<strong>สะท้อนกฎของฐานข้อมูลเป๊ะ ๆ</strong> ทั้งเรื่องความยาว <code>varchar</code> ตัวไหนบังคับ และตัวไหนเป็น Optional โดยเราไม่ได้เขียนกฎซ้ำเลยสักข้อ</p>
-      <p>เหตุผลที่ต้องมีสองตัวก็เหมือนเหตุผลของ Type สองชุด <code>insertUserSchema</code> ใช้ตรวจของที่กำลังจะสร้าง ส่วน <code>selectUserSchema</code> ใช้ตรวจของที่ดึงออกมาแล้วในกรณีที่เราอยากมั่นใจตอน Runtime ว่าข้อมูลหน้าตาถูกต้อง</p>
-
-      <h2>เอาไปใช้กับ Validation Middleware</h2>
-      <p>คำถามที่ตามมาทันทีคือ Schema พวกนี้ใช้แทน Zod Schema ที่เราเขียนมือใน <code>src/middleware/validation.ts</code> ตอนบทที่ 12 ได้ไหม คำตอบคือ<strong>ได้ และควรใช้ด้วย</strong></p>
-      <pre><code>import { insertHabitSchema } from '../db/schema.ts'
-
-router.post('/', validateBody(insertHabitSchema), createHabit)</code></pre>
-      <p>ตอนบทที่ 12 เราเขียน Schema เองเพราะยังไม่มีฐานข้อมูล ตอนนี้มีแล้วก็ดึงมาใช้เลยดีกว่า เพราะกฎจะไม่มีวันหลุดจากกัน</p>
-      <p>แต่มี<strong>ข้อยกเว้นสำคัญ</strong>ที่ต้องรู้ Schema จากฐานข้อมูลใช้ตรงกับ Input ของผู้ใช้ได้ก็ต่อเมื่อ<em>ทุก Field ที่บังคับ ผู้ใช้เป็นคนส่งมาทั้งหมด</em></p>
-      <p>ลองนึกถึงตอนสร้าง Habit ฐานข้อมูลบังคับให้มี <code>userId</code> แต่ผู้ใช้ไม่ได้ส่งค่านั้นมาใน Body เราต่างหากที่เป็นคนเติมให้จาก Token ถ้าเราเอา <code>insertHabitSchema</code> ไปตรวจ Body ตรง ๆ Request ที่ถูกต้องทุกอันจะถูกปฏิเสธหมด เพราะขาด <code>userId</code></p>
-      <p>ทางแก้คือหยิบเฉพาะส่วนที่ต้องการ Zod มี Method อย่าง <code>.omit()</code>, <code>.pick()</code> และ <code>.partial()</code> ให้ตัดแต่งได้ หรือจะ <code>.extend()</code> เพื่อเพิ่มกฎที่ฐานข้อมูลไม่รู้จักก็ได้ เช่นบังคับความยาวขั้นต่ำของรหัสผ่าน ซึ่งเป็นกฎของแอปเรา ไม่ใช่กฎของฐานข้อมูล</p>
+      <p>Prisma ไม่มีตัวแปลง Schema เป็น Zod ติดมาให้ (มี Generator ของชุมชนอย่าง <code>zod-prisma-types</code> ที่ทำให้ได้ แต่ผมอยากให้คุณเห็นของจริงก่อนค่อยไปใช้ตัวช่วย) เราจึงเขียนเองในไฟล์ <code>src/db/validation.ts</code> โดยมีกติกาข้อเดียวที่ผมยึดเวลาเขียนไฟล์นี้ คือ<strong>สะท้อนเฉพาะกฎที่ฐานข้อมูลบังคับจริง</strong> — ความยาวของ <code>varchar</code> ตัวไหนบังคับ ตัวไหน Optional — เปิด <code>schema.prisma</code> คู่กันแล้วไล่ทีละ Field</p>
       <pre><code>import { z } from 'zod'
 
-export const createUserSchema = insertUserSchema
-  .omit({ id: true, createdAt: true, updatedAt: true })
-  .extend({
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-  })</code></pre>
-      <p>เทคนิคนี้จะกลับมามีบทบาทตอนคุยเรื่อง Validation ของระบบสมัครสมาชิก (บทที่ 22 และ 30) — ในคอร์สเราเลือกใช้ Schema ที่ได้มาฟรีไปก่อน</p>
+export const insertUserSchema = z.object({
+  email: z.string().max(255),
+  username: z.string().max(50),
+  password: z.string().max(255),
+  firstName: z.string().max(50).optional(),
+  lastName: z.string().max(50).optional(),
+})
+
+export const insertTagSchema = z.object({
+  name: z.string().max(50),
+  color: z.string().max(7).optional(),
+})
+
+export const insertEntrySchema = z.object({
+  habitId: z.uuid(),
+  note: z.string().optional(),
+})</code></pre>
+      <p>สังเกตสองเรื่อง หนึ่ง — เราไม่ใส่ Field อย่าง <code>id</code>, <code>createdAt</code>, <code>updatedAt</code> เพราะพวกนั้นฐานข้อมูลเติมให้เอง ผู้ใช้ไม่มีหน้าที่ส่งมา สอง — ต้นทุนของการเขียนมือคือ<strong>ถ้าแก้ <code>schema.prisma</code> ต้องกลับมาแก้ไฟล์นี้ให้ตรงกันด้วย</strong> ซึ่งเป็นวินัยที่ต้องรักษาเอง นี่คือจุดที่ Generator ของชุมชนเข้ามาช่วยได้เมื่อโปรเจกต์โตขึ้น</p>
+
+      <h2>เอาไปใช้กับ Validation Middleware</h2>
+      <p>คำถามที่ตามมาทันทีคือ Schema พวกนี้ใช้แทน Zod Schema ตัวอย่างที่เราเขียนมือใน <code>src/middleware/validation.ts</code> ตอนบทที่ 12 ได้ไหม คำตอบคือ<strong>ได้ และควรใช้ด้วย</strong></p>
+      <pre><code>import { insertUserSchema } from '../db/validation.ts'
+
+router.post('/register', validateBody(insertUserSchema), register)</code></pre>
+      <p>ตอนบทที่ 12 เราเขียน Schema กันสด ๆ เพราะยังไม่มีฐานข้อมูล ตอนนี้มีแล้วก็รวมกฎมาไว้ที่ <code>src/db/validation.ts</code> ที่เดียว เพราะกฎของ Validation ควรเดินตามกฎของตารางเสมอ</p>
+      <p>แต่มี<strong>ข้อยกเว้นสำคัญ</strong>ที่ต้องรู้ Schema ที่ล้อกับตารางใช้ตรวจ Input ของผู้ใช้ได้ก็ต่อเมื่อ<em>ทุก Field ที่บังคับ ผู้ใช้เป็นคนส่งมาทั้งหมด</em></p>
+      <p>ลองนึกถึงตอนสร้าง Habit ฐานข้อมูลบังคับให้มี <code>userId</code> แต่ผู้ใช้ไม่ได้ส่งค่านั้นมาใน Body เราต่างหากที่เป็นคนเติมให้จาก Token ถ้า Schema สำหรับตรวจ Body บังคับ <code>userId</code> ด้วย Request ที่ถูกต้องทุกอันจะถูกปฏิเสธหมด เพราะฉะนั้น Schema ของ Habit ที่ใช้ตรวจ Body เราจึง<em>จงใจไม่ใส่</em> <code>userId</code> ลงไป (เดี๋ยวได้เขียนกันจริงในบทที่ 26)</p>
+      <p>อีกทางคือใช้เครื่องมือตัดแต่งของ Zod — <code>.omit()</code>, <code>.pick()</code> และ <code>.partial()</code> ช่วยหยิบเฉพาะส่วนจาก Schema ที่มีอยู่ หรือ <code>.extend()</code> เพื่อเพิ่มกฎที่ฐานข้อมูลไม่รู้จัก เช่นบังคับความยาวขั้นต่ำของรหัสผ่าน ซึ่งเป็นกฎของแอปเรา ไม่ใช่กฎของฐานข้อมูล</p>
+      <pre><code>export const createUserSchema = insertUserSchema.extend({
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+})</code></pre>
+      <p>เทคนิคนี้จะกลับมามีบทบาทตอนคุยเรื่อง Validation ของระบบสมัครสมาชิก (บทที่ 22 และ 30) — ในคอร์สเราเลือกใช้ <code>insertUserSchema</code> ฉบับล้อตารางไปก่อน</p>
 
       <h2>Best Practices ของการออกแบบ Schema</h2>
       <p>ก่อนจะไปต่อ ขอรวบเจ็ดข้อที่ผมยึดทุกครั้งที่ออกแบบ Schema</p>
       <ul>
         <li><strong>ใส่ Timestamp เสมอ</strong> — <code>createdAt</code> กับ <code>updatedAt</code> มีประโยชน์มากกว่าที่คุณคิด และวันที่คุณต้องการมันคือวันที่มันไม่มี</li>
-        <li><strong>บังคับกฎที่ระดับ Database</strong> — ใช้ <code>unique</code>, <code>notNull</code> และ Foreign Key ให้เป็นประโยชน์ เป็นชั้นที่ไม่มีใครข้ามได้</li>
-        <li><strong>ทำ Index ให้คอลัมน์ที่ Query บ่อย</strong> — โดยเฉพาะ Foreign Key ทุกตัว</li>
+        <li><strong>บังคับกฎที่ระดับ Database</strong> — ใช้ <code>@unique</code>, การไม่ใส่ <code>?</code> และ <code>@relation</code> ให้เป็นประโยชน์ เป็นชั้นที่ไม่มีใครข้ามได้</li>
+        <li><strong>ทำ Index ให้คอลัมน์ที่ Query บ่อย</strong> — โดยเฉพาะ Foreign Key ทุกตัว (Prisma มี <code>@@index</code> ให้ประกาศเพิ่มได้)</li>
         <li><strong>ตั้งชื่อให้สื่อความหมาย</strong> — ผมทนไม่ได้กับ Schema ที่ตั้งชื่อคอลัมน์ว่า <code>tg</code> แล้วไม่มีใครในทีมบอกได้ว่ามันคืออะไร</li>
         <li><strong>เผื่ออนาคตไว้ด้วย</strong> — ถ้ารู้ว่ามีฟีเจอร์อะไรอยู่ใน Roadmap ให้คิดตั้งแต่ตอนนี้ว่ามันจะกระทบ Schema อย่างไร เพราะ Migration กำลังมาแน่</li>
         <li><strong>Normalize แต่พอดี</strong> — Normalize คือการเลือกว่าจะวาง Key ไว้ฝั่งไหนแล้ว Query จากฝั่งนั้นตลอด ซึ่งเป็นเป้าหมายที่ดี แต่อย่ายึดจนถึงขั้นต้องรื้อ Logic หลังบ้านสามเดือนเพียงเพื่อความสวยงาม ถ้าเพิ่ม Key อีกตัวแล้วจบก็เพิ่มไปเถอะ</li>
-        <li><strong>ใช้ Enum เมื่อค่าที่เป็นไปได้มีจำกัด</strong> — Enum ก็คือ "ต้องเป็นหนึ่งในลิสต์นี้" เหมือนที่เราใช้ใน <code>env.ts</code></li>
+        <li><strong>ใช้ Enum เมื่อค่าที่เป็นไปได้มีจำกัด</strong> — Enum ก็คือ "ต้องเป็นหนึ่งในลิสต์นี้" เหมือนที่เราใช้ใน <code>env.ts</code> และ Prisma มี Block <code>enum</code> ให้ประกาศใน Schema ได้เลย</li>
       </ul>
-      <p>ข้อสุดท้ายนี่แหละคือจุดที่ Schema ของเรายังทำได้ไม่ดี คอลัมน์ <code>frequency</code> ของเราเป็น <code>varchar</code> ที่ใส่อะไรลงไปก็ได้ ทั้งที่มันควรเลือกได้แค่ daily, weekly, monthly ถ้าเปลี่ยนเป็น Enum ข้อมูลจะสม่ำเสมอขึ้น และคนทำหน้าบ้านจะรู้ทันทีว่ามีตัวเลือกอะไรบ้าง เอาไปทำ Dropdown ได้เลย</p>
+      <p>ข้อสุดท้ายนี่แหละคือจุดที่ Schema ของเรายังทำได้ไม่ดี คอลัมน์ <code>frequency</code> ของเราเป็น <code>String</code> ที่ใส่อะไรลงไปก็ได้ ทั้งที่มันควรเลือกได้แค่ daily, weekly, monthly ถ้าเปลี่ยนเป็น Enum ข้อมูลจะสม่ำเสมอขึ้น และคนทำหน้าบ้านจะรู้ทันทีว่ามีตัวเลือกอะไรบ้าง เอาไปทำ Dropdown ได้เลย</p>
 
       <h2>สี่กับดักที่เจอบ่อย</h2>
-      <p><strong>ลืมใส่ Foreign Key จริง ๆ</strong> — การมีคอลัมน์ชื่อ <code>user_id</code> ไม่ได้แปลว่ามีความสัมพันธ์ ถ้าไม่มี <code>.references()</code> ฐานข้อมูลจะยอมให้ใส่ ID มั่ว ๆ ที่ไม่มีอยู่จริงลงไปได้</p>
-      <pre><code>// ผิด — ไม่มีการตรวจสอบความถูกต้องของความสัมพันธ์
-userId: uuid('user_id').notNull(),
+      <p><strong>ลืมใส่ Foreign Key จริง ๆ</strong> — การมีคอลัมน์ชื่อ <code>userId</code> ไม่ได้แปลว่ามีความสัมพันธ์ ถ้าไม่มี <code>@relation</code> ฐานข้อมูลจะยอมให้ใส่ ID มั่ว ๆ ที่ไม่มีอยู่จริงลงไปได้</p>
+      <pre><code>// ผิด — มีแค่คอลัมน์ ไม่มีการตรวจสอบความถูกต้องของความสัมพันธ์
+userId String @map("user_id") @db.Uuid
 
 // ถูก — ฐานข้อมูลรับประกันให้ว่า User คนนั้นมีอยู่จริง
-userId: uuid('user_id')
-  .references(() =&gt; users.id, { onDelete: 'cascade' })
-  .notNull(),</code></pre>
+userId String @map("user_id") @db.Uuid
+user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)</code></pre>
       <p><strong>ลืมทำ Index</strong> — Query อย่าง <code>SELECT * FROM habits WHERE user_id = ?</code> ถ้าไม่มี Index จะกลายเป็นการสแกนทั้งตาราง ตอนมีข้อมูลร้อยแถวไม่รู้สึกอะไร ตอนมีล้านแถวถึงจะรู้สึก</p>
       <p><strong>Normalize เกินจำเป็น</strong> — เคยเห็นคนแยกตาราง <code>user_first_names</code> ออกมาต่างหากมาแล้ว ผลคือทุก Query ต้อง JOIN เพิ่มโดยไม่ได้อะไรกลับมาเลย ชื่อจริงควรอยู่บนตาราง <code>users</code> ตรงนั้นแหละ</p>
       <p><strong>ไม่มี Timestamp</strong> — ข้อเดิมที่ต้องย้ำ เพราะพอไม่มีแล้วอยากได้ทีหลัง คุณจะเติมย้อนหลังให้ข้อมูลเก่าไม่ได้เลย</p>
@@ -118,7 +113,7 @@ userId: uuid('user_id')
       <p>พูดถึง Neon พอดี บทหน้าเราจะไปสร้าง Database จริงบนนั้นกัน แบบฟรีและไม่ต้องสมัครสมาชิกด้วยซ้ำ</p>
     </article>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link lesson-navigation__link--previous" href="16_create_tables_with_drizzle.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="16_create_tables_with_prisma.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link lesson-navigation__link--next" href="18_hosted_postgresql_with_neon.html" rel="next">บทถัดไป →</a>
     </nav>

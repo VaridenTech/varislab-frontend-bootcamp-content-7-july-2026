@@ -60,29 +60,18 @@ export default defineConfig({
       </ul>
 
       <h2>Global Setup — เตรียมฐานข้อมูลให้พร้อมทุกครั้ง</h2>
-      <p>สร้างไฟล์ <code>tests/setup/globalSetup.ts</code> หน้าที่ของมันมีสองอย่างคือ <strong>ล้างตารางเก่าทิ้ง</strong> แล้ว <strong>Push Schema ล่าสุดลงไปใหม่</strong></p>
-      <pre><code>import { db } from '../../src/db/connection.ts'
-import { users, habits, entries, tags, habitTags } from '../../src/db/schema.ts'
-import { sql } from 'drizzle-orm'
+      <p>สร้างไฟล์ <code>tests/setup/globalSetup.ts</code> หน้าที่ของมันคือ <strong>ล้างของเก่าทิ้งแล้ว Push Schema ล่าสุดลงไปใหม่</strong> ก่อน Test ทุกรอบ</p>
+      <pre><code>import { prisma } from '../../src/db/connection.ts'
 import { execSync } from 'child_process'
 
 export default async function setup() {
   console.log('💾 Setting up the test db')
   try {
-    await db.execute(sql`DROP TABLE IF EXISTS ${entries} CASCADE`)
-    await db.execute(sql`DROP TABLE IF EXISTS ${habits} CASCADE`)
-    await db.execute(sql`DROP TABLE IF EXISTS ${users} CASCADE`)
-    await db.execute(sql`DROP TABLE IF EXISTS ${tags} CASCADE`)
-    await db.execute(sql`DROP TABLE IF EXISTS ${habitTags} CASCADE`)
-
-    console.log('🚀 Pushing schema using drizzle-kit...')
-    execSync(
-      `npx drizzle-kit push --url="${process.env.DATABASE_URL}" --schema="./src/db/schema.ts" --dialect="postgresql"`,
-      {
-        stdio: 'inherit',
-        cwd: process.cwd(),
-      }
-    )
+    console.log('🚀 Pushing schema using prisma db push...')
+    execSync('npx prisma db push --force-reset --skip-generate', {
+      stdio: 'inherit',
+      cwd: process.cwd(),
+    })
 
     console.log('✅ Test DB created')
   } catch (e) {
@@ -92,11 +81,7 @@ export default async function setup() {
 
   return async () =&gt; {
     try {
-      await db.execute(sql`DROP TABLE IF EXISTS ${entries} CASCADE`)
-      await db.execute(sql`DROP TABLE IF EXISTS ${habits} CASCADE`)
-      await db.execute(sql`DROP TABLE IF EXISTS ${users} CASCADE`)
-      await db.execute(sql`DROP TABLE IF EXISTS ${tags} CASCADE`)
-      await db.execute(sql`DROP TABLE IF EXISTS ${habitTags} CASCADE`)
+      await prisma.$executeRaw`DROP TABLE IF EXISTS entries, habit_tags, habits, tags, users CASCADE`
       process.exit(0)
     } catch (e) {
       console.error('❌ Fail to clean up test db', e)
@@ -104,24 +89,16 @@ export default async function setup() {
     }
   }
 }</code></pre>
-      <p><strong><code>db.execute</code> กับ Tagged Template <code>sql</code></strong> คือการเขียน SQL ดิบ ๆ ผ่าน Drizzle ซึ่งเป็นอีกวิธีหนึ่งของการคุยกับฐานข้อมูลที่เรายังไม่เคยใช้ในคอร์สนี้ ข้อดีคือเราแทรกตัวแปรตารางอย่าง <code>${entries}</code> ลงไปได้ตรง ๆ แล้ว Drizzle จะแปลงเป็นชื่อตารางจริงใน SQL ให้เอง ไม่ต้องพิมพ์ <code>entries</code> เป็นสตริงเองให้เสี่ยงพิมพ์ผิด ส่วน <code>CASCADE</code> คือให้ลบความสัมพันธ์ที่ผูกอยู่ไปด้วย</p>
-      <p><strong><code>execSync</code></strong> จาก Node.js คือการสั่งรันคำสั่ง Terminal จากในโค้ด เราใช้มันเรียก <code>drizzle-kit push</code> เพราะฐานข้อมูลทดสอบของเราคงไม่ได้ตามทันการแก้ Schema ล่าสุดเสมอ แทนที่จะต้องมานั่งจำว่าต้อง Push เอง ก็ให้สคริปต์นี้ทำให้ทุกครั้งที่รัน Test เลย</p>
-      <p><strong>ทำไมใช้ <code>process.env.DATABASE_URL</code> ไม่ใช่ <code>env.ts</code></strong> ที่เราอุตส่าห์ทำไว้ในบทที่ 6 คำตอบคือไฟล์ <code>env.ts</code> มีหน้าที่โหลดและตรวจ Environment ของ <em>ตัวแอป</em> ซึ่งบังคับว่าต้องมีตัวแปรครบทุกตัว แต่สคริปต์เตรียมฐานข้อมูลตัวนี้ต้องการแค่ค่าเดียว เราจึงไม่อยากลากการตรวจทั้งชุดเข้ามา ส่วนโค้ดของแอปที่ถูกทดสอบยังใช้ <code>env.ts</code> ตามปกติทุกประการ</p>
-      <p><strong>Flag ที่ส่งให้ <code>execSync</code></strong> — <code>stdio: 'inherit'</code> แปลว่า "เอา Output ของ Terminal ลูกมาแสดงใน Terminal ของเราด้วย" เราจะได้เห็นว่า Drizzle ทำอะไรอยู่ ส่วน <code>cwd</code> คือบอกว่าให้รันคำสั่งจากโฟลเดอร์ไหน</p>
-      <p><strong>ค่าที่ Return ออกไปเป็น Function</strong> — Vitest จะเก็บฟังก์ชันที่เรา Return ไว้แล้วเรียกมันตอน Test ทั้งหมดจบลง นี่คือจังหวะเก็บกวาด เราล้างตารางทิ้งซ้ำอีกรอบด้วยหลักคิดง่าย ๆ ว่า <strong>มายังไงก็ทิ้งไว้อย่างนั้น</strong> เผื่อวันหนึ่งมีโปรแกรมอื่นมาใช้ฐานข้อมูลนี้โดยไม่ผ่านสคริปต์ของเรา ปิดท้ายด้วย <code>process.exit(0)</code> ไม่งั้นโปรเซสจะค้างอยู่อย่างนั้น ทั้งที่ Test จบไปแล้ว</p>
+      <p><strong><code>execSync</code></strong> จาก Node.js คือการสั่งรันคำสั่ง Terminal จากในโค้ด เราใช้มันเรียก <code>prisma db push</code> เพราะฐานข้อมูลทดสอบของเราคงไม่ได้ตามทันการแก้ Schema ล่าสุดเสมอ แทนที่จะต้องมานั่งจำว่าต้อง Push เอง ก็ให้สคริปต์นี้ทำให้ทุกครั้งที่รัน Test เลย</p>
+      <p><strong>Flag สองตัวที่เพิ่มเข้ามา</strong> — <code>--force-reset</code> คือสั่งให้ล้าง Database ทิ้งทั้งก้อนก่อนแล้วค่อยสร้างตารางตาม Schema ใหม่หมด เราจึงไม่ต้องเขียนคำสั่ง <code>DROP TABLE</code> เองสักบรรทัดในขาเข้า (Flag นี้อันตรายมากถ้าไปเจอกับ Database จริง แต่กับ Database ทดสอบมันคือสิ่งที่เราต้องการพอดี) ส่วน <code>--skip-generate</code> คือไม่ต้อง Generate Client ซ้ำ เพราะเรามีอยู่แล้วและ Schema ไม่ได้เปลี่ยน</p>
+      <p><strong>แล้วมันรู้ได้อย่างไรว่าต้อง Push ใส่ Database ทดสอบ</strong> — จำได้ไหมว่า <code>prisma.config.ts</code> ของเรา Import <code>env.ts</code> เข้ามาใช้ และ <code>env.ts</code> เลือกโหลด <code>.env</code> หรือ <code>.env.test</code> ตามค่า <code>APP_STAGE</code> เมื่อคำสั่ง <code>npm test</code> ของเราตั้ง <code>APP_STAGE=test</code> ไว้ (เดี๋ยวทำกันท้ายบท) Environment นั้นจะถูกส่งต่อไปยัง Process ลูกที่ <code>execSync</code> เปิดด้วย CLI ของ Prisma จึงชี้ไปที่ Database ทดสอบให้เองพอดี โดยเราไม่ต้องส่ง URL อะไรให้มันเลย</p>
+      <p><strong>Flag ที่ส่งให้ <code>execSync</code></strong> — <code>stdio: 'inherit'</code> แปลว่า "เอา Output ของ Terminal ลูกมาแสดงใน Terminal ของเราด้วย" เราจะได้เห็นว่า Prisma ทำอะไรอยู่ ส่วน <code>cwd</code> คือบอกว่าให้รันคำสั่งจากโฟลเดอร์ไหน</p>
+      <p><strong>ค่าที่ Return ออกไปเป็น Function</strong> — Vitest จะเก็บฟังก์ชันที่เรา Return ไว้แล้วเรียกมันตอน Test ทั้งหมดจบลง นี่คือจังหวะเก็บกวาด เราล้างตารางทิ้งด้วยหลักคิดง่าย ๆ ว่า <strong>มายังไงก็ทิ้งไว้อย่างนั้น</strong> เผื่อวันหนึ่งมีโปรแกรมอื่นมาใช้ฐานข้อมูลนี้โดยไม่ผ่านสคริปต์ของเรา ตัวที่ใช้คือ <code>prisma.$executeRaw</code> ซึ่งเป็นช่องทางเขียน SQL ดิบ ๆ ผ่าน Prisma ที่เรายังไม่เคยใช้ในคอร์สนี้ เหมาะกับงานระดับโครงสร้างแบบนี้ที่ Method ปกติไม่มีให้ (<code>CASCADE</code> ต่อท้ายคือให้ลบความสัมพันธ์ที่ผูกอยู่ไปด้วย) ปิดท้ายด้วย <code>process.exit(0)</code> ไม่งั้นโปรเซสจะค้างอยู่อย่างนั้น ทั้งที่ Test จบไปแล้ว</p>
 
       <h2>Helper Functions สำหรับสร้างข้อมูลทดสอบ</h2>
       <p>เกือบทุก Test ของเราต้องมี User สักคนก่อนถึงจะทำอะไรได้ ถ้าต้องเขียนโค้ดสร้าง User ใหม่ในทุกไฟล์ Test คงไม่ไหว สร้างไฟล์ <code>tests/helpers/dbHelpers.ts</code> ขึ้นมาเก็บงานพวกนี้ หน้าตาของมันคล้ายสคริปต์ Seed ในบทที่ 19 อยู่พอสมควร</p>
-      <pre><code>import { db } from '../../src/db/connection.ts'
-import {
-  users,
-  habits,
-  entries,
-  tags,
-  habitTags,
-  type NewUser,
-  type NewHabit,
-} from '../../src/db/schema.ts'
+      <pre><code>import { prisma } from '../../src/db/connection.ts'
+import type { NewUser, NewHabit } from '../../src/db/types.ts'
 import { hashPassword } from '../../src/utils/password.ts'
 import { generateToken } from '../../src/utils/jwt.ts'
 
@@ -136,13 +113,12 @@ export const createTestUser = async (userData: Partial&lt;NewUser&gt; = {}) =&gt
   }
 
   const hashedPassword = await hashPassword(defaultData.password)
-  const [user] = await db
-    .insert(users)
-    .values({
+  const user = await prisma.user.create({
+    data: {
       ...defaultData,
       password: hashedPassword,
-    })
-    .returning()
+    },
+  })
 
   const token = await generateToken({
     id: user.id,
@@ -165,29 +141,28 @@ export const createTestHabit = async (
     ...habitData,
   }
 
-  const [habit] = await db
-    .insert(habits)
-    .values({
+  const habit = await prisma.habit.create({
+    data: {
       userId,
       ...defaultData,
-    })
-    .returning()
+    },
+  })
 
   return habit
 }
 
 export const cleanupDatabase = async () =&gt; {
-  await db.delete(entries)
-  await db.delete(habits)
-  await db.delete(users)
-  await db.delete(habitTags)
-  await db.delete(tags)
+  await prisma.entry.deleteMany()
+  await prisma.habit.deleteMany()
+  await prisma.user.deleteMany()
+  await prisma.habitTag.deleteMany()
+  await prisma.tag.deleteMany()
 }</code></pre>
       <p><strong>รูปแบบ "ค่าตั้งต้นบวกค่าที่ส่งมาทับ"</strong> คือหัวใจของไฟล์นี้ ทุกฟังก์ชันรับ Object มาแบบ <code>Partial</code> ของ Type ที่เรา Export ไว้ในบทที่ 17 แล้ว Spread ทับค่าตั้งต้น ผลคือ Test ที่ไม่สนใจรายละเอียดก็เรียก <code>createTestUser()</code> เปล่า ๆ ได้เลย ส่วน Test ที่อยากได้อีเมลเจาะจงก็ส่งเฉพาะ Field นั้นมา รูปแบบนี้มีชื่อเรียกว่า Test Data Builder และคุณจะเจอมันในโปรเจกต์อื่น ๆ อีกเยอะ</p>
       <p><strong><code>Date.now()</code> กับ <code>Math.random()</code></strong> ต่อท้ายอีเมลและ Username เพื่อไม่ให้ข้อมูลชนกันเอง ถ้าฮาร์ดโค้ดเป็น <code>test@example.com</code> ไว้ Test ตัวที่สองจะพังทันทีเพราะอีเมลซ้ำ</p>
       <p><strong>เรา Hash รหัสผ่านเองในนี้</strong> เพราะฐานข้อมูลจริงไม่เคยเก็บรหัสผ่านดิบ ถ้า Insert ดิบ ๆ ลงไป Test เรื่องการ Login จะพังทันทีเพราะ <code>comparePassword</code> เทียบไม่ผ่าน แล้วเรา Return <code>rawPassword</code> กลับออกไปด้วย เพราะ Test ที่จะลอง Login ต้องใช้รหัสผ่านตัวจริงส่งขึ้นไป</p>
       <p>อาจมีคนสงสัยว่าทำไมไม่เรียก Controller <code>register</code> ที่เขียนไว้แล้วให้จบ ๆ ไป <strong>เพราะเรากำลังจะเขียน Test เพื่อทดสอบ Controller ตัวนั้นอยู่ไงครับ</strong> ถ้าเครื่องมือที่ใช้เตรียมข้อมูลเป็นตัวเดียวกับสิ่งที่กำลังถูกทดสอบ พอมันพัง เราจะแยกไม่ออกเลยว่าใครพัง</p>
-      <p><strong>ลำดับการลบใน <code>cleanupDatabase</code> ปลอดภัย</strong> เพราะ Foreign Key ทุกตัวใน Schema ของเราตั้ง <code>onDelete: 'cascade'</code> ไว้ตั้งแต่บทที่ 16 การลบแถวฝั่งแม่จึงพาแถวลูกหายตามไปด้วยเสมอ ไม่มีทางค้าง Foreign Key Constraint</p>
+      <p><strong>ลำดับการลบใน <code>cleanupDatabase</code> ปลอดภัย</strong> เพราะ Foreign Key ทุกตัวใน Schema ของเราตั้ง <code>onDelete: Cascade</code> ไว้ตั้งแต่บทที่ 16 การลบแถวฝั่งแม่จึงพาแถวลูกหายตามไปด้วยเสมอ ไม่มีทางค้าง Foreign Key Constraint</p>
 
       <h2>บอก Vitest ว่าให้ใช้ .env.test</h2>
       <p>เหลืออีกชิ้นเดียว เปิด <code>package.json</code> แล้วแก้สคริปต์ <code>test</code></p>
@@ -217,7 +192,7 @@ describe('Test Setup Verification', () =&gt; {
       <p>สังเกตว่าเราไม่ได้ Import <code>describe</code>, <code>test</code> หรือ <code>expect</code> เลยสักตัว เพราะ <code>globals: true</code> จัดการให้แล้ว จากนั้นสั่งรัน</p>
       <pre><code>npm test setup.test.ts</code></pre>
       <p>คำที่ต่อท้าย <code>npm test</code> ไม่จำเป็นต้องเป็นชื่อไฟล์เต็ม ๆ นะครับ Vitest ใช้มันเป็นคำค้นแล้วรันทุกไฟล์ที่ชื่อตรงกับรูปแบบนั้น พิมพ์แค่ <code>npm test setup</code> ก็ได้ผลเหมือนกัน ส่วน <code>npm test</code> เปล่า ๆ จะรันทุกไฟล์</p>
-      <p>สิ่งที่ควรเห็นใน Terminal คือข้อความว่ากำลังเตรียมฐานข้อมูล ตามด้วย Output ของ <code>drizzle-kit push</code> ที่สร้างตารางให้ แล้วจบด้วย Test สีเขียวหนึ่งตัว ถ้าเห็นครบแปลว่าทั้ง Config, Global Setup, Helper และการโหลด <code>.env.test</code> ทำงานถูกต้องหมด</p>
+      <p>สิ่งที่ควรเห็นใน Terminal คือข้อความว่ากำลังเตรียมฐานข้อมูล ตามด้วย Output ของ <code>prisma db push</code> ที่สร้างตารางให้ แล้วจบด้วย Test สีเขียวหนึ่งตัว ถ้าเห็นครบแปลว่าทั้ง Config, Global Setup, Helper และการโหลด <code>.env.test</code> ทำงานถูกต้องหมด</p>
       <p>ลองรันซ้ำอีกรอบก็ได้ ผลจะเหมือนเดิมทุกครั้ง เพราะตารางถูกล้างแล้วสร้างใหม่ตั้งแต่ต้นเสมอ — <strong>ความคาดเดาได้แบบนี้แหละคือสิ่งที่เราลงทุนตั้งค่ากันมาทั้งบท</strong> บทหน้าเราจะเอาพื้นฐานนี้ไปเขียน Test ที่ยิงเข้า API ของเราจริง ๆ</p>
     </article>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">

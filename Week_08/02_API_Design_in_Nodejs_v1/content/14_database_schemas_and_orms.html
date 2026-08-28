@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="เข้าใจการออกแบบ Schema ของ Relational Database ผ่านมุมมองแบบ JavaScript รู้จัก Primary Key, Foreign Key และความสัมพันธ์แบบต่าง ๆ พร้อมเปรียบเทียบ Raw SQL, Query Builder และ ORM ก่อนเลือกใช้ Drizzle" />
+  <meta name="description" content="เข้าใจการออกแบบ Schema ของ Relational Database ผ่านมุมมองแบบ JavaScript รู้จัก Primary Key, Foreign Key และความสัมพันธ์แบบต่าง ๆ พร้อมเปรียบเทียบ Raw SQL, Query Builder และ ORM ก่อนเลือกใช้ Prisma" />
   <title>Database Schema และ ORM — API Design in Node.js</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -63,9 +63,9 @@ const user = {
   })),
 }</code></pre>
       <p>ปัญหาคือไม่มี Type เลย ต้องแปลงชนิดข้อมูลเอง ต้องแกะผลลัพธ์เอง และ SQL ที่เขียนก็ผูกกับ Database เจ้านั้นเจ้าเดียว ถ้ามี ORM เรื่องเดียวกันจะเหลือแค่นี้</p>
-      <pre><code>const user = await db.query.users.findFirst({
-  where: eq(users.id, userId),
-  with: {
+      <pre><code>const user = await prisma.user.findFirst({
+  where: { id: userId },
+  include: {
     habits: true,
   },
 })
@@ -77,18 +77,18 @@ user.nonExistent  // TypeScript ฟ้อง Error ให้ตั้งแต�
       <ul>
         <li><strong>Type Safety</strong> — จับพลาดตั้งแต่ตอนเขียน ไม่ใช่ตอน Production พัง</li>
         <li><strong>Query Building</strong> — ประกอบ Query ด้วยโค้ดได้ ทำ Filter หรือ Pagination แบบไดนามิกง่าย</li>
-        <li><strong>Relationship Loading</strong> — สั่ง <code>with</code> ทีเดียวแล้ว ORM จัดการ JOIN ให้</li>
+        <li><strong>Relationship Loading</strong> — สั่ง <code>include</code> ทีเดียวแล้ว ORM จัดการ JOIN ให้</li>
         <li><strong>Schema Management</strong> และ <strong>Migration</strong> — Schema อยู่ใน Git และเปลี่ยนแปลงได้อย่างเป็นระบบ ซึ่งเป็นหัวข้อของบทหน้า</li>
       </ul>
       <p>หลายคนบอกว่า ORM ป้องกัน SQL Injection ให้ด้วย ซึ่งจริงบางส่วน แต่อยากให้เข้าใจให้ถูก ถ้าคุณยัด String ที่ผู้ใช้ส่งมาเข้าไปเป็น Raw SQL ผ่าน ORM คุณก็โดนเหมือนเดิม ความปลอดภัยมาจากการที่เราไม่ต่อ String เอง ไม่ได้มาจากยี่ห้อของ ORM</p>
       <p>สำหรับผมเหตุผลที่ใหญ่ที่สุดคือ<strong>ผมไม่ต้องรู้ SQL ลึกขนาดนั้น</strong> SQL เป็นศาสตร์ที่ลึกจนมีคนเก่งระดับรับงานเขียน Query อย่างเดียวกินเงินเป็นล้าน ผมรู้ SQL พอทำงานได้และผมพอใจแค่นั้น</p>
 
-      <h2>ทำไมคอร์สนี้เลือก Drizzle</h2>
-      <p>ORM ฝั่ง Node.js ที่ดังที่สุดคู่หนึ่งคือ Prisma กับ Drizzle ผมใช้ Prisma มาหลายปีและชอบมัน แต่เปลี่ยนมาใช้ Drizzle เมื่อประมาณสองปีก่อนแล้วไม่เคยคิดจะกลับ</p>
-      <p>ความต่างหลักคือ Prisma ให้เราเขียน Schema ด้วยภาษาเฉพาะของมันเอง (เรียกว่า DSL ซึ่งหน้าตาได้อิทธิพลมาจาก GraphQL) แล้วต้องรัน Code Generation เพื่อสร้าง Client ขึ้นมาก่อนถึงจะได้ Type</p>
+      <h2>ทำไมคอร์สนี้เลือก Prisma</h2>
+      <p>ORM ฝั่ง Node.js ที่ดังที่สุดคู่หนึ่งคือ Prisma กับ Drizzle ทั้งคู่เป็นของดีและมีคนใช้จริงในโปรดักชันมหาศาล คอร์สนี้เลือก Prisma และผมอยากให้เห็นว่าเลือกเพราะอะไร ไม่ใช่แค่เลือกตามกระแส</p>
+      <p>ความต่างหลักคือ Prisma ให้เราเขียน Schema ด้วยภาษาเฉพาะของมันเอง (เรียกว่า DSL ซึ่งหน้าตาได้อิทธิพลมาจาก GraphQL) แล้วรัน Code Generation เพื่อสร้าง Client ที่มี Type ครบทุกตารางออกมาให้เราใช้</p>
       <pre><code>// ฝั่ง Prisma — ไฟล์ schema.prisma เป็นภาษาของมันเอง
 model User {
-  id     String  @id @default(cuid())
+  id     String  @id @default(uuid())
   email  String  @unique
   habits Habit[]
 }</code></pre>
@@ -98,14 +98,14 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
   email: varchar('email', { length: 255 }).unique(),
 })</code></pre>
-      <p>ข้อดีที่ตามมาคือ</p>
+      <p>เหตุผลที่ผมพาคุณไปทาง Prisma ในคอร์สนี้</p>
       <ul>
-        <li>ไม่ต้องเรียนภาษาใหม่ และไม่มีขั้นตอน Code Generation ให้ลืมรัน</li>
-        <li>เขียน JavaScript ปนลงไปใน Schema ได้เลย เช่นเรียก Function เพื่อคำนวณค่า Default</li>
-        <li>API หน้าตาใกล้เคียง SQL ทำให้เดาได้ว่ามันจะสร้าง Query แบบไหน ไม่มีเวทมนตร์ซ่อนอยู่</li>
-        <li>ตัว Runtime เบา เพราะส่วนใหญ่คือ Type ที่หายไปตอน Build</li>
+        <li><strong>Schema อ่านรู้เรื่องทั้งไฟล์ในไม่กี่วินาที</strong> — DSL ของ Prisma ถูกออกแบบมาเพื่องานนี้อย่างเดียว แม้แต่คนที่ไม่เขียน TypeScript ก็เปิดไฟล์แล้วเข้าใจโครงสร้างข้อมูลได้ทันที มันจึงกลายเป็นเอกสารกลางของทีมไปในตัว</li>
+        <li><strong>Client ที่ Generate ออกมาอ่านเหมือนภาษาคน</strong> — <code>prisma.user.findMany()</code> อ่านแล้วรู้เลยว่าทำอะไร และทุกอย่างมี Type ครบโดยเราไม่ต้องเขียนเอง</li>
+        <li><strong>ระบบ Migration ที่คิดมาครบ</strong> — เก็บประวัติเป็นไฟล์ SQL ที่รีวิวได้ ซึ่งเป็นหัวข้อใหญ่ของบทหน้า</li>
+        <li><strong>Ecosystem ใหญ่ที่สุดในบรรดา ORM ฝั่ง Node.js</strong> — เอกสารดีมาก มี Prisma Studio ให้ส่องข้อมูลแบบภาพ และเจอปัญหาอะไรก็มีคนเคยเจอมาก่อนแล้วเกือบเสมอ</li>
       </ul>
-      <p>ยังมีเหตุผลอีกข้อที่ใหญ่กว่านี้อีก คือเรื่อง Migration ซึ่งเป็นสาเหตุที่ทำให้ผมย้ายค่ายจริง ๆ แต่ขอเก็บไว้เล่าในบทหน้า เพราะต้องอธิบายเรื่อง Migration ให้เข้าใจก่อน</p>
+      <p>ราคาที่ต้องจ่ายก็มีจริง คือต้องเรียนภาษาเล็ก ๆ เพิ่มหนึ่งภาษา และมีขั้นตอน Generate ที่ต้องรันเมื่อ Schema เปลี่ยน ส่วน Drizzle ก็มีจุดแข็งของมัน คือเป็น TypeScript ล้วนและ API ใกล้เคียง SQL กว่า ถ้าวันหนึ่งคุณไปเจอโปรเจกต์ที่ใช้ Drizzle ความรู้จากคอร์สนี้ย้ายไปใช้ได้เกือบทั้งหมด เพราะแนวคิดเรื่อง Schema, ความสัมพันธ์ และ Migration เป็นเรื่องเดียวกันเป๊ะ</p>
       <p>บทถัดไปเราจะคุยเรื่อง Migration ซึ่งเป็น Version Control ของ Database และเป็นหัวข้อที่ผมกล้าพูดเลยว่าน่าปวดหัวที่สุดในคอร์สนี้ แต่ผมจะย่อยมาให้ง่ายที่สุดแล้ว</p>
     </article>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">

@@ -48,10 +48,10 @@
       <h2>Database</h2>
       <ul>
         <li>เราออกแบบ Schema โดย <strong>เริ่มจาก Feature ไม่ใช่เริ่มจากตาราง</strong> แล้วจึงได้ตารางห้าตัวคือ <code>users</code>, <code>habits</code>, <code>entries</code>, <code>tags</code> และ <code>habit_tags</code> ที่เป็นตัวเชื่อมความสัมพันธ์แบบ Many-to-Many</li>
-        <li>เราเลือก PostgreSQL กับ <strong>Drizzle ORM</strong> ที่เขียน Schema เป็น TypeScript แล้วได้ทั้ง Type และ SQL ที่คุมได้ พร้อมประกาศความสัมพันธ์ด้วย <code>relations()</code></li>
-        <li><strong>Migration คือประวัติการเปลี่ยนแปลงของ Database</strong> เราใช้ <code>db:push</code> ได้เฉพาะกับเครื่องเราเท่านั้น ส่วนที่อื่นต้อง <code>db:generate</code> แล้ว <code>db:migrate</code> เสมอ และต้องแยกให้ออกว่าการเปลี่ยนแปลงไหน Destructive ไหน Non-destructive</li>
-        <li>เรา Export Type จากตารางด้วย <code>$inferSelect</code>/<code>$inferInsert</code> และสร้าง Zod Schema จากตารางด้วย <strong>drizzle-zod</strong> ทำให้ Schema ของ Database กับ Schema ที่ใช้ Validate เป็นแหล่งความจริงเดียวกัน</li>
-        <li>เราใช้ <strong>Neon</strong> เป็น PostgreSQL บนคลาวด์ เชื่อมต่อผ่าน Connection Pool ใน <code>src/db/connection.ts</code> ส่องข้อมูลด้วย Drizzle Studio และเติมข้อมูลตัวอย่างด้วย <code>src/db/seed.ts</code></li>
+        <li>เราเลือก PostgreSQL กับ <strong>Prisma ORM</strong> ที่เขียน Schema ด้วย DSL อ่านง่ายในไฟล์ <code>schema.prisma</code> แล้ว Generate Client ที่มี Type ครบทุกตาราง พร้อมประกาศความสัมพันธ์ด้วย <code>@relation</code></li>
+        <li><strong>Migration คือประวัติการเปลี่ยนแปลงของ Database</strong> เราใช้ <code>db:push</code> ได้เฉพาะกับเครื่องเราเท่านั้น ส่วนที่อื่นต้อง <code>db:migrate</code> เพื่อสร้างไฟล์ Migration แล้ว <code>db:deploy</code> เสมอ และต้องแยกให้ออกว่าการเปลี่ยนแปลงไหน Destructive ไหน Non-destructive</li>
+        <li>เราได้ Type ของทุกตารางฟรีจาก Generated Client (รวบไว้ใน <code>src/db/types.ts</code>) และเขียน Zod Schema ใน <code>src/db/validation.ts</code> ให้ล้อกฎของตารางเป๊ะ ๆ เพื่อให้กฎของ Database กับกฎของ Validation เดินไปด้วยกันเสมอ</li>
+        <li>เราใช้ <strong>Neon</strong> เป็น PostgreSQL บนคลาวด์ เชื่อมต่อผ่าน Connection Pool ของ <code>@prisma/adapter-pg</code> ใน <code>src/db/connection.ts</code> ส่องข้อมูลด้วย Prisma Studio และเติมข้อมูลตัวอย่างด้วย <code>src/db/seed.ts</code></li>
       </ul>
 
       <h2>Authentication และ Authorization</h2>

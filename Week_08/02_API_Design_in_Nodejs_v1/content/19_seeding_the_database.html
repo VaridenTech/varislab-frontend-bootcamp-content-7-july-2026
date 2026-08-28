@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="เขียน src/db/seed.ts เพื่อใส่ข้อมูลตัวอย่างลง Database ทั้งการล้างข้อมูลตามลำดับ Foreign Key การใช้ .returning() การสร้างความสัมพันธ์ผ่านตารางกลาง และทริก import.meta.url ก่อนรัน db:seed แล้วตรวจผลด้วย Drizzle Studio" />
+  <meta name="description" content="เขียน src/db/seed.ts เพื่อใส่ข้อมูลตัวอย่างลง Database ทั้งการล้างข้อมูลตามลำดับ Foreign Key การสร้างแถวด้วย prisma.create การสร้างความสัมพันธ์ผ่านตารางกลาง และทริก import.meta.url ก่อนรัน db:seed แล้วตรวจผลด้วย Prisma Studio" />
   <title>การ Seed ข้อมูลลงฐานข้อมูล — API Design in Node.js</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -27,8 +27,7 @@
 
       <h2>เขียน src/db/seed.ts</h2>
       <p>สร้างไฟล์ <code>src/db/seed.ts</code> เริ่มจาก Import และโครงของ Function</p>
-      <pre><code>import { db } from './connection.ts'
-import { users, habits, entries, tags, habitTags } from './schema.ts'
+      <pre><code>import { prisma } from './connection.ts'
 
 const seed = async () =&gt; {
   console.log('🌱 Starting database seed...')
@@ -44,67 +43,65 @@ const seed = async () =&gt; {
 
       <h3>ล้างข้อมูลเดิมก่อน และลำดับสำคัญมาก</h3>
       <pre><code>console.log('Clearing existing data...')
-await db.delete(entries)
-await db.delete(habitTags)
-await db.delete(habits)
-await db.delete(tags)
-await db.delete(users)</code></pre>
+await prisma.entry.deleteMany()
+await prisma.habitTag.deleteMany()
+await prisma.habit.deleteMany()
+await prisma.tag.deleteMany()
+await prisma.user.deleteMany()</code></pre>
+      <p>สังเกตหน้าตาของ Prisma Client ก่อน — ทุกตารางกลายเป็น Property บน <code>prisma</code> ในชื่อเดียวกับ Model (ตัวเล็ก) แล้วมี Method ให้เลือกใช้ <code>deleteMany()</code> ที่ไม่ใส่เงื่อนไขอะไรเลยแปลว่า "ลบทุกแถวในตารางนี้"</p>
       <p>เราล้างก่อนเพื่อให้ Seed Script <strong>รันกี่ครั้งก็ได้ผลเหมือนเดิม</strong> ไม่ใช่ว่ารันสามรอบแล้วได้ข้อมูลซ้อนกันสามชุด</p>
-      <p>สังเกตลำดับให้ดี เราลบจาก<em>ลูกไปหาแม่</em>เสมอ คือลบ <code>entries</code> กับ <code>habitTags</code> ที่ถือ Foreign Key ก่อน แล้วค่อยลบ <code>habits</code> และ <code>tags</code> ปิดท้ายด้วย <code>users</code> ถ้าสลับลำดับ ฐานข้อมูลจะไม่ยอมให้ลบเพราะยังมีคนอ้างถึงอยู่</p>
+      <p>สังเกตลำดับให้ดี เราลบจาก<em>ลูกไปหาแม่</em>เสมอ คือลบ <code>entry</code> กับ <code>habitTag</code> ที่ถือ Foreign Key ก่อน แล้วค่อยลบ <code>habit</code> และ <code>tag</code> ปิดท้ายด้วย <code>user</code> ถ้าสลับลำดับ ฐานข้อมูลจะไม่ยอมให้ลบเพราะยังมีคนอ้างถึงอยู่</p>
 
-      <h3>สร้าง User และรู้จัก .returning()</h3>
+      <h3>สร้าง User และดูว่า create คืนอะไรให้เรา</h3>
       <pre><code>console.log('Creating demo users...')
 
-const [demoUser] = await db
-  .insert(users)
-  .values({
+const demoUser = await prisma.user.create({
+  data: {
     email: 'demo@habittracker.com',
     username: 'demouser',
     password: 'demo123',
     firstName: 'Demo',
     lastName: 'User',
-  })
-  .returning()</code></pre>
-      <p>รูปแบบคือ <code>db.insert(ตาราง).values(ข้อมูล)</code> ส่วนที่สนุกคือ <code>.values()</code> ถูก Type Check ตามตารางที่เรากำลังใส่ ลองพิมพ์ในเอดิเตอร์ดูจะเห็นรายชื่อ Field ทั้งหมดของ User โผล่มา และ<strong>ตัวที่มีเครื่องหมายคำถามคือตัวที่ไม่ต้องใส่ก็ได้</strong> เหลือที่บังคับจริง ๆ แค่ <code>email</code>, <code>username</code> และ <code>password</code> ตรงกับ Type <code>NewUser</code> ที่เรา Export ไว้ในบทที่ 17 พอดี</p>
-      <p><code>.values()</code> รับ Object เดียวถ้าจะใส่แถวเดียว หรือรับ Array ของ Object ถ้าจะใส่ทีละหลายแถว</p>
-      <p>ส่วน <code>.returning()</code> สำคัญมาก <strong>ถ้าไม่ใส่ Drizzle จะคืนแค่ Metadata ของการ Insert</strong> เช่นใส่ไปกี่แถว ไม่ได้คืนข้อมูลจริง แต่เราต้องการ <code>id</code> ที่ฐานข้อมูลเพิ่งสุ่มให้ เพื่อเอาไปผูกกับตารางอื่น จึงต้องใส่</p>
-      <p>และเพราะ <code>.returning()</code> คืนเป็น Array เสมอไม่ว่าจะใส่กี่แถว เราเลยใช้ Destructuring ครอบด้วย <code>[ ]</code> เพื่อหยิบตัวแรกออกมาตั้งชื่อว่า <code>demoUser</code> ในบรรทัดเดียว</p>
+  },
+})</code></pre>
+      <p>รูปแบบคือ <code>prisma.ชื่อโมเดล.create({ data })</code> ส่วนที่สนุกคือ <code>data</code> ถูก Type Check ตาม Model ที่เรากำลังใส่ ลองพิมพ์ในเอดิเตอร์ดูจะเห็นรายชื่อ Field ทั้งหมดของ User โผล่มา และ<strong>ตัวที่มีเครื่องหมายคำถามคือตัวที่ไม่ต้องใส่ก็ได้</strong> เหลือที่บังคับจริง ๆ แค่ <code>email</code>, <code>username</code> และ <code>password</code> ตรงกับ Type <code>NewUser</code> ที่เรา Export ไว้ในบทที่ 17 พอดี</p>
+      <p>อีกเรื่องที่ดีงามคือ <strong><code>create</code> คืนแถวที่เพิ่งถูกสร้างกลับมาให้เลย</strong> ครบทุก Field รวมทั้ง <code>id</code> ที่เพิ่งถูกสุ่มและ <code>createdAt</code> ที่เพิ่งถูกประทับ ซึ่งเราต้องการ <code>id</code> นั้นมาก เพราะเดี๋ยวต้องเอาไปผูกกับตารางอื่น (ถ้าอยากใส่ทีละหลายแถวก็มี <code>createMany</code> ที่รับ Array ของ Object)</p>
       <p>เรื่อง <code>password</code> ตอนนี้เรายังใส่เป็นข้อความธรรมดาไปก่อน เพราะเรายังไม่ได้เรียนเรื่องการ Hash รหัสผ่าน ซึ่งจะอยู่ในบทที่ 21 หลังจากบทนั้นเราจะกลับมาแก้ตรงนี้ให้เป็นแบบนี้แทน</p>
       <pre><code>import { hashPassword } from '../utils/password.ts'
 
 const hashedPassword = await hashPassword('demo123')
-// แล้วส่ง hashedPassword เข้าไปใน values() แทนข้อความดิบ</code></pre>
+// แล้วส่ง hashedPassword เข้าไปใน data แทนข้อความดิบ</code></pre>
       <p>บนเครื่องเราเองตอนนี้ไม่มีปัญหาอะไร แต่บน Production ห้ามเก็บรหัสผ่านเป็นข้อความธรรมดาเด็ดขาด</p>
 
       <h3>สร้าง Tag และ Habit</h3>
       <pre><code>console.log('Creating tags...')
 
-const [healthTag] = await db
-  .insert(tags)
-  .values({ name: 'Health', color: '#10B981' })
-  .returning()
+const healthTag = await prisma.tag.create({
+  data: { name: 'Health', color: '#10B981' },
+})
 
 console.log('Creating demo habits...')
 
-const [exerciseHabit] = await db
-  .insert(habits)
-  .values({
+const exerciseHabit = await prisma.habit.create({
+  data: {
     userId: demoUser.id,
     name: 'Exercise',
     description: 'Daily workout routine',
     frequency: 'daily',
     targetCount: 1,
-  })
-  .returning()</code></pre>
-      <p>ตรงนี้คือจุดที่ความสัมพันธ์เริ่มทำงานจริง <code>userId: demoUser.id</code> คือการผูก Habit เข้ากับ User ที่เราเพิ่งสร้าง และถ้าเราลืมบรรทัดนี้ ฐานข้อมูลจะปฏิเสธทันที เพราะเราตั้ง <code>.notNull()</code> ไว้ตั้งแต่บทที่ 16</p>
-      <p>สังเกตด้วยว่า <code>frequency</code> เราใส่ <code>'daily'</code> ได้ตามใจเพราะยังเป็น <code>varchar</code> อยู่ ซึ่งเป็นข้อจำกัดที่เราคุยกันไปแล้วในบทที่ 17</p>
+  },
+})</code></pre>
+      <p>ตรงนี้คือจุดที่ความสัมพันธ์เริ่มทำงานจริง <code>userId: demoUser.id</code> คือการผูก Habit เข้ากับ User ที่เราเพิ่งสร้าง และถ้าเราลืมบรรทัดนี้ ฐานข้อมูลจะปฏิเสธทันที เพราะ <code>userId</code> เป็น Field บังคับตั้งแต่บทที่ 16</p>
+      <p>สังเกตด้วยว่า <code>frequency</code> เราใส่ <code>'daily'</code> ได้ตามใจเพราะยังเป็น <code>String</code> ธรรมดาอยู่ ซึ่งเป็นข้อจำกัดที่เราคุยกันไปแล้วในบทที่ 17</p>
 
       <h3>ผูก Habit เข้ากับ Tag ผ่านตารางกลาง</h3>
-      <pre><code>await db.insert(habitTags).values({
-  habitId: exerciseHabit.id,
-  tagId: healthTag.id,
+      <pre><code>await prisma.habitTag.create({
+  data: {
+    habitId: exerciseHabit.id,
+    tagId: healthTag.id,
+  },
 })</code></pre>
-      <p>นี่คือการใช้ตารางกลางจริง ๆ ครั้งแรก เราแค่จับ <code>id</code> ของทั้งสองฝั่งมาวางคู่กัน แค่นั้น Habit ชื่อ Exercise ก็ถูกติดป้าย Health เรียบร้อย และตรงนี้เราไม่ต้องใส่ <code>.returning()</code> เพราะไม่ต้องเอาผลลัพธ์ไปทำอะไรต่อ แค่ต้องการให้แถวนั้นมีอยู่</p>
+      <p>นี่คือการใช้ตารางกลางจริง ๆ ครั้งแรก เราแค่จับ <code>id</code> ของทั้งสองฝั่งมาวางคู่กัน แค่นั้น Habit ชื่อ Exercise ก็ถูกติดป้าย Health เรียบร้อย และตรงนี้เราไม่ต้องเก็บผลลัพธ์ใส่ตัวแปร เพราะไม่ต้องเอาไปทำอะไรต่อ แค่ต้องการให้แถวนั้นมีอยู่</p>
 
       <h3>ใส่ Entry ย้อนหลังเจ็ดวัน</h3>
       <pre><code>console.log('Adding completion entries...')
@@ -116,10 +113,12 @@ for (let i = 0; i &lt; 7; i++) {
   const date = new Date(today)
   date.setDate(date.getDate() - i)
 
-  await db.insert(entries).values({
-    habitId: exerciseHabit.id,
-    completion_date: date,
-    note: i === 0 ? 'Great workout today!' : null,
+  await prisma.entry.create({
+    data: {
+      habitId: exerciseHabit.id,
+      completion_date: date,
+      note: i === 0 ? 'Great workout today!' : null,
+    },
   })
 }</code></pre>
       <p>เราปักเวลาไว้ที่เที่ยงวันด้วย <code>setHours(12, 0, 0, 0)</code> เพื่อไม่ให้ผลลัพธ์เปลี่ยนไปตามเวลาที่เรารัน Script แล้ววนถอยหลังเจ็ดวันเพื่อสร้างประวัติการทำ Habit</p>
@@ -153,10 +152,11 @@ export default seed</code></pre>
       <h2>รันแล้วตรวจผล</h2>
       <pre><code>npm run db:seed</code></pre>
       <p>คุณควรเห็น Log ไล่ตามลำดับที่เราเขียนไว้จนถึงบรรทัดสุดท้ายที่บอกว่าสำเร็จ ถ้ามี Error ก็ย้อนกลับไปดูว่าพังที่ Log บรรทัดไหน</p>
-      <p>วิธียืนยันว่าข้อมูลลงจริงคือเปิด Drizzle Studio</p>
+      <p>วิธียืนยันว่าข้อมูลลงจริงคือเปิด Prisma Studio</p>
       <pre><code>npm run db:studio</code></pre>
       <p>กด Refresh แล้วไล่ดูทีละตาราง คุณจะเห็น Entry ทั้งเจ็ดแถวที่ผูกกับ Habit ตัวเดียวกัน เห็น Habit ที่ผูกกับ User ของเรา เห็น <code>habit_tags</code> หนึ่งแถวที่มี <code>habit_id</code> กับ <code>tag_id</code> ชี้ไปหาของจริงทั้งคู่ ถ้าครบทั้งหมดนี้ก็แปลว่า<strong>ความสัมพันธ์ที่เราออกแบบไว้ทำงานได้จริง</strong></p>
-      <p>อีกอย่างที่ควรรู้ Drizzle Studio ไม่ใช่เครื่องมือแยกส่วน มันมาจาก <code>drizzle-kit</code> ทีมเดียวกันกับ ORM และมัน<strong>อ่าน Schema ของเราตรง ๆ</strong> เพราะฉะนั้นตารางที่เห็นในนั้นคือสิ่งที่เราเขียนเป๊ะ ๆ มีหน้าที่ให้ดูเวอร์ชัน SQL ของ Schema ได้ด้วย ซึ่งจะละเอียดกว่าที่เราเขียนนิดหน่อย เช่นตอนเราใช้ทางลัด <code>.unique()</code> ในนั้นจะแสดงเป็นคำสั่งสร้าง Unique Constraint แบบเต็มรูป และถ้าเปิด Drizzle Runner ในนั้น คุณจะเขียนโค้ดอย่าง <code>db.insert(entries).values(...)</code> ยิงเข้า Database ได้ทันทีพร้อม Type ครบเหมือนที่เขียนใน Editor</p>
+      <p>อีกอย่างที่ควรรู้ Prisma Studio ไม่ใช่เครื่องมือแยกส่วน มันมากับ CLI ทีมเดียวกันกับ ORM และมัน<strong>อ่าน Schema ของเราตรง ๆ</strong> เพราะฉะนั้นตารางและความสัมพันธ์ที่เห็นในนั้นคือสิ่งที่เราเขียนเป๊ะ ๆ ลองกดที่แถว Habit แล้วเดินตามความสัมพันธ์ไปหา Entry ทั้งเจ็ดแถวดู จะเห็นภาพ One-to-Many ชัดขึ้นอีก</p>
+      <p>เกร็ดเสริม — Prisma มีคำสั่ง <code>npx prisma db seed</code> ของมันเองด้วย ซึ่งจะไปเรียก Script ที่เราประกาศไว้ใน <code>prisma.config.ts</code> ได้ (เพิ่ม <code>seed: 'node src/db/seed.ts'</code> เข้าไปใน <code>migrations</code>) ทำงานเหมือน <code>npm run db:seed</code> ของเราทุกประการ ผมขอใช้ Script ตรง ๆ ของเราต่อเพื่อให้เห็นชัดว่ามันคือไฟล์ Node.js ธรรมดา ๆ ไฟล์หนึ่ง</p>
 
       <h2>เมื่อข้อมูล Seed เริ่มเยอะ</h2>
       <p>มีคนถามว่าถ้าข้อมูลที่ต้อง Seed เยอะมาก ควรยัดไว้ใน <code>seed.ts</code> ไฟล์เดียวไหม คำตอบคือแล้วแต่ว่าคุณ Seed ไปเพื่ออะไร</p>
@@ -167,10 +167,10 @@ export default seed</code></pre>
       <p>อ้อ อีกเรื่องที่อยากฝากไว้ การให้ AI ช่วยสร้างข้อมูลปลอมเป็นงานที่มันเหมาะมาก เพราะสิ่งที่เราอยากได้คือข้อมูลมั่ว ๆ ที่ดูสมจริงพอดี</p>
 
       <h2>เวิร์กโฟลว์จากนี้ไป</h2>
-      <p>คุณอาจสังเกตว่าเราไม่เคยรัน <code>db:generate</code> กับ <code>db:migrate</code> เลยสักครั้ง ถูกแล้ว เพราะเรายังไม่จำเป็นต้องใช้ เราจะได้ใช้จริงตอน Deploy ขึ้น Production ในบทที่ 31</p>
+      <p>คุณอาจสังเกตว่าเราไม่เคยรัน <code>db:migrate</code> กับ <code>db:deploy</code> เลยสักครั้ง ถูกแล้ว เพราะเรายังไม่จำเป็นต้องใช้ เราจะได้ใช้จริงตอน Deploy ขึ้น Production ในบทที่ 31</p>
       <p>จังหวะการทำงานที่ถูกต้องคือแบบนี้ ระหว่างที่ทำฟีเจอร์อยู่และยังเปลี่ยน Schema ไปมา ให้ <code>db:push</code> รัว ๆ ได้เลย ตราบใดที่ไม่ใช่ Destructive Change มันจะไม่มีปัญหาอะไร</p>
-      <p>ถ้าเป็น Destructive Change เช่นเปลี่ยนชื่อคอลัมน์ที่มีข้อมูลอยู่แล้ว Drizzle จะเตือนและอาจเสนอให้ล้างข้อมูลทิ้งแล้ว Push ใหม่ บนเครื่องเราเองก็ยอมได้เพราะเดี๋ยว Seed ใหม่ก็จบ แต่ถ้าใครไปทำแบบนั้นกับ Production คือการลบข้อมูลของคนอื่นทิ้ง ซึ่งถึงขั้นติดคุกได้จริง ๆ อย่าทำ</p>
-      <p>พอฟีเจอร์เสร็จและพร้อมเปิด PR ค่อยรัน <code>db:generate</code> <strong>ครั้งเดียว</strong> เพื่อให้ได้ไฟล์ Migration ไฟล์เดียวที่สรุปทุกการเปลี่ยนแปลง แล้วให้ Production รัน <code>db:migrate</code> ตอน Deploy ถ้าคุณ Generate ทุกครั้งที่เปลี่ยนใจ PR ของคุณจะมี Migration หกไฟล์และไม่มีใครกล้า Merge ให้</p>
+      <p>ถ้าเป็น Destructive Change เช่นเปลี่ยนชื่อคอลัมน์ที่มีข้อมูลอยู่แล้ว Prisma จะเตือนว่าข้อมูลจะหายและถามยืนยันก่อน (หรือถึงขั้นให้ล้าง Database ทิ้งแล้วสร้างใหม่ด้วย Flag <code>--force-reset</code>) บนเครื่องเราเองก็ยอมได้เพราะเดี๋ยว Seed ใหม่ก็จบ แต่ถ้าใครไปทำแบบนั้นกับ Production คือการลบข้อมูลของคนอื่นทิ้ง ซึ่งถึงขั้นติดคุกได้จริง ๆ อย่าทำ</p>
+      <p>พอฟีเจอร์เสร็จและพร้อมเปิด PR ค่อยรัน <code>db:migrate</code> <strong>ครั้งเดียว</strong> เพื่อให้ได้ไฟล์ Migration ไฟล์เดียวที่สรุปทุกการเปลี่ยนแปลง แล้วให้ Production รัน <code>db:deploy</code> ตอน Deploy ถ้าคุณสร้าง Migration ทุกครั้งที่เปลี่ยนใจ PR ของคุณจะมี Migration หกไฟล์และไม่มีใครกล้า Merge ให้</p>
       <p>เรื่อง Database จบครบแล้ว เรามี Schema มี Database จริง มี Connection และมีข้อมูลให้เล่น บทหน้าเราจะเริ่มเรื่องใหญ่เรื่องถัดไป คือ Authentication ว่าจะรู้ได้อย่างไรว่าคนที่ยิง Request เข้ามาเป็นใคร และเขามีสิทธิ์แตะข้อมูลชุดไหนบ้าง</p>
     </article>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">

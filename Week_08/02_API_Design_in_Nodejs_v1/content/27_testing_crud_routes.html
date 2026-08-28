@@ -82,15 +82,10 @@
       <pre><code>{
   "name": "stretch hammies"
 }</code></pre>
-      <p>และนี่คือ Error จริงที่ผมเจอตอนสอน</p>
-      <pre><code>missing FROM-clause entry for table "habit_tags"</code></pre>
-      <p>ข้อความนี้มาจาก PostgreSQL ตรง ๆ ไม่ได้มาจากโค้ดเรา ความหมายของมันคือ "Query นี้อ้างถึงตาราง <code>habit_tags</code> ทั้งที่ Query ไม่ได้ดึงตารางนั้นเข้ามาด้วย" ซึ่งพอรู้แบบนี้ก็ตามหาได้ไม่ยาก — ผมไปเขียน <code>where</code> ของคำสั่ง Update ผิด ใส่เป็น <code>habitTags.id</code> ทั้งที่ต้องเป็น <code>habits.id</code> เพราะเรากำลังอัปเดตตาราง <code>habits</code></p>
-      <pre><code>// ผิด — อ้างถึงตารางที่ไม่ได้อยู่ในคำสั่ง Update นี้
-.where(and(eq(habitTags.id, id), eq(habits.userId, userId)))
-
-// ถูก
-.where(and(eq(habits.id, id), eq(habits.userId, userId)))</code></pre>
-      <p>บทเรียนที่ได้คือ <strong>อ่านข้อความ Error จาก Database ให้จบก่อนเสมอ</strong> มันมักบอกชื่อตารางหรือชื่อคอลัมน์ที่มีปัญหาไว้ตรง ๆ อยู่แล้ว แก้แล้วยิงใหม่</p>
+      <p>และนี่คือ Error จริงที่ผมเจอตอนสอน — ผมลองส่ง <code>tagIds</code> ไปด้วย แต่ดันก๊อป UUID มั่ว ๆ มาใส่ ผลคือได้ <code>500</code> กลับมา แล้วใน Terminal ของ Server มี Error ก้อนนี้รออยู่</p>
+      <pre><code>Foreign key constraint violated on the constraint: `habit_tags_tag_id_fkey`</code></pre>
+      <p>ข้อความนี้คือเสียงของฐานข้อมูลที่ส่งผ่าน Prisma ขึ้นมาตรง ๆ (Error Code ของมันคือ <code>P2003</code>) ความหมายคือ "มีคนพยายามใส่ค่าลงคอลัมน์ <code>tag_id</code> ของตาราง <code>habit_tags</code> โดยที่ค่านั้นชี้ไปหาแถวที่ไม่มีอยู่จริง" ซึ่งพอรู้แบบนี้ก็ตามหาได้ไม่ยาก — Tag ที่ผมอ้างถึงไม่เคยถูกสร้าง Foreign Key Constraint ที่เราตั้งไว้ในบทที่ 16 จึงตีกลับทั้ง Transaction (สังเกตว่าตัว Habit เองก็ไม่ถูกแก้ด้วย เพราะทุกอย่างอยู่ใน Transaction เดียวกันตามที่ออกแบบไว้)</p>
+      <p>บทเรียนที่ได้คือ <strong>อ่านข้อความ Error จาก Database ให้จบก่อนเสมอ</strong> มันมักบอกชื่อตาราง ชื่อคอลัมน์ หรือชื่อ Constraint ที่มีปัญหาไว้ตรง ๆ อยู่แล้ว เอา <code>tagIds</code> ออกแล้วยิงใหม่</p>
       <pre><code>{
   "message": "Habit updated successfully",
   "habit": {
@@ -101,7 +96,7 @@
     "updatedAt": "2026-03-14T09:21:03.884Z"
   }
 }</code></pre>
-      <p>ชื่อเปลี่ยนแล้ว และ <code>updatedAt</code> ก็ขยับตามด้วยเพราะเราใส่ <code>new Date()</code> ให้มันทุกครั้งที่อัปเดต ส่วน <code>frequency</code> กับ <code>targetCount</code> ยังอยู่ครบทั้งที่เราไม่ได้ส่งมา นั่นคือความหมายของคำว่า Partial Update</p>
+      <p>ชื่อเปลี่ยนแล้ว และ <code>updatedAt</code> ก็ขยับตามด้วยเพราะเราแปะ <code>@updatedAt</code> ไว้ใน Schema ตั้งแต่บทที่ 16 ส่วน <code>frequency</code> กับ <code>targetCount</code> ยังอยู่ครบทั้งที่เราไม่ได้ส่งมา นั่นคือความหมายของคำว่า Partial Update</p>
 
       <h2>กับดักที่เจอบ่อยที่สุด</h2>
       <p>ก่อนจบขอไล่กรณีที่พังบ่อยให้ครบ เพราะการรู้ว่า Error แต่ละแบบหน้าตาเป็นอย่างไรจะช่วยคุณประหยัดเวลาได้มหาศาล ลองยิงเองให้เห็นกับตาสักรอบ</p>
@@ -119,7 +114,7 @@
       <h3>Id ที่ไม่มีอยู่จริง หรือเป็นของคนอื่น</h3>
       <pre><code>{ "error": "Habit not found" }   // 404</code></pre>
       <p>ทั้งสองกรณีให้ผลเหมือนกันเป๊ะ และนั่นคือความตั้งใจ เพราะ <code>where</code> ของเรากรองด้วย <code>userId</code> อยู่แล้ว Habit ของคนอื่นจึงไม่มีทางแมตช์ และการตอบเหมือนกันทั้งสองกรณีก็<strong>ไม่ได้ใบ้ให้ใครรู้ว่า Id นั้นมีอยู่จริงหรือเปล่า</strong></p>
-      <p>ถ้าอยากพิสูจน์ ลองสมัครผู้ใช้คนที่สอง ล็อกอินเอา Token ใหม่ แล้วเอา Token นั้นมายิง PATCH ใส่ Id ของ Habit ที่เราเพิ่งสร้าง — คุณจะได้ <code>404</code> ทั้งที่ Habit อันนั้นมีอยู่จริง ๆ นั่นแหละคือบรรทัด <code>eq(habits.userId, userId)</code> กำลังทำงาน</p>
+      <p>ถ้าอยากพิสูจน์ ลองสมัครผู้ใช้คนที่สอง ล็อกอินเอา Token ใหม่ แล้วเอา Token นั้นมายิง PATCH ใส่ Id ของ Habit ที่เราเพิ่งสร้าง — คุณจะได้ <code>404</code> ทั้งที่ Habit อันนั้นมีอยู่จริง ๆ นั่นแหละคือเงื่อนไข <code>userId</code> ใน <code>where</code> กำลังทำงาน</p>
       <h3>ลืมเลือก raw กับ JSON ใน Postman</h3>
       <p>ถ้า Postman ไม่ได้ส่ง Header <code>Content-Type: application/json</code> มาด้วย <code>express.json()</code> จะไม่ Parse Body ให้ ผลคือ <code>req.body</code> ว่างเปล่า แล้ว Validation จะตีกลับว่าไม่มีข้อมูล ทั้งที่คุณพิมพ์ JSON ไว้เต็มช่องแล้ว</p>
 

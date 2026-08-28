@@ -1,0 +1,158 @@
+{
+  "questions": [
+    {
+      "prompt": "ข้อใดอธิบายความแตกต่างระหว่าง Database และ DBMS ได้ถูกต้อง?",
+      "choices": [
+        "Database คือชุดข้อมูลที่จัดเก็บไว้ ส่วน DBMS คือ Software ที่ใช้จัดการข้อมูลนั้น",
+        "Database คือ Software ส่วน DBMS คือไฟล์สำรองข้อมูลเท่านั้น",
+        "Database และ DBMS หมายถึงข้อมูลชั่วคราวที่อยู่ใน Memory เหมือนกัน"
+      ],
+      "correctChoice": 1,
+      "explanation": "Database หมายถึงชุดข้อมูลที่จัดเก็บไว้อย่างเป็นระบบ ส่วน DBMS เช่น PostgreSQL, MongoDB และ Redis คือ Software ที่เป็นตัวกลางให้แอปอ่านและเปลี่ยนแปลงข้อมูลนั้น"
+    },
+    {
+      "prompt": "สถานการณ์ใดเป็นสัญญาณชัดเจนว่า Web App ควรใช้ Database แทนการเก็บ State ไว้ในตัวแปรหรือไฟล์เดียว?",
+      "choices": [
+        "ข้อมูลเป็นข้อความสั้นและมีผู้ใช้เพียงคนเดียวเสมอ",
+        "ข้อมูลต้องอยู่ต่อหลัง Server Restart และมีหลาย Request แก้ข้อมูลพร้อมกัน",
+        "ข้อมูลใช้แสดงเพียงครั้งเดียวแล้วทิ้งทันที"
+      ],
+      "correctChoice": 2,
+      "explanation": "ข้อมูลใน Memory หายเมื่อ Process หยุด และไฟล์เดียวจัดการการเขียนพร้อมกันได้ยาก Database จึงเหมาะเมื่อข้อมูลต้อง Persistent และต้องรองรับหลาย Request อย่างเป็นระเบียบ"
+    },
+    {
+      "prompt": "หากผลลัพธ์ระหว่างเรียนไม่ตรงกับตัวอย่าง สิ่งแรกที่ควรตรวจสอบตามบทติดตั้งคืออะไร?",
+      "choices": [
+        "เปลี่ยนระบบปฏิบัติการทันที",
+        "ย้าย Database ทั้งหมดขึ้น Cloud",
+        "ตรวจสอบเวอร์ชันของเครื่องมือ เพราะ Syntax และพฤติกรรมของ Query อาจต่างกันระหว่างเวอร์ชัน"
+      ],
+      "correctChoice": 3,
+      "explanation": "บทเรียนแนะนำให้ตรวจเวอร์ชันก่อน เพราะแต่ละเวอร์ชันอาจมี Syntax หรือพฤติกรรมต่างกัน โดยไม่จำเป็นต้องตรงกันทุกเลขเวอร์ชันย่อย แค่ใกล้เคียงกับที่คอร์สใช้"
+    },
+    {
+      "prompt": "การโอนเงินประกอบด้วยการหักยอดจากบัญชีหนึ่งและเพิ่มยอดให้อีกบัญชีหนึ่ง หากขั้นตอนใดล้มเหลวต้องยกเลิกทั้งหมด คุณสมบัตินี้ตรงกับข้อใดของ ACID?",
+      "choices": [
+        "Durability",
+        "Atomicity",
+        "Isolation"
+      ],
+      "correctChoice": 2,
+      "explanation": "Atomicity กำหนดให้งานหลายขั้นตอนสำเร็จทั้งหมดหรือไม่เกิดขึ้นเลย Transaction จึงช่วยไม่ให้การโอนเงินค้างอยู่ในสถานะที่ทำเพียงครึ่งเดียว"
+    },
+    {
+      "prompt": "ข้อใดเป็นลักษณะสำคัญของ Relational Database ตามบทเรียน?",
+      "choices": [
+        "ข้อมูลทุกชนิดต้องเก็บรวมอยู่ใน Document เดียวเสมอ",
+        "แต่ละ Row สามารถมี Column คนละชุดกันได้โดยไม่ต้องมี Schema",
+        "ข้อมูลถูกแยกเป็น Table ที่มี Schema และเชื่อมความสัมพันธ์กันได้ด้วย Key และ JOIN"
+      ],
+      "correctChoice": 3,
+      "explanation": "Relational Database จัดข้อมูลเป็น Table ที่มี Row และ Column ตาม Schema และสามารถแยกข้อมูลที่เกี่ยวข้องกันไว้หลาย Table ก่อนเชื่อมกลับด้วยความสัมพันธ์และ JOIN"
+    },
+    {
+      "prompt": "Constraint ใดใน Schema นี้ทำให้ PostgreSQL สร้างค่า user_id เพิ่มขึ้นให้อัตโนมัติ?",
+      "body": "<pre><code>CREATE TABLE users (\n  user_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,\n  username VARCHAR(25) UNIQUE NOT NULL\n);</code></pre>",
+      "choices": [
+        "UNIQUE NOT NULL",
+        "GENERATED ALWAYS AS IDENTITY",
+        "VARCHAR(25)"
+      ],
+      "correctChoice": 2,
+      "explanation": "GENERATED ALWAYS AS IDENTITY ทำให้ PostgreSQL สร้างค่าตัวเลขที่เพิ่มขึ้นให้อัตโนมัติ ส่วน PRIMARY KEY ระบุคีย์หลักและทำให้ PostgreSQL สร้าง Index ให้ Field นี้"
+    },
+    {
+      "prompt": "Query ใดคืนเฉพาะ username และ user_id ของผู้ใช้ที่ยังไม่เคยเข้าสู่ระบบ โดยจำกัดผลลัพธ์ไม่เกิน 10 Row?",
+      "choices": [
+        "SELECT username, user_id FROM users WHERE last_login IS NULL LIMIT 10;",
+        "SELECT * FROM users WHERE last_login = NULL LIMIT 10;",
+        "SELECT username AND user_id FROM users LIMIT last_login IS NULL;"
+      ],
+      "correctChoice": 1,
+      "explanation": "Projection ระบุเฉพาะ Column ที่ต้องใช้, WHERE last_login IS NULL กรองผู้ใช้ที่ยังไม่เคยเข้าสู่ระบบ และ LIMIT 10 จำกัดจำนวน Row ที่คืนกลับมา"
+    },
+    {
+      "prompt": "Query สองบรรทัดนี้อาจคืนค่าต่างกันเพราะเหตุใด?",
+      "body": "<pre><code>SELECT COUNT(*) FROM users;\nSELECT COUNT(last_login) FROM users;</code></pre>",
+      "choices": [
+        "COUNT(*) นับทุก Row แต่ COUNT(last_login) ไม่นับ Row ที่ last_login เป็น NULL",
+        "COUNT(*) นับเฉพาะ Row ที่มี Primary Key ส่วน COUNT(last_login) นับทุก Row",
+        "COUNT(last_login) ใช้นับจำนวน Column ทั้งหมดใน Table"
+      ],
+      "correctChoice": 1,
+      "explanation": "COUNT(*) นับทุก Row ในผลลัพธ์ ขณะที่ COUNT(column) ไม่นับค่า NULL ดังนั้นผู้ใช้ที่ยังไม่เคยเข้าสู่ระบบจะไม่ถูกรวมใน COUNT(last_login)"
+    },
+    {
+      "prompt": "Schema ต่อไปนี้กำหนดให้เกิดอะไรขึ้นเมื่อลบ User ที่ยังมี Comment อ้างถึง?",
+      "body": "<pre><code>user_id INT REFERENCES users(user_id) ON DELETE CASCADE</code></pre>",
+      "choices": [
+        "PostgreSQL ปฏิเสธการลบ User เสมอ",
+        "PostgreSQL เก็บ Comment ไว้และเปลี่ยน user_id เป็น 0",
+        "PostgreSQL ลบ Comment ที่อ้างถึง User คนนั้นตามไปด้วย"
+      ],
+      "correctChoice": 3,
+      "explanation": "Foreign Key เชื่อม comments.user_id ไปยัง users.user_id และ ON DELETE CASCADE สั่งให้ลบ Comment ที่อ้างถึง User นั้นโดยอัตโนมัติเมื่อ User ถูกลบ"
+    },
+    {
+      "prompt": "หากต้องการรายงานจำนวน Comment ของทุก Board รวมถึง Board ที่ยังไม่มี Comment เหตุใดจึงควรใช้ OUTER JOIN และ COUNT(comment_id) แทน INNER JOIN และ COUNT(*)?",
+      "choices": [
+        "เพราะ INNER JOIN แสดงเฉพาะ Board ที่จับคู่กับ Comment ได้ และ COUNT(*) อาจนับ Row ของ Board ว่างเป็น 1",
+        "เพราะ COUNT(*) ใช้ได้เฉพาะกับ Table ที่ไม่มี Primary Key",
+        "เพราะ OUTER JOIN จะลบ Board ที่ไม่มี Comment ออกจากผลลัพธ์ก่อนนับ"
+      ],
+      "correctChoice": 1,
+      "explanation": "OUTER JOIN ที่เก็บฝั่ง boards ไว้ทำให้ Board ว่างยังอยู่ในผลลัพธ์ ส่วน COUNT(comment_id) ไม่นับค่า NULL จึงรายงานจำนวน Comment ของ Board ว่างเป็น 0 ได้ถูกต้อง"
+    },
+    {
+      "prompt": "Query ใดดึงค่า type จาก Column JSONB ออกมาเป็น Text เพื่อใช้เปรียบเทียบหรือตัดค่าซ้ำได้?",
+      "choices": [
+        "SELECT content['type'] FROM rich_content;",
+        "SELECT content -&gt;&gt; 'type' FROM rich_content;",
+        "SELECT content -&gt; 'type' FROM rich_content;"
+      ],
+      "correctChoice": 2,
+      "explanation": "Operator -&gt;&gt; แยกค่าจาก JSONB ออกมาเป็น Text ธรรมดา ส่วน -&gt; และวงเล็บจะยังคืนค่าเป็น JSON ซึ่งสำคัญต่อการเปรียบเทียบและ SELECT DISTINCT"
+    },
+    {
+      "prompt": "หลังใช้ EXPLAIN แล้วพบว่า Query กรองด้วย board_id และเรียงตาม time บ่อยมาก Index ใดเหมาะกับรูปแบบ Query นี้ที่สุดตามบทเรียน?",
+      "body": "<pre><code>SELECT comment_id, user_id, time\nFROM comments\nWHERE board_id = 39\nORDER BY time DESC\nLIMIT 40;</code></pre>",
+      "choices": [
+        "CREATE INDEX ON comments (board_id, time);",
+        "CREATE UNIQUE INDEX ON comments (comment_id, user_id, time);",
+        "CREATE INDEX ON boards (board_name);"
+      ],
+      "correctChoice": 1,
+      "explanation": "Composite Index ที่รวม board_id และ time สอดคล้องกับ Field ที่ Query ใช้กรองและเรียงลำดับ จึงเหมาะกว่าการสร้าง Index บน Field ที่ Query ไม่ได้ใช้"
+    },
+    {
+      "prompt": "ข้อใดอธิบาย Trade-off ของการสร้าง Index ได้ถูกต้อง?",
+      "choices": [
+        "Index ทำให้ทุก Query เร็วขึ้นโดยไม่ใช้พื้นที่หรือเพิ่มต้นทุนใด ๆ",
+        "Index ลดขนาดข้อมูลต้นฉบับ แต่ทำให้การอ่านทุกชนิดช้าลง",
+        "Index ช่วยให้ Query บางรูปแบบค้นหาเร็วขึ้น แต่ใช้พื้นที่และเพิ่มงานตอน INSERT, UPDATE และ DELETE"
+      ],
+      "correctChoice": 3,
+      "explanation": "Database ต้องเก็บและอัปเดต Data Structure ของ Index ให้สอดคล้องกับข้อมูล จึงแลกความเร็วในการค้นหากับพื้นที่ Disk และต้นทุนเพิ่มเติมเมื่อเขียนหรือเปลี่ยนข้อมูล"
+    },
+    {
+      "prompt": "เหตุใดแอป Node.js จึงควรใช้ Connection Pool และเรียก client.release() หลังใช้งาน แทนการเปิด Connection ใหม่แล้วปิดด้วย client.end() ทุก Request?",
+      "choices": [
+        "เพื่อให้ SQL Keyword ไม่ต้องเขียนเป็นตัวพิมพ์ใหญ่",
+        "เพื่อใช้ Connection ซ้ำ ลดต้นทุนการเชื่อมต่อ และไม่ทำให้ PostgreSQL ใช้ Connection จนเต็มง่าย",
+        "เพื่อให้แอปเชื่อมต่อ Database ได้โดยไม่ต้องมี Connection String"
+      ],
+      "correctChoice": 2,
+      "explanation": "Connection Pool เปิด Connection เท่าที่จำเป็นและนำกลับมาใช้ซ้ำ client.release() คืน Client ให้ Pool ส่วนการสร้างและปิด Connection ใหม่ทุก Request ทั้งช้าและเสี่ยงใช้ Connection จนเต็ม"
+    },
+    {
+      "prompt": "โค้ดใดส่งค่าจากผู้ใช้ไปยัง PostgreSQL ได้ปลอดภัยกว่าจาก SQL Injection?",
+      "choices": [
+        "client.query(`SELECT * FROM boards WHERE board_id = ${req.query.search}`)",
+        "client.query('SELECT * FROM boards WHERE board_id = ' + req.query.search)",
+        "client.query('SELECT * FROM boards WHERE board_id = $1', [req.query.search])"
+      ],
+      "correctChoice": 3,
+      "explanation": "Parameterized Query ใช้ $1 เป็น Placeholder และส่งค่าผู้ใช้แยกจากข้อความ SQL ทำให้ Database ตีความ Input เป็นข้อมูล ไม่ใช่คำสั่ง SQL ที่ผู้โจมตีแทรกเข้ามา"
+    }
+  ]
+}

@@ -34,11 +34,9 @@ router.delete('/:id', deleteHabit)    // DELETE /api/habits/123</code></pre>
       <p>สร้างไฟล์ <code>src/controllers/habitController.ts</code> แล้วเริ่มจาก Import ที่จะใช้ทั้งไฟล์</p>
       <pre><code>import type { Response } from 'express'
 import type { AuthenticatedRequest } from '../middleware/auth.ts'
-import { db } from '../db/connection.ts'
-import { habits, entries, habitTags, tags } from '../db/schema.ts'
-import { eq, and, desc, inArray } from 'drizzle-orm'</code></pre>
+import { prisma } from '../db/connection.ts'</code></pre>
       <p>จุดที่สำคัญที่สุดคือบรรทัดที่สอง — <strong>เราใช้ <code>AuthenticatedRequest</code> แทน <code>Request</code> ของ Express</strong> เพราะทุก Route ใน <code>habitRoutes.ts</code> ถูกล็อกด้วย <code>authenticateToken</code> ไปแล้วตั้งแต่บทที่ 24 นั่นแปลว่าเมื่อโค้ดวิ่งมาถึง Controller เรารู้แน่นอนว่า <code>req.user</code> มีค่าอยู่</p>
-      <p>ส่วน <code>habitTags</code> คือตารางกลางแบบ Many-to-Many ที่เราสร้างไว้ในบทที่ 16 เพราะ Habit หนึ่งอันมีได้หลาย Tag และ Tag หนึ่งอันก็ผูกกับได้หลาย Habit เราจึงเปิดช่องให้ผู้ใช้ผูก Tag ผ่านฝั่ง Habit ได้ (จะทำจากฝั่ง Tag ก็ได้เหมือนกัน มันสมมาตร) ส่วน <code>tags</code> กับ <code>inArray</code> เอาไว้ใช้กับ Controller ตัวอื่นในไฟล์เดียวกันนี้</p>
+      <p>สังเกตว่า Import ทั้งไฟล์มีแค่นี้ เพราะทุกตารางเรียกผ่าน <code>prisma</code> ได้หมด รวมถึง <code>prisma.habitTag</code> ตารางกลางแบบ Many-to-Many ที่เราสร้างไว้ในบทที่ 16 — Habit หนึ่งอันมีได้หลาย Tag และ Tag หนึ่งอันก็ผูกกับได้หลาย Habit เราจึงเปิดช่องให้ผู้ใช้ผูก Tag ผ่านฝั่ง Habit ได้ (จะทำจากฝั่ง Tag ก็ได้เหมือนกัน มันสมมาตร)</p>
 
       <h2>C คือ Create</h2>
       <pre><code>export const createHabit = async (req: AuthenticatedRequest, res: Response) =&gt; {
@@ -46,19 +44,19 @@ import { eq, and, desc, inArray } from 'drizzle-orm'</code></pre>
     const { name, description, frequency, targetCount, tagIds } = req.body
     const userId = req.user!.id
 
-    const result = await db.transaction(async (tx) =&gt; {
-      const [newHabit] = await tx
-        .insert(habits)
-        .values({ userId, name, description, frequency, targetCount })
-        .returning()
+    const result = await prisma.$transaction(async (tx) =&gt; {
+      const newHabit = await tx.habit.create({
+        data: { userId, name, description, frequency, targetCount },
+      })
 
       // ถ้าส่ง tagIds มาด้วย ให้สร้างความสัมพันธ์ในตารางกลาง
       if (tagIds &amp;&amp; tagIds.length &gt; 0) {
-        const habitTagValues = tagIds.map((tagId: string) =&gt; ({
-          habitId: newHabit.id,
-          tagId,
-        }))
-        await tx.insert(habitTags).values(habitTagValues)
+        await tx.habitTag.createMany({
+          data: tagIds.map((tagId: string) =&gt; ({
+            habitId: newHabit.id,
+            tagId,
+          })),
+        })
       }
 
       return newHabit
@@ -78,10 +76,10 @@ import { eq, and, desc, inArray } from 'drizzle-orm'</code></pre>
       <p><strong>ตอบ <code>201</code> ไม่ใช่ <code>200</code></strong> เพราะ POST ที่สร้างของใหม่สำเร็จมี Status ของตัวเองอยู่แล้ว ส่วน<strong><code>catch</code> ตอบ <code>500</code></strong> เพราะถ้าโค้ดวิ่งมาถึงตรงนี้ได้ แปลว่า Input ผ่าน Validation แล้ว และผู้ใช้ผ่าน Authentication แล้ว สิ่งที่พังได้จึงเหลือแต่ฝั่งเรา — Database ล่ม Query ผิด อะไรทำนองนั้น</p>
 
       <h3>Transaction คืออะไร</h3>
-      <p>ถ้าคุณไม่เคยทำงานกับ Database มาก่อน <code>db.transaction()</code> คือของใหม่ในบทนี้ ลองคิดตาม ถ้าฟังก์ชันหนึ่งต้องเขียนลง Database มากกว่าหนึ่งครั้ง แล้วครั้งแรกสำเร็จ แต่ครั้งที่สองพัง ข้อมูลของคุณจะค้างอยู่ในสภาพที่ไม่สมบูรณ์ ตัวอย่างคลาสสิกคือการโอนเงิน — ขั้นตอนตัดเงินจากบัญชีต้นทางสำเร็จ แต่ขั้นตอนเพิ่มเงินให้บัญชีปลายทางพัง <strong>แล้วเงินก้อนนั้นอยู่ไหน</strong> ไม่อยู่ทั้งสองบัญชี</p>
+      <p>ถ้าคุณไม่เคยทำงานกับ Database มาก่อน <code>prisma.$transaction()</code> คือของใหม่ในบทนี้ ลองคิดตาม ถ้าฟังก์ชันหนึ่งต้องเขียนลง Database มากกว่าหนึ่งครั้ง แล้วครั้งแรกสำเร็จ แต่ครั้งที่สองพัง ข้อมูลของคุณจะค้างอยู่ในสภาพที่ไม่สมบูรณ์ ตัวอย่างคลาสสิกคือการโอนเงิน — ขั้นตอนตัดเงินจากบัญชีต้นทางสำเร็จ แต่ขั้นตอนเพิ่มเงินให้บัญชีปลายทางพัง <strong>แล้วเงินก้อนนั้นอยู่ไหน</strong> ไม่อยู่ทั้งสองบัญชี</p>
       <p>Transaction เกิดมาเพื่อเรื่องนี้ มันมัดคำสั่งเขียนหลายคำสั่งเข้าเป็นก้อนเดียว <strong>ถ้ามีตัวใดตัวหนึ่งพัง ทุกตัวจะถูกย้อนกลับหมด</strong> คำอธิบายที่ผมชอบที่สุดคือมันเหมือน Git Commit — คุณรวบการเปลี่ยนแปลงทั้งหมดแล้วสั่งให้มีผลพร้อมกันทีเดียว Database ที่รองรับ ACID ทุกตัวมีของสิ่งนี้</p>
-      <p>วิธีใช้คือเรียก <code>db.transaction()</code> แล้วจะได้ Object ที่ผมตั้งชื่อว่า <code>tx</code> ออกมา ซึ่ง<strong>ใช้เหมือน <code>db</code> ทุกประการ</strong> ข้างในนั้นต้องเรียก <code>tx</code> เท่านั้น ถ้าเผลอเรียก <code>db</code> คำสั่งนั้นจะหลุดออกไปนอก Transaction ทันที และสิ่งที่ <code>return</code> ออกมา คือสิ่งที่ <code>result</code> ข้างนอกจะได้รับ</p>
-      <p>ต้องสั่ง Commit หรือ Rollback เองไหม — <strong>ไม่ต้อง</strong> Drizzle จัดการให้ วิ่งจนจบก็ Commit มี Error โยนออกมาก็ Rollback ที่ต้องสั่งเองมีกรณีเดียวคือคุณไปทำงาน Async อย่างอื่นข้างในที่ไม่เกี่ยวกับ Database เช่นยิงไปอัปเดต Stripe แล้วอยากให้ Stripe พังเมื่อไรก็ Rollback ด้วย ซึ่ง Drizzle ไม่มีทางรู้ วิธีที่ง่ายที่สุดคือ<strong>โยน Error ออกมาเอง</strong></p>
+      <p>วิธีใช้คือเรียก <code>prisma.$transaction()</code> แล้วจะได้ Object ที่ผมตั้งชื่อว่า <code>tx</code> ออกมา ซึ่ง<strong>ใช้เหมือน <code>prisma</code> ทุกประการ</strong> ข้างในนั้นต้องเรียก <code>tx</code> เท่านั้น ถ้าเผลอเรียก <code>prisma</code> คำสั่งนั้นจะหลุดออกไปนอก Transaction ทันที และสิ่งที่ <code>return</code> ออกมา คือสิ่งที่ <code>result</code> ข้างนอกจะได้รับ</p>
+      <p>ต้องสั่ง Commit หรือ Rollback เองไหม — <strong>ไม่ต้อง</strong> Prisma จัดการให้ วิ่งจนจบก็ Commit มี Error โยนออกมาก็ Rollback ที่ต้องสั่งเองมีกรณีเดียวคือคุณไปทำงาน Async อย่างอื่นข้างในที่ไม่เกี่ยวกับ Database เช่นยิงไปอัปเดต Stripe แล้วอยากให้ Stripe พังเมื่อไรก็ Rollback ด้วย ซึ่ง Prisma ไม่มีทางรู้ วิธีที่ง่ายที่สุดคือ<strong>โยน Error ออกมาเอง</strong></p>
 
       <h2>เสียบเข้ากับ Route</h2>
       <p>กลับไปที่ <code>src/routes/habitRoutes.ts</code> เอา Handler ปลอมที่เราเขียนไว้ตั้งแต่บทที่ 8 ออก แล้วใส่ Controller ตัวจริงลงไป</p>
@@ -101,7 +99,7 @@ const createHabitSchema = z.object({
 
 router.post('/', validateBody(createHabitSchema), createHabit)</code></pre>
       <p><code>createHabitSchema</code> ที่เราใส่ไว้เป็นตัวอย่างในบทที่ 12 มีแค่ <code>name</code> ตอนนี้ถึงเวลาเขียนของจริง วิธีที่ผมทำคือเปิด Controller ดูว่ามัน Destructure อะไรออกมาจาก <code>req.body</code> บ้าง แล้วเปิด Schema ของ Database ดูว่า Field ไหนบังคับ — ได้ความว่า <code>name</code>, <code>frequency</code> และ <code>targetCount</code> บังคับ ส่วน <code>description</code> กับ <code>tagIds</code> เป็น Optional</p>
-      <p>คำถามที่ควรถามคือ <strong>ทำไมไม่ Import Schema จาก Drizzle มาใช้เลย</strong> ในเมื่อบทที่ 17 เราก็ทำแบบนั้นได้ คำตอบคือเพราะสิ่งที่เรารับจากผู้ใช้กับสิ่งที่ Database เก็บ <em>ไม่เหมือนกัน</em> ตรงนี้ — ตาราง <code>habits</code> ไม่มีคอลัมน์ชื่อ <code>tagIds</code> เพราะความสัมพันธ์กับ Tag อยู่คนละตาราง แต่เราอยากเปิดให้ผู้ใช้ส่ง <code>tagIds</code> มาพร้อมกันในครั้งเดียว เมื่อสองฝั่งไม่ตรงกัน เราก็ต้องเขียน Schema ของตัวเอง</p>
+      <p>คำถามที่ควรถามคือ <strong>ทำไมไม่ใช้ Schema จาก <code>src/db/validation.ts</code> ที่ล้อตารางไว้แล้ว</strong> ในเมื่อบทที่ 17 เราก็ทำแบบนั้นกับ User คำตอบคือเพราะสิ่งที่เรารับจากผู้ใช้กับสิ่งที่ Database เก็บ <em>ไม่เหมือนกัน</em> ตรงนี้ — ตาราง <code>habits</code> ไม่มีคอลัมน์ชื่อ <code>tagIds</code> เพราะความสัมพันธ์กับ Tag อยู่คนละตาราง แต่เราอยากเปิดให้ผู้ใช้ส่ง <code>tagIds</code> มาพร้อมกันในครั้งเดียว เมื่อสองฝั่งไม่ตรงกัน เราก็ต้องเขียน Schema ของตัวเอง</p>
       <p>อีกจุดที่ต้องระวังคือ <code>targetCount</code> เป็น <code>z.number()</code> เพราะในตาราง Database มันคือ <code>integer</code> ส่งมาเป็น String จะไม่ผ่านทันที (เดี๋ยวเราจะเจอกับดักนี้ของจริงในบทหน้า) ส่วน <code>frequency</code> ยังเป็น <code>z.string()</code> ตามคอลัมน์ที่เป็น <code>varchar</code> ซึ่งจุดอ่อนข้อนี้เราคุยกันไว้แล้วในบทที่ 17</p>
 
       <h2>R คือ Read — ดึงทั้งหมด</h2>
@@ -113,16 +111,16 @@ router.post('/', validateBody(createHabitSchema), createHabit)</code></pre>
   try {
     const userId = req.user!.id
 
-    const userHabitsWithTags = await db.query.habits.findMany({
-      where: eq(habits.userId, userId),
-      with: {
+    const userHabitsWithTags = await prisma.habit.findMany({
+      where: { userId },
+      include: {
         habitTags: {
-          with: {
+          include: {
             tag: true,
           },
         },
       },
-      orderBy: [desc(habits.createdAt)],
+      orderBy: { createdAt: 'desc' },
     })
 
     // แผ่ Tag ออกมาให้อยู่ระดับเดียวกับ Habit
@@ -138,9 +136,9 @@ router.post('/', validateBody(createHabitSchema), createHabit)</code></pre>
     res.status(500).json({ error: 'Failed to fetch habits' })
   }
 }</code></pre>
-      <p><strong><code>where: eq(habits.userId, userId)</code></strong> คือหัวใจของ Controller ตัวนี้ ทุก Query ที่แตะข้อมูลของผู้ใช้ต้องกรองด้วย Id ที่ได้จาก Token เสมอ ถ้าลืมบรรทัดนี้ คุณกำลังส่ง Habit ของทุกคนในระบบให้คนที่ยิงเข้ามา</p>
-      <p><strong><code>with</code> คือการ Join</strong> เราเริ่มจากตาราง <code>habits</code> ซึ่งมีความสัมพันธ์ไปยัง <code>habitTags</code> และตารางนั้นก็มีความสัมพันธ์ต่อไปยัง <code>tags</code> อีกที ทางเดียวที่จะรู้ว่า Habit หนึ่งอันมี Tag อะไรบ้างคือต้องเดินผ่านตารางกลางนั้น <code>with</code> ซ้อน <code>with</code> จึงเป็นการบอกว่า "หา Habit มา แล้วหา habitTags ของแต่ละอัน แล้วหา Tag ของแต่ละ habitTag อีกที" ส่วน <code>tag: true</code> แปลว่า "เอา Field นี้มาด้วย" เฉย ๆ ไม่ได้ใส่ <code>true</code> ให้ <code>habit</code> ด้วยเพราะมันจะวนกลับมาที่ Habit ตัวเดิมที่อยู่ชั้นบนสุด</p>
-      <p><strong><code>orderBy: [desc(habits.createdAt)]</code></strong> เรียงจากใหม่ไปเก่า อันที่เพิ่งสร้างจะอยู่บนสุด</p>
+      <p><strong><code>where: { userId }</code></strong> คือหัวใจของ Controller ตัวนี้ ทุก Query ที่แตะข้อมูลของผู้ใช้ต้องกรองด้วย Id ที่ได้จาก Token เสมอ ถ้าลืมบรรทัดนี้ คุณกำลังส่ง Habit ของทุกคนในระบบให้คนที่ยิงเข้ามา</p>
+      <p><strong><code>include</code> คือการ Join</strong> เราเริ่มจากตาราง <code>habits</code> ซึ่งมีความสัมพันธ์ไปยัง <code>habitTags</code> และตารางนั้นก็มีความสัมพันธ์ต่อไปยัง <code>tags</code> อีกที ทางเดียวที่จะรู้ว่า Habit หนึ่งอันมี Tag อะไรบ้างคือต้องเดินผ่านตารางกลางนั้น <code>include</code> ซ้อน <code>include</code> จึงเป็นการบอกว่า "หา Habit มา แล้วหา habitTags ของแต่ละอัน แล้วหา Tag ของแต่ละ habitTag อีกที" ส่วน <code>tag: true</code> แปลว่า "เอา Field นี้มาด้วย" เฉย ๆ ไม่ได้ใส่ <code>true</code> ให้ <code>habit</code> ด้วยเพราะมันจะวนกลับมาที่ Habit ตัวเดิมที่อยู่ชั้นบนสุด (Field พวกนี้คือของที่ <code>@relation</code> ในบทที่ 16 เสกให้เราตอน Query นั่นเอง)</p>
+      <p><strong><code>orderBy: { createdAt: 'desc' }</code></strong> เรียงจากใหม่ไปเก่า อันที่เพิ่งสร้างจะอยู่บนสุด</p>
 
       <h3>แปลงหน้าตาข้อมูลก่อนส่ง</h3>
       <p>ผลลัพธ์ดิบที่ได้จะมี <code>habitTags</code> โผล่คั่นกลางอยู่ ซึ่งเป็นรายละเอียดภายในของ Database ที่คนใช้ API ไม่ควรต้องรับรู้ เราจึงแผ่มันออกให้แบนลง เอา Tag ขึ้นมาไว้ที่ <code>tags</code> ตรง ๆ ทริกที่น่าสนใจคือบรรทัด <code>habitTags: undefined</code> — เมื่อ <code>JSON.stringify()</code> เจอค่า <code>undefined</code> มันจะ<strong>ตัด Field นั้นทิ้งไปเลย</strong></p>
@@ -152,13 +150,13 @@ router.post('/', validateBody(createHabitSchema), createHabit)</code></pre>
       <pre><code>const { id } = req.params
 const userId = req.user!.id
 
-const habit = await db.query.habits.findFirst({
-  where: and(eq(habits.id, id), eq(habits.userId, userId)),
-  with: {
-    habitTags: { with: { tag: true } },
+const habit = await prisma.habit.findFirst({
+  where: { id, userId },
+  include: {
+    habitTags: { include: { tag: true } },
     entries: {
-      orderBy: [desc(entries.completion_date)],
-      limit: 10, // เอาแค่ 10 ครั้งล่าสุดพอ
+      orderBy: { completion_date: 'desc' },
+      take: 10, // เอาแค่ 10 ครั้งล่าสุดพอ
     },
   },
 })
@@ -166,8 +164,8 @@ const habit = await db.query.habits.findFirst({
 if (!habit) {
   return res.status(404).json({ error: 'Habit not found' })
 }</code></pre>
-      <p><code>findFirst</code> แทน <code>findMany</code> และเงื่อนไขต้องตรงสองอย่างคือ Id ของ Habit และ Id ของเจ้าของ ถ้าไม่เจอตอบ <code>404</code></p>
-      <p>เพิ่มมาอีกอย่างคือเราแถม <code>entries</code> ซึ่งคือประวัติการทำ Habit นั้นไปด้วย แต่จำกัดไว้ที่ 10 รายการล่าสุด เพราะการดึงประวัติทั้งหมดของ Habit ที่ทำมาสามปีไม่มีใครได้ประโยชน์ <code>limit</code> แบบนี้คือกำแพงกันไม่ให้ Response บวมโดยไม่มีเพดาน</p>
+      <p><code>findFirst</code> แทน <code>findMany</code> และเงื่อนไขใน <code>where</code> ที่มีสอง Field แปลว่าต้องตรง<em>ทั้งสองอย่าง</em>คือ Id ของ Habit และ Id ของเจ้าของ (Prisma เชื่อมเงื่อนไขด้วย AND ให้โดยปริยาย) ถ้าไม่เจอตอบ <code>404</code></p>
+      <p>เพิ่มมาอีกอย่างคือเราแถม <code>entries</code> ซึ่งคือประวัติการทำ Habit นั้นไปด้วย แต่จำกัดไว้ที่ 10 รายการล่าสุด เพราะการดึงประวัติทั้งหมดของ Habit ที่ทำมาสามปีไม่มีใครได้ประโยชน์ <code>take</code> แบบนี้คือกำแพงกันไม่ให้ Response บวมโดยไม่มีเพดาน</p>
 
       <h2>U คือ Update</h2>
       <p>ตัวนี้สนุกที่สุดในบท เพราะมีทั้ง Transaction และประเด็นเรื่องสิทธิ์</p>
@@ -177,27 +175,23 @@ if (!habit) {
     const userId = req.user!.id
     const { tagIds, ...updates } = req.body
 
-    const result = await db.transaction(async (tx) =&gt; {
-      const [updatedHabit] = await tx
-        .update(habits)
-        .set({ ...updates, updatedAt: new Date() })
-        .where(and(eq(habits.id, id), eq(habits.userId, userId)))
-        .returning()
-
-      if (!updatedHabit) {
-        throw new Error('Habit not found')
-      }
+    const result = await prisma.$transaction(async (tx) =&gt; {
+      const updatedHabit = await tx.habit.update({
+        where: { id, userId },
+        data: updates,
+      })
 
       if (tagIds !== undefined) {
         // ลบความสัมพันธ์เดิมทิ้งก่อน แล้วค่อยใส่ชุดใหม่เข้าไป
-        await tx.delete(habitTags).where(eq(habitTags.habitId, id))
+        await tx.habitTag.deleteMany({ where: { habitId: id } })
 
         if (tagIds.length &gt; 0) {
-          const habitTagValues = tagIds.map((tagId: string) =&gt; ({
-            habitId: id,
-            tagId,
-          }))
-          await tx.insert(habitTags).values(habitTagValues)
+          await tx.habitTag.createMany({
+            data: tagIds.map((tagId: string) =&gt; ({
+              habitId: id,
+              tagId,
+            })),
+          })
         }
       }
 
@@ -209,21 +203,21 @@ if (!habit) {
       habit: result,
     })
   } catch (error: any) {
-    if (error.message === 'Habit not found') {
+    if (error.code === 'P2025') {
       return res.status(404).json({ error: 'Habit not found' })
     }
     console.error('Update habit error:', error)
     res.status(500).json({ error: 'Failed to update habit' })
   }
 }</code></pre>
-      <p><strong>แยก <code>tagIds</code> ออกมาก่อน</strong> ด้วย Rest Operator เพราะสองอย่างนี้จะไปลงคนละตาราง <code>tagIds</code> ไปที่ <code>habitTags</code> ส่วน <code>updates</code> ที่เหลือทั้งหมดคือสิ่งที่จะเอาไปอัปเดตตาราง <code>habits</code> ผ่าน <strong><code>.set()</code> ซึ่งคือการอัปเดตแบบบางส่วน</strong> Field ไหนที่ไม่ได้ส่งมาก็ไม่ถูกแตะต้อง และเราแอบใส่ <code>updatedAt: new Date()</code> เพิ่มเข้าไปเองทุกครั้ง</p>
+      <p><strong>แยก <code>tagIds</code> ออกมาก่อน</strong> ด้วย Rest Operator เพราะสองอย่างนี้จะไปลงคนละตาราง <code>tagIds</code> ไปที่ <code>habitTags</code> ส่วน <code>updates</code> ที่เหลือทั้งหมดคือสิ่งที่จะเอาไปอัปเดตตาราง <code>habits</code> ผ่าน <strong><code>data</code> ของ <code>update</code> ซึ่งคือการอัปเดตแบบบางส่วน</strong> Field ไหนที่ไม่ได้ส่งมาก็ไม่ถูกแตะต้อง สังเกตว่าเราไม่ต้องเติม <code>updatedAt</code> เองด้วย เพราะเราแปะ <code>@updatedAt</code> ไว้ใน Schema ตั้งแต่บทที่ 16 Prisma จึงประทับเวลาให้เองทุกครั้งที่แถวถูกแก้</p>
 
       <h3>บรรทัดที่ห้ามลืมเด็ดขาด</h3>
-      <p>ดูที่ <code>where</code> ให้ดี มันเช็คสองเงื่อนไขพร้อมกันด้วย <code>and()</code></p>
-      <pre><code>.where(and(eq(habits.id, id), eq(habits.userId, userId)))</code></pre>
+      <p>ดูที่ <code>where</code> ให้ดี มันเช็คสองเงื่อนไขพร้อมกัน</p>
+      <pre><code>where: { id, userId }</code></pre>
       <p>เงื่อนไขแรกคือ "Habit ที่มี Id ตรงกับที่ส่งมาใน Route Param" ซึ่งตรงไปตรงมา แต่<strong>เงื่อนไขที่สองคือเรื่องเป็นเรื่องตาย</strong> — Habit นั้นต้องเป็นของผู้ใช้ที่กำลังยิงเข้ามาด้วย นี่คือ <strong>Authorization</strong> ตัวเป็น ๆ คนละเรื่องกับ Authentication ที่แปลว่า "คุณคือใคร" อันนี้แปลว่า "คุณมีสิทธิ์แก้ของชิ้นนี้ไหม"</p>
       <p><strong>ถ้าไม่มีเงื่อนไขที่สอง ใครก็ตามที่รู้ Id ของ Habit คนอื่นจะแก้ Habit นั้นได้ทันที</strong> ลองนึกภาพว่าถ้า Twitter ไม่เช็คข้อนี้ คุณจะโพสต์ในนามใครก็ได้แค่รู้ Id ของเขา นี่คือช่องโหว่ที่เจอบ่อยมากในระบบจริงและร้ายแรงเสมอ</p>
-      <p><strong>ทำไมต้อง <code>.returning()</code> แล้วเช็ค</strong> เพราะถ้า <code>where</code> ไม่แมตช์อะไรเลย <strong>Drizzle จะไม่โยน Error</strong> มันจะคืนค่าว่างเปล่ากลับมาเฉย ๆ (ORM บางตัวโยน Error ให้ ของ Drizzle ไม่ทำ) เราจึงต้องตรวจเอง แล้ว <code>throw new Error('Habit not found')</code> ซึ่งได้ผลสองอย่างในทีเดียว — Transaction ถูก Rollback และ <code>catch</code> ข้างนอกจับได้แล้วแปลงเป็น <code>404</code></p>
+      <p><strong>แล้วถ้า <code>where</code> ไม่แมตช์อะไรเลยล่ะ</strong> — <code>update</code> ของ Prisma จะ<strong>โยน Error ให้เอง</strong> โดยมี Code ชื่อ <code>P2025</code> ("ไม่พบแถวที่จะอัปเดต") ซึ่งได้ผลสองอย่างในทีเดียว — Error หลุดออกจาก Callback ทำให้ Transaction ถูก Rollback และ <code>catch</code> ข้างนอกจับได้แล้วแปลงเป็น <code>404</code> (ORM บางตัวไม่โยน Error แต่คืนค่าว่างเปล่ากลับมาเฉย ๆ ซึ่งเราต้องตรวจเอง — เจอ ORM แบบไหนก็ต้องอ่านพฤติกรรมข้อนี้ของมันให้ขาด)</p>
       <p>ตอนสอนสด ผมเลือกตอบ <code>401</code> แล้วปิด Response ด้วย <code>res.status(401).end()</code> เฉย ๆ ตรงจุดนี้ (<code>.end()</code> คือ "จบ Request เลย ไม่มี Body จะส่ง" ซึ่งบางครั้งก็เพียงพอแล้ว) เหตุผลที่ลังเลระหว่างสอง Status คือเราแยกไม่ออกจริง ๆ ว่ามันไม่เจอเพราะ Id ไม่มีอยู่จริง หรือเพราะ Id มีอยู่แต่ไม่ใช่ของคุณ แต่โค้ดที่ลงเอยใน Repo ใช้ <code>404</code> ซึ่งผมว่าดีกว่า เพราะการตอบ <code>404</code> เหมือนกันทั้งสองกรณี<strong>ไม่เผยให้คนนอกรู้ว่า Id นั้นมีอยู่จริงหรือไม่</strong></p>
       <p><strong>เรื่อง Tag เป็นการแทนที่ ไม่ใช่การเพิ่ม</strong> ถ้าคุณส่ง <code>tagIds</code> มา เราลบความสัมพันธ์เดิมทั้งหมดทิ้งก่อนแล้วค่อยใส่ชุดใหม่ นี่ไม่ใช่วิธีที่ถูกหรือผิด มันคือการตัดสินใจของคนออกแบบ Server ว่าจะตีความคำว่า "อัปเดต Tag" อย่างไร และต้องเขียนไว้ในเอกสาร API ให้ชัด</p>
 
@@ -232,7 +226,7 @@ if (!habit) {
 router.get('/:id', getHabitById)
 router.post('/', validateBody(createHabitSchema), createHabit)
 router.patch('/:id', updateHabit)</code></pre>
-      <p>สี่บรรทัดนี้เข้าไปแทนที่ Handler ปลอมที่เราวางไว้ตั้งแต่บทที่ 8 ส่วนอีกสองเส้นในไฟล์เดียวกันคือ <code>router.delete('/:id', ...)</code> กับ <code>router.post('/:id/complete', ...)</code> <strong>ให้คงไว้เป็น Handler ปลอมเหมือนเดิม</strong> เพราะคอร์สนี้ไม่ได้เขียน Controller ของสองตัวนั้น (ใน Repo มีให้ครบชื่อ <code>deleteHabit</code> กับ <code>completeHabit</code>) และผมอยากยกให้เป็นแบบฝึกหัดของคุณ — <code>deleteHabit</code> คือ <code>updateHabit</code> ที่เปลี่ยน <code>.update()</code> เป็น <code>.delete()</code> โดยยังต้องมี <code>and()</code> เช็คเจ้าของเหมือนเดิมเป๊ะ</p>
+      <p>สี่บรรทัดนี้เข้าไปแทนที่ Handler ปลอมที่เราวางไว้ตั้งแต่บทที่ 8 ส่วนอีกสองเส้นในไฟล์เดียวกันคือ <code>router.delete('/:id', ...)</code> กับ <code>router.post('/:id/complete', ...)</code> <strong>ให้คงไว้เป็น Handler ปลอมเหมือนเดิม</strong> เพราะคอร์สนี้ไม่ได้เขียน Controller ของสองตัวนั้น (ใน Repo มีให้ครบชื่อ <code>deleteHabit</code> กับ <code>completeHabit</code>) และผมอยากยกให้เป็นแบบฝึกหัดของคุณ — <code>deleteHabit</code> คือ <code>updateHabit</code> ที่เปลี่ยน <code>update</code> เป็น <code>delete</code> โดยยังต้องมี <code>where: { id, userId }</code> เช็คเจ้าของเหมือนเดิมเป๊ะ</p>
       <p>ผมเลือก <code>PATCH</code> ไม่ใช่ <code>PUT</code> เพราะเราอัปเดตแค่บางส่วน ตามที่คุยกันไว้ในบทที่ 7 แต่สังเกตว่า <code>PATCH</code> ของเราไม่มี Validation ทั้งที่ควรมี เหตุผลตรง ๆ คือ Schema ของมันต้องเป็นแบบ Partial คือทุก Field เป็น Optional หมด (Zod มี <code>.partial()</code> ให้อยู่แล้ว) แต่ผมขี้เกียจเขียน และถ้าส่งข้อมูลผิดมาแล้วมันพัง ผมก็ยอมรับได้เพราะยังไงมันก็พังอยู่ดี แต่พูดให้เป็นธรรม <strong>เหตุผลจริง ๆ ที่ควรใส่ Validation ไม่ใช่เพื่อกัน Server พัง แต่เพื่อบอกผู้ใช้ให้ชัดว่าเขาพลาดที่ Field ไหน</strong> เวอร์ชันเต็มใน Repo จึงใส่ทั้ง <code>updateHabitSchema</code> และตรวจ Route Param ด้วย</p>
       <pre><code>const uuidSchema = z.object({
   id: z.uuid('Invalid habit ID format'),

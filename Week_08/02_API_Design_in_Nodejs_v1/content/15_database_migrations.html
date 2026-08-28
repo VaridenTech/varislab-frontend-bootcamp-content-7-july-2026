@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="ทำความเข้าใจ Migration ในฐานะ Version Control ของ Database ทั้ง Schema Migration และ Data Migration ความต่างของ Destructive กับ Non-destructive Change และเวิร์กโฟลว์ Generate กับ Push ของ drizzle-kit" />
+  <meta name="description" content="ทำความเข้าใจ Migration ในฐานะ Version Control ของ Database ทั้ง Schema Migration และ Data Migration ความต่างของ Destructive กับ Non-destructive Change และเวิร์กโฟลว์ Migrate กับ Push ของ Prisma" />
   <title>Database Migrations — API Design in Node.js</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -38,7 +38,7 @@
         <li><strong>Apply</strong> — รัน Migration ใส่ Database</li>
         <li><strong>Deploy</strong> — ทำแบบเดียวกันบน Production แต่ควรทดสอบบน Staging ให้ผ่านก่อนเสมอ</li>
       </ol>
-      <p>คนส่วนใหญ่ทำแบบนี้ แต่ผมไม่ทำแบบนี้ทุกครั้ง ผมไม่ชอบ วิธีเลี่ยงมีอยู่ ไม่ใช่การเลี่ยงทั้งหมดหรอก แต่ทำให้เหลือน้อยที่สุดได้ ซึ่งเราจะได้เห็นกันจริง ๆ ตอนใช้ Drizzle</p>
+      <p>คนส่วนใหญ่ทำแบบนี้ แต่ผมไม่ทำแบบนี้ทุกครั้ง ผมไม่ชอบ วิธีเลี่ยงมีอยู่ ไม่ใช่การเลี่ยงทั้งหมดหรอก แต่ทำให้เหลือน้อยที่สุดได้ ซึ่งเราจะได้เห็นกันจริง ๆ ตอนใช้ Prisma</p>
 
       <h2>หัวใจที่สุดของบทนี้: Destructive กับ Non-destructive</h2>
       <p>ไม่ใช่ทุกการเปลี่ยนแปลงที่เจ็บเท่ากัน ถ้าจับจุดนี้ได้ ชีวิตคุณจะง่ายขึ้นทันที</p>
@@ -67,24 +67,19 @@ ALTER TABLE habits ALTER COLUMN frequency SET NOT NULL;
 
 -- ขั้นที่ 4 (Schema) ทิ้งคอลัมน์เก่า
 ALTER TABLE habits DROP COLUMN target_days_per_week;</code></pre>
-      <p>ผมยกมาให้ดูเพื่อให้กลัวไว้ก่อน เราจะไม่เขียน SQL แบบนี้เองในคอร์สนี้ Drizzle จะสร้างให้เรา แต่คุณควรอ่านมันออกเวลาที่ต้องรีวิว</p>
+      <p>ผมยกมาให้ดูเพื่อให้กลัวไว้ก่อน เราจะไม่เขียน SQL แบบนี้เองในคอร์สนี้ Prisma จะสร้างให้เรา แต่คุณควรอ่านมันออกเวลาที่ต้องรีวิว</p>
 
-      <h2>เหตุผลจริง ๆ ที่ผมย้ายจาก Prisma มา Drizzle</h2>
-      <p>บทที่แล้วผมค้างเรื่องนี้ไว้ ตอนนี้อธิบายได้แล้ว</p>
-      <p>Prisma ต้อง Generate Client ขึ้นมาเพื่อให้ได้ Type ที่ถูกต้อง แต่พอเป็นเรื่อง Migration มันมีปัญหา เพราะ Migration ทำงานโดย<strong>ไล่รันทุกไฟล์ตามลำดับที่มันถูกสร้าง</strong> ตั้งแต่ไฟล์แรกจนถึงไฟล์ล่าสุด</p>
-      <p>ทีนี้ถ้าเรามีแต่ Prisma Schema ฉบับล่าสุดฉบับเดียว แล้วเราจะเอา Schema ของ Migration ตัวก่อน ๆ มาจากไหน คำตอบคือไม่มี สุดท้ายเลยต้องมานั่งเขียน Migration เป็น SQL ดิบเอง ซึ่งผมไม่เอาด้วย ผมเลยย้ายมา Drizzle ที่เป็น TypeScript ล้วน ไม่มี DSL ไม่มีขั้นตอน Code Generation และ Query ที่ออกมาเดาได้</p>
-
-      <h2>drizzle-kit ตามรอยการเปลี่ยนแปลงอย่างไร</h2>
-      <p>Drizzle ไม่ได้เป็นแค่ ORM มันมาพร้อม CLI ชื่อ <code>drizzle-kit</code> ที่ดูแลงานฝั่ง Migration ให้ วิธีที่มันตามรอยคือ<strong>เก็บ Snapshot ของ Schema ไว้ทุกครั้งที่เรา Generate</strong></p>
-      <p>เวลาเราสั่ง Generate มันจะเทียบ Schema ปัจจุบันในโค้ดกับ Snapshot ล่าสุดที่มันเก็บไว้ แล้วสรุปว่ามีอะไรต่างกันบ้าง จากนั้นเขียนไฟล์ SQL ออกมาหนึ่งไฟล์พร้อม Snapshot ใหม่ ทั้งคู่ถูกเก็บลงโฟลเดอร์ <code>migrations</code> ซึ่ง<strong>เรา Commit ขึ้น Git</strong> นั่นแปลว่าประวัติของ Database อยู่ในที่เดียวกับประวัติของโค้ด และทีมทุกคนได้ไฟล์ชุดเดียวกัน</p>
-      <p>เวลาเราสั่ง Migrate มันจะไปดูว่า Database ตัวนั้นรันไฟล์ไหนไปแล้วบ้าง แล้วรันเฉพาะไฟล์ที่ยังค้างอยู่ตามลำดับ</p>
-      <p>แต่ Drizzle ยังมีอีกทางเลือกหนึ่งที่ชื่อว่า <strong>Push</strong> ซึ่งเป็นทางที่เราจะใช้บ่อยที่สุดตอนพัฒนา วิธีจำความต่างที่ง่ายที่สุดคือเทียบกับ Git</p>
+      <h2>Prisma Migrate ตามรอยการเปลี่ยนแปลงอย่างไร</h2>
+      <p>บทที่แล้วผมค้างไว้ว่าเหตุผลข้อใหญ่ที่สุดที่เลือก Prisma คือเรื่อง Migration ตอนนี้อธิบายได้แล้ว</p>
+      <p>Prisma ไม่ได้เป็นแค่ ORM มันมาพร้อม CLI ที่ดูแลงานฝั่ง Migration ให้ทั้งหมด เวลาเราสั่ง <code>prisma migrate dev</code> มันจะเทียบ Schema ปัจจุบันในไฟล์ <code>schema.prisma</code> กับ<strong>ผลรวมของ Migration ทุกไฟล์ที่เคยสร้างมา</strong> แล้วสรุปว่ามีอะไรต่างกันบ้าง จากนั้นเขียนไฟล์ SQL ออกมาหนึ่งไฟล์ เก็บลงโฟลเดอร์ <code>prisma/migrations</code> ซึ่ง<strong>เรา Commit ขึ้น Git</strong> นั่นแปลว่าประวัติของ Database อยู่ในที่เดียวกับประวัติของโค้ด และทีมทุกคนได้ไฟล์ชุดเดียวกัน</p>
+      <p>ฝั่ง Database เอง Prisma ก็สร้างตารางพิเศษชื่อ <code>_prisma_migrations</code> ไว้จดว่า Database ตัวนั้นรันไฟล์ไหนไปแล้วบ้าง เวลาสั่ง Migrate ซ้ำ มันจึงรันเฉพาะไฟล์ที่ยังค้างอยู่ตามลำดับ ไม่มีทางรันซ้ำหรือข้ามไฟล์</p>
+      <p>แต่ Prisma ยังมีอีกทางเลือกหนึ่งที่ชื่อว่า <strong>Push</strong> (<code>prisma db push</code>) ซึ่งเป็นทางที่เราจะใช้บ่อยที่สุดตอนพัฒนา วิธีจำความต่างที่ง่ายที่สุดคือเทียบกับ Git</p>
       <ul>
-        <li><strong>Generate แล้ว Migrate</strong> เหมือนการเปิด PR แล้วรีวิวก่อนค่อย Merge เข้า Main มีร่องรอยเก็บไว้ทุกขั้น เหมาะกับ Production</li>
+        <li><strong>Migrate</strong> เหมือนการเปิด PR แล้วรีวิวก่อนค่อย Merge เข้า Main มีร่องรอยเก็บไว้ทุกขั้น เหมาะกับ Production</li>
         <li><strong>Push</strong> เหมือนการ Push ตรงเข้า Main ไม่สนว่าในนั้นมีอะไร เอา Schema ปัจจุบันยัดเข้า Database ให้ตรงกันเดี๋ยวนี้ ไม่มีไฟล์ Migration เกิดขึ้น</li>
       </ul>
       <p>Push บน Production คือหายนะ แต่บนเครื่องเราเองมันคือสวรรค์ เพราะ Database ตัวนั้นเป็นของเราคนเดียว ข้อมูลข้างในเป็นข้อมูลปลอมที่ Seed ขึ้นมาเอง จะพังก็ Seed ใหม่</p>
-      <p>เวิร์กโฟลว์ที่เราจะใช้จริงในคอร์สนี้จึงเป็นแบบนี้ ตอนพัฒนาให้แก้ Schema แล้ว Push รัว ๆ กี่รอบก็ได้ พอฟีเจอร์เสร็จพร้อมเปิด PR แล้วค่อย Generate <strong>ครั้งเดียว</strong> ให้ได้ไฟล์ Migration ไฟล์เดียวที่รวมทุกการเปลี่ยนแปลง ไม่ใช่หกไฟล์จากหกครั้งที่เราเปลี่ยนใจ เพราะ PR ที่มี Migration หกไฟล์ไม่มีใครกล้า Merge ให้หรอก</p>
+      <p>เวิร์กโฟลว์ที่เราจะใช้จริงในคอร์สนี้จึงเป็นแบบนี้ ตอนพัฒนาให้แก้ Schema แล้ว Push รัว ๆ กี่รอบก็ได้ พอฟีเจอร์เสร็จพร้อมเปิด PR แล้วค่อยรัน <code>migrate dev</code> <strong>ครั้งเดียว</strong> ให้ได้ไฟล์ Migration ไฟล์เดียวที่รวมทุกการเปลี่ยนแปลง ไม่ใช่หกไฟล์จากหกครั้งที่เราเปลี่ยนใจ เพราะ PR ที่มี Migration หกไฟล์ไม่มีใครกล้า Merge ให้หรอก</p>
 
       <h2>แผนที่ข้อมูลของ Habit Tracker</h2>
       <p>ก่อนจบบท มาดูหน้าตาข้อมูลที่เราจะสร้างกันในบทหน้า เรามีห้าตาราง</p>
@@ -97,12 +92,12 @@ ALTER TABLE habits DROP COLUMN target_days_per_week;</code></pre>
       </ul>
       <p>สองความสัมพันธ์แรกเป็น One-to-Many ทั้งคู่ User หนึ่งคนมีได้หลาย Habit และ Habit หนึ่งอันมีได้หลาย Entry ตามกฎที่เราคุยกันไปแล้ว Foreign Key จึงไปอยู่ฝั่ง Many เสมอ</p>
       <p>ส่วน <code>habits</code> กับ <code>tags</code> เป็น Many-to-Many คือ Habit หนึ่งอันติดได้หลาย Tag และ Tag หนึ่งอันก็ไปเกาะได้หลาย Habit กรณีแบบนี้เราไม่แปะ Foreign Key ใส่กันตรง ๆ แต่<strong>สร้างตารางกลางขึ้นมาอีกหนึ่งตาราง</strong> ซึ่งก็คือ <code>habit_tags</code> หน้าที่ของมันคือเก็บ Foreign Key ของทั้งสองฝั่งไว้คู่กันเท่านั้น อยากรู้ว่า Tag นี้มี Habit อะไรบ้าง ก็ Query ตารางนี้ด้วย <code>tag_id</code> แล้วเอา <code>habit_id</code> ที่ได้ไปดึงตัวจริงต่อ</p>
-      <p>บทหน้าเราจะลงมือเขียน Schema ทั้งห้าตารางนี้ด้วย Drizzle กันจริง ๆ</p>
+      <p>บทหน้าเราจะลงมือเขียน Schema ทั้งห้าตารางนี้ด้วย Prisma กันจริง ๆ</p>
     </article>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link lesson-navigation__link--previous" href="14_database_schemas_and_orms.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link lesson-navigation__link--next" href="16_create_tables_with_drizzle.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="16_create_tables_with_prisma.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
 </body>

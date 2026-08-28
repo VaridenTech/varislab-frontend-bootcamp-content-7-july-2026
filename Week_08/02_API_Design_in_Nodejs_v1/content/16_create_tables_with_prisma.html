@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="ลงมือเขียนไฟล์ prisma/schema.prisma สร้างตาราง users, habits, entries, tags และ habit_tags ด้วย Prisma ORM พร้อมกำหนด Foreign Key, onDelete Cascade และประกาศความสัมพันธ์ด้วย @relation" />
+  <title>สร้างตารางและความสัมพันธ์ด้วย Prisma ORM — API Design in Node.js</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <article>
+      <h1>สร้างตารางและความสัมพันธ์ด้วย Prisma ORM</h1>
+      <p>ทฤษฎีพอแล้ว บทนี้เราจะเขียน Schema ทั้งห้าตารางของ Habit Tracker กันจริง ๆ เริ่มจากติดตั้ง Package กันก่อน Prisma แบ่งเป็นสองส่วน คือ CLI ที่ใช้ตอนพัฒนา กับ Client ที่โค้ดเราเรียกใช้ตอนรันจริง</p>
+      <pre><code>npm install @prisma/client
+npm install -D prisma</code></pre>
+      <p>แล้วสั่งให้ Prisma ตั้งโครงให้เรา</p>
+      <pre><code>npx prisma init</code></pre>
+      <p>คำสั่งนี้สร้างของให้เราสองชิ้น คือโฟลเดอร์ <code>prisma/</code> ที่มีไฟล์ <code>schema.prisma</code> อยู่ข้างใน กับไฟล์ <code>prisma.config.ts</code> ที่รากโปรเจกต์ ตัวหลังคือไฟล์ตั้งค่าของ CLI ซึ่งเราจะกลับมาต่อสายมันเข้ากับ Database จริงในบทที่ 18 บทนี้โฟกัสที่ <code>schema.prisma</code> อย่างเดียว</p>
+
+      <h2>รู้จักไฟล์ schema.prisma</h2>
+      <p>Prisma ให้เราเขียน Schema ด้วยภาษาเฉพาะของมันเอง นามสกุลไฟล์คือ <code>.prisma</code> แนะนำให้ติดตั้ง Extension ชื่อ <strong>Prisma</strong> ใน VS Code ก่อนเลย จะได้ทั้ง Syntax Highlight, Autocomplete และ Format ไฟล์ให้อัตโนมัติ</p>
+      <p>เปิดไฟล์ขึ้นมาแล้วเริ่มจากสองบล็อกบนสุด</p>
+      <pre><code>generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  runtime                = "nodejs"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}</code></pre>
+      <p>บล็อก <code>generator</code> คือการบอกว่า "เวลาสร้าง Client ให้ผม สร้างแบบไหน" — <code>provider</code> ที่ชื่อ <code>prisma-client</code> คือ Generator รุ่นปัจจุบันที่สร้างโค้ดออกมาเป็น TypeScript ตรง ๆ ส่วน <code>output</code> คือโฟลเดอร์ปลายทาง (Path นับจากโฟลเดอร์ <code>prisma/</code> ดังนั้น <code>../src/generated/prisma</code> คือไปโผล่ที่ <code>src/generated/prisma</code>) สามบรรทัดล่างคือการบอกว่าโปรเจกต์เราเป็น ESM และรันไฟล์ <code>.ts</code> ตรง ๆ ด้วย Node.js ซึ่งตรงกับที่เราตั้งโปรเจกต์ไว้ตั้งแต่ต้นคอร์สพอดี</p>
+      <p>ส่วน <code>datasource</code> บอกแค่ว่า Database ของเราเป็น PostgreSQL สังเกตว่า<strong>ไม่มี Connection String อยู่ในนี้</strong> เพราะค่านั้นเป็นความลับและเปลี่ยนตามสภาพแวดล้อม Prisma จึงให้ไปประกาศใน <code>prisma.config.ts</code> แทน ซึ่งเดี๋ยวเราจะทำกันในบทที่ 18</p>
+
+      <h2>ตาราง users</h2>
+      <p>ต่อจากสองบล็อกนั้น เขียน Model แรกของเรา</p>
+      <pre><code>model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique @db.VarChar(255)
+  username  String   @unique @db.VarChar(50)
+  password  String   @db.VarChar(255)
+  firstName String?  @map("first_name") @db.VarChar(50)
+  lastName  String?  @map("last_name") @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("users")
+}</code></pre>
+      <p>มีรายละเอียดหลายจุดที่ควรเข้าใจ ไม่ใช่แค่ก๊อปวาง</p>
+      <ul>
+        <li><strong>หนึ่ง Model เท่ากับหนึ่งตาราง</strong> ธรรมเนียมของ Prisma คือตั้งชื่อ Model เป็นเอกพจน์ตัวใหญ่ (<code>User</code>) แล้วใช้ <code>@@map("users")</code> บอกชื่อตารางจริงในฐานข้อมูล ซึ่งธรรมเนียมฝั่งนั้นคือพหูพจน์ตัวเล็ก</li>
+        <li>เช่นเดียวกัน <strong><code>@map</code> คือการบอกชื่อคอลัมน์จริง</strong> สังเกตว่า <code>firstName</code> ในโค้ดแมปไปเป็น <code>first_name</code> ในฐานข้อมูล เพราะธรรมเนียมของ Relational Database คือ Snake Case ส่วนธรรมเนียมของ JavaScript คือ Camel Case Prisma เลยให้เราเขียนสองชื่อคู่กันแบบนี้</li>
+        <li><code>@id @default(uuid()) @db.Uuid</code> คือ Primary Key แบบ UUID โดย Prisma จะสุ่มค่าให้เองตอนสร้างแถวใหม่ ข้อดีของ UUID คือไม่ซ้ำกันข้ามระบบ ใส่ใน URL ได้ และไม่หลุดข้อมูลว่าเรามีผู้ใช้กี่คนเหมือนเลขรันนิ่ง ส่วน <code>@db.Uuid</code> คือให้คอลัมน์ในฐานข้อมูลเป็นชนิด UUID จริง ๆ ไม่ใช่ Text ธรรมดา</li>
+        <li><strong>ทุก Field บังคับ (Not Null) โดยปริยาย</strong> ถ้าอยากให้เว้นว่างได้ต้องเติม <code>?</code> ต่อท้ายชนิดข้อมูลเอง สังเกตว่า <code>firstName</code> กับ <code>lastName</code> เราใส่ <code>?</code> ไว้ เพราะบางคนไม่อยากบอกชื่อจริง</li>
+        <li><code>@default(now())</code> บน <code>createdAt</code> คือให้เติมเวลาปัจจุบันให้เองตอนสร้างแถว ส่วน <code>updatedAt</code> เราแถม <code>@updatedAt</code> เข้าไปด้วย ซึ่งแปลว่า <strong>Prisma จะอัปเดตเวลาให้เองทุกครั้งที่แถวนั้นถูกแก้ไข</strong> โดยเราไม่ต้องเขียนโค้ดเติมเอง เรื่อง Timestamp นี้เป็น Best Practice ที่ผมจะย้ำอีกครั้งในบทหน้า</li>
+      </ul>
+
+      <h3>varchar กับ text ต่างกันอย่างไร</h3>
+      <p>ชนิดข้อมูล <code>String</code> ของ Prisma บน PostgreSQL จะกลายเป็นคอลัมน์แบบ <code>text</code> คือข้อความยาวเท่าไรก็ได้ ถ้าอยากจำกัดความยาวให้เติม <code>@db.VarChar(ความยาว)</code> ซึ่ง <code>varchar</code> ก็คือ Text ธรรมดานี่แหละ แค่มันจำกัดความยาวได้</p>
+      <p>ผมใส่ <code>@db.VarChar(255)</code> ให้ <code>email</code> ไว้ ไม่ใช่เพราะเชื่อว่าเป็นวิธีที่ดีที่สุด แต่เพื่อให้คุณเห็นว่ามันทำอะไรได้ จะจำกัดความยาวอีเมลจริง ๆ หรือไม่ก็แล้วแต่คุณ ส่วนคอลัมน์อย่าง <code>description</code> ที่เราไม่อยากจำกัดอะไรเลย ใช้ <code>String</code> เปล่า ๆ ไปตรง ๆ ง่ายกว่า</p>
+
+      <h3><code>@unique</code> คือทางลัดของการสร้าง Unique Index</h3>
+      <p>คุณเจอ Index มาแล้วในคอร์ส Database ของ Week 8 ขอทวนสั้น ๆ ในภาษาที่ใช้กับงานนี้ Index คือที่เก็บแยกอีกที่หนึ่งในฐานข้อมูล ที่จับคู่ Key ไว้กับ<em>ตำแหน่ง</em>ของข้อมูล พูดแบบ JavaScript มันคือ Object ที่ทำหน้าที่เป็น Hash Table นั่นเอง</p>
+      <p>ถ้าไม่มี Index การหาอะไรสักอย่างแปลว่าต้องไล่สแกนทั้งตาราง แต่ถ้ามี Index ฐานข้อมูลจะสแกนแค่ตัว Index ที่เล็กกว่ามาก (บางระบบเก็บไว้ใน Memory เลย) เจอ Key แล้วกระโดดไปที่ตำแหน่งของข้อมูลได้ทันที</p>
+      <p>การเติม <code>@unique</code> จึงหมายความสองอย่างพร้อมกัน คือ<strong>ห้ามมีอีเมลซ้ำในระบบ</strong> และ<strong>สร้าง Index ให้คอลัมน์นี้ด้วย</strong> เพื่อให้ตอนมีคนสมัครใหม่ ฐานข้อมูลตอบได้ทันทีว่าอีเมลนี้มีคนใช้แล้วหรือยัง โดยไม่ต้องไล่สแกนผู้ใช้ทั้งตาราง</p>
+      <p>สังเกตว่า <code>password</code> เรา <em>ไม่</em> ใส่ <code>@unique</code> ซึ่งฟังดูตลกแต่มีคนพลาดจริง ลองคิดดูว่าถ้ารหัสผ่านห้ามซ้ำ พอสมัครไม่ผ่านปุ๊บก็แปลว่ามีคนใช้รหัสนี้อยู่ เหลือแค่หาอีเมลให้เจอก็เข้าระบบได้เลย</p>
+      <p>อีกเรื่องที่อยากให้เห็นคือ <strong>Validation เกิดได้หลายชั้น</strong> ทั้งที่ Form ฝั่งหน้าบ้าน ที่ Middleware ที่เราเขียนไปในบทที่ 12 และที่ระดับ Database ตรงนี้ ชั้นนอกข้ามได้ง่าย แต่ชั้นในสุดข้ามไม่ได้เลย ยิ่งกฎตรงกันทุกชั้นยิ่งดี</p>
+
+      <h2>ตาราง habits และ Foreign Key ตัวแรกของเรา</h2>
+      <pre><code>model Habit {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String   @db.VarChar(100)
+  description String?
+  frequency   String   @db.VarChar(20) // daily, weekly, monthly
+  targetCount Int      @default(1) @map("target_count") // ทำกี่ครั้งต่อรอบ
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("habits")
+}</code></pre>
+      <p><code>userId</code> คือ Foreign Key ตัวแรกของเรา กฎข้อแรกคือ<strong>ชนิดต้องตรงกับ Primary Key ที่มันชี้ไป</strong> ฝั่ง <code>User.id</code> เป็น <code>String @db.Uuid</code> ฝั่งนี้ก็ต้องเป็นแบบเดียวกัน</p>
+      <p>ตัวที่ทำงานจริงคือบรรทัด <code>user User @relation(...)</code> อ่านว่า "Habit หนึ่งอันผูกกับ User หนึ่งคน โดยใช้คอลัมน์ <code>userId</code> ฝั่งเราไปเทียบกับ <code>id</code> ฝั่งเขา" บรรทัดนี้แหละที่สั่งให้ฐานข้อมูลสร้าง Foreign Key Constraint จริง ๆ</p>
+      <p>จุดที่ต้องเข้าใจให้ชัดคือ <strong>Field ชื่อ <code>user</code> ไม่ใช่คอลัมน์ในตาราง</strong> ตาราง <code>habits</code> มีแค่ <code>user_id</code> เท่านั้น <code>user</code> เป็นของที่ Prisma เสกขึ้นมาให้ฝั่งโค้ด เพื่อให้เวลา Query เราขอ "Habit พร้อม User เจ้าของ" ได้ในคำสั่งเดียว ซึ่งเราจะได้ใช้จริงตอนเขียน Controller</p>
+      <p><code>onDelete: Cascade</code> คือคำสั่งว่า<strong>ถ้า User ที่ถูกอ้างถึงถูกลบ ให้ลบ Habit นี้ตามไปด้วย</strong> ซึ่งสมเหตุสมผล เพราะ Habit ที่ไม่มีเจ้าของก็ไม่มีความหมาย</p>
+      <p>และเพราะ <code>userId</code> ไม่มีเครื่องหมาย <code>?</code> จึง<strong>สร้าง Habit โดยไม่ผูกกับ User ไม่ได้เลย</strong> ฐานข้อมูลจะปฏิเสธตั้งแต่ต้น ไม่ต้องรอให้โค้ดเราตรวจ</p>
+      <p>คอลัมน์ที่เหลือ <code>frequency</code> คือรอบการทำ เช่น daily, weekly, monthly ตรงนี้จริง ๆ ควรใช้ Enum จะดีกว่า แต่ผมยังไม่ใส่และจะกลับมาคุยเรื่องนี้ในบทหน้า <code>targetCount</code> คือเป้าหมายว่าต้องทำกี่ครั้งต่อรอบ เผื่อ Habit อย่าง "ดื่มน้ำแปดแก้วต่อวัน" และ <code>isActive</code> ให้ซ่อน Habit ที่เลิกทำแล้วโดยไม่ต้องลบประวัติทิ้ง</p>
+
+      <h3>ความสัมพันธ์ต้องประกาศทั้งสองฝั่ง</h3>
+      <p>ถ้าคุณเซฟไฟล์ตอนนี้ Prisma จะฟ้อง Error ทันที เพราะกฎของมันคือ<strong>เมื่อประกาศความสัมพันธ์ฝั่งหนึ่ง ต้องประกาศอีกฝั่งด้วยเสมอ</strong> กลับขึ้นไปเติมบรรทัดเดียวใน Model <code>User</code></p>
+      <pre><code>model User {
+  // ...field เดิมทั้งหมด
+  habits Habit[]
+
+  @@map("users")
+}</code></pre>
+      <p><code>habits Habit[]</code> อ่านว่า "User หนึ่งคนมี Habit ได้หลายอัน" นี่คือหน้าตาของ One-to-Many ในภาษา Prisma — ฝั่ง Many ถือ Foreign Key ส่วนฝั่ง One ได้ Field ที่เป็น Array และเช่นเดียวกับ <code>user</code> เมื่อกี้ <strong><code>habits</code> ไม่ใช่คอลัมน์จริงในตาราง <code>users</code></strong> มันคือ Field ที่ Prisma เตรียมไว้ให้ตอน Query เท่านั้น</p>
+      <p>เกร็ดที่ช่วยชีวิตได้คือ ถ้าขี้เกียจเขียนฝั่งกลับเอง สั่ง <code>npx prisma format</code> แล้ว Prisma จะเติม Field ฝั่งที่ขาดให้อัตโนมัติ (Extension ใน VS Code ก็ทำให้ตอนเซฟไฟล์เช่นกัน)</p>
+
+      <h2>ตาราง entries</h2>
+      <pre><code>model Entry {
+  id              String   @id @default(uuid()) @db.Uuid
+  habitId         String   @map("habit_id") @db.Uuid
+  habit           Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  completion_date DateTime @default(now())
+  note            String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("entries")
+}</code></pre>
+      <p>รูปแบบเดิมทุกอย่าง Entry หนึ่งแถวคือ "ทำ Habit นี้สำเร็จหนึ่งครั้ง" ความสัมพันธ์เป็น One-to-Many อีกครั้ง Foreign Key จึงอยู่ฝั่ง Many ตามเคย และ Cascade ก็สมเหตุสมผล เพราะถ้า Habit ถูกลบ ประวัติการทำ Habit นั้นก็ไม่ควรค้างอยู่ (อย่าลืมไปเติม <code>entries Entry[]</code> ใน Model <code>Habit</code> ด้วย หรือให้ <code>prisma format</code> เติมให้)</p>
+      <p><code>completion_date</code> ใส่ <code>@default(now())</code> ไว้ เพราะปกติแถวนี้ถูกสร้างตอนที่คุณเพิ่งทำเสร็จพอดี ส่วน <code>note</code> เป็น Optional เผื่ออยากบันทึกอะไรไว้</p>
+      <p>สังเกตว่า Field นี้ชื่อ <code>completion_date</code> ทั้งฝั่งโค้ดและฝั่งฐานข้อมูล ไม่ได้เป็น Camel Case เหมือน Field อื่น อันนี้คือหน้าตาที่มันเป็นจริงในโปรเจกต์ ให้จำชื่อนี้ไว้ เพราะเราจะใช้มันตอนเขียน Seed และ Controller ในบทถัด ๆ ไป</p>
+
+      <h2>ตาราง tags กับกับดักเรื่อง Unique</h2>
+      <pre><code>model Tag {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(50)
+  color     String   @default("#6B7280") @db.VarChar(7) // hex color
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("tags")
+}</code></pre>
+      <p><code>color</code> ยาว 7 ตัวอักษรพอดีสำหรับ Hex Color อย่าง <code>#6B7280</code> ตรงนี้ไม่มีอะไรซับซ้อน แต่บรรทัด <code>name</code> มีกับดักที่ผมอยากให้เห็น</p>
+      <p>การใส่ <code>@unique</code> ตรงนี้แปลว่าชื่อ Tag <strong>ห้ามซ้ำกันทั้งระบบ</strong> ซึ่งหมายความว่าถ้าผมสร้าง Tag ชื่อ Fitness ไปแล้ว คุณจะสร้าง Tag ชื่อเดียวกันบนบัญชีของคุณไม่ได้เลย ทั้งที่มันควรเป็นของใครของมัน</p>
+      <p>สิ่งที่ถูกต้องกว่าคือทำ Unique บน<em>คู่</em>ของ <code>userId</code> กับ <code>name</code> (ซึ่งต้องเพิ่มคอลัมน์ <code>userId</code> ให้ตาราง <code>tags</code> ก่อน) ซึ่ง Prisma รองรับผ่าน <code>@@unique([userId, name])</code> แต่มันซับซ้อนขึ้นอีกระดับ ผมเลยขอคงไว้แบบนี้ก่อนในคอร์ส แล้วบอกให้คุณรู้ว่ามันเป็นข้อจำกัด</p>
+      <p>ที่ยกมาเล่าเพราะกับดักแบบนี้เกิดขึ้นได้จริง Server ตัวแรกในชีวิตผมเคยมีช่องโหว่ที่ใครก็เข้าไปดูข้อมูลของคนอื่นได้ ทั้งที่ตอนนั้นผมคิดว่าเขียนดีมากแล้ว และมันถูกใช้งานจริงด้วย ผิดแล้วก็จำไว้</p>
+
+      <h2>ตาราง habit_tags ตัวเชื่อม Many-to-Many</h2>
+      <pre><code>model HabitTag {
+  id        String   @id @default(uuid()) @db.Uuid
+  habitId   String   @map("habit_id") @db.Uuid
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  tagId     String   @map("tag_id") @db.Uuid
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("habit_tags")
+}</code></pre>
+      <p>ตารางนี้ไม่มีข้อมูลของตัวเองเลย หน้าที่เดียวของมันคือ<strong>จับคู่ Habit หนึ่งอันเข้ากับ Tag หนึ่งอัน</strong> แล้วมี <code>id</code> ของตัวเองไว้อ้างถึงคู่นั้น สังเกตว่าจากมุมของตารางกลาง ความสัมพันธ์ทั้งสองขาเป็นแบบ "หนึ่งแถวผูกกับของหนึ่งชิ้น" ความเป็น Many-to-Many เกิดขึ้นเมื่อมองภาพรวมจากการที่มีหลายแถว</p>
+      <p>ให้เห็นภาพชัด ๆ <strong>หนึ่งความสัมพันธ์เท่ากับหนึ่งแถวในตารางนี้</strong> ถ้า Habit หนึ่งอันติดยี่สิบ Tag จะมียี่สิบแถวที่ <code>habit_id</code> เหมือนกันหมดแต่ <code>tag_id</code> ต่างกัน ถ้า Tag หนึ่งอันไปเกาะยี่สิบ Habit ก็จะมียี่สิบแถวที่ <code>tag_id</code> เหมือนกันแต่ <code>habit_id</code> ต่างกัน</p>
+      <p>อย่าลืมเติมฝั่งกลับอีกสองที่ คือ <code>habitTags HabitTag[]</code> ใน Model <code>Habit</code> และใน Model <code>Tag</code> (Prisma มีระบบ Many-to-Many แบบที่มันสร้างตารางกลางให้เองโดยเราไม่ต้องเขียน Model นี้เลยด้วยนะครับ แต่ผมจงใจเขียนตารางกลางเองแบบนี้ เพราะอยากให้คุณเห็นกลไกจริงของมัน และเราอยากได้คอลัมน์ <code>createdAt</code> ของตัวเองด้วย)</p>
+
+      <h2>Schema ฉบับเต็มเมื่อประกอบครบ</h2>
+      <p>เมื่อเติมฝั่งกลับครบทุกที่ สาม Model หลักจะหน้าตาแบบนี้ (ตัดบรรทัดที่ไม่เปลี่ยนออกเพื่อความกระชับ)</p>
+      <pre><code>model User {
+  // ...
+  habits Habit[]
+}
+
+model Habit {
+  // ...
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries   Entry[]
+  habitTags HabitTag[]
+}
+
+model Tag {
+  // ...
+  habitTags HabitTag[]
+}</code></pre>
+      <p>วิธีอ่านมีแค่นี้ — Field ที่เป็นชนิด Model เดี่ยว (<code>user User</code>) คือ "ของชิ้นนี้เป็นของใคร" ส่วน Field ที่เป็น Array (<code>habits Habit[]</code>) คือ "ใครมีของพวกนี้บ้าง" ทั้งหมดนี้คือ Field ที่จะงอกขึ้นมาให้ตอน Query โดยที่ในฐานข้อมูลจริงมีแค่ Foreign Key ธรรมดา</p>
+      <p>จุดที่เก๋คือใน Prisma <strong>การบอกฐานข้อมูล (สร้าง Foreign Key) กับการบอก ORM (อยากได้ Field อะไรตอน Query) เป็นการประกาศครั้งเดียวจบ</strong>ที่ <code>@relation</code> — ORM บางตัวแยกสองเรื่องนี้เป็นคนละที่ ซึ่งเปิดช่องให้ประกาศไม่ครบหรือไม่ตรงกันได้</p>
+
+      <h2>สามเรื่องที่ต้องระวัง</h2>
+      <p><strong>หนึ่ง ใช้ <code>npx prisma validate</code> ให้เป็นนิสัย</strong> คำสั่งนี้ตรวจว่า Schema ของเราถูกกฎครบทุกข้อ ทั้งชนิดของ Foreign Key ที่ต้องตรงกัน ความสัมพันธ์ที่ประกาศไม่ครบสองฝั่ง หรือชื่อที่ชนกัน โดยไม่ต้องแตะฐานข้อมูลเลย มันคือตาข่ายชั้นแรกก่อนที่อะไรจะถูกสร้างจริง</p>
+      <p><strong>สอง Format แล้วอ่านซ้ำ</strong> <code>npx prisma format</code> ช่วยเติมฝั่งกลับของความสัมพันธ์ให้ก็จริง แต่มันเดาชื่อ Field ให้ตามชื่อ Model ถ้าคุณอยากได้ชื่ออื่นต้องแก้เอง และถ้าคุณเผลอชี้ <code>fields</code> ไปที่คอลัมน์ผิดตัวที่ชนิดบังเอิญตรงกัน เครื่องมือก็ช่วยไม่ได้ ให้อ่านสองรอบทุกครั้ง ผมเองเคยนั่งงงว่าทำไมข้อมูลไม่โผล่ ทั้งที่ตอนนั้นเปิด Note ที่ตัวเองเขียนไว้อยู่ตรงหน้า</p>
+      <p><strong>สาม จะแยก Schema เป็นหลายไฟล์ก็ได้</strong> เหมือนที่เราแยก Route ออกเป็นไฟล์ละ Resource Prisma ให้เราเปลี่ยนจากไฟล์เดียวเป็นโฟลเดอร์ <code>prisma/schema/</code> ที่ข้างในมีหลายไฟล์ <code>.prisma</code> ได้ บางโปรเจกต์ของผมที่มีเกิน 50 ตารางก็ต้องแยก เพราะเปิดไฟล์เดียวแล้วมึน แต่ของเรามีร้อยกว่าบรรทัด ผมเลยรวมไว้ไฟล์เดียว</p>
+      <p>Schema ของเราครบแล้ว บทหน้าเราจะดึงประโยชน์จากมันต่อ ด้วยการ Generate Client ที่มี TypeScript Type ครบทุกตาราง แล้วประกอบ Zod Schema สำหรับ Validation ให้เข้าชุดกัน</p>
+    </article>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link lesson-navigation__link--previous" href="15_database_migrations.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link lesson-navigation__link--index" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link lesson-navigation__link--next" href="17_schema_types_and_best_practices.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+</body>
+</html>

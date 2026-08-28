@@ -24,16 +24,18 @@
 
       <h2>2. รัน Migration ครั้งแรกเข้า Production</h2>
       <p>Database ที่เพิ่งสร้างมันว่างเปล่า ไม่รู้จัก Schema ของเราเลย ถ้า Deploy ตอนนี้แอปพังแน่นอน เราต้องส่ง Schema เข้าไปก่อน ที่ผ่านมาเราใช้ <code>npm run db:push</code> ยัด Schema เข้า Database ของเครื่องเราแบบตรง ๆ ซึ่งทำได้เพราะข้อมูลในนั้นพังก็ไม่มีใครเดือดร้อน แต่กับ Production <strong>ห้ามใช้ <code>db:push</code> เด็ดขาด</strong> มันเทียบเท่ากับการ Force Push ทับ Branch หลัก มีสิทธิ์ล้างข้อมูลของผู้ใช้จริงทิ้งได้ ต้องไปทาง Migration เท่านั้น</p>
-      <p>เปิดไฟล์ <code>.env</code> แล้วคอมเมนต์ <code>DATABASE_URL</code> ตัวเดิมไว้ ใส่ของ Production ลงไปแทนชั่วคราว (ใส่ใน <code>.env</code> นะครับ ไม่ใช่ <code>.env.test</code>) จากนั้นสั่ง</p>
-      <pre><code>npm run db:generate</code></pre>
-      <p>คำสั่งนี้ <strong>ไม่ได้คุยกับ Database เลย</strong> มันแค่อ่าน <code>src/db/schema.ts</code> แล้วเขียนไฟล์ SQL ออกมาในโฟลเดอร์ <code>migrations/</code> ตามที่เราตั้งค่า <code>out</code> ไว้ใน <code>drizzle.config.ts</code> ข้างในจะมีสองอย่าง</p>
+      <p>ขั้นแรกเราต้องมีไฟล์ Migration ก่อน ซึ่งตอนนี้ยังไม่มีเลยสักไฟล์ เพราะที่ผ่านมาเรา Push อย่างเดียว รันคำสั่งนี้ในขณะที่ <code>.env</code> ยังชี้ไปที่ Database ของเครื่องเราอยู่</p>
+      <pre><code>npm run db:migrate -- --name init</code></pre>
+      <p>คำสั่งนี้คือ <code>prisma migrate dev</code> ที่เราตั้ง Script ไว้ตั้งแต่บทที่ 18 (ขีดคู่ตรงกลางคือวิธีส่ง Argument ทะลุ npm เข้าไปหาคำสั่งจริง) มันจะเทียบ Schema กับประวัติ Migration ที่ว่างเปล่า แล้วเขียนไฟล์ออกมาในโฟลเดอร์ <code>prisma/migrations/</code> ตามที่ตั้งไว้ใน <code>prisma.config.ts</code> ข้างในจะมี</p>
       <ul>
-        <li><code>0000_xxxx.sql</code> — SQL จริงที่จะถูกรัน นี่คือสิ่งที่เราต้องนั่งเขียนเองถ้าไม่มี Drizzle</li>
-        <li><code>meta/</code> — มี <code>_journal.json</code> กับไฟล์ Snapshot ที่เป็นภาพแทน Schema ของเราในรูปแบบ JSON เอาไว้ให้ Drizzle เทียบ Diff ในครั้งถัดไป</li>
+        <li><code>20260829..._init/migration.sql</code> — SQL จริงที่จะถูกรัน นี่คือสิ่งที่เราต้องนั่งเขียนเองถ้าไม่มี Prisma</li>
+        <li><code>migration_lock.toml</code> — ไฟล์ที่จดไว้ว่าประวัติชุดนี้เป็นของ PostgreSQL กันคนในทีมเผลอสลับชนิด Database</li>
       </ul>
-      <p>สังเกตเลขนำหน้าชื่อไฟล์ Migration ต้องถูกรันตามลำดับเสมอ เลขจึงเป็นตัวบอกลำดับ (บางทีมใช้วันที่แทนเลขก็ได้เหมือนกัน) และ <strong>ไฟล์ Migration ต้องถูก Commit ขึ้น Git</strong> เพราะทุกคนในทีมและเครื่องที่ Deploy ต้องใช้มัน จากนั้นค่อยสั่งรัน Migration เข้า Database</p>
-      <pre><code>npm run db:migrate</code></pre>
-      <p>Drizzle จะไล่รันไฟล์ในโฟลเดอร์ <code>migrations/</code> จากเก่าสุดไปใหม่สุด ถ้าไม่มี Error แปลว่าเรียบร้อย ตรวจซ้ำได้ด้วย <code>npm run db:studio</code> แล้วดูว่าตารางทั้งห้าตัวขึ้นครบใน Production Database</p>
+      <p>สังเกต Timestamp นำหน้าชื่อโฟลเดอร์ Migration ต้องถูกรันตามลำดับเสมอ เวลาจึงเป็นตัวบอกลำดับ และ <strong>ไฟล์ Migration ต้องถูก Commit ขึ้น Git</strong> เพราะทุกคนในทีมและเครื่องที่ Deploy ต้องใช้มัน</p>
+      <p>มีสองเรื่องที่อาจเจอตอนรันคำสั่งนี้ หนึ่ง — มันอาจถามว่าขอ Reset Database ก่อนได้ไหม เพราะ Database ของเราถูก Push มาโดยไม่มีประวัติ Migration ตอบตกลงได้เลยแล้วค่อย Seed ใหม่ นี่คือเหตุผลที่เราทำขั้นตอนนี้กับ Database ของเครื่องเราเท่านั้น สอง — <code>migrate dev</code> ต้องสร้าง Database ชั่วคราวที่เรียกว่า <strong>Shadow Database</strong> ไว้คำนวณส่วนต่าง ถ้า Provider ของคุณไม่ให้สิทธิ์สร้าง จะเจอ Error รหัส <code>P3014</code> วิธีแก้คือสร้าง Database เปล่าเพิ่มอีกตัวแล้วใส่ <code>shadowDatabaseUrl</code> เพิ่มใน <code>datasource</code> ของ <code>prisma.config.ts</code></p>
+      <p>ได้ไฟล์มาแล้ว คราวนี้ค่อยหันปืนไปทาง Production เปิดไฟล์ <code>.env</code> แล้วคอมเมนต์ <code>DATABASE_URL</code> ตัวเดิมไว้ ใส่ของ Production ลงไปแทนชั่วคราว (ใส่ใน <code>.env</code> นะครับ ไม่ใช่ <code>.env.test</code>) จากนั้นสั่ง</p>
+      <pre><code>npm run db:deploy</code></pre>
+      <p>คำสั่งนี้คือ <code>prisma migrate deploy</code> — มันจะไล่รันไฟล์ในโฟลเดอร์ <code>prisma/migrations/</code> ที่ยังไม่เคยถูกรันบน Database ตัวนั้น จากเก่าสุดไปใหม่สุด แล้วจดบันทึกไว้ในตาราง <code>_prisma_migrations</code> โดย<strong>ไม่สร้างไฟล์ใหม่ ไม่ถามอะไร และไม่มีทาง Reset ข้อมูล</strong> ซึ่งคือคุณสมบัติที่เราต้องการจากคำสั่งที่จะไปแตะ Production พอดี ถ้าไม่มี Error แปลว่าเรียบร้อย ตรวจซ้ำได้ด้วย <code>npm run db:studio</code> แล้วดูว่าตารางทั้งห้าตัวขึ้นครบใน Production Database</p>
       <p>พอเสร็จแล้ว <strong>เอา Connection String ของ Production ออกจาก <code>.env</code> ทันที</strong> แล้วเอาของ Development กลับมา การรัน Migration จากเครื่องตัวเองใส่ Production แบบนี้เราทำเพราะเป็นการเรียนการสอน ในงานจริงจะไม่ทำกัน เขาจะรันผ่านสคริปต์บนเครื่องที่ Deploy แล้ว หรือผ่านเครื่องมือจัดการ Migration ที่บริษัทซื้อมาโดยเฉพาะ</p>
 
       <h2>3. ทำให้ Port เป็น Dynamic</h2>
@@ -69,7 +71,7 @@
       <p>ตัวเลข <code>&gt;=24.3.0</code> ตรงนี้สูงกว่า <code>23.6.0</code> ที่เราตั้งเป็นขั้นต่ำไว้ตอนต้นคอร์ส ซึ่งไม่ได้ขัดกัน — <code>23.6.0</code> คือเวอร์ชันต่ำสุดที่รัน TypeScript ตรง ๆ ได้ ส่วนบน Production เราขอเผื่อขึ้นไปที่ LTS ที่ใหม่กว่าเพื่อความสบายใจ ถ้าเครื่องคุณเป็น 23.x อยู่ก็เรียนจบคอร์สได้ตามปกติ</p>
 
       <h2>7. เตรียม Branch แล้ว Push ขึ้น GitHub</h2>
-      <p>Render ดึงโค้ดจาก GitHub ดังนั้นโค้ดที่จะ Deploy ต้องอยู่บน GitHub ก่อน โดยทั่วไปจะเป็น Branch <code>main</code> แต่ไม่จำเป็นต้องเป็น เพราะเราบอก Render ได้ว่าให้ดู Branch ไหน บางทีมมี Branch <code>production</code> แยกต่างหากก็มี เลือก Branch ที่มีโค้ดครบตามที่ต้องการ (อย่าลืมว่าโฟลเดอร์ <code>migrations/</code> ต้องอยู่ในนั้นด้วย) แล้ว Push ขึ้นไป</p>
+      <p>Render ดึงโค้ดจาก GitHub ดังนั้นโค้ดที่จะ Deploy ต้องอยู่บน GitHub ก่อน โดยทั่วไปจะเป็น Branch <code>main</code> แต่ไม่จำเป็นต้องเป็น เพราะเราบอก Render ได้ว่าให้ดู Branch ไหน บางทีมมี Branch <code>production</code> แยกต่างหากก็มี เลือก Branch ที่มีโค้ดครบตามที่ต้องการ (อย่าลืมว่าโฟลเดอร์ <code>prisma/migrations/</code> ต้องอยู่ในนั้นด้วย) แล้ว Push ขึ้นไป</p>
       <pre><code>git add .
 git commit -m "Prepare for deployment"
 git push origin your-branch</code></pre>
@@ -81,7 +83,7 @@ git push origin your-branch</code></pre>
         <li><strong>Language</strong> — เลือก Node</li>
         <li><strong>Branch</strong> — Branch ที่เพิ่ง Push ขึ้นไป</li>
         <li><strong>Root Directory</strong> — ปล่อยว่างไว้ถ้า <code>package.json</code> อยู่ที่รากของ Repository</li>
-        <li><strong>Build Command</strong> — เปลี่ยนเป็น <code>npm install</code> (ค่าเริ่มต้นอาจเป็น Yarn ซึ่งเราไม่ได้ใช้มาตลอดทั้งคอร์ส)</li>
+        <li><strong>Build Command</strong> — เปลี่ยนเป็น <code>npm install &amp;&amp; npx prisma generate</code> (ค่าเริ่มต้นอาจเป็น Yarn ซึ่งเราไม่ได้ใช้มาตลอดทั้งคอร์ส) ท่อนหลังสำคัญมาก เพราะโฟลเดอร์ <code>src/generated</code> ของเราอยู่ใน <code>.gitignore</code> เครื่องที่ Build จึงต้อง Generate Prisma Client ของมันเองก่อน ไม่งั้นแอปหา Client ไม่เจอตั้งแต่บรรทัด Import แรก</li>
         <li><strong>Start Command</strong> — Render อ่าน <code>package.json</code> เจอ Script <code>start</code> แล้วเดาให้เองว่าเป็น <code>npm start</code></li>
         <li><strong>Instance Type</strong> — เลือก Free ได้เลย</li>
       </ul>

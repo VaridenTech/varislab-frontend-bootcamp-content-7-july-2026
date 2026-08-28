@@ -22,7 +22,7 @@
         <li><strong>ออก Token</strong> — ล็อกอินให้เขาทันทีโดยไม่ต้องกรอกซ้ำ</li>
         <li><strong>ส่งอีเมลยืนยัน</strong> — ไม่บังคับ และเราจะไม่ทำในคอร์สนี้</li>
       </ol>
-      <p>ข้อ 1 เราทำเสร็จไปแล้วตั้งแต่บทที่ 12 ด้วย <code>validateBody</code> และ Schema ที่ Drizzle สร้างให้เรา</p>
+      <p>ข้อ 1 เราทำเสร็จไปแล้วตั้งแต่บทที่ 12 ด้วย <code>validateBody</code> บวกกับ <code>insertUserSchema</code> ที่เราเขียนล้อตาราง <code>users</code> ไว้ในบทที่ 17</p>
 
       <h2>ข้อ 2 อย่าเขียน Query เช็คความซ้ำเอง</h2>
       <p>ถ้าคุณกำลังจะเขียน Query ไปไล่ดูว่ามี Email นี้ใน Database แล้วหรือยัง <strong>หยุดก่อน</strong> ลองคิดดูว่าถ้าคุณมีผู้ใช้ร้อยล้านคน แล้วทุกครั้งที่มีคนสมัคร คุณต้องไปไล่หาทีละแถว มันคือหายนะด้านประสิทธิภาพ และผมรับประกันว่าไม่มีใคร Merge PR แบบนั้นให้คุณ</p>
@@ -75,8 +75,8 @@ export const hashPassword = async (password: string): Promise&lt;string&gt; =&gt
       <p>สร้างโฟลเดอร์ <code>src/controllers</code> แล้วสร้างไฟล์ <code>authController.ts</code> คำว่า Controller กับ Handler หมายถึงสิ่งเดียวกัน คือฟังก์ชันที่เราเสียบเข้าไปใน Route เพื่อบอกว่า "ถ้า Request วิ่งมาที่นี่ ให้รันตัวนี้" ผมสลับไปมาระหว่างสองคำนี้ตลอด รอบนี้ขอใช้คำว่า Controller</p>
       <p>เริ่มจากโครงเปล่า ๆ พร้อม <code>try/catch</code></p>
       <pre><code>import type { Request, Response } from 'express'
-import { db } from '../db/connection.ts'
-import { users, type NewUser } from '../db/schema.ts'
+import { prisma } from '../db/connection.ts'
+import type { NewUser } from '../db/types.ts'
 import { hashPassword } from '../utils/password.ts'
 
 export const register = async (
@@ -91,27 +91,22 @@ export const register = async (
   }
 }</code></pre>
       <p><strong>ทำไม 500</strong> เพราะถ้าโค้ดหลุดมาถึงตรงนี้ได้ แปลว่าไม่น่าใช่ความผิดของฝั่งผู้ใช้แล้ว Input ผ่านการตรวจไปตั้งแต่ Middleware ที่หน้า Route ดังนั้นสิ่งที่พังได้คือ Database ล่ม หรือโค้ดเราเอง — ซึ่งทั้งคู่เป็นความผิดของเรา</p>
-      <p>มีข้อยกเว้นอยู่หนึ่งกรณีคือคนสมัครด้วย Email ที่ถูกใช้ไปแล้ว Postgres จะโยน Error Code เฉพาะสำหรับ Duplicate ออกมา ซึ่งเราดักแล้วตอบ 400 แทนได้ ตอนนี้ผมขอตอบ 500 ไปทุกกรณีก่อน แล้วดูจาก <code>console.error</code> ว่า Error หน้าตาเป็นอย่างไรจริง ๆ</p>
-      <p>ส่วน <code>Request&lt;any, any, NewUser&gt;</code> คือการบอก TypeScript ว่า <code>req.body</code> หน้าตาเป็นอย่างไร Generic ตัวแรกคือ Params ซึ่ง Route นี้ไม่มี เลยใส่ <code>any</code> ตัวที่สามคือ Body — เราใช้ <code>NewUser</code> ที่ Export ไว้ตั้งแต่บทที่ 17 <strong>ไม่ใช่ <code>User</code></strong> เพราะ <code>User</code> มาจาก <code>$inferSelect</code> ซึ่งจะมี <code>id</code>, <code>createdAt</code>, <code>updatedAt</code> ครบเสมอ แต่คนที่กำลังจะสมัครยังไม่มีของพวกนั้น ส่วน <code>NewUser</code> มาจาก <code>$inferInsert</code> จึงเหลือแค่ที่จำเป็นจริง ๆ ตรงกับสิ่งที่ Client ส่งมาพอดี</p>
+      <p>มีข้อยกเว้นอยู่หนึ่งกรณีคือคนสมัครด้วย Email ที่ถูกใช้ไปแล้ว Prisma จะโยน Error ที่มี Code เฉพาะสำหรับ Unique Constraint ออกมา (ชื่อ Code คือ <code>P2002</code>) ซึ่งเราดักแล้วตอบ 400 แทนได้ ตอนนี้ผมขอตอบ 500 ไปทุกกรณีก่อน แล้วดูจาก <code>console.error</code> ว่า Error หน้าตาเป็นอย่างไรจริง ๆ</p>
+      <p>ส่วน <code>Request&lt;any, any, NewUser&gt;</code> คือการบอก TypeScript ว่า <code>req.body</code> หน้าตาเป็นอย่างไร Generic ตัวแรกคือ Params ซึ่ง Route นี้ไม่มี เลยใส่ <code>any</code> ตัวที่สามคือ Body — เราใช้ <code>NewUser</code> ที่ Export ไว้ตั้งแต่บทที่ 17 <strong>ไม่ใช่ <code>User</code></strong> เพราะ <code>User</code> คือหน้าตาของแถวที่ถูกสร้างแล้ว ซึ่งจะมี <code>id</code>, <code>createdAt</code>, <code>updatedAt</code> ครบเสมอ แต่คนที่กำลังจะสมัครยังไม่มีของพวกนั้น ส่วน <code>NewUser</code> มาจาก Type ตระกูล <code>CreateInput</code> จึงเหลือแค่ที่จำเป็นจริง ๆ ตรงกับสิ่งที่ Client ส่งมาพอดี</p>
       <p>ย้ำว่าสิ่งนี้<strong>ไม่ได้เปลี่ยนพฤติกรรมของโค้ดเลย</strong> มันคือ TypeScript ล้วน ๆ แต่ผลที่ได้คือพอพิมพ์ <code>req.body.</code> ในเอดิเตอร์ ทุก Field ของ User จะเด้งขึ้นมาให้เลือก</p>
 
       <h2>เติมเนื้อใน Controller</h2>
       <pre><code>const hashedPassword = await hashPassword(req.body.password)
 
-const [user] = await db
-  .insert(users)
-  .values({
+const user = await prisma.user.create({
+  data: {
     ...req.body,
     password: hashedPassword,
-  })
-  .returning({
-    id: users.id,
-    email: users.email,
-    username: users.username,
-    firstName: users.firstName,
-    lastName: users.lastName,
-    createdAt: users.createdAt,
-  })
+  },
+  omit: {
+    password: true,
+  },
+})
 
 const token = await generateToken({
   id: user.id,
@@ -126,9 +121,8 @@ return res.status(201).json({
 })</code></pre>
       <p>ลำดับสำคัญมาก เรา Hash <em>ก่อน</em> Insert เสมอ</p>
       <p>ลูกเล่นที่ผมชอบคือ <code>...req.body</code> แล้วเขียน <code>password</code> ทับไว้ทีหลัง ถ้าสลับลำดับกันคือเอา <code>password</code> ขึ้นก่อนแล้ว Spread ทีหลัง รหัสผ่านข้อความดิบจะทับค่าที่ Hash แล้วทันที ซึ่งเป็นบั๊กที่มองไม่เห็นด้วยตาเปล่า ที่กล้าทำแบบนี้ได้เพราะเรา Validate Body มาแล้วอย่างเข้มงวด จึงมั่นใจว่าไม่มีของแปลกปลอมหลุดเข้ามา</p>
-      <p><strong><code>.returning()</code> คือจุดสำคัญที่สุดของบทนี้</strong> ถ้าเราเรียก <code>.returning()</code> เปล่า ๆ Drizzle จะคืน User ทั้งแถวมาให้ ซึ่ง<em>รวมคอลัมน์ <code>password</code></em> ด้วย ถ้าเราเผลอส่งกลับไปให้ Client ก็เท่ากับยิงรหัสผ่านที่ Hash ไว้ออกไปในสายลม เราจึงระบุเองว่าอยากได้ Field ไหนบ้าง และไม่มี <code>password</code> อยู่ในนั้น</p>
+      <p><strong><code>omit</code> คือจุดสำคัญที่สุดของบทนี้</strong> ปกติ <code>create</code> จะคืน User ทั้งแถวมาให้ ซึ่ง<em>รวมคอลัมน์ <code>password</code></em> ด้วย ถ้าเราเผลอส่งกลับไปให้ Client ก็เท่ากับยิงรหัสผ่านที่ Hash ไว้ออกไปในสายลม เราจึงสั่ง <code>omit: { password: true }</code> เพื่อตัด Field นั้นทิ้งตั้งแต่ระดับ Query เลย (จะใช้ <code>select</code> ระบุทีละ Field ที่อยากได้แทนก็ได้ ให้ผลแบบเดียวกัน แค่เขียนยาวกว่า)</p>
       <p>ผมขอตั้งเป็นกฎเลย — <strong>เหตุผลเดียวที่คุณควร Query คอลัมน์ <code>password</code> คือตอนล็อกอินกับตอนเปลี่ยนรหัสผ่าน</strong> นอกจากสองเรื่องนี้ไม่มีเหตุผลอื่นเลย</p>
-      <p>และเพราะ <code>.returning()</code> คืน Array เสมอ เราจึง Destructure ด้วย <code>[user]</code> เหมือนที่ทำใน Seed Script</p>
 
       <h2>ทำไมต้องออก Token ทันทีที่สมัครเสร็จ</h2>
       <p>เพราะการออก Token ณ จุดนี้เท่ากับ<strong>ล็อกอินให้เขาอัตโนมัติ</strong> ลองเทียบสองแบบ</p>
