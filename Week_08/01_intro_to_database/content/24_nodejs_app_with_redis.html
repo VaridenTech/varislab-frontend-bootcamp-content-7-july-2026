@@ -15,7 +15,8 @@
       <p>สร้าง Directory ใหม่แล้วรันคำสั่งต่อไปนี้</p>
       <pre><code class="language-bash">npm init -y
 npm pkg set type=module
-npm i express redis@5.11.0 express@5.2.1
+npm pkg set scripts.start="node server.js"
+npm i redis@5.11.0 express@5.2.1
 mkdir static
 touch static/index.html server.js
 code . # or open this folder in VS Code or whatever editor you want</code></pre>
@@ -64,6 +65,7 @@ async function init() {
   console.log(`running on http://localhost:${PORT}`);
 }
 init();</code></pre>
+      <p>จากนั้นรัน <code>npm start</code> เพื่อเปิดเซิร์ฟเวอร์</p>
       <p>เราได้ Page View Counter ที่เรียบง่าย ตัวอย่างนี้แสดงวิธีเชื่อมต่อ Redis SDK และเพิ่ม Counter ทุกครั้งที่ Browser เรียก Endpoint</p>
       <p>ต่อไปเพิ่มฟังก์ชัน Cache ใน <code>server.js</code></p>
       <pre><code class="language-javascript">// under the client = redis.createClient() line
@@ -74,7 +76,7 @@ function cache(key, ttl, slowFn) {
       return cachedResponse;
     }
     const result = await slowFn(...props);
-    await client.setEx(key, ttl, result);
+    await client.setEx(key, ttl, result); // SETEX: ttl เป็นวินาที ไม่ใช่ millisecond
     return result;
   };
 }
@@ -93,7 +95,7 @@ async function verySlowAndExpensiveFunction() {
   return p;
 }
 
-const cachedFn = cache(&quot;expensive_call&quot;, 10, verySlowAndExpensiveFunction);
+const cachedFn = cache(&quot;expensive_call&quot;, 10, verySlowAndExpensiveFunction); // เก็บ Cache ไว้ 10 วินาที
 
 // inside init, under app.get pageviews
 app.get(&quot;/get&quot;, async (req, res) =&gt; {
@@ -108,7 +110,7 @@ app.get(&quot;/get&quot;, async (req, res) =&gt; {
       <ul>
         <li>ตัวอย่างนี้รวมทุกอย่างไว้ไม่กี่ไฟล์เพื่อให้อ่านง่าย ระบบจริงควรแยกหน้าที่เป็นหลายไฟล์</li>
         <li>ให้คิดว่า <code>verySlowAndExpensiveFunction</code> คือ Query ขนาดใหญ่หรือ API ราคาแพงที่เราไม่อยากเรียกบ่อย ตัวอย่างจงใจรอห้าวินาทีเพื่อจำลองงานนั้น</li>
-        <li><code>cache</code> เป็นฟังก์ชันทั่วไปที่รับ Redis Key, ระยะเวลาที่เก็บ และฟังก์ชันที่จะเรียกเมื่อไม่พบ Cache จากมุมผู้เรียกจะได้รับค่าจาก Cache ทันที หรือรอผลจากฟังก์ชันที่ช้าโดยไม่ต้องรู้รายละเอียด</li>
+        <li><code>cache</code> เป็นฟังก์ชันทั่วไปที่รับ Redis Key, ระยะเวลาที่เก็บเป็นวินาที และฟังก์ชันที่จะเรียกเมื่อไม่พบ Cache เพราะ <code>setEx</code> ใช้คำสั่ง SETEX ของ Redis ซึ่งหน่วยเป็นวินาที ถ้าต้องการ Millisecond ให้ใช้ <code>pSetEx</code> (PSETEX) จากมุมผู้เรียกจะได้รับค่าจาก Cache ทันที หรือรอผลจากฟังก์ชันที่ช้าโดยไม่ต้องรู้รายละเอียด</li>
         <li>โค้ดนี้ยังมีโอกาสเกิด Thundering Herd วิธีที่ดีกว่าคือสร้าง Lock Key อีกตัวเพื่อบอกว่ามีงานกำลังคำนวณคำตอบอยู่ Backend อาจ Poll Lock จนได้คำตอบ หรือส่ง 503 ให้ Frontend แล้วให้ Frontend ลองใหม่ภายหลัง</li>
       </ul>
       <p>Redis ใช้ในโค้ดได้อีกหลายรูปแบบ สองตัวอย่างนี้เน้นงานหลักคือ Cache และข้อมูลปริมาณสูงที่ไม่ใช่ข้อมูลวิกฤต เช่น Telemetry</p>

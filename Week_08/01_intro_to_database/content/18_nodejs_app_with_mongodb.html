@@ -16,6 +16,7 @@
       <p>สร้างไดเร็กทอรีใหม่ ในไดเร็กทอรีนั้นให้รัน:</p>
       <pre><code class="language-bash">npm init -y
 npm pkg set type=module
+npm pkg set scripts.start="node server.js"
 npm i mongodb@7.1.0 express@5.2.1
 mkdir static
 touch static/index.html server.js
@@ -92,6 +93,7 @@ async function init() {
   console.log(`running on http://localhost:${PORT}`);
 }
 init();</code></pre>
+      <p>จากนั้นรัน <code>npm start</code> เพื่อเปิดเซิร์ฟเวอร์</p>
       <blockquote><p>🚨 <strong>ถ้าเจอ Error:</strong> ข้อความ <code>UnhandledPromiseRejectionWarning: MongoError: text index required for $text query (no such collection 'adoption.pets')</code> มักหมายถึงชื่อ Database ในโค้ดไม่ตรงกับที่สร้างไว้ ตัวอย่างใช้ชื่อ <code>adoption</code> แต่ถ้าไม่ได้สลับ Database ไว้อาจเป็น <code>test</code> ให้รัน <code>db</code> ใน MongoDB Shell เพื่อตรวจชื่อ แล้วแก้ <code>const db = await client.db(&quot;&lt;the name of your database here&gt;&quot;);</code> ให้ตรงกัน</p></blockquote>
       <p>มาดูบันทึกย่อบางส่วนที่นี่ เพื่อให้ชัดเจน นี่เป็นการแสดงให้คุณเห็นถึงวิธีเชื่อมต่อกับ MongoDB จากโค้ดเป็นส่วนใหญ่ และเพื่อแสดงให้คุณเห็นว่าข้อความค้นหาทั้งหมดที่คุณได้เรียนรู้ในส่วนที่แล้วนำไปใช้ได้เกือบจะโดยไม่มีการแก้ไขใดๆ (มีความแตกต่างเล็กน้อยอยู่บ้าง)</p>
       <ul>

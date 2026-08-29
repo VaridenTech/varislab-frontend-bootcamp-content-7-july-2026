@@ -16,6 +16,7 @@
       <p>สร้าง Directory ใหม่ แล้วรันคำสั่งต่อไปนี้ภายใน Directory นั้น</p>
       <pre><code class="language-bash">npm init -y
 npm pkg set type=module
+npm pkg set scripts.start="node server.js"
 npm i pg@8.20.0 express@5.2.1
 mkdir static
 touch static/index.html server.js
@@ -94,6 +95,7 @@ async function init() {
   console.log(`running on http://localhost:${PORT}`);
 }
 init();</code></pre>
+      <p>จากนั้นรัน <code>npm start</code> เพื่อเปิดเซิร์ฟเวอร์</p>
       <ul>
         <li>โครงสร้างแอปตั้งใจให้คล้ายตัวอย่าง MongoDB ในบทถัดไป เพื่อให้เห็นว่า Flow การเรียก Database จาก Node.js ไม่ได้ต่างกันมาก</li>
         <li>เราใช้ Connection Pool เพื่อเปิด Connection เท่าที่จำเป็นและนำกลับมาใช้ซ้ำ การเปิดและปิด Connection ใหม่ทุก Request ช้าและยังทำให้ PostgreSQL ใช้ Connection จนเต็มได้ง่าย</li>
