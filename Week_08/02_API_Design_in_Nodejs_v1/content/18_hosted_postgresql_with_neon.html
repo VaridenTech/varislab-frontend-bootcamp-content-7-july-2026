@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="สร้าง PostgreSQL ฟรีบน Neon ใส่ Connection String ลง .env เขียน src/db/connection.ts ด้วย Connection Pool และ Singleton ตั้งค่า prisma.config.ts เพิ่ม db Scripts ใน package.json แล้ว Push Schema ขึ้น Database ครั้งแรก" />
+  <meta name="description" content="สร้าง PostgreSQL ฟรีบน Neon ใส่ Connection String ลง .env เขียน src/db/connection.ts ด้วย Connection Pool และ Singleton ตั้งค่า prisma7.config.ts เพิ่ม db Scripts ใน package.json แล้ว Push Schema ขึ้น Database ครั้งแรก" />
   <title>ใช้ PostgreSQL บนคลาวด์ด้วย Neon — API Design in Node.js</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -48,7 +48,7 @@ const result = await pool.query('SELECT * FROM users')</code></pre>
 
       <h2>เขียน src/db/connection.ts</h2>
       <p>ติดตั้งของที่ยังขาด</p>
-      <pre><code>npm install @prisma/adapter-pg @epic-web/remember</code></pre>
+      <pre><code>npm install @prisma/adapter-pg@7.10.0 @epic-web/remember</code></pre>
       <p><code>@prisma/adapter-pg</code> คือ Adapter ที่เชื่อม Prisma เข้ากับ Driver <code>pg</code> ที่เพิ่งเล่าไป จากนั้นสร้างไฟล์ <code>src/db/connection.ts</code> ข้าง ๆ <code>types.ts</code></p>
       <pre><code>import { PrismaClient } from '../generated/prisma/client.ts'
 import { PrismaPg } from '@prisma/adapter-pg'
@@ -83,8 +83,8 @@ export default prisma</code></pre>
       </ul>
       <p>ย้ำอีกครั้งว่าเรื่อง <code>remember</code> ทั้งหมดนี้มีอยู่<strong>เพราะ Hot Reload ตอนพัฒนาอย่างเดียว</strong> ไม่มีเหตุผลอื่นเลย และถ้าคุณใช้ Database ที่คุยผ่าน HTTP แทน (ซึ่ง Neon ก็รองรับ) ก็ไม่ต้องมีเรื่องพวกนี้เลยเพราะไม่มี Connection ให้ค้าง</p>
 
-      <h2>ตั้งค่า prisma.config.ts</h2>
-      <p>CLI ของ Prisma รับงานฝั่ง Migration ให้เราตามที่คุยกันในบทที่ 15 แต่มันต้องรู้ก่อนว่า Schema อยู่ไหนและ Database อยู่ไหน นั่นคือหน้าที่ของไฟล์ <code>prisma.config.ts</code> ที่ <code>npx prisma init</code> สร้างไว้ให้ที่รากโปรเจกต์ตั้งแต่บทที่ 16 เปิดมันขึ้นมาแล้วแก้เป็นแบบนี้</p>
+      <h2>ตั้งค่า prisma7.config.ts</h2>
+      <p>CLI ของ Prisma รับงานฝั่ง Migration ให้เราตามที่คุยกันในบทที่ 15 แต่มันต้องรู้ก่อนว่า Schema อยู่ไหนและ Database อยู่ไหน นั่นคือหน้าที่ของไฟล์ <code>prisma7.config.ts</code> ที่ <code>npx prisma init</code> สร้างไว้ให้ที่รากโปรเจกต์ตั้งแต่บทที่ 16 เปิดมันขึ้นมาแล้วแก้เป็นแบบนี้</p>
       <pre><code>import { defineConfig } from 'prisma/config'
 import env from './env.ts'
 

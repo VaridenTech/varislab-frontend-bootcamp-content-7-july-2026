@@ -30,7 +30,7 @@ JWT_SECRET=test-secret-key-for-testing-only</code></pre>
 
       <h2>vitest.config.ts</h2>
       <p>ก่อนอื่นติดตั้งเครื่องมือที่บทนี้ต้องใช้</p>
-      <pre><code>npm install -D vitest cross-env</code></pre>
+      <pre><code>npm install -D vitest@4.1.11 cross-env</code></pre>
       <p>สร้างไฟล์ <code>vitest.config.ts</code> ไว้ที่ Root ของโปรเจกต์ ไฟล์นี้ปกติ CLI ของ Vitest สร้างให้ได้อยู่แล้ว คุณไม่จำเป็นต้องจำวิธีเขียนมันขึ้นมาเองจากศูนย์ แต่เราควรรู้ว่าแต่ละบรรทัดหมายถึงอะไร</p>
       <pre><code>import { defineConfig } from 'vitest/config'
 
@@ -42,12 +42,7 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     // Ensure tests run sequentially to avoid database conflicts
-    pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true
-      }
-    }
+    fileParallelism: false,
   },
   plugins: [],
 })</code></pre>
@@ -55,7 +50,7 @@ export default defineConfig({
         <li><strong><code>globals: true</code></strong> — ยัด <code>describe</code>, <code>test</code>, <code>it</code>, <code>expect</code>, <code>beforeAll</code>, <code>afterEach</code> เข้าไปไว้ใน Global Scope ให้เลย เราจะได้ไม่ต้อง Import มันในทุกไฟล์ Test ซึ่งน่ารำคาญมาก ส่วนฝั่ง TypeScript เราใส่ <code>"types": ["vitest/globals"]</code> ไว้ใน <code>tsconfig.json</code> ให้แล้วตั้งแต่ต้นคอร์ส เอดิเตอร์จึงรู้จักฟังก์ชันพวกนี้เอง</li>
         <li><strong><code>globalSetup</code></strong> — "ก่อนจะรัน Test ทั้งหมด ให้รันไฟล์นี้ก่อนหนึ่งครั้ง" เดี๋ยวเราจะไปสร้างมันกัน</li>
         <li><strong><code>clearMocks</code> และ <code>restoreMocks</code></strong> — ล้าง Mock ที่สร้างไว้ให้อัตโนมัติทุกครั้งที่จบ Test แต่ละตัว เพราะการปล่อยให้ Mock ค้างข้ามไปยัง Test ตัวถัดไปคือ <strong>Anti-pattern</strong> ที่ทำให้ Test ผูกกันเอง หลักการคือผมต้องหยิบ Test ตัวไหนมารันเดี่ยว ๆ ก็ได้ แล้วผลต้องออกมาเหมือนตอนรันพร้อมกันทั้งชุด</li>
-        <li><strong><code>pool</code> และ <code>singleThread</code></strong> — อันนี้คนละเรื่องกับ Connection Pool ของฐานข้อมูลนะครับ โดยปกติ Vitest รัน Test พร้อมกันหลายตัวเพื่อความเร็ว แต่ Test ของเราทุกตัวใช้ฐานข้อมูลตัวเดียวกัน ถ้าสามตัววิ่งพร้อมกันแล้วต่างก็ Insert User อีเมลเดียวกัน มันจะชน Unique Constraint หรือตัวหนึ่งอาจลบข้อมูลที่อีกตัวเพิ่งสร้าง <strong>ผลคือ Test พังบ้างผ่านบ้างแบบไม่มีเหตุผล</strong> เราจึงสั่งให้รันทีละตัวเรียงกันไป</li>
+        <li><strong><code>fileParallelism: false</code></strong> — โดยปกติ Vitest รันไฟล์ Test พร้อมกันหลายไฟล์เพื่อความเร็ว แต่ Test ของเราทุกตัวใช้ฐานข้อมูลตัวเดียวกัน ถ้าสามตัววิ่งพร้อมกันแล้วต่างก็ Insert User อีเมลเดียวกัน มันจะชน Unique Constraint หรือตัวหนึ่งอาจลบข้อมูลที่อีกตัวเพิ่งสร้าง <strong>ผลคือ Test พังบ้างผ่านบ้างแบบไม่มีเหตุผล</strong> เราจึงสั่งให้รันทีละไฟล์เรียงกันไป (ถ้าไปเจอตัวอย่างเก่า ๆ ที่ใช้ <code>poolOptions.threads.singleThread</code> นั่นคือวิธีของ Vitest 3 ซึ่งถูกถอดออกใน Vitest 4 แล้ว — ใส่ไปมันจะถูกเมินเงียบ ๆ แล้ว Test จะกลับมาพังแบบสุ่มทันที)</li>
         <li><strong><code>plugins: []</code></strong> — ว่างเปล่าเพราะเราไม่ต้องการอะไรเพิ่มเลย Vitest ทำงานกับโปรเจกต์ TypeScript ของเราได้ตั้งแต่แกะกล่อง</li>
       </ul>
 
@@ -68,7 +63,7 @@ export default async function setup() {
   console.log('💾 Setting up the test db')
   try {
     console.log('🚀 Pushing schema using prisma db push...')
-    execSync('npx prisma db push --force-reset --skip-generate', {
+    execSync('npx prisma db push --force-reset', {
       stdio: 'inherit',
       cwd: process.cwd(),
     })
@@ -90,8 +85,8 @@ export default async function setup() {
   }
 }</code></pre>
       <p><strong><code>execSync</code></strong> จาก Node.js คือการสั่งรันคำสั่ง Terminal จากในโค้ด เราใช้มันเรียก <code>prisma db push</code> เพราะฐานข้อมูลทดสอบของเราคงไม่ได้ตามทันการแก้ Schema ล่าสุดเสมอ แทนที่จะต้องมานั่งจำว่าต้อง Push เอง ก็ให้สคริปต์นี้ทำให้ทุกครั้งที่รัน Test เลย</p>
-      <p><strong>Flag สองตัวที่เพิ่มเข้ามา</strong> — <code>--force-reset</code> คือสั่งให้ล้าง Database ทิ้งทั้งก้อนก่อนแล้วค่อยสร้างตารางตาม Schema ใหม่หมด เราจึงไม่ต้องเขียนคำสั่ง <code>DROP TABLE</code> เองสักบรรทัดในขาเข้า (Flag นี้อันตรายมากถ้าไปเจอกับ Database จริง แต่กับ Database ทดสอบมันคือสิ่งที่เราต้องการพอดี) ส่วน <code>--skip-generate</code> คือไม่ต้อง Generate Client ซ้ำ เพราะเรามีอยู่แล้วและ Schema ไม่ได้เปลี่ยน</p>
-      <p><strong>แล้วมันรู้ได้อย่างไรว่าต้อง Push ใส่ Database ทดสอบ</strong> — จำได้ไหมว่า <code>prisma.config.ts</code> ของเรา Import <code>env.ts</code> เข้ามาใช้ และ <code>env.ts</code> เลือกโหลด <code>.env</code> หรือ <code>.env.test</code> ตามค่า <code>APP_STAGE</code> เมื่อคำสั่ง <code>npm test</code> ของเราตั้ง <code>APP_STAGE=test</code> ไว้ (เดี๋ยวทำกันท้ายบท) Environment นั้นจะถูกส่งต่อไปยัง Process ลูกที่ <code>execSync</code> เปิดด้วย CLI ของ Prisma จึงชี้ไปที่ Database ทดสอบให้เองพอดี โดยเราไม่ต้องส่ง URL อะไรให้มันเลย</p>
+      <p><strong>Flag ที่เพิ่มเข้ามา</strong> — <code>--force-reset</code> คือสั่งให้ล้าง Database ทิ้งทั้งก้อนก่อนแล้วค่อยสร้างตารางตาม Schema ใหม่หมด เราจึงไม่ต้องเขียนคำสั่ง <code>DROP TABLE</code> เองสักบรรทัดในขาเข้า (Flag นี้อันตรายมากถ้าไปเจอกับ Database จริง แต่กับ Database ทดสอบมันคือสิ่งที่เราต้องการพอดี) ถ้าไปเจอตัวอย่างเก่าที่ใส่ <code>--skip-generate</code> มาด้วย ให้ตัดทิ้งได้เลย เพราะ Prisma 7 ถอด Flag นี้ออกไปแล้ว — <code>db push</code> รุ่นใหม่ไม่ Generate Client ซ้ำให้อยู่แล้ว จึงไม่มีอะไรต้อง Skip</p>
+      <p><strong>แล้วมันรู้ได้อย่างไรว่าต้อง Push ใส่ Database ทดสอบ</strong> — จำได้ไหมว่า <code>prisma7.config.ts</code> ของเรา Import <code>env.ts</code> เข้ามาใช้ และ <code>env.ts</code> เลือกโหลด <code>.env</code> หรือ <code>.env.test</code> ตามค่า <code>APP_STAGE</code> เมื่อคำสั่ง <code>npm test</code> ของเราตั้ง <code>APP_STAGE=test</code> ไว้ (เดี๋ยวทำกันท้ายบท) Environment นั้นจะถูกส่งต่อไปยัง Process ลูกที่ <code>execSync</code> เปิดด้วย CLI ของ Prisma จึงชี้ไปที่ Database ทดสอบให้เองพอดี โดยเราไม่ต้องส่ง URL อะไรให้มันเลย</p>
       <p><strong>Flag ที่ส่งให้ <code>execSync</code></strong> — <code>stdio: 'inherit'</code> แปลว่า "เอา Output ของ Terminal ลูกมาแสดงใน Terminal ของเราด้วย" เราจะได้เห็นว่า Prisma ทำอะไรอยู่ ส่วน <code>cwd</code> คือบอกว่าให้รันคำสั่งจากโฟลเดอร์ไหน</p>
       <p><strong>ค่าที่ Return ออกไปเป็น Function</strong> — Vitest จะเก็บฟังก์ชันที่เรา Return ไว้แล้วเรียกมันตอน Test ทั้งหมดจบลง นี่คือจังหวะเก็บกวาด เราล้างตารางทิ้งด้วยหลักคิดง่าย ๆ ว่า <strong>มายังไงก็ทิ้งไว้อย่างนั้น</strong> เผื่อวันหนึ่งมีโปรแกรมอื่นมาใช้ฐานข้อมูลนี้โดยไม่ผ่านสคริปต์ของเรา ตัวที่ใช้คือ <code>prisma.$executeRaw</code> ซึ่งเป็นช่องทางเขียน SQL ดิบ ๆ ผ่าน Prisma ที่เรายังไม่เคยใช้ในคอร์สนี้ เหมาะกับงานระดับโครงสร้างแบบนี้ที่ Method ปกติไม่มีให้ (<code>CASCADE</code> ต่อท้ายคือให้ลบความสัมพันธ์ที่ผูกอยู่ไปด้วย) ปิดท้ายด้วย <code>process.exit(0)</code> ไม่งั้นโปรเซสจะค้างอยู่อย่างนั้น ทั้งที่ Test จบไปแล้ว</p>
 

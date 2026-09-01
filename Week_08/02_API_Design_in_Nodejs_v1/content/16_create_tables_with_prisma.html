@@ -11,12 +11,13 @@
   <main>
     <article>
       <h1>สร้างตารางและความสัมพันธ์ด้วย Prisma ORM</h1>
-      <p>ทฤษฎีพอแล้ว บทนี้เราจะเขียน Schema ทั้งห้าตารางของ Habit Tracker กันจริง ๆ เริ่มจากติดตั้ง Package กันก่อน Prisma แบ่งเป็นสองส่วน คือ CLI ที่ใช้ตอนพัฒนา กับ Client ที่โค้ดเราเรียกใช้ตอนรันจริง</p>
-      <pre><code>npm install @prisma/client
-npm install -D prisma</code></pre>
+      <p>ทฤษฎีพอแล้ว บทนี้เราจะเขียน Schema ทั้งห้าตารางของ Habit Tracker กันจริง ๆ เริ่มจากติดตั้ง Package กันก่อน Prisma แบ่งเป็นสองส่วน คือ CLI ที่ใช้ตอนพัฒนา กับ Client ที่โค้ดเราเรียกใช้ตอนรันจริง สังเกตว่าเราระบุเวอร์ชันแบบเจาะจงไปเลย เพราะ CLI ของ Prisma ปรับพฤติกรรมระหว่างเวอร์ชันอยู่เรื่อย ๆ การล็อกเวอร์ชันทำให้ทุกคนในคลาสเห็นผลลัพธ์เหมือนกันเป๊ะ</p>
+      <pre><code>npm install @prisma/client@7.10.0
+npm install -D prisma@7.10.0</code></pre>
       <p>แล้วสั่งให้ Prisma ตั้งโครงให้เรา</p>
-      <pre><code>npx prisma init</code></pre>
-      <p>คำสั่งนี้สร้างของให้เราสองชิ้น คือโฟลเดอร์ <code>prisma/</code> ที่มีไฟล์ <code>schema.prisma</code> อยู่ข้างใน กับไฟล์ <code>prisma.config.ts</code> ที่รากโปรเจกต์ ตัวหลังคือไฟล์ตั้งค่าของ CLI ซึ่งเราจะกลับมาต่อสายมันเข้ากับ Database จริงในบทที่ 18 บทนี้โฟกัสที่ <code>schema.prisma</code> อย่างเดียว</p>
+      <pre><code>npx prisma init --no-skills</code></pre>
+      <p>คำสั่งนี้สร้างของให้เราสองชิ้น คือโฟลเดอร์ <code>prisma/</code> ที่มีไฟล์ <code>schema.prisma</code> อยู่ข้างใน กับไฟล์ <code>prisma7.config.ts</code> ที่รากโปรเจกต์ ตัวหลังคือไฟล์ตั้งค่าของ CLI ซึ่งเราจะกลับมาต่อสายมันเข้ากับ Database จริงในบทที่ 18 บทนี้โฟกัสที่ <code>schema.prisma</code> อย่างเดียว</p>
+      <p>ส่วน Flag <code>--no-skills</code> คือบอกว่าไม่ต้องติดตั้ง "Agent Skills" ซึ่งเป็นชุดไฟล์แนะนำการใช้ Prisma สำหรับ AI Coding Agent อย่าง Claude Code หรือ Cursor (ถ้ารันโดยไม่ใส่ Flag นี้ จะได้โฟลเดอร์ <code>.claude/</code>, <code>.agents/</code>, <code>.windsurf/</code> และไฟล์ <code>skills-lock.json</code> แถมมาด้วย ซึ่งไม่เกี่ยวกับคอร์สนี้ แต่ถ้าคุณใช้เครื่องมือพวกนั้นอยู่จะเก็บไว้ก็ไม่เสียหาย)</p>
 
       <h2>รู้จักไฟล์ schema.prisma</h2>
       <p>Prisma ให้เราเขียน Schema ด้วยภาษาเฉพาะของมันเอง นามสกุลไฟล์คือ <code>.prisma</code> แนะนำให้ติดตั้ง Extension ชื่อ <strong>Prisma</strong> ใน VS Code ก่อนเลย จะได้ทั้ง Syntax Highlight, Autocomplete และ Format ไฟล์ให้อัตโนมัติ</p>
@@ -34,7 +35,7 @@ datasource db {
   provider = "postgresql"
 }</code></pre>
       <p>บล็อก <code>generator</code> คือการบอกว่า "เวลาสร้าง Client ให้ผม สร้างแบบไหน" — <code>provider</code> ที่ชื่อ <code>prisma-client</code> คือ Generator รุ่นปัจจุบันที่สร้างโค้ดออกมาเป็น TypeScript ตรง ๆ ส่วน <code>output</code> คือโฟลเดอร์ปลายทาง (Path นับจากโฟลเดอร์ <code>prisma/</code> ดังนั้น <code>../src/generated/prisma</code> คือไปโผล่ที่ <code>src/generated/prisma</code>) สามบรรทัดล่างคือการบอกว่าโปรเจกต์เราเป็น ESM และรันไฟล์ <code>.ts</code> ตรง ๆ ด้วย Node.js ซึ่งตรงกับที่เราตั้งโปรเจกต์ไว้ตั้งแต่ต้นคอร์สพอดี</p>
-      <p>ส่วน <code>datasource</code> บอกแค่ว่า Database ของเราเป็น PostgreSQL สังเกตว่า<strong>ไม่มี Connection String อยู่ในนี้</strong> เพราะค่านั้นเป็นความลับและเปลี่ยนตามสภาพแวดล้อม Prisma จึงให้ไปประกาศใน <code>prisma.config.ts</code> แทน ซึ่งเดี๋ยวเราจะทำกันในบทที่ 18</p>
+      <p>ส่วน <code>datasource</code> บอกแค่ว่า Database ของเราเป็น PostgreSQL สังเกตว่า<strong>ไม่มี Connection String อยู่ในนี้</strong> เพราะค่านั้นเป็นความลับและเปลี่ยนตามสภาพแวดล้อม Prisma จึงให้ไปประกาศใน <code>prisma7.config.ts</code> แทน ซึ่งเดี๋ยวเราจะทำกันในบทที่ 18</p>
 
       <h2>ตาราง users</h2>
       <p>ต่อจากสองบล็อกนั้น เขียน Model แรกของเรา</p>

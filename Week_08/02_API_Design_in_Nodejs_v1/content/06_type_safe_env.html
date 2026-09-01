@@ -100,6 +100,66 @@ export { env }
 export default env</code></pre>
       <p>Helper สามตัวนี้หน้าตาเหมือนตัวแปร Boolean ที่เราเขียนไว้บนหัวไฟล์ แต่ต่างกันตรงที่ชุดนี้อ้างอิงจาก <code>env</code> ที่ผ่านการตรวจแล้ว เราจะได้เรียกใช้จากที่ไหนก็ได้ในแอปโดยไม่ต้องไปเขียนเงื่อนไขเทียบ String ซ้ำ ๆ ซึ่งวันหนึ่งถ้าเราเปลี่ยนชื่อ Stage เราจะได้แก้ที่เดียว</p>
 
+      <h2>ไฟล์ env.ts ฉบับสมบูรณ์</h2>
+      <p>เราเขียนไฟล์นี้กันมาทีละท่อนตั้งแต่บทที่แล้ว ลองถอยออกมาดูภาพรวมกันหน่อยว่าเมื่อประกอบทุกส่วนเข้าด้วยกันแล้ว <code>env.ts</code> ทั้งไฟล์หน้าตาเป็นแบบนี้</p>
+      <pre><code>import { env as loadEnv } from 'custom-env'
+import { z } from 'zod'
+
+process.env.APP_STAGE = process.env.APP_STAGE || 'dev'
+
+const isProduction = process.env.APP_STAGE === 'production'
+const isDevelopment = process.env.APP_STAGE === 'dev'
+const isTesting = process.env.APP_STAGE === 'test'
+
+if (isDevelopment) {
+  loadEnv()
+} else if (isTesting) {
+  loadEnv('test')
+}
+
+const envSchema = z.object({
+  NODE_ENV: z
+    .enum(['development', 'test', 'production'])
+    .default('development'),
+
+  APP_STAGE: z.enum(['dev', 'test', 'production']).default('dev'),
+
+  PORT: z.coerce.number().positive().default(3000),
+  DATABASE_URL: z.string().startsWith('postgresql://'),
+  JWT_SECRET: z.string().min(32, 'Must be 32 chars long'),
+  JWT_EXPIRES_IN: z.string().default('7d'),
+  BCRYPT_ROUNDS: z.coerce.number().min(10).max(20).default(12),
+})
+
+export type Env = z.infer&lt;typeof envSchema&gt;
+let env: Env
+
+try {
+  env = envSchema.parse(process.env)
+} catch (e) {
+  if (e instanceof z.ZodError) {
+    console.log('Invalid env var')
+    console.error(JSON.stringify(e.flatten().fieldErrors, null, 2))
+
+    e.issues.forEach((err) =&gt; {
+      const path = err.path.join('.')
+      console.log(`${path}: ${err.message}`)
+    })
+
+    process.exit(1)
+  }
+
+  throw e
+}
+
+export const isProd = () =&gt; env.APP_STAGE === 'production'
+export const isDev = () =&gt; env.APP_STAGE === 'dev'
+export const isTest = () =&gt; env.APP_STAGE === 'test'
+
+export { env }
+export default env</code></pre>
+      <p>ไล่จากบนลงล่างจะเห็นว่าไฟล์นี้เล่าเรื่องเป็นลำดับชัดเจน คือรู้ก่อนว่าตัวเองรันอยู่ Stage ไหน แล้วโหลดไฟล์ <code>.env</code> ให้ถูกไฟล์ จากนั้นประกาศกฎของตัวแปรทั้งหมดไว้ใน Schema เอากฎไปตรวจค่าจริง ถ้าไม่ผ่านก็ตายทันทีพร้อมบอกเหตุผล และถ้าผ่านก็ Export ออกไปให้ทั้งแอปใช้</p>
+
       <h2>ใช้ env จริงใน src/index.ts</h2>
       <p>ตอนนี้ <code>env.ts</code> พร้อมแล้ว กลับไปแก้ Entry Point ของเราให้เป็นแบบนี้</p>
       <pre><code>import { env } from '../env.ts'

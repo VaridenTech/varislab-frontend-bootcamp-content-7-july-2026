@@ -156,7 +156,7 @@ export default seed</code></pre>
       <pre><code>npm run db:studio</code></pre>
       <p>กด Refresh แล้วไล่ดูทีละตาราง คุณจะเห็น Entry ทั้งเจ็ดแถวที่ผูกกับ Habit ตัวเดียวกัน เห็น Habit ที่ผูกกับ User ของเรา เห็น <code>habit_tags</code> หนึ่งแถวที่มี <code>habit_id</code> กับ <code>tag_id</code> ชี้ไปหาของจริงทั้งคู่ ถ้าครบทั้งหมดนี้ก็แปลว่า<strong>ความสัมพันธ์ที่เราออกแบบไว้ทำงานได้จริง</strong></p>
       <p>อีกอย่างที่ควรรู้ Prisma Studio ไม่ใช่เครื่องมือแยกส่วน มันมากับ CLI ทีมเดียวกันกับ ORM และมัน<strong>อ่าน Schema ของเราตรง ๆ</strong> เพราะฉะนั้นตารางและความสัมพันธ์ที่เห็นในนั้นคือสิ่งที่เราเขียนเป๊ะ ๆ ลองกดที่แถว Habit แล้วเดินตามความสัมพันธ์ไปหา Entry ทั้งเจ็ดแถวดู จะเห็นภาพ One-to-Many ชัดขึ้นอีก</p>
-      <p>เกร็ดเสริม — Prisma มีคำสั่ง <code>npx prisma db seed</code> ของมันเองด้วย ซึ่งจะไปเรียก Script ที่เราประกาศไว้ใน <code>prisma.config.ts</code> ได้ (เพิ่ม <code>seed: 'node src/db/seed.ts'</code> เข้าไปใน <code>migrations</code>) ทำงานเหมือน <code>npm run db:seed</code> ของเราทุกประการ ผมขอใช้ Script ตรง ๆ ของเราต่อเพื่อให้เห็นชัดว่ามันคือไฟล์ Node.js ธรรมดา ๆ ไฟล์หนึ่ง</p>
+      <p>เกร็ดเสริม — Prisma มีคำสั่ง <code>npx prisma db seed</code> ของมันเองด้วย ซึ่งจะไปเรียก Script ที่เราประกาศไว้ใน <code>prisma7.config.ts</code> ได้ (เพิ่ม <code>seed: 'node src/db/seed.ts'</code> เข้าไปใน <code>migrations</code>) ทำงานเหมือน <code>npm run db:seed</code> ของเราทุกประการ ผมขอใช้ Script ตรง ๆ ของเราต่อเพื่อให้เห็นชัดว่ามันคือไฟล์ Node.js ธรรมดา ๆ ไฟล์หนึ่ง</p>
 
       <h2>เมื่อข้อมูล Seed เริ่มเยอะ</h2>
       <p>มีคนถามว่าถ้าข้อมูลที่ต้อง Seed เยอะมาก ควรยัดไว้ใน <code>seed.ts</code> ไฟล์เดียวไหม คำตอบคือแล้วแต่ว่าคุณ Seed ไปเพื่ออะไร</p>

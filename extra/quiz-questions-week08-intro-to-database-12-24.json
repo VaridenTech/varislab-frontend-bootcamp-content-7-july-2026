@@ -1,0 +1,161 @@
+{
+  "questions": [
+    {
+      "prompt": "ข้อใดอธิบายทั้งจุดเด่นและ Trade-off ของ Document Database อย่าง MongoDB ได้ถูกต้อง?",
+      "choices": [
+        "แต่ละ Document มี Field ต่างกันได้ จึงยืดหยุ่น แต่การสะกดชื่อ Field ผิดอาจกลายเป็น Field ใหม่โดยไม่แจ้ง Error",
+        "ทุก Document ต้องมี Column และ Data Type เหมือนกัน จึงไม่ต้องตรวจสอบข้อมูลใน Application",
+        "Document Database รองรับเฉพาะ String และไม่สามารถเก็บ Object ที่ซ้อนกันได้"
+      ],
+      "correctChoice": 1,
+      "explanation": "Document Database ไม่บังคับให้ทุก Document มีโครงสร้างเหมือนกัน จึงเหมาะกับข้อมูลที่ยืดหยุ่นและคุ้นมือสำหรับนักพัฒนา JavaScript แต่ความยืดหยุ่นนี้ทำให้ข้อผิดพลาดอย่างชื่อ Field ผิดอาจไม่ถูก Database ปฏิเสธ"
+    },
+    {
+      "prompt": "หากเลือก Database adoption แล้ว Collection pets ยังไม่มี ผลของคำสั่งนี้คืออะไร?",
+      "body": "<pre><code>use adoption\ndb.pets.insertOne({ name: \"Luna\", type: \"dog\" });</code></pre>",
+      "choices": [
+        "คำสั่งล้มเหลวเสมอ เพราะต้องสร้าง Collection ด้วย CREATE COLLECTION ก่อน",
+        "MongoDB สร้าง Collection pets ตอน Insert ครั้งแรกและเพิ่ม Document ของ Luna เข้าไป",
+        "MongoDB สร้าง Database ใหม่ชื่อ pets และเก็บ Luna ไว้โดยไม่มี Collection"
+      ],
+      "correctChoice": 2,
+      "explanation": "db อ้างถึง Database adoption ที่เลือกด้วย use ส่วน pets คือชื่อ Collection หากยังไม่มี MongoDB จะสร้าง Collection ให้เมื่อ Insert Document แรก"
+    },
+    {
+      "prompt": "Query ใดค้นหาเฉพาะสุนัขอายุมากกว่า 12 ปี เรียงจากอายุมากไปน้อย และคืนเฉพาะ name กับ breed โดยไม่รวม _id?",
+      "choices": [
+        "db.pets.find({ type: \"dog\", age: 12 }, { name: 0, breed: 0 }).sort({ age: 1 });",
+        "db.pets.find({ type: \"dog\", age: { $lt: 12 } }).sort({ age: -1 }).limit({ name: 1, breed: 1 });",
+        "db.pets.find({ type: \"dog\", age: { $gt: 12 } }, { name: 1, breed: 1, _id: 0 }).sort({ age: -1 });"
+      ],
+      "correctChoice": 3,
+      "explanation": "$gt ใช้กรองค่าที่มากกว่า 12, Projection ค่า 1 เลือก name กับ breed และ _id: 0 ตัด _id ออก ส่วน sort({ age: -1 }) เรียงอายุจากมากไปน้อย"
+    },
+    {
+      "prompt": "เหตุใด MongoDB Shell จึงคืนผลลัพธ์จาก find ผ่าน Cursor แทนการโหลดทุก Document เป็น Array ทันที?",
+      "choices": [
+        "เพื่ออ่านผลลัพธ์ขนาดใหญ่ทีละชุดและหลีกเลี่ยงการใช้ Memory เก็บทั้งหมดพร้อมกัน",
+        "เพราะ Cursor ใช้ได้เฉพาะ Query ที่คืน Document ไม่เกิน 20 รายการ",
+        "เพราะ toArray จะลบ Document ออกจาก Collection หลังอ่านเสร็จ"
+      ],
+      "correctChoice": 1,
+      "explanation": "Cursor ช่วยไล่อ่านผลลัพธ์ทีละชุด โดย Shell แสดงครั้งละ 20 Document และใช้ it เพื่อดึงชุดถัดไป ส่วน toArray โหลดผลลัพธ์ทั้งหมดเข้า Memory จึงเหมาะเมื่อมั่นใจว่าชุดข้อมูลไม่ใหญ่เกินไป"
+    },
+    {
+      "prompt": "ตัวเลือก upsert: true ในคำสั่งนี้ทำให้เกิดพฤติกรรมใด?",
+      "body": "<pre><code>db.pets.updateOne(\n  { type: \"dog\", name: \"Sudo\" },\n  { $set: { type: \"dog\", name: \"Sudo\", age: 5 } },\n  { upsert: true },\n);</code></pre>",
+      "choices": [
+        "แทนที่ทุก Document ใน Collection ด้วยข้อมูลของ Sudo",
+        "Update Document ที่ตรง Filter หรือ Insert Document ใหม่หากยังหาไม่พบ",
+        "Update เฉพาะเมื่อมี Document อยู่แล้ว และคืน Error หากหาไม่พบ"
+      ],
+      "correctChoice": 2,
+      "explanation": "Upsert มาจาก Update + Insert หากพบ Document จะ Update แต่หากไม่พบจะ Insert ใหม่ ดังนั้น Filter ควรอ้างถึง Key ที่ไม่ซ้ำและข้อมูลสำหรับ Insert ควรครบถ้วน"
+    },
+    {
+      "prompt": "หากต้องทำ Full-Text Search ทั้ง type, breed และ name ใน Collection pets ควรออกแบบ Text Index อย่างไร?",
+      "choices": [
+        "สร้าง Text Index แยกหนึ่งตัวต่อหนึ่ง Field เพื่อให้มีทั้งหมดสาม Text Index",
+        "ไม่ต้องสร้าง Index เพราะ $text สร้าง Text Index ชั่วคราวให้ทุก Query",
+        "รวมทั้งสาม Field ไว้ใน Text Index เดียว เพราะหนึ่ง Collection มี Text Index ได้เพียงหนึ่งตัว"
+      ],
+      "correctChoice": 3,
+      "explanation": "MongoDB อนุญาต Text Index เพียงหนึ่งตัวต่อ Collection หากต้องค้นหาหลาย Field ต้องรวม Field เหล่านั้นไว้ใน Text Index เดียว แล้วใช้ $text และ Text Score เมื่อต้องการเรียงตาม Relevance"
+    },
+    {
+      "prompt": "Aggregation Pipeline สำหรับนับสุนัขแยกตามช่วงอายุและแสดงกลุ่มที่มีจำนวนมากที่สุดก่อน ควรเรียง Stage อย่างไร?",
+      "choices": [
+        "$match เพื่อกรองสุนัข → $bucket เพื่อแบ่งช่วงอายุและนับ → $sort เพื่อเรียง count จากมากไปน้อย",
+        "$sort เพื่อเรียงชื่อ → $match เพื่อกรองอายุ → $bucket เพื่อเปลี่ยนทุก Document เป็น String",
+        "$bucket เพื่อแบ่ง Collection → $delete เพื่อลบสัตว์ชนิดอื่น → $find เพื่อคืนผลลัพธ์"
+      ],
+      "correctChoice": 1,
+      "explanation": "แต่ละ Stage รับผลจาก Stage ก่อนหน้า จึงควรกรองสุนัขด้วย $match ก่อน ส่งต่อให้ $bucket จัดกลุ่มและนับ แล้วใช้ $sort กับ count: -1 เพื่อเรียงกลุ่มที่มีจำนวนมากที่สุดก่อน"
+    },
+    {
+      "prompt": "ลำดับใดถูกต้องสำหรับการ Query MongoDB จาก Node.js ตามตัวอย่างในบทเรียน?",
+      "body": "<pre><code>const client = new MongoClient(connectionString);\nawait client.connect();</code></pre>",
+      "choices": [
+        "เลือก Collection ก่อนสร้าง Client แล้วใช้ Collection สร้าง Database",
+        "สร้างและเชื่อมต่อ Client → เลือก Database → เลือก Collection → เรียก Query ผ่าน Collection",
+        "สร้าง Express Route → เรียก $text โดยตรง → ให้ MongoDB เลือก Database และ Collection อัตโนมัติ"
+      ],
+      "correctChoice": 2,
+      "explanation": "โค้ดเริ่มจาก MongoClient ที่เชื่อมกับ Server จากนั้นใช้ client.db เลือก Database และ db.collection เลือก Collection ก่อนเรียก find หรือ Query อื่น หากชื่อ Database ไม่ตรงกับข้อมูลจริง Query อาจรายงานว่าไม่พบ Collection หรือ Text Index"
+    },
+    {
+      "prompt": "สถานการณ์ใดเหมาะกับ Key-Value Store อย่าง Redis มากที่สุดตามบทเรียน?",
+      "choices": [
+        "เก็บธุรกรรมการเงินเป็น Source of Truth เพียงแห่งเดียว เพราะ Cache ห้ามสูญหาย",
+        "แทน PostgreSQL ทุกกรณีที่ต้อง JOIN หลาย Table และทำ Query ซับซ้อน",
+        "Cache ผล Query ที่คำนวณแพงหรือเก็บตัวนับ Page View ที่มีปริมาณสูงและไม่ใช่ข้อมูลวิกฤต"
+      ],
+      "correctChoice": 3,
+      "explanation": "Key-Value Store มี API เรียบง่ายและรองรับปริมาณงานสูง จึงเหมาะกับ Cache, Session และ Telemetry แต่โดยทั่วไปใช้เสริม Database หลัก ไม่ควรเป็น Source of Truth เพียงแห่งเดียวสำหรับข้อมูลสำคัญ"
+    },
+    {
+      "prompt": "คำสั่งใดเพิ่ม Page View Counter และคืนค่าใหม่ได้ทันทีโดยไม่ต้อง GET ค่าปัจจุบันก่อน?",
+      "body": "<pre><code>SET pageviews 0</code></pre>",
+      "choices": [
+        "INCR pageviews",
+        "MGET pageviews 1",
+        "EXISTS pageviews"
+      ],
+      "correctChoice": 1,
+      "explanation": "INCR เพิ่มค่าตัวเลขทีละหนึ่งใน Redis โดยตรง เหมาะกับ Counter เช่น Page View ส่วน INCRBY ใช้เมื่ออยากเพิ่มมากกว่าหนึ่ง"
+    },
+    {
+      "prompt": "คำสั่งนี้กำหนดพฤติกรรมใดให้ Cache?",
+      "body": "<pre><code>SET fitness:total:btholt 750kj EX 3600</code></pre>",
+      "choices": [
+        "เขียนค่าเฉพาะเมื่อ Key มีอยู่แล้วและเก็บถาวร",
+        "เก็บค่าไว้ 3,600 วินาทีแล้วให้ Redis ลบ Key อัตโนมัติ",
+        "เก็บค่าไว้ 3,600 Millisecond แล้วเพิ่มค่าอัตโนมัติทุกครั้งที่อ่าน"
+      ],
+      "correctChoice": 2,
+      "explanation": "EX กำหนด TTL เป็นวินาที ดังนั้น Key นี้มีอายุหนึ่งชั่วโมง ส่วน PX ใช้เมื่อต้องการระบุเวลาเป็น Millisecond"
+    },
+    {
+      "prompt": "หากต้องการอ่าน Notification ทั้งหมด แล้วคืนค่าและลบ Notification ตัวสุดท้าย ควรใช้คำสั่งคู่ใด?",
+      "body": "<pre><code>RPUSH notifications:btholt \"Call your mom\" \"Feed the dog\"</code></pre>",
+      "choices": [
+        "GET notifications:btholt แล้ว DEL notifications:btholt",
+        "HGETALL notifications:btholt แล้ว LPOP notifications:btholt",
+        "LRANGE notifications:btholt 0 -1 แล้ว RPOP notifications:btholt"
+      ],
+      "correctChoice": 3,
+      "explanation": "LRANGE 0 -1 อ่านสมาชิกทั้งหมดของ List ส่วน RPOP คืนค่าและลบสมาชิกจากท้าย List ซึ่งเป็นด้านเดียวกับที่ RPUSH เพิ่มข้อมูล"
+    },
+    {
+      "prompt": "Redis Data Type ใดเหมาะกับ Leaderboard ที่สมาชิกแต่ละคนมีคะแนนและต้องคืนผลตามลำดับคะแนน?",
+      "choices": [
+        "Sorted Set เพราะแต่ละค่ามี Score และ Redis รักษาลำดับตาม Score ให้",
+        "Set ธรรมดา เพราะเก็บค่าซ้ำและเรียงตามเวลาที่เพิ่มโดยอัตโนมัติ",
+        "String เพราะ GET สามารถเรียง Property ภายใน JSON ตามคะแนนได้"
+      ],
+      "correctChoice": 1,
+      "explanation": "Sorted Set ผูก Score หรือ Priority กับแต่ละสมาชิกและเรียกข้อมูลตามลำดับได้ จึงเหมาะกับ Leaderboard, Top 10 หรือ Priority Queue ส่วน Set ธรรมดาไม่ซ้ำแต่ไม่มีลำดับ"
+    },
+    {
+      "prompt": "ข้อใดจับคู่ความสามารถขั้นสูงของ Redis กับกรณีใช้งานได้ถูกต้อง?",
+      "choices": [
+        "Pub/Sub ใช้ JOIN หลาย Collection และ LRU ใช้รับประกันว่าข้อมูลจะไม่ถูกลบ",
+        "Pub/Sub ใช้ส่งเหตุการณ์แบบ Real-time, Transaction ใช้รวมหลายคำสั่งแบบ Atomic และ LRU ขับ Key ที่ไม่ได้ใช้นานเมื่อ Memory เต็ม",
+        "Transaction ใช้เรียง Sorted Set และ EVAL ใช้สร้าง Foreign Key ระหว่าง Redis กับ PostgreSQL"
+      ],
+      "correctChoice": 2,
+      "explanation": "Pub/Sub เหมาะกับการตอบสนองต่อเหตุการณ์, MULTI/EXEC และคำสั่งที่เกี่ยวข้องใช้จัดการ Transaction และนโยบาย LRU ช่วยให้ Cache ขับข้อมูลที่ไม่ได้ใช้งานมานานเพื่อเปิดพื้นที่ให้ข้อมูลใหม่"
+    },
+    {
+      "prompt": "ฟังก์ชัน Cache นี้ทำอะไรเมื่อ client.get(key) ไม่พบข้อมูล?",
+      "body": "<pre><code>const cachedResponse = await client.get(key);\nif (cachedResponse) return cachedResponse;\n\nconst result = await slowFn(...props);\nawait client.setEx(key, ttl, result);\nreturn result;</code></pre>",
+      "choices": [
+        "คืน undefined ทันทีและลบ Key เพื่อป้องกันการคำนวณซ้ำ",
+        "เรียก slowFn ทุกครั้งแต่ไม่เก็บผล เพราะ setEx ใช้ได้เฉพาะข้อมูลตัวเลข",
+        "เรียก slowFn เก็บผลพร้อม TTL เป็นวินาที แล้วคืนผล แต่ยังอาจเกิด Thundering Herd หากหลาย Request Miss พร้อมกัน"
+      ],
+      "correctChoice": 3,
+      "explanation": "เมื่อ Cache Miss ฟังก์ชันจะคำนวณผลด้วย slowFn แล้วบันทึกผ่าน setEx ตาม TTL ก่อนคืนค่า อย่างไรก็ตามหลาย Request ที่ Miss Key เดียวกันพร้อมกันยังอาจเริ่มงานแพงซ้ำ จึงอาจต้องใช้ Lock Key หรือกลยุทธ์อัปเดต Cache แบบอื่น"
+    }
+  ]
+}
