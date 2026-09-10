@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ตั้งค่า TypeORM Migrations ใน NestJS: สร้างไฟล์ migration, เขียน up/down, รันและ revert อย่างปลอดภัยแทนการพึ่ง synchronize" />
+  <title>ตั้งค่า Migrations</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 31 จาก 77</p>
+    <h1>ตั้งค่า Migrations</h1>
+    <section class="learning-objectives" aria-labelledby="objectives-heading">
+      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <ul>
+        <li>อธิบายได้ว่าทำไม production ต้องใช้ migrations แทน <code>synchronize: true</code></li>
+        <li>สร้างไฟล์ migration ด้วย TypeORM CLI และเขียนเมธอด <code>up</code>/<code>down</code> ให้ย้อนกลับได้</li>
+        <li>รัน, revert และ generate migrations จากโค้ดที่ build แล้วใน <code>dist/</code></li>
+      </ul>
+    </section>
+
+    <h2>ทำไมต้องมี Migrations</h2>
+    <p>ตลอดบทที่ผ่านมาเราเปิด <code>synchronize: true</code> ให้ TypeORM ปรับ schema ของฐานข้อมูลตาม entity โดยอัตโนมัติ ซึ่งสะดวกมากตอนพัฒนา แต่บน production ถือว่าอันตราย: การเปลี่ยนชื่อ property เพียงตัวเดียวอาจทำให้ TypeORM ตัดสินใจ drop column แล้วสร้างใหม่ ข้อมูลจริงของผู้ใช้จะหายทันที <strong>Migration</strong> คือไฟล์ที่บันทึกการเปลี่ยนแปลง schema เป็นขั้น ๆ อย่างชัดเจน ทำให้เราควบคุมได้ว่าจะเปลี่ยนอะไร เมื่อไหร่ และย้อนกลับอย่างไร</p>
+    <div class="warning"><p>ก่อนใช้ migrations จริง ให้ปิด <code>synchronize</code> ในสภาพแวดล้อมที่ไม่ใช่ development เสมอ มิฉะนั้น TypeORM จะแก้ schema แข่งกับ migration ของเรา</p></div>
+
+    <h2>สร้าง DataSource สำหรับ TypeORM CLI</h2>
+    <p>TypeORM CLI ทำงานนอก NestJS application จึงต้องมีไฟล์ config ของตัวเองที่ประกาศ <code>DataSource</code> ชี้ไปฐานข้อมูลเดียวกับแอปของเรา สร้างไฟล์ <code>typeorm-cli.config.ts</code> ที่ root ของโปรเจกต์</p>
+    <pre><code>/* typeorm-cli.config.ts */
+export default new DataSource({
+  type: 'postgres',
+  host: 'localhost',
+  port: 5432,
+  username: 'postgres',
+  password: 'pass123',
+  database: 'postgres',
+  entities: [],
+  migrations: [],
+});</code></pre>
+    <p>เมื่อมี entity หรือ migration ที่เกี่ยวข้องกับการ generate ให้เพิ่มเข้า array <code>entities</code> และ <code>migrations</code> ตามลำดับ เพื่อให้ CLI มองเห็น schema ปัจจุบัน</p>
+
+    <h2>สร้างและเขียน Migration แรก</h2>
+    <p>ใช้คำสั่ง <code>migration:create</code> เพื่อสร้างไฟล์เปล่าใน <code>src/migrations</code> โดยชื่อท้ายคำสั่งคือชื่อที่เราตั้งให้ migration นั้น</p>
+    <pre><code>npx typeorm migration:create src/migrations/CoffeeRefactor</code></pre>
+    <p>ในไฟล์ที่ได้ เขียนสิ่งที่ต้องเปลี่ยนใน <code>up</code> และวิธีย้อนกลับใน <code>down</code> — ทั้งสองฝั่งต้องสมมาตรกันเสมอ ตัวอย่างนี้เปลี่ยนชื่อ column <code>name</code> เป็น <code>title</code> ของตาราง <code>coffee</code></p>
+    <pre><code>public async up(queryRunner: QueryRunner): Promise&lt;any&gt; {
+  await queryRunner.query(
+    `ALTER TABLE "coffee" RENAME COLUMN "name" TO "title"`,
+  );
+}
+
+public async down(queryRunner: QueryRunner): Promise&lt;any&gt; {
+  await queryRunner.query(
+    `ALTER TABLE "coffee" RENAME COLUMN "title" TO "name"`,
+  );
+}</code></pre>
+
+    <h2>รัน, Revert และให้ TypeORM Generate ให้</h2>
+    <p>CLI รัน migration จากไฟล์ JavaScript ที่ compile แล้ว ไม่ใช่ TypeScript โดยตรง จึงต้อง <code>npm run build</code> ให้ทุกอย่างออกไปอยู่ใน <code>dist/</code> ก่อนเสมอ</p>
+    <pre><code># compile โปรเจกต์ก่อน
+npm run build
+
+# รัน migration ทั้งหมดที่ยังไม่ถูก apply
+npx typeorm migration:run -d dist/typeorm-cli.config
+
+# ย้อนกลับ migration ล่าสุด
+npx typeorm migration:revert -d dist/typeorm-cli.config
+
+# ให้ TypeORM เทียบ entity กับ schema แล้ว generate migration ให้อัตโนมัติ
+npx typeorm migration:generate src/migrations/SchemaSync -d dist/typeorm-cli.config</code></pre>
+    <div class="note"><p><code>migration:generate</code> ช่วยเขียน SQL ให้เองโดยเทียบ entity ปัจจุบันกับ schema ในฐานข้อมูล เหมาะกับการเปลี่ยนแปลงทั่วไป แต่ควรเปิดไฟล์ที่ได้มาตรวจทุกครั้งก่อนรันจริง โดยเฉพาะคำสั่งที่ drop ข้อมูล</p></div>
+
+    <section class="workshop" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">เปลี่ยนชื่อ column แบบไม่ทำข้อมูลหาย</h2>
+      <p>ในโปรเจกต์ <code>iluvcoffee</code> สร้างไฟล์ <code>typeorm-cli.config.ts</code> แล้วเขียน migration <code>CoffeeRefactor</code> เปลี่ยน column <code>name</code> เป็น <code>title</code> จากนั้น build, รัน migration และทดลอง revert กลับหนึ่งครั้ง</p>
+      <div class="prompt-example"><code>npx typeorm migration:create src/migrations/CoffeeRefactor
+npm run build
+npx typeorm migration:run -d dist/typeorm-cli.config
+npx typeorm migration:revert -d dist/typeorm-cli.config</code></div>
+    </section>
+    <section class="expected-result" aria-labelledby="exercise-result-heading">
+      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <p>ตอน <code>migration:run</code> terminal แสดง SQL ที่ถูก execute และชื่อ migration ที่สำเร็จ ตาราง <code>coffee</code> มี column <code>title</code> แทน <code>name</code> โดยข้อมูลเดิมยังอยู่ครบ และเมื่อ revert คอลัมน์กลับเป็น <code>name</code> เหมือนเดิม TypeORM ยังสร้างตาราง <code>migrations</code> ไว้บันทึกว่า migration ใดถูก apply ไปแล้ว</p>
+    </section>
+    <section class="verification" aria-labelledby="exercise-check-heading">
+      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <ul>
+        <li>เปิด GUI จากบทที่ 21 แล้วดูตาราง <code>coffee</code> ว่า column เปลี่ยนตาม migration และแถวข้อมูลเดิมไม่หาย</li>
+        <li>ตรวจตาราง <code>migrations</code> ว่ามีแถวบันทึกชื่อ <code>CoffeeRefactor</code> หลังรัน และหายไปหลัง revert</li>
+        <li>ลองรัน <code>migration:run</code> ซ้ำ — ต้องไม่มีอะไรถูกรันซ้ำ เพราะ TypeORM รู้ว่า apply ไปแล้ว</li>
+        <li>ลอง <code>migration:generate</code> หลังแก้ entity เล็กน้อย แล้วเปิดไฟล์ที่ได้มาอ่าน SQL ก่อนตัดสินใจรัน</li>
+      </ul>
+    </section>
+    <h2>แหล่งอ้างอิง</h2>
+    <ul class="source-list">
+      <li><a href="https://docs.nestjs.com/techniques/database">Database (TypeORM) — NestJS Docs</a></li>
+      <li><a href="https://docs.nestjs.com/recipes/sql-typeorm">SQL (TypeORM) recipe — NestJS Docs</a></li>
+      <li><a href="https://learn.nestjs.com/">NestJS Fundamentals — คอร์สต้นฉบับ</a></li>
+    </ul>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link" href="30_adding-indexes-to-entities.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="32_control-nestjs-module-encapsulation.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+</body>
+</html>

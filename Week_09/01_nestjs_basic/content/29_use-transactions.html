@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="สร้าง Event entity แล้วใช้ QueryRunner ของ TypeORM ทำ transaction ให้การบันทึกสองตารางสำเร็จหรือล้มเหลวไปพร้อมกัน" />
+  <title>ใช้ Transactions</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 29 จาก 77</p>
+    <h1>ใช้ Transactions</h1>
+    <section class="learning-objectives" aria-labelledby="objectives-heading">
+      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <ul>
+        <li>อธิบายได้ว่า transaction แก้ปัญหาอะไร และเมื่อไหร่ที่การ save สองครั้งติดกันไม่พอ</li>
+        <li>สร้าง <code>Event</code> entity สำหรับเก็บเหตุการณ์ในระบบด้วย Nest CLI</li>
+        <li>ใช้ <code>QueryRunner</code> คุมวงจร <code>startTransaction</code> → <code>commit</code>/<code>rollback</code> → <code>release</code> ได้ครบถ้วน</li>
+      </ul>
+    </section>
+
+    <h2>งานที่ต้องสำเร็จด้วยกันหรือล้มด้วยกัน</h2>
+    <p><strong>Transaction</strong> คือหน่วยของงานฐานข้อมูลที่ต้องเกิดผลแบบ all-or-nothing สมมติเราเพิ่มฟีเจอร์ "แนะนำกาแฟ" ที่ต้องทำสองอย่าง: เพิ่มตัวนับ <code>recommendations</code> ของกาแฟ และบันทึกแถว event ลงอีกตารางเพื่อ analytics ถ้า save แรกสำเร็จแต่ตัวที่สองล้ม ข้อมูลจะค้างอยู่ในสภาพครึ่ง ๆ กลาง ๆ ที่เชื่อถือไม่ได้ — transaction ทำให้ทั้งคู่ commit พร้อมกัน หรือ rollback กลับทั้งหมด</p>
+    <p>เริ่มจากสร้าง entity สำหรับเก็บ event (และเพิ่มคอลัมน์ <code>recommendations: number</code> เข้า <code>Coffee</code> entity ด้วย <code>@Column({ default: 0 })</code>)</p>
+    <pre><code>nest g class events/entities/event.entity --no-spec</code></pre>
+    <pre><code>import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity()
+export class Event {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  type: string;
+
+  @Column()
+  name: string;
+
+  @Column('json')
+  payload: Record&lt;string, any&gt;;
+}</code></pre>
+
+    <h2>QueryRunner: คุม transaction ด้วยมือ</h2>
+    <p>ฉีด <code>Connection</code> (ใน TypeORM รุ่นใหม่คือ <code>DataSource</code>) เข้า service แล้วสร้าง <code>QueryRunner</code> ของตัวเองเมื่อจะเริ่ม transaction — ทุก operation ภายในต้องเรียกผ่าน <code>queryRunner.manager</code> เท่านั้น จึงจะอยู่ใน transaction เดียวกัน</p>
+    <pre><code>import { Connection } from 'typeorm';
+import { Event } from '../events/entities/event.entity';
+
+@Injectable()
+export class CoffeesService {
+  constructor(private readonly connection: Connection) {}
+
+  async recommendCoffee(coffee: Coffee) {
+    const queryRunner = this.connection.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      coffee.recommendations++;
+
+      const recommendEvent = new Event();
+      recommendEvent.name = 'recommend_coffee';
+      recommendEvent.type = 'coffee';
+      recommendEvent.payload = { coffeeId: coffee.id };
+
+      await queryRunner.manager.save(coffee);
+      await queryRunner.manager.save(recommendEvent);
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
+  }
+}</code></pre>
+    <p>โครง try/catch/finally นี้คือหัวใจของบท:</p>
+    <ul>
+      <li><code>try</code> — ทำงานทั้งหมดผ่าน <code>queryRunner.manager</code> แล้ว <code>commitTransaction()</code> เมื่อครบ</li>
+      <li><code>catch</code> — อะไรพังกลางทาง <code>rollbackTransaction()</code> ยกเลิกทุกอย่างที่ทำไปแล้ว</li>
+      <li><code>finally</code> — <code>release()</code> คืน connection กลับ pool <strong>เสมอ</strong> ไม่ว่าสำเร็จหรือล้ม</li>
+    </ul>
+    <div class="warning"><p>ลืม <code>release()</code> คือ bug แบบเงียบที่อันตรายที่สุดของ QueryRunner: connection จะรั่วออกจาก pool ทีละอันจนแอปค้างทั้งระบบเมื่อ pool หมด ใส่ไว้ใน <code>finally</code> ทุกครั้งโดยไม่มีข้อยกเว้น</p></div>
+    <div class="note"><p>อย่าลืมลงทะเบียน <code>Event</code> ผ่าน <code>forFeature</code> ใน module ที่เกี่ยวข้อง เพื่อให้ <code>synchronize</code> สร้างตาราง <code>event</code> ให้ และเพิ่ม endpoint ทดลอง เช่น <code>POST /coffees/:id/recommend</code> ที่เรียก <code>recommendCoffee</code> เพื่อใช้ทดสอบ</p></div>
+
+    <section class="workshop" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">ทำให้การแนะนำกาแฟเป็น atomic</h2>
+      <p>เพิ่มคอลัมน์ <code>recommendations</code>, สร้าง <code>Event</code> entity, เขียน <code>recommendCoffee</code> ตามโค้ดด้านบน แล้วต่อ endpoint ทดลองใน controller</p>
+      <div class="prompt-example"><code># สร้าง entity
+nest g class events/entities/event.entity --no-spec
+
+# ทดสอบ
+POST http://localhost:3000/coffees/1/recommend
+GET  http://localhost:3000/coffees/1
+
+# ดูในฐานข้อมูล
+SELECT * FROM event;</code></div>
+    </section>
+    <section class="expected-result" aria-labelledby="exercise-result-heading">
+      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <p>ทุกครั้งที่ยิง recommend ค่า <code>recommendations</code> ของกาแฟเพิ่มขึ้น 1 <em>และ</em> ตาราง <code>event</code> ได้แถวใหม่ที่ payload ระบุ <code>coffeeId</code> เสมอ — สองตารางขยับพร้อมกันทุกครั้ง ถ้าจงใจทำให้ save ตัวที่สองพัง (เช่น ตั้ง <code>recommendEvent.name = null</code> ชั่วคราว) ตัวนับต้องไม่เพิ่ม เพราะโดน rollback ทั้งก้อน</p>
+    </section>
+    <section class="verification" aria-labelledby="exercise-check-heading">
+      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <ul>
+        <li>ยิง recommend 3 ครั้ง — <code>recommendations</code> เป็น 3 และตาราง <code>event</code> มี 3 แถว เท่ากันเป๊ะ</li>
+        <li>ทดลอง sabotage ให้ save ที่สองล้ม — ตัวนับไม่ขยับและไม่มีแถว event ใหม่ (แล้วแก้กลับ)</li>
+        <li>แอปยังรับคำขออื่นได้ปกติหลังทดลองหลายรอบ แสดงว่า connection ถูก release ครบ ไม่มีรั่ว</li>
+        <li>ทุก operation ใน transaction เรียกผ่าน <code>queryRunner.manager</code> ไม่ใช่ repository ปกติ</li>
+      </ul>
+    </section>
+    <h2>แหล่งอ้างอิง</h2>
+    <ul class="source-list">
+      <li><a href="https://docs.nestjs.com/techniques/database">Database: Transactions (NestJS Docs)</a></li>
+      <li><a href="https://docs.nestjs.com/recipes/sql-typeorm">SQL (TypeORM) Recipe (NestJS Docs)</a></li>
+      <li><a href="https://learn.nestjs.com/">NestJS Fundamentals — คอร์สต้นฉบับ</a></li>
+    </ul>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link" href="28_adding-pagination.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="30_adding-indexes-to-entities.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+</body>
+</html>

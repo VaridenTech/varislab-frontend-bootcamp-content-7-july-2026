@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="เปลี่ยน flavors จากคอลัมน์ json เป็น Flavor entity แยก แล้วผูก many-to-many กับ Coffee ด้วย @ManyToMany และ @JoinTable" />
+  <title>สร้าง Relation ระหว่างสอง Entities</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 25 จาก 77</p>
+    <h1>สร้าง Relation ระหว่างสอง Entities</h1>
+    <section class="learning-objectives" aria-labelledby="objectives-heading">
+      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <ul>
+        <li>แยกความแตกต่างของ relation ทั้งสามแบบ: one-to-one, one-to-many/many-to-one และ many-to-many</li>
+        <li>ผูก <code>Coffee</code> กับ <code>Flavor</code> แบบ many-to-many ด้วย <code>@ManyToMany()</code> และ <code>@JoinTable()</code></li>
+        <li>อธิบายได้ว่าฝั่ง owner ของ relation คือฝั่งไหน และตารางเชื่อมเกิดขึ้นได้อย่างไร</li>
+      </ul>
+    </section>
+
+    <h2>Relation สามแบบที่ต้องรู้จัก</h2>
+    <p><strong>Relation</strong> คือความสัมพันธ์ระหว่างตารางที่ผูกกันด้วยฟิลด์ร่วม โดยทั่วไปคือ primary key กับ foreign key TypeORM ให้เรานิยามความสัมพันธ์เหล่านี้ด้วย decorator บน entity โดยตรง</p>
+    <div class="comparison" role="region" aria-label="ชนิดของ relation ใน TypeORM" tabindex="0">
+      <table>
+        <thead><tr><th>ชนิด</th><th>ความหมาย</th><th>Decorator</th></tr></thead>
+        <tbody>
+          <tr><td>One-to-one</td><td>แถวในตารางหลักจับคู่กับแถวในตารางปลายทางได้แถวเดียวเท่านั้น</td><td><code>@OneToOne()</code></td></tr>
+          <tr><td>One-to-many / Many-to-one</td><td>แถวในตารางหลักมีแถวที่เกี่ยวข้องในตารางปลายทางได้หลายแถว</td><td><code>@OneToMany()</code> คู่กับ <code>@ManyToOne()</code></td></tr>
+          <tr><td>Many-to-many</td><td>ทั้งสองฝั่งต่างมีแถวที่เกี่ยวข้องกันได้หลายแถว</td><td><code>@ManyToMany()</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>กาแฟหนึ่งตัวมีได้หลาย flavor และ flavor หนึ่ง (เช่น <code>chocolate</code>) ก็อยู่ในกาแฟได้หลายตัว — ความสัมพันธ์ระหว่าง <code>Coffee</code> กับ <code>Flavor</code> จึงเป็น many-to-many</p>
+
+    <h2>เปลี่ยน flavors จาก json เป็น entity จริง</h2>
+    <p>สร้าง <code>Flavor</code> entity ใหม่ที่ <code>src/coffees/entities/flavor.entity.ts</code> แล้วแก้ property <code>flavors</code> ของ <code>Coffee</code> ให้ชี้ไปหา entity นั้นแทนคอลัมน์ json เดิม แต่ละฝั่งของ <code>@ManyToMany()</code> ต้องบอกด้วยว่า "ตัวฉันอยู่ตรงไหนในอีกฝั่ง" ผ่าน arrow function ตัวที่สอง</p>
+    <pre><code>/* coffee.entity.ts */
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Flavor } from './flavor.entity';
+
+@Entity()
+export class Coffee {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  name: string;
+
+  @Column()
+  brand: string;
+
+  @JoinTable() // ฝั่ง OWNER เท่านั้นที่ประกาศตารางเชื่อม
+  @ManyToMany(
+    type =&gt; Flavor,
+    flavor =&gt; flavor.coffees, // "coffees" คืออะไรใน Flavor entity
+  )
+  flavors: string[];
+}
+
+/* flavor.entity.ts */
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Coffee } from './coffee.entity';
+
+@Entity()
+export class Flavor {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  name: string;
+
+  @ManyToMany(
+    type =&gt; Coffee,
+    coffee =&gt; coffee.flavors, // "flavors" คืออะไรใน Coffee entity
+  )
+  coffees: Coffee[];
+}</code></pre>
+    <p><code>@JoinTable()</code> ประกาศไว้ที่ฝั่ง <strong>owner</strong> ของความสัมพันธ์เพียงฝั่งเดียว — ในที่นี้คือ <code>Coffee</code> เพราะเรามองกาแฟเป็นตัวตั้งแล้วค่อยผูก flavor เข้าไป TypeORM จะสร้างตารางเชื่อมชื่อ <code>coffee_flavors_flavor</code> ให้เองเมื่อ <code>synchronize</code> ทำงาน</p>
+    <div class="warning"><p>การเปลี่ยนคอลัมน์ <code>flavors</code> จาก json เป็น relation ทำให้ <code>synchronize</code> ลบคอลัมน์เดิม<strong>พร้อมข้อมูลในนั้น</strong>ทิ้ง — บนเครื่อง dev ไม่เป็นไร แต่นี่คือเหตุผลที่ production ต้องใช้ migrations (บทที่ 31) แทน</p></div>
+    <div class="note"><p>อย่าลืมลงทะเบียน entity ใหม่ใน module ด้วย: <code>TypeOrmModule.forFeature([Coffee, Flavor])</code> ไม่เช่นนั้น Nest จะหา repository ของ <code>Flavor</code> ไม่เจอในบทถัดไป</p></div>
+
+    <section class="workshop" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">ผูก Coffee กับ Flavor เข้าด้วยกัน</h2>
+      <p>สร้าง <code>flavor.entity.ts</code>, แก้ <code>coffee.entity.ts</code> ตามโค้ดด้านบน แล้วเพิ่ม <code>Flavor</code> เข้า <code>forFeature</code> ของ <code>CoffeesModule</code> จากนั้นรันแอปแล้วไปดูตารางที่เกิดขึ้นใหม่</p>
+      <div class="prompt-example"><code>npm run start:dev
+
+# ใน pgAdmin ควรเห็น 3 ตาราง:
+#   coffee                 - ข้อมูลกาแฟ
+#   flavor                 - ข้อมูล flavor
+#   coffee_flavors_flavor  - ตารางเชื่อม many-to-many</code></div>
+    </section>
+    <section class="expected-result" aria-labelledby="exercise-result-heading">
+      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <p>ฐานข้อมูลมี 3 ตาราง: <code>coffee</code> (ไม่มีคอลัมน์ <code>flavors</code> แล้ว), <code>flavor</code> และตารางเชื่อม <code>coffee_flavors_flavor</code> ที่ถือ foreign key ของทั้งสองฝั่ง ตอนนี้ endpoint สร้างกาแฟพร้อม flavor จะยังทำงานไม่ครบ — เราจะแก้ให้บันทึกลง relation จริงในบทที่ 27 เรื่อง cascading inserts</p>
+    </section>
+    <section class="verification" aria-labelledby="exercise-check-heading">
+      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <ul>
+        <li>แอป start ขึ้นโดยไม่มี error เรื่อง entity metadata</li>
+        <li>เห็นตาราง <code>coffee_flavors_flavor</code> ใน pgAdmin พร้อมคอลัมน์อ้างอิง id ของทั้งสองตาราง</li>
+        <li>คอลัมน์ <code>flavors</code> ชนิด json หายไปจากตาราง <code>coffee</code> แล้ว</li>
+        <li><code>CoffeesModule</code> ลงทะเบียนทั้ง <code>Coffee</code> และ <code>Flavor</code> ใน <code>forFeature</code></li>
+      </ul>
+    </section>
+    <h2>แหล่งอ้างอิง</h2>
+    <ul class="source-list">
+      <li><a href="https://docs.nestjs.com/techniques/database">Database: Relations (NestJS Docs)</a></li>
+      <li><a href="https://docs.nestjs.com/recipes/sql-typeorm">SQL (TypeORM) Recipe (NestJS Docs)</a></li>
+      <li><a href="https://learn.nestjs.com/">NestJS Fundamentals — คอร์สต้นฉบับ</a></li>
+    </ul>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link" href="24_using-repository-to-access-database.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="26_retrieve-entities-with-their-relations.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+</body>
+</html>

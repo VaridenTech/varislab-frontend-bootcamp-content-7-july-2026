@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="สร้าง Coffee entity ด้วย decorator ของ TypeORM และลงทะเบียนผ่าน TypeOrmModule.forFeature ให้กลายเป็นตารางจริงใน PostgreSQL" />
+  <title>สร้าง TypeORM Entity</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 23 จาก 77</p>
+    <h1>สร้าง TypeORM Entity</h1>
+    <section class="learning-objectives" aria-labelledby="objectives-heading">
+      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <ul>
+        <li>นิยาม entity ด้วย <code>@Entity()</code>, <code>@PrimaryGeneratedColumn()</code> และ <code>@Column()</code></li>
+        <li>ลงทะเบียน entity ใน scope ของ module ด้วย <code>TypeOrmModule.forFeature()</code></li>
+        <li>ยืนยันว่า <code>synchronize</code> สร้างตาราง <code>coffee</code> ใน PostgreSQL ให้ตรงกับ entity จริง</li>
+      </ul>
+    </section>
+
+    <h2>Entity คือ class ที่แทนหนึ่งตาราง</h2>
+    <p><strong>Entity</strong> คือ class ธรรมดาที่ติด decorator <code>@Entity()</code> — TypeORM จะ map class นี้เป็นหนึ่งตาราง SQL โดยใช้ชื่อ class ตัวพิมพ์เล็กเป็นชื่อตาราง (class <code>Coffee</code> จึงกลายเป็นตาราง <code>coffee</code>) และ map แต่ละ property ที่ติด <code>@Column()</code> เป็นคอลัมน์ เราสร้างไฟล์นี้ไว้ที่ <code>src/coffees/entities/coffee.entity.ts</code></p>
+    <pre><code>import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity() // ตาราง SQL ชื่อ 'coffee'
+export class Coffee {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  name: string;
+
+  @Column()
+  brand: string;
+
+  @Column('json', { nullable: true })
+  flavors: string[];
+}</code></pre>
+    <ul>
+      <li><code>@PrimaryGeneratedColumn()</code> สร้าง primary key ชนิด auto-increment ให้อัตโนมัติ</li>
+      <li><code>@Column()</code> เฉย ๆ อนุมานชนิดคอลัมน์จาก type ของ TypeScript เช่น <code>string</code> → <code>varchar</code></li>
+      <li><code>@Column('json', { nullable: true })</code> ระบุชนิดเองเป็น <code>json</code> และยอมให้เป็นค่าว่างได้ — เหมาะกับ <code>flavors</code> ที่ตอนนี้ยังเป็น array ของ string ก่อนจะแยกเป็น entity ของตัวเองในบทที่ 25</li>
+    </ul>
+
+    <h2>ลงทะเบียน entity ด้วย forFeature ใน module ที่เป็นเจ้าของ</h2>
+    <p>ในขณะที่ <code>forRoot()</code> ตั้งค่า connection ที่ระดับแอป <code>forFeature()</code> ใช้ลงทะเบียนว่า module นี้ทำงานกับ entity ตัวไหนบ้าง เมื่อรวมกับ <code>autoLoadEntities: true</code> ที่ตั้งไว้ในบทที่แล้ว entity ที่ลงทะเบียนตรงนี้จะถูกโหลดเข้า connection โดยไม่ต้องไปแก้ config กลาง</p>
+    <pre><code>import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { CoffeesController } from './coffees.controller';
+import { CoffeesService } from './coffees.service';
+import { Coffee } from './entities/coffee.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Coffee])],
+  controllers: [CoffeesController],
+  providers: [CoffeesService],
+})
+export class CoffeesModule {}</code></pre>
+    <p>เมื่อแอป start ขึ้นอีกครั้ง <code>synchronize: true</code> จะเทียบ entity กับฐานข้อมูลแล้วสร้างตารางให้เองทันที</p>
+    <pre><code>+-------------+--------------+----------------------------+
+|                          coffee                         |
++-------------+--------------+----------------------------+
+| id          | int          | PRIMARY KEY AUTO_INCREMENT |
+| name        | varchar      |                            |
+| brand       | varchar      |                            |
+| flavors     | json         |                            |
++-------------+--------------+----------------------------+</code></pre>
+    <div class="note"><p>ตั้งชื่อไฟล์ entity ตาม convention <code>&lt;ชื่อ&gt;.entity.ts</code> และเก็บไว้ในโฟลเดอร์ <code>entities/</code> ของ domain นั้น — ทั้ง Nest CLI และเพื่อนร่วมทีมจะหาไฟล์เจอได้ทันทีจากชื่อ</p></div>
+
+    <section class="workshop" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">สร้างตาราง coffee ตัวแรกของโปรเจกต์</h2>
+      <p>สร้างไฟล์ <code>src/coffees/entities/coffee.entity.ts</code> ตามโค้ดด้านบน เพิ่ม <code>TypeOrmModule.forFeature([Coffee])</code> เข้า <code>CoffeesModule</code> แล้วรันแอปโดยเปิด Docker ไว้</p>
+      <div class="prompt-example"><code>docker-compose up -d
+npm run start:dev
+
+# แล้วเปิด pgAdmin (บทที่ 21) ดูตาราง:
+# Databases &gt; postgres &gt; Schemas &gt; public &gt; Tables &gt; coffee</code></div>
+    </section>
+    <section class="expected-result" aria-labelledby="exercise-result-heading">
+      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <p>แอป start สำเร็จ และเมื่อ refresh ใน pgAdmin จะเห็นตาราง <code>coffee</code> โผล่ขึ้นมาพร้อมคอลัมน์ <code>id</code>, <code>name</code>, <code>brand</code>, <code>flavors</code> ตรงตาม entity ทุกประการ — โดยที่เราไม่ได้เขียน SQL <code>CREATE TABLE</code> เองแม้แต่บรรทัดเดียว</p>
+    </section>
+    <section class="verification" aria-labelledby="exercise-check-heading">
+      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <ul>
+        <li>ไฟล์อยู่ที่ <code>src/coffees/entities/coffee.entity.ts</code> และ export class <code>Coffee</code></li>
+        <li><code>CoffeesModule</code> มี <code>TypeOrmModule.forFeature([Coffee])</code> ใน <code>imports</code></li>
+        <li>ใน pgAdmin หรือ GUI ที่ใช้ เห็นตาราง <code>coffee</code> พร้อม 4 คอลัมน์ และ <code>id</code> เป็น primary key</li>
+        <li>ลองเพิ่ม property ใหม่ชั่วคราวใน entity แล้ว save — ตารางควรได้คอลัมน์ใหม่ทันทีจาก <code>synchronize</code> (ลบออกแล้ว save กลับด้วย)</li>
+      </ul>
+    </section>
+    <h2>แหล่งอ้างอิง</h2>
+    <ul class="source-list">
+      <li><a href="https://docs.nestjs.com/techniques/database">Database: Repository pattern (NestJS Docs)</a></li>
+      <li><a href="https://docs.nestjs.com/recipes/sql-typeorm">SQL (TypeORM) Recipe (NestJS Docs)</a></li>
+      <li><a href="https://docs.nestjs.com/modules">Modules (NestJS Docs)</a></li>
+    </ul>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link" href="22_introducing-the-typeorm-module.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="24_using-repository-to-access-database.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+</body>
+</html>

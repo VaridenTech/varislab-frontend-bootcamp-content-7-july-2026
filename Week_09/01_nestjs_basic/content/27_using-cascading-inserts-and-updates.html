@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="เปิด cascade บน relation ของ Coffee และเขียน preloadFlavorByName เพื่อให้ POST/PATCH สร้างหรือ reuse flavor ได้ในคำขอเดียว" />
+  <title>ใช้ Cascading Inserts และ Updates</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 27 จาก 77</p>
+    <h1>ใช้ Cascading Inserts และ Updates</h1>
+    <section class="learning-objectives" aria-labelledby="objectives-heading">
+      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <ul>
+        <li>เปิด cascading บน relation ด้วย option <code>cascade: true</code> และบอกได้ว่ามันช่วยอะไร</li>
+        <li>เขียน helper <code>preloadFlavorByName</code> ที่ reuse flavor เดิมหรือสร้างใหม่เมื่อยังไม่มี</li>
+        <li>ปรับ <code>create</code> และ <code>update</code> ให้บันทึกกาแฟพร้อม flavors ได้ในคำขอเดียว</li>
+      </ul>
+    </section>
+
+    <h2>ให้การ save กาแฟพา flavor ไปด้วย</h2>
+    <p>ตอนนี้ POST <code>/coffees</code> พร้อม flavors จะยังไม่บันทึกความสัมพันธ์ลงตารางเชื่อม เพราะ TypeORM ไม่รู้ว่าควรทำอะไรกับ entity ปลายทางที่ยังไม่มีอยู่ <strong>Cascading</strong> คือการบอกว่า "เมื่อ save ฝั่ง owner ให้ save entity ที่ผูกอยู่ด้วย" เปิดได้ที่ option ตัวที่สามของ <code>@ManyToMany()</code></p>
+    <pre><code>/* coffee.entity.ts */
+@JoinTable()
+@ManyToMany(
+  type =&gt; Flavor,
+  flavor =&gt; flavor.coffees,
+  {
+    cascade: true, // หรือระบุเฉพาะบางอย่าง เช่น ['insert']
+  },
+)
+flavors: Flavor[];</code></pre>
+    <p>สังเกตว่า type ของ property เปลี่ยนจาก <code>string[]</code> เป็น <code>Flavor[]</code> แล้ว — ข้อมูลที่ไหลผ่าน service ต่อจากนี้เป็น entity จริง ไม่ใช่ string เปล่า</p>
+
+    <h2>reuse flavor เดิม อย่าสร้างซ้ำ</h2>
+    <p>ถ้าปล่อยให้ cascade สร้าง flavor ใหม่ทุกครั้ง ตาราง <code>flavor</code> จะเต็มไปด้วย <code>chocolate</code> ซ้ำ ๆ วิธีแก้คือ helper ที่ค้นหาด้วยชื่อก่อน: เจอก็คืนตัวเดิม ไม่เจอจึงสร้างใหม่ ซึ่งต้องฉีด repository ของ <code>Flavor</code> เพิ่มเข้ามาใน service ด้วย</p>
+    <pre><code>@Injectable()
+export class CoffeesService {
+  constructor(
+    @InjectRepository(Coffee)
+    private readonly coffeeRepository: Repository&lt;Coffee&gt;,
+    @InjectRepository(Flavor)
+    private readonly flavorRepository: Repository&lt;Flavor&gt;,
+  ) {}
+
+  async create(createCoffeeDto: CreateCoffeeDto) {
+    const flavors = await Promise.all(
+      createCoffeeDto.flavors.map(name =&gt; this.preloadFlavorByName(name)),
+    );
+
+    const coffee = this.coffeeRepository.create({
+      ...createCoffeeDto,
+      flavors,
+    });
+    return this.coffeeRepository.save(coffee);
+  }
+
+  async update(id: string, updateCoffeeDto: UpdateCoffeeDto) {
+    const flavors =
+      updateCoffeeDto.flavors &amp;&amp;
+      (await Promise.all(
+        updateCoffeeDto.flavors.map(name =&gt; this.preloadFlavorByName(name)),
+      ));
+
+    const coffee = await this.coffeeRepository.preload({
+      id: +id,
+      ...updateCoffeeDto,
+      flavors,
+    });
+    if (!coffee) {
+      throw new NotFoundException(`Coffee #${id} not found`);
+    }
+    return this.coffeeRepository.save(coffee);
+  }
+
+  private async preloadFlavorByName(name: string): Promise&lt;Flavor&gt; {
+    const existingFlavor = await this.flavorRepository.findOne({ where: { name } });
+    if (existingFlavor) {
+      return existingFlavor;
+    }
+    return this.flavorRepository.create({ name });
+  }
+}</code></pre>
+    <p>ใน <code>update</code> เงื่อนไข <code>updateCoffeeDto.flavors &amp;&amp; ...</code> สำคัญมาก: PATCH ที่ไม่ได้ส่ง flavors มาจะได้ <code>undefined</code> และ <code>preload</code> จะไม่ไปยุ่งกับ relation เดิม — ส่งมาเมื่อไหร่จึงค่อยแทนที่ทั้งชุด</p>
+    <div class="warning"><p>อย่าลืมว่า <code>@InjectRepository(Flavor)</code> ใช้ได้ก็ต่อเมื่อ <code>Flavor</code> ถูกลงทะเบียนใน <code>TypeOrmModule.forFeature([Coffee, Flavor])</code> ของ module แล้ว ไม่เช่นนั้นจะเจอ error <code>Nest can't resolve dependencies</code> ตอน start</p></div>
+
+    <section class="workshop" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">สร้างกาแฟพร้อม flavors ในคำขอเดียว</h2>
+      <p>เปิด <code>cascade: true</code> ที่ entity, เพิ่ม <code>flavorRepository</code> และ <code>preloadFlavorByName</code> เข้า service แล้วปรับ <code>create</code>/<code>update</code> ตามโค้ดด้านบน จากนั้นทดสอบ</p>
+      <div class="prompt-example"><code>POST http://localhost:3000/coffees
+{
+  "name": "Shipwreck Roast",
+  "brand": "Buddy Brew",
+  "flavors": ["chocolate", "vanilla"]
+}
+
+# ยิงซ้ำอีกครั้งด้วย flavor เดิมบางตัว
+POST http://localhost:3000/coffees
+{
+  "name": "Salemander Roast",
+  "brand": "Buddy Brew",
+  "flavors": ["chocolate", "caramel"]
+}</code></div>
+    </section>
+    <section class="expected-result" aria-labelledby="exercise-result-heading">
+      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <p>คำขอแรกสร้างกาแฟพร้อม flavor <code>chocolate</code> และ <code>vanilla</code> ในตาราง <code>flavor</code> คำขอที่สอง reuse แถว <code>chocolate</code> เดิม (id เดิม) และสร้างเฉพาะ <code>caramel</code> เพิ่ม — ตาราง <code>flavor</code> มี 3 แถว ไม่ใช่ 4 และตารางเชื่อมผูกความสัมพันธ์ครบทุกคู่</p>
+    </section>
+    <section class="verification" aria-labelledby="exercise-check-heading">
+      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <ul>
+        <li>POST พร้อม flavors แล้ว <code>GET /coffees</code> เห็น flavors กลับมาเป็น object ที่มี id จริง</li>
+        <li>ตาราง <code>flavor</code> ไม่มีชื่อซ้ำ แม้จะ POST ด้วย flavor เดิมหลายครั้ง</li>
+        <li>PATCH โดยไม่ส่ง <code>flavors</code> — relation เดิมต้องไม่หาย; PATCH พร้อม <code>flavors</code> ชุดใหม่ — ต้องแทนที่ชุดเดิม</li>
+        <li>แอปไม่ throw <code>Nest can't resolve dependencies</code> แปลว่า repository ทั้งสองถูกลงทะเบียนครบ</li>
+      </ul>
+    </section>
+    <h2>แหล่งอ้างอิง</h2>
+    <ul class="source-list">
+      <li><a href="https://docs.nestjs.com/techniques/database">Database (NestJS Docs)</a></li>
+      <li><a href="https://docs.nestjs.com/recipes/sql-typeorm">SQL (TypeORM) Recipe (NestJS Docs)</a></li>
+      <li><a href="https://learn.nestjs.com/">NestJS Fundamentals — คอร์สต้นฉบับ</a></li>
+    </ul>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link" href="26_retrieve-entities-with-their-relations.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="28_adding-pagination.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+</body>
+</html>

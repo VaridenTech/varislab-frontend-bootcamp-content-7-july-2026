@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ใช้ find options ของ TypeORM ระบุ relations เพื่อให้ endpoint ของ coffees คืน flavors ที่ผูกกันมาด้วย" />
+  <title>ดึง Entities พร้อม Relations</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 26 จาก 77</p>
+    <h1>ดึง Entities พร้อม Relations</h1>
+    <section class="learning-objectives" aria-labelledby="objectives-heading">
+      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <ul>
+        <li>อธิบายได้ว่าทำไม TypeORM ไม่โหลด relation มาให้อัตโนมัติ และต้องขอเองอย่างไร</li>
+        <li>ใช้ find option <code>relations</code> ใน <code>find()</code> และ <code>findOne()</code> เพื่อดึงข้อมูลที่ผูกกันมาด้วย</li>
+        <li>ตรวจสอบ response ว่ามี array <code>flavors</code> ติดมากับกาแฟแต่ละตัวจริง</li>
+      </ul>
+    </section>
+
+    <h2>Relation ไม่ถูกโหลดมาโดย default</h2>
+    <p>หลังจากบทที่แล้ว ฐานข้อมูลของเรามี 3 ตาราง: <code>coffee</code>, <code>flavor</code> และ <code>coffee_flavors_flavor</code> ที่แทนความสัมพันธ์ many-to-many แต่ถ้ายิง <code>GET /coffees</code> ตอนนี้ จะพบว่า response ไม่มี <code>flavors</code> กลับมาเลย — TypeORM จงใจ<strong>ไม่ join ตารางให้อัตโนมัติ</strong> เพราะการโหลด relation ทุกครั้งโดยไม่จำเป็นคือต้นทุน query ที่แพงโดยเปล่าประโยชน์</p>
+    <p>เมื่อไหร่ที่อยากได้ relation มาด้วย เราต้องระบุอย่างชัดเจนผ่าน find options</p>
+    <pre><code>return this.coffeeRepository.find({
+  relations: {
+    flavors: true,
+  },
+});</code></pre>
+
+    <h2>เพิ่ม relations เข้า findAll และ findOne</h2>
+    <p>ใน <code>CoffeesService</code> จุดที่อ่านข้อมูลมีสองแห่งคือ <code>findAll()</code> และ <code>findOne()</code> เพิ่ม option เดียวกันเข้าไปทั้งคู่</p>
+    <pre><code>import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CreateCoffeeDto } from './dto/create-coffee.dto';
+import { UpdateCoffeeDto } from './dto/update-coffee.dto';
+import { Coffee } from './entities/coffee.entity';
+
+@Injectable()
+export class CoffeesService {
+  constructor(
+    @InjectRepository(Coffee)
+    private readonly coffeeRepository: Repository&lt;Coffee&gt;,
+  ) {}
+
+  findAll() {
+    return this.coffeeRepository.find({
+      relations: {
+        flavors: true,
+      },
+    });
+  }
+
+  async findOne(id: string) {
+    const coffee = await this.coffeeRepository.findOne({
+      where: {
+        id: +id,
+      },
+      relations: {
+        flavors: true,
+      },
+    });
+    if (!coffee) {
+      throw new NotFoundException(`Coffee #${id} not found`);
+    }
+    return coffee;
+  }
+
+  // create / update / remove คงเดิมจากบทที่ 24
+}</code></pre>
+    <div class="note"><p>รูปแบบ object <code>relations: { flavors: true }</code> รองรับ relation ซ้อนกันได้ด้วย เช่น <code>{ flavors: { someNested: true } }</code> — ระบุเฉพาะเท่าที่หน้างานต้องใช้จริง response จะได้ไม่บวมและ query ไม่ join เกินจำเป็น</p></div>
+    <div class="warning"><p>อย่าแก้ปัญหา "อยากได้ relation ทุกครั้ง" ด้วยการเปิด eager loading ที่ตัว entity ทั้งระบบ — มันทำให้ทุก query ในแอปแบกการ join นั้นไปด้วยโดยมองไม่เห็นจากโค้ดที่เรียก การระบุที่จุดเรียกแบบนี้ชัดเจนกว่า</p></div>
+
+    <section class="workshop" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">ทำให้ endpoint คืน flavors มาด้วย</h2>
+      <p>เพิ่ม <code>relations</code> ใน <code>findAll()</code> และ <code>findOne()</code> ตามโค้ดด้านบน จากนั้นเพิ่มข้อมูล flavor ลงตารางโดยตรงชั่วคราวเพื่อทดสอบ (บทถัดไปเราจะทำให้ POST จัดการเรื่องนี้ให้เอง)</p>
+      <div class="prompt-example"><code># ใน pgAdmin Query Tool - ใส่ข้อมูลทดสอบ
+INSERT INTO flavor (name) VALUES ('chocolate'), ('vanilla');
+INSERT INTO coffee (name, brand) VALUES ('Shipwreck Roast', 'Buddy Brew');
+INSERT INTO coffee_flavors_flavor ("coffeeId", "flavorId") VALUES (1, 1), (1, 2);
+
+# แล้วยิงทดสอบ
+GET http://localhost:3000/coffees
+GET http://localhost:3000/coffees/1</code></div>
+    </section>
+    <section class="expected-result" aria-labelledby="exercise-result-heading">
+      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <p>ทั้งสอง endpoint คืนกาแฟพร้อม property <code>flavors</code> เป็น array ของ object เต็ม ๆ เช่น <code>[{ "id": 1, "name": "chocolate" }, { "id": 2, "name": "vanilla" }]</code> ไม่ใช่ array ว่างหรือหายไปเหมือนก่อนหน้า</p>
+    </section>
+    <section class="verification" aria-labelledby="exercise-check-heading">
+      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <ul>
+        <li><code>GET /coffees</code> คืนทุกแถวพร้อม <code>flavors</code> ที่ join มาจากตารางเชื่อม</li>
+        <li><code>GET /coffees/1</code> คืนกาแฟเดียวพร้อม <code>flavors</code> ครบทุกตัวที่ผูกไว้</li>
+        <li>id ที่ไม่มีจริงยังได้ 404 <code>Coffee #id not found</code> เหมือนเดิม</li>
+        <li>ลองเอา <code>relations</code> ออกชั่วคราวแล้วยิงซ้ำ — <code>flavors</code> ต้องหายไป เพื่อยืนยันว่า option นี้คือตัวควบคุมจริง (แล้วใส่กลับ)</li>
+      </ul>
+    </section>
+    <h2>แหล่งอ้างอิง</h2>
+    <ul class="source-list">
+      <li><a href="https://docs.nestjs.com/techniques/database">Database: Relations (NestJS Docs)</a></li>
+      <li><a href="https://docs.nestjs.com/recipes/sql-typeorm">SQL (TypeORM) Recipe (NestJS Docs)</a></li>
+      <li><a href="https://learn.nestjs.com/">NestJS Fundamentals — คอร์สต้นฉบับ</a></li>
+    </ul>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link" href="25_create-a-relation-between-two-entities.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="27_using-cascading-inserts-and-updates.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+</body>
+</html>

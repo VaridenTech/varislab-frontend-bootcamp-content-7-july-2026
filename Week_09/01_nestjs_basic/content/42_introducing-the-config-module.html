@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ติดตั้งและใช้งาน @nestjs/config เพื่อจัดการ environment variables ของแอป NestJS อย่างปลอดภัย แทนการ hardcode ค่าเชื่อมต่อฐานข้อมูล" />
+  <title>รู้จัก Config Module</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 42 จาก 77</p>
+    <h1>รู้จัก Config Module</h1>
+    <section class="learning-objectives" aria-labelledby="objectives-heading">
+      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <ul>
+        <li>อธิบายได้ว่าทำไม configuration ควรอยู่ใน environment ไม่ใช่ hardcode ในโค้ด</li>
+        <li>ติดตั้ง <code>@nestjs/config</code> และสร้างไฟล์ <code>.env</code> ที่ไม่ถูก track โดย git</li>
+        <li>เปลี่ยนค่าเชื่อมต่อฐานข้อมูลใน <code>TypeOrmModule</code> ให้อ่านจาก <code>process.env</code></li>
+      </ul>
+    </section>
+
+    <h2>ทำไม configuration ต้องแยกออกจากโค้ด</h2>
+    <p>แอปพลิเคชันมักรันในหลาย environment — development, staging, production — ซึ่งแต่ละที่ใช้ค่าต่างกัน เช่น host ของฐานข้อมูล, credentials หรือ API key แนวปฏิบัติมาตรฐานของชุมชน Node.js คือเก็บค่าเหล่านี้ไว้ใน <em>environment variables</em> ผ่าน object global <code>process.env</code> เพื่อให้โค้ดชุดเดียวรันได้ทุกที่โดยเปลี่ยนแค่ค่าแวดล้อม</p>
+    <p><code>@nestjs/config</code> ช่วยให้เรื่องนี้ง่ายขึ้น: เมื่อเรียก <code>ConfigModule.forRoot()</code> มันจะอ่านไฟล์ <code>.env</code> ที่ root ของโปรเจกต์ แล้ว merge คู่ key/value เข้ากับ <code>process.env</code> ให้อัตโนมัติ</p>
+    <pre><code>npm i @nestjs/config</code></pre>
+    <pre><code>// app.module.ts
+import { ConfigModule } from '@nestjs/config';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot(),
+    // ...imports อื่น ๆ
+  ],
+})
+export class AppModule {}</code></pre>
+
+    <h2>สร้างไฟล์ .env และกันไม่ให้หลุดขึ้น git</h2>
+    <p>สร้างไฟล์ <code>.env</code> ที่ root directory ของ <code>iluvcoffee</code> แล้วย้ายค่าเชื่อมต่อ PostgreSQL ที่เรา hardcode ไว้ตั้งแต่บทที่ 22 เข้ามาเก็บแทน</p>
+    <pre><code>DATABASE_USER=postgres
+DATABASE_PASSWORD=pass123
+DATABASE_NAME=postgres
+DATABASE_PORT=5432
+DATABASE_HOST=localhost</code></pre>
+    <div class="warning">
+      <p>ไฟล์ <code>.env</code> มี credentials จริง ห้าม commit ขึ้น repository เด็ดขาด — เพิ่มบรรทัด <code>*.env</code> ใน <code>.gitignore</code> ก่อนทำอย่างอื่น แล้วตรวจด้วย <code>git status</code> ว่าไฟล์ไม่โผล่ในรายการ</p>
+    </div>
+    <pre><code># .gitignore
+# Env
+*.env</code></pre>
+
+    <h2>ให้ TypeOrmModule อ่านค่าจาก process.env</h2>
+    <p>จากนั้นแก้ <code>AppModule</code> ให้การตั้งค่า TypeORM ดึงจาก environment แทนค่า hardcode สังเกตเครื่องหมาย <code>+</code> หน้า <code>process.env.DATABASE_PORT</code> — environment variable เป็น string เสมอ จึงต้องแปลงเป็น number ก่อนส่งให้ TypeORM</p>
+    <pre><code>TypeOrmModule.forRoot({
+  type: 'postgres',
+  host: process.env.DATABASE_HOST,
+  port: +process.env.DATABASE_PORT,
+  username: process.env.DATABASE_USER,
+  password: process.env.DATABASE_PASSWORD,
+  database: process.env.DATABASE_NAME,
+  autoLoadEntities: true,
+  synchronize: true,
+}),</code></pre>
+
+    <section class="workshop" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">ย้ายค่าเชื่อมต่อฐานข้อมูลเข้า .env</h2>
+      <p>ติดตั้ง <code>@nestjs/config</code>, สร้าง <code>.env</code> พร้อมค่าทั้งห้า, เพิ่ม <code>*.env</code> ใน <code>.gitignore</code>, import <code>ConfigModule.forRoot()</code> ใน <code>AppModule</code> แล้วเปลี่ยน options ของ <code>TypeOrmModule.forRoot()</code> ให้อ่านจาก <code>process.env</code> ทั้งหมด</p>
+      <div class="prompt-example"><code>npm i @nestjs/config
+
+# สร้างไฟล์ .env ที่ root แล้วเติมค่า DATABASE_*
+# เพิ่ม *.env ใน .gitignore
+
+npm run start:dev</code></div>
+    </section>
+    <section class="expected-result" aria-labelledby="exercise-result-heading">
+      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <p>แอป start ขึ้นและเชื่อมต่อ PostgreSQL ได้เหมือนเดิมทุกประการ ทั้งที่ในโค้ดไม่มี credentials ปรากฏอีกแล้ว และ <code>git status</code> ไม่แสดงไฟล์ <code>.env</code> ในรายการไฟล์ที่จะถูก commit</p>
+    </section>
+    <section class="verification" aria-labelledby="exercise-check-heading">
+      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <ul>
+        <li><code>GET /coffees</code> ยังตอบข้อมูลจากฐานข้อมูลได้ปกติหลังย้ายค่าเข้า <code>.env</code></li>
+        <li>ลองเปลี่ยน <code>DATABASE_PASSWORD</code> ใน <code>.env</code> เป็นค่าผิดแล้ว restart — แอปต้องต่อฐานข้อมูลไม่ได้ ยืนยันว่าค่าถูกอ่านจากไฟล์จริง (แก้กลับเมื่อทดสอบเสร็จ)</li>
+        <li><code>git status</code> ไม่มี <code>.env</code> โผล่ในรายการ untracked/staged</li>
+        <li><code>port</code> ที่ส่งให้ TypeORM เป็น number (มี <code>+</code> แปลงค่า) ไม่ใช่ string</li>
+      </ul>
+    </section>
+    <h2>แหล่งอ้างอิง</h2>
+    <ul class="source-list">
+      <li><a href="https://docs.nestjs.com/techniques/configuration">Configuration (NestJS)</a></li>
+      <li><a href="https://docs.nestjs.com/techniques/database">Database (NestJS)</a></li>
+      <li><a href="https://learn.nestjs.com/">NestJS Fundamentals course (ต้นฉบับ)</a></li>
+    </ul>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link" href="41_diving-deeper-into-request-scoped-providers.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="43_custom-environment-file-paths.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+</body>
+</html>

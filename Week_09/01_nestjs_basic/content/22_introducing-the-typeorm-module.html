@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ติดตั้ง @nestjs/typeorm และตั้งค่า TypeOrmModule.forRoot ให้แอป NestJS เชื่อมต่อกับ PostgreSQL" />
+  <title>รู้จัก TypeORM Module</title>
+  <link rel="stylesheet" href="lesson.css" />
+</head>
+<body>
+  <main>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 22 จาก 77</p>
+    <h1>รู้จัก TypeORM Module</h1>
+    <section class="learning-objectives" aria-labelledby="objectives-heading">
+      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <ul>
+        <li>ติดตั้ง dependencies ที่จำเป็นสำหรับใช้ TypeORM กับ PostgreSQL ใน NestJS</li>
+        <li>ตั้งค่า <code>TypeOrmModule.forRoot()</code> ใน <code>AppModule</code> ให้เชื่อมต่อฐานข้อมูลได้จริง</li>
+        <li>อธิบายได้ว่า <code>autoLoadEntities</code> และ <code>synchronize</code> ทำอะไร และทำไม <code>synchronize</code> ห้ามใช้ใน production</li>
+      </ul>
+    </section>
+
+    <h2>TypeORM คือสะพานระหว่าง TypeScript กับ SQL</h2>
+    <p><strong>TypeORM</strong> เป็น Object-Relational Mapper (ORM) ที่ให้เรานิยามตารางเป็น class และ query ข้อมูลผ่าน method ของ TypeScript แทนการเขียน SQL ดิบทุกครั้ง NestJS มี integration ทางการผ่านแพ็กเกจ <code>@nestjs/typeorm</code> ซึ่งห่อ TypeORM ไว้ในระบบ module และ dependency injection ของ Nest ทำให้เราขอใช้ repository ของ entity ใดก็ได้จาก constructor โดยตรง</p>
+    <p>เริ่มจากติดตั้ง 3 แพ็กเกจ: ตัว integration ของ Nest, ตัว TypeORM เอง และ driver ของ PostgreSQL</p>
+    <pre><code>npm install @nestjs/typeorm typeorm pg</code></pre>
+
+    <h2>ตั้งค่า forRoot ที่ AppModule เพียงครั้งเดียว</h2>
+    <p><code>TypeOrmModule.forRoot()</code> ใช้ตั้งค่า connection หลักของทั้งแอป จึงเรียกครั้งเดียวที่ root module ค่าที่ใส่คือค่าเดียวกับที่เรากำหนดใน <code>docker-compose.yml</code> เมื่อบทที่ 20</p>
+    <pre><code>import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { CoffeesModule } from './coffees/coffees.module';
+
+@Module({
+  imports: [
+    CoffeesModule,
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      username: 'postgres',
+      password: 'pass123',
+      database: 'postgres',
+      autoLoadEntities: true,
+      synchronize: true,
+    }),
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}</code></pre>
+    <div class="comparison" role="region" aria-label="ตัวเลือกสำคัญของ TypeOrmModule.forRoot" tabindex="0">
+      <table>
+        <thead><tr><th>ตัวเลือก</th><th>หน้าที่</th><th>ข้อควรระวัง</th></tr></thead>
+        <tbody>
+          <tr><td><code>type</code>, <code>host</code>, <code>port</code>, <code>username</code>, <code>password</code>, <code>database</code></td><td>ระบุชนิดฐานข้อมูลและวิธีเชื่อมต่อ</td><td>ต้องตรงกับค่าใน docker-compose.yml ไม่เช่นนั้นแอป start ไม่ขึ้น</td></tr>
+          <tr><td><code>autoLoadEntities: true</code></td><td>โหลด entity ทุกตัวที่ลงทะเบียนผ่าน <code>forFeature()</code> อัตโนมัติ</td><td>ช่วยให้ไม่ต้อง maintain array <code>entities</code> เองในทุก ๆ ครั้งที่เพิ่ม entity ใหม่</td></tr>
+          <tr><td><code>synchronize: true</code></td><td>sync โครงสร้าง entity กับตารางในฐานข้อมูลให้อัตโนมัติทุกครั้งที่แอปรัน</td><td>สะดวกมากตอน dev แต่<strong>ต้องปิดใน production</strong> เพราะอาจแก้/ลบโครงสร้างตารางจริงโดยไม่ตั้งใจ</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="warning"><p><code>synchronize: true</code> เหมาะกับการเรียนรู้และ prototype เท่านั้น ใน production ให้ปิดแล้วจัดการโครงสร้างผ่าน migrations ซึ่งเราจะทำกันในบทที่ 31</p></div>
+
+    <section class="workshop" aria-labelledby="exercise-heading">
+      <h2 id="exercise-heading">เชื่อม iluvcoffee เข้ากับ Postgres</h2>
+      <p>ติดตั้ง dependencies แล้วเพิ่ม <code>TypeOrmModule.forRoot()</code> เข้าไปใน <code>imports</code> ของ <code>AppModule</code> ตามโค้ดด้านบน จากนั้นรันแอปโดยที่ Docker container ยังเปิดอยู่</p>
+      <div class="prompt-example"><code>npm install @nestjs/typeorm typeorm pg
+docker-compose up -d
+npm run start:dev</code></div>
+    </section>
+    <section class="expected-result" aria-labelledby="exercise-result-heading">
+      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <p>แอป start ขึ้นตามปกติโดยมี log ของ <code>InstanceLoader</code> แสดงว่า <code>TypeOrmCoreModule</code> ถูก initialize สำเร็จ ถ้า connection ผิด (เช่น ลืมเปิด Docker หรือรหัสผ่านไม่ตรง) แอปจะ throw error ตอน start ทันที ซึ่งเป็นสัญญาณที่ดี — ปัญหา config โผล่เร็วดีกว่าโผล่ตอน runtime</p>
+    </section>
+    <section class="verification" aria-labelledby="exercise-check-heading">
+      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <ul>
+        <li><code>package.json</code> มี <code>@nestjs/typeorm</code>, <code>typeorm</code> และ <code>pg</code> อยู่ใน dependencies</li>
+        <li><code>npm run start:dev</code> ขึ้นข้อความ initialize สำเร็จ ไม่มี <code>ECONNREFUSED</code> หรือ authentication error</li>
+        <li>ทดลอง <code>docker-compose down</code> แล้วรันแอปอีกครั้ง — ควรเห็น connection error เพื่อยืนยันว่าแอปเชื่อมกับ container นี้จริง (อย่าลืม <code>up -d</code> กลับ)</li>
+        <li>endpoint เดิมของ <code>coffees</code> ยังตอบสนองได้ตามปกติ เพราะเรายังไม่ได้เปลี่ยน service ไปใช้ฐานข้อมูล</li>
+      </ul>
+    </section>
+    <h2>แหล่งอ้างอิง</h2>
+    <ul class="source-list">
+      <li><a href="https://docs.nestjs.com/techniques/database">Database (NestJS Docs)</a></li>
+      <li><a href="https://docs.nestjs.com/recipes/sql-typeorm">SQL (TypeORM) Recipe (NestJS Docs)</a></li>
+      <li><a href="https://learn.nestjs.com/">NestJS Fundamentals — คอร์สต้นฉบับ</a></li>
+    </ul>
+    <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
+      <a class="lesson-navigation__link" href="21_how-to-visualize-your-postgres-database-gui.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="23_creating-a-typeorm-entity.html" rel="next">บทถัดไป →</a>
+    </nav>
+  </main>
+  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+</body>
+</html>
