@@ -1417,10 +1417,10 @@ In `src/main.ts` after `useGlobalPipes`:
 
 ```bash
 curl -s -i -H 'Origin: http://localhost:5173' http://localhost:3000/products/categories | grep -i access-control-allow-origin
-curl -s -i -H 'Origin: http://evil.test' http://localhost:3000/products/categories | grep -ic access-control-allow-origin
+curl -s -i -H 'Origin: http://evil.test' http://localhost:3000/products/categories | grep -i access-control-allow-origin
 ```
 
-Expected: `Access-Control-Allow-Origin: http://localhost:5173`; second prints `0`. Commit `feat: cors`, tag `lesson-20`.
+Expected: both print `Access-Control-Allow-Origin: http://localhost:5173` — with a fixed-string `origin`, the cors middleware always emits the configured value and never echoes the request's origin; the browser rejects the mismatch for `http://evil.test`. (Verified: it does NOT omit the header.) Commit `feat: cors`, tag `lesson-20`.
 
 - [ ] **Step 2: Lesson 21 — Swagger setup**
 
@@ -2339,7 +2339,7 @@ main.ts ตอนนี้มี ValidationPipe แบบ global และ app.l
 - ยังไม่ต้องตั้งค่า Swagger
 ```
 
-Review: `enableCors` with the env origin; no wildcard; no `credentials: true`. AI มักพลาดตรงนี้: `app.enableCors()` with no options (= `*`). Reference: `main.ts` at tag `lesson-20`. Verification: the two `curl -H 'Origin: …' | grep -i access-control-allow-origin` checks (allowed origin echoed; foreign origin → no header); commit `feat: cors`.
+Review: `enableCors` with the env origin; no wildcard; no `credentials: true`. AI มักพลาดตรงนี้: `app.enableCors()` with no options (= `*`). Reference: `main.ts` at tag `lesson-20`. Verification: the two `curl -H 'Origin: …' | grep -i access-control-allow-origin` checks — both answer `Access-Control-Allow-Origin: http://localhost:5173`; the point to teach is that the header never says `http://evil.test`, and the browser, not the server, blocks the mismatch; commit `feat: cors`.
 
 - [ ] **Step 2: Lesson 21 — เพิ่มเอกสาร API ด้วย Swagger**
 
