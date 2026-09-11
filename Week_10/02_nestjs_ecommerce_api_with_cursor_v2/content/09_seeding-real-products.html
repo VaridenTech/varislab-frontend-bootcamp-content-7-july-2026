@@ -86,7 +86,8 @@ Node.js เวอร์ชันนี้มี fetch ในตัว ห้า�
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
 - ห้ามแก้ schema.prisma, prisma7.config.ts หรือไฟล์ใน src/
-- ห้ามรัน script ให้ผมรันเอง</code></div>
+- ห้ามรัน script ให้ผมรันเอง
+- ยังไม่ต้องสร้าง controller หรือ endpoint ของสินค้า</code></div>
       <p>ตรวจโค้ดตามหัวข้อถัดไปให้จบก่อน แล้วรันเอง <strong>สองครั้ง</strong> เพื่อพิสูจน์ว่ารันซ้ำได้ไม่พังและไม่เกิดข้อมูลซ้ำ</p>
       <div class="prompt-example"><code>npm run db:seed
 npm run db:seed</code></div>
@@ -100,7 +101,7 @@ npm run db:seed</code></div>
         <li>มี <code>createMany</code> สามครั้งพอดี ไม่มี <code>upsert</code> และไม่มี <code>for</code>/<code>map</code> ที่เรียก <code>create</code> ทีละชิ้น</li>
         <li>ส่ง <code>id: product.id</code> ตรง ๆ (ถ้า AI ตัด field นี้ออก id จะหลุดไปเป็นค่าอื่นและ React app จะลิงก์ผิด)</li>
         <li><code>brand: product.brand ?? null</code> — ใช้ <code>??</code> ไม่ใช่ <code>||</code> (ถ้าใช้ <code>||</code> แบรนด์ที่เป็น string ว่างจะกลายเป็น null ไปด้วย)</li>
-        <li>สี่ field ที่เป็นวันเวลาถูกห่อด้วย <code>new Date(...)</code>: <code>createdAt</code>, <code>updatedAt</code> ของสินค้า และ <code>date</code> ของรีวิว — Prisma ต้องการ <code>DateTime</code> ไม่ใช่ string</li>
+        <li>สาม field ที่เป็นวันเวลาถูกห่อด้วย <code>new Date(...)</code>: <code>createdAt</code>, <code>updatedAt</code> ของสินค้า และ <code>date</code> ของรีวิว — Prisma ต้องการ <code>DateTime</code> ไม่ใช่ string</li>
         <li>ไม่มี <code>any</code> และไม่มี non-null assertion (<code>!</code>) — การหา id จาก slug ต้องเป็นฟังก์ชันที่ <code>throw Error</code> พร้อมชื่อ slug เมื่อไม่พบ</li>
         <li><code>package.json</code> มี <code>"db:seed": "tsx prisma/seed.ts"</code> และ dependencies ไม่มีตัวใหม่ (โดยเฉพาะต้องไม่มี <code>axios</code> หรือ <code>node-fetch</code>)</li>
       </ul>

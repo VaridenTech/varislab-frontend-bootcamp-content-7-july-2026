@@ -38,7 +38,7 @@
     <p>สังเกตว่าเราใช้ <code>getOrThrow</code> ไม่ใช่ <code>get</code> — <code>get</code> คืน <code>undefined</code> เงียบ ๆ เมื่อไม่มีคีย์นั้น ผลคือ url จะกลายเป็น <code>undefined/products/category/beauty</code> แล้วหลุดขึ้น production ไปเงียบ ๆ ส่วน <code>getOrThrow</code> ทำให้แอปพังทันทีที่ request แรก ซึ่งเป็นสิ่งที่เราต้องการ (ทบทวน Week_09 บทที่ 45 เรื่อง <code>ConfigService</code>)</p>
 
     <h2>ทำไมแค่ <code>orderBy: { id: 'asc' }</code> ก็ตรงกับ dummyjson</h2>
-    <p>ลำดับของ array มีผลต่อ <code>diff</code> — ถ้าเรียงไม่ตรง ถึงข้อมูลจะครบก็ถือว่าไม่ผ่าน seed ในบทที่ 9 วน <code>for</code> ใส่ category ตามลำดับที่อยู่ในไฟล์ contract ทีละตัว ดังนั้นคอลัมน์ <code>id</code> (auto-increment) จึงเรียงตรงกับลำดับของ dummyjson อยู่แล้ว การสั่ง <code>orderBy: { id: 'asc' }</code> คือการ<em>เขียนเจตนานั้นออกมา</em> ไม่ใช่การหวังว่า Postgres จะคืนแถวตามลำดับที่ insert — Postgres ไม่รับประกันลำดับให้เลยถ้าไม่สั่ง <code>ORDER BY</code></p>
+    <p>ลำดับของ array มีผลต่อ <code>diff</code> — ถ้าเรียงไม่ตรง ถึงข้อมูลจะครบก็ถือว่าไม่ผ่าน seed ในบทที่ 9 ส่ง category เข้า <code>createMany</code> เป็น array ตามลำดับที่ <code>GET /products/categories</code> คืนมา ดังนั้น <code>id</code> ที่ sequence แจกให้ (auto-increment) จึงเรียงตรงกับลำดับของ dummyjson อยู่แล้ว การสั่ง <code>orderBy: { id: 'asc' }</code> คือการ<em>เขียนเจตนานั้นออกมา</em> ไม่ใช่การหวังว่า Postgres จะคืนแถวตามลำดับที่ insert — Postgres ไม่รับประกันลำดับให้เลยถ้าไม่สั่ง <code>ORDER BY</code></p>
     <div class="note"><p>ค่า <code>id</code> ที่แท้จริงจะขยับขึ้นทุกครั้งที่ re-seed (ตามที่เจอในบทที่ 9) แต่ไม่มีผลกับบทนี้ เพราะ <code>id</code> ไม่ถูกส่งออกไปใน response — dummyjson ส่งแค่สามคีย์ <code>slug</code>, <code>name</code>, <code>url</code> เท่านั้น</p></div>
 
     <h2>เป้าหมายของบทนี้</h2>
@@ -180,7 +180,7 @@ diff /tmp/actual.json docs/contract/categories.json &amp;&amp; echo IDENTICAL</c
         </li>
         <li>พิสูจน์ว่า host มาจาก config จริง: แก้ <code>APP_URL</code> ใน <code>.env</code> เป็น <code>http://127.0.0.1:3000</code> restart แล้วยิงซ้ำ — ทุก <code>url</code> ต้องเปลี่ยนตาม (จากนั้นแก้กลับเป็น <code>http://localhost:3000</code> แล้ว restart)</li>
         <li>ลบบรรทัด <code>APP_URL</code> ออกจาก <code>.env</code> ชั่วคราว restart แล้วยิงซ้ำ — ต้องได้ error 500 จาก <code>getOrThrow</code> ไม่ใช่ url ที่มีคำว่า <code>undefined</code> (แล้วใส่กลับ)</li>
-        <li>commit ผลงานด้วย <code>git commit -m "feat: GET /products/categories"</code></li>
+        <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: GET /products/categories"</code></li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>

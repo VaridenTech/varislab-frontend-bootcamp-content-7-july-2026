@@ -67,7 +67,7 @@ export default defineConfig({
       <li><code>ConfigModule</code> โหลด <code>.env</code> เข้า <code>process.env</code> ให้เอง เราจึงไม่ต้องเขียน <code>import 'dotenv/config'</code> ไว้หัว <code>main.ts</code> — รายละเอียดเรื่องนี้อยู่ใน <a href="../../../Week_09/01_nestjs_basic/content/42_introducing-the-config-module.html">Week_09 บทที่ 42</a></li>
       <li><code>isGlobal: true</code> ทำให้ <code>ConfigService</code> ถูก inject ได้ทุกที่ บทที่ 10 จะใช้อ่าน <code>APP_URL</code> และบทที่ 20 จะใช้อ่าน <code>PORT</code> กับ <code>CORS_ORIGIN</code></li>
     </ul>
-    <p>เพราะ <code>ConfigModule</code> ถูก import ก่อน <code>PrismaModule</code> ค่า <code>process.env.DATABASE_URL</code> จึงมีค่าแล้วตอน <code>PrismaService</code> ถูกสร้าง — สลับลำดับสองตัวนี้แล้วจะได้ <code>connectionString: undefined</code></p>
+    <p><code>ConfigModule.forRoot()</code> โหลด <code>.env</code> เข้า <code>process.env</code> ทันทีตอนที่ array <code>imports</code> ถูกประเมิน จึงมีค่าก่อนที่ provider ตัวไหนจะถูกสร้าง — การวางไว้ตัวแรกเป็นธรรมเนียมที่ช่วยตอนมี module อื่นอ่าน <code>process.env</code> ในตัวเลือกของ <code>forRoot()</code> ของมันเอง</p>
     <div class="note">
       <p>บทนี้ยังติดตั้ง <code>tsx</code> เป็น devDependency ไปด้วย แม้จะยังไม่ได้ใช้ เพราะ seed script ในบทที่ 9 รัน <strong>นอก</strong> NestJS: มันเป็นไฟล์ TypeScript ที่ต้องรันตรง ๆ และต้อง import ไฟล์ที่ Prisma generate มาได้ <code>tsx</code> ทำสองอย่างนั้นให้ในคำสั่งเดียว</p>
     </div>

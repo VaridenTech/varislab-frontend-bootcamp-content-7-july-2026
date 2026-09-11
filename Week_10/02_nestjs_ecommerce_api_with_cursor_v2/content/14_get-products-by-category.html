@@ -214,18 +214,18 @@ export class ProductsController {
   | node -e "let d='';process.stdin.on('data',c=&gt;d+=c).on('end',()=&gt;{const j=JSON.parse(d);console.log(j.total,j.skip,j.limit,j.products.map(p=&gt;p.id))})"</code></pre>
         </li>
         <li>slug ที่ไม่มีอยู่ ตรงกับ contract ทุกไบต์ — ต้องได้ <code>IDENTICAL</code>
-          <pre><code>curl -s "http://localhost:3000/products/category/nope?limit=2&amp;skip=0" &gt; actual-unknown.json
-diff actual-unknown.json docs/contract/products-by-category-unknown.json &amp;&amp; echo IDENTICAL</code></pre>
+          <pre><code>curl -s "http://localhost:3000/products/category/nope?limit=2&amp;skip=0" &gt; /tmp/actual-unknown.json
+diff /tmp/actual-unknown.json docs/contract/products-by-category-unknown.json &amp;&amp; echo IDENTICAL</code></pre>
         </li>
         <li>หน้าแรกของ beauty เทียบ contract แบบเรียงคีย์ — ต้องได้ <code>IDENTICAL</code>
           <pre><code>curl -s "http://localhost:3000/products/category/beauty?limit=2&amp;skip=0" \
-  | node -e "let d='';process.stdin.on('data',c=&gt;d+=c).on('end',()=&gt;console.log(JSON.stringify(JSON.parse(d),Object.keys(JSON.parse(d)).sort())))" &gt; actual-by-category.json
-node -e "const d=require('./docs/contract/products-by-category.json');console.log(JSON.stringify(d,Object.keys(d).sort()))" &gt; expected-by-category.json
-diff actual-by-category.json expected-by-category.json &amp;&amp; echo IDENTICAL</code></pre>
+  | node -e "let d='';process.stdin.on('data',c=&gt;d+=c).on('end',()=&gt;console.log(JSON.stringify(JSON.parse(d),Object.keys(JSON.parse(d)).sort())))" &gt; /tmp/actual-by-category.json
+node -e "const d=require('./docs/contract/products-by-category.json');console.log(JSON.stringify(d,Object.keys(d).sort()))" &gt; /tmp/expected-by-category.json
+diff /tmp/actual-by-category.json /tmp/expected-by-category.json &amp;&amp; echo IDENTICAL</code></pre>
         </li>
         <li>สาม endpoint เดิมยังทำงาน: <code>/products/categories</code> ได้ 24 ก้อน, <code>/products?limit=2</code> ได้ <code>total: 194</code>, <code>/products/1</code> ได้สินค้าชิ้นแรก</li>
         <li><code>git diff --stat</code> เห็นแค่ <code>products.controller.ts</code> กับ <code>products.service.ts</code></li>
-        <li>commit ผลงานด้วย <code>git commit -m "feat: GET /products/category/:slug"</code></li>
+        <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: GET /products/category/:slug"</code></li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>

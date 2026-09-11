@@ -294,13 +294,13 @@ export class ProductsController {
         <li><code>curl -s -i "http://localhost:3000/products?limit=-1" | sed -n '1p'</code> ได้ <code>HTTP/1.1 400 Bad Request</code></li>
         <li>เทียบหน้าแรกกับ contract แบบเรียงคีย์ — ต้องได้ <code>IDENTICAL</code>
           <pre><code>curl -s "http://localhost:3000/products?limit=2&amp;skip=0" \
-  | node -e "let d='';process.stdin.on('data',c=&gt;d+=c).on('end',()=&gt;console.log(JSON.stringify(JSON.parse(d),Object.keys(JSON.parse(d)).sort())))" &gt; actual.json
-node -e "const d=require('./docs/contract/products-page.json');console.log(JSON.stringify(d,Object.keys(d).sort()))" &gt; expected.json
-diff actual.json expected.json &amp;&amp; echo IDENTICAL</code></pre>
+  | node -e "let d='';process.stdin.on('data',c=&gt;d+=c).on('end',()=&gt;console.log(JSON.stringify(JSON.parse(d),Object.keys(JSON.parse(d)).sort())))" &gt; /tmp/actual.json
+node -e "const d=require('./docs/contract/products-page.json');console.log(JSON.stringify(d,Object.keys(d).sort()))" &gt; /tmp/expected.json
+diff /tmp/actual.json /tmp/expected.json &amp;&amp; echo IDENTICAL</code></pre>
         </li>
         <li>ขอเลยขอบข้อมูล — <code>curl -s "http://localhost:3000/products?limit=10&amp;skip=190"</code> ต้องได้ <code>limit: 4</code> (ไม่ใช่ <code>10</code>) กับ <code>total: 194</code></li>
         <li><code>whitelist</code> ทำงาน — <code>curl -s "http://localhost:3000/products?limit=2&amp;sort=price"</code> ต้องได้ 200 ปกติ ไม่ใช่ 400</li>
-        <li>commit ผลงานด้วย <code>git commit -m "feat: GET /products with pagination"</code></li>
+        <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: GET /products with pagination"</code></li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>

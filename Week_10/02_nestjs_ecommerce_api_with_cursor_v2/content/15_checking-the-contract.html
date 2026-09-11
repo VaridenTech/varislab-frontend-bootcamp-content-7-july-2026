@@ -123,7 +123,8 @@ script รันด้วย node ตรง ๆ (Node 24 รัน .ts ที่
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
 - ห้ามแก้ไฟล์ใน src/
-- ห้ามรัน script ให้ผมรันเอง</code></div>
+- ห้ามรัน script ให้ผมรันเอง
+- ยังไม่ต้องเพิ่ม model ของคำสั่งซื้อ</code></div>
     </section>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
@@ -247,13 +248,20 @@ process.exit(failures === 0 ? 0 : 1);</code></pre>
       <ul>
         <li><code>npm run contract:check</code> ได้ ✅ แปดบรรทัดและ <code>echo $?</code> ได้ <code>0</code></li>
         <li>lint ไฟล์นี้ด้วยมือ เพราะ <code>npm run lint</code> ครอบแค่ <code>src/</code> และ <code>test/</code> — <code>npx oxlint scripts/contract-check.ts</code> ต้องไม่พิมพ์อะไรออกมา</li>
-        <li>ทำให้พังเพื่อดูว่ามันจับได้จริง: ใน <code>src/products/product.mapper.ts</code> เปลี่ยนชื่อ field สุดท้ายจาก <code>thumbnail</code> เป็น <code>thumbnailRenamed</code> ชั่วคราว รอ watch mode compile แล้วรันตรวจซ้ำ — ต้องเห็นบรรทัดนี้
-          <pre><code>❌ /products/1  $.thumbnail missing on local</code></pre>
-          และบรรทัดของ list endpoint จะขึ้น <code>$.products[0].thumbnail missing on local</code> ส่วน <code>exit code</code> เป็น <code>1</code>
+        <li>ทำให้พังเพื่อดูว่ามันจับได้จริง: ใน <code>src/products/product.mapper.ts</code> แก้บรรทัดสุดท้ายของ object ที่ return เป็น <code>thumbnail: product.thumbnail + '-broken',</code> ชั่วคราว — แก้ที่<em>ค่า</em> ไม่ใช่เปลี่ยนชื่อ field เพราะถ้าเปลี่ยนชื่อ TypeScript จะฟ้องว่าไม่ตรงกับ <code>ProductResponseDto</code> แล้ว watch mode จะไม่ restart ให้เลย (นั่นคือกลไกป้องกันชั้นแรกของเรา แต่มันทำให้แบบฝึกหัดนี้ไม่ได้ทดสอบอะไร) รอ watch mode compile แล้วรันตรวจซ้ำ — ห้าบรรทัดที่มีสินค้าติดมาใน response จะกลายเป็น ❌
+          <pre><code>✅ /products/categories
+❌ /products?limit=3&amp;skip=0  $.products[0].thumbnail: "https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp" vs "https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp-broken"
+❌ /products?limit=2&amp;skip=190  $.products[0].thumbnail: "https://cdn.dummyjson.com/product-images/womens-watches/rolex-cellini-moonphase/thumbnail.webp" vs "https://cdn.dummyjson.com/product-images/womens-watches/rolex-cellini-moonphase/thumbnail.webp-broken"
+❌ /products/1  $.thumbnail: "https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp" vs "https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp-broken"
+❌ /products/194  $.thumbnail: "https://cdn.dummyjson.com/product-images/womens-watches/women's-wrist-watch/thumbnail.webp" vs "https://cdn.dummyjson.com/product-images/womens-watches/women's-wrist-watch/thumbnail.webp-broken"
+✅ /products/9999
+❌ /products/category/beauty?limit=2&amp;skip=1  $.products[0].thumbnail: "https://cdn.dummyjson.com/product-images/beauty/eyeshadow-palette-with-mirror/thumbnail.webp" vs "https://cdn.dummyjson.com/product-images/beauty/eyeshadow-palette-with-mirror/thumbnail.webp-broken"
+✅ /products/category/nope?limit=5&amp;skip=0</code></pre>
+          สามบรรทัดที่ยังขึ้น ✅ อธิบายได้ทุกบรรทัด: <code>/products/categories</code> ไม่มี <code>thumbnail</code> ใน response, <code>/products/9999</code> เทียบแค่ <code>message</code> ของ 404 และ <code>/products/category/nope?limit=5&amp;skip=0</code> คืน <code>products</code> เป็น array ว่าง ส่วน <code>exit code</code> เป็น <code>1</code>
         </li>
         <li>ย้อนกลับด้วย <code>git checkout -- src/products/product.mapper.ts</code> รอ compile แล้วรันตรวจอีกครั้ง — ต้องกลับมา ✅ แปดบรรทัดและ exit 0 ก่อนจะ commit</li>
         <li>ตัดเน็ตแล้วรันดูก็ได้ — script จะ throw ตอน <code>fetch</code> ฝั่ง dummyjson ซึ่งเป็นพฤติกรรมที่ถูก: การตรวจนี้ต้องมีเน็ตโดยเจตนา</li>
-        <li>commit ผลงานด้วย <code>git commit -m "feat: contract check script"</code></li>
+        <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: contract check script"</code></li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>

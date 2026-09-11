@@ -29,7 +29,7 @@
           <tr><td>คอลัมน์ <code>width</code>, <code>height</code>, <code>depth</code></td><td>object <code>dimensions { width, height, depth }</code></td><td>ห่อสามคอลัมน์เป็น object เดียว</td></tr>
           <tr><td>คอลัมน์ <code>barcode</code>, <code>qrCode</code>, <code>createdAt</code>, <code>updatedAt</code></td><td>object <code>meta { createdAt, updatedAt, barcode, qrCode }</code></td><td>ห่อสี่คอลัมน์เป็น <code>meta</code></td></tr>
           <tr><td><code>categoryId</code> + relation <code>category</code> (ทั้ง object)</td><td><code>category</code> เป็น string เช่น <code>"beauty"</code></td><td>ดึงแค่ <code>category.slug</code> ออกมา</td></tr>
-          <tr><td><code>DateTime</code> → JavaScript <code>Date</code></td><td>ISO string เช่น <code>"2025-04-30T09:41:02.053Z"</code></td><td>เรียก <code>.toISOString()</code> ทั้งสี่จุด</td></tr>
+          <tr><td><code>DateTime</code> → JavaScript <code>Date</code></td><td>ISO string เช่น <code>"2025-04-30T09:41:02.053Z"</code></td><td>เรียก <code>.toISOString()</code> ทั้งสามจุด</td></tr>
           <tr><td><code>brand String?</code> → ค่า <code>null</code> ได้</td><td>ถ้าไม่มี brand จะ<strong>ไม่มีคีย์</strong> <code>brand</code> เลย</td><td>ใส่คีย์เฉพาะเมื่อไม่ใช่ <code>null</code></td></tr>
           <tr><td><code>Review</code> มี <code>id</code> และ <code>productId</code></td><td>review มีเพียงห้าคีย์</td><td>เลือกเฉพาะห้าคีย์ ตัด <code>id</code>/<code>productId</code> ออก</td></tr>
         </tbody>
@@ -121,7 +121,7 @@ Prisma Client อยู่ที่ src/generated/prisma/client.ts และ exp
         <li><code>ProductResponseDto</code> มี 22 field เรียงตามลำดับของ contract (นับเทียบกับ <code>docs/contract/product-1.json</code> ทีละบรรทัด)</li>
         <li>type ของ model นำเข้าด้วย <code>import type</code> ไม่ใช่ <code>import</code> ธรรมดา และ path ลงท้าย <code>.js</code></li>
         <li>brand ใช้ conditional spread ไม่ใช่ <code>?? undefined</code> หรือ <code>|| ''</code></li>
-        <li>เรียก <code>.toISOString()</code> ครบสี่จุด: <code>review.date</code>, <code>product.createdAt</code>, <code>product.updatedAt</code> — และไม่มี <code>Date</code> object ไหนหลุดออกไปเป็น field</li>
+        <li>เรียก <code>.toISOString()</code> ครบสามจุด: <code>review.date</code>, <code>product.createdAt</code>, <code>product.updatedAt</code> — และไม่มี <code>Date</code> object ไหนหลุดออกไปเป็น field</li>
         <li>object ของ review ที่ map ออกมามีห้าคีย์เท่านั้น ไม่มี <code>id</code> ไม่มี <code>productId</code></li>
         <li><code>npm run build</code> ผ่าน และในไฟล์ทั้งสองไม่มีคำว่า <code>any</code> หรือ <code>as</code></li>
       </ul>
@@ -243,7 +243,7 @@ export function toProductResponse(product: ProductWithRelations): ProductRespons
         <li>นับคีย์: <code>node -e "const d=require('./docs/contract/product-1.json');console.log(Object.keys(d).length)"</code> ต้องได้ <code>22</code> เท่ากับจำนวน field ใน <code>ProductResponseDto</code></li>
         <li>ลองแก้ <code>category: product.category.slug</code> เป็น <code>category: product.category</code> ชั่วคราวแล้ว <code>npm run build</code> — ต้องได้ error ทันที (ยืนยันว่า DTO ทำหน้าที่เป็นยาม) แล้วแก้กลับ</li>
         <li><code>grep -n "any\|as " src/products/product.mapper.ts src/products/dto/product-response.dto.ts</code> — ต้องไม่เจอ</li>
-        <li>commit ผลงานด้วย <code>git commit -m "feat: product response dto and mapper"</code></li>
+        <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: product response dto and mapper"</code></li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>

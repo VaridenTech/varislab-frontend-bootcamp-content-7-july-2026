@@ -46,7 +46,7 @@
     <p>เราจึง <strong>คัดลอก</strong> ค่าที่ใช้คิดเงินลงมาเก็บใน <code>OrderItem</code> ตอนสั่งซื้อ (เรียกว่า snapshot หรือ denormalization ที่ตั้งใจทำ) ส่วน <code>productId</code> ยังเก็บไว้เพื่อให้ลิงก์กลับไปหน้าสินค้าได้ แต่ตัวเลขบนใบเสร็จไม่พึ่งมันแล้ว ด้วยเหตุผลเดียวกัน <code>total</code>, <code>discountedTotal</code>, <code>totalProducts</code>, <code>totalQuantity</code> ก็ถูกเก็บเป็น column ไม่ใช่คำนวณใหม่ตอนอ่าน</p>
 
     <h2>ลบอะไรได้ ลบอะไรไม่ได้</h2>
-    <p>สองความสัมพันธ์ของ <code>OrderItem</code> ต้องตั้ง <code>onDelete</code> ต่างกัน และนี่คือที่ที่ AI มักทำเหมือนกันทั้งคู่</p>
+    <p>สองความสัมพันธ์ของ <code>OrderItem</code> ต้องตั้ง <code>onDelete</code> ต่างกัน และนี่คือจุดที่ AI มักทำเหมือนกันทั้งคู่</p>
     <div class="comparison" role="region" aria-label="เปรียบเทียบ onDelete ของสองความสัมพันธ์" tabindex="0">
       <table>
         <thead><tr><th>ความสัมพันธ์</th><th>onDelete</th><th>เหตุผล</th></tr></thead>

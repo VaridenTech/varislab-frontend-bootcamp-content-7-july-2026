@@ -46,7 +46,7 @@
       </table>
     </div>
     <div class="warning"><p>ถ้าลืม <code>@Type(() =&gt; AddressDto)</code> จะไม่มี error อะไรเลย แต่ validation ของ <code>address</code> จะ<strong>ผ่านทุกอย่าง</strong> — ส่ง <code>{"address": {}}</code> ก็ผ่าน นี่คือความพลาดที่อันตรายที่สุดในบทนี้ เพราะเงียบสนิทจนกว่าจะมีข้อมูลเสียลงฐานข้อมูล</p></div>
-    <p>ลำดับการประกาศ class ในไฟล์ก็มีผล: <code>@Type(() =&gt; CartProductDto)</code> ถูกเรียกตอน runtime จริง ถ้า <code>AddCartDto</code> ถูกประกาศไว้ก่อน <code>CartProductDto</code> arrow function นั้นจะอ่าน binding ที่ยังไม่ถูก initialize (temporal dead zone) เราจึงเรียง class เล็กไปใหญ่: <code>CartProductDto</code> → <code>AddressDto</code> → <code>AddCartDto</code></p>
+    <p>เราเรียง class เล็กไปใหญ่เพื่ออ่านง่าย: <code>CartProductDto</code> → <code>AddressDto</code> → <code>AddCartDto</code> — arrow function ใน <code>@Type(() =&gt; CartProductDto)</code> ถูกเรียกตอน class-transformer แปลง payload จริง (คือตอนมี request เข้ามา) ไม่ใช่ตอนประกาศ class จึงไม่ผูกกับลำดับการประกาศ นั่นคือเหตุผลที่ <code>@Type</code> รับ function ไม่ใช่รับ class ตรง ๆ</p>
 
     <h2>ตรวจสองฝั่งไม่ใช่ความซ้ำซ้อน</h2>
     <p>ฝั่ง React app ตรวจ address ด้วย zod อยู่แล้ว (<code>src/features/checkout/schema.ts</code>)</p>
@@ -108,7 +108,7 @@ dummyjson ตอบ 400 { "message": "User id is required" } เมื่อไ�
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li>ลำดับ class ในไฟล์คือ <code>CartProductDto</code>, <code>AddressDto</code> แล้วค่อย <code>AddCartDto</code> — class ที่ถูกอ้างใน <code>@Type()</code> ต้องประกาศไว้ก่อน</li>
+        <li>ลำดับ class ในไฟล์คือ <code>CartProductDto</code>, <code>AddressDto</code> แล้วค่อย <code>AddCartDto</code> — เป็นเรื่องความอ่านง่าย ไม่ใช่ข้อบังคับทางเทคนิค (thunk ใน <code>@Type()</code> ทำให้ลำดับไม่สำคัญ) แต่ให้จัดให้ตรงกันเพื่อเทียบกับโค้ดอ้างอิงทีละบรรทัดได้</li>
         <li><code>@Type()</code> ปรากฏ <strong>สองครั้ง</strong> คือที่ <code>products</code> และที่ <code>address</code> (ค้นด้วย <code>grep -c "@Type" src/orders/dto/add-cart.dto.ts</code> ต้องได้ 2)</li>
         <li><code>Type</code> import มาจาก <code>class-transformer</code> ส่วน decorator ที่เหลือมาจาก <code>class-validator</code> — สอง package ไม่ปนกัน</li>
         <li><code>products</code> มี <code>@ArrayMinSize(1)</code> และ <code>@ValidateNested({ each: true })</code> ครบ</li>

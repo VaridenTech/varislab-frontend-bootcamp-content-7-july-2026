@@ -97,7 +97,7 @@ Swagger ตั้งค่าที่ /api แล้ว และ CLI plugin �
         <li>import path ทุกเส้นยังลงท้าย <code>.js</code> ตามกติกา ESM ของ Nest 12 เช่น <code>./dto/product-response.dto.js</code></li>
         <li><code>npm run build</code> และ <code>npm run lint</code> ผ่านทั้งคู่</li>
       </ul>
-      <p><strong>AI มักพลาดตรงนี้:</strong> เห่อ decorator แล้วใส่ <code>@ApiProperty()</code> ให้ทุก field ของทุก DTO — ซึ่งเป็นสิ่งที่ CLI plugin มีไว้เพื่อไม่ให้เราต้องทำ ผลคือไฟล์ยาวขึ้นเท่าตัวโดยเอกสารไม่ได้ดีขึ้นเลย ถ้าเจอให้ลบออกให้เหลือเท่าที่ prompt ระบุ อีกอันตรายที่แนบเนียนกว่าคือมันจัดเรียง handler ใหม่ตาม <q>ความสวยงาม</q> (เช่นย้าย <code>@Get(':id')</code> ขึ้นไปไว้ต้น class) ซึ่งทำให้ <code>GET /products/categories</code> กลายเป็นการหา product id ชื่อ <code>categories</code> แล้วได้ 400 จาก <code>ParseIntPipe</code> — ตรวจลำดับด้วยตาทุกครั้ง</p>
+      <p><strong>AI มักพลาดตรงนี้:</strong> ใส่ decorator เพลินจนใส่ <code>@ApiProperty()</code> ให้ทุก field ของทุก DTO — ซึ่งเป็นสิ่งที่ CLI plugin มีไว้เพื่อไม่ให้เราต้องทำ ผลคือไฟล์ยาวขึ้นเท่าตัวโดยเอกสารไม่ได้ดีขึ้นเลย ถ้าเจอให้ลบออกให้เหลือเท่าที่ prompt ระบุ อีกอันตรายที่แนบเนียนกว่าคือมันจัดเรียง handler ใหม่ตาม <q>ความสวยงาม</q> (เช่นย้าย <code>@Get(':id')</code> ขึ้นไปไว้ต้น class) ซึ่งทำให้ <code>GET /products/categories</code> กลายเป็นการหา product id ชื่อ <code>categories</code> แล้วได้ 400 จาก <code>ParseIntPipe</code> — ตรวจลำดับด้วยตาทุกครั้ง</p>
       <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
       <pre><code>/* src/products/products.controller.ts */
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';

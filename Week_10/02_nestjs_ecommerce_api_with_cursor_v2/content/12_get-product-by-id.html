@@ -22,7 +22,7 @@
 
     <h2>บทนี้คือบทที่ mapper ได้ทำงานจริง</h2>
     <p>บทที่ 11 เขียน <code>toProductResponse</code> ไว้แต่ยังไม่มีใครเรียก บทนี้เราต่อสายให้ครบ: controller รับ id → service query สินค้าพร้อม relation → ส่งแถวเข้า mapper → คืน JSON ที่ตรงกับ <code>docs/contract/product-1.json</code></p>
-    <p>โครงการรับ parameter เป็นแบบเดียวกับ Week_09 บทที่ 7 (route parameters) และการโยน error เป็นแบบเดียวกับบทที่ 13 (ข้อความ error ที่อ่านรู้เรื่อง) ต่างกันที่คราวนี้ข้อความไม่ใช่เรื่องรสนิยม — มันคือส่วนหนึ่งของสัญญา</p>
+    <p>รูปแบบการรับ parameter เป็นแบบเดียวกับ Week_09 บทที่ 7 (route parameters) และการโยน error เป็นแบบเดียวกับบทที่ 13 (ข้อความ error ที่อ่านรู้เรื่อง) ต่างกันที่คราวนี้ข้อความไม่ใช่เรื่องรสนิยม — มันคือส่วนหนึ่งของสัญญา</p>
 
     <h2>ข้อความ 404 คือสัญญา ไม่ใช่ข้อความประกอบ</h2>
     <p>เปิด <code>docs/contract/product-not-found.txt</code> ที่จับไว้ในบทที่ 3 dummyjson ตอบ status 404 พร้อม body</p>
@@ -34,7 +34,7 @@
     <h2><code>include</code> และเหตุผลที่ต้องสั่ง <code>orderBy</code> ให้ reviews</h2>
     <p>แถว <code>Product</code> เปล่า ๆ ไม่มี <code>category</code> และไม่มี <code>reviews</code> ติดมา เราจึงต้องสั่ง <code>include</code> (ทบทวน Week_09 บทที่ 26 เรื่องดึง model พร้อม relation)</p>
     <pre><code>include: { category: true, reviews: { orderBy: { id: 'asc' } } }</code></pre>
-    <p>ทำไมต้องมี <code>orderBy</code> ให้ reviews ด้วย? เพราะ array ที่ลำดับไม่ตรงกันคือ <code>diff</code> ที่ไม่ผ่าน และ Postgres ไม่รับประกันลำดับของแถวที่คืนมาถ้าไม่มี <code>ORDER BY</code> — มันจะเรียงตามที่สะดวกที่สุดในแผนการ query นั้น ๆ ซึ่งอาจเปลี่ยนเมื่อข้อมูลโตขึ้นหรือมี index ใหม่ seed ในบทที่ 9 ใส่ review ตามลำดับที่อยู่ใน contract ดังนั้น <code>id</code> น้อยไปมากคือลำดับเดียวกับ dummyjson</p>
+    <p>ทำไมต้องมี <code>orderBy</code> ให้ reviews ด้วย? เพราะ array ที่ลำดับไม่ตรงกันคือ <code>diff</code> ที่ไม่ผ่าน และ Postgres ไม่รับประกันลำดับของแถวที่คืนมาถ้าไม่มี <code>ORDER BY</code> — มันจะเรียงตามที่สะดวกที่สุดในแผนการ query นั้น ๆ ซึ่งอาจเปลี่ยนเมื่อข้อมูลโตขึ้นหรือมี index ใหม่ seed ในบทที่ 9 ใส่ review ตามลำดับที่ dummyjson ส่งมาใน <code>products[].reviews</code> ดังนั้น <code>id</code> น้อยไปมากคือลำดับเดียวกับ dummyjson</p>
 
     <h2>ลำดับการประกาศ route คือลำดับที่ Nest ลองจับ</h2>
     <p>Nest ลงทะเบียน handler ตามลำดับที่ประกาศไว้ใน class และ router จะจับ pattern แรกที่ตรง ถ้าเราเผลอวาง <code>@Get(':id')</code> ไว้ก่อน</p>
@@ -168,9 +168,9 @@ export class ProductsController {
       <ul>
         <li>เทียบสินค้าชิ้นที่ 1 กับ contract โดยเรียงคีย์ทั้งสองฝั่งให้เหมือนกันก่อน — ต้องได้ <code>IDENTICAL</code>
           <pre><code>curl -s http://localhost:3000/products/1 \
-  | node -e "let d='';process.stdin.on('data',c=&gt;d+=c).on('end',()=&gt;console.log(JSON.stringify(JSON.parse(d),Object.keys(JSON.parse(d)).sort())))" &gt; actual.json
-node -e "const d=require('./docs/contract/product-1.json');console.log(JSON.stringify(d,Object.keys(d).sort()))" &gt; expected.json
-diff actual.json expected.json &amp;&amp; echo IDENTICAL</code></pre>
+  | node -e "let d='';process.stdin.on('data',c=&gt;d+=c).on('end',()=&gt;console.log(JSON.stringify(JSON.parse(d),Object.keys(JSON.parse(d)).sort())))" &gt; /tmp/actual.json
+node -e "const d=require('./docs/contract/product-1.json');console.log(JSON.stringify(d,Object.keys(d).sort()))" &gt; /tmp/expected.json
+diff /tmp/actual.json /tmp/expected.json &amp;&amp; echo IDENTICAL</code></pre>
           <p>(คำสั่ง <code>node -e</code> ใช้ <code>require</code> ได้ ทั้งที่โปรเจกต์เป็น <code>"type": "module"</code> เพราะสคริปต์ที่ส่งผ่าน <code>-e</code> ถูกรันเป็น CommonJS โดยปริยาย)</p>
         </li>
         <li><code>curl -i http://localhost:3000/products/9999</code> ได้ 404 พร้อม <code>"message":"Product with id '9999' not found"</code> ตรงตัวอักษร</li>
@@ -181,7 +181,7 @@ diff actual.json expected.json &amp;&amp; echo IDENTICAL</code></pre>
 # ต้องพิมพ์ false</code></pre>
         </li>
         <li><code>curl -i http://localhost:3000/products/abc</code> ได้ 400 พร้อม <code>Validation failed (numeric string is expected)</code> — ความต่างที่เรายอมรับ ไม่ใช่ bug</li>
-        <li>commit ผลงานด้วย <code>git commit -m "feat: GET /products/:id"</code></li>
+        <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: GET /products/:id"</code></li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>
