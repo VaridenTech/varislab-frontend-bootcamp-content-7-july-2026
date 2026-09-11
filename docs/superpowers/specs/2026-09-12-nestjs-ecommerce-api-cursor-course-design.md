@@ -149,7 +149,7 @@ via default import, every decorated parameter typed.
   `new PrismaPg({ connectionString: process.env.DATABASE_URL })`, connect in
   `onModuleInit`, disconnect in `onModuleDestroy`; client imported from
   `src/generated/prisma/client.js`.
-- `class-validator`, `class-transformer`, `@nestjs/config`, `@nestjs/swagger`.
+- `class-validator`, `class-transformer`, `@nestjs/config`, `@nestjs/swagger`, dev `tsx`.
 - `.cursor/rules/project.mdc` (written by hand in lesson 04):
   ESM `.js` imports, strict TS / no `any` / no `as` to silence errors, one module
   per domain (`products`, `orders`), DTOs in `dto/`, all DB access through
@@ -280,12 +280,13 @@ model OrderItem {
 }
 ```
 
-Seed (`prisma/seed.ts`, run with `node prisma/seed.ts`; the course requires
-Node 24 LTS, whose built-in type stripping runs `.ts` directly, so no `tsx`):
-fetches
+Seed (`prisma/seed.ts`, run with `npm run db:seed` = `tsx prisma/seed.ts`;
+`tsx` is a devDependency because the generated client imports its own files with
+`.js` extensions that plain Node type stripping cannot resolve): fetches
 `https://dummyjson.com/products/categories` and `https://dummyjson.com/products?limit=0`,
-upserts categories, then creates each product with its explicit id and nested
-reviews. Idempotent (delete-all then insert, inside a transaction).
+then inside one `$transaction` deletes reviews, products, categories (and, from
+lesson 16, order items and orders) and re-inserts everything with `createMany`,
+keeping dummyjson's product ids and review order. Idempotent.
 
 ## Module layout
 
@@ -299,12 +300,13 @@ src/
 │   ├── products.controller.ts    GET /products/categories, /products, /products/category/:slug, /products/:id
 │   ├── products.service.ts
 │   ├── product.mapper.ts         toProductResponse(row with reviews & category)
-│   └── dto/ pagination-query.dto.ts
+│   └── dto/ pagination-query.dto.ts, product-response.dto.ts
 └── orders/
     ├── orders.module.ts
     ├── carts.controller.ts       POST /carts/add
     ├── orders.service.ts
-    └── dto/ add-cart.dto.ts (+ nested CartProductDto, AddressDto)
+    ├── cart.mapper.ts            toCartResponse(order with items)
+    └── dto/ add-cart.dto.ts (+ nested CartProductDto, AddressDto), cart-response.dto.ts
 scripts/contract-check.ts         (lesson 15)
 docs/contract/*.json              (lesson 02)
 ```
@@ -320,13 +322,13 @@ Filenames follow Week_09 (`NN_kebab-slug.html`). ✍️ = hand-typed, no prompt.
 1. `01_what-well-be-building.html` สิ่งที่เราจะสร้างและกติกาของคอร์ส — the drop-in
    idea, the five endpoints, the governing rule, how a prompt lesson is laid out
    (🤖 prompt → ✅ review → verification), prerequisites and versions.
-2. ✍️ `02_capturing-the-dummyjson-contract.html` จับสัญญาของ dummyjson ด้วย curl —
-   create the project folder, `docs/contract/`, `curl` each endpoint into a JSON
-   file, read the facts (default limit 30, 404 message, empty category, 201 cart,
-   brand missing on 92). Why by hand: this is the truth every later prompt quotes.
-3. ✍️ `03_scaffolding-the-project.html` Scaffold โปรเจกต์ด้วย Nest CLI — `nest new
-   ecommerce-api`, move `docs/contract` inside, `npm run start:dev`, git init +
-   first commit, the commit-before-every-prompt habit.
+2. ✍️ `02_scaffolding-the-project.html` Scaffold โปรเจกต์ด้วย Nest CLI — `nest new
+   ecommerce-api`, `npm run start:dev`, first commit, the commit-before-every-prompt
+   habit.
+3. ✍️ `03_capturing-the-dummyjson-contract.html` จับสัญญาของ dummyjson ด้วย curl —
+   `docs/contract/` inside the project, `curl` each endpoint into a file, read the
+   facts (default limit 30, 404 message, empty category, 201 cart, brand missing
+   on 92). Why by hand: this is the truth every later prompt quotes.
 4. ✍️ `04_cursor-rules-and-the-prompt-template.html` Cursor Rules และแม่แบบ Prompt —
    write `.cursor/rules/project.mdc`, the five-part template, the review loop
    (`npm run build`, `npm run lint`, watch log, `curl`, compare with contract),
@@ -337,7 +339,8 @@ Filenames follow Week_09 (`NN_kebab-slug.html`). ✍️ = hand-typed, no prompt.
    `docker-compose.yml` + `.env` (`DATABASE_URL`, `PORT`, `APP_URL`) + `.gitignore`.
 6. `06_setting-up-prisma.html` ติดตั้ง Prisma และ PrismaModule — `npm i` pinned
    versions (told in prompt), `npx prisma init --no-skills`, prompt for
-   `PrismaModule`/`PrismaService` (global).
+   `PrismaModule`/`PrismaService` (global) and `ConfigModule.forRoot({ isGlobal:
+   true })` in `AppModule` so `.env` is loaded without `dotenv/config` in `main.ts`.
 7. `07_modeling-products-in-prisma.html` ออกแบบ Prisma Model ของสินค้า — prompt for
    `Category`, `Product`, `Review` with the field list from the contract; why
    flatten dimensions/meta; why `Float` not `Decimal`.
@@ -351,8 +354,12 @@ Filenames follow Week_09 (`NN_kebab-slug.html`). ✍️ = hand-typed, no prompt.
 10. `10_get-products-categories.html` GET /products/categories — prompt for
     `ProductsModule`, controller, service, `APP_URL` via `ConfigService`.
 11. `11_mapping-rows-to-the-contract.html` แปลงแถวจากฐานข้อมูลเป็นรูปทรงของ dummyjson —
-    prompt for `product.mapper.ts` (+ `ProductResponse` type); brand omitted when
-    null; nested `dimensions`/`meta`; `category` as slug string.
+    prompt for `dto/product-response.dto.ts` (classes `ProductDimensionsDto`,
+    `ProductReviewDto`, `ProductMetaDto`, `ProductResponseDto`, `CategoryResponseDto`,
+    `ProductListResponseDto`; classes so the Swagger CLI plugin can document them in
+    lesson 22) and `product.mapper.ts` (`toProductResponse`); brand omitted when
+    null; nested `dimensions`/`meta`; `category` as slug string; dates via
+    `toISOString()`.
 12. `12_get-product-by-id.html` GET /products/:id — `ParseIntPipe`, `include`
     reviews + category, `NotFoundException` with the exact message, route order.
 13. `13_get-products-with-pagination.html` GET /products พร้อม skip/limit —
