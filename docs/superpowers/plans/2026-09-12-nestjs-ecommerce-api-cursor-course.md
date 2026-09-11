@@ -1508,8 +1508,8 @@ Do NOT edit `.env.local`; the shell variable overrides it for this run only.
 - [ ] **Step 2: Walk the pages in a browser** (claude-in-chrome or playwright tools; screenshots go to `$SCRATCH/verify/screens/`)
 
 1. `http://localhost:5173/` — "Deals of the day" shows 5 products; category menu lists 24 categories; clicking a category updates the grid.
-2. Category page — pagination shows pages; page 2 loads different products (network tab: `GET /products/category/<slug>?skip=20&limit=20` hits `localhost:3000`).
-3. Product page `/product/1` — title, brand, price, 3 reviews; "Add to cart" opens the modal; cart badge increments.
+2. Category page `/categories` — pick a category with more than 20 products (Groceries has 27; Beauty has only 5); pagination shows pages; page 2 loads different products (network tab: `GET /products/category/groceries?skip=20&limit=20` hits `localhost:3000`).
+3. Product page `/products/1` — title, brand, price, 3 reviews; "Add to cart" opens the modal; cart badge increments.
 4. Cart → Checkout — fill address (any address, a valid email, a phone), pick delivery/payment, "Place order" → Order Success page; network tab shows `POST http://localhost:3000/carts/add` → 201.
 5. `docker compose exec db psql -U postgres -d ecommerce -c 'SELECT id, email, "totalQuantity" FROM "Order" ORDER BY id DESC LIMIT 1;'` shows the order just placed.
 
@@ -1521,7 +1521,7 @@ Record which screenshot proves each step; lesson 23 describes exactly these five
 cd /Users/varis/Sites/varis-lab/workshop/temp/react-ecommerce-app && npm test 2>&1 | tail -5
 ```
 
-Expected: all test files pass (their base URL is pinned in `vite.config.ts` `test.env`). Stop the Vite dev server. Leave the API and db running for Phase 2 spot checks; note `git -C "$SCRATCH/verify/ecommerce-api" tag` lists `lesson-02` … `lesson-22`.
+Expected: the same result as before the URL switch (their base URL is pinned in `vite.config.ts` `test.env`, so the API cannot affect them). Verified 2026-09-12: on Node 26.7 the suite fails in `src/test/setup.ts` with `ExperimentalWarning: localStorage is not available because --localstorage-file was not provided` (Node's built-in localStorage shadows jsdom's) — identical before and after the switch, unrelated to the API. Stop the Vite dev server. Leave the API and db running for Phase 2 spot checks; note `git -C "$SCRATCH/verify/ecommerce-api" tag` lists `lesson-02` … `lesson-22`.
 
 ---
 
@@ -2410,7 +2410,7 @@ Review: decorators exactly as listed; handler order unchanged; `brand` optional 
 
 - [ ] **Step 4: Lesson 23 — สลับ React app มาใช้ API ของเรา** (✍️)
 
-Concept: the moment of truth; one line changes (`.env.local` in the React project: `VITE_API_BASE_URL=http://localhost:3000`); Vite reads `.env.local` at startup so restart `npm run dev`; the five checks from Task 11 Step 2 as an ordered list with what to look for in the Network tab (host `localhost:3000`, status codes) and the psql query for the placed order; then `npm test` in the React project stays green because `vite.config.ts` pins the test base URL (show the `test.env` line). `.note`: to go back to dummyjson, restore the line. Verification: all five checks pass; `SELECT … FROM "Order"` shows the order; `npm test` output "Test Files … passed".
+Concept: the moment of truth; one line changes (`.env.local` in the React project: `VITE_API_BASE_URL=http://localhost:3000`); Vite reads `.env.local` at startup so restart `npm run dev`; the five checks from Task 11 Step 2 as an ordered list (routes `/`, `/categories`, `/products/1`, `/cart`, `/checkout`, `/order/success`; use Groceries for pagination since Beauty has only 5 products) with what to look for in the Network tab (host `localhost:3000`, status codes) and the psql query for the placed order; then `npm test` in the React project gives the same result as before the switch because `vite.config.ts` pins the test base URL to dummyjson and MSW intercepts it (show the `test.env` line) — the API cannot change the outcome. `.note`: on Node 26 the suite currently fails with `ExperimentalWarning: localStorage is not available` before AND after the switch; that is a Node/jsdom incompatibility, not the API — run it once before switching to see the baseline. `.note`: to go back to dummyjson, restore the line. Verification: all five checks pass; `SELECT … FROM "Order"` shows the order; `npm test` result unchanged from the baseline run.
 
 - [ ] **Step 5: Lesson 24 — สรุปและก้าวต่อไป**
 
