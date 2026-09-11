@@ -1873,6 +1873,7 @@ Node.js เวอร์ชันนี้มี fetch ในตัว ห้า�
 - ห้ามติดตั้ง dependency ใหม่
 - ห้ามแก้ schema.prisma, prisma7.config.ts หรือไฟล์ใน src/
 - ห้ามรัน script ให้ผมรันเอง
+- ยังไม่ต้องสร้าง controller หรือ endpoint ของสินค้า
 ```
 
 Review: `import 'dotenv/config'` first line; `PrismaPg` adapter; delete order review → product → category; three `createMany`; explicit `id: product.id`; `brand: product.brand ?? null`; `new Date(...)` on the four date fields; no `!`, no `any`; `db:seed` script uses `tsx`. AI มักพลาดตรงนี้: loops `create` per product (slow but works) or forgets `limit=0` and seeds only 30 products — the verification count catches it. Reference: `prisma/seed.ts` at tag `lesson-09`. Hand steps: `npm run db:seed` twice. Expected: `Seeded 24 categories, 194 products, 582 reviews` both times. Verification: the psql count query from Task 4 Step 2 → `24 | 194 | 582`; `SELECT count(*) FROM "Product" WHERE brand IS NULL` → 92; `SELECT id, slug FROM "Category" ORDER BY id LIMIT 3` → beauty, fragrances, furniture (a `.note`: the id numbers grow on each re-seed because the sequence is not reset; only the order matters, nothing exposes category ids); commit `feat: seed from dummyjson`.
@@ -2130,9 +2131,10 @@ script รันด้วย node ตรง ๆ (Node 24 รัน .ts ที่
 - ห้ามติดตั้ง dependency ใหม่
 - ห้ามแก้ไฟล์ใน src/
 - ห้ามรัน script ให้ผมรันเอง
+- ยังไม่ต้องเพิ่ม model ของคำสั่งซื้อ
 ```
 
-Review: no `import` lines; eight requests in order; keys sorted in `normalize`; host replaced in strings; missing-key detection on both sides; error path compares `message` only; exit code. AI มักพลาดตรงนี้: uses `JSON.stringify(a) === JSON.stringify(b)` (no path on failure) or `import fetch from 'node-fetch'`. Reference: `scripts/contract-check.ts` at tag `lesson-15`. Verification: `npm run contract:check` → eight ✅ and exit 0; break something on purpose (rename `thumbnail` in the mapper) → ❌ with `$.thumbnail missing on local`; restore; commit `feat: contract check script`.
+Review: no `import` lines; eight requests in order; keys sorted in `normalize`; host replaced in strings; missing-key detection on both sides; error path compares `message` only; exit code. AI มักพลาดตรงนี้: uses `JSON.stringify(a) === JSON.stringify(b)` (no path on failure) or `import fetch from 'node-fetch'`. Reference: `scripts/contract-check.ts` at tag `lesson-15`. Verification: `npm run contract:check` → eight ✅ and exit 0; break something on purpose (change the mapper's last line to `thumbnail: product.thumbnail + '-broken',` — a rename would be a TypeScript error and watch mode would not restart) → ❌ on every product-bearing request with `$.thumbnail: "…thumbnail.webp" vs "…thumbnail.webp-broken"`; restore the file from the last commit; commit `feat: contract check script`.
 
 - [ ] **Step 7: Nav chain and commit**
 
