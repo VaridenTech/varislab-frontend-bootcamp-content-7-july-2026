@@ -565,7 +565,7 @@ docker compose exec db psql -U postgres -d ecommerce -c 'SELECT count(*) FROM "P
 npm run lint
 ```
 
-Expected: both runs print `Seeded 24 categories, 194 products, 582 reviews`; counts `24 | 194 | 582`; first categories `1 beauty`, `2 fragrances`, `3 furniture`; `92` products without brand; lint clean (if oxlint complains about `prisma/seed.ts`, fix the code, not the config). If `tsx` cannot resolve `../src/generated/prisma/client.js`, replace the `db:seed` script with `"db:seed": "tsx --tsconfig tsconfig.json prisma/seed.ts"` and record which one worked for the lesson. Commit `feat: seed from dummyjson`, tag `lesson-09`.
+Expected: both runs print `Seeded 24 categories, 194 products, 582 reviews`; counts `24 | 194 | 582`; first categories by id are `beauty`, `fragrances`, `furniture` (the absolute ids advance on every re-seed because `deleteMany` does not reset the Postgres sequence — compare slugs, not id numbers); `92` products without brand; lint clean (if oxlint complains about `prisma/seed.ts`, fix the code, not the config). If `tsx` cannot resolve `../src/generated/prisma/client.js`, replace the `db:seed` script with `"db:seed": "tsx --tsconfig tsconfig.json prisma/seed.ts"` and record which one worked for the lesson. Commit `feat: seed from dummyjson`, tag `lesson-09`.
 
 ---
 
@@ -1875,7 +1875,7 @@ Node.js เวอร์ชันนี้มี fetch ในตัว ห้า�
 - ห้ามรัน script ให้ผมรันเอง
 ```
 
-Review: `import 'dotenv/config'` first line; `PrismaPg` adapter; delete order review → product → category; three `createMany`; explicit `id: product.id`; `brand: product.brand ?? null`; `new Date(...)` on the four date fields; no `!`, no `any`; `db:seed` script uses `tsx`. AI มักพลาดตรงนี้: loops `create` per product (slow but works) or forgets `limit=0` and seeds only 30 products — the verification count catches it. Reference: `prisma/seed.ts` at tag `lesson-09`. Hand steps: `npm run db:seed` twice. Expected: `Seeded 24 categories, 194 products, 582 reviews` both times. Verification: the psql count query from Task 4 Step 2 → `24 | 194 | 582`; `SELECT count(*) FROM "Product" WHERE brand IS NULL` → 92; `SELECT id, slug FROM "Category" ORDER BY id LIMIT 3` → beauty, fragrances, furniture; commit `feat: seed from dummyjson`.
+Review: `import 'dotenv/config'` first line; `PrismaPg` adapter; delete order review → product → category; three `createMany`; explicit `id: product.id`; `brand: product.brand ?? null`; `new Date(...)` on the four date fields; no `!`, no `any`; `db:seed` script uses `tsx`. AI มักพลาดตรงนี้: loops `create` per product (slow but works) or forgets `limit=0` and seeds only 30 products — the verification count catches it. Reference: `prisma/seed.ts` at tag `lesson-09`. Hand steps: `npm run db:seed` twice. Expected: `Seeded 24 categories, 194 products, 582 reviews` both times. Verification: the psql count query from Task 4 Step 2 → `24 | 194 | 582`; `SELECT count(*) FROM "Product" WHERE brand IS NULL` → 92; `SELECT id, slug FROM "Category" ORDER BY id LIMIT 3` → beauty, fragrances, furniture (a `.note`: the id numbers grow on each re-seed because the sequence is not reset; only the order matters, nothing exposes category ids); commit `feat: seed from dummyjson`.
 
 - [ ] **Step 6: Nav chain and commit**
 
