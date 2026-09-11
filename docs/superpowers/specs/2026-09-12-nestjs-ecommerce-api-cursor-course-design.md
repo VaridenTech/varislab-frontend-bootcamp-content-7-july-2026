@@ -163,8 +163,8 @@ Verified live on 2026-09-12:
 | Request | Status | Shape / notes |
 | --- | --- | --- |
 | `GET /products/categories` | 200 | `[{slug, name, url}]`, 24 items, `url` = `<base>/products/category/<slug>` |
-| `GET /products?limit&skip` | 200 | `{products: Product[], total: 194, skip, limit}`; default `limit` 30; `limit=0` returns all |
-| `GET /products/category/:slug?limit&skip` | 200 | same envelope; unknown slug → `{products: [], total: 0, skip, limit}` (200, not 404) |
+| `GET /products?limit&skip` | 200 | `{products: Product[], total: 194, skip, limit}`; default `limit` 30; `limit=0` returns all; the echoed `limit` is the number of products actually returned (`?limit=10&skip=190` → `limit: 4`) |
+| `GET /products/category/:slug?limit&skip` | 200 | same envelope; unknown slug → `{products: [], total: 0, skip: 0, limit: 0}` (200, not 404) |
 | `GET /products/:id` | 200 / 404 | full `Product`; not found → `{"message": "Product with id '9999' not found"}` |
 | `POST /carts/add` | 201 / 400 | body `{userId, products: [{id, quantity}], address?}`; response = cart (below); missing userId → `{"message": "User id is required"}` |
 

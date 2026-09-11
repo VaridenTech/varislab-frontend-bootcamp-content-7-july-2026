@@ -143,7 +143,7 @@ curl -s -i -X POST https://dummyjson.com/carts/add \
 node -e "fetch('https://dummyjson.com/products?limit=0').then(r=>r.json()).then(({products})=>console.log(products.length,'products;',products.filter(p=>!('brand' in p)).length,'without brand'))"
 ```
 
-Expected: `categories.json` is an array of 24 `{slug,name,url}`; `products-page.json` has `"total":194,"skip":0,"limit":2`; `product-1.json` has 22 keys; `product-not-found.txt` first line `HTTP/2 404` and body `{"message":"Product with id '9999' not found"}`; `products-by-category-unknown.json` is `{"products":[],"total":0,"skip":0,"limit":2}`; `cart-add.txt` first line `HTTP/2 201` and body contains `"discountedPrice":18` and `"totalQuantity":2`; the node one-liner prints `194 products; 92 without brand`. Record the exact outputs — lesson 03 quotes them. Commit `docs: capture dummyjson contract`, tag `lesson-03`.
+Expected: `categories.json` is an array of 24 `{slug,name,url}`; `products-page.json` has `"total":194,"skip":0,"limit":2`; `product-1.json` has 22 keys; `product-not-found.txt` first line `HTTP/2 404` and body `{"message":"Product with id '9999' not found"}`; `products-by-category-unknown.json` is `{"products":[],"total":0,"skip":0,"limit":0}` (dummyjson's `limit` echoes the number of products actually returned); `cart-add.txt` first line `HTTP/2 201` and body contains `"discountedPrice":18` and `"totalQuantity":2`; the node one-liner prints `194 products; 92 without brand`. Record the exact outputs — lesson 03 quotes them. Commit `docs: capture dummyjson contract`, tag `lesson-03`.
 
 - [ ] **Step 5: Write the Cursor rules file (lesson 04, hand-typed)**
 
@@ -928,7 +928,7 @@ export class ProductsService {
       }),
       this.prisma.product.count({ where }),
     ]);
-    return { products: rows.map(toProductResponse), total, skip, limit };
+    return { products: rows.map(toProductResponse), total, skip, limit: rows.length };
   }
 }
 ```
@@ -981,14 +981,14 @@ curl -s -i "http://localhost:3000/products?limit=abc" | sed -n '1p;$p'
 curl -s -i "http://localhost:3000/products?limit=-1" | sed -n '1p'
 ```
 
-Expected: `194 0 2 [ 1, 2 ]`; `30 30`; `0 194`; `limit=abc` → 400 with `"limit must be an integer number"`; `-1` → 400. Commit `feat: GET /products with pagination`, tag `lesson-13`. Then add `findByCategory` (service + controller):
+Expected: `194 0 2 [ 1, 2 ]`; `30 30`; `194 194`; `limit=abc` → 400 with `"limit must be an integer number"`; `-1` → 400. Commit `feat: GET /products with pagination`, tag `lesson-13`. Then add `findByCategory` (service + controller):
 
 ```bash
 curl -s "http://localhost:3000/products/category/beauty?limit=2&skip=1" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const j=JSON.parse(d);console.log(j.total,j.skip,j.limit,j.products.map(p=>p.id))})"
 curl -s "http://localhost:3000/products/category/nope?limit=2&skip=0"
 ```
 
-Expected: `5 1 2 [ 2, 3 ]`; `{"products":[],"total":0,"skip":0,"limit":2}` (matches `docs/contract/products-by-category-unknown.json` exactly). Commit `feat: GET /products/category/:slug`, tag `lesson-14`.
+Expected: `5 1 2 [ 2, 3 ]`; `{"products":[],"total":0,"skip":0,"limit":0}` (matches `docs/contract/products-by-category-unknown.json` exactly — dummyjson echoes the number of products actually returned as `limit`). Commit `feat: GET /products/category/:slug`, tag `lesson-14`.
 
 ---
 
@@ -1677,7 +1677,7 @@ Sections: why not delegate (`nest new` is one command and gives the ESM/Vitest b
 Sections:
 1. `ทำไมต้องจับด้วยมือ` — the contract is the one thing Cursor cannot know; a hallucinated field breaks the React app silently. Every later prompt `@`-mentions these files.
 2. `เจ็ดไฟล์ใน docs/contract/` — the exact eight commands from Task 1 Step 4 in a `.prompt-example`, one file per request, and a `.comparison` table: file | request | สิ่งที่ต้องสังเกต.
-3. `อ่านสัญญา: ข้อเท็จจริงที่ต้องจำ` — bullet list of facts with the evidence file: default `limit` 30 and `skip` 0; `limit=0` returns all 194; 22 keys on a product (list them); nested `dimensions`, `meta`, `reviews[]` (3 per product); `brand` absent on 92 of 194 (the node one-liner); dates are ISO strings; unknown category → 200 with empty `products` and `total: 0`; unknown id → 404 `{"message":"Product with id '9999' not found"}`; `POST /carts/add` → 201 with the cart shape and `discountedPrice: 18` for 2 × 9.99 at 10.48% (show the arithmetic: 19.98 × 0.8952 = 17.886 → `Math.round` → 18).
+3. `อ่านสัญญา: ข้อเท็จจริงที่ต้องจำ` — bullet list of facts with the evidence file: default `limit` 30 and `skip` 0; `limit=0` returns all 194; the `limit` in every list response is the number of products actually returned (not the requested value — `?limit=10&skip=190` answers `limit: 4`, an unknown category answers `limit: 0`); 22 keys on a product (list them); nested `dimensions`, `meta`, `reviews[]` (3 per product); `brand` absent on 92 of 194 (the node one-liner); dates are ISO strings; unknown category → 200 with empty `products` and `total: 0`; unknown id → 404 `{"message":"Product with id '9999' not found"}`; `POST /carts/add` → 201 with the cart shape and `discountedPrice: 18` for 2 × 9.99 at 10.48% (show the arithmetic: 19.98 × 0.8952 = 17.886 → `Math.round` → 18).
 4. Commit: `git add docs && git commit -m "docs: capture dummyjson contract"`.
 Verification: seven files exist; `product-not-found.txt` starts with `HTTP/2 404`; `cart-add.txt` starts with `HTTP/2 201`; `categories.json` has 24 entries.
 
@@ -2028,6 +2028,7 @@ Prompt:
 ติดตั้ง class-validator และ class-transformer แล้ว
 docs/contract/products-page.json คือ response จริงของ GET /products?limit=2&skip=0: { products: Product[], total: 194, skip: 0, limit: 2 }
 กติกาของ dummyjson: ถ้าไม่ส่ง limit ใช้ 30, ถ้าไม่ส่ง skip ใช้ 0, limit=0 หมายถึงเอาทั้งหมด, สินค้าเรียงตาม id น้อยไปมาก
+field limit ใน response ไม่ใช่ค่าที่ client ขอมา แต่คือจำนวนสินค้าที่ส่งกลับจริง (products.length) เช่น ?limit=10&skip=190 ตอบ limit: 4 และหมวดที่ไม่มีสินค้าตอบ limit: 0
 มี ProductListResponseDto { products, total, skip, limit } และ toProductResponse อยู่แล้ว
 findOne ใช้ include: { category: true, reviews: { orderBy: { id: 'asc' } } } — list ต้องใช้ include เดียวกัน
 
@@ -2047,7 +2048,7 @@ findOne ใช้ include: { category: true, reviews: { orderBy: { id: 'asc' } }
   (import type { Prisma } from '../generated/prisma/client.js') แล้วให้ findOne ใช้ include: productInclude แทนของเดิม
   เพิ่ม private async paginate(where: Prisma.ProductWhereInput, skip: number, limit: number): Promise<ProductListResponseDto>
   ใช้ this.prisma.$transaction([ findMany, count ]) โดย findMany มี where, skip, take: limit === 0 ? undefined : limit, orderBy: { id: 'asc' }, include: productInclude ส่วน count มี where เดียวกัน
-  คืน { products: rows.map(toProductResponse), total, skip, limit }
+  คืน { products: rows.map(toProductResponse), total, skip, limit: rows.length } (limit คือจำนวนที่ส่งกลับจริงตาม dummyjson)
   เพิ่ม findAll(query: PaginationQueryDto) ที่คืน this.paginate({}, query.skip, query.limit)
 - controller: เพิ่ม handler @Get() findAll(@Query() query: PaginationQueryDto) วางไว้ระหว่าง findCategories กับ findOne (ต้องอยู่ก่อน @Get(':id'))
 
@@ -2057,11 +2058,11 @@ findOne ใช้ include: { category: true, reviews: { orderBy: { id: 'asc' } }
 - ยังไม่ต้องทำ GET /products/category/:slug
 ```
 
-Review: DTO defaults `0`/`30` with `@IsInt @Min(0)`; pipe options exactly `whitelist`, `transform`, `enableImplicitConversion`; `$transaction([...])` array form; `take: limit === 0 ? undefined : limit`; `productInclude` reused in `findOne`; `findAll` declared before `findOne`. AI มักพลาดตรงนี้: `skip?: number` with `@IsOptional()` and then `query.skip ?? 0` sprinkled around, or `take: limit` (limit=0 → empty page instead of all). Reference: four files at tag `lesson-13`. Verification: the five curl checks from Task 7 Step 4 (`194 0 2 [1,2]`, default `30 30`, `limit=0` → `0 194`, `limit=abc` → 400 `limit must be an integer number`, `limit=-1` → 400); `diff` of `/products?limit=2&skip=0` sorted keys against `products-page.json` (write the node one-liner in the lesson); commit `feat: GET /products with pagination`.
+Review: DTO defaults `0`/`30` with `@IsInt @Min(0)`; pipe options exactly `whitelist`, `transform`, `enableImplicitConversion`; `$transaction([...])` array form; `take: limit === 0 ? undefined : limit`; `limit: rows.length` in the envelope; `productInclude` reused in `findOne`; `findAll` declared before `findOne`. AI มักพลาดตรงนี้: `skip?: number` with `@IsOptional()` and then `query.skip ?? 0` sprinkled around, or `take: limit` (limit=0 → empty page instead of all). Reference: four files at tag `lesson-13`. Verification: the five curl checks from Task 7 Step 4 (`194 0 2 [1,2]`, default `30 30`, `limit=0` → `194 194`, `limit=abc` → 400 `limit must be an integer number`, `limit=-1` → 400); `diff` of `/products?limit=2&skip=0` sorted keys against `products-page.json` (write the node one-liner in the lesson); commit `feat: GET /products with pagination`.
 
 - [ ] **Step 5: Lesson 14 — GET /products/category/:slug**
 
-Concept: the payoff of `paginate(where, …)`: one new `where` (`{ category: { slug } }`, a relation filter — link Week_09 lesson 26) and one handler; unknown slug is a 200 with an empty list because dummyjson does that (show `products-by-category-unknown.json`) and the React Category page relies on `total: 0`; route order again: `category/:slug` has two segments so it cannot collide with `:id`, but it must still be declared before `@Get(':id')` for readability and before `@Get()` to keep static-first ordering.
+Concept: the payoff of `paginate(where, …)`: one new `where` (`{ category: { slug } }`, a relation filter — link Week_09 lesson 26) and one handler; unknown slug is a 200 with an empty list and `limit: 0` because dummyjson does that (show `products-by-category-unknown.json`; `limit` = products returned) and the React Category page relies on `total: 0`; route order again: `category/:slug` has two segments so it cannot collide with `:id`, but it must still be declared before `@Get(':id')` for readability and before `@Get()` to keep static-first ordering.
 
 Prompt:
 
@@ -2094,7 +2095,7 @@ Review: relation filter `{ category: { slug } }`; no extra `findUnique` on categ
 
 - [ ] **Step 6: Lesson 15 — ตรวจสัญญากับ dummyjson อัตโนมัติ**
 
-Concept: manual `diff`s per lesson do not scale; a script that hits both hosts with the same requests and reports the first differing path is a regression test for the contract; normalisation (sort keys, swap host in strings) and why error bodies compare only `message`; the accepted deviations table (`.comparison`): non-numeric id → 400 vs 404; validation errors carry `statusCode`/`error`; category url host; key order; unknown category echoes our default `limit` 30 when none is sent (so the check always sends `limit` explicitly). Why `node scripts/…ts` works without `tsx`: no imports, only erasable TS syntax (Node 24 strips types natively).
+Concept: manual `diff`s per lesson do not scale; a script that hits both hosts with the same requests and reports the first differing path is a regression test for the contract; normalisation (sort keys, swap host in strings) and why error bodies compare only `message`; the accepted deviations table (`.comparison`): non-numeric id → 400 vs 404; validation errors carry `statusCode`/`error`; category url host; key order. Why `node scripts/…ts` works without `tsx`: no imports, only erasable TS syntax (Node 24 strips types natively).
 
 Prompt:
 
