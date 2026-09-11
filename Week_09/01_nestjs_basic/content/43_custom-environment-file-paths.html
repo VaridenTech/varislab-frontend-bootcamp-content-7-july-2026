@@ -28,6 +28,7 @@
     <div class="note">
       <p><code>envFilePath</code> รับเป็น array ได้ด้วย เช่น <code>envFilePath: ['.env.development.local', '.env.development']</code> — เมื่อ key ซ้ำกัน ไฟล์ที่อยู่ก่อนใน array ชนะ</p>
     </div>
+    <div class="warning"><p>การเปลี่ยนชื่อไฟล์มีผลแค่กับฝั่งแอป NestJS เท่านั้น <code>prisma7.config.ts</code> (บทที่ 22) ยังมี <code>import "dotenv/config"</code> ของตัวเองซึ่งมองหาไฟล์ชื่อ <code>.env</code> ตรง ๆ เสมอ ไม่รู้จัก <code>envFilePath</code> ของ <code>ConfigModule</code> เลย — ถ้าเปลี่ยนเป็น <code>.environment</code> แล้วสั่ง <code>npx prisma &lt;command&gt;</code> แบบเปล่า ๆ (เช่น <code>npx prisma studio</code>) ในภายหลัง จะเจอ <code>Error: datasource.url property is required</code> เพราะ <code>DATABASE_URL</code> ไม่มีใครโหลดให้ ถ้าจะเก็บชื่อไฟล์ใหม่ต่อไปให้แก้ <code>prisma7.config.ts</code> เป็น <code>dotenv.config({ path: '.environment' })</code> ด้วย</p></div>
 
     <h2>ignoreEnvFile: เมื่อ platform จัดการ environment ให้แล้ว</h2>
     <p>บริการ hosting อย่าง Heroku หรือ platform อื่น ๆ มักมีหน้า UI สำหรับตั้ง environment variables โดยตรง ค่าเหล่านั้นถูก inject เข้า <code>process.env</code> ตอนรันอยู่แล้ว จึงไม่มีไฟล์ <code>.env</code> ในเครื่อง production เลย กรณีนี้สั่งให้ <code>ConfigModule</code> ข้ามการอ่านไฟล์ไปได้</p>

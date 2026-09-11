@@ -24,12 +24,13 @@
     <p>ประโยชน์หลักอย่างหนึ่งของ request-scoped provider คือแต่ละ instance ผูกกับ request เดียว เราจึงสามารถ inject <code>Request</code> object ต้นฉบับเข้ามาดูข้อมูลอย่าง headers, cookies, IP หรือ user ที่ authenticate แล้วได้โดยตรง ผ่าน token พิเศษ <code>REQUEST</code> ที่ export จาก <code>@nestjs/core</code></p>
     <pre><code>import { Injectable, Inject, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
+import type { Request } from 'express'; // 👈 ต้องเป็น import type เพราะ Request เป็น interface ที่ใช้ใน constructor ที่มี decorator
 
 @Injectable({ scope: Scope.REQUEST })
 export class CoffeesService {
   constructor(@Inject(REQUEST) private request: Request) {}
 }</code></pre>
+    <div class="note"><p>ทำไมต้อง <code>import type</code>? tsconfig ของ Nest 12 เปิด <code>isolatedModules</code> คู่กับ <code>emitDecoratorMetadata</code> — type ใด ๆ ที่ปรากฏใน signature ของ constructor/method ที่มี decorator ต้อง import แบบ type-only ไม่อย่างนั้น compiler จะฟ้อง <q>TS1272: A type referenced in a decorated signature must be imported with 'import type'</q> กฎนี้ใช้กับ interface/type ล้วน ๆ (เช่น <code>Request</code> ของ express, <code>ConfigType</code> ของ @nestjs/config) ส่วน class อย่าง <code>ConfigService</code> import ปกติได้</p></div>
     <p>ลองใส่ <code>console.log(this.request.url)</code> ใน constructor แล้วยิง request ไปที่ <code>/coffees</code> หลาย ๆ ครั้ง จะเห็นว่า constructor ถูกเรียกใหม่ทุกครั้ง เพราะ Nest สร้าง <code>CoffeesService</code> ตัวใหม่ให้ทุก request แทนที่จะ reuse singleton เดิม</p>
 
     <h2>Scope bubbling: scope ลามขึ้นไปตาม chain ของผู้ใช้งาน</h2>

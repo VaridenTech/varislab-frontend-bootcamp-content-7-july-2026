@@ -30,7 +30,7 @@ import { HttpStatus, HttpCode } from '@nestjs/common';
 
 @Post()
 @HttpCode(HttpStatus.GONE) // 👈 ตอบ 410 Gone
-create(@Body() body) {
+create(@Body() body: any) {
   // ...
 }</code></pre>
     <p>การใช้ enum อย่าง <code>HttpStatus.GONE</code> แทนเลข <code>410</code> ทำให้โค้ดอ่านออกทันทีว่าตั้งใจสื่ออะไร และช่วยกัน typo ของเลข status ด้วย ตัวอย่างนี้ตั้ง 410 ชั่วคราวเพื่อทดลองเท่านั้น — เดี๋ยวเราจะเปลี่ยนกลับ</p>
@@ -41,9 +41,10 @@ create(@Body() body) {
   🚨 ใช้อย่างระวัง — โค้ดจะผูกกับแพลตฟอร์ม (Express/Fastify)
 */
 import { Res } from '@nestjs/common';
+import { Response } from 'express'; // 👈 ต้อง type ให้ชัด ไม่งั้น TypeScript strict mode ฟ้อง implicit any
 
 @Get()
-findAll(@Res() response) {
+findAll(@Res() response: Response) {
   // ตัวอย่างแบบ Express: ใช้ status() และ send()
   response.status(200).send('This action returns all coffees');
 }</code></pre>

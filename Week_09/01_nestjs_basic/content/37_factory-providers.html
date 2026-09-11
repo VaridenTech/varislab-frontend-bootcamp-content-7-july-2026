@@ -39,7 +39,7 @@
   },
   inject: [CoffeesService], // 👈 ลำดับตรงกับ parameter ของ factory
 }</code></pre>
-    <div class="warning"><p>ลำดับใน <code>inject</code> ต้องตรงกับลำดับ parameter ของ factory แบบตัวต่อตัว และ token ที่ขอ inject ต้องมองเห็นได้จาก module นี้ (อยู่ใน providers เดียวกัน หรือถูก export มาจาก module ที่เรา import) ไม่อย่างนั้นจะเจอ error resolve dependency ตอน start</p></div>
+    <div class="warning"><p>ลำดับใน <code>inject</code> ต้องตรงกับลำดับ parameter ของ factory แบบตัวต่อตัว และ token ที่ขอ inject ต้องมองเห็นได้จาก module นี้ (อยู่ใน providers เดียวกัน หรือถูก export มาจาก module ที่เรา import) ไม่อย่างนั้นจะเจอ error resolve dependency ตอน start นอกจากนี้ห้าม inject provider ที่ย้อนกลับมาพึ่ง token เดียวกันนี้ — เช่น <code>CoffeesService</code> เอง ก็ <code>@Inject('COFFEE_BRANDS')</code> อยู่แล้ว (บทที่ 35) ถ้า factory ของ <code>COFFEE_BRANDS</code> ไป <code>inject: [CoffeesService]</code> ด้วย จะกลายเป็น circular dependency แล้วแอปจะพังตอน start ทันที</p></div>
 
     <h2>บันไดสามขั้นของ provider แบบกำหนดค่า</h2>
     <div class="comparison" role="region" aria-label="เปรียบเทียบ useValue useClass useFactory" tabindex="0">
@@ -55,7 +55,7 @@
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">เปลี่ยน COFFEE_BRANDS ให้มาจาก factory</h2>
-      <p>ใน <code>coffees.module.ts</code> แก้ provider <code>COFFEE_BRANDS</code> จาก <code>useValue</code> (บทที่ 35) เป็น <code>useFactory</code> จากนั้นทดลองเพิ่ม <code>inject: [CoffeesService]</code> และ log ใน factory เพื่อดูลำดับการสร้างของ container</p>
+      <p>ใน <code>coffees.module.ts</code> แก้ provider <code>COFFEE_BRANDS</code> จาก <code>useValue</code> (บทที่ 35) เป็น <code>useFactory</code> จากนั้นทดลองเพิ่ม <code>inject: [PrismaService]</code> (<strong>ห้ามใช้ <code>CoffeesService</code></strong> — มันพึ่ง <code>COFFEE_BRANDS</code> อยู่แล้ว จะกลายเป็น circular dependency) และ log ใน factory เพื่อดูลำดับการสร้างของ container</p>
       <div class="prompt-example"><code>// coffees.module.ts
 {
   provide: COFFEE_BRANDS,
@@ -63,6 +63,15 @@
 }
 
 // ขั้นทดลองต่อ: เพิ่ม parameter + inject array แล้วสังเกต log
+// ใช้ provider ที่ไม่พึ่ง COFFEE_BRANDS กลับมา เช่น PrismaService
+{
+  provide: COFFEE_BRANDS,
+  useFactory: (prisma: PrismaService) =&gt; {
+    console.log('factory: got', typeof prisma);
+    return ['buddy brew', 'nescafe'];
+  },
+  inject: [PrismaService],
+}
 npm run start:dev</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">

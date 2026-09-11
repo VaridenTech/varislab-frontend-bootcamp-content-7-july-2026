@@ -61,34 +61,62 @@ import { ValidationPipe } from '@nestjs/common';
   providers: [
     {
       provide: APP_PIPE,
-      useClass: ValidationPipe,
+      useFactory: () =>
+        new ValidationPipe({
+          whitelist: true,
+          transform: true,
+          forbidNonWhitelisted: true,
+          transformOptions: {
+            enableImplicitConversion: true,
+          },
+        }),
     },
   ],
 })
 export class AppModule {}</code></pre>
+    <div class="warning"><p><code>{ provide: APP_PIPE, useClass: ValidationPipe }</code> (ไม่มี options) เป็นกับดักที่พบบ่อย — <code>useClass</code> แค่สั่ง <code>new ValidationPipe()</code> เปล่า ๆ ให้ ทำให้ <code>whitelist</code>, <code>forbidNonWhitelisted</code>, <code>transform</code> และ <code>enableImplicitConversion</code> ที่ตั้งไว้ใน <code>main.ts</code> (บทที่ 16–18, 28) หายไปทั้งหมดแบบเงียบ ๆ — mass assignment กลับมาหลุดผ่าน และ query string อย่าง <code>limit</code>/<code>offset</code> จะไม่ถูกแปลงเป็น number ให้อัตโนมัติอีก ถ้าต้องการ config ให้ใช้ <code>useFactory</code> ตามตัวอย่างด้านบนเสมอ</p></div>
     <p>Token คู่กันมีครบทั้งสี่: <code>APP_PIPE</code>, <code>APP_GUARD</code>, <code>APP_INTERCEPTOR</code> และ <code>APP_FILTER</code> — จำแพทเทิร์นเดียวใช้ได้ทั้งตระกูล</p>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ย้าย ValidationPipe จาก main.ts ไป APP_PIPE</h2>
-      <p>ใน <code>iluvcoffee</code> ลองย้ายการ bind <code>ValidationPipe</code> จาก <code>app.useGlobalPipes()</code> ใน <code>main.ts</code> ไปเป็น provider <code>APP_PIPE</code> ใน <code>AppModule</code> แล้วยืนยันว่า validation ยังทำงานครบ</p>
+      <p>ใน <code>iluvcoffee</code> ลองย้ายการ bind <code>ValidationPipe</code> จาก <code>app.useGlobalPipes()</code> ใน <code>main.ts</code> ไปเป็น provider <code>APP_PIPE</code> ใน <code>AppModule</code> แล้วยืนยันว่า validation ยังทำงานครบ — ใช้ <code>useFactory</code> พร้อม options เดิมทั้งหมด อย่าใช้ <code>useClass: ValidationPipe</code> เฉย ๆ เพราะ options จะหายไป (ดูคำเตือนด้านบน)</p>
       <div class="prompt-example"><code>// 1) ลบ/คอมเมนต์ app.useGlobalPipes(...) ใน main.ts
 // 2) เพิ่ม provider ใน app.module.ts:
-{ provide: APP_PIPE, useClass: ValidationPipe }
+{
+  provide: APP_PIPE,
+  useFactory: () =>
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+}
 
 // 3) ทดสอบว่า validation ยังจับ payload ผิดรูป
 curl -X POST http://localhost:3000/coffees \
   -H "Content-Type: application/json" \
-  -d '{"name": 123}'</code></div>
+  -d '{"name": 123}'
+
+# 4) ทดสอบว่า mass assignment ยังถูกปัดตก (forbidNonWhitelisted)
+curl -X POST http://localhost:3000/coffees \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Test", "brand": "Test", "flavors": [], "id": 999}'
+
+# 5) ทดสอบว่า pagination ยังแปลง query string เป็น number อัตโนมัติ (enableImplicitConversion)
+curl "http://localhost:3000/coffees?limit=2&offset=0"</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
-      <p>คำขอ payload ผิดรูปยังถูกปฏิเสธด้วย <code>400 Bad Request</code> พร้อมรายละเอียด validation error เหมือนก่อนย้าย — แต่ตอนนี้ pipe ถูกสร้างจากใน DI container แล้ว พร้อมรับ dependency ในอนาคต</p>
+      <p>คำขอ payload ผิดรูปยังถูกปฏิเสธด้วย <code>400 Bad Request</code> พร้อมรายละเอียด validation error เหมือนก่อนย้าย, payload ที่มี field แปลกปลอมอย่าง <code>id</code> ยังถูกปัดตกด้วย <code>400</code> (ไม่ใช่หลุดไปถึง Prisma แล้วได้ 500), และ pagination ด้วย query string ยังทำงานถูกต้อง — ตอนนี้ pipe ถูกสร้างจากใน DI container แล้ว พร้อมรับ dependency ในอนาคต โดย behavior เดิมไม่มีอะไรหายไป</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
         <li><code>POST /coffees</code> ด้วย field เกินหรือชนิดผิด ยังได้ <code>400</code> พร้อมข้อความ validation</li>
         <li><code>POST /coffees</code> ด้วย payload ถูกต้อง ยังสร้างข้อมูลได้ <code>201</code></li>
+        <li><code>POST /coffees</code> ด้วย field แปลกปลอมเพิ่มเข้ามา (เช่น <code>id</code>) ยังได้ <code>400</code> จาก <code>forbidNonWhitelisted</code> ไม่ใช่ 500 จาก Prisma</li>
+        <li><code>GET /coffees?limit=2&amp;offset=0</code> ยังทำงานปกติ — ยืนยันว่า <code>enableImplicitConversion</code> ยังอยู่</li>
         <li><code>main.ts</code> ไม่เหลือ <code>useGlobalPipes</code> ที่ซ้ำซ้อนกับ <code>APP_PIPE</code> (bind ซ้ำ = รันสองรอบ)</li>
         <li>อธิบายได้ว่าจะเลือก bind ระดับใดถ้า validation ต้องใช้กับ endpoint เดียวเท่านั้น</li>
       </ul>

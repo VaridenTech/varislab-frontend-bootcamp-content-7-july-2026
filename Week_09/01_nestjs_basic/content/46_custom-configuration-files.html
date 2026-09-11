@@ -25,16 +25,16 @@
     <pre><code>// src/config/app.config.ts
 export default () =&gt; ({
   environment: process.env.NODE_ENV || 'development',
+  port: parseInt(process.env.PORT ?? '3000', 10),
   database: {
-    host: process.env.DATABASE_HOST,
-    port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
+    url: process.env.DATABASE_URL,
   },
 });</code></pre>
-    <p>สังเกตว่าไฟล์นี้เป็นจุดเดียวที่ยังแตะ <code>process.env</code> — ทั้งการอ่าน, แปลงเป็นตัวเลขด้วย <code>parseInt</code> และ fallback ถูกรวมไว้ที่เดียว ส่วนอื่นของแอปเห็นแค่ object ที่มีโครงสร้างชัดเจนแล้ว</p>
+    <p>สังเกตว่าไฟล์นี้เป็นจุดเดียวที่ยังแตะ <code>process.env</code> — ทั้งการอ่าน, fallback ด้วย <code>??</code> เมื่อไม่ได้ตั้งค่า (จำเป็นใน strict mode เพราะ <code>process.env.PORT</code> มีชนิด <code>string | undefined</code>) และการแปลงเป็นตัวเลขด้วย <code>parseInt</code> ถูกรวมไว้ที่เดียว ส่วนอื่นของแอปเห็นแค่ object ที่มีโครงสร้างชัดเจนแล้ว</p>
 
     <h2>โหลดเข้า ConfigModule ด้วย option load</h2>
     <pre><code>// app.module.ts
-import appConfig from './config/app.config';
+import appConfig from './config/app.config.js';
 
 @Module({
   imports: [
@@ -48,30 +48,31 @@ export class AppModule {}</code></pre>
 
     <h2>อ่านค่า nested ด้วย dot notation</h2>
     <p>ค่าใน object ที่โหลดแล้วเข้าถึงผ่าน <code>ConfigService</code> เหมือนเดิม โดยชี้ลึกลงไปด้วยรูปแบบ <code>a.b</code> และยังใส่ default เป็น argument ตัวที่สองได้</p>
-    <pre><code>const databaseHost = this.configService.get('database.host', 'localhost');</code></pre>
+    <pre><code>const databaseUrl = this.configService.get('database.url');
+const port = this.configService.get('port', 3000);</code></pre>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">รวม config ของ iluvcoffee ไว้ใน app.config.ts</h2>
-      <p>สร้าง <code>src/config/app.config.ts</code> ตามตัวอย่าง, ลงทะเบียนผ่าน <code>load</code> ใน <code>ConfigModule.forRoot()</code> แล้วเปลี่ยนจุดที่อ่าน <code>DATABASE_HOST</code> ในบทก่อนให้ใช้ <code>database.host</code> แทน</p>
+      <p>สร้าง <code>src/config/app.config.ts</code> ตามตัวอย่าง, ลงทะเบียนผ่าน <code>load</code> ใน <code>ConfigModule.forRoot()</code> แล้วเปลี่ยนจุดที่อ่าน <code>DATABASE_URL</code> ในบทก่อนให้ใช้ <code>database.url</code> แทน</p>
       <div class="prompt-example"><code>mkdir -p src/config
 # สร้าง src/config/app.config.ts ตามตัวอย่างด้านบน
 
 // coffees.service.ts — ทดสอบอ่านค่า nested
-const databaseHost = this.configService.get('database.host', 'localhost');
-console.log(databaseHost);
+const databaseUrl = this.configService.get('database.url');
+console.log(databaseUrl, this.configService.get('port'));
 
 npm run start:dev</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
-      <p>เทอร์มินัลพิมพ์ค่า host จาก <code>.env</code> ผ่านเส้นทางใหม่ <code>database.host</code> และเมื่อคอมเมนต์ <code>DATABASE_PORT</code> ออกจาก <code>.env</code> ค่า <code>database.port</code> จะกลายเป็น <code>5432</code> จาก fallback ใน config file ไม่ใช่ <code>NaN</code></p>
+      <p>เทอร์มินัลพิมพ์ connection string จาก <code>.env</code> ผ่านเส้นทางใหม่ <code>database.url</code> และเมื่อไม่ได้ตั้ง <code>PORT</code> ใน <code>.env</code> ค่า <code>port</code> จะกลายเป็น <code>3000</code> จาก fallback ใน config file ไม่ใช่ <code>NaN</code></p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
-        <li><code>get('database.host')</code> คืนค่าตรงกับ <code>DATABASE_HOST</code> ใน <code>.env</code></li>
+        <li><code>get('database.url')</code> คืนค่าตรงกับ <code>DATABASE_URL</code> ใน <code>.env</code></li>
         <li><code>get('environment')</code> คืน <q>development</q> เมื่อไม่ได้ตั้ง <code>NODE_ENV</code></li>
-        <li><code>database.port</code> เป็น number (ลอง <code>typeof</code>) เพราะผ่าน <code>parseInt</code> แล้ว</li>
+        <li><code>port</code> เป็น number (ลอง <code>typeof</code>) เพราะผ่าน <code>parseInt</code> แล้ว</li>
         <li>แอป start และ <code>GET /coffees</code> ทำงานปกติหลัง refactor</li>
       </ul>
     </section>

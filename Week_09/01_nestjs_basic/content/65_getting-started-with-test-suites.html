@@ -38,22 +38,21 @@
     <p>ระหว่างพัฒนาไม่จำเป็นต้องรันทุก suite — ส่ง pattern ของชื่อไฟล์ต่อท้ายคำสั่งได้</p>
     <pre><code># รัน unit test แบบ watch เฉพาะไฟล์ที่ชื่อเข้ากับ pattern
 npm run test:watch -- coffees.service</code></pre>
-    <p>พอเปิด <code>coffees.service.spec.ts</code> ที่ CLI สร้างให้ จะพบว่ามัน fail ทันที เพราะ <code>CoffeesService</code> ตอนนี้ inject repository ของ <code>Coffee</code>/<code>Flavor</code> และ <code>DataSource</code> — <code>TestingModule</code> ไม่รู้จะหา provider เหล่านี้จากไหน วิธีปลดล็อกขั้นแรกคือให้ <em>mock ว่าง</em> ไปก่อน แค่ให้ DI resolve ได้</p>
+    <div class="warning"><p><strong>เก็บกวาด constructor ก่อนเริ่มบทนี้:</strong> ระหว่างบทที่ 35–47 เราทดลอง inject ของหลายอย่างเข้า <code>CoffeesService</code> — <code>@Inject(COFFEE_BRANDS)</code>, <code>ConfigService</code> (log ของบทที่ 45) และ <code>@Inject(coffeesConfig.KEY)</code> ถ้ายังทิ้งไว้ suite ในบทนี้และบทถัดไปจะ fail ด้วย <q>Nest can't resolve dependencies of the CoffeesService (PrismaService, ?, …)</q> เพราะ test module ไม่มี provider เหล่านั้น ให้ถอด injection ทดลองออกจน constructor เหลือแค่ <code>constructor(private readonly prisma: PrismaService) {}</code> (ลบ import ที่ไม่ใช้แล้วด้วย — ส่วน provider <code>COFFEE_BRANDS</code> และ <code>ConfigModule.forFeature()</code> ใน <code>CoffeesModule</code> จะคงไว้หรือลบก็ได้) หรือถ้าอยากเก็บไว้ ก็ต้องเพิ่ม mock ให้ครบทุกตัวใน <code>providers</code> ของ test เช่น <code>{ provide: COFFEE_BRANDS, useValue: [] }</code>, <code>{ provide: ConfigService, useValue: { get: () =&gt; undefined } }</code> และ <code>{ provide: coffeesConfig.KEY, useValue: { foo: 'bar' } }</code> — โค้ดในบทที่ 66 เขียนสำหรับ constructor แบบสั้น</p></div>
+    <p>พอเปิด <code>coffees.service.spec.ts</code> ที่ CLI สร้างให้ จะพบว่ามัน fail ทันที เพราะ <code>CoffeesService</code> ตอนนี้ inject <code>PrismaService</code> — <code>TestingModule</code> ที่สร้างขึ้นมาเปล่า ๆ ไม่มี <code>PrismaModule</code> จึงไม่รู้จะหา provider นี้จากไหน วิธีปลดล็อกขั้นแรกคือให้ <em>mock ว่าง</em> ไปก่อน แค่ให้ DI resolve ได้</p>
     <pre><code>// coffees.service.spec.ts — ภายใน Test.createTestingModule
 providers: [
   CoffeesService,
-  { provide: DataSource, useValue: {} },
-  { provide: getRepositoryToken(Flavor), useValue: {} }, // 👈 mock ว่างให้ entity repository
-  { provide: getRepositoryToken(Coffee), useValue: {} }, // 👈
+  { provide: PrismaService, useValue: {} }, // 👈 mock ว่างแทน Prisma Client ตัวจริง
 ]</code></pre>
-    <div class="note"><p><code>getRepositoryToken(Entity)</code> จาก <code>@nestjs/typeorm</code> คืน injection token ตัวเดียวกับที่ <code>@InjectRepository(Entity)</code> ใช้ — นี่คือการเอาความรู้เรื่อง custom providers (บทที่ 33–37) มาใช้กับการทดสอบตรง ๆ</p></div>
+    <div class="note"><p>เราใช้ class <code>PrismaService</code> เป็น token แล้ว <code>useValue</code> เป็น object ว่าง — นี่คือการเอาความรู้เรื่อง custom providers (บทที่ 33–37) มาใช้กับการทดสอบตรง ๆ และเป็นเหตุผลที่เราห่อ <code>PrismaClient</code> ไว้ใน service ของ Nest ตั้งแต่บทที่ 22: มันสลับตัวจริงกับ mock ได้ในบรรทัดเดียวโดยไม่ต้องต่อฐานข้อมูล</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ทำให้ CoffeesService suite กลับมาเขียว</h2>
       <p>เปิด watch mode เฉพาะ <code>coffees.service</code> แล้วเติม mock providers ว่างจนกว่า test <q>should be defined</q> จะผ่าน</p>
       <div class="prompt-example"><code>npm run test:watch -- coffees.service
 # แก้ coffees.service.spec.ts: เพิ่ม providers mock ตามโค้ดด้านบน
-# (import DataSource จาก 'typeorm' และ getRepositoryToken จาก '@nestjs/typeorm')</code></div>
+# (import PrismaService จาก '../prisma/prisma.service.js')</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
@@ -63,8 +62,8 @@ providers: [
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
         <li>ผลของ <code>npm run test:watch -- coffees.service</code> แสดงแค่ suite ของ <code>coffees.service.spec.ts</code> ไม่ใช่ทุกไฟล์</li>
-        <li>ลองลบ mock ของ <code>getRepositoryToken(Coffee)</code> ออกหนึ่งบรรทัดแล้วดูว่า error dependency กลับมา — ยืนยันว่าเข้าใจว่า mock ตัวไหนแก้ปัญหาอะไร</li>
-        <li>แก้ไฟล์ service เล็กน้อยระหว่าง watch เปิดอยู่ แล้วเห็น Jest รันซ้ำอัตโนมัติ</li>
+        <li>ลองลบ mock ของ <code>PrismaService</code> ออกแล้วดูว่า error dependency กลับมา — ยืนยันว่าเข้าใจว่า mock ตัวนี้แก้ปัญหาอะไร</li>
+        <li>แก้ไฟล์ service เล็กน้อยระหว่าง watch เปิดอยู่ แล้วเห็น Vitest รันซ้ำอัตโนมัติ</li>
         <li>ตรวจว่าไฟล์ spec อยู่ข้างไฟล์ source ตาม convention ไม่ได้ย้ายไป <code>test/</code></li>
       </ul>
     </section>
@@ -72,10 +71,10 @@ providers: [
     <ul class="source-list">
       <li><a href="https://docs.nestjs.com/fundamentals/testing">Testing: unit testing และ TestingModule (NestJS)</a></li>
       <li><a href="https://docs.nestjs.com/fundamentals/custom-providers">Custom providers: พื้นฐานของการ mock ด้วย useValue (NestJS)</a></li>
-      <li><a href="https://docs.nestjs.com/techniques/database">Database: repository pattern ของ TypeORM (NestJS)</a></li>
+      <li><a href="https://docs.nestjs.com/recipes/prisma">Prisma recipe: PrismaService (NestJS)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="64_introduction-to-jest.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="64_introduction-to-vitest.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link" href="66_adding-unit-tests.html" rel="next">บทถัดไป →</a>
     </nav>

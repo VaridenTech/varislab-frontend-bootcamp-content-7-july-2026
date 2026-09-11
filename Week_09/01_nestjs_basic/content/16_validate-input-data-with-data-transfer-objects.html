@@ -50,7 +50,7 @@ export class CreateCoffeeDto {
     <pre><code>npm i @nestjs/mapped-types</code></pre>
     <pre><code>/* dto/update-coffee.dto.ts */
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateCoffeeDto } from './create-coffee.dto';
+import { CreateCoffeeDto } from './create-coffee.dto.js';
 
 export class UpdateCoffeeDto extends PartialType(CreateCoffeeDto) {}</code></pre>
     <p><code>PartialType</code> คืน class ใหม่ที่มีทุก property ของต้นฉบับแบบ optional และ<strong>สืบทอด validation rules ทั้งหมด</strong>มาด้วย — แก้กฎที่ <code>CreateCoffeeDto</code> ที่เดียว UpdateDto ได้ผลตามทันที</p>

@@ -25,18 +25,21 @@
     <pre><code># Generate PaginationQueryDto (ไม่เอาไฟล์ test)
 nest g class common/dto/pagination-query.dto --no-spec</code></pre>
     <pre><code>/* PaginationQueryDto - FINAL CODE */
-import { IsOptional, IsPositive } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsOptional, IsPositive, Min } from 'class-validator';
 
 export class PaginationQueryDto {
+  @Type(() =&gt; Number)
   @IsOptional()
   @IsPositive()
   limit: number;
 
+  @Type(() =&gt; Number)
   @IsOptional()
-  @IsPositive()
+  @Min(0) // 👈 ไม่ใช่ @IsPositive() — offset=0 (เริ่มจากแถวแรก) เป็นค่าที่ถูกต้อง
   offset: number;
 }</code></pre>
-    <div class="note"><p>เพราะเราเปิด <code>transform: true</code> กับ <code>enableImplicitConversion</code> ไว้ตั้งแต่บทที่ 18 ค่า query string ที่เข้ามาเป็นข้อความอย่าง <code>"10"</code> จะถูกแปลงเป็น <code>number</code> ให้เองก่อนเข้า validator — ถ้าไม่ได้เปิดไว้ <code>@IsPositive()</code> จะ reject ทุกคำขอ</p></div>
+    <div class="note"><p>เส้นทาง MongoDB นี้แตกมาจากจุดจบของบทที่ 18 ซึ่งเปิดแค่ <code>whitelist + forbidNonWhitelisted + transform</code> — <strong>ไม่มี</strong> <code>enableImplicitConversion</code> (ตัวนั้นเพิ่มในบทที่ 28 ของเส้นทาง PostgreSQL/Prisma ซึ่งเส้นทางนี้ไม่ได้ผ่าน) query string อย่าง <code>"10"</code> จึงยังเป็น <code>string</code> ตอนเข้า validator ถ้าไม่ติด <code>@Type(() =&gt; Number)</code> ให้แต่ละ field เอง <code>@IsPositive()</code>/<code>@Min()</code> จะ reject ทุกคำขอที่ส่ง query มา (เพราะ <code>"10"</code> ไม่ใช่ตัวเลขในสายตาของ validator) — โค้ดด้านบนจึงติด <code>@Type()</code> ไว้ที่ตัว DTO เองแทน</p></div>
 
     <h2>ส่งต่อให้ Mongoose ด้วย skip/limit</h2>
     <p>ใน controller ให้ <code>findAll()</code> รับ <code>@Query() paginationQuery: PaginationQueryDto</code> แล้วส่งต่อมาที่ service ซึ่งนำค่าไปต่อท้าย query: <code>skip(offset)</code> ข้ามจำนวน document ตามที่ระบุ และ <code>limit(limit)</code> จำกัดจำนวนที่ตอบกลับ ทั้งหมดทำงานที่ฐานข้อมูล ไม่ใช่ดึงมาทั้งก้อนแล้วค่อยตัดในแอป</p>
@@ -44,10 +47,10 @@ export class PaginationQueryDto {
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
-import { CreateCoffeeDto } from './dto/create-coffee.dto';
-import { UpdateCoffeeDto } from './dto/update-coffee.dto';
-import { Coffee } from './entities/coffee.entity';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto.js';
+import { CreateCoffeeDto } from './dto/create-coffee.dto.js';
+import { UpdateCoffeeDto } from './dto/update-coffee.dto.js';
+import { Coffee } from './entities/coffee.entity.js';
 
 @Injectable()
 export class CoffeesService {
@@ -90,7 +93,7 @@ export class CoffeesService {
 
   async remove(id: string) {
     const coffee = await this.findOne(id);
-    return coffee.remove();
+    return coffee.deleteOne();
   }
 }</code></pre>
 

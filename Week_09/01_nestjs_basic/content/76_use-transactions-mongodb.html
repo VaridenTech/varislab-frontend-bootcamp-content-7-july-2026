@@ -39,7 +39,7 @@ export class Event extends mongoose.Document {
   @Prop()
   name: string;
 
-  @Prop(mongoose.SchemaTypes.Mixed)
+  @Prop({ type: mongoose.SchemaTypes.Mixed }) // 👈 ต้องส่งเป็น { type } — @nestjs/mongoose 12 อนุมาน type ของ Record&lt;string, any&gt; เองไม่ได้
   payload: Record&lt;string, any&gt;;
 }
 
@@ -50,8 +50,8 @@ export const EventSchema = SchemaFactory.createForClass(Event);</code></pre>
     <p>การทำ transaction ใน Mongoose เริ่มจาก connection ระดับแอป ซึ่ง inject ได้ด้วย <code>@InjectConnection()</code> จากนั้นเปิด session, สั่งงานทุกอย่างโดยแนบ <code>{ session }</code>, แล้ว commit เมื่อครบ — หรือ abort เมื่อมีขั้นตอนใดล้ม</p>
     <pre><code>/* ส่วนสำคัญของ CoffeesService - FINAL CODE */
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Connection, Model } from 'mongoose';
-import { Event } from '../events/entities/event.entity';
+import type { Connection, Model } from 'mongoose'; // 👈 import type — mongoose เป็น CommonJS และไม่ expose "Connection" เป็น named export ตอน runtime ใน ES module
+import { Event } from '../events/entities/event.entity.js';
 
 @Injectable()
 export class CoffeesService {
@@ -73,7 +73,7 @@ export class CoffeesService {
       const recommendEvent = new this.eventModel({
         name: 'recommend_coffee',
         type: 'coffee',
-        payload: { coffeeId: coffee.id },
+        payload: { coffeeId: coffee._id }, // ใช้ _id (ObjectId) — virtual "id" ไม่มีใน type ของ Document ที่ extends มา
       });
       await recommendEvent.save({ session });
       await coffee.save({ session });
@@ -87,7 +87,7 @@ export class CoffeesService {
   }
 }</code></pre>
     <div class="note"><p>โค้ดนี้อ้าง <code>coffee.recommendations</code> — อย่าลืมเพิ่ม <code>@Prop({ default: 0 }) recommendations: number;</code> เข้าไปใน <code>Coffee</code> schema ของบทที่ 73 ก่อน ไม่อย่างนั้นค่าจะเป็น <code>NaN</code></p></div>
-    <div class="warning"><p>MongoDB รองรับ multi-document transaction เฉพาะเมื่อรันเป็น replica set เท่านั้น container แบบ standalone จากบทที่ 71 จะโยน error ตอน <code>startTransaction</code> — สำหรับการเรียนแนวคิดนี้ถือว่าปกติ แต่ถ้าอยากเห็น transaction ทำงานจริง ต้องตั้งค่า mongo ใน docker-compose ให้เป็น replica set โหนดเดียว (<code>--replSet</code>) ก่อน</p></div>
+    <div class="warning"><p>MongoDB รองรับ multi-document transaction เฉพาะเมื่อรันเป็น replica set เท่านั้น container แบบ standalone จากบทที่ 71 <strong>ไม่</strong>โยน error ตอน <code>session.startTransaction()</code> (เมธอดนี้แค่ตั้งค่า flag ในตัว session เท่านั้น) แต่จะโยน error ตอนมีคำสั่งเขียนแรกที่แนบ <code>{ session }</code> เข้าไปจริง (ในโค้ดนี้คือ <code>recommendEvent.save({ session })</code>) — สำหรับการเรียนแนวคิดนี้ถือว่าปกติ (โค้ดจับได้ใน <code>catch</code> อยู่แล้วไม่ว่า error จะเกิดจากบรรทัดไหนใน try) แต่ถ้าอยากเห็น transaction ทำงานจริง ต้องตั้งค่า mongo ใน docker-compose ให้เป็น replica set โหนดเดียว (<code>--replSet</code>) ก่อน</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">เพิ่ม endpoint สำหรับ recommend coffee</h2>

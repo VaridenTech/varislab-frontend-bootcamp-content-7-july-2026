@@ -38,7 +38,7 @@ export class Coffee {
 }</code></pre>
     <pre><code>/* coffees.service.ts */
 import { Injectable } from '@nestjs/common';
-import { Coffee } from './entities/coffee.entity';
+import { Coffee } from './entities/coffee.entity.js';
 
 @Injectable()
 export class CoffeesService {
@@ -91,14 +91,14 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CoffeesService } from './coffees.service';
+import { CoffeesService } from './coffees.service.js';
 
 @Controller('coffees')
 export class CoffeesController {
   constructor(private readonly coffeesService: CoffeesService) {}
 
   @Get()
-  findAll(@Query() paginationQuery) {
+  findAll(@Query() paginationQuery: any) {
     return this.coffeesService.findAll();
   }
 
@@ -108,12 +108,12 @@ export class CoffeesController {
   }
 
   @Post()
-  create(@Body() body) {
+  create(@Body() body: any) {
     return this.coffeesService.create(body);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body) {
+  update(@Param('id') id: string, @Body() body: any) {
     return this.coffeesService.update(id, body);
   }
 

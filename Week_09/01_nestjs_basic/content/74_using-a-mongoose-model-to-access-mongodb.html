@@ -27,7 +27,7 @@ constructor(
   @InjectModel(Coffee.name)
   private coffeeModel: Model&lt;Coffee&gt;,
 ) {}</code></pre>
-    <p><code>@InjectModel(Coffee.name)</code> ขอ Model ที่ลงทะเบียนไว้กับ <code>MongooseModule.forFeature()</code> ในบทที่แล้ว — เทียบกับฝั่ง SQL แล้วบทบาทเดียวกับ <code>@InjectRepository(Coffee)</code> ของ TypeORM ทุกประการ</p>
+    <p><code>@InjectModel(Coffee.name)</code> ขอ Model ที่ลงทะเบียนไว้กับ <code>MongooseModule.forFeature()</code> ในบทที่แล้ว — เทียบกับฝั่ง SQL แล้วบทบาทเดียวกับการ inject <code>PrismaService</code> เข้า <code>CoffeesService</code> ต่างกันตรงที่ Mongoose ให้ Model แยกตัวต่อ collection ส่วน Prisma ให้ client ตัวเดียวที่มีทุก model เป็น property</p>
 
     <h2>CoffeesService ฉบับ MongoDB เต็มตัว</h2>
     <p>จากนั้นแทนที่ array in-memory ของ Chapter 2 ด้วยการเรียก Model ทั้งหมด สังเกตว่า query ของ Mongoose ปิดท้ายด้วย <code>.exec()</code> เพื่อให้ได้ Promise กลับมาอย่างชัดเจน</p>
@@ -35,9 +35,9 @@ constructor(
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CreateCoffeeDto } from './dto/create-coffee.dto';
-import { UpdateCoffeeDto } from './dto/update-coffee.dto';
-import { Coffee } from './entities/coffee.entity';
+import { CreateCoffeeDto } from './dto/create-coffee.dto.js';
+import { UpdateCoffeeDto } from './dto/update-coffee.dto.js';
+import { Coffee } from './entities/coffee.entity.js';
 
 @Injectable()
 export class CoffeesService {
@@ -75,10 +75,10 @@ export class CoffeesService {
 
   async remove(id: string) {
     const coffee = await this.findOne(id);
-    return coffee.remove();
+    return coffee.deleteOne(); // Mongoose 7+ ตัด Document#remove() ออกแล้ว
   }
 }</code></pre>
-    <p>จุดที่ควรสังเกต: <code>create()</code> สร้าง document ใหม่ด้วย <code>new this.coffeeModel(dto)</code> แล้ว <code>save()</code>; <code>update()</code> ใช้ operator <code>$set</code> เพื่ออัปเดตเฉพาะฟิลด์ที่ส่งมา และ option <code>{ new: true }</code> ขอ document เวอร์ชัน<em>หลัง</em>อัปเดตกลับมา (ค่า default คือเวอร์ชันก่อนแก้); ส่วน <code>remove()</code> ใช้ <code>findOne()</code> ของเราเองก่อน จึงได้ 404 ฟรี ๆ เมื่อ id ไม่มีจริง</p>
+    <p>จุดที่ควรสังเกต: <code>create()</code> สร้าง document ใหม่ด้วย <code>new this.coffeeModel(dto)</code> แล้ว <code>save()</code>; <code>update()</code> ใช้ operator <code>$set</code> เพื่ออัปเดตเฉพาะฟิลด์ที่ส่งมา และ option <code>{ new: true }</code> ขอ document เวอร์ชัน<em>หลัง</em>อัปเดตกลับมา (ค่า default คือเวอร์ชันก่อนแก้); ส่วน <code>remove()</code> ของ service ใช้ <code>findOne()</code> ของเราเองก่อน จึงได้ 404 ฟรี ๆ เมื่อ id ไม่มีจริง แล้วค่อยเรียก <code>deleteOne()</code> บน document ที่ได้ (เมธอด <code>remove()</code> เดิมของ Mongoose Document ถูกถอดออกตั้งแต่ Mongoose 7 — คอร์สต้นฉบับใช้ชื่อนั้น ถ้าเห็นในวิดีโอเก่าให้แทนด้วย <code>deleteOne()</code>)</p>
     <div class="warning"><p><code>id</code> ที่รับเข้ามาเป็น <code>string</code> เพราะ <code>_id</code> ของ MongoDB เป็น ObjectId ไม่ใช่ตัวเลข ถ้า controller ของคุณเคยแปลง id เป็น number (เช่นด้วย <code>ParseIntPipe</code> หรือ <code>+id</code>) ต้องถอดออก ไม่อย่างนั้น query จะหาไม่เจอทุกครั้ง</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">

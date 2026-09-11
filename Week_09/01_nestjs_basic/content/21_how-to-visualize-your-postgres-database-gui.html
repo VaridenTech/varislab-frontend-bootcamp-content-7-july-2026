@@ -21,7 +21,7 @@
     </section>
 
     <h2>ทำไมต้องมี GUI ทั้งที่ยิง API ก็เห็นข้อมูล</h2>
-    <p>ตลอดหลายบทต่อจากนี้ เราจะให้ TypeORM สร้างตาราง เพิ่มคอลัมน์ และสร้างตารางเชื่อม relation ให้อัตโนมัติ การเห็น<em>สภาพจริง</em>ของฐานข้อมูล — ตารางชื่ออะไร คอลัมน์เป็นชนิดไหน ข้อมูลถูก insert จริงไหม — ช่วยให้เราแยกได้ทันทีว่าปัญหาอยู่ที่โค้ดฝั่ง NestJS หรืออยู่ที่ฐานข้อมูล การไล่ดูผ่าน <code>psql</code> ใน terminal ทำได้เช่นกัน แต่ GUI ทำให้การสำรวจ schema และไล่ข้อมูลทีละแถวเร็วกว่ามาก</p>
+    <p>ตลอดหลายบทต่อจากนี้ เราจะให้ Prisma สร้างตาราง เพิ่มคอลัมน์ และสร้างตารางเชื่อม relation ให้จาก <code>schema.prisma</code> การเห็น<em>สภาพจริง</em>ของฐานข้อมูล — ตารางชื่ออะไร คอลัมน์เป็นชนิดไหน ข้อมูลถูก insert จริงไหม — ช่วยให้เราแยกได้ทันทีว่าปัญหาอยู่ที่โค้ดฝั่ง NestJS หรืออยู่ที่ฐานข้อมูล การไล่ดูผ่าน <code>psql</code> ใน terminal ทำได้เช่นกัน แต่ GUI ทำให้การสำรวจ schema และไล่ข้อมูลทีละแถวเร็วกว่ามาก</p>
     <p>เครื่องมือที่คอร์สแนะนำคือ <a href="https://www.pgadmin.org/">pgAdmin</a> ซึ่งเป็นเครื่องมือฟรีสำหรับดู แก้ไข และ browse ฐานข้อมูล Postgres แต่ถ้าคุณคุ้นเคยกับเครื่องมืออื่นอยู่แล้ว เช่น TablePlus, DBeaver หรือ DataGrip ก็ใช้แทนกันได้ทั้งหมด เพราะสิ่งที่เราต้องการมีแค่การเชื่อมต่อแบบ Postgres มาตรฐาน</p>
 
     <h2>ข้อมูลการเชื่อมต่อมาจาก docker-compose.yml</h2>
@@ -39,7 +39,7 @@
       </table>
     </div>
     <div class="note"><p>การใช้งาน pgAdmin เชิงลึกอยู่นอกขอบเขตของคอร์สนี้ หากติดขัดตอนสร้าง connection ให้ดู<a href="https://www.pgadmin.org/docs/pgadmin4/latest/connecting.html">เอกสารการเชื่อมต่อของ pgAdmin</a> ประกอบ</p></div>
-    <div class="warning"><p>ค่า <code>pass123</code> เป็นรหัสผ่านสำหรับเครื่อง dev เท่านั้น อย่านำ pattern การ hardcode รหัสผ่านแบบนี้ไปใช้กับระบบจริง — ในบท Application Configuration เราจะย้ายค่าเหล่านี้ไปไว้ใน environment variables</p></div>
+    <div class="warning"><p>ค่า <code>pass123</code> เป็นรหัสผ่านสำหรับเครื่อง dev เท่านั้น ในบทถัดไปค่าทั้งหมดนี้จะถูกรวมเป็น connection string เดียวชื่อ <code>DATABASE_URL</code> ในไฟล์ <code>.env</code> (ห้าม commit) และในบท Application Configuration เราจะให้ NestJS โหลดและ validate ค่านี้อย่างเป็นระบบ</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">เชื่อม pgAdmin เข้ากับ Postgres ใน Docker</h2>
@@ -55,7 +55,7 @@ docker ps
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
-      <p>pgAdmin เชื่อมต่อสำเร็จและเห็น database ชื่อ <code>postgres</code> ใน tree ด้านซ้าย ตอนนี้ยังไม่มีตารางของแอปเรา — นั่นถูกต้องแล้ว เพราะเราจะให้ TypeORM สร้างตาราง <code>coffee</code> ให้ในบทถัดไป เมื่อถึงตอนนั้นให้กลับมา refresh ดูใน GUI นี้อีกครั้ง</p>
+      <p>pgAdmin เชื่อมต่อสำเร็จและเห็น database ชื่อ <code>postgres</code> ใน tree ด้านซ้าย ตอนนี้ยังไม่มีตารางของแอปเรา — นั่นถูกต้องแล้ว เพราะเราจะให้ Prisma สร้างตาราง <code>coffee</code> ให้ในบทที่ 23 เมื่อถึงตอนนั้นให้กลับมา refresh ดูใน GUI นี้อีกครั้ง</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
@@ -75,7 +75,7 @@ docker ps
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link" href="20_running-postgresql.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="22_introducing-the-typeorm-module.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="22_introducing-prisma.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
   <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>

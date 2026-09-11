@@ -26,13 +26,15 @@
 
 services:
   db:
-    image: mongo        # container image ที่ใช้
+    image: mongo:8.0    # container image ที่ใช้ — pin ที่ Major Release 8.0 (สายที่ได้ long-term support)
     restart: always
     ports:              # เปิดพอร์ตรูปแบบ "host:container"
       - 27017:27017
     environment:        # ตัวแปรแวดล้อมที่ส่งเข้า container
-      MONGODB_DATABASE: nest-course</code></pre>
-    <p>ความหมายของแต่ละส่วน: <code>image: mongo</code> ดึง image ทางการของ MongoDB จาก registry, <code>restart: always</code> ให้ Docker รีสตาร์ต container ให้อัตโนมัติถ้ามันล้ม, <code>ports</code> ผูกพอร์ต 27017 ของเครื่องเรา (host) เข้ากับพอร์ต 27017 ใน container ซึ่งเป็นพอร์ตมาตรฐานของ MongoDB และ <code>environment</code> ส่งตัวแปรแวดล้อมเข้าไปตั้งชื่อฐานข้อมูลเริ่มต้นเป็น <code>nest-course</code></p>
+      MONGO_INITDB_DATABASE: nest-course</code></pre>
+    <p>ความหมายของแต่ละส่วน: <code>image: mongo:8.0</code> ดึง image ทางการของ MongoDB จาก registry โดยระบุเวอร์ชัน, <code>restart: always</code> ให้ Docker รีสตาร์ต container ให้อัตโนมัติถ้ามันล้ม, <code>ports</code> ผูกพอร์ต 27017 ของเครื่องเรา (host) เข้ากับพอร์ต 27017 ใน container ซึ่งเป็นพอร์ตมาตรฐานของ MongoDB และ <code>environment</code> ส่งตัวแปรแวดล้อมเข้าไปตั้งชื่อฐานข้อมูลเริ่มต้นเป็น <code>nest-course</code> (ต้องใช้ชื่อ <code>MONGO_INITDB_DATABASE</code> ให้ตรงตาม image ทางการเป๊ะ ๆ — ชื่ออื่นเช่น <code>MONGODB_DATABASE</code> จะถูก entrypoint script เพิกเฉยแบบเงียบ ๆ ไม่มี error ใด ๆ)</p>
+    <div class="note"><p><strong>ทำไมต้อง pin เวอร์ชัน:</strong> MongoDB แบ่ง release เป็นสองสาย — <em>Major Release</em> (เช่น 7.0, 8.0) ออกทุกสองปี รองรับนานห้าปี เหมาะกับ production และการเรียนที่ต้องการสภาพแวดล้อมคงที่ กับ <em>Rapid/Minor Release</em> (เช่น 8.2, 8.3) ที่ออกถี่และเลิก patch ทันทีที่มีรุ่นถัดไป ถ้าเขียน <code>image: mongo</code> เฉย ๆ Docker จะดึง tag <code>latest</code> ซึ่งชี้ไปที่ Rapid Release ล่าสุด ทำให้ผู้เรียนแต่ละคนได้เวอร์ชันต่างกัน (และบางรุ่นอาจไม่ยอมสตาร์ตบน Docker Desktop บางเวอร์ชัน) คอร์สนี้จึง pin ที่ <code>mongo:8.0</code> ซึ่งเป็น Major Release ปัจจุบัน ให้ทุกคนได้ MongoDB ตัวเดียวกัน</p></div>
+    <div class="warning"><p><strong>ถ้า container ขึ้นแล้วดับทันที</strong> และ <code>docker logs</code> บอกว่า <q>Linux kernel versions 6.19 and newer has a known incompatibility with this version of MongoDB</q> (MongoDB issue SERVER-121912) แปลว่า Docker Desktop ของคุณใช้ Linux kernel รุ่นที่ MongoDB 8.x ยังไม่รองรับ ทางแก้ชั่วคราวคืออัปเดต Docker Desktop เป็นรุ่นล่าสุด หรือ pin patch เก่ากว่าของสายเดียวกันเป็น <code>image: mongo:8.0.4</code> ซึ่งสตาร์ตได้และเนื้อหาทุกบทในเส้นทางนี้ทดสอบผ่านบนรุ่นนี้แล้ว</p></div>
     <div class="note"><p>จำชื่อฐานข้อมูล <code>nest-course</code> นี้ไว้ให้ดี — ในบทถัดไป connection string ของ <code>MongooseModule.forRoot()</code> ต้องชี้ไปที่ชื่อเดียวกันนี้ ไม่อย่างนั้นแอปจะต่อฐานข้อมูลคนละก้อนกับที่ตั้งใจ</p></div>
 
     <h2>คำสั่งเปิด–ปิดที่ใช้ประจำ</h2>

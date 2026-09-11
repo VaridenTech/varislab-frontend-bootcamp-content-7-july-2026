@@ -3,92 +3,94 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="เปิด cascade บน relation ของ Coffee และเขียน preloadFlavorByName เพื่อให้ POST/PATCH สร้างหรือ reuse flavor ได้ในคำขอเดียว" />
-  <title>ใช้ Cascading Inserts และ Updates</title>
+  <meta name="description" content="ใช้ nested writes ของ Prisma (connectOrCreate และ set) ให้ POST/PATCH สร้างหรือ reuse flavor ได้ในคำขอเดียว โดยไม่ต้องเขียน helper ค้นหาเอง" />
+  <title>ใช้ Nested Writes สร้างและอัปเดตพร้อม Relation</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
 <body>
   <main>
     <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 27 จาก 77</p>
-    <h1>ใช้ Cascading Inserts และ Updates</h1>
+    <h1>ใช้ Nested Writes สร้างและอัปเดตพร้อม Relation</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
       <ul>
-        <li>เปิด cascading บน relation ด้วย option <code>cascade: true</code> และบอกได้ว่ามันช่วยอะไร</li>
-        <li>เขียน helper <code>preloadFlavorByName</code> ที่ reuse flavor เดิมหรือสร้างใหม่เมื่อยังไม่มี</li>
-        <li>ปรับ <code>create</code> และ <code>update</code> ให้บันทึกกาแฟพร้อม flavors ได้ในคำขอเดียว</li>
+        <li>อธิบายได้ว่า nested write คืออะไร และแยกความต่างของ <code>create</code>, <code>connect</code> และ <code>connectOrCreate</code></li>
+        <li>ใช้ <code>connectOrCreate</code> reuse flavor เดิมหรือสร้างใหม่เมื่อยังไม่มี โดยอาศัยฟิลด์ <code>@unique</code></li>
+        <li>ปรับ <code>create</code> และ <code>update</code> ให้บันทึกกาแฟพร้อม flavors ได้ในคำขอเดียว และใช้ <code>set: []</code> แทนที่ชุด relation เดิม</li>
       </ul>
     </section>
 
-    <h2>ให้การ save กาแฟพา flavor ไปด้วย</h2>
-    <p>ตอนนี้ POST <code>/coffees</code> พร้อม flavors จะยังไม่บันทึกความสัมพันธ์ลงตารางเชื่อม เพราะ TypeORM ไม่รู้ว่าควรทำอะไรกับ entity ปลายทางที่ยังไม่มีอยู่ <strong>Cascading</strong> คือการบอกว่า "เมื่อ save ฝั่ง owner ให้ save entity ที่ผูกอยู่ด้วย" เปิดได้ที่ option ตัวที่สามของ <code>@ManyToMany()</code></p>
-    <pre><code>/* coffee.entity.ts */
-@JoinTable()
-@ManyToMany(
-  type =&gt; Flavor,
-  flavor =&gt; flavor.coffees,
-  {
-    cascade: true, // หรือระบุเฉพาะบางอย่าง เช่น ['insert']
-  },
-)
-flavors: Flavor[];</code></pre>
-    <p>สังเกตว่า type ของ property เปลี่ยนจาก <code>string[]</code> เป็น <code>Flavor[]</code> แล้ว — ข้อมูลที่ไหลผ่าน service ต่อจากนี้เป็น entity จริง ไม่ใช่ string เปล่า</p>
+    <h2>ให้การบันทึกกาแฟพา flavor ไปด้วย</h2>
+    <p>ตอนนี้ POST <code>/coffees</code> พร้อม flavors ยังไม่บันทึกความสัมพันธ์ลงตารางเชื่อม (และ type-check ยังไม่ผ่านตั้งแต่บทที่ 25) เพราะ Prisma ไม่รับ array ของ string ใส่ relation field ตรง ๆ สิ่งที่ Prisma ต้องการคือ <strong>nested write</strong>: ใน <code>data</code> ของ <code>create</code>/<code>update</code> เดียวกัน เราบอกได้เลยว่าจะทำอะไรกับ model ปลายทาง — Prisma รวมทั้งหมดเป็นการเขียน<em>ก้อนเดียว</em>ที่สำเร็จหรือล้มไปพร้อมกัน โดยไม่ต้องเปิด option cascade อะไรเพิ่ม</p>
+    <div class="comparison" role="region" aria-label="คำสั่ง nested write สำหรับ relation" tabindex="0">
+      <table>
+        <thead><tr><th>คำสั่ง</th><th>ทำอะไร</th><th>เหมาะกับ</th></tr></thead>
+        <tbody>
+          <tr><td><code>create</code></td><td>สร้างแถวใหม่ใน model ปลายทางแล้วผูกให้ทันที</td><td>ของที่ไม่มีทางซ้ำ เช่น comment ใหม่ของโพสต์</td></tr>
+          <tr><td><code>connect</code></td><td>ผูกกับแถวที่<em>มีอยู่แล้ว</em> โดยอ้างด้วยฟิลด์ unique (<code>id</code> หรือ <code>@unique</code> อื่น)</td><td>เมื่อรู้แน่ว่าปลายทางมีอยู่ ไม่มีก็ให้ error</td></tr>
+          <tr><td><code>connectOrCreate</code></td><td>ค้นด้วยฟิลด์ unique ก่อน เจอก็ผูกตัวเดิม ไม่เจอจึงสร้างใหม่แล้วผูก</td><td>ข้อมูลอ้างอิงที่ใช้ซ้ำ เช่น tag หรือ flavor ของเรา</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>ทั้ง <code>connect</code> และ <code>connectOrCreate</code> ต้องค้นด้วยฟิลด์ที่ unique เท่านั้น — นี่คือเหตุผลที่บทที่ 25 เราใส่ <code>@unique</code> ให้ <code>Flavor.name</code> ไว้ล่วงหน้า ทำให้ไม่ต้องเขียน helper "หา flavor จากชื่อ ถ้าไม่มีค่อยสร้าง" เองอีกเลย</p>
 
     <h2>reuse flavor เดิม อย่าสร้างซ้ำ</h2>
-    <p>ถ้าปล่อยให้ cascade สร้าง flavor ใหม่ทุกครั้ง ตาราง <code>flavor</code> จะเต็มไปด้วย <code>chocolate</code> ซ้ำ ๆ วิธีแก้คือ helper ที่ค้นหาด้วยชื่อก่อน: เจอก็คืนตัวเดิม ไม่เจอจึงสร้างใหม่ ซึ่งต้องฉีด repository ของ <code>Flavor</code> เพิ่มเข้ามาใน service ด้วย</p>
-    <pre><code>@Injectable()
+    <p>ก่อนส่ง <code>data</code> ให้ Prisma ต้อง destructure <code>flavors</code> ออกจาก DTO ก่อน เพราะ field นี้ใน <code>data</code> ไม่ใช่ array ของ string อีกแล้ว แต่เป็น object ที่บอกคำสั่ง nested write จากนั้น map ชื่อแต่ละตัวเป็นคู่ <code>where</code>/<code>create</code> ให้ <code>connectOrCreate</code></p>
+    <pre><code>import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { CreateCoffeeDto } from './dto/create-coffee.dto.js';
+import { UpdateCoffeeDto } from './dto/update-coffee.dto.js';
+
+@Injectable()
 export class CoffeesService {
-  constructor(
-    @InjectRepository(Coffee)
-    private readonly coffeeRepository: Repository&lt;Coffee&gt;,
-    @InjectRepository(Flavor)
-    private readonly flavorRepository: Repository&lt;Flavor&gt;,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(createCoffeeDto: CreateCoffeeDto) {
-    const flavors = await Promise.all(
-      createCoffeeDto.flavors.map(name =&gt; this.preloadFlavorByName(name)),
-    );
-
-    const coffee = this.coffeeRepository.create({
-      ...createCoffeeDto,
-      flavors,
+  create(createCoffeeDto: CreateCoffeeDto) {
+    const { flavors, ...data } = createCoffeeDto;
+    return this.prisma.coffee.create({
+      data: {
+        ...data,
+        flavors: {
+          connectOrCreate: flavors.map((name) =&gt; ({
+            where: { name },
+            create: { name },
+          })),
+        },
+      },
+      include: { flavors: true },
     });
-    return this.coffeeRepository.save(coffee);
   }
 
   async update(id: string, updateCoffeeDto: UpdateCoffeeDto) {
-    const flavors =
-      updateCoffeeDto.flavors &amp;&amp;
-      (await Promise.all(
-        updateCoffeeDto.flavors.map(name =&gt; this.preloadFlavorByName(name)),
-      ));
-
-    const coffee = await this.coffeeRepository.preload({
-      id: +id,
-      ...updateCoffeeDto,
-      flavors,
+    await this.findOne(id);
+    const { flavors, ...data } = updateCoffeeDto;
+    return this.prisma.coffee.update({
+      where: { id: +id },
+      data: {
+        ...data,
+        ...(flavors &amp;&amp; {
+          flavors: {
+            set: [], // ตัดความสัมพันธ์เดิมทั้งหมดก่อน
+            connectOrCreate: flavors.map((name) =&gt; ({
+              where: { name },
+              create: { name },
+            })),
+          },
+        }),
+      },
+      include: { flavors: true },
     });
-    if (!coffee) {
-      throw new NotFoundException(`Coffee #${id} not found`);
-    }
-    return this.coffeeRepository.save(coffee);
   }
 
-  private async preloadFlavorByName(name: string): Promise&lt;Flavor&gt; {
-    const existingFlavor = await this.flavorRepository.findOne({ where: { name } });
-    if (existingFlavor) {
-      return existingFlavor;
-    }
-    return this.flavorRepository.create({ name });
-  }
+  // findAll / findOne / remove คงเดิมจากบทที่ 26
 }</code></pre>
-    <p>ใน <code>update</code> เงื่อนไข <code>updateCoffeeDto.flavors &amp;&amp; ...</code> สำคัญมาก: PATCH ที่ไม่ได้ส่ง flavors มาจะได้ <code>undefined</code> และ <code>preload</code> จะไม่ไปยุ่งกับ relation เดิม — ส่งมาเมื่อไหร่จึงค่อยแทนที่ทั้งชุด</p>
-    <div class="warning"><p>อย่าลืมว่า <code>@InjectRepository(Flavor)</code> ใช้ได้ก็ต่อเมื่อ <code>Flavor</code> ถูกลงทะเบียนใน <code>TypeOrmModule.forFeature([Coffee, Flavor])</code> ของ module แล้ว ไม่เช่นนั้นจะเจอ error <code>Nest can't resolve dependencies</code> ตอน start</p></div>
+    <p>ใน <code>update</code> มีสองจุดที่ต้องอ่านให้ขาด: <code>set: []</code> สั่งให้ตัด join row ทั้งหมดของกาแฟตัวนี้ทิ้งก่อน แล้ว <code>connectOrCreate</code> ค่อยผูกชุดใหม่เข้าไป — ผลคือ "แทนที่ทั้งชุด" ไม่ใช่ "เพิ่มต่อท้าย" ส่วนเงื่อนไข <code>flavors &amp;&amp; {...}</code> สำคัญมาก: PATCH ที่ไม่ได้ส่ง flavors มาจะได้ <code>undefined</code> และ spread ของ <code>undefined</code> คือไม่ใส่อะไรเลย relation เดิมจึงไม่ถูกแตะ — ส่งมาเมื่อไหร่จึงค่อยแทนที่</p>
+    <div class="note"><p><code>set: []</code> ตัดแค่แถวในตารางเชื่อม <code>_CoffeeToFlavor</code> เท่านั้น ไม่เคยลบแถวในตาราง <code>flavor</code> — flavor ที่ไม่มีกาแฟตัวไหนใช้แล้วจะยังอยู่ ไม่มีเรื่อง orphan ถูกลบโดยไม่ตั้งใจให้ต้องกังวล และการใส่ <code>include: { flavors: true }</code> ท้าย <code>create</code>/<code>update</code> ทำให้ response คืน flavors ที่ผูกแล้วกลับมาทันทีโดยไม่ต้อง query ซ้ำ</p></div>
+    <div class="warning"><p><code>connectOrCreate</code> ทำงานเป็นสองขั้น (ค้นแล้วค่อยสร้าง) ดังนั้นถ้ามีคำขอจำนวนมากสร้าง flavor ชื่อเดียวกัน<em>พร้อมกันเป๊ะ</em> อาจมีตัวหนึ่งชน unique constraint ได้ (Prisma docs ระบุไว้) สำหรับแอปนี้ไม่ใช่ปัญหา แต่ในระบบที่ concurrent สูงต้องเผื่อ retry หรือจัดการ error ตรงนั้น</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">สร้างกาแฟพร้อม flavors ในคำขอเดียว</h2>
-      <p>เปิด <code>cascade: true</code> ที่ entity, เพิ่ม <code>flavorRepository</code> และ <code>preloadFlavorByName</code> เข้า service แล้วปรับ <code>create</code>/<code>update</code> ตามโค้ดด้านบน จากนั้นทดสอบ</p>
+      <p>แทนที่ <code>create</code>/<code>update</code> ใน <code>CoffeesService</code> ด้วยโค้ดด้านบน (ลบโค้ดที่คอมเมนต์ไว้ตั้งแต่บทที่ 25 ออก) ตรวจว่า TypeScript compile ผ่านแล้ว จากนั้นทดสอบ</p>
       <div class="prompt-example"><code>POST http://localhost:3000/coffees
 {
   "name": "Shipwreck Roast",
@@ -106,25 +108,26 @@ POST http://localhost:3000/coffees
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
-      <p>คำขอแรกสร้างกาแฟพร้อม flavor <code>chocolate</code> และ <code>vanilla</code> ในตาราง <code>flavor</code> คำขอที่สอง reuse แถว <code>chocolate</code> เดิม (id เดิม) และสร้างเฉพาะ <code>caramel</code> เพิ่ม — ตาราง <code>flavor</code> มี 3 แถว ไม่ใช่ 4 และตารางเชื่อมผูกความสัมพันธ์ครบทุกคู่</p>
+      <p>คำขอแรกสร้างกาแฟพร้อม flavor <code>chocolate</code> และ <code>vanilla</code> ในตาราง <code>flavor</code> คำขอที่สอง reuse แถว <code>chocolate</code> เดิม (id เดิม) และสร้างเฉพาะ <code>caramel</code> เพิ่ม — ตาราง <code>flavor</code> มี 3 แถว ไม่ใช่ 4 และ <code>_CoffeeToFlavor</code> ผูกความสัมพันธ์ครบทุกคู่ response ของทั้งสองคำขอมี <code>flavors</code> เป็น object พร้อม id กลับมาทันที</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
         <li>POST พร้อม flavors แล้ว <code>GET /coffees</code> เห็น flavors กลับมาเป็น object ที่มี id จริง</li>
         <li>ตาราง <code>flavor</code> ไม่มีชื่อซ้ำ แม้จะ POST ด้วย flavor เดิมหลายครั้ง</li>
-        <li>PATCH โดยไม่ส่ง <code>flavors</code> — relation เดิมต้องไม่หาย; PATCH พร้อม <code>flavors</code> ชุดใหม่ — ต้องแทนที่ชุดเดิม</li>
-        <li>แอปไม่ throw <code>Nest can't resolve dependencies</code> แปลว่า repository ทั้งสองถูกลงทะเบียนครบ</li>
+        <li>PATCH โดยไม่ส่ง <code>flavors</code> — relation เดิมต้องไม่หาย; PATCH พร้อม <code>flavors</code> ชุดใหม่ — ต้องแทนที่ชุดเดิม และแถวใน <code>flavor</code> ที่ถูกถอดออกยังอยู่</li>
+        <li><code>npm run start:dev</code> compile ผ่านไม่มี type error — ข้อผิดพลาดชั่วคราวจากบทที่ 25 หายไปแล้ว</li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>
     <ul class="source-list">
-      <li><a href="https://docs.nestjs.com/techniques/database">Database (NestJS Docs)</a></li>
-      <li><a href="https://docs.nestjs.com/recipes/sql-typeorm">SQL (TypeORM) Recipe (NestJS Docs)</a></li>
+      <li><a href="https://www.prisma.io/docs/orm/prisma-client/queries/relation-queries">Relation queries: nested writes (Prisma Docs)</a></li>
+      <li><a href="https://www.prisma.io/docs/orm/prisma-schema/data-model/relations/many-to-many-relations">Many-to-many relations (Prisma Docs)</a></li>
+      <li><a href="https://docs.nestjs.com/recipes/prisma">Prisma Recipe (NestJS Docs)</a></li>
       <li><a href="https://learn.nestjs.com/">NestJS Fundamentals — คอร์สต้นฉบับ</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="26_retrieve-entities-with-their-relations.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="26_retrieve-models-with-their-relations.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link" href="28_adding-pagination.html" rel="next">บทถัดไป →</a>
     </nav>

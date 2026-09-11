@@ -61,9 +61,18 @@ update(@Param('id') id: string, @Body() updateCoffeeDto: UpdateCoffeeDto) {
 }</code></pre>
     <div class="note"><p>ณ จุดนี้ DTO ยังเป็นแค่สัญญาระดับ type — ตอน runtime ยังไม่มีอะไรบังคับว่า client ต้องส่งข้อมูลตามนี้จริง บทถัดไปเราจะเติม <code>class-validator</code> เพื่อให้สัญญานี้มีผลจริงตอนรับ request</p></div>
 
+    <h2>อย่าลืมอัปเดต service ให้ตรงกับ DTO ใหม่</h2>
+    <p><code>CreateCoffeeDto</code> ไม่มี <code>id</code> (client ไม่ใช่คนกำหนด id) แต่ <code>coffees.service.ts</code> เดิมเก็บข้อมูลเป็น <code>Coffee[]</code> ที่ <code>id</code> เป็น field บังคับ ถ้าเปลี่ยน signature ของ <code>create()</code> เป็น <code>CreateCoffeeDto</code> โดยไม่แก้ตัว method ด้วย <code>this.coffees.push(createCoffeeDto)</code> เดิมจะคอมไพล์ไม่ผ่าน (property <code>id</code> ขาดหาย) — ต้องสร้าง <code>id</code> เพิ่มเองก่อน push:</p>
+    <pre><code>/* coffees.service.ts */
+create(createCoffeeDto: CreateCoffeeDto) {
+  const coffee = { id: this.coffees.length + 1, ...createCoffeeDto };
+  this.coffees.push(coffee);
+  return coffee;
+}</code></pre>
+
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">แทนที่ any ด้วย DTO ทั้งสองตัว</h2>
-      <p>สร้าง <code>CreateCoffeeDto</code> และ <code>UpdateCoffeeDto</code> ในโฟลเดอร์ <code>coffees/dto/</code> แล้วอัปเดต signature ของ <code>create()</code> และ <code>update()</code> ทั้งใน controller และ service ให้ใช้ type ใหม่</p>
+      <p>สร้าง <code>CreateCoffeeDto</code> และ <code>UpdateCoffeeDto</code> ในโฟลเดอร์ <code>coffees/dto/</code> แล้วอัปเดต signature ของ <code>create()</code> และ <code>update()</code> ทั้งใน controller และ service ให้ใช้ type ใหม่ (ดูโค้ด <code>create()</code> ที่แก้แล้วด้านบน — ไม่งั้น TypeScript จะฟ้องว่า <code>id</code> ขาดหาย)</p>
       <div class="prompt-example"><code>nest g class coffees/dto/create-coffee.dto --no-spec
 nest g class coffees/dto/update-coffee.dto --no-spec
 # แก้ controller + service ให้รับ CreateCoffeeDto / UpdateCoffeeDto</code></div>

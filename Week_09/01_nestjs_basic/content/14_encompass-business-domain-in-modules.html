@@ -41,8 +41,8 @@
     <p>CLI สร้าง <code>coffees/coffees.module.ts</code> และเพิ่ม <code>CoffeesModule</code> เข้า <code>imports</code> ของ <code>AppModule</code> ให้อัตโนมัติ จากนั้นย้าย controller และ service ของเราเข้ามาประกาศที่นี่แทน</p>
     <pre><code>/* coffees.module.ts */
 import { Module } from '@nestjs/common';
-import { CoffeesController } from './coffees.controller';
-import { CoffeesService } from './coffees.service';
+import { CoffeesController } from './coffees.controller.js';
+import { CoffeesService } from './coffees.service.js';
 
 @Module({
   controllers: [CoffeesController],

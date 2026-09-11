@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ใช้ useClass ใน NestJS เลือก implementation ของ provider ตามเงื่อนไข เช่น สลับ ConfigService ระหว่าง development และ production" />
+  <meta name="description" content="ใช้ useClass ใน NestJS เลือก implementation ของ provider ตามเงื่อนไข เช่น สลับ AppConfigService ระหว่าง development และ production" />
   <title>Class Providers (useClass)</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -24,14 +24,14 @@
     <p><code>useClass</code> ให้เราบอก Nest ว่า "เมื่อมีคนขอ token นี้ ให้ instantiate class <em>นี้</em>" จุดที่ทำให้มันทรงพลังคือค่า class ที่ส่งเข้าไปเป็น expression ธรรมดา — คำนวณตอน module ถูกโหลดได้ จึงเลือก implementation ตามเงื่อนไขอย่าง environment variable ได้ทันที ตัวอย่างคลาสสิกจากคอร์ส: config service คนละตัวระหว่างตอนพัฒนากับตอน deploy จริง</p>
     <pre><code>// ตัวอย่าง syntax "useClass"
 {
-  provide: ConfigService,
+  provide: AppConfigService,
   useClass:
     process.env.NODE_ENV === 'development'
-      ? DevelopmentConfigService
-      : ProductionConfigService,
+      ? DevelopmentAppConfigService
+      : ProductionAppConfigService,
 },</code></pre>
-    <p>token ยังคงเป็น <code>ConfigService</code> ผู้ใช้ทุกคน inject ด้วย type นี้ตามปกติ ส่วนของจริงที่ได้รับจะเป็น <code>DevelopmentConfigService</code> หรือ <code>ProductionConfigService</code> ขึ้นกับสภาพแวดล้อมตอนแอป start — โค้ดฝั่งผู้ใช้ไม่ต้องมี <code>if</code> แม้แต่ตัวเดียว</p>
-    <div class="note"><p>ให้ <code>DevelopmentConfigService</code> และ <code>ProductionConfigService</code> extend หรือ implement interface ร่วมกับ <code>ConfigService</code> เพื่อให้ method signature ตรงกัน มิฉะนั้น type จะบอกว่ามีเมธอดที่ runtime ไม่มีจริง</p></div>
+    <p>token ยังคงเป็น <code>AppConfigService</code> ผู้ใช้ทุกคน inject ด้วย type นี้ตามปกติ ส่วนของจริงที่ได้รับจะเป็น <code>DevelopmentAppConfigService</code> หรือ <code>ProductionAppConfigService</code> ขึ้นกับสภาพแวดล้อมตอนแอป start — โค้ดฝั่งผู้ใช้ไม่ต้องมี <code>if</code> แม้แต่ตัวเดียว</p>
+    <div class="note"><p>ให้ <code>DevelopmentAppConfigService</code> และ <code>ProductionAppConfigService</code> extend หรือ implement interface ร่วมกับ <code>AppConfigService</code> เพื่อให้ method signature ตรงกัน มิฉะนั้น type จะบอกว่ามีเมธอดที่ runtime ไม่มีจริง ตั้งชื่อว่า <code>AppConfigService</code> (ไม่ใช่ <code>ConfigService</code> เฉย ๆ) โดยตั้งใจ — บทที่ 45 จะ import <code>ConfigService</code> ตัวจริงจาก <code>@nestjs/config</code> เข้ามาในโปรเจกต์เดียวกัน ถ้าตั้งชื่อชนกันจะเจอ <code>TS2300: Duplicate identifier</code> ทันทีที่ทั้งสองถูก import เข้าไฟล์เดียวกัน</p></div>
 
     <h2>นี่คือ Strategy Pattern ที่ container จัดการให้</h2>
     <p>ในบทที่ 33 เราลิสต์ use case "Strategy Pattern" ไว้ — <code>useClass</code> คือคำตอบของมัน: ประกาศ abstract class (หรือ base class) เป็นสัญญากลาง แล้วเลือก strategy จริงที่จุดประกอบ module เพียงจุดเดียว เงื่อนไขการเลือกจะซับซ้อนแค่ไหนก็กระจุกอยู่ที่ provider declaration ไม่รั่วไปทั่ว codebase</p>
@@ -47,8 +47,8 @@
     </div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
-      <h2 id="exercise-heading">สลับ ConfigService ตาม NODE_ENV</h2>
-      <p>สร้าง class <code>ConfigService</code>, <code>DevelopmentConfigService</code> และ <code>ProductionConfigService</code> (ให้สองตัวหลังมี property หรือเมธอดที่ return ค่าบอกตัวตน เช่น <code>getEnvName()</code>) ประกาศ provider ด้วย <code>useClass</code> ตามตัวอย่าง แล้ว inject <code>ConfigService</code> เข้า <code>CoffeesService</code> และ log ค่าออกมาดู</p>
+      <h2 id="exercise-heading">สลับ AppConfigService ตาม NODE_ENV</h2>
+      <p>สร้าง class <code>AppConfigService</code>, <code>DevelopmentAppConfigService</code> และ <code>ProductionAppConfigService</code> (ให้สองตัวหลังมี property หรือเมธอดที่ return ค่าบอกตัวตน เช่น <code>getEnvName()</code>) ประกาศ provider ด้วย <code>useClass</code> ตามตัวอย่าง แล้ว inject <code>AppConfigService</code> เข้า <code>CoffeesService</code> และ log ค่าออกมาดู</p>
       <div class="prompt-example"><code>// รันแบบ development
 NODE_ENV=development npm run start:dev
 
@@ -57,7 +57,7 @@ NODE_ENV=production npm run start:dev</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
-      <p>เมื่อรันด้วย <code>NODE_ENV=development</code> log บอกว่าได้ instance ของ <code>DevelopmentConfigService</code>; เมื่อสลับเป็น <code>production</code> ได้ <code>ProductionConfigService</code> โดยที่ <code>CoffeesService</code> ยัง inject ผ่าน type <code>ConfigService</code> ตัวเดิมไม่มีการแก้ไข</p>
+      <p>เมื่อรันด้วย <code>NODE_ENV=development</code> log บอกว่าได้ instance ของ <code>DevelopmentAppConfigService</code>; เมื่อสลับเป็น <code>production</code> ได้ <code>ProductionAppConfigService</code> โดยที่ <code>CoffeesService</code> ยัง inject ผ่าน type <code>AppConfigService</code> ตัวเดิมไม่มีการแก้ไข</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
@@ -65,7 +65,7 @@ NODE_ENV=production npm run start:dev</code></div>
         <li>รันสองครั้งด้วย <code>NODE_ENV</code> ต่างกัน แล้วเห็น log ระบุ class คนละตัว</li>
         <li>ค้นทั้งโปรเจกต์ว่าไม่มี <code>process.env.NODE_ENV</code> โผล่ในไฟล์ service/controller — เงื่อนไขอยู่ที่ module เท่านั้น</li>
         <li>ลองเพิ่มเมธอดใหม่ใน interface กลางแล้วดูว่า TypeScript บังคับให้ทั้งสอง implementation มีครบ</li>
-        <li>อธิบายได้ว่าถ้าเพิ่ม <code>StagingConfigService</code> ต้องแก้กี่จุด (ควรตอบ: จุดเดียว)</li>
+        <li>อธิบายได้ว่าถ้าเพิ่ม <code>StagingAppConfigService</code> ต้องแก้กี่จุด (ควรตอบ: จุดเดียว)</li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>

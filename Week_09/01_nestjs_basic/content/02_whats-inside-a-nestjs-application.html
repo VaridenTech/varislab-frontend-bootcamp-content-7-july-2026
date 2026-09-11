@@ -29,21 +29,29 @@
 │   ├── app.module.ts            # root module ของแอป
 │   ├── app.service.ts           # service ตัวอย่าง (business logic)
 │   └── main.ts                  # entry point — bootstrap แอป
-├── test/                        # e2e tests
+├── test/
+│   └── app.e2e-spec.ts          # e2e test ตัวอย่าง
+├── .prettierrc                  # ค่าตั้งของ Prettier (จัด format โค้ด)
 ├── nest-cli.json                # ค่าตั้งของ Nest CLI
+├── oxlint.json                  # ค่าตั้งของ oxlint (linter)
 ├── package.json
-└── tsconfig.json</code></pre>
+├── tsconfig.build.json          # tsconfig สำหรับ nest build (compile เฉพาะ src/)
+├── tsconfig.json
+├── vitest.config.ts             # ค่าตั้ง Vitest สำหรับ unit tests
+└── vitest.config.e2e.ts         # ค่าตั้ง Vitest สำหรับ e2e tests</code></pre>
+    <p>สังเกตว่า <code>package.json</code> มี <code>"type": "module"</code> — โปรเจกต์ NestJS 12 เป็น <strong>ES module</strong> ตั้งแต่ต้น เครื่องมือที่มากับ scaffold คือ oxlint (<code>npm run lint</code>), Prettier (<code>npm run format</code>) และ Vitest (<code>npm test</code>) ซึ่งเราจะได้ใช้ในบทเรื่องการทดสอบ</p>
 
     <h2>เส้นทางของ request: main.ts → module → controller → service</h2>
-    <p>ทุกอย่างเริ่มที่ <code>main.ts</code> ซึ่งเรียก <code>NestFactory.create()</code> เพื่อสร้าง application instance จาก root module แล้วสั่งให้ฟังที่ port ที่กำหนด</p>
+    <p>ทุกอย่างเริ่มที่ <code>main.ts</code> ซึ่งเรียก <code>NestFactory.create()</code> เพื่อสร้าง application instance จาก root module แล้วสั่งให้ฟังที่ port ที่กำหนด (อ่านจาก <code>process.env.PORT</code> ถ้าไม่ตั้งจะใช้ 3000)</p>
     <pre><code>import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
+  await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();</code></pre>
+await bootstrap();</code></pre>
+    <p>สองจุดที่ต่างจากโค้ด Node.js แบบเก่า: import ไฟล์ในโปรเจกต์ต้องลงท้ายด้วย <code>.js</code> เสมอ (<code>'./app.module.js'</code>) เพราะใน ES module Node จะ resolve ไฟล์ที่ compile แล้ว TypeScript จึงบังคับให้ระบุนามสกุลแม้เราจะเขียนไฟล์ <code>.ts</code> อยู่ก็ตาม และ <code>await bootstrap()</code> เป็น top-level await ที่ ES module อนุญาตให้เขียนได้โดยไม่ต้องห่อใน function อีกชั้น — ทุก import ที่ <code>nest g</code> สร้างให้ตลอดคอร์สจะมี <code>.js</code> ติดมาให้เองอยู่แล้ว</p>
     <p>จากนั้นแต่ละชิ้นส่วนแบ่งหน้าที่กันชัดเจน:</p>
     <div class="comparison" role="region" aria-label="หน้าที่ของแต่ละไฟล์" tabindex="0">
       <table>

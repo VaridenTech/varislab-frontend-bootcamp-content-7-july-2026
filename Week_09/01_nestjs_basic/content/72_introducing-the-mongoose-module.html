@@ -27,7 +27,7 @@ npm i mongoose @nestjs/mongoose</code></pre>
     <div class="note"><p>ตั้งแต่ <code>mongoose@5.11.1</code> เป็นต้นมา Mongoose เผยแพร่ type definitions ของตัวเองแล้ว จึง<strong>ไม่ต้อง</strong>ติดตั้งแพ็กเกจ <code>@types/mongoose</code> เพิ่มอีก</p></div>
 
     <h2>ตั้งค่า MongooseModule ใน AppModule</h2>
-    <p>เช่นเดียวกับ <code>TypeOrmModule.forRoot()</code> ในเส้นทาง SQL การเชื่อมต่อระดับแอปทำครั้งเดียวที่ root module ด้วย <code>MongooseModule.forRoot()</code> โดยส่ง connection string ที่ชี้ไปยัง MongoDB ใน Docker ของบทที่แล้ว: host <code>localhost</code>, พอร์ต <code>27017</code> และชื่อฐานข้อมูล <code>nest-course</code></p>
+    <p>เช่นเดียวกับ <code>PrismaModule</code> ในเส้นทาง SQL การเชื่อมต่อระดับแอปทำครั้งเดียวที่ root module — คราวนี้ผ่าน dynamic module <code>MongooseModule.forRoot()</code> (แพทเทิร์นจากบทที่ 39) โดยส่ง connection string ที่ชี้ไปยัง MongoDB ใน Docker ของบทที่แล้ว: host <code>localhost</code>, พอร์ต <code>27017</code> และชื่อฐานข้อมูล <code>nest-course</code></p>
     <pre><code>/* ตั้งค่า MongooseModule ใน AppModule */
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';

@@ -9,11 +9,9 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">Workshop ภาษาไทยดัดแปลงจากคอร์ส <a href="https://learn.nestjs.com/">NestJS Fundamentals อย่างเป็นทางการ</a></p>
     <h1>NestJS Fundamentals: สร้าง REST API ตั้งแต่ศูนย์ถึงโปรดักชัน</h1>
 
-    <p>เส้นทางเรียนรู้ NestJS แบบต่อเนื่อง 77 บทเรียน: เราจะสร้าง REST API เกี่ยวกับกาแฟชื่อ <code>iluvcoffee</code> ตั้งแต่ scaffold โปรเจกต์, สร้าง CRUD endpoints, เชื่อม PostgreSQL ด้วย TypeORM, เข้าใจ Dependency Injection ถึงแก่น, ใช้ building blocks อย่าง filters/guards/interceptors/pipes, ทำเอกสารด้วย Swagger, เขียน unit และ e2e tests และปิดท้ายด้วยเส้นทางโบนัส MongoDB + Mongoose</p>
-    <p>เนื้อหาอ้างอิงจากคอร์ส <a href="https://learn.nestjs.com/">NestJS Fundamentals โดยทีมผู้สร้าง NestJS</a> และเชื่อมโยงกับ<a href="https://docs.nestjs.com/">เอกสารทางการของ NestJS</a> เพื่อให้ผู้เรียนตรวจสอบรายละเอียดปัจจุบันได้เอง</p>
+    <p>เส้นทางเรียนรู้ NestJS แบบต่อเนื่อง 77 บทเรียน: เราจะสร้าง REST API เกี่ยวกับกาแฟชื่อ <code>iluvcoffee</code> ตั้งแต่ scaffold โปรเจกต์, สร้าง CRUD endpoints, เชื่อม PostgreSQL ด้วย Prisma, เข้าใจ Dependency Injection ถึงแก่น, ใช้ building blocks อย่าง filters/guards/interceptors/pipes, ทำเอกสารด้วย Swagger, เขียน unit และ e2e tests และปิดท้ายด้วยเส้นทางโบนัส MongoDB + Mongoose</p>
 
     <section aria-label="ผลลัพธ์การเรียนรู้">
       <p><strong>เมื่อเรียนจบ:</strong> คุณจะออกแบบ API เป็น modules ตาม business domain, ตรวจสอบและแปลงข้อมูลขาเข้าด้วย DTO + ValidationPipe, ทำงานกับฐานข้อมูลทั้ง SQL และ NoSQL อย่างปลอดภัย (relations, transactions, indexes, migrations), เลือกใช้ custom providers และ scopes ได้ถูกสถานการณ์ และมีชุดทดสอบที่พิสูจน์ว่าระบบทำงานจริง</p>
@@ -58,22 +56,22 @@ npm run start:dev</code></pre>
       </ol>
     </section>
 
-    <section class="lesson-index" aria-labelledby="typeorm-heading">
-      <h2 id="typeorm-heading">19–31. ต่อฐานข้อมูล PostgreSQL ด้วย TypeORM</h2>
+    <section class="lesson-index" aria-labelledby="prisma-heading">
+      <h2 id="prisma-heading">19–31. ต่อฐานข้อมูล PostgreSQL ด้วย Prisma</h2>
       <ol start="19">
         <li><a href="19_before-we-get-started.html">ก่อนเริ่มบทฐานข้อมูล: เก็บความคืบหน้าไว้ใน Branch</a></li>
         <li><a href="20_running-postgresql.html">รัน PostgreSQL ด้วย Docker Compose</a></li>
         <li><a href="21_how-to-visualize-your-postgres-database-gui.html">ดูฐานข้อมูล Postgres ด้วย GUI</a></li>
-        <li><a href="22_introducing-the-typeorm-module.html">รู้จัก TypeORM Module</a></li>
-        <li><a href="23_creating-a-typeorm-entity.html">สร้าง TypeORM Entity</a></li>
-        <li><a href="24_using-repository-to-access-database.html">ใช้ Repository เข้าถึงฐานข้อมูล</a></li>
-        <li><a href="25_create-a-relation-between-two-entities.html">สร้าง Relation ระหว่างสอง Entities</a></li>
-        <li><a href="26_retrieve-entities-with-their-relations.html">ดึง Entities พร้อม Relations</a></li>
-        <li><a href="27_using-cascading-inserts-and-updates.html">ใช้ Cascading Inserts และ Updates</a></li>
+        <li><a href="22_introducing-prisma.html">รู้จัก Prisma และ PrismaService</a></li>
+        <li><a href="23_creating-a-prisma-model.html">สร้าง Prisma Model</a></li>
+        <li><a href="24_using-prisma-client-to-access-database.html">ใช้ Prisma Client เข้าถึงฐานข้อมูล</a></li>
+        <li><a href="25_create-a-relation-between-two-models.html">สร้าง Relation ระหว่างสอง Models</a></li>
+        <li><a href="26_retrieve-models-with-their-relations.html">ดึง Models พร้อม Relations</a></li>
+        <li><a href="27_using-nested-writes.html">ใช้ Nested Writes สร้างและอัปเดตพร้อม Relation</a></li>
         <li><a href="28_adding-pagination.html">เพิ่ม Pagination ที่ชั้นฐานข้อมูล</a></li>
         <li><a href="29_use-transactions.html">ใช้ Transactions</a></li>
-        <li><a href="30_adding-indexes-to-entities.html">เพิ่ม Indexes ให้ Entities</a></li>
-        <li><a href="31_setting-up-migrations.html">ตั้งค่า Migrations</a></li>
+        <li><a href="30_adding-indexes-to-models.html">เพิ่ม Indexes ให้ Models</a></li>
+        <li><a href="31_setting-up-migrations.html">ตั้งค่า Migrations ด้วย Prisma Migrate</a></li>
       </ol>
     </section>
 
@@ -134,9 +132,9 @@ npm run start:dev</code></pre>
     </section>
 
     <section class="lesson-index" aria-labelledby="testing-heading">
-      <h2 id="testing-heading">64–69. การทดสอบด้วย Jest</h2>
+      <h2 id="testing-heading">64–69. การทดสอบด้วย Vitest</h2>
       <ol start="64">
-        <li><a href="64_introduction-to-jest.html">รู้จัก Jest</a></li>
+        <li><a href="64_introduction-to-vitest.html">รู้จัก Vitest</a></li>
         <li><a href="65_getting-started-with-test-suites.html">เริ่มต้นกับ Test Suites</a></li>
         <li><a href="66_adding-unit-tests.html">เขียน Unit Tests</a></li>
         <li><a href="67_diving-into-e2e-tests.html">เจาะลึก e2e Tests</a></li>
@@ -161,7 +159,7 @@ npm run start:dev</code></pre>
     </section>
 
     <div class="updated">
-      <p>ตรวจทานเมื่อ 1 กันยายน 2026: เวอร์ชันของ NestJS, TypeORM, Mongoose และ dependencies อื่น ๆ เปลี่ยนแปลงได้ตามรอบการเผยแพร่ ก่อนใช้กับงานจริงให้ตรวจ<a href="https://docs.nestjs.com/">เอกสารทางการของ NestJS</a> เสมอ</p>
+      <p>ตรวจทานเมื่อ 1 กันยายน 2026: เวอร์ชันของ NestJS, Prisma, Mongoose และ dependencies อื่น ๆ เปลี่ยนแปลงได้ตามรอบการเผยแพร่ ก่อนใช้กับงานจริงให้ตรวจ<a href="https://docs.nestjs.com/">เอกสารทางการของ NestJS</a> เสมอ</p>
     </div>
   </main>
   <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>

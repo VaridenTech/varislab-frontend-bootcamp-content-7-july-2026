@@ -40,9 +40,9 @@ docker-compose up -d
 
 # stop และเก็บ container
 docker-compose down</code></pre>
-    <p>ธง <code>-d</code> (detached) ทำให้ container รันเบื้องหลังโดยไม่ยึด terminal ของเรา ส่วน <code>docker-compose down</code> หยุดและลบ container ทิ้ง (ข้อมูลจะหายด้วยหากยังไม่ได้ตั้ง volume — สำหรับการเรียนถือว่ายอมรับได้ เพราะบทถัด ๆ ไป TypeORM จะสร้าง schema ให้ใหม่เอง)</p>
+    <p>ธง <code>-d</code> (detached) ทำให้ container รันเบื้องหลังโดยไม่ยึด terminal ของเรา ส่วน <code>docker-compose down</code> หยุดและลบ container ทิ้ง (ข้อมูลจะหายด้วยหากยังไม่ได้ตั้ง volume — สำหรับการเรียนถือว่ายอมรับได้ เพราะบทถัด ๆ ไปเราสั่ง <code>prisma db push</code> ให้สร้าง schema ใหม่ได้ในคำสั่งเดียว)</p>
     <div class="note"><p>Docker รุ่นใหม่ใช้ <code>docker compose</code> (เว้นวรรค) แทน <code>docker-compose</code> ได้เช่นกัน — ทั้งสองคำสั่งอ่านไฟล์ <code>docker-compose.yml</code> เดียวกัน</p></div>
-    <div class="warning"><p>ถ้าเครื่องคุณเคยติดตั้ง PostgreSQL ไว้อยู่แล้ว พอร์ต 5432 จะชนกันและ container จะ start ไม่ขึ้น — ปิด service เดิมก่อน หรือเปลี่ยนฝั่งซ้ายของ mapping เป็นพอร์ตอื่น เช่น <code>"5433:5432"</code> (แล้วจำไว้ใช้ตอนตั้งค่า TypeORM บทถัดไป)</p></div>
+    <div class="warning"><p>ถ้าเครื่องคุณเคยติดตั้ง PostgreSQL ไว้อยู่แล้ว พอร์ต 5432 จะชนกันและ container จะ start ไม่ขึ้น — ปิด service เดิมก่อน หรือเปลี่ยนฝั่งซ้ายของ mapping เป็นพอร์ตอื่น เช่น <code>"5433:5432"</code> (แล้วจำไว้ใส่ใน <code>DATABASE_URL</code> ตอนตั้งค่า Prisma ในบทที่ 22)</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ยกฐานข้อมูลขึ้นมาให้ได้ในสามคำสั่ง</h2>

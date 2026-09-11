@@ -24,7 +24,7 @@
     <p>ตอนนี้ถ้า client ขอ <code>GET /coffees/999</code> ที่ไม่มีอยู่ <code>findOne()</code> คืน <code>undefined</code> และ Nest ตอบ 200 พร้อม body ว่าง — client ไม่มีทางรู้ว่าผิดตรงไหน API ที่ดีต้องบอกอย่างชัดเจนว่า <em>ไม่พบข้อมูล</em> ด้วย status 404 พร้อมข้อความที่อ่านรู้เรื่อง Nest เตรียม exception class มาตรฐานไว้ให้ครบใน <code>@nestjs/common</code></p>
     <pre><code>/* coffees.service.ts */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Coffee } from './entities/coffee.entity';
+import { Coffee } from './entities/coffee.entity.js';
 
 @Injectable()
 export class CoffeesService {

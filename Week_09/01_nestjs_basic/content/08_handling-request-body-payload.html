@@ -38,7 +38,7 @@ export class CoffeesController {
   }
 
   @Post()
-  create(@Body() body) {
+  create(@Body() body: any) {
     return body;
   }
 }</code></pre>
@@ -48,7 +48,7 @@ export class CoffeesController {
     </div>
 
     <h2>รับได้ ไม่ได้แปลว่าปลอดภัย</h2>
-    <p>สังเกตว่า <code>body</code> ตอนนี้ไม่มี type (เป็น <code>any</code> โดยปริยาย) แปลว่าผู้ใช้ส่งอะไรมาก็ได้ — field เกิน, field ขาด, type ผิด — โค้ดเราก็รับหมด ปัญหานี้คือเหตุผลที่บทที่ 15–18 จะแนะนำ <strong>DTO (Data Transfer Object)</strong> และ <code>ValidationPipe</code> เพื่อประกาศหน้าตา payload ที่ยอมรับและปฏิเสธของแปลกปลอมโดยอัตโนมัติ ตอนนี้ให้จำไว้ก่อนว่า "รับ body ดิบ ๆ เป็นของชั่วคราว"</p>
+    <p>สังเกตว่า <code>body</code> ตอนนี้ประกาศเป็น <code>any</code> ตรง ๆ (โปรเจกต์ Nest 12 เปิด <code>strict</code> mode ของ TypeScript ถ้าไม่ระบุ type เลย compiler จะฟ้อง <q>implicitly has an 'any' type</q> และ <code>nest start</code> จะไม่ยอมรันแอป) แปลว่าผู้ใช้ส่งอะไรมาก็ได้ — field เกิน, field ขาด, type ผิด — โค้ดเราก็รับหมด ปัญหานี้คือเหตุผลที่บทที่ 15–18 จะแนะนำ <strong>DTO (Data Transfer Object)</strong> และ <code>ValidationPipe</code> เพื่อประกาศหน้าตา payload ที่ยอมรับและปฏิเสธของแปลกปลอมโดยอัตโนมัติ ตอนนี้ให้จำไว้ก่อนว่า "รับ body ดิบ ๆ เป็นของชั่วคราว"</p>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ยิง POST แรกด้วย JSON payload</h2>

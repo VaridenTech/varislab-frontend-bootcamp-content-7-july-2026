@@ -26,8 +26,8 @@
     <pre><code>/* app.e2e-spec.ts - FINAL CODE */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from './../src/app.module';
+import request from 'supertest';
+import { AppModule } from './../src/app.module.js';
 
 describe('AppController (e2e)', () =&gt; {
   let app: INestApplication;
@@ -44,7 +44,7 @@ describe('AppController (e2e)', () =&gt; {
   it('/ (GET)', () =&gt; {
     return request(app.getHttpServer()) // 👈 ยิงเข้า server จริงของแอป
       .get('/')
-      .set('Authorization', process.env.API_KEY) // 👈 แนบ header ให้ผ่าน ApiKeyGuard
+      .set('Authorization', process.env.API_KEY!) // 👈 แนบ header ให้ผ่าน ApiKeyGuard (! เพราะ strict mode มองว่าอาจ undefined)
       .expect(200)
       .expect('Hello World!');
   });
@@ -58,28 +58,30 @@ describe('AppController (e2e)', () =&gt; {
     <ul>
       <li><strong><code>createNestApplication()</code></strong> — แทนที่จะ <code>module.get()</code> ดึง class มาเรียกตรง ๆ เราสร้าง instance ของแอปเต็มรูปจาก <code>AppModule</code> แล้ว <code>app.init()</code> ให้ lifecycle hooks ทำงานเหมือน production</li>
       <li><strong><code>supertest</code></strong> — <code>request(app.getHttpServer())</code> ยิง HTTP เข้า server ของแอปโดยไม่ต้อง listen บน port จริง แล้ว chain <code>.expect()</code> ตรวจทั้ง status และ body ได้</li>
-      <li><strong><code>beforeAll</code>/<code>afterAll</code></strong> — boot แอปครั้งเดียวต่อ suite (ไม่ใช่ <code>beforeEach</code> แบบ unit test เพราะ boot แพง) และต้อง <code>app.close()</code> เสมอ ไม่งั้น Jest จะค้างเพราะ connection ยังเปิดอยู่</li>
+      <li><strong><code>beforeAll</code>/<code>afterAll</code></strong> — boot แอปครั้งเดียวต่อ suite (ไม่ใช่ <code>beforeEach</code> แบบ unit test เพราะ boot แพง) และต้อง <code>app.close()</code> เสมอ ไม่งั้น Vitest จะค้างรอ (แล้วฟ้องว่า process ปิดไม่ลง) เพราะ connection ยังเปิดอยู่</li>
     </ul>
     <div class="note"><p>ตั้งแต่บท guards เราคุม endpoint ด้วย <code>ApiKeyGuard</code> — e2e test จึงต้อง <code>.set('Authorization', process.env.API_KEY)</code> แนบ header ไปด้วย นี่คือข้อดีของ e2e: มันบังคับให้เราทดสอบผ่านชั้น guard/pipe/filter จริงทั้งหมด ไม่ใช่ข้ามไป</p></div>
+
+    <div class="note"><p>ต่างจาก unit test ในบทที่ 65–66 ที่เรา mock <code>PrismaService</code> ทิ้ง e2e test boot <code>AppModule</code> ทั้งใบ จึงสร้าง <code>PrismaService</code> ตัวจริงและเรียก <code>$connect()</code> — database จึงต้องรันอยู่ก่อนเสมอ ส่วน Vitest รันไฟล์ทดสอบเป็น ES module เหมือนแอปจริง Prisma Client ที่ generate ไว้จึงโหลดได้โดยไม่ต้องตั้งค่าอะไรเพิ่ม และ script <code>test:e2e</code> ที่ Nest เตรียมให้ (<code>vitest run --config ./vitest.config.e2e.ts</code>) ใช้ได้ทันที</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">รันและอ่าน e2e test ที่มีอยู่</h2>
       <p>รัน e2e suite ของโปรเจกต์ ถ้า fail ให้อ่าน error แล้วแก้ให้ตรงสาเหตุ — ส่วนใหญ่มาจาก guard ที่เพิ่มระหว่างคอร์ส (ต้องแนบ API key) หรือ <code>AppModule</code> ที่ตอนนี้ต้องการ database</p>
-      <div class="prompt-example"><code># ให้แน่ใจว่า database รันอยู่ เพราะ AppModule import TypeOrmModule
+      <div class="prompt-example"><code># ให้แน่ใจว่า database รันอยู่ เพราะ PrismaService เชื่อมต่อตอน onModuleInit
 docker-compose up -d
 npm run test:e2e</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
-      <p><code>test/app.e2e-spec.ts</code> ผ่าน: แอป boot ขึ้นจริง, request <code>GET /</code> ที่แนบ Authorization header ได้ 200 พร้อม body <q>Hello World!</q> และ process จบสนิทหลัง <code>app.close()</code> โดย Jest ไม่ค้าง</p>
+      <p><code>test/app.e2e-spec.ts</code> ผ่าน: แอป boot ขึ้นจริง, request <code>GET /</code> ที่แนบ Authorization header ได้ 200 พร้อม body <q>Hello World!</q> และ process จบสนิทหลัง <code>app.close()</code> โดย Vitest ไม่ค้าง</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
-        <li><code>npm run test:e2e</code> จบด้วย exit code 0 และไม่ขึ้นคำเตือน <q>Jest did not exit one second after…</q></li>
+        <li><code>npm run test:e2e</code> จบด้วย exit code 0 และ process ปิดตัวทันที ไม่ค้างรอ handle ที่ยังเปิดอยู่</li>
         <li>ลองลบบรรทัด <code>.set('Authorization', …)</code> ชั่วคราว → ต้องได้ 403 ยืนยันว่า guard ทำงานใน e2e จริง</li>
         <li>ลองปิด database แล้วรันซ้ำ เพื่อเห็นว่า e2e ต่างจาก unit test อย่างไร (boot fail)</li>
-        <li>เปิด <code>test/jest-e2e.json</code> ยืนยันว่า <code>testRegex</code> คือ <code>.e2e-spec.ts$</code></li>
+        <li>เปิด <code>vitest.config.e2e.ts</code> ยืนยันว่า <code>include</code> คือ <code>['**/*.e2e-spec.ts']</code> ต่างจาก <code>vitest.config.ts</code> ที่จับ <code>*.spec.ts</code></li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>

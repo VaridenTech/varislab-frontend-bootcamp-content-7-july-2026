@@ -52,13 +52,13 @@ nest --help</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
-      <p><code>node --version</code> พิมพ์เลขเวอร์ชันออกมา (เช่น <code>v22.x.x</code>), การติดตั้ง CLI จบโดยไม่มี error, <code>nest --version</code> แสดงเลขเวอร์ชันของ CLI และ <code>nest --help</code> แสดงตารางคำสั่งพร้อม alias แบบย่อของแต่ละคำสั่ง</p>
+      <p><code>node --version</code> พิมพ์เลขเวอร์ชันออกมา (เช่น <code>v22.x.x</code>), การติดตั้ง CLI จบโดยไม่มี error, <code>nest --version</code> แสดงเลขเวอร์ชัน <code>12.x.x</code> ของ CLI และ <code>nest --help</code> แสดงตารางคำสั่งพร้อม alias แบบย่อของแต่ละคำสั่ง — คอร์สนี้เขียนสำหรับ NestJS 12 ซึ่ง scaffold โปรเจกต์เป็น ES module และใช้ Vitest เป็นเครื่องมือทดสอบ (เราจะเห็นผลของเรื่องนี้ในบทถัดไป)</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
         <li>รัน <code>node --version</code> และ <code>npm --version</code> ได้ผลเป็นเลขเวอร์ชัน ไม่ใช่ <code>command not found</code></li>
-        <li>รัน <code>nest --version</code> จาก directory ไหนก็ได้ (ยืนยันว่า global install สำเร็จ)</li>
+        <li>รัน <code>nest --version</code> จาก directory ไหนก็ได้ (ยืนยันว่า global install สำเร็จ) และได้เลข <code>12.x.x</code></li>
         <li>เปิด <code>nest --help</code> แล้วหา alias ของ <code>generate controller</code> เจอ (ควรเป็น <code>g co</code>)</li>
         <li>ถ้าคำสั่ง <code>nest</code> ไม่เจอ ให้ตรวจว่า npm global bin path อยู่ใน <code>$PATH</code> ด้วย <code>npm bin -g</code></li>
       </ul>

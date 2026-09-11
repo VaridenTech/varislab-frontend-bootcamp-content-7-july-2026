@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="เขียน unit test ให้เมธอด findOne ของ CoffeesService ด้วย mock repository ครอบคลุมทั้งกรณีพบข้อมูลและกรณี NotFoundException" />
+  <meta name="description" content="เขียน unit test ให้เมธอด findOne ของ CoffeesService ด้วย mock PrismaService ครอบคลุมทั้งกรณีพบข้อมูลและกรณี NotFoundException" />
   <title>เขียน Unit Tests</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -14,59 +14,68 @@
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
       <ul>
-        <li>สร้าง mock repository ที่ควบคุมค่าตอบกลับได้ด้วย <code>jest.fn()</code> แทน mock ว่าง</li>
+        <li>สร้าง mock ของ <code>PrismaService</code> ที่ควบคุมค่าตอบกลับได้ด้วย <code>vi.fn()</code> แทน mock ว่าง</li>
         <li>เขียน test ครอบคลุมทั้งขาสำเร็จ (พบ coffee) และขาล้มเหลว (throw <code>NotFoundException</code>) ของ <code>findOne</code></li>
         <li>จัดโครง <code>describe</code> ซ้อนกันให้อ่านเป็นสเปกพฤติกรรมได้</li>
       </ul>
     </section>
 
     <h2>จาก mock ว่างสู่ mock ที่ตอบได้</h2>
-    <p>บทที่แล้ว mock ของเราเป็น object ว่าง ซึ่งพอให้ DI resolve ได้แต่ทดสอบพฤติกรรมจริงไม่ได้ ปัญหาคือ <code>findOne</code> ของ service เรียก <code>coffeeRepository.findOne</code> ข้างใน — ถ้า mock ไม่มีเมธอดนี้ test จะพัง เราจึงยกระดับเป็น mock ที่มีเมธอดเป็น <code>jest.fn()</code> เพื่อกำหนดค่าตอบกลับได้ในแต่ละ test</p>
-    <pre><code>type MockRepository&lt;T = any&gt; = Partial&lt;Record&lt;keyof Repository&lt;T&gt;, jest.Mock&gt;&gt;;
-const createMockRepository = &lt;T = any&gt;(): MockRepository&lt;T&gt; =&gt; ({
-  findOne: jest.fn(),
-  create: jest.fn(),
+    <p>บทที่แล้ว mock ของเราเป็น object ว่าง ซึ่งพอให้ DI resolve ได้แต่ทดสอบพฤติกรรมจริงไม่ได้ ปัญหาคือ <code>findOne</code> ของ service เรียก <code>this.prisma.coffee.findUnique(...)</code> ข้างใน — ถ้า mock ไม่มี property <code>coffee</code> ที่มีเมธอดนี้ test จะพัง เราจึงยกระดับเป็น mock ที่เลียนโครง <code>prisma.&lt;model&gt;.&lt;method&gt;</code> โดยให้แต่ละเมธอดเป็น <code>vi.fn()</code> เพื่อกำหนดค่าตอบกลับได้ในแต่ละ test</p>
+    <pre><code>type MockPrisma = {
+  coffee: {
+    findMany: Mock;
+    findUnique: Mock;
+    create: Mock;
+  };
+};
+const createMockPrisma = (): MockPrisma =&gt; ({
+  coffee: {
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    create: vi.fn(),
+  },
 });</code></pre>
-    <p>Type helper นี้บอกว่า: mock ของเราเป็น object ที่ key เป็นชื่อเมธอดของ <code>Repository</code> และ value เป็น <code>jest.Mock</code> — ได้ autocomplete และกันพิมพ์ชื่อเมธอดผิดไปพร้อมกัน</p>
+    <p>Type helper นี้บอกว่า: mock ของเราเป็น object ที่มี property ชื่อเดียวกับ model และข้างในเป็นเมธอดที่เป็น <code>Mock</code> (type จาก <code>vitest</code> — ตัวเดียวที่ต้อง import เพราะ <code>vi</code>, <code>describe</code>, <code>expect</code> เป็น global อยู่แล้ว) — ได้ autocomplete และกันพิมพ์ชื่อเมธอดผิดไปพร้อมกัน ประกาศเฉพาะเมธอดที่ test ต้องใช้ก็พอ</p>
+    <div class="note"><p>ถ้าอยากได้ mock ที่ครบทุก model และทุกเมธอดโดยไม่ต้องพิมพ์เอง ไลบรารี <code>vitest-mock-extended</code> มี <code>mockDeep&lt;PrismaClient&gt;()</code> ให้ใช้ — แต่ในบทนี้เราเขียนมือเพื่อให้เห็นว่าไม่มีเวทมนตร์อะไรซ่อนอยู่</p></div>
 
     <h2>โค้ดเต็มของ suite</h2>
     <pre><code>/* coffees.service.spec.ts - FINAL CODE */
+import type { Mock } from 'vitest'; // describe/it/expect/vi เป็น global อยู่แล้ว import เฉพาะ type
 import { Test, TestingModule } from '@nestjs/testing';
-import { CoffeesService } from './coffees.service';
-import { DataSource, Repository } from 'typeorm';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Flavor } from './entities/flavor.entity';
-import { Coffee } from './entities/coffee.entity';
 import { NotFoundException } from '@nestjs/common';
+import { CoffeesService } from './coffees.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
-type MockRepository&lt;T = any&gt; = Partial&lt;Record&lt;keyof Repository&lt;T&gt;, jest.Mock&gt;&gt;;
-const createMockRepository = &lt;T = any&gt;(): MockRepository&lt;T&gt; =&gt; ({
-  findOne: jest.fn(),
-  create: jest.fn(),
+type MockPrisma = {
+  coffee: {
+    findMany: Mock;
+    findUnique: Mock;
+    create: Mock;
+  };
+};
+const createMockPrisma = (): MockPrisma =&gt; ({
+  coffee: {
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    create: vi.fn(),
+  },
 });
 
 describe('CoffeesService', () =&gt; {
   let service: CoffeesService;
-  let coffeeRepository: MockRepository;
+  let prisma: MockPrisma;
 
   beforeEach(async () =&gt; {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CoffeesService,
-        { provide: DataSource, useValue: {} },
-        {
-          provide: getRepositoryToken(Flavor),
-          useValue: createMockRepository(),
-        },
-        {
-          provide: getRepositoryToken(Coffee),
-          useValue: createMockRepository(),
-        },
+        { provide: PrismaService, useValue: createMockPrisma() },
       ],
     }).compile();
 
     service = module.get&lt;CoffeesService&gt;(CoffeesService);
-    coffeeRepository = module.get&lt;MockRepository&gt;(getRepositoryToken(Coffee));
+    prisma = module.get&lt;MockPrisma&gt;(PrismaService);
   });
 
   it('should be defined', () =&gt; {
@@ -79,7 +88,7 @@ describe('CoffeesService', () =&gt; {
         const coffeeId = '1';
         const expectedCoffee = {};
 
-        coffeeRepository.findOne.mockReturnValue(expectedCoffee);
+        prisma.coffee.findUnique.mockReturnValue(expectedCoffee);
         const coffee = await service.findOne(coffeeId);
         expect(coffee).toEqual(expectedCoffee);
       });
@@ -87,20 +96,20 @@ describe('CoffeesService', () =&gt; {
     describe('otherwise', () =&gt; {
       it('should throw the "NotFoundException"', async () =&gt; {
         const coffeeId = '1';
-        coffeeRepository.findOne.mockReturnValue(undefined);
+        prisma.coffee.findUnique.mockReturnValue(null); // Prisma คืน null เมื่อไม่พบ
 
         try {
           await service.findOne(coffeeId);
           expect(false).toBeTruthy(); // ต้องไม่มาถึงบรรทัดนี้
         } catch (err) {
           expect(err).toBeInstanceOf(NotFoundException);
-          expect(err.message).toEqual(`Coffee #${coffeeId} not found`);
+          expect((err as Error).message).toEqual(`Coffee #${coffeeId} not found`); // strict: err เป็น unknown
         }
       });
     });
   });
 });</code></pre>
-    <p>สังเกตสองจุดสำคัญ: เราดึง mock กลับออกมาจาก container ด้วย <code>module.get(getRepositoryToken(Coffee))</code> เพื่อสั่ง <code>mockReturnValue</code> ในแต่ละ test และโครง <code>describe('findOne') → describe('when …') → it('should …')</code> ทำให้รายงานผลอ่านเป็นประโยคสเปกได้ทันที</p>
+    <p>สังเกตสองจุดสำคัญ: เราดึง mock กลับออกมาจาก container ด้วย <code>module.get(PrismaService)</code> เพื่อสั่ง <code>mockReturnValue</code> บน <code>prisma.coffee.findUnique</code> ในแต่ละ test และโครง <code>describe('findOne') → describe('when …') → it('should …')</code> ทำให้รายงานผลอ่านเป็นประโยคสเปกได้ทันที</p>
     <div class="warning"><p>ขาที่คาดว่า throw ให้ยืนยันว่า throw เกิดขึ้นจริง — โค้ดนี้ใช้ <code>expect(false).toBeTruthy()</code> เป็นกับดักกันกรณี <code>findOne</code> ไม่ throw แล้ว test ผ่านแบบหลอก ๆ ถ้าลืมจุดนี้ test ขาล้มเหลวอาจ <q>เขียว</q> ทั้งที่ไม่เคยทดสอบอะไรเลย</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
@@ -108,7 +117,7 @@ describe('CoffeesService', () =&gt; {
       <p>แทนที่เนื้อหา <code>coffees.service.spec.ts</code> ด้วยโค้ดเต็มด้านบน แล้วรันแบบ watch จนผ่านทั้ง 3 tests จากนั้นลองสลับค่า mock เพื่อดูว่า test จับความผิดปกติได้จริง</p>
       <div class="prompt-example"><code>npm run test:watch -- coffees.service
 # ผ่านแล้วลองทดสอบว่า test แข็งแรง:
-# เปลี่ยน mockReturnValue(undefined) เป็น mockReturnValue({}) ชั่วคราว
+# เปลี่ยน mockReturnValue(null) เป็น mockReturnValue({}) ชั่วคราว
 # → test ขา NotFoundException ต้อง fail</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
@@ -120,7 +129,7 @@ describe('CoffeesService', () =&gt; {
       <ul>
         <li><code>npm run test:watch -- coffees.service</code> เขียวทั้ง suite และไม่มี connection ไปยัง Postgres (ปิด Docker ก็ยังผ่าน)</li>
         <li>ทดลอง sabotage: แก้ message ใน <code>NotFoundException</code> ของ service ชั่วคราว → test ต้อง fail ที่ <code>err.message</code></li>
-        <li>ตรวจว่า <code>coffeeRepository</code> ที่ใช้ใน test เป็นตัวเดียวกับที่ดึงจาก <code>getRepositoryToken(Coffee)</code> ไม่ใช่ mock ของ <code>Flavor</code></li>
+        <li>ตรวจว่า <code>prisma</code> ที่ใช้ใน test เป็นตัวเดียวกับที่ดึงจาก <code>module.get(PrismaService)</code> ไม่ใช่ object ใหม่จาก <code>createMockPrisma()</code> อีกตัว</li>
         <li>รัน <code>npm run test:cov</code> แล้วดูว่า coverage ของ <code>coffees.service.ts</code> ขยับขึ้นจากบทก่อน</li>
       </ul>
     </section>
@@ -128,7 +137,7 @@ describe('CoffeesService', () =&gt; {
     <ul class="source-list">
       <li><a href="https://docs.nestjs.com/fundamentals/testing">Testing: unit testing กับ mock providers (NestJS)</a></li>
       <li><a href="https://docs.nestjs.com/exception-filters">Exception filters: NotFoundException และ HttpException family (NestJS)</a></li>
-      <li><a href="https://docs.nestjs.com/techniques/database">Database: getRepositoryToken (NestJS)</a></li>
+      <li><a href="https://www.prisma.io/docs/orm/prisma-client/testing/unit-testing">Unit testing with Prisma Client (Prisma Docs)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link" href="65_getting-started-with-test-suites.html" rel="prev">← บทก่อนหน้า</a>

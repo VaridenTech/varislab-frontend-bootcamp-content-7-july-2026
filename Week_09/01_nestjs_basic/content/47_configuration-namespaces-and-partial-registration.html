@@ -30,9 +30,9 @@ export default registerAs('coffees', () =&gt; ({
 }));</code></pre>
 
     <h2>Partial registration: โหลดเฉพาะที่ module ใช้</h2>
-    <p>แทนที่จะโหลด config ทุกก้อนที่ root เราลงทะเบียนเฉพาะ namespace ที่ module นั้นสนใจด้วย <code>forFeature</code> — แนวเดียวกับ <code>TypeOrmModule.forFeature</code> ที่เจอมาแล้ว</p>
+    <p>แทนที่จะโหลด config ทุกก้อนที่ root เราลงทะเบียนเฉพาะ namespace ที่ module นั้นสนใจด้วย <code>forFeature</code> — แนวเดียวกับ <code>forFeature()</code> ที่ library modules ของ Nest นิยมใช้ (เช่น <code>MongooseModule.forFeature</code> ที่จะเจอในบทที่ 73)</p>
     <pre><code>// coffees.module.ts
-import coffeesConfig from './coffees.config';
+import coffeesConfig from './coffees.config.js';
 
 @Module({
   imports: [ConfigModule.forFeature(coffeesConfig)],
@@ -46,8 +46,8 @@ const coffeesConfig = this.configService.get('coffees');
 const foo = this.configService.get('coffees.foo');</code></pre>
     <p>วิธีที่คอร์สแนะนำคือ inject ทั้ง namespace ผ่าน token <code>KEY</code> ที่ <code>registerAs</code> สร้างให้ คู่กับ type helper <code>ConfigType</code> ซึ่ง infer ชนิดจาก factory โดยตรง:</p>
     <pre><code>import { Inject } from '@nestjs/common';
-import { ConfigType } from '@nestjs/config';
-import coffeesConfig from './coffees.config';
+import type { ConfigType } from '@nestjs/config'; // 👈 import type — ConfigType เป็น type ล้วน และถูกใช้ใน constructor ที่มี decorator (ดูบทที่ 41)
+import coffeesConfig from './coffees.config.js';
 
 constructor(
   @Inject(coffeesConfig.KEY)
@@ -64,7 +64,7 @@ constructor(
       <p>สร้าง <code>src/coffees/coffees.config.ts</code> ด้วย <code>registerAs('coffees', ...)</code>, ลงทะเบียนผ่าน <code>forFeature</code> ใน <code>CoffeesModule</code> แล้ว inject เข้า <code>CoffeesService</code> ด้วย <code>coffeesConfig.KEY</code> + <code>ConfigType</code> เพื่ออ่านค่าแบบ typed</p>
       <div class="prompt-example"><code>// coffees.config.ts → registerAs('coffees', () =&gt; ({ foo: 'bar' }))
 // coffees.module.ts → imports: [ConfigModule.forFeature(coffeesConfig)]
-// coffees.service.ts →
+// coffees.service.ts → (import type { ConfigType } from '@nestjs/config')
 constructor(
   @Inject(coffeesConfig.KEY)
   private coffeesConfiguration: ConfigType&lt;typeof coffeesConfig&gt;,

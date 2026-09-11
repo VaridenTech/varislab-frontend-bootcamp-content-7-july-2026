@@ -58,7 +58,7 @@ open http://localhost:3000/api</code></div>
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
         <li>กาง <code>POST /coffees</code> แล้วเห็น example body ที่ generate จาก <code>CreateCoffeeDto</code></li>
-        <li>ตรวจว่า <code>UpdateCoffeeDto</code> (ที่สร้างจาก <code>PartialType</code>) แสดงทุกฟิลด์เป็น optional</li>
+        <li>ดู schema ของ <code>PATCH /coffees/{id}</code> คร่าว ๆ — ตอนนี้ <code>UpdateCoffeeDto</code> ยังใช้ <code>PartialType</code> จาก <code>@nestjs/mapped-types</code> (บทที่ 18) อยู่ ฟิลด์อาจยังไม่ถูกทำเครื่องหมาย optional ครบในเอกสารจนกว่าจะสลับไปใช้ <code>PartialType</code> จาก <code>@nestjs/swagger</code> ในบทถัดไป — ยังไม่ต้องแก้อะไรตอนนี้</li>
         <li>ดูส่วน Schemas ว่ามี DTO ของ pagination ด้วย (<code>PaginationQueryDto</code>)</li>
         <li>ลองลบ plugin ออกชั่วคราวแล้ว restart เพื่อเห็นความต่าง จากนั้นใส่กลับ</li>
       </ul>

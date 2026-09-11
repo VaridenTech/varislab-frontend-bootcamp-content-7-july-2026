@@ -21,7 +21,7 @@
     </section>
 
     <h2>จาก process.env สู่ ConfigService</h2>
-    <p>การหยิบ <code>process.env.DATABASE_HOST</code> ตรง ๆ ทำงานได้ แต่กระจาย dependency ไปทั่วโค้ดแบบมองไม่เห็น และ mock ยากเวลาเขียนเทสต์ <code>@nestjs/config</code> จึงมี <code>ConfigService</code> ให้ inject ผ่านระบบ dependency injection ปกติของ Nest — จุดเดียวที่รู้เรื่อง environment ทั้งหมด</p>
+    <p>การหยิบ <code>process.env.DATABASE_URL</code> ตรง ๆ ทำงานได้ แต่กระจาย dependency ไปทั่วโค้ดแบบมองไม่เห็น และ mock ยากเวลาเขียนเทสต์ <code>@nestjs/config</code> จึงมี <code>ConfigService</code> ให้ inject ผ่านระบบ dependency injection ปกติของ Nest — จุดเดียวที่รู้เรื่อง environment ทั้งหมด</p>
     <pre><code>import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -36,11 +36,11 @@ export class CoffeesService {
 
     <h2>อ่านค่าด้วย get() แบบระบุ type และ default</h2>
     <p>เมธอด <code>get()</code> รับชื่อ key และคืนค่าจาก environment; ใส่ generic type เพื่อบอก TypeScript ว่าคาดหวังชนิดใด และส่ง argument ตัวที่สองเป็นค่า default เมื่อ key ไม่ถูกตั้งไว้</p>
-    <pre><code>const databaseHost = this.configService.get&lt;string&gt;('DATABASE_HOST');
-console.log(databaseHost);
+    <pre><code>const databaseUrl = this.configService.get&lt;string&gt;('DATABASE_URL');
+console.log(databaseUrl);
 
 // พร้อมค่า default เมื่อไม่พบ key
-const port = this.configService.get&lt;number&gt;('DATABASE_PORT', 5432);</code></pre>
+const port = this.configService.get&lt;number&gt;('PORT', 3000);</code></pre>
     <div class="comparison" role="region" aria-label="เปรียบเทียบการอ่านค่า config" tabindex="0">
       <table>
         <thead><tr><th>วิธี</th><th>ข้อดี</th><th>ข้อจำกัด</th></tr></thead>
@@ -52,28 +52,31 @@ const port = this.configService.get&lt;number&gt;('DATABASE_PORT', 5432);</code>
     </div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
-      <h2 id="exercise-heading">อ่านค่า DATABASE_HOST ผ่าน ConfigService</h2>
-      <p>ใน <code>CoffeesService</code> ของ <code>iluvcoffee</code> inject <code>ConfigService</code> แล้วลอง log ค่า <code>DATABASE_HOST</code> ใน constructor เพื่อยืนยันว่าอ่านค่าจาก <code>.env</code> ผ่าน service ได้จริง</p>
-      <div class="prompt-example"><code>// coffees.service.ts
+      <h2 id="exercise-heading">อ่านค่า DATABASE_URL ผ่าน ConfigService</h2>
+      <p>ใน <code>CoffeesService</code> ของ <code>iluvcoffee</code> inject <code>ConfigService</code> (คู่กับ <code>PrismaService</code> ที่มีอยู่แล้ว) แล้วลอง log ค่า <code>DATABASE_URL</code> ใน constructor เพื่อยืนยันว่าอ่านค่าจาก <code>.env</code> ผ่าน service ได้จริง</p>
+      <div class="prompt-example"><code>// coffees.module.ts → imports: [ConfigModule]  (ไม่งั้น Nest resolve ConfigService ใน CoffeesModule ไม่ได้)
+
+// coffees.service.ts
 import { ConfigService } from '@nestjs/config';
 
 constructor(
+  private readonly prisma: PrismaService,
   private readonly configService: ConfigService,
 ) {
-  const databaseHost = this.configService.get&lt;string&gt;('DATABASE_HOST');
-  console.log(databaseHost);
+  const databaseUrl = this.configService.get&lt;string&gt;('DATABASE_URL');
+  console.log(databaseUrl);
 }
 
 npm run start:dev</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
-      <p>ตอนแอป start (หรือเมื่อ service ถูกสร้าง) เทอร์มินัลพิมพ์ <q>localhost</q> — ค่าเดียวกับใน <code>.env</code> — โดยที่ <code>CoffeesService</code> ไม่แตะ <code>process.env</code> เลย</p>
+      <p>ตอนแอป start (หรือเมื่อ service ถูกสร้าง) เทอร์มินัลพิมพ์ <q>postgresql://postgres:pass123@localhost:5432/postgres</q> — ค่าเดียวกับใน <code>.env</code> — โดยที่ <code>CoffeesService</code> ไม่แตะ <code>process.env</code> เลย (ลบ log ทิ้งเมื่อทดสอบเสร็จ อย่าปล่อย credentials ไว้ใน log)</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
-        <li>Log แสดงค่า <code>DATABASE_HOST</code> ตรงกับ <code>.env</code></li>
+        <li>Log แสดงค่า <code>DATABASE_URL</code> ตรงกับ <code>.env</code></li>
         <li>เปลี่ยนค่าใน <code>.env</code> แล้ว restart — log เปลี่ยนตาม</li>
         <li>ลองอ่าน key ที่ไม่มีอยู่พร้อม default: <code>get('NOT_EXIST', 'fallback')</code> คืน <q>fallback</q></li>
         <li>แอปยัง start และ <code>GET /coffees</code> ทำงานปกติ ไม่มี DI error</li>

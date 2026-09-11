@@ -46,12 +46,12 @@ export class CoffeesController {
   }
 
   @Post()
-  create(@Body() body) {
+  create(@Body() body: any) {
     return body;
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body) {
+  update(@Param('id') id: string, @Body() body: any) {
     return `This action updates #${id} coffee`;
   }
 

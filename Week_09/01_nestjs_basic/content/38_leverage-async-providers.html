@@ -28,16 +28,18 @@
   // สังเกต "async" และการ await ภายใน factory
   // ของจริงอาจเป็น database connection / API call ฯลฯ
   // ที่นี่เรา mock เหตุการณ์นั้นด้วย Promise
-  useFactory: async (connection: Connection): Promise&lt;string[]&gt; =&gt; {
-    // const coffeeBrands = await connection.query('SELECT * ...');
+  useFactory: async (prisma: PrismaService): Promise&lt;string[]&gt; =&gt; {
+    // ของจริง: const rows = await prisma.coffee.findMany({
+    //   select: { brand: true }, distinct: ['brand'],
+    // });
     const coffeeBrands = await Promise.resolve(['buddy brew', 'nescafe']);
     return coffeeBrands;
   },
-  inject: [Connection],
+  inject: [PrismaService],
 },</code></pre>
-    <p>ตัวอย่างนี้รวมทุกอย่างที่เรียนมา: token เป็น string (บทที่ 35), ค่ามาจาก factory (บทที่ 37), factory ขอ inject <code>Connection</code> ของ TypeORM แล้วในสถานการณ์จริงจะใช้มัน query แบรนด์จากตาราง — โค้ดสาธิต mock ขั้นตอนนั้นด้วย <code>Promise.resolve</code></p>
+    <p>ตัวอย่างนี้รวมทุกอย่างที่เรียนมา: token เป็น string (บทที่ 35), ค่ามาจาก factory (บทที่ 37), factory ขอ inject <code>PrismaService</code> แล้วในสถานการณ์จริงจะใช้มัน query แบรนด์ที่ไม่ซ้ำกันจากตาราง <code>coffee</code> — โค้ดสาธิต mock ขั้นตอนนั้นด้วย <code>Promise.resolve</code></p>
     <div class="note"><p>ทุก class ที่ inject <code>'COFFEE_BRANDS'</code> ไม่ต้องรู้เลยว่าค่านี้มาแบบ async — ตอนที่ <code>CoffeesService</code> ถูกสร้าง ค่าถูก resolve เสร็จแล้วเรียบร้อย ความซับซ้อนเรื่องเวลาถูกเก็บไว้ใน container ทั้งหมด</p></div>
-    <div class="updated"><p>ตรวจสอบเมื่อ 1 กันยายน 2026: TypeORM รุ่นใหม่เลิกใช้ class <code>Connection</code> แล้วแทนที่ด้วย <code>DataSource</code> (ตั้งแต่ TypeORM 0.3) แนวคิด async provider ไม่เปลี่ยน เพียงสลับ token ที่ inject เป็น <code>DataSource</code> ตามเวอร์ชันที่โปรเจกต์คุณใช้</p></div>
+    <div class="note"><p><code>PrismaService</code> inject ได้จากทุก module โดยไม่ต้อง import อะไรเพิ่ม เพราะ <code>PrismaModule</code> ที่เราสร้างในบทที่ 22 ติด <code>@Global()</code> ไว้ — และเพราะ <code>PrismaService</code> เชื่อมต่อฐานข้อมูลใน <code>onModuleInit</code> factory นี้จึงเรียก query ได้ทันทีที่ถูกเรียก</p></div>
 
     <h2>ผลต่อจังหวะ bootstrap</h2>
     <p>Nest สร้าง dependency graph แล้ว resolve ตามลำดับ ใครที่พึ่ง async provider จะถูกสร้าง<em>หลัง</em> Promise resolve เสมอ ข้อดีคือแอปไม่มีสภาวะ "start แล้วแต่ข้อมูลยังไม่พร้อม" ข้อแลกคือถ้า Promise ช้า แอปทั้งแอปจะ start ช้าตาม และถ้า reject แอปจะไม่ start เลย — จึงควรมี timeout หรือ error handling ในการเชื่อมต่อของจริง</p>
@@ -76,7 +78,7 @@ npm run start:dev</code></div>
     <ul class="source-list">
       <li><a href="https://docs.nestjs.com/fundamentals/async-providers">Asynchronous providers — NestJS Docs</a></li>
       <li><a href="https://docs.nestjs.com/fundamentals/custom-providers">Custom providers — NestJS Docs</a></li>
-      <li><a href="https://docs.nestjs.com/techniques/database">Database — NestJS Docs</a></li>
+      <li><a href="https://docs.nestjs.com/recipes/prisma">Prisma recipe — NestJS Docs</a></li>
       <li><a href="https://learn.nestjs.com/">NestJS Fundamentals — คอร์สต้นฉบับ</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">

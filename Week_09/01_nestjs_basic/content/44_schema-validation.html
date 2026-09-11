@@ -21,54 +21,52 @@
     </section>
 
     <h2>ทำไมต้อง validate environment ตั้งแต่ตอน start</h2>
-    <p>ถ้า <code>DATABASE_HOST</code> หายไป แอปจะ start สำเร็จแต่ไปพังตอนพยายามต่อฐานข้อมูล — อาการแบบนี้วินิจฉัยยากเพราะ error โผล่ไกลจากต้นเหตุ วิธีที่ดีกว่าคือประกาศ <em>schema</em> ของตัวแปรที่จำเป็นทั้งหมด แล้วให้ <code>ConfigModule</code> ตรวจตอน bootstrap: ถ้าขาดหรือผิดชนิด แอปจะ throw ทันทีพร้อมข้อความบอกว่า key ไหนมีปัญหา</p>
+    <p>ถ้า <code>DATABASE_URL</code> หายไปหรือพิมพ์ผิด สิ่งที่เห็นคือ error จาก driver ของ PostgreSQL ตอน <code>PrismaService</code> พยายามเชื่อมต่อ ซึ่งไม่ได้บอกเลยว่าต้นเหตุคือ environment variable ตัวไหน — อาการแบบนี้วินิจฉัยยากเพราะ error โผล่ไกลจากต้นเหตุ วิธีที่ดีกว่าคือประกาศ <em>schema</em> ของตัวแปรที่จำเป็นทั้งหมด แล้วให้ <code>ConfigModule</code> ตรวจตอน bootstrap: ถ้าขาดหรือผิดชนิด แอปจะ throw ทันทีพร้อมข้อความบอกว่า key ไหนมีปัญหา</p>
 
     <h2>ติดตั้ง Joi และประกาศ schema</h2>
-    <p>คอร์สต้นฉบับใช้ไลบรารี Joi สำหรับเขียน object schema แบบ declarative:</p>
-    <pre><code>npm install @hapi/joi
-npm install --save-dev @types/hapi__joi</code></pre>
+    <p>เราใช้ไลบรารี Joi สำหรับเขียน object schema แบบ declarative (มี type definitions ในตัว ไม่ต้องติดตั้ง <code>@types</code> แยก):</p>
+    <pre><code>npm install joi</code></pre>
     <pre><code>// app.module.ts
-import * as Joi from '@hapi/joi';
+import Joi from 'joi';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       validationSchema: Joi.object({
-        DATABASE_HOST: Joi.required(),
-        DATABASE_PORT: Joi.number().default(5432),
+        DATABASE_URL: Joi.string().required(),
+        PORT: Joi.number().default(3000),
       }),
     }),
     // ...
   ],
 })
 export class AppModule {}</code></pre>
-    <p>สองบรรทัดใน schema นี้เล่าเรื่องต่างกัน: <code>DATABASE_HOST</code> เป็นค่า <strong>required</strong> — ไม่มีแล้ว start ไม่ได้; ส่วน <code>DATABASE_PORT</code> ต้องเป็นตัวเลข แต่ถ้าไม่ตั้งมาก็ fallback เป็น <code>5432</code> ให้อัตโนมัติ</p>
+    <p>สองบรรทัดใน schema นี้เล่าเรื่องต่างกัน: <code>DATABASE_URL</code> เป็นค่า <strong>required</strong> — ไม่มีแล้ว start ไม่ได้; ส่วน <code>PORT</code> (พอร์ตที่แอป listen ใน <code>main.ts</code>) ต้องเป็นตัวเลข แต่ถ้าไม่ตั้งมาก็ fallback เป็น <code>3000</code> ให้อัตโนมัติ</p>
     <div class="updated">
-      <p>แพ็กเกจ <code>@hapi/joi</code> ถูก deprecated แล้ว — เวอร์ชันปัจจุบันย้ายไปอยู่ที่แพ็กเกจชื่อ <code>joi</code> (import ด้วย <code>import * as Joi from 'joi'</code> และไม่ต้องติดตั้ง types แยก) แนวคิดและ API ที่ใช้ในบทนี้เหมือนเดิมทุกประการ ตรวจรายละเอียดจากเอกสาร NestJS หัวข้อ Schema validation</p>
+      <p>คอร์สต้นฉบับใช้แพ็กเกจ <code>@hapi/joi</code> ซึ่ง deprecated ไปแล้ว — เวอร์ชันปัจจุบันอยู่ที่แพ็กเกจชื่อ <code>joi</code> และเพราะโปรเจกต์ Nest 12 ของเราเป็น ES module จึง import แบบ default (<code>import Joi from 'joi'</code>) ไม่ใช่ <code>import * as Joi</code> แบบเดิม แนวคิดและ API ที่ใช้ในบทนี้เหมือนเดิมทุกประการ ตรวจรายละเอียดจากเอกสาร NestJS หัวข้อ Schema validation</p>
     </div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ทำให้แอป fail fast เมื่อ env ไม่ครบ</h2>
-      <p>เพิ่ม <code>validationSchema</code> ให้ครอบคลุมตัวแปร <code>DATABASE_*</code> ของ <code>iluvcoffee</code> จากนั้นทดสอบโดยลบ <code>DATABASE_HOST</code> ออกจาก <code>.env</code> ชั่วคราวเพื่อดู error ตอน start แล้วใส่กลับ</p>
-      <div class="prompt-example"><code>npm install @hapi/joi
-npm install --save-dev @types/hapi__joi
+      <p>เพิ่ม <code>validationSchema</code> ให้ครอบคลุม <code>DATABASE_URL</code> และ <code>PORT</code> ของ <code>iluvcoffee</code> จากนั้นทดสอบโดยลบ <code>DATABASE_URL</code> ออกจาก <code>.env</code> ชั่วคราวเพื่อดู error ตอน start แล้วใส่กลับ</p>
+      <div class="prompt-example"><code>npm install joi
 
 // เพิ่ม validationSchema ใน ConfigModule.forRoot()
 // จากนั้นทดสอบ fail fast:
-#   1) คอมเมนต์บรรทัด DATABASE_HOST ใน .env
+#   1) คอมเมนต์บรรทัด DATABASE_URL ใน .env
 #   2) npm run start:dev  → ควรเห็น validation error
 #   3) เอาคอมเมนต์ออก แล้ว start ใหม่</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
-      <p>เมื่อ <code>DATABASE_HOST</code> หายไป แอปหยุดทันทีพร้อมข้อความประมาณ <q>Config validation error: "DATABASE_HOST" is required</q> — ไม่ใช่ start สำเร็จแล้วไปพังตอน query และเมื่อใส่ค่ากลับ แอปกลับมา start ได้ปกติ</p>
+      <p>เมื่อ <code>DATABASE_URL</code> หายไป แอปหยุดทันทีพร้อมข้อความประมาณ <q>Config validation error: "DATABASE_URL" is required</q> — ไม่ใช่ start สำเร็จแล้วไปพังตอน query และเมื่อใส่ค่ากลับ แอปกลับมา start ได้ปกติ</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
-        <li>ลบ <code>DATABASE_HOST</code> แล้ว start — เห็น validation error ที่ระบุชื่อ key ชัดเจน</li>
-        <li>ลบ <code>DATABASE_PORT</code> แล้ว start — แอปทำงานได้โดยใช้ default <code>5432</code> (ต่อฐานข้อมูลสำเร็จ)</li>
-        <li>ตั้ง <code>DATABASE_PORT=abc</code> — เห็น error ว่าต้องเป็น number</li>
+        <li>ลบ <code>DATABASE_URL</code> แล้ว start — เห็น validation error ที่ระบุชื่อ key ชัดเจน ไม่ใช่ error จาก driver ของ Postgres</li>
+        <li>ไม่ตั้ง <code>PORT</code> แล้ว start — แอปทำงานได้บนพอร์ต default <code>3000</code></li>
+        <li>ตั้ง <code>PORT=abc</code> — เห็น error ว่าต้องเป็น number</li>
         <li>เมื่อ <code>.env</code> ครบถ้วน <code>GET /coffees</code> ยังทำงานปกติ</li>
       </ul>
     </section>

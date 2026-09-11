@@ -35,7 +35,7 @@ app.useGlobalPipes(
 );
 await app.init();
 httpServer = app.getHttpServer(); // เก็บไว้ใช้ซ้ำทุก test</code></pre>
-    <div class="warning"><p>ถ้าใช้ Jest เวอร์ชัน 27 ขึ้นไป ให้ใช้ helpers บน object <code>expect</code> แทน jasmine helpers เดิม — เช่นใช้ <code>expect.objectContaining()</code> แทน <code>jasmine.objectContaining()</code></p></div>
+    <div class="note"><p>คอร์สต้นฉบับ (ยุค Jest) ใช้ <code>jasmine.objectContaining()</code> — ใน Vitest ไม่มี jasmine helpers ให้ใช้ matcher บน object <code>expect</code> โดยตรง เช่น <code>expect.objectContaining()</code> และ <code>expect.arrayContaining()</code> ซึ่งมีให้ครบ</p></div>
 
     <h2>ตรวจ response ที่มีมากกว่าที่เราส่งไป</h2>
     <p>เมื่อ POST coffee เข้าไป response จะมี field ที่เราไม่ได้ส่ง เช่น <code>id</code> และ flavors ที่กลายเป็น entity object (<code>{ id, name }</code>) แทน string เปล่า ๆ การ <code>toEqual</code> ตรง ๆ จึงไม่ผ่าน — ใช้ matcher แบบ partial แทน</p>
@@ -109,7 +109,7 @@ it('Delete one [DELETE /:id]', () =&gt; {
     })
 });</code></pre>
     <p>สังเกตว่า test เหล่านี้<em>ต่อเนื่องกัน</em>โดยตั้งใจ: Create ใส่ข้อมูลที่ Get/Update/Delete ใช้ต่อ และสองเส้นท้ายยิง request ซ้ำเพื่อยืนยันผลข้างเคียง — Update แล้ว Get ต้องเห็นชื่อใหม่, Delete แล้ว Get ต้องได้ 404 นี่คือการทดสอบ <q>ผลที่คงอยู่จริงใน database</q> ไม่ใช่แค่เชื่อ response แรก</p>
-    <div class="note"><p>อย่าลืม import ที่ต้องใช้เพิ่ม: <code>ValidationPipe, HttpStatus, HttpServer</code> จาก <code>@nestjs/common</code>, <code>* as request</code> จาก <code>supertest</code> และ DTO ทั้งสองตัวจาก <code>src/coffees/dto</code></p></div>
+    <div class="note"><p>อย่าลืม import ที่ต้องใช้เพิ่ม: <code>ValidationPipe, HttpStatus</code> จาก <code>@nestjs/common</code>, <code>import request from 'supertest'</code> (default import) และ DTO ทั้งสองตัวจาก <code>../../src/coffees/dto/….js</code> ส่วนตัวแปร <code>httpServer</code> (ประกาศคู่กับ <code>let app: INestApplication;</code> จากบทที่ 68) <strong>อย่า</strong> type ให้เป็น <code>HttpServer</code> จาก <code>@nestjs/common</code> แม้จะดูเข้าท่า — type ของ supertest คาดหวัง <code>App</code> ของตัวเอง (ใกล้เคียง Node <code>http.Server</code>) ซึ่ง <code>HttpServer</code> ของ Nest ไม่ตรงกัน ส่ง <code>request(httpServer)</code> จะเจอ <code>TS2345</code> ตอน compile ปล่อยให้ TypeScript อนุมาน type จาก <code>app.getHttpServer()</code> เอง (หรือประกาศแบบไม่ระบุ type ก็ได้) แทน</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">เปลี่ยน todo ทั้ง 5 ให้เป็น test จริง</h2>
@@ -123,7 +123,7 @@ it('Delete one [DELETE /:id]', () =&gt; {
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
-        <li>สรุปผล Jest: 5 passed, 0 todo</li>
+        <li>สรุปผล Vitest: <code>Tests 5 passed (5)</code>, 0 todo</li>
         <li>รันซ้ำอีกรอบทันที — ต้องผ่านเหมือนเดิม เพราะ test-db ถูกสร้างใหม่สะอาดทุกครั้ง (ถ้ารอบสอง fail แปลว่า teardown ไม่ทำงาน)</li>
         <li>ทดลองส่ง field แปลกปลอมใน POST (เช่น <code>isEnabled: true</code>) ใน test ชั่วคราว → ต้องได้ 400 เพราะ <code>forbidNonWhitelisted</code> ทำงานเหมือน production</li>
         <li>ตรวจว่า database พัฒนาที่ port 5432 ไม่มีข้อมูล <q>Shipwreck Roast</q> โผล่เข้าไป</li>
