@@ -1468,7 +1468,7 @@ curl -s http://localhost:3000/api-json | node -e "let d='';process.stdin.on('dat
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:3000/api
 ```
 
-Expected: paths `/products/categories`, `/products/category/{slug}`, `/products`, `/products/{id}`, `/carts/add`; schemas include `PaginationQueryDto`, `AddCartDto`, `CartProductDto`, `AddressDto` (plugin picked up `.dto.ts` files); `/api` → 200. Commit `feat: swagger`, tag `lesson-21`.
+Expected: paths `/products/categories`, `/products/category/{slug}`, `/products`, `/products/{id}`, `/carts/add`; schemas include `AddCartDto`, `CartProductDto`, `AddressDto` (plugin picked up the `.dto.ts` body classes; `PaginationQueryDto` is NOT a schema — `@Query()` DTOs are expanded into per-field `parameters` on `/products` and `/products/category/{slug}`); `/api` → 200. Commit `feat: swagger`, tag `lesson-21`.
 
 - [ ] **Step 3: Lesson 22 — decorations**
 
@@ -2370,7 +2370,7 @@ DTO ทุกไฟล์ในโปรเจกต์ลงท้าย .dto.t
 - ห้ามแก้ไฟล์อื่น ห้ามใส่ decorator ของ swagger ใน controller หรือ DTO ในรอบนี้
 ```
 
-Review: setup before `listen`; plugin in `compilerOptions.plugins`; no decorators added yet. AI มักพลาดตรงนี้: puts `plugins` at the top level of `nest-cli.json` instead of under `compilerOptions`. Reference: `main.ts` + `nest-cli.json` at tag `lesson-21`. Verification: `/api` → 200 and shows five routes; `/api-json` `components.schemas` lists `PaginationQueryDto`, `AddCartDto`, `CartProductDto`, `AddressDto` (the node one-liner from Task 10 Step 2); restart `start:dev` was required for the plugin to take effect; commit `feat: swagger`.
+Review: setup before `listen`; plugin in `compilerOptions.plugins`; no decorators added yet. AI มักพลาดตรงนี้: puts `plugins` at the top level of `nest-cli.json` instead of under `compilerOptions`. Reference: `main.ts` + `nest-cli.json` at tag `lesson-21`. Verification: `/api` → 200 and shows five routes; `/api-json` `components.schemas` lists `AddCartDto`, `CartProductDto`, `AddressDto`, and `/products` shows `skip`/`limit` as query `parameters` (query DTOs are expanded, not published as schemas) (the node one-liner from Task 10 Step 2); restart `start:dev` was required for the plugin to take effect; commit `feat: swagger`.
 
 - [ ] **Step 3: Lesson 22 — ตกแต่ง DTO และ Response ให้เอกสารครบ**
 
