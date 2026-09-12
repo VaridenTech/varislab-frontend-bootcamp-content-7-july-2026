@@ -14,14 +14,14 @@
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
       <ul>
-        <li>อธิบายได้ว่า nested write คืออะไร และแยกความต่างของ <code>create</code>, <code>connect</code> และ <code>connectOrCreate</code></li>
-        <li>ใช้ <code>connectOrCreate</code> reuse flavor เดิมหรือสร้างใหม่เมื่อยังไม่มี โดยอาศัยฟิลด์ <code>@unique</code></li>
-        <li>ปรับ <code>create</code> และ <code>update</code> ให้บันทึกกาแฟพร้อม flavors ได้ในคำขอเดียว และใช้ <code>set: []</code> แทนที่ชุด relation เดิม</li>
+        <li>อธิบายได้ว่า nested write คืออะไร และแยกความต่างของ <code>create</code>, <code>connect</code> และ <code>connectOrCreate</code> ที่ใช้ไปแล้วในบทที่ 26</li>
+        <li>แก้ <code>update()</code> ให้ใช้ <code>set: []</code> แทนที่ชุด relation เดิมทั้งหมด แทนที่จะบวกเพิ่มเรื่อย ๆ แบบเดิม</li>
+        <li>เพิ่ม <code>include: { flavors: true }</code> ให้ <code>create()</code>/<code>update()</code> เพื่อให้ response มี flavors ติดมาทันที ไม่ต้องยิง GET แยก</li>
       </ul>
     </section>
 
-    <h2>ให้การบันทึกกาแฟพา flavor ไปด้วย</h2>
-    <p>ตอนนี้ POST <code>/coffees</code> พร้อม flavors ยังไม่บันทึกความสัมพันธ์ลงตารางเชื่อม (และ type-check ยังไม่ผ่านตั้งแต่บทที่ 25) เพราะ Prisma ไม่รับ array ของ string ใส่ relation field ตรง ๆ สิ่งที่ Prisma ต้องการคือ <strong>nested write</strong>: ใน <code>data</code> ของ <code>create</code>/<code>update</code> เดียวกัน เราบอกได้เลยว่าจะทำอะไรกับ model ปลายทาง — Prisma รวมทั้งหมดเป็นการเขียน<em>ก้อนเดียว</em>ที่สำเร็จหรือล้มไปพร้อมกัน โดยไม่ต้องเปิด option cascade อะไรเพิ่ม</p>
+    <h2>สิ่งที่ทำไปแล้วในบทที่ 26 กับสองจุดที่ยังไม่สมบูรณ์</h2>
+    <p>บทที่ 26 ทำให้ <code>create()</code>/<code>update()</code> คอมไพล์ผ่านและบันทึกความสัมพันธ์ลงตารางเชื่อม <code>_CoffeeToFlavor</code> ได้แล้วด้วย <strong>nested write</strong> — สั่งใน <code>data</code> ของ <code>create</code>/<code>update</code> เดียวกันได้เลยว่าจะทำอะไรกับ model ปลายทาง (<code>Flavor</code>) โดย Prisma รวมทั้งหมดเป็นการเขียน<em>ก้อนเดียว</em>ที่สำเร็จหรือล้มไปพร้อมกัน แต่ยังเหลือสองจุดที่ทำงานไม่ตรงตามที่ควร: <code>update()</code> บวก flavor เพิ่มเรื่อย ๆ แทนที่จะแทนที่ทั้งชุด และทั้งคู่ไม่คืน <code>flavors</code> กลับมาใน response บทนี้จะแก้ทั้งสองจุดนั้น</p>
     <div class="comparison" role="region" aria-label="คำสั่ง nested write สำหรับ relation" tabindex="0">
       <table>
         <thead><tr><th>คำสั่ง</th><th>ทำอะไร</th><th>เหมาะกับ</th></tr></thead>
@@ -34,9 +34,13 @@
     </div>
     <p>ทั้ง <code>connect</code> และ <code>connectOrCreate</code> ต้องค้นด้วยฟิลด์ที่ unique เท่านั้น — นี่คือเหตุผลที่บทที่ 25 เราใส่ <code>@unique</code> ให้ <code>Flavor.name</code> ไว้ล่วงหน้า ทำให้ไม่ต้องเขียน helper "หา flavor จากชื่อ ถ้าไม่มีค่อยสร้าง" เองอีกเลย</p>
 
-    <h2>reuse flavor เดิม อย่าสร้างซ้ำ</h2>
-    <p>ก่อนส่ง <code>data</code> ให้ Prisma ต้อง destructure <code>flavors</code> ออกจาก DTO ก่อน เพราะ field นี้ใน <code>data</code> ไม่ใช่ array ของ string อีกแล้ว แต่เป็น object ที่บอกคำสั่ง nested write จากนั้น map ชื่อแต่ละตัวเป็นคู่ <code>where</code>/<code>create</code> ให้ <code>connectOrCreate</code></p>
-    <pre><code>import { Injectable, NotFoundException } from '@nestjs/common';
+    <h2>แก้ update() ให้แทนที่ชุด flavor แทนการบวกเพิ่ม</h2>
+    <p><code>update()</code> จากบทที่ 26 ยังไม่มีอะไรบอก Prisma ว่า "ตัดของเดิมทิ้งก่อน" — <code>connectOrCreate</code> เพียงอย่างเดียวจึงแค่<em>เพิ่ม</em>ความสัมพันธ์ใหม่เข้าไปในตารางเชื่อม โดยไม่แตะของเดิมเลย ทางแก้คือสั่ง <code>set: []</code> ก่อน <code>connectOrCreate</code> ในบล็อกเดียวกัน — Prisma จะตัด join row เดิมของกาแฟตัวนี้ทั้งหมดออกก่อน แล้วค่อยผูกชุดใหม่เข้าไป ผลคือ "แทนที่ทั้งชุด" ไม่ใช่ "เพิ่มต่อท้าย" อีกต่อไป</p>
+
+    <h2>เพิ่ม include ให้ create() และ update() คืน flavors กลับมาด้วย</h2>
+    <p>อีกจุดที่ยังขาดคือ <code>include: { flavors: true }</code> — ไม่มี option นี้ Prisma จะคืนเฉพาะ column ของ <code>Coffee</code> เอง ไม่รวม flavors ที่เพิ่งผูกไป ทั้งที่ข้อมูลถูกบันทึกลงฐานข้อมูลถูกต้องแล้ว เพิ่ม option เดียวกับที่ <code>findAll()</code>/<code>findOne()</code> ใช้ไปแล้วในบทที่ 26 เข้าไปที่ <code>create()</code> และ <code>update()</code> ด้วย</p>
+    <pre><code>/* coffees.service.ts — ต่อจากบทที่ 26 */
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateCoffeeDto } from './dto/create-coffee.dto.js';
 import { UpdateCoffeeDto } from './dto/update-coffee.dto.js';
@@ -46,51 +50,50 @@ export class CoffeesService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(createCoffeeDto: CreateCoffeeDto) {
-    const { flavors, ...data } = createCoffeeDto;
+    const { flavors, ...coffeeData } = createCoffeeDto;
     return this.prisma.coffee.create({
       data: {
-        ...data,
+        ...coffeeData,
         flavors: {
-          connectOrCreate: flavors.map((name) =&gt; ({
-            where: { name },
-            create: { name },
-          })),
+          connectOrCreate: this.connectOrCreateFlavors(flavors),
         },
       },
-      include: { flavors: true },
+      include: { flavors: true }, // 👈 ใหม่: ให้ response มี flavors ติดมาด้วย
     });
   }
 
   async update(id: string, updateCoffeeDto: UpdateCoffeeDto) {
-    await this.findOne(id);
-    const { flavors, ...data } = updateCoffeeDto;
+    await this.findOne(id); // ให้ id ที่ไม่มีจริงได้ 404 แบบเดียวกัน
+    const { flavors, ...coffeeData } = updateCoffeeDto;
     return this.prisma.coffee.update({
       where: { id: +id },
       data: {
-        ...data,
-        ...(flavors &amp;&amp; {
-          flavors: {
-            set: [], // ตัดความสัมพันธ์เดิมทั้งหมดก่อน
-            connectOrCreate: flavors.map((name) =&gt; ({
-              where: { name },
-              create: { name },
-            })),
-          },
-        }),
+        ...coffeeData,
+        flavors: flavors && {
+          set: [], // 👈 ใหม่: ตัดความสัมพันธ์เดิมทั้งหมดก่อนผูกชุดใหม่
+          connectOrCreate: this.connectOrCreateFlavors(flavors),
+        },
       },
-      include: { flavors: true },
+      include: { flavors: true }, // 👈 ใหม่
     });
+  }
+
+  private connectOrCreateFlavors(names: string[]) {
+    return names.map((name) =&gt; ({
+      where: { name },
+      create: { name },
+    }));
   }
 
   // findAll / findOne / remove คงเดิมจากบทที่ 26
 }</code></pre>
-    <p>ใน <code>update</code> มีสองจุดที่ต้องอ่านให้ขาด: <code>set: []</code> สั่งให้ตัด join row ทั้งหมดของกาแฟตัวนี้ทิ้งก่อน แล้ว <code>connectOrCreate</code> ค่อยผูกชุดใหม่เข้าไป — ผลคือ "แทนที่ทั้งชุด" ไม่ใช่ "เพิ่มต่อท้าย" ส่วนเงื่อนไข <code>flavors &amp;&amp; {...}</code> สำคัญมาก: PATCH ที่ไม่ได้ส่ง flavors มาจะได้ <code>undefined</code> และ spread ของ <code>undefined</code> คือไม่ใส่อะไรเลย relation เดิมจึงไม่ถูกแตะ — ส่งมาเมื่อไหร่จึงค่อยแทนที่</p>
+    <p>สังเกตว่าเงื่อนไข <code>flavors &amp;&amp; {...}</code> ใน <code>update</code> ยังสำคัญเหมือนเดิม: PATCH ที่ไม่ได้ส่ง <code>flavors</code> มาจะได้ <code>undefined</code> ซึ่ง Prisma ปฏิบัติเหมือน field นี้ไม่ถูกส่งมาเลย (เท่ากับไม่ใส่ key นี้ใน <code>data</code>) — relation เดิมจึงไม่ถูกแตะ ต่อเมื่อ client ส่ง <code>flavors</code> มาจริงเท่านั้น <code>set: []</code> จึงจะทำงานและแทนที่ทั้งชุด</p>
     <div class="note"><p><code>set: []</code> ตัดแค่แถวในตารางเชื่อม <code>_CoffeeToFlavor</code> เท่านั้น ไม่เคยลบแถวในตาราง <code>flavor</code> — flavor ที่ไม่มีกาแฟตัวไหนใช้แล้วจะยังอยู่ ไม่มีเรื่อง orphan ถูกลบโดยไม่ตั้งใจให้ต้องกังวล และการใส่ <code>include: { flavors: true }</code> ท้าย <code>create</code>/<code>update</code> ทำให้ response คืน flavors ที่ผูกแล้วกลับมาทันทีโดยไม่ต้อง query ซ้ำ</p></div>
     <div class="warning"><p><code>connectOrCreate</code> ทำงานเป็นสองขั้น (ค้นแล้วค่อยสร้าง) ดังนั้นถ้ามีคำขอจำนวนมากสร้าง flavor ชื่อเดียวกัน<em>พร้อมกันเป๊ะ</em> อาจมีตัวหนึ่งชน unique constraint ได้ (Prisma docs ระบุไว้) สำหรับแอปนี้ไม่ใช่ปัญหา แต่ในระบบที่ concurrent สูงต้องเผื่อ retry หรือจัดการ error ตรงนั้น</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
-      <h2 id="exercise-heading">สร้างกาแฟพร้อม flavors ในคำขอเดียว</h2>
-      <p>แทนที่ <code>create</code>/<code>update</code> ใน <code>CoffeesService</code> ด้วยโค้ดด้านบน (ลบโค้ดที่คอมเมนต์ไว้ตั้งแต่บทที่ 25 ออก) ตรวจว่า TypeScript compile ผ่านแล้ว จากนั้นทดสอบ</p>
+      <h2 id="exercise-heading">แทนที่ทั้งชุด flavor แทนการบวกเพิ่ม แล้วให้ response มี flavors ติดมา</h2>
+      <p>แก้ <code>create</code>/<code>update</code> ใน <code>CoffeesService</code> จากบทที่ 26 ตามโค้ดด้านบน (เพิ่ม <code>set: []</code> ใน <code>update</code> และเพิ่ม <code>include: { flavors: true }</code> ให้ทั้งคู่) แล้วทดสอบ</p>
       <div class="prompt-example"><code>POST http://localhost:3000/coffees
 {
   "name": "Shipwreck Roast",
@@ -116,7 +119,7 @@ POST http://localhost:3000/coffees
         <li>POST พร้อม flavors แล้ว <code>GET /coffees</code> เห็น flavors กลับมาเป็น object ที่มี id จริง</li>
         <li>ตาราง <code>flavor</code> ไม่มีชื่อซ้ำ แม้จะ POST ด้วย flavor เดิมหลายครั้ง</li>
         <li>PATCH โดยไม่ส่ง <code>flavors</code> — relation เดิมต้องไม่หาย; PATCH พร้อม <code>flavors</code> ชุดใหม่ — ต้องแทนที่ชุดเดิม และแถวใน <code>flavor</code> ที่ถูกถอดออกยังอยู่</li>
-        <li><code>npm run start:dev</code> compile ผ่านไม่มี type error — ข้อผิดพลาดชั่วคราวจากบทที่ 25 หายไปแล้ว</li>
+        <li>POST ตอนนี้ response มี field <code>flavors</code> ติดมาทันที ไม่ต้องยิง <code>GET</code> แยกเหมือนบทที่ 26</li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>

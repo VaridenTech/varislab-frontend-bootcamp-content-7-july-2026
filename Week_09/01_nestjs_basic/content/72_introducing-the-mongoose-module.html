@@ -39,7 +39,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 })
 export class AppModule {}</code></pre>
     <p>ส่วนท้ายของ connection string (<code>/nest-course</code>) คือชื่อฐานข้อมูลที่จะใช้ ซึ่งต้องตรงกับที่ประกาศไว้ใน <code>docker-compose.yml</code> เมื่อ Nest สตาร์ต มันจะเปิด connection นี้ให้ทั้งแอปใช้ร่วมกัน และ module ฟีเจอร์ต่าง ๆ จะมาลงทะเบียน model ของตัวเองบน connection นี้ในบทถัดไป</p>
-    <div class="warning"><p>ถ้าแอปสตาร์ตแล้วค้างหรือฟ้อง connect ไม่ได้: ตรวจว่า Docker รันอยู่ด้วย <code>docker compose up -d</code> ก่อน และตรวจว่าชื่อฐานข้อมูลใน <code>MongooseModule.forRoot()</code> ตรงกับใน <code>docker-compose.yml</code> — สองสาเหตุนี้คือปัญหาที่เจอบ่อยที่สุดของขั้นตอนนี้</p></div>
+    <div class="warning"><p>ถ้าแอปสตาร์ตแล้วค้างหรือฟ้อง connect ไม่ได้ ให้ตรวจว่า Docker รันอยู่ด้วย <code>docker compose up -d</code> ก่อน — นี่คือสาเหตุที่พบบ่อยที่สุดของปัญหานี้ ส่วนชื่อฐานข้อมูลใน <code>MongooseModule.forRoot()</code> ที่ไม่ตรงกับ <code>docker-compose.yml</code> จะ<strong>ไม่</strong>ทำให้ connect ล้มเหลวหรือค้าง (MongoDB สร้างฐานข้อมูลใหม่ให้อัตโนมัติตามชื่อที่ระบุ โดยไม่สนใจว่าชื่อนั้นมีอยู่จริงหรือไม่) แต่จะทำให้แอปต่อกับฐานข้อมูลคนละก้อนกับที่ตั้งใจแบบเงียบ ๆ แทน — ให้ตรวจชื่อให้ตรงกันเสมอเพื่อเลี่ยงปัญหานี้</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">เชื่อม iluvcoffee เข้ากับ MongoDB</h2>

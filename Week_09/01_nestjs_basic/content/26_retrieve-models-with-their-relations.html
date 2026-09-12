@@ -63,15 +63,57 @@ export class CoffeesService {
     return coffee;
   }
 
-  // create / update / remove คงเดิมจากบทที่ 24
+  create(createCoffeeDto: CreateCoffeeDto) {
+    const { flavors, ...coffeeData } = createCoffeeDto;
+    return this.prisma.coffee.create({
+      data: {
+        ...coffeeData,
+        flavors: {
+          connectOrCreate: this.connectOrCreateFlavors(flavors),
+        },
+      },
+    });
+  }
+
+  async update(id: string, updateCoffeeDto: UpdateCoffeeDto) {
+    await this.findOne(id); // ให้ id ที่ไม่มีจริงได้ 404 แบบเดียวกัน
+    const { flavors, ...coffeeData } = updateCoffeeDto;
+    return this.prisma.coffee.update({
+      where: { id: +id },
+      data: {
+        ...coffeeData,
+        flavors: flavors && {
+          connectOrCreate: this.connectOrCreateFlavors(flavors),
+        },
+      },
+    });
+  }
+
+  private connectOrCreateFlavors(names: string[]) {
+    return names.map((name) => ({
+      where: { name },
+      create: { name },
+    }));
+  }
+
+  // remove คงเดิมจากบทที่ 24
 }</code></pre>
+    <p>โค้ดนี้ทำให้ <code>create()</code>/<code>update()</code> คอมไพล์ผ่านและ<em>บันทึกความสัมพันธ์ลง <code>_CoffeeToFlavor</code> ได้จริง</em> ด้วย <code>connectOrCreate</code>: ค้นหา <code>Flavor</code> จากชื่อ (ต้องใช้ฟิลด์ <code>@unique</code>) เจอก็ผูกของเดิม ไม่เจอก็สร้างใหม่แล้วผูกให้</p>
+    <div class="warning"><p>เวอร์ชันนี้<strong>ยังไม่สมบูรณ์</strong> — เหลือสองจุดที่บทที่ 27 จะแก้ให้ถูกต้อง: (1) <code>update()</code> ยังไม่มี <code>set: []</code> ก่อน <code>connectOrCreate</code> จึงเป็นการ<em>เพิ่ม</em> flavor เข้าไปเรื่อย ๆ ไม่ใช่<em>แทนที่</em>ทั้งชุดตามที่ PATCH ควรทำ (PATCH ด้วย <code>flavors: ["caramel"]</code> บนกาแฟที่มี <code>chocolate, vanilla</code> อยู่แล้ว จะได้ <code>chocolate, vanilla, caramel</code> ไม่ใช่ <code>caramel</code> เพียวๆ) และ (2) ทั้ง <code>create()</code> และ <code>update()</code> ยังไม่มี <code>include: { flavors: true }</code> ผลคือ response ของ POST/PATCH จะไม่มี field <code>flavors</code> ติดมา (ทั้งที่ข้อมูลถูกบันทึกลงฐานข้อมูลถูกต้องแล้ว — ต้องยิง GET แยกถึงจะเห็น) เก็บสองจุดนี้ไว้ในใจ เดี๋ยวบทที่ 27 จะอธิบายและแก้ให้ครบ</p></div>
     <div class="note"><p><code>include</code> ซ้อนกันได้ เช่น <code>include: { flavors: { include: { coffees: true } } }</code> เพื่อดึงกาแฟตัวอื่นที่มี flavor เดียวกันมาด้วย และถ้าต้องการเฉพาะบางคอลัมน์ให้ใช้ <code>select</code> แทน (<code>select: { id: true, name: true, flavors: true }</code>) — แต่อย่าใช้ <code>include</code> กับ <code>select</code> ในระดับเดียวกัน Prisma จะไม่ยอม ระบุเฉพาะเท่าที่หน้างานต้องใช้จริง response จะได้ไม่บวมและ query ไม่ join เกินจำเป็น</p></div>
     <div class="warning"><p>อย่าแก้ปัญหา "อยากได้ relation ทุกครั้ง" ด้วยการทำ helper ที่แอบใส่ <code>include</code> ให้ทุก query ทั้งระบบ — มันทำให้ทุก query ในแอปแบกการ join นั้นไปด้วยโดยมองไม่เห็นจากโค้ดที่เรียก การระบุที่จุดเรียกแบบนี้ชัดเจนกว่า และ type ที่ได้ก็ตรงกับข้อมูลจริงเสมอ</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ทำให้ endpoint คืน flavors มาด้วย</h2>
-      <p>เพิ่ม <code>include</code> ใน <code>findAll()</code> และ <code>findOne()</code> ตามโค้ดด้านบน จากนั้นเพิ่มข้อมูล flavor ลงตารางโดยตรงชั่วคราวเพื่อทดสอบ (บทถัดไปเราจะทำให้ POST จัดการเรื่องนี้ให้เอง)</p>
-      <div class="prompt-example"><code># ใน pgAdmin Query Tool - ใส่ข้อมูลทดสอบ
+      <p>เพิ่ม <code>include</code> ใน <code>findAll()</code> และ <code>findOne()</code> แล้วแทนที่ <code>create()</code>/<code>update()</code> ที่คอมเมนต์ไว้ตั้งแต่บทที่ 25 ด้วยโค้ดด้านบน ตอนนี้ POST/PATCH เริ่มบันทึกความสัมพันธ์ได้แล้ว (แม้จะยังไม่สมบูรณ์ตามที่เตือนไว้ข้างบน) ลองสร้างข้อมูลผ่าน POST ได้เลย หรือจะแทรกข้อมูลตรงในฐานข้อมูลเพื่อทดสอบ <code>include</code> แยกต่างหากก็ได้เช่นกัน</p>
+      <div class="prompt-example"><code>POST http://localhost:3000/coffees
+{
+  "name": "Shipwreck Roast",
+  "brand": "Buddy Brew",
+  "flavors": ["chocolate", "vanilla"]
+}
+
+# หรือใส่ข้อมูลตรงใน pgAdmin Query Tool
 INSERT INTO flavor (name) VALUES ('chocolate'), ('vanilla');
 INSERT INTO coffee (name, brand) VALUES ('Shipwreck Roast', 'Buddy Brew');
 INSERT INTO "_CoffeeToFlavor" ("A", "B") VALUES (1, 1), (1, 2);
@@ -91,6 +133,8 @@ GET http://localhost:3000/coffees/1</code></div>
         <li><code>GET /coffees/1</code> คืนกาแฟเดียวพร้อม <code>flavors</code> ครบทุกตัวที่ผูกไว้</li>
         <li>id ที่ไม่มีจริงยังได้ 404 <code>Coffee #id not found</code> เหมือนเดิม</li>
         <li>ลองเอา <code>include</code> ออกชั่วคราวแล้วยิงซ้ำ — <code>flavors</code> ต้องหายไป เพื่อยืนยันว่า option นี้คือตัวควบคุมจริง (แล้วใส่กลับ)</li>
+        <li>POST พร้อม <code>flavors</code> แล้วตัว response จะยังไม่มี field <code>flavors</code> ติดมา — ของปกติสำหรับตอนนี้ (ไม่มี <code>include</code> ใน <code>create()</code> อยู่) ยิง <code>GET /coffees</code> แยกแล้วจะเห็นว่าข้อมูลถูกบันทึกจริง</li>
+        <li>PATCH ด้วย <code>flavors</code> ชุดใหม่แล้วสังเกตว่าชุดเดิม<em>ไม่ถูกแทนที่</em> แต่ถูกบวกเพิ่มเข้าไป — ของปกติสำหรับตอนนี้เช่นกัน (ไม่มี <code>set: []</code>) บทที่ 27 จะแก้ให้ถูก</li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>
