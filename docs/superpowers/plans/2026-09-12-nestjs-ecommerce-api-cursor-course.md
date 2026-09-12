@@ -143,7 +143,7 @@ curl -s -i -X POST https://dummyjson.com/carts/add \
 node -e "fetch('https://dummyjson.com/products?limit=0').then(r=>r.json()).then(({products})=>console.log(products.length,'products;',products.filter(p=>!('brand' in p)).length,'without brand'))"
 ```
 
-Expected: `categories.json` is an array of 24 `{slug,name,url}`; `products-page.json` has `"total":194,"skip":0,"limit":2`; `product-1.json` has 22 keys; `product-not-found.txt` first line `HTTP/2 404` and body `{"message":"Product with id '9999' not found"}`; `products-by-category-unknown.json` is `{"products":[],"total":0,"skip":0,"limit":2}`; `cart-add.txt` first line `HTTP/2 201` and body contains `"discountedPrice":18` and `"totalQuantity":2`; the node one-liner prints `194 products; 92 without brand`. Record the exact outputs — lesson 03 quotes them. Commit `docs: capture dummyjson contract`, tag `lesson-03`.
+Expected: `categories.json` is an array of 24 `{slug,name,url}`; `products-page.json` has `"total":194,"skip":0,"limit":2`; `product-1.json` has 22 keys; `product-not-found.txt` first line `HTTP/2 404` and body `{"message":"Product with id '9999' not found"}`; `products-by-category-unknown.json` is `{"products":[],"total":0,"skip":0,"limit":0}` (dummyjson's `limit` echoes the number of products actually returned); `cart-add.txt` first line `HTTP/2 201` and body contains `"discountedPrice":18` and `"totalQuantity":2`; the node one-liner prints `194 products; 92 without brand`. Record the exact outputs — lesson 03 quotes them. Commit `docs: capture dummyjson contract`, tag `lesson-03`.
 
 - [ ] **Step 5: Write the Cursor rules file (lesson 04, hand-typed)**
 
@@ -565,7 +565,7 @@ docker compose exec db psql -U postgres -d ecommerce -c 'SELECT count(*) FROM "P
 npm run lint
 ```
 
-Expected: both runs print `Seeded 24 categories, 194 products, 582 reviews`; counts `24 | 194 | 582`; first categories `1 beauty`, `2 fragrances`, `3 furniture`; `92` products without brand; lint clean (if oxlint complains about `prisma/seed.ts`, fix the code, not the config). If `tsx` cannot resolve `../src/generated/prisma/client.js`, replace the `db:seed` script with `"db:seed": "tsx --tsconfig tsconfig.json prisma/seed.ts"` and record which one worked for the lesson. Commit `feat: seed from dummyjson`, tag `lesson-09`.
+Expected: both runs print `Seeded 24 categories, 194 products, 582 reviews`; counts `24 | 194 | 582`; first categories by id are `beauty`, `fragrances`, `furniture` (the absolute ids advance on every re-seed because `deleteMany` does not reset the Postgres sequence — compare slugs, not id numbers); `92` products without brand; lint clean (if oxlint complains about `prisma/seed.ts`, fix the code, not the config). If `tsx` cannot resolve `../src/generated/prisma/client.js`, replace the `db:seed` script with `"db:seed": "tsx --tsconfig tsconfig.json prisma/seed.ts"` and record which one worked for the lesson. Commit `feat: seed from dummyjson`, tag `lesson-09`.
 
 ---
 
@@ -928,7 +928,7 @@ export class ProductsService {
       }),
       this.prisma.product.count({ where }),
     ]);
-    return { products: rows.map(toProductResponse), total, skip, limit };
+    return { products: rows.map(toProductResponse), total, skip, limit: rows.length };
   }
 }
 ```
@@ -981,14 +981,14 @@ curl -s -i "http://localhost:3000/products?limit=abc" | sed -n '1p;$p'
 curl -s -i "http://localhost:3000/products?limit=-1" | sed -n '1p'
 ```
 
-Expected: `194 0 2 [ 1, 2 ]`; `30 30`; `0 194`; `limit=abc` → 400 with `"limit must be an integer number"`; `-1` → 400. Commit `feat: GET /products with pagination`, tag `lesson-13`. Then add `findByCategory` (service + controller):
+Expected: `194 0 2 [ 1, 2 ]`; `30 30`; `194 194`; `limit=abc` → 400 with `"limit must be an integer number"`; `-1` → 400. Commit `feat: GET /products with pagination`, tag `lesson-13`. Then add `findByCategory` (service + controller):
 
 ```bash
 curl -s "http://localhost:3000/products/category/beauty?limit=2&skip=1" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const j=JSON.parse(d);console.log(j.total,j.skip,j.limit,j.products.map(p=>p.id))})"
 curl -s "http://localhost:3000/products/category/nope?limit=2&skip=0"
 ```
 
-Expected: `5 1 2 [ 2, 3 ]`; `{"products":[],"total":0,"skip":0,"limit":2}` (matches `docs/contract/products-by-category-unknown.json` exactly). Commit `feat: GET /products/category/:slug`, tag `lesson-14`.
+Expected: `5 1 2 [ 2, 3 ]`; `{"products":[],"total":0,"skip":0,"limit":0}` (matches `docs/contract/products-by-category-unknown.json` exactly — dummyjson echoes the number of products actually returned as `limit`). Commit `feat: GET /products/category/:slug`, tag `lesson-14`.
 
 ---
 
@@ -1417,10 +1417,10 @@ In `src/main.ts` after `useGlobalPipes`:
 
 ```bash
 curl -s -i -H 'Origin: http://localhost:5173' http://localhost:3000/products/categories | grep -i access-control-allow-origin
-curl -s -i -H 'Origin: http://evil.test' http://localhost:3000/products/categories | grep -ic access-control-allow-origin
+curl -s -i -H 'Origin: http://evil.test' http://localhost:3000/products/categories | grep -i access-control-allow-origin
 ```
 
-Expected: `Access-Control-Allow-Origin: http://localhost:5173`; second prints `0`. Commit `feat: cors`, tag `lesson-20`.
+Expected: both print `Access-Control-Allow-Origin: http://localhost:5173` — with a fixed-string `origin`, the cors middleware always emits the configured value and never echoes the request's origin; the browser rejects the mismatch for `http://evil.test`. (Verified: it does NOT omit the header.) Commit `feat: cors`, tag `lesson-20`.
 
 - [ ] **Step 2: Lesson 21 — Swagger setup**
 
@@ -1468,7 +1468,7 @@ curl -s http://localhost:3000/api-json | node -e "let d='';process.stdin.on('dat
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:3000/api
 ```
 
-Expected: paths `/products/categories`, `/products/category/{slug}`, `/products`, `/products/{id}`, `/carts/add`; schemas include `PaginationQueryDto`, `AddCartDto`, `CartProductDto`, `AddressDto` (plugin picked up `.dto.ts` files); `/api` → 200. Commit `feat: swagger`, tag `lesson-21`.
+Expected: paths `/products/categories`, `/products/category/{slug}`, `/products`, `/products/{id}`, `/carts/add`; schemas include `AddCartDto`, `CartProductDto`, `AddressDto` (plugin picked up the `.dto.ts` body classes; `PaginationQueryDto` is NOT a schema — `@Query()` DTOs are expanded into per-field `parameters` on `/products` and `/products/category/{slug}`); `/api` → 200. Commit `feat: swagger`, tag `lesson-21`.
 
 - [ ] **Step 3: Lesson 22 — decorations**
 
@@ -1508,8 +1508,8 @@ Do NOT edit `.env.local`; the shell variable overrides it for this run only.
 - [ ] **Step 2: Walk the pages in a browser** (claude-in-chrome or playwright tools; screenshots go to `$SCRATCH/verify/screens/`)
 
 1. `http://localhost:5173/` — "Deals of the day" shows 5 products; category menu lists 24 categories; clicking a category updates the grid.
-2. Category page — pagination shows pages; page 2 loads different products (network tab: `GET /products/category/<slug>?skip=20&limit=20` hits `localhost:3000`).
-3. Product page `/product/1` — title, brand, price, 3 reviews; "Add to cart" opens the modal; cart badge increments.
+2. Category page `/categories` — pick a category with more than 20 products (Groceries has 27; Beauty has only 5); pagination shows pages; page 2 loads different products (network tab: `GET /products/category/groceries?skip=20&limit=20` hits `localhost:3000`).
+3. Product page `/products/1` — title, brand, price, 3 reviews; "Add to cart" opens the modal; cart badge increments.
 4. Cart → Checkout — fill address (any address, a valid email, a phone), pick delivery/payment, "Place order" → Order Success page; network tab shows `POST http://localhost:3000/carts/add` → 201.
 5. `docker compose exec db psql -U postgres -d ecommerce -c 'SELECT id, email, "totalQuantity" FROM "Order" ORDER BY id DESC LIMIT 1;'` shows the order just placed.
 
@@ -1521,7 +1521,7 @@ Record which screenshot proves each step; lesson 23 describes exactly these five
 cd /Users/varis/Sites/varis-lab/workshop/temp/react-ecommerce-app && npm test 2>&1 | tail -5
 ```
 
-Expected: all test files pass (their base URL is pinned in `vite.config.ts` `test.env`). Stop the Vite dev server. Leave the API and db running for Phase 2 spot checks; note `git -C "$SCRATCH/verify/ecommerce-api" tag` lists `lesson-02` … `lesson-22`.
+Expected: the same result as before the URL switch (their base URL is pinned in `vite.config.ts` `test.env`, so the API cannot affect them). Verified 2026-09-12: on Node 26.7 the suite fails in `src/test/setup.ts` with `ExperimentalWarning: localStorage is not available because --localstorage-file was not provided` (Node's built-in localStorage shadows jsdom's) — identical before and after the switch, unrelated to the API. Stop the Vite dev server. Leave the API and db running for Phase 2 spot checks; note `git -C "$SCRATCH/verify/ecommerce-api" tag` lists `lesson-02` … `lesson-22`.
 
 ---
 
@@ -1677,7 +1677,7 @@ Sections: why not delegate (`nest new` is one command and gives the ESM/Vitest b
 Sections:
 1. `ทำไมต้องจับด้วยมือ` — the contract is the one thing Cursor cannot know; a hallucinated field breaks the React app silently. Every later prompt `@`-mentions these files.
 2. `เจ็ดไฟล์ใน docs/contract/` — the exact eight commands from Task 1 Step 4 in a `.prompt-example`, one file per request, and a `.comparison` table: file | request | สิ่งที่ต้องสังเกต.
-3. `อ่านสัญญา: ข้อเท็จจริงที่ต้องจำ` — bullet list of facts with the evidence file: default `limit` 30 and `skip` 0; `limit=0` returns all 194; 22 keys on a product (list them); nested `dimensions`, `meta`, `reviews[]` (3 per product); `brand` absent on 92 of 194 (the node one-liner); dates are ISO strings; unknown category → 200 with empty `products` and `total: 0`; unknown id → 404 `{"message":"Product with id '9999' not found"}`; `POST /carts/add` → 201 with the cart shape and `discountedPrice: 18` for 2 × 9.99 at 10.48% (show the arithmetic: 19.98 × 0.8952 = 17.886 → `Math.round` → 18).
+3. `อ่านสัญญา: ข้อเท็จจริงที่ต้องจำ` — bullet list of facts with the evidence file: default `limit` 30 and `skip` 0; `limit=0` returns all 194; the `limit` in every list response is the number of products actually returned (not the requested value — `?limit=10&skip=190` answers `limit: 4`, an unknown category answers `limit: 0`); 22 keys on a product (list them); nested `dimensions`, `meta`, `reviews[]` (3 per product); `brand` absent on 92 of 194 (the node one-liner); dates are ISO strings; unknown category → 200 with empty `products` and `total: 0`; unknown id → 404 `{"message":"Product with id '9999' not found"}`; `POST /carts/add` → 201 with the cart shape and `discountedPrice: 18` for 2 × 9.99 at 10.48% (show the arithmetic: 19.98 × 0.8952 = 17.886 → `Math.round` → 18).
 4. Commit: `git add docs && git commit -m "docs: capture dummyjson contract"`.
 Verification: seven files exist; `product-not-found.txt` starts with `HTTP/2 404`; `cart-add.txt` starts with `HTTP/2 201`; `categories.json` has 24 entries.
 
@@ -1873,9 +1873,10 @@ Node.js เวอร์ชันนี้มี fetch ในตัว ห้า�
 - ห้ามติดตั้ง dependency ใหม่
 - ห้ามแก้ schema.prisma, prisma7.config.ts หรือไฟล์ใน src/
 - ห้ามรัน script ให้ผมรันเอง
+- ยังไม่ต้องสร้าง controller หรือ endpoint ของสินค้า
 ```
 
-Review: `import 'dotenv/config'` first line; `PrismaPg` adapter; delete order review → product → category; three `createMany`; explicit `id: product.id`; `brand: product.brand ?? null`; `new Date(...)` on the four date fields; no `!`, no `any`; `db:seed` script uses `tsx`. AI มักพลาดตรงนี้: loops `create` per product (slow but works) or forgets `limit=0` and seeds only 30 products — the verification count catches it. Reference: `prisma/seed.ts` at tag `lesson-09`. Hand steps: `npm run db:seed` twice. Expected: `Seeded 24 categories, 194 products, 582 reviews` both times. Verification: the psql count query from Task 4 Step 2 → `24 | 194 | 582`; `SELECT count(*) FROM "Product" WHERE brand IS NULL` → 92; `SELECT id, slug FROM "Category" ORDER BY id LIMIT 3` → beauty, fragrances, furniture; commit `feat: seed from dummyjson`.
+Review: `import 'dotenv/config'` first line; `PrismaPg` adapter; delete order review → product → category; three `createMany`; explicit `id: product.id`; `brand: product.brand ?? null`; `new Date(...)` on the four date fields; no `!`, no `any`; `db:seed` script uses `tsx`. AI มักพลาดตรงนี้: loops `create` per product (slow but works) or forgets `limit=0` and seeds only 30 products — the verification count catches it. Reference: `prisma/seed.ts` at tag `lesson-09`. Hand steps: `npm run db:seed` twice. Expected: `Seeded 24 categories, 194 products, 582 reviews` both times. Verification: the psql count query from Task 4 Step 2 → `24 | 194 | 582`; `SELECT count(*) FROM "Product" WHERE brand IS NULL` → 92; `SELECT id, slug FROM "Category" ORDER BY id LIMIT 3` → beauty, fragrances, furniture (a `.note`: the id numbers grow on each re-seed because the sequence is not reset; only the order matters, nothing exposes category ids); commit `feat: seed from dummyjson`.
 
 - [ ] **Step 6: Nav chain and commit**
 
@@ -2028,6 +2029,7 @@ Prompt:
 ติดตั้ง class-validator และ class-transformer แล้ว
 docs/contract/products-page.json คือ response จริงของ GET /products?limit=2&skip=0: { products: Product[], total: 194, skip: 0, limit: 2 }
 กติกาของ dummyjson: ถ้าไม่ส่ง limit ใช้ 30, ถ้าไม่ส่ง skip ใช้ 0, limit=0 หมายถึงเอาทั้งหมด, สินค้าเรียงตาม id น้อยไปมาก
+field limit ใน response ไม่ใช่ค่าที่ client ขอมา แต่คือจำนวนสินค้าที่ส่งกลับจริง (products.length) เช่น ?limit=10&skip=190 ตอบ limit: 4 และหมวดที่ไม่มีสินค้าตอบ limit: 0
 มี ProductListResponseDto { products, total, skip, limit } และ toProductResponse อยู่แล้ว
 findOne ใช้ include: { category: true, reviews: { orderBy: { id: 'asc' } } } — list ต้องใช้ include เดียวกัน
 
@@ -2047,7 +2049,7 @@ findOne ใช้ include: { category: true, reviews: { orderBy: { id: 'asc' } }
   (import type { Prisma } from '../generated/prisma/client.js') แล้วให้ findOne ใช้ include: productInclude แทนของเดิม
   เพิ่ม private async paginate(where: Prisma.ProductWhereInput, skip: number, limit: number): Promise<ProductListResponseDto>
   ใช้ this.prisma.$transaction([ findMany, count ]) โดย findMany มี where, skip, take: limit === 0 ? undefined : limit, orderBy: { id: 'asc' }, include: productInclude ส่วน count มี where เดียวกัน
-  คืน { products: rows.map(toProductResponse), total, skip, limit }
+  คืน { products: rows.map(toProductResponse), total, skip, limit: rows.length } (limit คือจำนวนที่ส่งกลับจริงตาม dummyjson)
   เพิ่ม findAll(query: PaginationQueryDto) ที่คืน this.paginate({}, query.skip, query.limit)
 - controller: เพิ่ม handler @Get() findAll(@Query() query: PaginationQueryDto) วางไว้ระหว่าง findCategories กับ findOne (ต้องอยู่ก่อน @Get(':id'))
 
@@ -2057,11 +2059,11 @@ findOne ใช้ include: { category: true, reviews: { orderBy: { id: 'asc' } }
 - ยังไม่ต้องทำ GET /products/category/:slug
 ```
 
-Review: DTO defaults `0`/`30` with `@IsInt @Min(0)`; pipe options exactly `whitelist`, `transform`, `enableImplicitConversion`; `$transaction([...])` array form; `take: limit === 0 ? undefined : limit`; `productInclude` reused in `findOne`; `findAll` declared before `findOne`. AI มักพลาดตรงนี้: `skip?: number` with `@IsOptional()` and then `query.skip ?? 0` sprinkled around, or `take: limit` (limit=0 → empty page instead of all). Reference: four files at tag `lesson-13`. Verification: the five curl checks from Task 7 Step 4 (`194 0 2 [1,2]`, default `30 30`, `limit=0` → `0 194`, `limit=abc` → 400 `limit must be an integer number`, `limit=-1` → 400); `diff` of `/products?limit=2&skip=0` sorted keys against `products-page.json` (write the node one-liner in the lesson); commit `feat: GET /products with pagination`.
+Review: DTO defaults `0`/`30` with `@IsInt @Min(0)`; pipe options exactly `whitelist`, `transform`, `enableImplicitConversion`; `$transaction([...])` array form; `take: limit === 0 ? undefined : limit`; `limit: rows.length` in the envelope; `productInclude` reused in `findOne`; `findAll` declared before `findOne`. AI มักพลาดตรงนี้: `skip?: number` with `@IsOptional()` and then `query.skip ?? 0` sprinkled around, or `take: limit` (limit=0 → empty page instead of all). Reference: four files at tag `lesson-13`. Verification: the five curl checks from Task 7 Step 4 (`194 0 2 [1,2]`, default `30 30`, `limit=0` → `194 194`, `limit=abc` → 400 `limit must be an integer number`, `limit=-1` → 400); `diff` of `/products?limit=2&skip=0` sorted keys against `products-page.json` (write the node one-liner in the lesson); commit `feat: GET /products with pagination`.
 
 - [ ] **Step 5: Lesson 14 — GET /products/category/:slug**
 
-Concept: the payoff of `paginate(where, …)`: one new `where` (`{ category: { slug } }`, a relation filter — link Week_09 lesson 26) and one handler; unknown slug is a 200 with an empty list because dummyjson does that (show `products-by-category-unknown.json`) and the React Category page relies on `total: 0`; route order again: `category/:slug` has two segments so it cannot collide with `:id`, but it must still be declared before `@Get(':id')` for readability and before `@Get()` to keep static-first ordering.
+Concept: the payoff of `paginate(where, …)`: one new `where` (`{ category: { slug } }`, a relation filter — link Week_09 lesson 26) and one handler; unknown slug is a 200 with an empty list and `limit: 0` because dummyjson does that (show `products-by-category-unknown.json`; `limit` = products returned) and the React Category page relies on `total: 0`; route order again: `category/:slug` has two segments so it cannot collide with `:id`, but it must still be declared before `@Get(':id')` for readability and before `@Get()` to keep static-first ordering.
 
 Prompt:
 
@@ -2094,7 +2096,7 @@ Review: relation filter `{ category: { slug } }`; no extra `findUnique` on categ
 
 - [ ] **Step 6: Lesson 15 — ตรวจสัญญากับ dummyjson อัตโนมัติ**
 
-Concept: manual `diff`s per lesson do not scale; a script that hits both hosts with the same requests and reports the first differing path is a regression test for the contract; normalisation (sort keys, swap host in strings) and why error bodies compare only `message`; the accepted deviations table (`.comparison`): non-numeric id → 400 vs 404; validation errors carry `statusCode`/`error`; category url host; key order; unknown category echoes our default `limit` 30 when none is sent (so the check always sends `limit` explicitly). Why `node scripts/…ts` works without `tsx`: no imports, only erasable TS syntax (Node 24 strips types natively).
+Concept: manual `diff`s per lesson do not scale; a script that hits both hosts with the same requests and reports the first differing path is a regression test for the contract; normalisation (sort keys, swap host in strings) and why error bodies compare only `message`; the accepted deviations table (`.comparison`): non-numeric id → 400 vs 404; validation errors carry `statusCode`/`error`; category url host; key order. Why `node scripts/…ts` works without `tsx`: no imports, only erasable TS syntax (Node 24 strips types natively).
 
 Prompt:
 
@@ -2129,9 +2131,10 @@ script รันด้วย node ตรง ๆ (Node 24 รัน .ts ที่
 - ห้ามติดตั้ง dependency ใหม่
 - ห้ามแก้ไฟล์ใน src/
 - ห้ามรัน script ให้ผมรันเอง
+- ยังไม่ต้องเพิ่ม model ของคำสั่งซื้อ
 ```
 
-Review: no `import` lines; eight requests in order; keys sorted in `normalize`; host replaced in strings; missing-key detection on both sides; error path compares `message` only; exit code. AI มักพลาดตรงนี้: uses `JSON.stringify(a) === JSON.stringify(b)` (no path on failure) or `import fetch from 'node-fetch'`. Reference: `scripts/contract-check.ts` at tag `lesson-15`. Verification: `npm run contract:check` → eight ✅ and exit 0; break something on purpose (rename `thumbnail` in the mapper) → ❌ with `$.thumbnail missing on local`; restore; commit `feat: contract check script`.
+Review: no `import` lines; eight requests in order; keys sorted in `normalize`; host replaced in strings; missing-key detection on both sides; error path compares `message` only; exit code. AI มักพลาดตรงนี้: uses `JSON.stringify(a) === JSON.stringify(b)` (no path on failure) or `import fetch from 'node-fetch'`. Reference: `scripts/contract-check.ts` at tag `lesson-15`. Verification: `npm run contract:check` → eight ✅ and exit 0; break something on purpose (change the mapper's last line to `thumbnail: product.thumbnail + '-broken',` — a rename would be a TypeScript error and watch mode would not restart) → ❌ on every product-bearing request with `$.thumbnail: "…thumbnail.webp" vs "…thumbnail.webp-broken"`; restore the file from the last commit; commit `feat: contract check script`.
 
 - [ ] **Step 7: Nav chain and commit**
 
@@ -2338,7 +2341,7 @@ main.ts ตอนนี้มี ValidationPipe แบบ global และ app.l
 - ยังไม่ต้องตั้งค่า Swagger
 ```
 
-Review: `enableCors` with the env origin; no wildcard; no `credentials: true`. AI มักพลาดตรงนี้: `app.enableCors()` with no options (= `*`). Reference: `main.ts` at tag `lesson-20`. Verification: the two `curl -H 'Origin: …' | grep -i access-control-allow-origin` checks (allowed origin echoed; foreign origin → no header); commit `feat: cors`.
+Review: `enableCors` with the env origin; no wildcard; no `credentials: true`. AI มักพลาดตรงนี้: `app.enableCors()` with no options (= `*`). Reference: `main.ts` at tag `lesson-20`. Verification: the two `curl -H 'Origin: …' | grep -i access-control-allow-origin` checks — both answer `Access-Control-Allow-Origin: http://localhost:5173`; the point to teach is that the header never says `http://evil.test`, and the browser, not the server, blocks the mismatch; commit `feat: cors`.
 
 - [ ] **Step 2: Lesson 21 — เพิ่มเอกสาร API ด้วย Swagger**
 
@@ -2369,7 +2372,7 @@ DTO ทุกไฟล์ในโปรเจกต์ลงท้าย .dto.t
 - ห้ามแก้ไฟล์อื่น ห้ามใส่ decorator ของ swagger ใน controller หรือ DTO ในรอบนี้
 ```
 
-Review: setup before `listen`; plugin in `compilerOptions.plugins`; no decorators added yet. AI มักพลาดตรงนี้: puts `plugins` at the top level of `nest-cli.json` instead of under `compilerOptions`. Reference: `main.ts` + `nest-cli.json` at tag `lesson-21`. Verification: `/api` → 200 and shows five routes; `/api-json` `components.schemas` lists `PaginationQueryDto`, `AddCartDto`, `CartProductDto`, `AddressDto` (the node one-liner from Task 10 Step 2); restart `start:dev` was required for the plugin to take effect; commit `feat: swagger`.
+Review: setup before `listen`; plugin in `compilerOptions.plugins`; no decorators added yet. AI มักพลาดตรงนี้: puts `plugins` at the top level of `nest-cli.json` instead of under `compilerOptions`. Reference: `main.ts` + `nest-cli.json` at tag `lesson-21`. Verification: `/api` → 200 and shows five routes; `/api-json` `components.schemas` lists `AddCartDto`, `CartProductDto`, `AddressDto`, and `/products` shows `skip`/`limit` as query `parameters` (query DTOs are expanded, not published as schemas) (the node one-liner from Task 10 Step 2); restart `start:dev` was required for the plugin to take effect; commit `feat: swagger`.
 
 - [ ] **Step 3: Lesson 22 — ตกแต่ง DTO และ Response ให้เอกสารครบ**
 
@@ -2409,7 +2412,7 @@ Review: decorators exactly as listed; handler order unchanged; `brand` optional 
 
 - [ ] **Step 4: Lesson 23 — สลับ React app มาใช้ API ของเรา** (✍️)
 
-Concept: the moment of truth; one line changes (`.env.local` in the React project: `VITE_API_BASE_URL=http://localhost:3000`); Vite reads `.env.local` at startup so restart `npm run dev`; the five checks from Task 11 Step 2 as an ordered list with what to look for in the Network tab (host `localhost:3000`, status codes) and the psql query for the placed order; then `npm test` in the React project stays green because `vite.config.ts` pins the test base URL (show the `test.env` line). `.note`: to go back to dummyjson, restore the line. Verification: all five checks pass; `SELECT … FROM "Order"` shows the order; `npm test` output "Test Files … passed".
+Concept: the moment of truth; one line changes (`.env.local` in the React project: `VITE_API_BASE_URL=http://localhost:3000`); Vite reads `.env.local` at startup so restart `npm run dev`; the five checks from Task 11 Step 2 as an ordered list (routes `/`, `/categories`, `/products/1`, `/cart`, `/checkout`, `/order/success`; use Groceries for pagination since Beauty has only 5 products) with what to look for in the Network tab (host `localhost:3000`, status codes) and the psql query for the placed order; then `npm test` in the React project gives the same result as before the switch because `vite.config.ts` pins the test base URL to dummyjson and MSW intercepts it (show the `test.env` line) — the API cannot change the outcome. `.note`: on Node 26 the suite currently fails with `ExperimentalWarning: localStorage is not available` before AND after the switch; that is a Node/jsdom incompatibility, not the API — run it once before switching to see the baseline. `.note`: to go back to dummyjson, restore the line. Verification: all five checks pass; `SELECT … FROM "Order"` shows the order; `npm test` result unchanged from the baseline run.
 
 - [ ] **Step 5: Lesson 24 — สรุปและก้าวต่อไป**
 
