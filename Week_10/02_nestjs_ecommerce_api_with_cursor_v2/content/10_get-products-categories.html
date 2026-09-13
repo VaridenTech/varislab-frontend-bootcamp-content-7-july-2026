@@ -16,12 +16,12 @@
       <ul>
         <li>ประกอบ module + controller + service ของ resource <code>products</code> ขึ้นมาใหม่ทั้งชุด แล้วลงทะเบียนเข้า <code>AppModule</code></li>
         <li>อธิบายได้ว่าทำไม field <code>url</code> ของ category ต้องอ่าน host จาก <code>APP_URL</code> ไม่ใช่ hard-code</li>
-        <li>ยืนยันด้วย <code>diff</code> ว่า response ของเราตรงกับ <code>docs/contract/categories.json</code> แบบไบต์ต่อไบต์</li>
+        <li>ยืนยันด้วย node script ว่า response ของเราตรงกับ section <code>Category</code> ใน <code>docs/api-spec.md</code> — 24 รายการ แต่ละรายการมีเพียงสามคีย์ <code>slug</code>/<code>name</code>/<code>url</code></li>
       </ul>
     </section>
 
     <h2>เลือก endpoint ที่ง่ายที่สุดขึ้นมาทำก่อน</h2>
-    <p>ใน contract ทั้งเจ็ดไฟล์ที่จับไว้ในบทที่ 3 มี endpoint เดียวที่ไม่มี query parameter ไม่มี route parameter และมีรูปทรง response แบนราบสามคีย์ — นั่นคือ <code>GET /products/categories</code> เราจึงเริ่มจากตัวนี้ เพราะมันพิสูจน์ว่าเส้นทางทั้งเส้น (request → controller → service → Prisma → Postgres → response) เชื่อมกันได้จริง โดยยังไม่ต้องยุ่งกับ mapper หรือ pagination ที่จะมาในบทถัด ๆ ไป</p>
+    <p>ใน <code>docs/api-spec.md</code> ที่เขียนไว้ตั้งแต่บทที่ 3 section <strong>Category</strong> คือ endpoint เดียวที่ไม่มี query parameter ไม่มี route parameter และมีรูปทรง response แบนราบสามคีย์ — นั่นคือ <code>GET /products/categories</code> เราจึงเริ่มจากตัวนี้ เพราะมันพิสูจน์ว่าเส้นทางทั้งเส้น (request → controller → service → Prisma → Postgres → response) เชื่อมกันได้จริง โดยยังไม่ต้องยุ่งกับ mapper หรือ pagination ที่จะมาในบทถัด ๆ ไป</p>
     <p>โครงสร้างสามไฟล์เป็นแบบเดียวกับที่คุณเคยทำใน Week_09 บทที่ 6 (controller), บทที่ 12 (service) และบทที่ 14 (module) ต่างกันแค่คราวนี้เราไม่พิมพ์เอง — เราสั่ง Cursor พิมพ์ แล้วเราอ่านทุกบรรทัด</p>
     <ul>
       <li><strong>controller</strong> รู้แค่เรื่อง HTTP: path, method, parameter — แล้วส่งต่อให้ service ทันที</li>
@@ -60,9 +60,9 @@
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before products module"</code>) จากนั้นส่ง prompt นี้ทั้งก้อน — กติกาของคอร์สยังเหมือนเดิม: <strong>AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้</strong></p>
       <div class="cursor-prompt"><code>สร้าง ProductsModule พร้อม endpoint GET /products/categories ที่ตอบเหมือน dummyjson
 
-บริบท: @src/app.module.ts @src/prisma/prisma.service.ts @prisma/schema.prisma @docs/contract/categories.json @.env @.cursor/rules/project.mdc
+บริบท: @src/app.module.ts @src/prisma/prisma.service.ts @prisma/schema.prisma @docs/api-spec.md @.env @.cursor/rules/project.mdc
 ฐานข้อมูลถูก seed แล้ว ตาราง Category มี 24 แถว (id เรียงตามลำดับเดียวกับ dummyjson)
-docs/contract/categories.json คือ response จริง: array ของ { slug, name, url } โดย url คือ https://dummyjson.com/products/category/&lt;slug&gt;
+docs/api-spec.md มี section Category: response คือ array ของ { slug, name, url } โดย url เป็น URL เต็ม (ไม่ใช่แค่ path)
 ของเรา url ต้องเป็น &lt;APP_URL&gt;/products/category/&lt;slug&gt; โดย APP_URL อ่านจาก .env ผ่าน ConfigService (ConfigModule เป็น global แล้ว)
 PrismaModule เป็น global แล้ว ฉีด PrismaService ผ่าน constructor ได้เลย
 
@@ -173,10 +173,17 @@ export class AppModule {}</code></pre>
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
         <li>log ตอน start มีทั้ง <code>ProductsModule dependencies initialized</code> และ <code>Mapped {/products/categories, GET} route</code></li>
-        <li>เทียบกับ contract โดยแทน host ของเรากลับเป็นของ dummyjson ก่อน แล้ว <code>diff</code> — ต้องได้คำว่า <code>IDENTICAL</code>
-          <pre><code>curl -s http://localhost:3000/products/categories \
-  | sed 's#http://localhost:3000#https://dummyjson.com#g' &gt; /tmp/actual.json
-diff /tmp/actual.json docs/contract/categories.json &amp;&amp; echo IDENTICAL</code></pre>
+        <li>ยืนยันด้วย node script ว่า response ตรงกับ section <code>Category</code> ใน <code>docs/api-spec.md</code> — ต้องได้ 24 รายการ แต่ละรายการมีเพียงสามคีย์
+          <pre><code>curl -s http://localhost:3000/products/categories -o /tmp/actual.json
+node -e "
+const categories = require('/tmp/actual.json');
+if (categories.length !== 24) throw new Error('expected 24, got ' + categories.length);
+for (const c of categories) {
+  const keys = Object.keys(c).sort().join(',');
+  if (keys !== 'name,slug,url') throw new Error('unexpected keys: ' + keys);
+}
+console.log('OK: 24 categories, each {slug,name,url}');
+"</code></pre>
         </li>
         <li>พิสูจน์ว่า host มาจาก config จริง: แก้ <code>APP_URL</code> ใน <code>.env</code> เป็น <code>http://127.0.0.1:3000</code> restart แล้วยิงซ้ำ — ทุก <code>url</code> ต้องเปลี่ยนตาม (จากนั้นแก้กลับเป็น <code>http://localhost:3000</code> แล้ว restart)</li>
         <li>ลบบรรทัด <code>APP_URL</code> ออกจาก <code>.env</code> ชั่วคราว restart แล้วยิงซ้ำ — ต้องได้ error 500 จาก <code>getOrThrow</code> ไม่ใช่ url ที่มีคำว่า <code>undefined</code> (แล้วใส่กลับ)</li>
