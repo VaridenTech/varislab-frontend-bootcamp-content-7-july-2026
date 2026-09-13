@@ -69,13 +69,13 @@
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ให้ Cursor เขียน schema จาก payload จริง</h2>
-      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent สังเกตว่า prompt นี้แนบ <code>@docs/contract/product-1.json</code> กับ <code>@docs/contract/categories.json</code> ไปด้วย — นั่นคือหัวใจ: เราไม่ได้ให้ AI เดารูปทรงของสินค้า แต่ให้มันอ่านจากไฟล์ที่เราจับมาเอง</p>
+      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent สังเกตว่า prompt นี้แนบ <code>@docs/api-spec.md</code> ไปด้วย — นั่นคือหัวใจ: เราไม่ได้ให้ AI เดารูปทรงของสินค้า แต่ให้มันอ่าน interface <code>Product</code> และ <code>Category</code> ที่เราออกแบบเองจากโค้ดฝั่ง client</p>
       <div class="cursor-prompt"><code>เพิ่ม Prisma model ของ Category, Product และ Review ให้ตรงกับ payload ของ dummyjson
 
 บริบท: @prisma/schema.prisma @docs/api-spec.md @.cursor/rules/project.mdc
 schema.prisma ตอนนี้มีแค่ generator กับ datasource ห้ามแก้สองบล็อกนั้น
-docs/contract/product-1.json คือ response จริงของ GET https://dummyjson.com/products/1 — ทุก field ของ Product ต้องมาจากไฟล์นี้
-docs/contract/categories.json คือ response จริงของ GET /products/categories แต่ละรายการมี slug, name, url — url ไม่ต้องเก็บเพราะคำนวณจาก slug ได้
+docs/api-spec.md มี interface Product 22 field ทุก field ของ Product ต้องตรงกับ interface นี้ (discountPercentage เป็น optional ตามที่ client ประกาศไว้ ส่วน brand ต้องมีเสมอ)
+docs/api-spec.md มี interface Category { slug, name, url } — url ไม่ต้องเก็บเพราะคำนวณจาก slug ได้
 สินค้าทุกชิ้นของเรามี field brand เสมอ แต่บางชิ้นไม่มี discountPercentage
 ฐานข้อมูลคือ PostgreSQL 17
 
