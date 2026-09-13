@@ -395,21 +395,21 @@ Seeded 24 categories, 208 products, 624 reviews</code></pre>
         <li>นับสินค้าต่อหมวด เรียงจากมากไปน้อย ต้องเห็น <code>groceries</code> 27, <code>beauty</code> 5 และอีก 22 หมวดที่เหลือ 8 เท่ากันหมด</li>
       </ul>
       <div class="prompt-example"><code>docker compose exec db psql -U postgres -d ecommerce -c 'SELECT c.slug, count(*) FROM "Product" p JOIN "Category" c ON c.id = p."categoryId" GROUP BY c.slug ORDER BY count(*) DESC, c.slug;'</code></div>
-      <pre><code>        slug         | count
+      <pre><code>        slug         | count 
 ---------------------+-------
  groceries           |    27
  fragrances          |     8
  furniture           |     8
- ...(อีก 19 หมวดที่เหลือ)... |     8
+ ...(อีก 19 หมวดที่เหลือ เรียงตามชื่อ slug)...
  beauty              |     5
 (24 rows)</code></pre>
       <ul>
         <li>รวมทั้งตาราง: <code>docker compose exec db psql -U postgres -d ecommerce -c 'SELECT count(*) FROM "Product";'</code> ต้องได้ <code>208</code></li>
         <li>สินค้า id 1 ต้องตรงกับค่าที่เขียนด้วยมือทุกคีย์: <code>docker compose exec db psql -U postgres -d ecommerce -c 'SELECT id, title, price, "discountPercentage", brand FROM "Product" WHERE id = 1;'</code></li>
       </ul>
-      <pre><code> id |         title         | price | discountPercentage | brand
-----+------------------------+-------+---------------------+--------
-  1 | Velvet Matte Lipstick |  9.99 |               10.48 | Lumina
+      <pre><code> id |         title         | price | discountPercentage | brand  
+----+-----------------------+-------+--------------------+--------
+  1 | Velvet Matte Lipstick |  9.99 |              10.48 | Lumina
 (1 row)</code></pre>
       <ul>
         <li><code>npm run lint</code> ผ่าน แต่ต้องรัน <code>npx oxlint prisma/seed.ts</code> เพิ่มด้วย เพราะ script <code>lint</code> ของ scaffold ครอบแค่ <code>src/</code> กับ <code>test/</code> (ไม่มี output = ไม่มีปัญหา)</li>
