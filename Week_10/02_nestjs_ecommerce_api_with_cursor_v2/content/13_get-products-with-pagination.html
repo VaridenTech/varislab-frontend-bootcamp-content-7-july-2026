@@ -221,7 +221,7 @@ export class ProductsService {
       include: productInclude,
     });
     if (!product) {
-      throw new NotFoundException(`Product with id '${id}' not found`);
+      throw new NotFoundException(`Product ${id} not found`);
     }
     return toProductResponse(product);
   }
@@ -306,7 +306,7 @@ export class ProductsController {
     <h2>แหล่งอ้างอิง</h2>
     <ul class="source-list">
       <li><a href="https://docs.nestjs.com/techniques/validation">Validation: ValidationPipe options (NestJS Docs)</a></li>
-      <li><a href="https://github.com/typestack/class-validator">class-validator: IsInt, Min (GitHub)</a></li>
+      <li><a href="https://github.com/typestack/class-validator">class-validator: IsInt, Min, Max (GitHub)</a></li>
       <li><a href="https://www.prisma.io/docs/orm/prisma-client/queries/pagination">Pagination: skip and take (Prisma Docs)</a></li>
       <li><a href="https://www.prisma.io/docs/orm/prisma-client/queries/transactions">Transactions: sequential operations (Prisma Docs)</a></li>
     </ul>
