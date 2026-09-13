@@ -20,8 +20,8 @@
       </ul>
     </section>
 
-    <h2>ต้นแบบไม่ใช่จินตนาการ แต่เป็นไฟล์ใน docs/contract</h2>
-    <p>บทที่ 3 เราเก็บ response จริงของ dummyjson ไว้ใน <code>docs/contract/</code> แล้ว บทนี้เราจะไม่เดาว่าสินค้า <q>ควร</q> มี field อะไร แต่เปิด <code>docs/contract/product-1.json</code> แล้วไล่ทุก key ที่มันมี — เพราะเป้าหมายของคอร์สนี้คือ API ที่สลับแทน dummyjson ได้โดย React app ไม่รู้ตัว ถ้าฐานข้อมูลเก็บ field ไม่ครบ response ก็จะขาด และ React app จะแสดงผลเพี้ยน</p>
+    <h2>ต้นแบบไม่ใช่จินตนาการ แต่เป็นไฟล์ใน docs/api-spec.md</h2>
+    <p>บทที่ 3 เราอ่านโค้ดฝั่ง client แล้วเขียนสัญญาไว้ใน <code>docs/api-spec.md</code> แล้ว บทนี้เราจะไม่เดาว่าสินค้า <q>ควร</q> มี field อะไร แต่เปิด <code>docs/api-spec.md</code> แล้วไล่ทุก field ในหัวข้อ <code>Product</code> ที่มันระบุ — เพราะเป้าหมายของคอร์สนี้คือ API ที่ตอบตรงกับสิ่งที่ React app ต้องการจริง ถ้าฐานข้อมูลเก็บ field ไม่ครบ response ก็จะขาด และ React app จะแสดงผลเพี้ยน</p>
     <div class="comparison" role="region" aria-label="เปรียบเทียบ field ของ dummyjson กับ field ของ Prisma" tabindex="0">
       <table>
         <thead><tr><th>field ของ dummyjson</th><th>field ใน Prisma</th><th>เหตุผล</th></tr></thead>
@@ -49,7 +49,7 @@
     </div>
 
     <h2>ทำไม Product.id ไม่มี autoincrement()</h2>
-    <p>React app ลิงก์ไปหน้าสินค้าด้วย id ตรง ๆ (<code>/products/1</code>) และ <code>docs/contract/product-1.json</code> คือของสินค้า id 1 ถ้าเราให้ PostgreSQL แจก id เอง ลำดับอาจไม่ตรงกับของ dummyjson แล้วลิงก์เดิม ๆ จะชี้ไปสินค้าผิดชิ้น เราจึงประกาศ <code>id Int @id</code> เฉย ๆ แล้วส่ง id มาเองตอน seed (บทที่ 9) ตรงกันข้าม <code>Category.id</code> และ <code>Review.id</code> ใช้ <code>@default(autoincrement())</code> ได้สบาย เพราะไม่มีใครอ้างอิงเลขสองตัวนั้นจากนอกระบบ — หมวดหมู่ถูกอ้างด้วย <code>slug</code> เท่านั้น</p>
+    <p>ตัวอย่าง cart-add ที่ใช้เป็นเคสทำงานตลอดบทที่ 16/18/19 และเกณฑ์ตรวจ <q>มี 22 key</q> ในบทที่ 11 ต่างอ้างถึงสินค้า id 1 ด้วยเลขเจาะจงตรง ๆ ถ้าเราปล่อยให้ PostgreSQL แจก id เองด้วย <code>autoincrement()</code> การ seed ซ้ำแต่ละรอบอาจสลับลำดับแถว แล้ว <q>id 1</q> ของรอบนี้กับรอบหน้าอาจไม่ใช่สินค้าชิ้นเดียวกัน ทำให้ตัวอย่างและเกณฑ์ตรวจที่ผูกกับเลขนั้นพังแบบเงียบ ๆ เราจึงประกาศ <code>id Int @id</code> เฉย ๆ (ไม่ใส่ <code>autoincrement()</code>) แล้วกำหนด id ให้ตรงกันทุกครั้งตอน seed เอง (บทที่ 9) — นี่คือสิ่งที่ทำให้เลข id คงที่ไม่ว่าจะ reseed กี่รอบ ตรงกันข้าม <code>Category.id</code> และ <code>Review.id</code> ใช้ <code>@default(autoincrement())</code> ได้สบาย เพราะไม่มีใครอ้างอิงเลขสองตัวนั้นจากนอกระบบ — หมวดหมู่ถูกอ้างด้วย <code>slug</code> เท่านั้น</p>
 
     <h2>ทำไมไม่เก็บ dimensions/meta/reviews เป็นคอลัมน์ Json</h2>
     <p>PostgreSQL เก็บ JSON ได้ และ Prisma ก็มีชนิด <code>Json</code> ให้ใช้ ทางนั้นสั้นกว่าจริง แต่เราไม่เอา ด้วยเหตุผลสามข้อ</p>
