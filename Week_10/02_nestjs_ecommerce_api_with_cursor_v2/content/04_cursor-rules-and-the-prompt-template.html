@@ -37,7 +37,7 @@ alwaysApply: true
 - src/&lt;domain&gt;/ หนึ่งโฟลเดอร์ต่อหนึ่ง business domain (products, orders) มี *.module.ts, *.controller.ts, *.service.ts และ dto/
 - src/prisma/ มี PrismaModule (global) และ PrismaService
 - src/generated/prisma/ คือโค้ดที่ Prisma generate ห้ามแก้ด้วยมือ
-- docs/contract/ คือ payload จริงของ dummyjson — response ของทุก endpoint ต้องมีรูปทรงตรงกับไฟล์เหล่านี้
+- docs/api-spec.md คือสัญญาของ API ที่เราออกแบบเองจากโค้ดฝั่ง client — response ของทุก endpoint ต้องมีรูปทรงตรงกับไฟล์นี้
 
 # กติกาการเขียนโค้ด
 - import ไฟล์ในโปรเจกต์ต้องลงท้ายด้วย .js เสมอ (เช่น './products.service.js') แม้ไฟล์จริงจะเป็น .ts
@@ -56,7 +56,7 @@ alwaysApply: true
     <p>แต่ละกลุ่มมีเหตุผลเฉพาะของโปรเจกต์นี้ ไม่ได้ลอกมาจากเทมเพลตทั่วไป</p>
     <ul>
       <li><strong>Stack</strong> — บอกความจริงที่เราเห็นด้วยตาในบทที่ 2 ว่าโปรเจกต์เป็น ESM และ strict โมเดลภาษาโดยธรรมชาติจะเขียนโค้ด Nest แบบ CommonJS (ซึ่งเป็นตัวอย่างส่วนใหญ่บนอินเทอร์เน็ต) ประโยคนี้จึงกันปัญหาไว้ตั้งแต่ต้น ส่วนข้อ <em>ห้าม <code>new PrismaClient</code> ในไฟล์อื่น</em> มีไว้เพราะการเปิด connection pool ซ้อนกันหลายชุดคือ bug ที่ไม่แสดงอาการตอน dev แต่ล้มตอนรันจริง</li>
-      <li><strong>โครงสร้างไฟล์</strong> — หนึ่งโฟลเดอร์ต่อหนึ่ง domain ทำให้ diff ของแต่ละบทอยู่ในโฟลเดอร์เดียวและอ่านจบได้ ส่วนบรรทัด <code>docs/contract/</code> เป็นหัวใจ: มันบอก Cursor ว่า <em>แหล่งความจริงเรื่องรูปทรง response ไม่ใช่ความรู้ของมัน แต่เป็นไฟล์ในโปรเจกต์</em> และบรรทัด <code>src/generated/prisma/</code> กัน AI ไม่ให้ "แก้ type error" ด้วยการไปแก้โค้ดที่ generate มา</li>
+      <li><strong>โครงสร้างไฟล์</strong> — หนึ่งโฟลเดอร์ต่อหนึ่ง domain ทำให้ diff ของแต่ละบทอยู่ในโฟลเดอร์เดียวและอ่านจบได้ ส่วนบรรทัด <code>docs/api-spec.md</code> เป็นหัวใจ: มันบอก Cursor ว่า <em>แหล่งความจริงเรื่องรูปทรง response ไม่ใช่ความรู้ของมัน แต่เป็นไฟล์ในโปรเจกต์</em> และบรรทัด <code>src/generated/prisma/</code> กัน AI ไม่ให้ "แก้ type error" ด้วยการไปแก้โค้ดที่ generate มา</li>
       <li><strong>กติกาการเขียนโค้ด</strong> — สามข้อแรกคือรอยแผลจาก Nest 12 + TS 6 โดยตรง: import ไม่ลงท้าย <code>.js</code> จะพังตอนรัน (ไม่ใช่ตอน compile), <code>import type</code> จำเป็นเพราะ <code>isolatedModules</code> ทำงานร่วมกับ decorator ที่ต้องมี metadata ของ type จริงตอน runtime และการห้าม <code>any</code> / <code>as</code> / <code>!</code> ปิดทางออกที่ AI ชอบใช้ที่สุดเมื่อมัน compile ไม่ผ่าน — เราต้องการโค้ดที่ถูก ไม่ใช่โค้ดที่เงียบ ส่วนข้อสุดท้ายเรื่อง Date/Decimal มาจากสัญญาในบทที่ 3 ที่ระบุว่าวันเวลาเป็น string และตัวเลขเป็น number</li>
       <li><strong>ขอบเขต</strong> — สามข้อแรกคุมขนาดของ diff ข้อ barrel file กัน <code>index.ts</code> ที่ทำให้ import สับสนใน ESM และข้อสุดท้ายสำคัญที่สุดในคอร์สนี้: <em>ห้ามรัน migrate, db push, generate หรือ docker เอง</em> เพราะคำสั่งเหล่านั้นแตะฐานข้อมูลจริง และ <code>prisma migrate reset</code> ที่หลุดมาหนึ่งครั้งคือข้อมูล seed ทั้งหมดหายไป เราจะรันคำสั่งพวกนี้ด้วยมือในบทที่ 8 เสมอ</li>
     </ul>
@@ -114,7 +114,7 @@ git commit -m "chore: add cursor rules"</code></div>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
       <p>Cursor Settings → Rules แสดงไฟล์ <code>project.mdc</code> พร้อมป้าย <strong>Always</strong> (มาจาก <code>alwaysApply: true</code> ใน frontmatter) และคำตอบของแชท Ask ต้องบอกว่า import ไฟล์ในโปรเจกต์ต้องลงท้ายด้วย <code>.js</code> แม้ไฟล์จริงเป็น <code>.ts</code> — ถ้ามันตอบแบบทั่ว ๆ ไปโดยไม่พูดถึง <code>.js</code> แปลว่าไฟล์ยังไม่ถูกอ่าน (มักเป็นเพราะวางไฟล์ผิดที่ หรือเปิด Cursor ที่โฟลเดอร์แม่ ไม่ใช่ที่ <code>ecommerce-api</code>)</p>
-      <p>ตอนนี้ <code>git log --oneline</code> มีสาม commit: scaffold, contract และ rules — โปรเจกต์พร้อมสำหรับ prompt แรกจริงในบทที่ 5</p>
+      <p>ตอนนี้ <code>git log --oneline</code> มีสาม commit: scaffold, api-spec.md และ rules — โปรเจกต์พร้อมสำหรับ prompt แรกจริงในบทที่ 5</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>

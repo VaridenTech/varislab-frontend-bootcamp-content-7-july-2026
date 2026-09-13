@@ -54,7 +54,7 @@ docker compose down</code></pre>
         <tbody>
           <tr><td><code>DATABASE_URL</code></td><td>Prisma CLI (<code>prisma7.config.ts</code>) และ <code>PrismaService</code></td><td>connection string ของ PostgreSQL — ใช้ตั้งแต่บทที่ 6</td></tr>
           <tr><td><code>PORT</code></td><td><code>src/main.ts</code></td><td>port ที่แอปฟัง (บทที่ 20 จะอ่านผ่าน <code>ConfigService</code> แทนเลข 3000 ที่ฝังไว้)</td></tr>
-          <tr><td><code>APP_URL</code></td><td><code>ProductsService</code></td><td>ฐานของ <code>url</code> ในผลลัพธ์ <code>GET /products/categories</code> (บทที่ 10) เพราะ dummyjson ส่ง URL เต็มกลับมาด้วย</td></tr>
+          <tr><td><code>APP_URL</code></td><td><code>ProductsService</code></td><td>ฐานของ <code>url</code> ในผลลัพธ์ <code>GET /products/categories</code> (บทที่ 10) เพราะ type <code>Category</code> ฝั่ง client (<code>src/features/products/types.ts</code>) กำหนดให้มี <code>url</code> เต็มเสมอ</td></tr>
           <tr><td><code>CORS_ORIGIN</code></td><td><code>src/main.ts</code></td><td>origin ของ React app ที่อนุญาตให้เรียกข้าม origin ได้ (บทที่ 20)</td></tr>
         </tbody>
       </table>
