@@ -74,6 +74,36 @@ const DEFAULT_COUNT = 8;</code></pre>
 
     <h2>product id 1 เขียนด้วยมือ ไม่ปล่อยให้ faker สุ่ม</h2>
     <p>ทุกชิ้นในแคตตาล็อกสุ่มด้วย faker ยกเว้นชิ้นเดียว: id 1 บทถัดไปจะยกตัวอย่าง mapper output จากสินค้าชิ้นนี้ตรง ๆ บทที่ 19 จะคำนวณราคารวมตะกร้าจากราคาชิ้นนี้ บทที่ 21–22 จะใส่ค่าชิ้นนี้เป็นตัวอย่างใน Swagger — ทุกจุดพิมพ์ค่าตรง ๆ ไว้ในเนื้อหา ถ้าปล่อยให้ faker สุ่มชิ้นนี้ด้วย ค่าที่พิมพ์ไว้ในทุกบทถัดไปจะผูกติดกับลำดับการเรียก faker แบบเปราะบางมาก — สลับลำดับ field แค่บรรทัดเดียวในไฟล์ก็ทำให้ค่าที่ได้เปลี่ยนไปทั้งหมด เราจึงเขียนสินค้าชิ้นนี้ด้วยมือ ให้เป็นค่าคงที่ที่ไม่ขึ้นกับ faker เลย</p>
+    <p>ทั้งสินค้าที่เขียนด้วยมือและสินค้าที่สุ่มด้วย faker ใช้ type เดียวกันคือ <code>GeneratedProduct</code> — ประกาศ field ตรงให้ครบทุกคอลัมน์ของ <code>Product</code> (ยกเว้น <code>categoryId</code> ที่ยังไม่รู้จนกว่าจะ resolve จาก slug ใน transaction ถัดไป) พร้อม <code>slug</code> กำกับไว้ให้รู้ว่าจะ resolve เป็นหมวดไหน</p>
+    <pre><code>interface GeneratedProduct {
+  id: number;
+  slug: string;
+  title: string;
+  description: string;
+  price: number;
+  discountPercentage: number | null;
+  rating: number;
+  stock: number;
+  tags: string[];
+  brand: string;
+  sku: string;
+  weight: number;
+  width: number;
+  height: number;
+  depth: number;
+  warrantyInformation: string;
+  shippingInformation: string;
+  availabilityStatus: string;
+  returnPolicy: string;
+  minimumOrderQuantity: number;
+  barcode: string;
+  qrCode: string;
+  images: string[];
+  thumbnail: string;
+  createdAt: Date;
+  updatedAt: Date;
+  reviews: Array&lt;{ rating: number; comment: string; date: Date; reviewerName: string; reviewerEmail: string }&gt;;
+}</code></pre>
     <pre><code>function handAuthoredProductOne(slug: string): GeneratedProduct {
   return {
     id: 1,
