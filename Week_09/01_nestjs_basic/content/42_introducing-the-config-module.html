@@ -66,13 +66,23 @@ super({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });</code></pre>
     <div class="note"><p><code>ConfigModule.forRoot()</code> อ่าน <code>.env</code> ตอนที่ <code>imports</code> array ถูกประเมิน ซึ่งเกิดก่อน Nest จะสร้าง provider ใด ๆ ดังนั้น constructor ของ <code>PrismaService</code> จึงเห็นค่าเสมอไม่ว่าจะวาง <code>PrismaModule</code> ไว้ก่อนหรือหลัง ส่วน <code>prisma7.config.ts</code> ยังต้องมี <code>import "dotenv/config"</code> ของตัวเองต่อไป เพราะ Prisma CLI ทำงานนอก NestJS</p></div>
-    <div class="warning"><p>ข้อยกเว้นคือค่าที่ถูกอ่านจาก <code>process.env</code> <strong>ตอน import module</strong> แทนที่จะอ่านใน constructor — เช่น <code>DatabaseModule.register({ connectionString: process.env.DATABASE_URL! })</code> ใน <code>coffee-rating.module.ts</code> จากบทที่ 39 ES module จะโหลด <code>coffee-rating.module.ts</code> (ซึ่งประเมิน <code>process.env.DATABASE_URL</code> ทันที) ก่อนที่ <code>app.module.ts</code> จะรัน <code>ConfigModule.forRoot()</code> เสมอ เพราะ static import ของไฟล์ที่ถูก import จะถูกประเมินก่อนโค้ดของไฟล์ที่ import มันทุกครั้ง ผลคือหลังลบ <code>import 'dotenv/config'</code> ออกจาก <code>main.ts</code> แล้ว <code>connectionString</code> ที่ <code>DatabaseModule.register()</code> ได้รับจะเป็น <code>undefined</code> — เป็นเรื่องที่คาดไว้ เพราะ provider <code>'CONNECTION'</code> ตัวนั้นเป็นแค่ของสาธิต ไม่ได้ถูกใช้จริงใน <code>CoffeesService</code> (ดูคำเตือนในบทที่ 39) และปัญหานี้จะถูกแก้ในบทที่ 48 ด้วย <code>DatabaseModule.registerAsync()</code></p></div>
+    <div class="warning"><p>ข้อยกเว้นคือค่าที่ถูกอ่านจาก <code>process.env</code> <strong>ตอน import module</strong> แทนที่จะอ่านใน constructor — เช่น <code>DatabaseModule.register({ connectionString: process.env.DATABASE_URL! })</code> ใน <code>coffee-rating.module.ts</code> จากบทที่ 39 ES module จะโหลด <code>coffee-rating.module.ts</code> (ซึ่งประเมิน <code>process.env.DATABASE_URL</code> ทันที) ก่อนที่ <code>app.module.ts</code> จะรัน <code>ConfigModule.forRoot()</code> เสมอ เพราะ static import ของไฟล์ที่ถูก import จะถูกประเมินก่อนโค้ดของไฟล์ที่ import มันทุกครั้ง ผลคือหลังลบ <code>import 'dotenv/config'</code> ออกจาก <code>main.ts</code> แล้ว <code>connectionString</code> ที่ <code>DatabaseModule.register()</code> ได้รับจะเป็น <code>undefined</code> — provider <code>'CONNECTION'</code> ตัวนั้นเป็นแค่ของสาธิต ไม่ได้ถูกใช้จริงใน <code>CoffeesService</code> (ดูคำเตือนในบทที่ 39) และปัญหานี้จะถูกแก้ในบทที่ 48 ด้วย <code>DatabaseModule.registerAsync()</code></p></div>
+    <div class="warning"><p><strong>ผลที่ตามมารุนแรงกว่านั้น:</strong> ถ้า <code>CoffeeRatingService.onModuleInit()</code> จากบทที่ 39 ยังเรียก <code>this.connection.$queryRaw</code> อยู่ (ตามที่บทนั้นให้ทำ) การได้ <code>connectionString</code> เป็น <code>undefined</code> จะไม่ใช่แค่ค่า demo ที่เงียบ ๆ — Postgres driver จะ throw <code>Error: SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string</code> เป็น unhandled rejection ระหว่าง bootstrap ซึ่ง <strong>ทำให้ทั้งแอป process ตายทันที</strong> (ไม่ใช่แค่ endpoint <code>/coffees</code> ใช้ไม่ได้ — แอปทั้งตัว start ไม่สำเร็จเลย) ก่อนลบ <code>import 'dotenv/config'</code> ให้ห่อ query สาธิตนั้นด้วย <code>try/catch</code> ชั่วคราวก่อน เพื่อกันไม่ให้บทนี้ถึงบทที่ 47 พังทั้งแอป</p></div>
+    <pre><code>// coffee-rating.service.ts — กันชั่วคราวจนกว่าบทที่ 48 จะแก้ด้วย registerAsync
+async onModuleInit() {
+  try {
+    console.log(await this.connection.$queryRaw`SELECT current_database()`);
+  } catch (err) {
+    console.warn('CONNECTION demo unavailable (expected until lesson 48):', (err as Error).message);
+  }
+}</code></pre>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ส่งมอบหน้าที่โหลด .env ให้ ConfigModule</h2>
-      <p>ติดตั้ง <code>@nestjs/config</code>, ตรวจว่า <code>*.env</code> อยู่ใน <code>.gitignore</code>, import <code>ConfigModule.forRoot()</code> ใน <code>AppModule</code> แล้วลบ <code>import 'dotenv/config'</code> ออกจาก <code>main.ts</code></p>
+      <p>ติดตั้ง <code>@nestjs/config</code>, ตรวจว่า <code>*.env</code> อยู่ใน <code>.gitignore</code>, ห่อ <code>$queryRaw</code> ใน <code>CoffeeRatingService.onModuleInit()</code> ด้วย <code>try/catch</code> ตามตัวอย่างด้านบน (ชั่วคราวจนกว่าบทที่ 48), import <code>ConfigModule.forRoot()</code> ใน <code>AppModule</code> แล้วลบ <code>import 'dotenv/config'</code> ออกจาก <code>main.ts</code></p>
       <div class="prompt-example"><code>npm i @nestjs/config
 
+# ห่อ this.connection.$queryRaw ใน coffee-rating.service.ts ด้วย try/catch (ดูตัวอย่างด้านบน)
 # ลบ import 'dotenv/config' ใน src/main.ts
 # เพิ่ม ConfigModule.forRoot() ใน AppModule
 # ตรวจว่า *.env อยู่ใน .gitignore

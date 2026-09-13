@@ -77,7 +77,7 @@ export class CoffeesService {
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ย้าย CoffeesService ลงฐานข้อมูลจริง</h2>
-      <p>แทนที่ array และ logic เดิมทั้งหมดใน <code>CoffeesService</code> ด้วยโค้ดด้านบน แล้วทดสอบ CRUD ครบวงจรผ่าน Insomnia</p>
+      <p>แทนที่ array และ logic เดิมทั้งหมดใน <code>CoffeesService</code> ด้วยโค้ดด้านบน ตอนนี้ไม่มีที่ไหน import <code>Coffee</code> จาก <code>entities/coffee.entity.ts</code> อีกแล้ว (type <code>Coffee</code> มาจาก Prisma Client โดยตรงผ่าน <code>this.prisma.coffee</code>) ลบไฟล์ <code>src/coffees/entities/coffee.entity.ts</code> ทิ้งได้เลย แล้วทดสอบ CRUD ครบวงจรผ่าน Insomnia</p>
       <div class="prompt-example"><code>POST http://localhost:3000/coffees
 { "name": "Shipwreck Roast", "brand": "Buddy Brew", "flavors": ["chocolate", "vanilla"] }
 
