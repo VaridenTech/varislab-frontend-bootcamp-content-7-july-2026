@@ -723,11 +723,13 @@ Expected (verify against real output, adjust the lesson text if it differs due t
 psql "$DATABASE_URL" -c "SELECT title FROM \"Product\" p JOIN \"Category\" c ON c.id = p.\"categoryId\" WHERE c.slug = 'groceries' ORDER BY p.id ASC;"
 ```
 
-Expected first 20 rows (page 1, `skip=0&limit=20`): Cornichons, Jicama, Chinese Five Spice, Currant, Mahi Mahi, Cantaloupe, Koshihikari Rice, Red Pepper, Jasmine Rice, Blood Orange, Date, Apple, Eggplant, Corella Pear, Galangal, Honeydew Melon, Radish, Peas, Papaya, Endive.
+**Correction (confirmed by a real run during execution — Task 3, agent a413cfba2ec592a2e):** the numbers below were computed by the controller with a *simplified* proxy script (only title/price/discount/brand draws per product) before this plan was written, not the full `generatedProduct` function above, which draws roughly twenty faker calls per product (description, rating, stock, tags, sku, dimensions, warranty/shipping/availability/returnPolicy, barcode, images, dates, three reviews) before moving to the next product. Since faker's seeded PRNG is one shared sequential stream, the full function lands at a different point in that stream by the time it reaches the `groceries` category (the 4th category), so the proxy script's predicted titles were never going to match the real run. The implementer verified their `prisma/seed.ts` is byte-identical to the code block above and `@faker-js/faker` resolved to exactly `10.6.0` — the divergence is fully explained by the proxy-vs-real algorithm difference, not a transcription bug. **The confirmed real output (use this, not the numbers this correction replaces):**
 
-Expected remaining 7 rows (page 2, `skip=20&limit=20`): Papaw, Banana, Bush Tomato, Peach, Beetroot, Dried Chinese Broccoli, Butternut Pumpkin.
+Real page 1 (ids 22–41, `skip=0&limit=20`): Dandelion, Prunes, Pasta, Dried Chinese Broccoli, Leeks, Okra, Endive, Broccolini, Paprik, Bok Choy, Coconut, Fresh Chillies, Carrot, Cheddar, Cucumber, Lettuce, Goji Berry, Allspice, Pumpkin, Butternut Lettuce.
 
-If the real psql output differs from this list (it must match exactly if `@faker-js/faker@10.6.0` and the exact code above ran with `faker.seed(20260913)` in this exact call order — but confirm rather than assume), use the real output in lesson 23 (Task 12) instead.
+Real page 2 (ids 42–48, `skip=20&limit=20`): Mulberry, Juniper Berry, Chinese Cabbage, White Bread, Peppers, Cabbage, Bean Shoots.
+
+If a later re-run of this exact code against this exact faker version produces a different list again, trust that later real run over this one, and update lesson 23 (Task 16) accordingly.
 
 - [ ] **Step 5: Commit and re-tag**
 
@@ -1769,7 +1771,7 @@ git commit -m "content(week10): lessons 21-22 — drop dummyjson framing from sw
 
 - [ ] **Step 1**: This lesson's env-var-flip mechanism is unchanged. Update the specific data-dependent claims:
   - The Home-page "DEALS OF THE DAY" and category-menu checks are unaffected by counts (still 5 deals, 24 categories) — keep as is, just confirm against a real run.
-  - The Category-page pagination walkthrough: "อย่าใช้ Beauty ทดสอบ pagination เพราะข้อมูล seed ของเรามีแค่ 5 ชิ้น... ให้เลือก Groceries ที่มี 27 ชิ้นแทน" stays structurally identical (Beauty=5, Groceries=27 by design — see Task 3's `COUNT_OVERRIDES`), but the **7 named products on page 2** must be replaced with the real titles captured in Task 3 Step 4: Papaw, Banana, Bush Tomato, Peach, Beetroot, Dried Chinese Broccoli, Butternut Pumpkin (verify against the actual reference-project output before writing — if Task 3 was re-run and produced different real titles, use those instead).
+  - The Category-page pagination walkthrough: "อย่าใช้ Beauty ทดสอบ pagination เพราะข้อมูล seed ของเรามีแค่ 5 ชิ้น... ให้เลือก Groceries ที่มี 27 ชิ้นแทน" stays structurally identical (Beauty=5, Groceries=27 by design — see Task 3's `COUNT_OVERRIDES`), but the **7 named products on page 2** must be replaced with the real titles Task 3 actually captured when it ran (confirmed by Task 3's implementer, not a prediction): Mulberry, Juniper Berry, Chinese Cabbage, White Bread, Peppers, Cabbage, Bean Shoots — and page 1 (20 items, for confirming the pagination request/response shape) is: Dandelion, Prunes, Pasta, Dried Chinese Broccoli, Leeks, Okra, Endive, Broccolini, Paprik, Bok Choy, Coconut, Fresh Chillies, Carrot, Cheddar, Cucumber, Lettuce, Goji Berry, Allspice, Pumpkin, Butternut Lettuce (verify against the actual reference-project output before writing — if Task 3's seed was re-run since and produced a different real list, use that instead).
 
 - [ ] **Step 2**: Update the framing sentence in the workshop intro from "ถ้าสัญญาที่เราจับมาตั้งแต่บทที่ 3 ถูกต้องจริง" (if the contract we captured is right) to "ถ้าสัญญาที่เราออกแบบเองตั้งแต่บทที่ 3 ตรงกับที่โค้ด client ต้องการจริง" (if the contract we designed ourselves matches what the client code actually needs) — the payoff is now evidence that reading the client correctly, not evidence that copying dummyjson correctly.
 
