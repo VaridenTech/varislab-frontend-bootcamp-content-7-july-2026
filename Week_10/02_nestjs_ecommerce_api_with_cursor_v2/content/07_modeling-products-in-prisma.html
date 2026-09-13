@@ -28,10 +28,11 @@
         <tbody>
           <tr><td><code>id</code> (number)</td><td><code>id Int @id</code></td><td>ไม่ใส่ <code>@default(autoincrement())</code> เพราะเรา seed ด้วย id เดิมของ dummyjson</td></tr>
           <tr><td><code>title</code>, <code>description</code>, <code>sku</code>, <code>warrantyInformation</code>, <code>shippingInformation</code>, <code>availabilityStatus</code>, <code>returnPolicy</code>, <code>thumbnail</code></td><td><code>String</code></td><td>ข้อความธรรมดา บังคับมีค่า (ทุกชิ้นใน 194 ชิ้นมีครบ)</td></tr>
-          <tr><td><code>price</code>, <code>discountPercentage</code>, <code>rating</code>, <code>weight</code></td><td><code>Float</code></td><td>ทศนิยม — เหตุผลที่ไม่ใช้ <code>Decimal</code> อยู่หัวข้อถัดไป</td></tr>
+          <tr><td><code>price</code>, <code>rating</code>, <code>weight</code></td><td><code>Float</code></td><td>ทศนิยม — เหตุผลที่ไม่ใช้ <code>Decimal</code> อยู่หัวข้อถัดไป</td></tr>
+          <tr><td><code>discountPercentage</code> (บางชิ้นไม่มี)</td><td><code>discountPercentage Float?</code></td><td>ไม่ใช่สินค้าทุกชิ้นมีส่วนลด — เป็นคอลัมน์เดียวที่ nullable และตรงกับ <code>discountPercentage?: number</code> ของฝั่ง client</td></tr>
           <tr><td><code>stock</code>, <code>minimumOrderQuantity</code></td><td><code>Int</code></td><td>จำนวนชิ้น ไม่มีทศนิยม</td></tr>
           <tr><td><code>tags</code>, <code>images</code></td><td><code>String[]</code></td><td>PostgreSQL รองรับ array ของ text ในตัว (<code>text[]</code>) จึงไม่ต้องมีตารางแยก</td></tr>
-          <tr><td><code>brand</code> (บางชิ้นไม่มี)</td><td><code>brand String?</code></td><td>92 จาก 194 ชิ้นไม่มี field นี้ — เป็นคอลัมน์เดียวที่ nullable</td></tr>
+          <tr><td><code>brand</code></td><td><code>brand String</code></td><td>สินค้าทุกชิ้นในแคตตาล็อกของเรามียี่ห้อเสมอ — บังคับมีค่า</td></tr>
           <tr><td><code>dimensions: { width, height, depth }</code></td><td><code>width Float</code>, <code>height Float</code>, <code>depth Float</code></td><td>แบน object ซ้อนเป็นสามคอลัมน์ แล้วบทที่ 11 จะประกอบกลับเป็น object ตอนตอบ client</td></tr>
           <tr><td><code>meta: { barcode, qrCode, createdAt, updatedAt }</code></td><td><code>barcode String</code>, <code>qrCode String</code>, <code>createdAt DateTime</code>, <code>updatedAt DateTime</code></td><td>แบนเช่นกัน และ<strong>ไม่</strong>ใส่ <code>@default(now())</code> / <code>@updatedAt</code> เพราะค่าต้องเป็นของ dummyjson</td></tr>
           <tr><td><code>category</code> (เป็น slug string)</td><td><code>categoryId Int</code> + <code>category Category @relation(...)</code></td><td>เก็บเป็น relation ไม่ใช่ string ซ้ำ ๆ 194 แถว เพื่อให้ <code>GET /products/category/:slug</code> (บทที่ 14) join ได้</td></tr>
@@ -71,11 +72,11 @@
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent สังเกตว่า prompt นี้แนบ <code>@docs/contract/product-1.json</code> กับ <code>@docs/contract/categories.json</code> ไปด้วย — นั่นคือหัวใจ: เราไม่ได้ให้ AI เดารูปทรงของสินค้า แต่ให้มันอ่านจากไฟล์ที่เราจับมาเอง</p>
       <div class="cursor-prompt"><code>เพิ่ม Prisma model ของ Category, Product และ Review ให้ตรงกับ payload ของ dummyjson
 
-บริบท: @prisma/schema.prisma @docs/contract/product-1.json @docs/contract/categories.json @.cursor/rules/project.mdc
+บริบท: @prisma/schema.prisma @docs/api-spec.md @.cursor/rules/project.mdc
 schema.prisma ตอนนี้มีแค่ generator กับ datasource ห้ามแก้สองบล็อกนั้น
 docs/contract/product-1.json คือ response จริงของ GET https://dummyjson.com/products/1 — ทุก field ของ Product ต้องมาจากไฟล์นี้
 docs/contract/categories.json คือ response จริงของ GET /products/categories แต่ละรายการมี slug, name, url — url ไม่ต้องเก็บเพราะคำนวณจาก slug ได้
-สินค้าบางชิ้น (92 จาก 194) ไม่มี field brand
+สินค้าทุกชิ้นของเรามี field brand เสมอ แต่บางชิ้นไม่มี discountPercentage
 ฐานข้อมูลคือ PostgreSQL 17
 
 โครงสร้าง: แก้ไฟล์เดียว
@@ -84,8 +85,8 @@ docs/contract/categories.json คือ response จริงของ GET /prod
 ข้อกำหนดทางเทคนิค:
 - model Category: id Int @id @default(autoincrement()), slug String @unique, name String, products Product[]
 - model Product: id Int @id (ไม่ใส่ autoincrement เพราะเราจะ seed ด้วย id เดิมของ dummyjson)
-  field ตามลำดับนี้: title String, description String, price Float, discountPercentage Float, rating Float, stock Int,
-  tags String[], brand String?, sku String, weight Float, width Float, height Float, depth Float,
+  field ตามลำดับนี้: title String, description String, price Float, discountPercentage Float?, rating Float, stock Int,
+  tags String[], brand String, sku String, weight Float, width Float, height Float, depth Float,
   warrantyInformation String, shippingInformation String, availabilityStatus String, returnPolicy String,
   minimumOrderQuantity Int, barcode String, qrCode String, images String[], thumbnail String,
   createdAt DateTime, updatedAt DateTime (ไม่ใส่ @default หรือ @updatedAt เพราะค่ามาจาก meta ของ dummyjson)
@@ -109,13 +110,13 @@ npx prisma format</code></div>
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
         <li><code>Product.id</code> เป็น <code>Int @id</code> เฉย ๆ — <strong>ไม่มี</strong> <code>@default(autoincrement())</code></li>
-        <li><code>brand String?</code> เป็น field เดียวในทั้งสาม model ที่มีเครื่องหมาย <code>?</code> (ค้นหา <code>?</code> ในไฟล์แล้วต้องเจอที่เดียว)</li>
+        <li><code>discountPercentage Float?</code> เป็น field เดียวในทั้งสาม model ที่มีเครื่องหมาย <code>?</code> (ค้นหา <code>?</code> ในไฟล์แล้วต้องเจอที่เดียว) ส่วน <code>brand</code> ต้อง<strong>ไม่มี</strong> <code>?</code></li>
         <li><code>updatedAt DateTime</code> ไม่มี <code>@updatedAt</code> และ <code>createdAt</code> ไม่มี <code>@default(now())</code> — ค่าทั้งคู่ต้องมาจาก <code>meta</code> ของ dummyjson</li>
         <li><code>Review.product</code> มี <code>onDelete: Cascade</code> ส่วน <code>Product.category</code> ไม่มี (ปล่อยเป็น restrict ตามค่าปริยาย — ห้ามลบหมวดหมู่ที่ยังมีสินค้าอยู่)</li>
         <li>มี <code>@@index([categoryId])</code> ใน <code>Product</code> และ <code>@@index([productId])</code> ใน <code>Review</code> ครบทั้งสองตัว</li>
         <li>ไม่มีคำว่า <code>Decimal</code>, <code>Json</code>, <code>@map</code> หรือ <code>@@map</code> ในไฟล์เลย</li>
         <li>บล็อก <code>generator client</code> และ <code>datasource db</code> ยังเหมือนเดิมทุกตัวอักษร และไม่มี model ที่เราไม่ได้สั่ง (เช่น <code>User</code>, <code>Order</code>) แถมมา</li>
-        <li>ทุก field ของ <code>Product</code> มีอยู่จริงใน <code>docs/contract/product-1.json</code> — ไล่เทียบทีละบรรทัด ไม่ใช่ไล่ด้วยความรู้สึก</li>
+        <li>ทุก field ของ <code>Product</code> มีอยู่จริงใน interface <code>Product</code> ของ <code>docs/api-spec.md</code> — ไล่เทียบทีละบรรทัด ไม่ใช่ไล่ด้วยความรู้สึก</li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> ใส่ <code>@updatedAt</code> ให้ <code>updatedAt</code> เพราะเป็นแบบแผนที่พบเจอทั่วไป (ผลคือค่าจาก dummyjson จะถูกเขียนทับด้วยเวลาปัจจุบันทุกครั้งที่แถวถูก update) หรือเลือก <code>Decimal</code> ให้ <code>price</code> ตามตำราบัญชี ซึ่งทำให้ราคาถูกส่งออกไปเป็น string และผิด contract ทันที</p>
       <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
@@ -141,11 +142,11 @@ model Product {
   title                String
   description          String
   price                Float
-  discountPercentage   Float
+  discountPercentage   Float?
   rating               Float
   stock                Int
   tags                 String[]
-  brand                String?
+  brand                String
   sku                  String
   weight               Float
   width                Float
@@ -181,6 +182,7 @@ model Review {
 
   @@index([productId])
 }</code></pre>
+      <p><code>brand</code> เปลี่ยนเป็นบังคับมีค่า (<code>String</code> ไม่มี <code>?</code>) เพราะแคตตาล็อกของเราเองกำหนดยี่ห้อให้สินค้าทุกชิ้นเสมอ ส่วน <code>discountPercentage</code> เปลี่ยนเป็น nullable (<code>Float?</code>) เพราะสินค้าบางชิ้นในข้อมูล seed ของเราไม่มีส่วนลด และฝั่ง client ก็ประกาศ <code>discountPercentage?: number</code> ไว้ใน <code>src/features/products/types.ts</code> อยู่แล้ว — schema ของเราแค่ตรงกับสิ่งที่ client คาดหวังจริง ๆ</p>
       <p>ถ้าอธิบายบรรทัดไหนไม่ได้ ยังไม่ผ่านบทนี้ — กลับไปอ่านส่วนแนวคิดก่อน</p>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
