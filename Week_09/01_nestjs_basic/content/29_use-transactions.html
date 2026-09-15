@@ -88,7 +88,12 @@ export class CoffeesService {
       </table>
     </div>
     <div class="warning"><p>Interactive transaction ถือ connection หนึ่งเส้นไว้ตลอดช่วง callback — ทำให้มันสั้นที่สุด อย่าเรียก API ภายนอกหรือรอ I/O ที่ไม่เกี่ยวข้องข้างใน Prisma ตั้ง timeout ไว้ 5 วินาทีโดย default (ปรับได้ผ่าน option <code>{ timeout }</code>) ถ้าเกินจะ rollback ทิ้งทั้งก้อน</p></div>
-    <div class="note"><p>เพิ่ม endpoint ทดลองใน controller เช่น <code>@Post(':id/recommend')</code> ที่เรียก <code>this.coffeesService.recommendCoffee(id)</code> — ถ้า id ไม่มีจริง <code>tx.coffee.update</code> จะ throw error รหัส <code>P2025</code> ภายใน transaction (ซึ่ง rollback ให้อยู่แล้ว) จะเรียก <code>this.findOne(id)</code> ก่อนเข้า transaction เพื่อให้ได้ 404 ที่อ่านรู้เรื่องเหมือน endpoint อื่นก็ได้</p></div>
+    <div class="note"><p>เพิ่ม endpoint ทดลองใน controller ที่เรียก <code>this.coffeesService.recommendCoffee(id)</code> ตามโค้ดด้านล่าง — ถ้า id ไม่มีจริง <code>tx.coffee.update</code> จะ throw error รหัส <code>P2025</code> ภายใน transaction (ซึ่ง rollback ให้อยู่แล้ว) จะเรียก <code>this.findOne(id)</code> ก่อนเข้า transaction เพื่อให้ได้ 404 ที่อ่านรู้เรื่องเหมือน endpoint อื่นก็ได้</p></div>
+    <pre><code>// coffees.controller.ts
+@Post(':id/recommend')
+recommendCoffee(@Param('id') id: string) {
+  return this.coffeesService.recommendCoffee(id);
+}</code></pre>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ทำให้การแนะนำกาแฟเป็น atomic</h2>
