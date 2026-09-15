@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 19 จาก 77</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 19 จาก 67</p>
     <h1>ก่อนเริ่มบทฐานข้อมูล: เก็บความคืบหน้าไว้ใน Branch</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
@@ -21,7 +21,7 @@
     </section>
 
     <h2>ทางแยกของคอร์ส: SQL กับ NoSQL</h2>
-    <p>บทนี้เป็นจุดต่อจาก Chapter 2 <q>Creating a REST API Application</q> ซึ่งเป็นเส้นทางหลัก (standard path) ของคอร์ส แต่คอร์สนี้ยังมีบทโบนัส <strong>NoSQL / MongoDB</strong> (บทที่ 70–77) ที่<em>เริ่มจากจุดเดียวกัน</em>คือโค้ด ณ ตอนจบ Chapter 2 เช่นกัน — ไม่ใช่ต่อจากบท Prisma</p>
+    <p>บทนี้เป็นจุดต่อจาก Chapter 2 <q>Creating a REST API Application</q> ซึ่งเป็นเส้นทางหลัก (standard path) ของคอร์ส แต่คอร์สนี้ยังมีบทโบนัส <strong>NoSQL / MongoDB</strong> (บทที่ 60–67) ที่<em>เริ่มจากจุดเดียวกัน</em>คือโค้ด ณ ตอนจบ Chapter 2 เช่นกัน — ไม่ใช่ต่อจากบท Prisma</p>
     <p>การแยกสองเส้นทางแบบนี้ทำให้คุณเลือกเรียนเฉพาะฐานข้อมูลที่โปรเจกต์ของคุณใช้จริงได้ หรือจะโค้ดตามทั้งสองเส้นทางก็ได้ ขอแค่มี snapshot ของจุดตั้งต้นเก็บไว้</p>
     <div class="warning"><p><strong>สำคัญมาก:</strong> ถ้าคุณตั้งใจจะโค้ดตามทั้งบท PostgreSQL และบท MongoDB ให้บันทึกความคืบหน้าปัจจุบัน (จุดจบ Chapter 2) ลง branch แยก<em>ก่อน</em>เริ่มบทถัดไป มิฉะนั้นเมื่อถึงบท MongoDB คุณจะต้องมานั่งถอนโค้ด Prisma ออกเอง</p></div>
 
@@ -35,7 +35,7 @@ git branch end-of-chapter-2
 git branch
 # * master (หรือ main)
 #   end-of-chapter-2</code></pre>
-    <p>เท่านี้ branch <code>end-of-chapter-2</code> จะชี้ไปที่ commit ปัจจุบันตลอดไป ส่วนเราทำงานต่อบน <code>master</code> เข้าสู่บท Prisma ได้เลย เมื่อถึงบทที่ 70 ค่อย <code>git checkout end-of-chapter-2</code> (หรือแตก branch ใหม่จากจุดนั้น) เพื่อเริ่มเส้นทาง MongoDB จากจุดที่ถูกต้อง</p>
+    <p>เท่านี้ branch <code>end-of-chapter-2</code> จะชี้ไปที่ commit ปัจจุบันตลอดไป ส่วนเราทำงานต่อบน <code>master</code> เข้าสู่บท Prisma ได้เลย เมื่อถึงบทที่ 60 ค่อย <code>git checkout end-of-chapter-2</code> (หรือแตก branch ใหม่จากจุดนั้น) เพื่อเริ่มเส้นทาง MongoDB จากจุดที่ถูกต้อง</p>
     <div class="note"><p>ถ้ายังไม่ได้ init git ในโปรเจกต์ ให้รัน <code>git init</code> ก่อน — โปรเจกต์ที่สร้างด้วย <code>nest new</code> มักมี git repository ให้แล้ว ตรวจได้ด้วย <code>git status</code></p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">

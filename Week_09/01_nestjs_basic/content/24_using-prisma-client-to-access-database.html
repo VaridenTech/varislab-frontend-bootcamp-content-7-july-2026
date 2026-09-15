@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 24 จาก 77</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 24 จาก 67</p>
     <h1>ใช้ Prisma Client เข้าถึงฐานข้อมูล</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
@@ -68,12 +68,12 @@ export class CoffeesService {
         <tbody>
           <tr><td><code>findMany()</code> / <code>findUnique()</code></td><td>ดึงหลายแถว / แถวเดียวตามเงื่อนไข <code>where</code></td><td><code>findUnique</code> คืน <code>null</code> เมื่อไม่พบ — เราจึงต้อง throw <code>NotFoundException</code> เอง และ <code>where</code> ของมันรับได้เฉพาะ field ที่ unique เช่น <code>id</code></td></tr>
           <tr><td><code>create({ data })</code></td><td>insert แถวใหม่ลงฐานข้อมูลทันที</td><td>คืนแถวที่บันทึกแล้วพร้อม <code>id</code> ที่ฐานข้อมูลรันให้ — ไม่มีขั้น "สร้างในหน่วยความจำก่อน" แยกต่างหาก</td></tr>
-          <tr><td><code>update({ where, data })</code></td><td>แก้แถวที่ตรงกับ <code>where</code> ด้วยค่าใน <code>data</code></td><td>ถ้า id ไม่มีจริง Prisma throw error รหัส <code>P2025</code> ซึ่งกลายเป็น 500 — เราจึงเรียก <code>findOne</code> ก่อนเพื่อให้ได้ 404 ที่สะอาด (อีกทางคือ map <code>P2025</code> ใน exception filter บทที่ 51)</td></tr>
+          <tr><td><code>update({ where, data })</code></td><td>แก้แถวที่ตรงกับ <code>where</code> ด้วยค่าใน <code>data</code></td><td>ถ้า id ไม่มีจริง Prisma throw error รหัส <code>P2025</code> ซึ่งกลายเป็น 500 — เราจึงเรียก <code>findOne</code> ก่อนเพื่อให้ได้ 404 ที่สะอาด (อีกทางคือ map <code>P2025</code> ใน exception filter บทที่ 41)</td></tr>
           <tr><td><code>delete({ where })</code></td><td>ลบแถวที่ตรงกับ <code>where</code> ออกจากตาราง</td><td>reuse <code>findOne</code> ก่อนด้วยเหตุผลเดียวกับ <code>update</code> — id ที่ไม่มีจริงต้องได้ 404 เหมือนกัน</td></tr>
         </tbody>
       </table>
     </div>
-    <div class="note"><p>สังเกตว่า <code>id</code> รับเข้ามาเป็น <code>string</code> จาก route parameter แล้วแปลงเป็นตัวเลขด้วย <code>+id</code> ก่อนใช้ query — Prisma จะไม่ยอมรับ string ในช่อง <code>id</code> ที่เป็น <code>Int</code> เลยแม้แต่ตอน compile ในบทที่ 56 เราจะเห็นวิธีที่สะอาดกว่าด้วย <code>ParseIntPipe</code> และ custom pipes</p></div>
+    <div class="note"><p>สังเกตว่า <code>id</code> รับเข้ามาเป็น <code>string</code> จาก route parameter แล้วแปลงเป็นตัวเลขด้วย <code>+id</code> ก่อนใช้ query — Prisma จะไม่ยอมรับ string ในช่อง <code>id</code> ที่เป็น <code>Int</code> เลยแม้แต่ตอน compile ในบทที่ 46 เราจะเห็นวิธีที่สะอาดกว่าด้วย <code>ParseIntPipe</code> และ custom pipes</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ย้าย CoffeesService ลงฐานข้อมูลจริง</h2>
