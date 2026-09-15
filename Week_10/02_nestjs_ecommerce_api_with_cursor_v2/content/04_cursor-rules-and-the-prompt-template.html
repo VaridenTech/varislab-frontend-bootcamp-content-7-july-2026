@@ -37,7 +37,7 @@ alwaysApply: true
 - src/&lt;domain&gt;/ หนึ่งโฟลเดอร์ต่อหนึ่ง business domain (products, orders) มี *.module.ts, *.controller.ts, *.service.ts และ dto/
 - src/prisma/ มี PrismaModule (global) และ PrismaService
 - src/generated/prisma/ คือโค้ดที่ Prisma generate ห้ามแก้ด้วยมือ
-- docs/contract/ คือ payload จริงของ dummyjson — response ของทุก endpoint ต้องมีรูปทรงตรงกับไฟล์เหล่านี้
+- docs/contract/ คือ payload จริงของ dummyjson (README.md คือสรุปสัญญาทั้งหมด) — response ของทุก endpoint ต้องมีรูปทรงตรงกับไฟล์เหล่านี้
 
 # กติกาการเขียนโค้ด
 - import ไฟล์ในโปรเจกต์ต้องลงท้ายด้วย .js เสมอ (เช่น './products.service.js') แม้ไฟล์จริงจะเป็น .ts

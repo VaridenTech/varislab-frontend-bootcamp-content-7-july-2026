@@ -25,7 +25,7 @@
     <p>รูปแบบการรับ parameter เป็นแบบเดียวกับ Week_09 บทที่ 7 (route parameters) และการโยน error เป็นแบบเดียวกับบทที่ 13 (ข้อความ error ที่อ่านรู้เรื่อง) ต่างกันที่คราวนี้ข้อความไม่ใช่เรื่องรสนิยม — มันคือส่วนหนึ่งของสัญญา</p>
 
     <h2>ข้อความ 404 คือสัญญา ไม่ใช่ข้อความประกอบ</h2>
-    <p>เปิด <code>docs/contract/product-not-found.txt</code> ที่จับไว้ในบทที่ 3 dummyjson ตอบ status 404 พร้อม body</p>
+    <p>เปิด <code>docs/contract/product-not-found.txt</code> ที่วางไว้ในบทที่ 3 dummyjson ตอบ status 404 พร้อม body</p>
     <pre><code>{ "message": "Product with id '9999' not found" }</code></pre>
     <p>React app ที่เราจะต่อในบทที่ 23 อ่าน <code>data.message</code> มาโชว์ให้ผู้ใช้เห็นตรง ๆ ผ่าน <code>ApiError</code> ของมัน ถ้าเราเขียนเป็น <code>Product #9999 not found</code> แบบที่เคยทำใน Week_09 หน้าเว็บก็ยังไม่พัง แต่ข้อความที่ผู้ใช้เห็นจะเปลี่ยนไป และ script ตรวจสัญญาในบทที่ 15 จะจับได้ทันที จุดที่ต้องระวังเป็นพิเศษคือ <strong>single quote ครอบตัวเลข</strong> — ไม่ใช่ double quote ไม่ใช่ backtick ไม่ใช่ไม่มีเลย</p>
     <pre><code>throw new NotFoundException(`Product with id '${id}' not found`);</code></pre>

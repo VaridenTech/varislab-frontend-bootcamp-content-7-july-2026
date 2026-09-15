@@ -68,7 +68,7 @@
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ให้ Cursor เขียน schema จาก payload จริง</h2>
-      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent สังเกตว่า prompt นี้แนบ <code>@docs/contract/product-1.json</code> กับ <code>@docs/contract/categories.json</code> ไปด้วย — นั่นคือหัวใจ: เราไม่ได้ให้ AI เดารูปทรงของสินค้า แต่ให้มันอ่านจากไฟล์ที่เราจับมาเอง</p>
+      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent สังเกตว่า prompt นี้แนบ <code>@docs/contract/product-1.json</code> กับ <code>@docs/contract/categories.json</code> ไปด้วย — นั่นคือหัวใจ: เราไม่ได้ให้ AI เดารูปทรงของสินค้า แต่ให้มันอ่านจากไฟล์สัญญาที่วางไว้ในโปรเจกต์</p>
       <div class="cursor-prompt"><code>เพิ่ม Prisma model ของ Category, Product และ Review ให้ตรงกับ payload ของ dummyjson
 
 บริบท: @prisma/schema.prisma @docs/contract/product-1.json @docs/contract/categories.json @.cursor/rules/project.mdc

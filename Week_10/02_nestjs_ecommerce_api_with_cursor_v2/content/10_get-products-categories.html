@@ -21,7 +21,7 @@
     </section>
 
     <h2>เลือก endpoint ที่ง่ายที่สุดขึ้นมาทำก่อน</h2>
-    <p>ใน contract ทั้งเจ็ดไฟล์ที่จับไว้ในบทที่ 3 มี endpoint เดียวที่ไม่มี query parameter ไม่มี route parameter และมีรูปทรง response แบนราบสามคีย์ — นั่นคือ <code>GET /products/categories</code> เราจึงเริ่มจากตัวนี้ เพราะมันพิสูจน์ว่าเส้นทางทั้งเส้น (request → controller → service → Prisma → Postgres → response) เชื่อมกันได้จริง โดยยังไม่ต้องยุ่งกับ mapper หรือ pagination ที่จะมาในบทถัด ๆ ไป</p>
+    <p>ใน contract ที่วางไว้ในโปรเจกต์ตั้งแต่บทที่ 3 มี endpoint เดียวที่ไม่มี query parameter ไม่มี route parameter และมีรูปทรง response แบนราบสามคีย์ — นั่นคือ <code>GET /products/categories</code> เราจึงเริ่มจากตัวนี้ เพราะมันพิสูจน์ว่าเส้นทางทั้งเส้น (request → controller → service → Prisma → Postgres → response) เชื่อมกันได้จริง โดยยังไม่ต้องยุ่งกับ mapper หรือ pagination ที่จะมาในบทถัด ๆ ไป</p>
     <p>โครงสร้างสามไฟล์เป็นแบบเดียวกับที่คุณเคยทำใน Week_09 บทที่ 6 (controller), บทที่ 12 (service) และบทที่ 14 (module) ต่างกันแค่คราวนี้เราไม่พิมพ์เอง — เราสั่ง Cursor พิมพ์ แล้วเราอ่านทุกบรรทัด</p>
     <ul>
       <li><strong>controller</strong> รู้แค่เรื่อง HTTP: path, method, parameter — แล้วส่งต่อให้ service ทันที</li>
