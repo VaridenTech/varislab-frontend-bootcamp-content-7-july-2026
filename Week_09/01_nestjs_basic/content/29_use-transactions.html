@@ -91,7 +91,7 @@ export class CoffeesService {
     <div class="note"><p>เพิ่ม endpoint ทดลองใน controller ที่เรียก <code>this.coffeesService.recommendCoffee(id)</code> ตามโค้ดด้านล่าง — ถ้า id ไม่มีจริง <code>tx.coffee.update</code> จะ throw error รหัส <code>P2025</code> ภายใน transaction (ซึ่ง rollback ให้อยู่แล้ว) จะเรียก <code>this.findOne(id)</code> ก่อนเข้า transaction เพื่อให้ได้ 404 ที่อ่านรู้เรื่องเหมือน endpoint อื่นก็ได้</p></div>
     <pre><code>// coffees.controller.ts
 @Post(':id/recommend')
-recommendCoffee(@Param('id') id: string) {
+recommend(@Param('id') id: string) {
   return this.coffeesService.recommendCoffee(id);
 }</code></pre>
 
