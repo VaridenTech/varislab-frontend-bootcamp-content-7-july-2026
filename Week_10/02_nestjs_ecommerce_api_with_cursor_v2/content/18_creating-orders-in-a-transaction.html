@@ -241,7 +241,7 @@ export class OrdersService {
       <ul>
         <li><code>npm run build &amp;&amp; npm run lint</code> ผ่านทั้งสองคำสั่ง</li>
         <li><code>grep -n "Math.round" src/orders/orders.service.ts</code> เจอที่เดียว: ข้างใน <code>round2</code> เท่านั้น — <code>discountedPrice</code> เรียก <code>round2(...)</code> ไม่ได้เรียก <code>Math.round</code> ตรง ๆ</li>
-        <li><code>grep -n "this.prisma" src/orders/orders.service.ts</code> เจอแค่สองบรรทัด คือ constructor และบรรทัดที่เปิด <code>$transaction</code> — ยืนยันว่าไม่มี query หลุดออกนอก transaction</li>
+        <li><code>grep -n "this.prisma" src/orders/orders.service.ts</code> เจอแค่หนึ่งบรรทัด คือบรรทัดที่เปิด <code>$transaction</code> (constructor เป็นแค่ประกาศ parameter <code>private readonly prisma: PrismaService</code> ไม่มีคำว่า <code>this.prisma</code> อยู่ในนั้น) — ยืนยันว่าไม่มี query หลุดออกนอก transaction</li>
         <li><code>grep -n "stock\|: any\| as " src/orders/orders.service.ts</code> ไม่เจออะไรเลย</li>
         <li>คิดเลขตามด้วยมือใน <code>node -e "console.log(Math.round(19.98 * (1 - 10.48 / 100) * 100) / 100)"</code> ได้ <code>17.89</code> ตรงกับ <code>discountedPrice</code> ที่ <code>orders.service.ts</code> คำนวณจริง (ยืนยันด้วย real run ก่อนเขียนเข้าไป)</li>
         <li><code>git status</code> เห็นเฉพาะสามไฟล์ใหม่ ไม่มี <code>app.module.ts</code> หรือไฟล์ใน <code>src/products/</code> ติดมา</li>
