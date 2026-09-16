@@ -63,7 +63,7 @@ DTO ทุกไฟล์ในโปรเจกต์ลงท้าย .dto.t
 
 ข้อกำหนดทางเทคนิค:
 - main.ts: import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-  หลัง enableCors และก่อน app.listen สร้าง config ด้วย new DocumentBuilder().setTitle('E-commerce API').setDescription('Drop-in replacement for dummyjson.com used by the React e-commerce app').setVersion('1.0').build()
+  หลัง enableCors และก่อน app.listen สร้าง config ด้วย new DocumentBuilder().setTitle('E-commerce API').setDescription("E-commerce API designed from the React storefront's own contract (see docs/api-spec.md)").setVersion('1.0').build()
   แล้ว SwaggerModule.setup('api', app, SwaggerModule.createDocument(app, config))
 - nest-cli.json: ใน compilerOptions เพิ่ม "plugins": ["@nestjs/swagger/plugin"] คงค่าอื่นไว้ทั้งหมด
 
@@ -101,7 +101,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('E-commerce API')
-    .setDescription('Drop-in replacement for dummyjson.com used by the React e-commerce app')
+    .setDescription("E-commerce API designed from the React storefront's own contract (see docs/api-spec.md)")
     .setVersion('1.0')
     .build();
   SwaggerModule.setup('api', app, SwaggerModule.createDocument(app, config));
