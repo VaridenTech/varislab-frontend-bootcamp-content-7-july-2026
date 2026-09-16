@@ -17,6 +17,7 @@
         <li>เปิด route <code>POST /carts/add</code> ให้ตรงกับ path ที่ React app เรียกโดยไม่แก้ฝั่ง frontend</li>
         <li>อธิบายได้ว่าทำไมไฟล์ controller ชื่อ <code>carts</code> แต่ module และ service ใช้คำว่า <code>orders</code></li>
         <li>พิสูจน์ทั้งสี่พฤติกรรมด้วย curl: 201, 400 ขาด <code>userId</code>, 404 สินค้าไม่มีจริงพร้อม rollback, 400 email ผิดรูป</li>
+        <li>เพิ่ม check ที่สิบใน <code>scripts/contract-check.ts</code> ด้วยมือ ให้ <code>npm run contract:check</code> ครอบคลุม <code>POST /carts/add</code> ด้วย</li>
       </ul>
     </section>
 
@@ -27,11 +28,13 @@
 
     <h2>ทวนของเดิม: @Body และ status 201</h2>
     <p>บทที่ 8 และ 9 ของคอร์ส NestJS Fundamentals วางพื้นไว้แล้วสองข้อที่ใช้ตรง ๆ ในบทนี้ ข้อแรก <code>@Body() dto: AddCartDto</code> — การ<em>ประกาศชนิด</em>ของ parameter ให้เป็น class ของ DTO คือสิ่งที่ทำให้ <code>ValidationPipe</code> รู้ว่าต้องเอา rule ชุดไหนมาตรวจ ถ้าเขียนเป็น <code>@Body() dto: any</code> หรือลืมใส่ชนิด DTO ทั้งชุดของบทที่ 17 จะไม่ทำงานเลยแม้แต่ข้อเดียว และไม่มี error ใด ๆ เตือน</p>
-    <p>ข้อสอง handler ที่เป็น <code>@Post()</code> ของ Nest ตอบ <code>201 Created</code> เป็นค่าเริ่มต้นอยู่แล้ว ตรงกับสัญญาของ dummyjson พอดี จึง<strong>ไม่ต้อง</strong>ใส่ <code>@HttpCode()</code> — ใส่ <code>@HttpCode(200)</code> ไปจะกลายเป็นการทำสัญญาเสียเอง</p>
+    <p>ข้อสอง handler ที่เป็น <code>@Post()</code> ของ Nest ตอบ <code>201 Created</code> เป็นค่าเริ่มต้นอยู่แล้ว ตรงกับสัญญาที่เราออกแบบไว้ใน <code>docs/api-spec.md</code> พอดี จึง<strong>ไม่ต้อง</strong>ใส่ <code>@HttpCode()</code> — ใส่ <code>@HttpCode(200)</code> ไปจะกลายเป็นการทำสัญญาเสียเอง</p>
     <p>สุดท้าย <code>OrdersModule</code> ต้องถูก import เข้า <code>AppModule</code> ไม่ทำขั้นนี้ Nest จะไม่รู้จัก controller ตัวใหม่ และจะไม่มีบรรทัด <code>Mapped {/carts/add, POST}</code> ใน log ตอน start — ซึ่งเป็นวิธีตรวจที่เร็วที่สุดว่าลืมหรือไม่ลืม</p>
 
     <h2>เป้าหมายของบทนี้</h2>
     <pre><code>ecommerce-api/
+├── scripts/
+│   └── contract-check.ts           (แก้ไข ด้วยมือ: เพิ่ม check ที่สิบ)
 └── src/
     ├── app.module.ts               (แก้ไข: เพิ่ม OrdersModule ต่อจาก ProductsModule)
     └── orders/
@@ -41,6 +44,7 @@
       <li><strong><code>src/orders/carts.controller.ts</code></strong> — สัญญา: ต้องเป็น <code>@Controller('carts')</code> กับ <code>@Post('add')</code> และรับ body ด้วย <code>@Body() dto: AddCartDto</code> · ต้องไม่ใส่ <code>@HttpCode()</code>, ไม่คิดเลขหรือแตะ Prisma ใน controller</li>
       <li><strong><code>src/orders/orders.module.ts</code></strong> — สัญญา: ต้องประกาศ <code>controllers: [CartsController]</code> และ <code>providers: [OrdersService]</code> · ต้องไม่ import <code>PrismaModule</code> ซ้ำ (บทที่ 6 ทำให้มันเป็น global module แล้ว)</li>
       <li><strong><code>src/app.module.ts</code></strong> — สัญญา: ต้องเพิ่ม <code>OrdersModule</code> ต่อจาก <code>ProductsModule</code> ใน <code>imports</code> · ต้องไม่แตะ <code>ConfigModule</code>, <code>controllers</code> หรือ <code>providers</code> เดิม</li>
+      <li><strong><code>scripts/contract-check.ts</code></strong> — สัญญา: import <code>orderResponseSchema</code> เพิ่มจาก <code>./contract-schemas.js</code> (ตัว schema มีอยู่แล้วตั้งแต่บทที่ 15) แล้วต่อ check ที่สิบท้าย array เดิม · แก้ไฟล์นี้<strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างล่าง เพราะ prompt นั้นถูกจำกัดขอบเขตไว้แค่สามไฟล์ของ controller</li>
     </ul>
 
     <section class="workshop" aria-labelledby="exercise-heading">
@@ -50,7 +54,7 @@
       <div class="cursor-prompt"><code>สร้าง CartsController ที่เปิด POST /carts/add และลงทะเบียน OrdersModule
 
 บริบท: @src/orders/orders.service.ts @src/orders/dto/add-cart.dto.ts @src/products/products.controller.ts @src/products/products.module.ts @src/app.module.ts @.cursor/rules/project.mdc
-React app เรียก POST /carts/add (path นี้ต้องตรงตัว เพราะเราแทนที่ dummyjson โดยไม่แก้ฝั่ง frontend) และคาดหวัง status 201
+React app เรียก POST /carts/add (path นี้ต้องตรงตัว เพราะ src/features/checkout/api.ts เรียก path นี้ตรง ๆ โดยไม่แก้ฝั่ง frontend) และคาดหวัง status 201
 OrdersService.create(dto: AddCartDto) คืน Promise&lt;CartResponseDto&gt; แล้ว
 products.controller.ts และ products.module.ts คือรูปแบบมาตรฐานของ controller และ module ในโปรเจกต์นี้
 
@@ -133,18 +137,52 @@ export class AppModule {}</code></pre>
       <p>ถ้าอธิบายบรรทัดไหนไม่ได้ ยังไม่ผ่านบทนี้ — กลับไปอ่านส่วนแนวคิดก่อน</p>
     </section>
 
+    <section class="contract-check-extension" aria-labelledby="contract-check-heading">
+      <h2 id="contract-check-heading">เพิ่ม check ที่สิบด้วยมือ</h2>
+      <p>บทที่ 15 ตั้งใจปล่อยให้ <code>scripts/contract-check.ts</code> มีแค่เก้า check ไว้ก่อน เพราะตอนนั้น <code>POST /carts/add</code> ยังไม่มีอยู่จริง ตอนนี้มันมีแล้ว จึงถึงเวลาต่อ check ที่สิบเข้าไป — แก้ไฟล์นี้ <strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างบน เพราะ prompt นั้นสั่งห้ามแก้ไฟล์อื่นนอกจากสามไฟล์ของ controller ไว้ชัดเจนแล้ว การเพิ่ม check นี้เป็นงานแยกที่ควรทำเอง จะได้อธิบายทุกบรรทัดได้เหมือนเดิม</p>
+      <p>เปิด <code>scripts/contract-check.ts</code> แล้วเพิ่ม <code>orderResponseSchema</code> เข้า import (ตัว schema เองมีอยู่แล้วตั้งแต่บทที่ 15 ไม่ต้องเขียนใหม่)</p>
+      <pre><code>import {
+  categorySchema,
+  errorSchema,
+  listEnvelopeSchema,
+  orderResponseSchema,
+  productSchema,
+} from './contract-schemas.js';</code></pre>
+      <p>แล้วต่อ check object นี้ท้าย array <code>checks</code> (หลัง check ของ <code>nope</code>)</p>
+      <pre><code>  {
+    name: 'POST /carts/add → 201, discountedPrice rounds to 2dp',
+    run: async () => {
+      const { status, body } = await getJson('/carts/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: 1,
+          products: [{ id: 1, quantity: 2 }],
+          address: { address: '1 Sukhumvit Rd', email: 'a@b.com', phone: '0812345678' },
+        }),
+      });
+      if (status !== 201) throw new Error(`expected 201, got ${status}`);
+      const receipt = orderResponseSchema.parse(body);
+      if (receipt.products[0].discountedPrice !== 17.89) {
+        throw new Error(`expected discountedPrice 17.89, got ${receipt.products[0].discountedPrice}`);
+      }
+    },
+  },</code></pre>
+      <p>check นี้ยิง <code>POST /carts/add</code> จริง แปลว่ารันหนึ่งครั้งเท่ากับสร้างคำสั่งซื้อเพิ่มอีกหนึ่งใบในฐานข้อมูล — ถ้ารัน <code>npm run contract:check</code> หลังจากยิง curl ทั้งสี่กรณีไปแล้ว แล้วย้อนไปนับแถวใน <code>Order</code> อีกครั้ง จำนวนจะเพิ่มจาก <code>1</code> เป็น <code>2</code> นั่นไม่ใช่ transaction รั่ว แต่เป็นเพราะ check นี้เองที่สั่งซื้อเพิ่ม</p>
+    </section>
+
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
       <p>รัน <code>npm run start:dev</code> แล้ว log ต้องมีสองบรรทัดนี้ ถ้าไม่มี แปลว่าลืม import <code>OrdersModule</code> เข้า <code>AppModule</code></p>
       <pre><code>LOG [RoutesResolver] CartsController {/carts}: +0ms
 LOG [RouterExplorer] Mapped {/carts/add, POST} route +0ms</code></pre>
-      <p>ยิง body เดียวกับที่ React app ส่ง จะได้ <code>201 Created</code> พร้อมตัวเลขตรงกับ <code>docs/contract/cart-add.txt</code> ทุกตัว</p>
+      <p>ยิง body เดียวกับที่ React app ส่ง จะได้ <code>201 Created</code> พร้อมตัวเลขตรงกับที่ <code>orders.service.ts</code> คำนวณจริงทุกตัว</p>
       <pre><code>curl -s -i -X POST http://localhost:3000/carts/add -H 'Content-Type: application/json' \
   -d '{"userId":1,"products":[{"id":1,"quantity":2}],"address":{"address":"1 Sukhumvit Rd","email":"a@b.com","phone":"0812345678"}}'</code></pre>
       <pre><code>HTTP/1.1 201 Created
 
-{"id":1,"products":[{"id":1,"title":"Essence Mascara Lash Princess","price":9.99,"quantity":2,"total":19.98,"discountPercentage":10.48,"discountedPrice":18,"thumbnail":"https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp"}],"total":19.98,"discountedTotal":18,"userId":1,"totalProducts":1,"totalQuantity":2}</code></pre>
-      <div class="note"><p><code>id</code> ที่ได้คือ <code>1</code> เพราะเป็นคำสั่งซื้อใบแรกในฐานข้อมูลของคุณ ส่วนในสัญญาที่จับจาก dummyjson เป็น <code>209</code> — ค่านี้เป็น id ที่รันตามลำดับของแต่ละฐานข้อมูล จึงต่างกันได้และไม่ถือว่าผิดสัญญา field อื่นทั้งหมด (<code>total</code>, <code>discountedTotal</code>, <code>discountedPrice</code>, <code>totalProducts</code>, <code>totalQuantity</code>) ต้องตรงเป๊ะ</p></div>
+{"id":1,"userId":1,"products":[{"id":1,"title":"Velvet Matte Lipstick","price":9.99,"quantity":2,"total":19.98,"discountPercentage":10.48,"discountedPrice":17.89,"thumbnail":"https://picsum.photos/seed/product-1-thumb/300/300"}],"total":19.98,"discountedTotal":17.89,"totalProducts":1,"totalQuantity":2}</code></pre>
+      <div class="note"><p><code>id</code> เริ่มนับจาก <code>1</code> เพราะเราเก็บคำสั่งซื้อในฐานข้อมูลของเราเอง — ตัวเลขจะขึ้นอยู่กับว่าฐานข้อมูลของคุณเคยมีคำสั่งซื้อมาก่อนกี่ใบ field อื่นทั้งหมด (<code>total</code>, <code>discountedTotal</code>, <code>discountedPrice</code>, <code>totalProducts</code>, <code>totalQuantity</code>) ต้องตรงเป๊ะ</p></div>
       <p>สามกรณีที่เหลือคือกรณีที่พลาดแล้วรู้ยาก จึงต้องยิงดูให้เห็นด้วยตาทั้งหมด ไม่มี <code>userId</code> → <code>400</code> จาก <code>ValidationPipe</code> โดยที่ <code>message</code> เป็น array และมีสองข้อ เพราะทั้ง <code>@IsInt()</code> และ <code>@Min(1)</code> ไม่ผ่านพร้อมกัน</p>
       <pre><code>curl -s -i -X POST http://localhost:3000/carts/add -H 'Content-Type: application/json' \
   -d '{"products":[{"id":1,"quantity":1}],"address":{"address":"x","email":"a@b.com","phone":"1"}}'</code></pre>
@@ -156,7 +194,7 @@ LOG [RouterExplorer] Mapped {/carts/add, POST} route +0ms</code></pre>
   -d '{"userId":1,"products":[{"id":99999,"quantity":1}],"address":{"address":"x","email":"a@b.com","phone":"1"}}'</code></pre>
       <pre><code>HTTP/1.1 404 Not Found
 
-{"message":"Product with id '99999' not found","error":"Not Found","statusCode":404}</code></pre>
+{"message":"Product 99999 not found","error":"Not Found","statusCode":404}</code></pre>
       <p>email ผิดรูป → <code>400</code> โดยชื่อ field ใน message มีคำนำหน้า <code>address.</code> ซึ่งเป็นหลักฐานว่า <code>@ValidateNested()</code> ของบทที่ 17 ไล่ตรวจเข้าไปข้างใน object จริง</p>
       <pre><code>curl -s -i -X POST http://localhost:3000/carts/add -H 'Content-Type: application/json' \
   -d '{"userId":1,"products":[{"id":1,"quantity":1}],"address":{"address":"x","email":"not-an-email","phone":"1"}}'</code></pre>
@@ -175,7 +213,7 @@ LOG [RouterExplorer] Mapped {/carts/add, POST} route +0ms</code></pre>
   -c 'SELECT id, "userId", total, "discountedTotal", "totalQuantity" FROM "Order";'</code></pre>
           <pre><code> id | userId | total | discountedTotal | totalQuantity
 ----+--------+-------+-----------------+---------------
-  1 |      1 | 19.98 |              18 |             2
+  1 |      1 | 19.98 |           17.89 |             2
 (1 row)</code></pre></li>
         <li>พิสูจน์ว่า transaction rollback จริง: หลังยิงครบทั้งสี่กรณี จำนวนคำสั่งซื้อต้องยังเป็น <code>1</code> ใบ — กรณี 404 ไม่ทิ้งใบครึ่ง ๆ ไว้ และสองกรณี 400 ถูกปัดตกก่อนถึง service
           <pre><code>docker compose exec db psql -U postgres -d ecommerce -c 'SELECT count(*) FROM "Order";'</code></pre>
@@ -184,6 +222,17 @@ LOG [RouterExplorer] Mapped {/carts/add, POST} route +0ms</code></pre>
      1
 (1 row)</code></pre></li>
         <li><code>docker compose exec db psql -U postgres -d ecommerce -c 'SELECT "orderId", "productId", title, price, quantity, total, "discountedPrice" FROM "OrderItem";'</code> เห็นบรรทัดเดียวที่เก็บ snapshot ชื่อและราคาสินค้าไว้ครบ ไม่ใช่แค่ <code>productId</code></li>
+        <li>หลังต่อ check ที่สิบตามหัวข้อ "เพิ่ม check ที่สิบด้วยมือ" ด้านบน รัน <code>npm run contract:check</code> ต้องได้สิบบรรทัดนี้ (สังเกตว่า <code>Order</code> จะกลายเป็น <code>2</code> ใบหลังรันรอบนี้ เพราะ check ที่สิบสั่งซื้อจริง)
+          <pre><code>✅ GET /products/categories → 200, 24 categories
+✅ GET /products?limit=5&amp;skip=0 → limit and skip echo the request
+✅ GET /products?limit=0 → 400 (out of range)
+✅ GET /products?limit=101 → 400 (out of range)
+✅ GET /products/1 → validated product
+✅ GET /products/999999 → 404 with message
+✅ GET /products/abc → 400 with message
+✅ GET /products/category/groceries?limit=20&amp;skip=0 → total 27
+✅ GET /products/category/nope?limit=5&amp;skip=0 → 200, empty envelope
+✅ POST /carts/add → 201, discountedPrice rounds to 2dp</code></pre></li>
         <li><code>npm run build &amp;&amp; npm run lint</code> ผ่านทั้งคู่</li>
         <li>commit ผลงานของบทนี้: <code>git add -A &amp;&amp; git commit -m "feat: POST /carts/add"</code></li>
       </ul>
@@ -194,7 +243,6 @@ LOG [RouterExplorer] Mapped {/carts/add, POST} route +0ms</code></pre>
     <ul class="source-list">
       <li><a href="https://docs.nestjs.com/controllers#request-payloads">Controllers: Request payloads และ status code ของ POST (NestJS Docs)</a></li>
       <li><a href="https://docs.nestjs.com/modules">Modules (NestJS Docs)</a></li>
-      <li><a href="https://dummyjson.com/docs/carts">Carts: add a new cart (DummyJSON Docs)</a></li>
     </ul>
 
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
