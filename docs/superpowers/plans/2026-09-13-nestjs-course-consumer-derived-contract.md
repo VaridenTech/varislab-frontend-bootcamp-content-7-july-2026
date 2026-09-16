@@ -1366,9 +1366,11 @@ git commit -m "content(week10): lesson 16 — our own order receipt shape and ro
 - Reference project: `package.json`, `scripts/contract-schemas.ts` (new), `scripts/contract-check.ts` (rewrite, delete old)
 - Modify: `Week_10/02_nestjs_ecommerce_api_with_cursor_v2/content/15_checking-the-contract.html`
 
+**Correction (found while dispatching Task 10 — verified against the course's own lesson ordering):** lesson 15 comes BEFORE lesson 16 (modeling orders) through lesson 19 (POST /carts/add) in the finished course. A student following the lessons in order does not have `POST /carts/add` working yet at lesson 15 — it doesn't exist until lesson 19. The original 10-check design here included a `POST /carts/add` check, which a student running `npm run contract:check` at lesson 15 could never pass. **This task ships 9 checks (products only); Task 14 (lesson 19) adds the 10th (`POST /carts/add`) once that endpoint actually exists**, extending this same script rather than lesson 15 pretending it's already live. `orderResponseSchema`/`cartProductSchema` may still be *defined* in `contract-schemas.ts` in this task (defining a schema for code that will exist soon is normal and harmless) — just don't import or use them in `contract-check.ts`'s checks array yet.
+
 **Interfaces:**
-- Consumes: the order receipt shape from Task 10 (lesson 16), completed immediately before this task.
-- Produces: `npm run contract:check` — referenced by lesson 22 (Task 15) as "10 lines, all ✅".
+- Consumes: the order receipt shape from Task 10 (lesson 16), completed immediately before this task, for the schema definitions only (not the check itself).
+- Produces: `npm run contract:check` at 9 checks/lines — Task 14 (lesson 19) extends it to 10; lesson 22 (Task 15) correctly says "10 lines" because by then Task 14 has already run.
 
 - [ ] **Step 1**: Add zod:
 
@@ -1485,7 +1487,6 @@ import {
   categorySchema,
   errorSchema,
   listEnvelopeSchema,
-  orderResponseSchema,
   productSchema,
 } from './contract-schemas.js';
 
@@ -1583,26 +1584,12 @@ const checks: Check[] = [
       }
     },
   },
-  {
-    name: 'POST /carts/add → 201, discountedPrice rounds to 2dp',
-    run: async () => {
-      const { status, body } = await getJson('/carts/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: 1,
-          products: [{ id: 1, quantity: 2 }],
-          address: { address: '1 Sukhumvit Rd', email: 'a@b.com', phone: '0812345678' },
-        }),
-      });
-      if (status !== 201) throw new Error(`expected 201, got ${status}`);
-      const receipt = orderResponseSchema.parse(body);
-      if (receipt.products[0].discountedPrice !== 17.89) {
-        throw new Error(`expected discountedPrice 17.89, got ${receipt.products[0].discountedPrice}`);
-      }
-    },
-  },
 ];
+// Task 14 (lesson 19) appends a tenth check here — POST /carts/add → 201 —
+// once that endpoint exists. Do not add it in this task: a student running
+// this script at lesson 15 doesn't have /carts/add yet (it arrives at
+// lesson 19), and a check that can never pass at the point it's introduced
+// is worse than not having it yet.
 
 let failures = 0;
 for (const check of checks) {
@@ -1632,9 +1619,9 @@ npm run contract:check
 git add -A && git commit -m "feat: zod contract check against our own API"
 git tag -f lesson-15
 ```
-Expected: 10 lines, all `✅`, exit code `0`. If any check fails, fix the underlying service/DTO (not the schema) and rerun before writing the lesson.
+Expected: 9 lines, all `✅`, exit code `0`. If any check fails, fix the underlying service/DTO (not the schema) and rerun before writing the lesson.
 
-- [ ] **Step 6**: Rewrite lesson 15 HTML. Keep filename. New framing: "making the contract executable" — the spec written by hand in lesson 03 becomes zod schemas that validate our own live API. State explicitly (per the design spec's DTO-vs-zod resolution): `ProductResponseDto` (read by Swagger's CLI plugin in lessons 21–22) is the compile-time/Swagger-facing type; this zod schema is a separate, runtime-only check of our own responses — not a third "official" shape. Show the schema file and the check script (or the load-bearing parts), explain `.strict()` (rejects unexpected keys — catches an AI-added stray field), and keep the sabotage/"AI gets this wrong" exercise: break one field (e.g. rename `discountedPrice` to `discountPrice` in the mapper) and show the real zod error output naming the exact path, then revert. Update every verification step to the real command output captured in Step 5.
+- [ ] **Step 6**: Rewrite lesson 15 HTML. Keep filename. New framing: "making the contract executable" — the spec written by hand in lesson 03 becomes zod schemas that validate our own live API. State explicitly (per the design spec's DTO-vs-zod resolution): `ProductResponseDto` (read by Swagger's CLI plugin in lessons 21–22) is the compile-time/Swagger-facing type; this zod schema is a separate, runtime-only check of our own responses — not a third "official" shape. Show the schema file and the check script (or the load-bearing parts), explain `.strict()` (rejects unexpected keys — catches an AI-added stray field), and keep the sabotage/"AI gets this wrong" exercise: break one field (e.g. rename `discountedPrice` to `discountPrice` in the mapper) and show the real zod error output naming the exact path, then revert. Update every verification step to the real command output captured in Step 5 (nine checks, not ten — say plainly that the tenth (carts) arrives in lesson 19 once that endpoint exists, so a student isn't confused when this run has fewer lines than lesson 22 later describes).
 
 - [ ] **Step 7: Verify and commit**
 
@@ -1710,20 +1697,55 @@ git commit -m "content(week10): lesson 18 — 2dp rounding worked example (17.89
 ### Task 14: Rewrite lesson 19 (POST /carts/add — full response verification)
 
 **Files:**
+- Reference project: `scripts/contract-schemas.ts`, `scripts/contract-check.ts`
 - Modify: `Week_10/02_nestjs_ecommerce_api_with_cursor_v2/content/19_post-carts-add.html`
+
+**Correction (companion to Task 11's correction above):** Task 11 shipped `contract:check` with 9 checks (product endpoints only) because `POST /carts/add` doesn't exist at lesson 15's point in the course. It exists now. This task adds the 10th check to that same script — the natural moment, since this lesson's entire subject is `POST /carts/add`.
 
 - [ ] **Step 1**: Replace every quoted response body with the real output captured in Task 13 Step 2 (full receipt: `id`, `userId`, `products[0]` with `discountedPrice: 17.89`, `total: 19.98`, `discountedTotal: 17.89`, `totalProducts: 1`, `totalQuantity: 2`).
 
-- [ ] **Step 2**: Verify the controller/wiring is unchanged from the current `carts.controller.ts`/`orders.module.ts` (Task 10 only touched the service/mapper/DTO, not the controller) — confirm:
+- [ ] **Step 2**: Confirm the controller/wiring built alongside the service in Task 10 (`carts.controller.ts`, `orders.module.ts`, `OrdersModule` imported in `app.module.ts`) is present and unchanged:
 
 ```bash
 SCRATCH=/private/tmp/claude-501/-Users-varis-Sites-varis-lab-frontend-bootcamp-content-7-july-2026/16431c67-c41f-48ab-8541-21a433bf6c5d/scratchpad/verify/ecommerce-api
 cd "$SCRATCH"
 cat src/orders/carts.controller.ts
-git tag -f lesson-19
 ```
 
-- [ ] **Step 3: Verify and commit**
+- [ ] **Step 3**: Add the tenth check to `scripts/contract-check.ts` — import `orderResponseSchema` from `./contract-schemas.js` and append this check object to the `checks` array (after the `nope` category check, before the closing `];`):
+```ts
+  {
+    name: 'POST /carts/add → 201, discountedPrice rounds to 2dp',
+    run: async () => {
+      const { status, body } = await getJson('/carts/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: 1,
+          products: [{ id: 1, quantity: 2 }],
+          address: { address: '1 Sukhumvit Rd', email: 'a@b.com', phone: '0812345678' },
+        }),
+      });
+      if (status !== 201) throw new Error(`expected 201, got ${status}`);
+      const receipt = orderResponseSchema.parse(body);
+      if (receipt.products[0].discountedPrice !== 17.89) {
+        throw new Error(`expected discountedPrice 17.89, got ${receipt.products[0].discountedPrice}`);
+      }
+    },
+  },
+```
+Run it for real:
+```bash
+(npm run start:dev &) ; sleep 8
+npm run contract:check
+git add -A && git commit -m "feat: extend contract check with POST /carts/add"
+git tag -f lesson-19
+```
+Expected: 10 lines, all ✅, exit code 0. If it fails, fix the underlying service/DTO (not the schema) and rerun.
+
+- [ ] **Step 4**: Rewrite lesson 19's own contract-check verification step (if it has one) or add a brief mention that `npm run contract:check` now shows all 10 checks, referencing the real 10-line output from Step 3.
+
+- [ ] **Step 5: Verify and commit**
 
 ```bash
 cd /Users/varis/Sites/varis-lab/frontend-bootcamp-content-7-july-2026
