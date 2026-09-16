@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 66 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 65/66</p>
     <h1>ใช้ Transactions (MongoDB)</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>อธิบายได้ว่า transaction คืออะไร และเหตุใดงานที่เขียนข้อมูลหลายจุดต้อง "สำเร็จทั้งคู่หรือไม่สำเร็จเลย"</li>
         <li>สร้าง <code>Event</code> schema สำหรับเก็บเหตุการณ์เพื่อใช้วิเคราะห์ข้อมูลภายหลัง</li>
@@ -61,7 +61,7 @@ export class CoffeesService {
     @InjectModel(Event.name) private readonly eventModel: Model&lt;Event&gt;,
   ) {}
 
-  // ...CRUD methods เดิมจากบทที่ 65 คงไว้ทั้งหมด...
+  // ...CRUD methods เดิมจากบทที่ 64 คงไว้ทั้งหมด...
 
   async recommendCoffee(coffee: Coffee) {
     const session = await this.connection.startSession();
@@ -86,8 +86,8 @@ export class CoffeesService {
     }
   }
 }</code></pre>
-    <div class="note"><p>โค้ดนี้อ้าง <code>coffee.recommendations</code> — อย่าลืมเพิ่ม <code>@Prop({ default: 0 }) recommendations: number;</code> เข้าไปใน <code>Coffee</code> schema ของบทที่ 63 ก่อน ไม่อย่างนั้นค่าจะเป็น <code>NaN</code></p></div>
-    <div class="warning"><p>MongoDB รองรับ multi-document transaction เฉพาะเมื่อรันเป็น replica set เท่านั้น container แบบ standalone จากบทที่ 61 <strong>ไม่</strong>โยน error ตอน <code>session.startTransaction()</code> (เมธอดนี้แค่ตั้งค่า flag ในตัว session เท่านั้น) แต่จะโยน error ตอนมีคำสั่งเขียนแรกที่แนบ <code>{ session }</code> เข้าไปจริง (ในโค้ดนี้คือ <code>recommendEvent.save({ session })</code>) — สำหรับการเรียนแนวคิดนี้ถือว่าปกติ (โค้ดจับได้ใน <code>catch</code> อยู่แล้วไม่ว่า error จะเกิดจากบรรทัดไหนใน try) แต่ถ้าอยากเห็น transaction ทำงานจริง ต้องตั้งค่า mongo ใน docker-compose ให้เป็น replica set โหนดเดียว (<code>--replSet</code>) ก่อน</p></div>
+    <div class="note"><p>โค้ดนี้อ้าง <code>coffee.recommendations</code> — อย่าลืมเพิ่ม <code>@Prop({ default: 0 }) recommendations: number;</code> เข้าไปใน <code>Coffee</code> schema ของบทที่ 62 ก่อน ไม่อย่างนั้นค่าจะเป็น <code>NaN</code></p></div>
+    <div class="warning"><p>MongoDB รองรับ multi-document transaction เฉพาะเมื่อรันเป็น replica set เท่านั้น container แบบ standalone จากบทที่ 60 <strong>ไม่</strong>โยน error ตอน <code>session.startTransaction()</code> (เมธอดนี้แค่ตั้งค่า flag ในตัว session เท่านั้น) แต่จะโยน error ตอนมีคำสั่งเขียนแรกที่แนบ <code>{ session }</code> เข้าไปจริง (ในโค้ดนี้คือ <code>recommendEvent.save({ session })</code>) — สำหรับการเรียนแนวคิดนี้ถือว่าปกติ (โค้ดจับได้ใน <code>catch</code> อยู่แล้วไม่ว่า error จะเกิดจากบรรทัดไหนใน try) แต่ถ้าอยากเห็น transaction ทำงานจริง ต้องตั้งค่า mongo ใน docker-compose ให้เป็น replica set โหนดเดียว (<code>--replSet</code>) ก่อน</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">เพิ่ม endpoint สำหรับ recommend coffee</h2>
@@ -102,11 +102,11 @@ export class CoffeesService {
 POST http://localhost:3000/coffees/&lt;_id&gt;/recommend</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
       <p>บน replica set: ยิง recommend แล้ว <code>recommendations</code> ของกาแฟเพิ่มขึ้นหนึ่ง และ collection <code>events</code> มี document <code>recommend_coffee</code> ใหม่พร้อมกันเสมอ — ไม่มีทางเกิดอย่างใดอย่างหนึ่งเพียงลำพัง บน standalone: การเขียนทั้งคู่ถูก abort และข้อมูลไม่ขยับ ซึ่งพิสูจน์พฤติกรรม all-or-nothing เช่นกัน</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li><code>db.coffees.find()</code> และ <code>db.events.find()</code> ใน mongosh ขยับพร้อมกันหลังยิง recommend สำเร็จ</li>
         <li>จำนวน document ใน <code>events</code> เท่ากับจำนวนครั้งที่ recommend สำเร็จพอดี</li>
@@ -120,11 +120,11 @@ POST http://localhost:3000/coffees/&lt;_id&gt;/recommend</code></div>
       <li><a href="https://learn.nestjs.com/">คอร์สต้นฉบับ NestJS Fundamentals</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="65_adding-pagination-mongodb.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="67_adding-indexes-to-schemas.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="64_adding-pagination-mongodb.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="66_adding-indexes-to-schemas.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>

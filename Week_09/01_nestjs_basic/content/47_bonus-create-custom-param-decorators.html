@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 48 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 47/66</p>
     <h1>โบนัส: สร้าง Custom Param Decorators</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>บอกได้ว่า param decorator อย่าง <code>@Body()</code> และ <code>@Param()</code> ทำงานอย่างไรเบื้องหลัง</li>
         <li>สร้าง param decorator ของตัวเองด้วย <code>createParamDecorator</code></li>
@@ -36,7 +36,7 @@ export const Protocol = createParamDecorator(
     return request.protocol;
   },
 );</code></pre>
-    <p>การใช้งานเหมือน decorator ในตัวทุกประการ — ประกาศเป็น parameter ของ handler แล้ว NestJS จะเรียก factory ให้ทุก request</p>
+    <p>วิธีใช้เหมือน decorator ที่มากับ Nest: วางไว้หน้า parameter ของ handler แล้ว Nest จะเรียก factory ให้ทุก request</p>
     <pre><code>@Get()
 findAll(@Protocol() protocol: string) {
   console.log(protocol); // 'http'
@@ -64,11 +64,11 @@ findAll(@Protocol() protocol: string, @Query() paginationQuery: PaginationQueryD
 curl http://localhost:3000/coffees</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
       <p>endpoint ทำงานเหมือนเดิม แต่ terminal ของ dev server พิมพ์ <code>http</code> ทุกครั้งที่มี request เข้า — ค่านั้นมาจาก <code>request.protocol</code> ที่ decorator ควักออกมาให้ handler โดยที่ handler ไม่ต้องรู้จัก request object เลย</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li>ยิง <code>GET /coffees</code> แล้วเห็น <code>http</code> ใน log ของ server</li>
         <li>ลองส่งค่าเข้า decorator เช่น <code>@Protocol('https')</code> แล้ว log พารามิเตอร์ <code>data</code> ใน factory เพื่อยืนยันว่าค่าเดินทางถึง</li>
@@ -82,11 +82,11 @@ curl http://localhost:3000/coffees</code></div>
       <li><a href="https://docs.nestjs.com/pipes">Pipes: การทำงานร่วมกับ decorators (NestJS docs)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="47_bonus-add-request-logging-with-middleware.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="49_introducing-the-swagger-module.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="46_bonus-add-request-logging-with-middleware.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="48_introducing-the-swagger-module.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>

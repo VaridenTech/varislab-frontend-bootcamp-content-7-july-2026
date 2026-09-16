@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 50 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 49/66</p>
     <h1>เปิดใช้ Swagger CLI Plugin</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>อธิบายได้ว่าทำไม Swagger มองไม่เห็น TypeScript type ของ DTO โดยลำพัง</li>
         <li>เปิดใช้ <code>@nestjs/swagger/plugin</code> ใน <code>nest-cli.json</code></li>
@@ -51,11 +51,11 @@ npm run start:dev
 open http://localhost:3000/api</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
       <p><code>POST /coffees</code> ใน Swagger UI แสดง schema ของ <code>CreateCoffeeDto</code> ครบทุกฟิลด์ (<code>name</code>, <code>brand</code>, <code>flavors</code>) พร้อมชนิดข้อมูลที่ถูกต้อง และส่วน <q>Schemas</q> ท้ายหน้าแสดง DTO ทั้งหมดของแอป — ทั้งที่เราไม่ได้ติด decorator ใด ๆ ใน DTO เลย</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li>กาง <code>POST /coffees</code> แล้วเห็น example body ที่ generate จาก <code>CreateCoffeeDto</code></li>
         <li>ดู schema ของ <code>PATCH /coffees/{id}</code> คร่าว ๆ — ตอนนี้ <code>UpdateCoffeeDto</code> ยังใช้ <code>PartialType</code> จาก <code>@nestjs/mapped-types</code> (บทที่ 18) อยู่ ฟิลด์อาจยังไม่ถูกทำเครื่องหมาย optional ครบในเอกสารจนกว่าจะสลับไปใช้ <code>PartialType</code> จาก <code>@nestjs/swagger</code> ในบทถัดไป — ยังไม่ต้องแก้อะไรตอนนี้</li>
@@ -69,11 +69,11 @@ open http://localhost:3000/api</code></div>
       <li><a href="https://docs.nestjs.com/openapi/types-and-parameters">OpenAPI types and parameters (NestJS docs)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="49_introducing-the-swagger-module.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="51_decorating-model-properties.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="48_introducing-the-swagger-module.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="50_decorating-model-properties.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>

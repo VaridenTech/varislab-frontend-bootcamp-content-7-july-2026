@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 41 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 40/66</p>
     <h1>จับ Exceptions ด้วย Filters</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>อธิบายได้ว่า exception filter เข้ามาแทรกตรงไหนของ request lifecycle และต่างจาก exception layer เริ่มต้นของ NestJS อย่างไร</li>
         <li>สร้าง filter ด้วย Nest CLI แล้วใช้ <code>@Catch()</code> จำกัดชนิด exception ที่ต้องการจับ</li>
@@ -69,11 +69,11 @@ app.useGlobalFilters(new HttpExceptionFilter());
 curl http://localhost:3000/coffees/999</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
       <p>response ของ error ยังมี <code>statusCode</code> และ <code>message</code> เหมือนเดิม (เช่น <q>Coffee #999 not found</q>) แต่เพิ่มฟิลด์ <code>timestamp</code> เป็นเวลา ISO string เข้ามาในทุก error — ทั้ง 404 จาก service และ 400 จาก ValidationPipe</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li>ยิง <code>GET /coffees/999</code> ด้วย Insomnia หรือ curl แล้วดูว่า JSON มี <code>timestamp</code> และ status ยังเป็น 404</li>
         <li>ยิง <code>POST /coffees</code> ด้วย payload ที่ผิด schema แล้วตรวจว่า error 400 ของ ValidationPipe ก็ผ่าน filter เดียวกัน (มี timestamp เช่นกัน)</li>
@@ -87,11 +87,11 @@ curl http://localhost:3000/coffees/999</code></div>
       <li><a href="https://docs.nestjs.com/cli/overview">Nest CLI overview: คำสั่ง generate (NestJS docs)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="40_understanding-binding-techniques.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="42_protect-routes-with-guards.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="39_understanding-binding-techniques.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="41_protect-routes-with-guards.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>

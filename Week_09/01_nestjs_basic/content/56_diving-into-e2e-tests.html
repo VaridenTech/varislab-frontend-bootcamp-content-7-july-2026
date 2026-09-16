@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 57 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 56/66</p>
     <h1>เจาะลึก e2e Tests</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>อธิบายได้ว่า e2e test ต่างจาก unit test ตรงที่ boot แอปทั้งใบแล้วทดสอบผ่าน HTTP จริง</li>
         <li>ใช้ <code>createNestApplication()</code> + <code>supertest</code> ยิง request เข้า in-memory HTTP server</li>
@@ -21,7 +21,7 @@
     </section>
 
     <h2>ทดสอบในระดับที่ผู้ใช้เจอจริง</h2>
-    <p>Unit test พิสูจน์ว่า class เดี่ยว ๆ ทำงานถูก แต่ตอบไม่ได้ว่า<em>ประกอบร่างแล้ว</em>ทั้งระบบยังถูกอยู่ไหม — routing ถูกเส้นหรือเปล่า, pipe แปลงข้อมูลจริงไหม, module import ครบหรือไม่ e2e test (End-to-End) ครอบคลุมการทำงานร่วมกันของ classes และ modules ในระดับ aggregate ใกล้เคียงกับที่ผู้ใช้ production เจอที่สุด: boot แอปขึ้นมาจริง แล้วคุยกับมันผ่าน HTTP</p>
+    <p>Unit test บอกได้ว่า class หนึ่งทำงานถูก แต่ยังตอบไม่ได้ว่าเมื่อประกอบทุกส่วนเข้าด้วยกัน ระบบจะทำงานครบหรือไม่ เช่น route ถูกต้องไหม, pipe แปลงค่าจริงหรือเปล่า และ module import dependency ครบหรือยัง e2e test (End-to-End) จึงเปิดแอปขึ้นมาจริง แล้วส่ง HTTP request เข้าไปเหมือนที่ client ใช้งาน</p>
     <p>โครงที่ Nest scaffold ให้ใน <code>test/app.e2e-spec.ts</code> มีครบทุกชิ้นที่ต้องรู้จัก</p>
     <pre><code>/* app.e2e-spec.ts - FINAL CODE */
 import { Test, TestingModule } from '@nestjs/testing';
@@ -62,7 +62,7 @@ describe('AppController (e2e)', () =&gt; {
     </ul>
     <div class="note"><p>ตั้งแต่บท guards เราคุม endpoint ด้วย <code>ApiKeyGuard</code> — e2e test จึงต้อง <code>.set('Authorization', process.env.API_KEY)</code> แนบ header ไปด้วย นี่คือข้อดีของ e2e: มันบังคับให้เราทดสอบผ่านชั้น guard/pipe/filter จริงทั้งหมด ไม่ใช่ข้ามไป</p></div>
 
-    <div class="note"><p>ต่างจาก unit test ในบทที่ 55–56 ที่เรา mock <code>PrismaService</code> ทิ้ง e2e test boot <code>AppModule</code> ทั้งใบ จึงสร้าง <code>PrismaService</code> ตัวจริงและเรียก <code>$connect()</code> — database จึงต้องรันอยู่ก่อนเสมอ ส่วน Vitest รันไฟล์ทดสอบเป็น ES module เหมือนแอปจริง Prisma Client ที่ generate ไว้จึงโหลดได้โดยไม่ต้องตั้งค่าอะไรเพิ่ม และ script <code>test:e2e</code> ที่ Nest เตรียมให้ (<code>vitest run --config ./vitest.config.e2e.ts</code>) ใช้ได้ทันที</p></div>
+    <div class="note"><p>ต่างจาก unit test ในบทที่ 54–55 ที่เรา mock <code>PrismaService</code> ทิ้ง e2e test boot <code>AppModule</code> ทั้งใบ จึงสร้าง <code>PrismaService</code> ตัวจริงและเรียก <code>$connect()</code> — database จึงต้องรันอยู่ก่อนเสมอ ส่วน Vitest รันไฟล์ทดสอบเป็น ES module เหมือนแอปจริง Prisma Client ที่ generate ไว้จึงโหลดได้โดยไม่ต้องตั้งค่าอะไรเพิ่ม และ script <code>test:e2e</code> ที่ Nest เตรียมให้ (<code>vitest run --config ./vitest.config.e2e.ts</code>) ใช้ได้ทันที</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">รันและอ่าน e2e test ที่มีอยู่</h2>
@@ -72,11 +72,11 @@ docker-compose up -d
 npm run test:e2e</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
       <p><code>test/app.e2e-spec.ts</code> ผ่าน: แอป boot ขึ้นจริง, request <code>GET /</code> ที่แนบ Authorization header ได้ 200 พร้อม body <q>Hello World!</q> และ process จบสนิทหลัง <code>app.close()</code> โดย Vitest ไม่ค้าง</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li><code>npm run test:e2e</code> จบด้วย exit code 0 และ process ปิดตัวทันที ไม่ค้างรอ handle ที่ยังเปิดอยู่</li>
         <li>ลองลบบรรทัด <code>.set('Authorization', …)</code> ชั่วคราว → ต้องได้ 403 ยืนยันว่า guard ทำงานใน e2e จริง</li>
@@ -90,11 +90,11 @@ npm run test:e2e</code></div>
       <li><a href="https://docs.nestjs.com/guards">Guards: เหตุที่ e2e ต้องแนบ credentials (NestJS)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="56_adding-unit-tests.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="58_creating-our-first-e2e-test.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="55_adding-unit-tests.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="57_creating-our-first-e2e-test.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>

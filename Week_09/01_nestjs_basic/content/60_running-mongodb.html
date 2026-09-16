@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 61 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 60/66</p>
     <h1>รัน MongoDB ด้วย Docker Compose</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>เขียน <code>docker-compose.yml</code> ที่รัน MongoDB container พร้อม expose พอร์ต 27017 ให้แอปเชื่อมต่อได้</li>
         <li>สั่งเปิด container แบบ detached และปิดลงอย่างสะอาดด้วยคำสั่งเดียว</li>
@@ -53,11 +53,11 @@ docker ps
 docker-compose down</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
       <p><code>docker-compose up -d</code> จบโดยไม่มี error และ <code>docker ps</code> แสดง container จาก image <code>mongo</code> สถานะ <code>Up</code> พร้อม mapping พอร์ต <code>0.0.0.0:27017-&gt;27017/tcp</code> — แปลว่า MongoDB พร้อมรับการเชื่อมต่อจาก NestJS ที่ <code>mongodb://localhost:27017</code> แล้ว</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li><code>docker ps</code> เห็น container ของ <code>mongo</code> สถานะ Up และพอร์ต 27017 ถูก map ออกมา</li>
         <li><code>docker compose logs db</code> มีบรรทัดทำนอง <q>Waiting for connections</q> โดยไม่มี error ซ้ำ ๆ</li>
@@ -71,11 +71,11 @@ docker-compose down</code></div>
       <li><a href="https://learn.nestjs.com/">คอร์สต้นฉบับ NestJS Fundamentals</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="60_before-we-get-started-mongodb.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="62_introducing-the-mongoose-module.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="59_before-we-get-started-mongodb.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="61_introducing-the-mongoose-module.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>

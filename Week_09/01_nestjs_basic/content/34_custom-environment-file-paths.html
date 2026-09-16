@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 34 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 34/66</p>
     <h1>กำหนด Path ของ Environment File เอง</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>ชี้ให้ <code>ConfigModule</code> อ่านไฟล์ environment จากชื่อหรือ path ที่กำหนดเองด้วย <code>envFilePath</code></li>
         <li>ปิดการอ่านไฟล์ <code>.env</code> ด้วย <code>ignoreEnvFile</code> เมื่อ platform เป็นผู้จัดการ environment variables ให้</li>
@@ -59,11 +59,11 @@ ConfigModule.forRoot({
 npm run start:dev</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
       <p>แอปยังเชื่อมต่อฐานข้อมูลได้ปกติทั้งที่ไม่มีไฟล์ชื่อ <code>.env</code> แล้ว และถ้าลองลบ option <code>envFilePath</code> ออก แอปจะต่อฐานข้อมูลไม่ได้ เพราะ <code>ConfigModule</code> หาไฟล์ default ไม่เจอ</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li><code>GET /coffees</code> ตอบข้อมูลได้หลังเปลี่ยนไปใช้ <code>.environment</code></li>
         <li>ลบ <code>envFilePath</code> ชั่วคราวแล้ว restart — การเชื่อมต่อฐานข้อมูลล้มเหลว ยืนยันว่า option มีผลจริง</li>
@@ -77,11 +77,11 @@ npm run start:dev</code></div>
       <li><a href="https://learn.nestjs.com/">NestJS Fundamentals course (ต้นฉบับ)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="33_introducing-the-config-module.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="33_introducing-the-config-module.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link" href="35_schema-validation.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>

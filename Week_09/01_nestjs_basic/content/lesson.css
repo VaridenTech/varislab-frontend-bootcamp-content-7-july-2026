@@ -156,6 +156,26 @@ blockquote { margin-inline: 0; padding: 1rem 1.25rem; color: var(--muted); backg
 .comparison th, .comparison td { padding: .85rem 1rem; text-align: start; vertical-align: top; border-bottom: 1px solid var(--border); }
 .comparison th { color: var(--red-dark); background: var(--red-soft); font-weight: 800; }
 .comparison tr:last-child td { border-bottom: 0; }
+.request-lifecycle-figure {
+  margin: 2rem 0;
+  overflow: hidden;
+  background: #fbfaf8;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.request-lifecycle-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.request-lifecycle-figure figcaption {
+  padding: .85rem 1rem;
+  color: var(--muted);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-size: .92rem;
+  line-height: 1.65;
+}
 .source-list { margin: 1.5rem 0; padding-inline-start: 1.25rem; color: var(--muted); font-size: .92rem; }
 .source-list li + li { margin-top: .25rem; }
 

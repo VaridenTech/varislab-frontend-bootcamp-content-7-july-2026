@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 54 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 53/66</p>
     <h1>รู้จัก Vitest</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>อธิบายได้ว่า NestJS 12 integrate กับ Vitest ให้ตั้งแต่ scaffold โปรเจกต์ โดยไม่ต้องตั้งค่าเพิ่ม</li>
         <li>รัน unit tests แบบครั้งเดียวและแบบ watch, เก็บ coverage และรัน e2e tests ด้วย npm scripts ที่มีให้</li>
@@ -21,7 +21,7 @@
     </section>
 
     <h2>ทำไมถึงเป็น Vitest</h2>
-    <p>NestJS ไม่ได้บังคับ testing framework — จะใช้ตัวไหนก็ได้ แต่การตั้งค่าทุกอย่างเองตั้งแต่ต้น (test runner, assertion, mocking, TypeScript transform) เป็นงานน่าเบื่อ ตั้งแต่ NestJS 12 โปรเจกต์ที่สร้างด้วย <code>nest new</code> จึงมาพร้อม <strong>Vitest</strong> แบบ out-of-the-box: test runner ที่สร้างบน Vite จึงรันไฟล์ TypeScript และ ES module ได้ตรง ๆ โดยไม่ต้อง transform แยก และเร็วเพราะรันแต่ละไฟล์ทดสอบขนานกันใน worker คนละตัว</p>
+    <p>NestJS ไม่ได้บังคับว่าต้องใช้ testing framework ตัวไหน แต่ถ้าตั้งค่าเองทั้งหมด เราต้องเตรียมทั้ง test runner, assertions, mocks และการรองรับ TypeScript ตั้งแต่ NestJS 12 เป็นต้นมา โปรเจกต์จาก <code>nest new</code> จึงตั้งค่า <strong>Vitest</strong> มาให้พร้อมใช้ Vitest ทำงานบน Vite รองรับ TypeScript และ ES modules โดยตรง และรันไฟล์ทดสอบแยกกันในหลาย workers ได้</p>
     <p>Vitest ให้ครบในแพ็กเกจเดียวเช่นกัน: เป็น test runner, มี assertion API (<code>expect</code>), มีระบบ mock ในตัว (<code>vi.fn()</code>, <code>vi.spyOn()</code>, <code>vi.mock()</code>) และรายงาน coverage ผ่าน <code>@vitest/coverage-v8</code> ที่ Nest ติดตั้งไว้ให้แล้ว API ของมันจงใจออกแบบให้เข้ากันได้กับ Jest — ถ้าเคยเขียน Jest มาก่อน สิ่งที่ต้องจำแทบมีแค่ <code>jest.fn()</code> กลายเป็น <code>vi.fn()</code></p>
     <div class="note"><p>Nest เปิด <code>globals: true</code> ไว้ใน config และประกาศ <code>"types": ["vitest/globals", "node"]</code> ใน <code>tsconfig.json</code> — <code>describe</code>, <code>it</code>, <code>expect</code>, <code>beforeEach</code>, <code>vi</code> ฯลฯ จึงใช้ได้ทันทีในไฟล์ทดสอบโดยไม่ต้อง import (import เฉพาะ type เช่น <code>import type { Mock } from 'vitest'</code> เมื่อต้องการ)</p></div>
 
@@ -86,11 +86,11 @@ npm run test:watch      # ลองแก้ไฟล์ spec แล้ว save 
 npm run test:e2e</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
       <p>Vitest รายงานผลเป็นรายไฟล์ (✓/✗ พร้อมชื่อ test) และปิดท้ายด้วยสรุป <code>Test Files</code> / <code>Tests</code>; <code>test:cov</code> พิมพ์ตาราง coverage รายไฟล์ลง terminal พร้อมสร้างโฟลเดอร์ <code>coverage/</code> — <strong>แต่เฉพาะเมื่อทุก test ผ่านเท่านั้น</strong> ถ้ามี test ไหน fail แม้แต่ตัวเดียว Vitest จะไม่สร้างโฟลเดอร์ <code>coverage/</code> ให้เลย; ส่วน <code>test:watch</code> ค้างอยู่รอการแก้ไฟล์ — ถ้าบาง test fail เพราะโค้ดที่เราแก้ระหว่างคอร์ส ถือว่าตรงตามคาด และเป็นโจทย์ของบทถัดไป แต่หมายความว่าตอนนี้ <code>npm run test:cov</code> อาจยังไม่มีรายงานให้ดูจนกว่าจะแก้ spec ที่ fail ให้ผ่านก่อน</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li><code>npm run test</code> รันจบและพิมพ์สรุป <code>Test Files</code> และ <code>Tests</code> พร้อมจำนวน passed/failed</li>
         <li>ถ้า <code>npm run test</code> ผ่านหมดจริง ๆ: เปิด <code>coverage/index.html</code> ในเบราว์เซอร์แล้วเห็นรายงาน coverage รายไฟล์ (ถ้ามี spec ตัวอย่างที่ fail อยู่ตามที่คาดไว้ด้านบน โฟลเดอร์ <code>coverage/</code> จะยังไม่ถูกสร้าง — เป็นเรื่องปกติ ไม่ใช่ปัญหา)</li>
@@ -106,11 +106,11 @@ npm run test:e2e</code></div>
       <li><a href="https://docs.nestjs.com/first-steps">First steps: โครงโปรเจกต์จาก nest new (NestJS)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="53_using-tags-to-group-resources.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="55_getting-started-with-test-suites.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="52_using-tags-to-group-resources.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="54_getting-started-with-test-suites.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>

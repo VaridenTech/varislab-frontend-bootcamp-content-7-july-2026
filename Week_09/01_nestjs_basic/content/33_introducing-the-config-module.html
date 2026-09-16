@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 33 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 33/66</p>
     <h1>รู้จัก Config Module</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>อธิบายได้ว่าทำไม configuration ควรอยู่ใน environment ไม่ใช่ hardcode ในโค้ด</li>
         <li>ติดตั้ง <code>@nestjs/config</code> และสร้างไฟล์ <code>.env</code> ที่ไม่ถูก track โดย git</li>
@@ -21,7 +21,7 @@
     </section>
 
     <h2>ทำไม configuration ต้องแยกออกจากโค้ด</h2>
-    <p>แอปพลิเคชันมักรันในหลาย environment — development, staging, production — ซึ่งแต่ละที่ใช้ค่าต่างกัน เช่น host ของฐานข้อมูล, credentials หรือ API key แนวปฏิบัติมาตรฐานของชุมชน Node.js คือเก็บค่าเหล่านี้ไว้ใน <em>environment variables</em> ผ่าน object global <code>process.env</code> เพื่อให้โค้ดชุดเดียวรันได้ทุกที่โดยเปลี่ยนแค่ค่าแวดล้อม</p>
+    <p>แอปของเรามักรันในหลาย environment — development, staging, production — ซึ่งแต่ละที่ใช้ค่าต่างกัน เช่น host ของฐานข้อมูล, credentials หรือ API key แนวปฏิบัติมาตรฐานของชุมชน Node.js คือเก็บค่าเหล่านี้ไว้ใน <em>environment variables</em> ผ่าน object global <code>process.env</code> เพื่อให้โค้ดชุดเดียวรันได้ทุกที่โดยเปลี่ยนแค่ค่าแวดล้อม</p>
     <p><code>@nestjs/config</code> ช่วยให้เรื่องนี้ง่ายขึ้น: เมื่อเรียก <code>ConfigModule.forRoot()</code> มันจะอ่านไฟล์ <code>.env</code> ที่ root ของโปรเจกต์ แล้ว merge คู่ key/value เข้ากับ <code>process.env</code> ให้อัตโนมัติ</p>
     <pre><code>npm i @nestjs/config</code></pre>
     <pre><code>// app.module.ts
@@ -47,7 +47,7 @@ export class AppModule {}</code></pre>
 *.env</code></pre>
 
     <h2>ให้ ConfigModule โหลด .env แทน dotenv ที่เราใส่เองใน main.ts</h2>
-    <p>ในบทที่ 22 เราแก้ขัดด้วยการ <code>import 'dotenv/config'</code> ไว้บรรทัดแรกของ <code>main.ts</code> เพื่อให้ <code>process.env.DATABASE_URL</code> มีค่าก่อน <code>PrismaService</code> ถูกสร้าง ตอนนี้ลบบรรทัดนั้นทิ้งแล้วให้ <code>ConfigModule.forRoot()</code> รับหน้าที่แทน — ผลลัพธ์เหมือนกัน แต่ต่อจากนี้เราจะได้ <code>ConfigService</code>, การ validate และ namespaces ในบทถัด ๆ ไปเป็นของแถม</p>
+    <p>ในบทที่ 22 เราแก้ขัดด้วยการ <code>import 'dotenv/config'</code> ไว้บรรทัดแรกของ <code>main.ts</code> เพื่อให้ <code>process.env.DATABASE_URL</code> มีค่าก่อน <code>PrismaService</code> ถูกสร้าง ตอนนี้ลบบรรทัดนั้นทิ้งแล้วให้ <code>ConfigModule.forRoot()</code> รับหน้าที่แทน — ผลลัพธ์เหมือนกัน แต่ต่อจากนี้เราจะได้ <code>ConfigService</code>, การ validate และ custom configuration files ในบทถัด ๆ ไปเป็นของแถม</p>
     <pre><code>// main.ts — ลบบรรทัดนี้ออก
 - import 'dotenv/config';
 
@@ -80,11 +80,11 @@ super({
 npm run start:dev</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
-      <p>แอป start ขึ้นและเชื่อมต่อ PostgreSQL ได้เหมือนเดิมทุกประการ ทั้งที่ <code>main.ts</code> ไม่มี dotenv แล้ว และ <code>git status</code> ไม่แสดงไฟล์ <code>.env</code> ในรายการไฟล์ที่จะถูก commit</p>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
+      <p>แอปยังเปิดและเชื่อมต่อ PostgreSQL ได้ตามปกติ แม้จะลบ dotenv ออกจาก <code>main.ts</code> แล้ว และ <code>git status</code> ต้องไม่แสดงไฟล์ <code>.env</code> ในรายการที่จะ commit</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li><code>GET /coffees</code> ยังตอบข้อมูลจากฐานข้อมูลได้ปกติหลังถอด dotenv ออกจาก <code>main.ts</code></li>
         <li>ลองแก้รหัสผ่านใน <code>DATABASE_URL</code> ของ <code>.env</code> ให้ผิดแล้ว restart — แอปต้องต่อฐานข้อมูลไม่ได้ ยืนยันว่าค่าถูกอ่านจากไฟล์ผ่าน <code>ConfigModule</code> จริง (แก้กลับเมื่อทดสอบเสร็จ)</li>
@@ -99,11 +99,11 @@ npm run start:dev</code></div>
       <li><a href="https://learn.nestjs.com/">NestJS Fundamentals course (ต้นฉบับ)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="32_control-nestjs-module-encapsulation.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="32_control-nestjs-module-encapsulation.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
       <a class="lesson-navigation__link" href="34_custom-environment-file-paths.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>

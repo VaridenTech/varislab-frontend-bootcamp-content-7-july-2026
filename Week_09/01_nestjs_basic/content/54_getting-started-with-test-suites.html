@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 55 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 54/66</p>
     <h1>เริ่มต้นกับ Test Suites</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>วางไฟล์ทดสอบตาม convention ของ Nest: <code>.spec.ts</code> คู่กับ source และ <code>.e2e-spec.ts</code> ในโฟลเดอร์ <code>test/</code></li>
         <li>แยกได้ว่าโจทย์ไหนควรเป็น unit test และโจทย์ไหนควรเป็น e2e test</li>
@@ -38,7 +38,7 @@
     <p>ระหว่างพัฒนาไม่จำเป็นต้องรันทุก suite — ส่ง pattern ของชื่อไฟล์ต่อท้ายคำสั่งได้</p>
     <pre><code># รัน unit test แบบ watch เฉพาะไฟล์ที่ชื่อเข้ากับ pattern
 npm run test:watch -- coffees.service</code></pre>
-    <div class="warning"><p><strong>เก็บกวาด constructor ก่อนเริ่มบทนี้:</strong> ระหว่างบทที่ 36–38 เราทดลอง inject ของ configuration เข้า <code>CoffeesService</code> — <code>ConfigService</code> (log ของบทที่ 36) และ <code>@Inject(coffeesConfig.KEY)</code> ถ้ายังทิ้งไว้ suite ในบทนี้และบทถัดไปจะ fail ด้วย <q>Nest can't resolve dependencies of the CoffeesService (PrismaService, ?, …)</q> เพราะ test module ไม่มี provider เหล่านั้น ให้ถอด injection ทดลองออกจน constructor เหลือแค่ <code>constructor(private readonly prisma: PrismaService) {}</code> (ลบ import ที่ไม่ใช้แล้วด้วย — ส่วน <code>ConfigModule.forFeature()</code> ใน <code>CoffeesModule</code> จะคงไว้หรือลบก็ได้) หรือถ้าอยากเก็บไว้ ก็ต้องเพิ่ม mock ให้ครบทุกตัวใน <code>providers</code> ของ test เช่น <code>{ provide: ConfigService, useValue: { get: () =&gt; undefined } }</code> และ <code>{ provide: coffeesConfig.KEY, useValue: { foo: 'bar' } }</code> — โค้ดในบทที่ 56 เขียนสำหรับ constructor แบบสั้น</p></div>
+    <div class="warning"><p><strong>เก็บกวาด constructor ก่อนเริ่มบทนี้:</strong> ในบทที่ 36 เรา inject <code>ConfigService</code> เข้า <code>CoffeesService</code> เพื่อลองอ่านและ log ค่า config ถ้ายังเก็บ dependency ทดลองนี้ไว้ test module ต้องมี mock ของ <code>ConfigService</code> เพิ่มด้วย วิธีที่ตรงกับโค้ดในบทนี้ที่สุดคือลบ injection และ log ที่ใช้ทดลองออก ให้ constructor เหลือ <code>constructor(private readonly prisma: PrismaService) {}</code> แล้วลบ import ที่ไม่ใช้แล้ว</p></div>
     <p>พอเปิด <code>coffees.service.spec.ts</code> ที่ CLI สร้างให้ จะพบว่ามัน fail ทันที เพราะ <code>CoffeesService</code> ตอนนี้ inject <code>PrismaService</code> — <code>TestingModule</code> ที่สร้างขึ้นมาเปล่า ๆ ไม่มี <code>PrismaModule</code> จึงไม่รู้จะหา provider นี้จากไหน วิธีปลดล็อกขั้นแรกคือให้ <em>mock ว่าง</em> ไปก่อน แค่ให้ DI resolve ได้</p>
     <pre><code>// coffees.service.spec.ts — ภายใน Test.createTestingModule
 providers: [
@@ -65,11 +65,11 @@ providers: [
 ],</code></pre>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
       <p>Watch mode รันเฉพาะ suite เดียว และผลเปลี่ยนจาก error เรื่อง <q>can't resolve dependencies of the CoffeesService</q> เป็น PASS ที่มี 1 test ผ่าน (<q>should be defined</q>)</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li>ผลของ <code>npm run test:watch -- coffees.service</code> แสดงแค่ suite ของ <code>coffees.service.spec.ts</code> ไม่ใช่ทุกไฟล์</li>
         <li>ลองลบ mock ของ <code>PrismaService</code> ออกแล้วดูว่า error dependency กลับมา — ยืนยันว่าเข้าใจว่า mock ตัวนี้แก้ปัญหาอะไร</li>
@@ -85,11 +85,11 @@ providers: [
       <li><a href="https://docs.nestjs.com/recipes/prisma">Prisma recipe: PrismaService (NestJS)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="54_introduction-to-vitest.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="56_adding-unit-tests.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="53_introduction-to-vitest.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="55_adding-unit-tests.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>

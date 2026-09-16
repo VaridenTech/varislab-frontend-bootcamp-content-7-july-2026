@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 64 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 63/66</p>
     <h1>ใช้ Mongoose Model เข้าถึง MongoDB</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>Inject Model เข้า service ด้วย <code>@InjectModel(Coffee.name)</code> และอธิบายได้ว่า token นี้มาจากไหน</li>
         <li>แทนที่ข้อมูล in-memory ของ <code>CoffeesService</code> ด้วยการเรียก MongoDB ผ่าน Model ครบทั้ง CRUD</li>
@@ -20,8 +20,8 @@
       </ul>
     </section>
 
-    <h2>Model คือ abstraction เหนือ datasource</h2>
-    <p>Mongoose Model แต่ละตัวแทน collection หนึ่งใน MongoDB และ instance ของ Model เรียกว่า <em>Document</em> (เทียบได้กับ "row" ของฝั่ง SQL) class <code>Model</code> ของ Mongoose ทำหน้าที่เป็น abstraction เหนือ datasource ของเรา โดยเปิด method ที่ใช้บ่อยให้ครบ: <code>find()</code>, <code>findOne()</code>, <code>findOneAndUpdate()</code> ไปจนถึงการ <code>save()</code> document ใหม่</p>
+    <h2>ใช้ Model คุยกับ MongoDB</h2>
+    <p>Mongoose Model หนึ่งตัวแทนหนึ่ง collection ส่วนข้อมูลแต่ละรายการที่ได้จาก Model เรียกว่า <em>Document</em> ซึ่งใกล้เคียงกับ row ในฐานข้อมูล SQL เราใช้ methods อย่าง <code>find()</code>, <code>findOne()</code> และ <code>findOneAndUpdate()</code> ผ่าน Model และเรียก <code>save()</code> เมื่อต้องการบันทึก Document ใหม่</p>
     <pre><code>/* การ inject Mongo Coffee Model */
 constructor(
   @InjectModel(Coffee.name)
@@ -93,11 +93,11 @@ PATCH http://localhost:3000/coffees/&lt;_id&gt;   { "name": "Better Roast" }
 DELETE http://localhost:3000/coffees/&lt;_id&gt;</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
       <p>POST ตอบ document ที่มี <code>_id</code> และ <code>__v</code> ที่ MongoDB สร้างให้, GET เห็นข้อมูลเดิมแม้รีสตาร์ตแอป (เพราะเก็บในฐานข้อมูลแล้ว ไม่ใช่ memory), PATCH ตอบ document เวอร์ชันหลังแก้ และการยิงด้วย <code>_id</code> มั่ว ๆ ที่ format ถูกต้องได้ 404 พร้อมข้อความ <code>Coffee #... not found</code></p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li>สร้างกาแฟผ่าน POST แล้วรีสตาร์ตแอป — <code>GET /coffees</code> ยังเห็นข้อมูลอยู่</li>
         <li>เปิด mongosh (<code>docker exec -it &lt;container&gt; mongosh nest-course</code>) แล้ว <code>db.coffees.find()</code> เห็น document ตรงกับที่ API ตอบ</li>
@@ -112,11 +112,11 @@ DELETE http://localhost:3000/coffees/&lt;_id&gt;</code></div>
       <li><a href="https://learn.nestjs.com/">คอร์สต้นฉบับ NestJS Fundamentals</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="63_creating-a-mongoose-model.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="65_adding-pagination-mongodb.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="62_creating-a-mongoose-model.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="64_adding-pagination-mongodb.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>

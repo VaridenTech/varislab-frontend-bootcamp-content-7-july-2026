@@ -9,10 +9,10 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 56 จาก 67</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 55/66</p>
     <h1>เขียน Unit Tests</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
-      <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
+      <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>สร้าง mock ของ <code>PrismaService</code> ที่ควบคุมค่าตอบกลับได้ด้วย <code>vi.fn()</code> แทน mock ว่าง</li>
         <li>เขียน test ครอบคลุมทั้งขาสำเร็จ (พบ coffee) และขาล้มเหลว (throw <code>NotFoundException</code>) ของ <code>findOne</code></li>
@@ -121,11 +121,11 @@ describe('CoffeesService', () =&gt; {
 # → test ขา NotFoundException ต้อง fail</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
-      <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
+      <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
       <p>Suite รายงาน 3 tests ผ่านทั้งหมด: <q>should be defined</q>, ขา <q>when coffee with ID exists</q> และขา <q>otherwise → should throw the "NotFoundException"</q> โดยไม่ต้องต่อฐานข้อมูลจริงเลย</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
-      <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
+      <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li><code>npm run test:watch -- coffees.service</code> เขียวทั้ง suite และไม่มี connection ไปยัง Postgres (ปิด Docker ก็ยังผ่าน)</li>
         <li>ทดลอง sabotage: แก้ message ใน <code>NotFoundException</code> ของ service ชั่วคราว → test ต้อง fail ที่ <code>err.message</code></li>
@@ -140,11 +140,11 @@ describe('CoffeesService', () =&gt; {
       <li><a href="https://www.prisma.io/docs/orm/prisma-client/testing/unit-testing">Unit testing with Prisma Client (Prisma Docs)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="55_getting-started-with-test-suites.html" rel="prev">← บทก่อนหน้า</a>
-      <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="57_diving-into-e2e-tests.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="54_getting-started-with-test-suites.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
+      <a class="lesson-navigation__link" href="56_diving-into-e2e-tests.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
-  <footer><p>NestJS Fundamentals Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 1 กันยายน 2026</p></footer>
+  <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
 </body>
 </html>
