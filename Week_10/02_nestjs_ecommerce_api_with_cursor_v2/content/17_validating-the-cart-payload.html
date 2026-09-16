@@ -59,7 +59,7 @@
   phone: z.string().min(1, "Phone number is required"),
 });</code></pre>
     <p>DTO ของเราจะสะท้อนกฎเดียวกันทีละข้อ: <code>address</code> ไม่ว่าง → <code>@IsString() @IsNotEmpty()</code>, <code>email</code> ต้องเป็นอีเมล → <code>@IsEmail()</code>, <code>phone</code> ไม่ว่าง → <code>@IsString() @IsNotEmpty()</code> ที่ต้องตรวจซ้ำเพราะ validation ฝั่ง client เป็นเรื่องของ <em>ประสบการณ์ผู้ใช้</em> ไม่ใช่ความปลอดภัย — ใครก็ยิง <code>curl</code> ตรงเข้า API ข้าม React ไปได้ กฎง่าย ๆ คือข้อมูลจากภายนอกไม่เชื่อถือได้เลย จนกว่า API จะตรวจเอง</p>
-    <p>ส่วนรูปแบบ error ที่ตอบออกไปจะไม่เหมือน dummyjson: dummyjson ตอบ <code>400</code> พร้อม <code>{"message": "User id is required"}</code> เป็น string เดี่ยว ของเราตอบตามมาตรฐาน Nest คือ <code>message</code> เป็น array ของทุกข้อที่ผิด นี่เป็นความต่างที่เรา<strong>ยอมรับ</strong> เพราะ <code>ApiError</code> ของ React app อ่านค่าจาก <code>data.message</code> ได้ทั้งสองแบบ และการบอกครบทุกข้อในรอบเดียวมีประโยชน์กับคนใช้ API มากกว่า</p>
+    <p>รูปแบบ error ที่ตอบออกไปเป็นมาตรฐานของ Nest: <code>message</code> เป็น array ของทุกข้อที่ผิดพร้อมกัน ไม่ใช่ string เดี่ยว — <code>ApiError</code> ของ React app อ่านค่าจาก <code>data.message</code> ได้อยู่แล้วไม่ว่าจะเป็น string หรือ array และการบอกครบทุกข้อในรอบเดียวมีประโยชน์กับคนใช้ API มากกว่าการต้องยิงซ้ำทีละข้อ</p>
 
     <h2>เป้าหมายของบทนี้</h2>
     <pre><code>ecommerce-api/
@@ -78,12 +78,12 @@
       <p>ก่อนส่ง อ่าน<a href="01_what-well-be-building.html">กติกาของคอร์ส</a>อีกครั้ง: AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้ — ถ้าอธิบายไม่ได้ แปลว่ายังไม่ผ่านบทนี้</p>
       <div class="cursor-prompt"><code>สร้าง DTO สำหรับ validate body ของ POST /carts/add ตามที่ React app ส่งมา
 
-บริบท: @src/products/dto/pagination-query.dto.ts @src/main.ts @docs/contract/cart-add.txt @.cursor/rules/project.mdc
+บริบท: @src/products/dto/pagination-query.dto.ts @src/main.ts @docs/api-spec.md @.cursor/rules/project.mdc
 ValidationPipe แบบ global เปิด whitelist และ transform อยู่แล้ว (ดูใน main.ts)
 React app ส่ง body รูปนี้เสมอ:
   { "userId": 1, "products": [{ "id": 1, "quantity": 2 }], "address": { "address": "...", "email": "...", "phone": "..." } }
 address ฝั่ง React ถูก validate ด้วย zod: address ต้องไม่ว่าง, email ต้องเป็นอีเมล, phone ต้องไม่ว่าง — ฝั่ง API ต้องตรวจซ้ำ
-dummyjson ตอบ 400 { "message": "User id is required" } เมื่อไม่มี userId ของเราให้ ValidationPipe ตอบ 400 ตามรูปแบบมาตรฐานของ Nest ได้เลย
+เมื่อไม่มี userId ของเราให้ ValidationPipe ตอบ 400 ตามรูปแบบมาตรฐานของ Nest ได้เลย (message เป็น array ของทุกข้อที่ผิด)
 
 โครงสร้าง: สร้างไฟล์เดียว
 - src/orders/dto/add-cart.dto.ts (สร้างใหม่)
