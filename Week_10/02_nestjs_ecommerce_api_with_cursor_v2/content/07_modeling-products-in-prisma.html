@@ -26,7 +26,7 @@
       <table>
         <thead><tr><th>field ใน docs/api-spec.md</th><th>field ใน Prisma</th><th>เหตุผล</th></tr></thead>
         <tbody>
-          <tr><td><code>id</code> (number)</td><td><code>id Int @id</code></td><td>ไม่ใส่ <code>@default(autoincrement())</code> เพราะ seed script ของเราเองกำหนด id ให้ตรงกันทุกครั้งที่ reseed (บทที่ 9) — ดูรายละเอียดในหัวข้อถัดไป</td></tr>
+          <tr><td><code>id</code> (number)</td><td><code>id Int @id</code></td><td>ไม่ใส่ <code>@default(autoincrement())</code> เพราะ seed script ของเราเองกำหนด id ให้ตรงกันทุกครั้งที่ reseed (บทที่ 9) — ดูรายละเอียดในหัวข้อ <q>ทำไม Product.id ไม่มี autoincrement()</q> ด้านล่าง</td></tr>
           <tr><td><code>title</code>, <code>description</code>, <code>sku</code>, <code>warrantyInformation</code>, <code>shippingInformation</code>, <code>availabilityStatus</code>, <code>returnPolicy</code>, <code>thumbnail</code></td><td><code>String</code></td><td>ข้อความธรรมดา บังคับมีค่า (ทุกชิ้นใน 208 ชิ้นมีครบ)</td></tr>
           <tr><td><code>price</code>, <code>rating</code>, <code>weight</code></td><td><code>Float</code></td><td>ทศนิยม — เหตุผลที่ไม่ใช้ <code>Decimal</code> อยู่หัวข้อถัดไป</td></tr>
           <tr><td><code>discountPercentage</code> (บางชิ้นไม่มี)</td><td><code>discountPercentage Float?</code></td><td>ไม่ใช่สินค้าทุกชิ้นมีส่วนลด — เป็นคอลัมน์เดียวที่ nullable และตรงกับ <code>discountPercentage?: number</code> ของฝั่ง client</td></tr>
@@ -68,7 +68,7 @@
     </ul>
 
     <section class="workshop" aria-labelledby="exercise-heading">
-      <h2 id="exercise-heading">ให้ Cursor เขียน schema จาก payload จริง</h2>
+      <h2 id="exercise-heading">ให้ Cursor เขียน schema จาก docs/api-spec.md</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent สังเกตว่า prompt นี้แนบ <code>@docs/api-spec.md</code> ไปด้วย — นั่นคือหัวใจ: เราไม่ได้ให้ AI เดารูปทรงของสินค้า แต่ให้มันอ่าน interface <code>Product</code> และ <code>Category</code> ที่เราออกแบบเองจากโค้ดฝั่ง client</p>
       <div class="cursor-prompt"><code>เพิ่ม Prisma model ของ Category, Product และ Review ให้ตรงกับ interface ใน docs/api-spec.md
 
