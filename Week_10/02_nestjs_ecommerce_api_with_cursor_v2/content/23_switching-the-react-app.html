@@ -14,14 +14,14 @@
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
       <ul>
-        <li>สลับ React app จาก dummyjson มาใช้ API ของคุณด้วยการแก้บรรทัดเดียวใน <code>.env.local</code></li>
+        <li>สลับ React app ไปใช้ API ที่คุณสร้างเองด้วยการแก้บรรทัดเดียวใน <code>.env.local</code></li>
         <li>ไล่ตรวจห้าจุดในเบราว์เซอร์ พร้อมอ่าน Network tab ว่า request วิ่งไปที่ host ไหนและได้สถานะอะไร</li>
         <li>ยืนยันคำสั่งซื้อที่เพิ่งกดด้วย psql และอธิบายได้ว่าทำไม <code>npm test</code> ของ React app ให้ผลเท่าเดิม</li>
       </ul>
     </section>
 
     <h2>ช่วงเวลาตัดสิน</h2>
-    <p>ยี่สิบสองบทที่ผ่านมาเราทำงานอยู่กับ <code>curl</code>, psql และ script ตรวจสัญญา ซึ่งทั้งหมดเป็นการตรวจว่า API ของเรา <em>เหมือน</em> dummyjson พอไหม บทนี้เป็นบทที่เอาของจริงมาชน: React e-commerce app จาก Week_05_06 ที่เขียนไว้ตั้งแต่ก่อนเราจะมี API — โค้ดของมันไม่รู้เลยว่าเรามีตัวตน ถ้าสัญญาที่เราจับมาตั้งแต่บทที่ 3 ถูกต้องจริง สิ่งที่ต้องเปลี่ยนคือ base URL หนึ่งบรรทัด ไม่ต้องแตะโค้ด ไม่ต้องแก้ type ไม่ต้องแก้ mapper ฝั่ง client</p>
+    <p>ยี่สิบสองบทที่ผ่านมาเราทำงานอยู่กับ <code>curl</code>, psql และ script ตรวจสัญญา ซึ่งทั้งหมดเป็นการตรวจว่า API ของเราตรงกับสัญญาที่เราออกแบบไว้เองหรือเปล่า บทนี้เป็นบทที่เอาของจริงมาชน: React e-commerce app จาก Week_05_06 ที่เขียนไว้ตั้งแต่ก่อนเราจะมี API — โค้ดของมันไม่รู้เลยว่าเรามีตัวตน ถ้าสัญญาที่เราออกแบบเองตั้งแต่บทที่ 3 ตรงกับที่โค้ด client ต้องการจริง สิ่งที่ต้องเปลี่ยนคือ base URL หนึ่งบรรทัด ไม่ต้องแตะโค้ด ไม่ต้องแก้ type ไม่ต้องแก้ mapper ฝั่ง client — นี่คือหลักฐานว่าการอ่าน client โค้ดให้ถูกต้องตั้งแต่บทที่ 3 นั้นได้ผลจริง ไม่ใช่หลักฐานว่าเราก็อปพฤติกรรมของ dummyjson ได้แม่นแค่ไหน</p>
     <p>แอปตัวนี้อ่าน base URL จาก environment variable ชื่อ <code>VITE_API_BASE_URL</code> — Vite เปิดเผยให้โค้ดฝั่ง client เห็นเฉพาะตัวแปรที่ขึ้นต้นด้วย <code>VITE_</code> และอ่านไฟล์ <code>.env</code> ตระกูลนี้ <strong>ตอนเริ่ม dev server</strong> เท่านั้น (รายละเอียดอยู่ใน <a href="https://vite.dev/guide/env-and-mode.html">คู่มือ Env Variables and Modes ของ Vite</a>) แปลว่าแก้ไฟล์แล้วต้องหยุด <code>npm run dev</code> แล้วสั่งใหม่ ไม่ใช่รอ hot reload</p>
 
     <h2>เตรียมของให้พร้อมก่อนสลับ</h2>
@@ -43,10 +43,10 @@ npm test            # เก็บ baseline ไว้ก่อน แล้ว�
 #   VITE_API_BASE_URL=http://localhost:3000
 # แล้วเริ่ม dev server ใหม่ (Vite อ่านไฟล์ env ตอนเริ่มเท่านั้น)
 npm run dev</code></div>
-      <p>เปิด <code>http://localhost:5173</code> แล้วเปิด DevTools ค้างไว้ที่แท็บ Network ทุกครั้งที่เดิน — สิ่งที่เราต้องเห็นคือ request วิ่งไปที่ <code>localhost:3000</code> ไม่ใช่ <code>dummyjson.com</code> แล้วไล่ห้าจุดนี้ตามลำดับ</p>
+      <p>เปิด <code>http://localhost:5173</code> แล้วเปิด DevTools ค้างไว้ที่แท็บ Network ทุกครั้งที่เดิน — สิ่งที่เราต้องเห็นคือ request ทุกตัววิ่งไปที่ host <code>localhost:3000</code> แล้วไล่ห้าจุดนี้ตามลำดับ</p>
       <ol>
         <li><strong>หน้าแรก <code>/</code></strong> — ส่วน <q>DEALS OF THE DAY</q> ต้องขึ้นสินค้า 5 ชิ้น และเมนูหมวดหมู่ต้องขึ้นครบ 24 หมวด (Beauty, Fragrances, Furniture, Groceries, … , Womens Watches) ใน Network tab จะเห็นสามคำขอตอนโหลดหน้า ได้ 200 ทั้งหมด: <code>GET http://localhost:3000/products?skip=0&amp;limit=5</code>, <code>GET http://localhost:3000/products/categories</code> และ <code>GET http://localhost:3000/products/category/beauty?skip=0&amp;limit=12</code> ลองกดหมวด <q>Fragrances</q> จะมีคำขอใหม่ <code>GET http://localhost:3000/products/category/fragrances?skip=0&amp;limit=12</code> ได้ 200 และ grid เปลี่ยนตาม</li>
-        <li><strong>หน้าหมวดหมู่ <code>/categories</code></strong> — อย่าใช้ Beauty ทดสอบ pagination เพราะข้อมูล seed ของเรามีแค่ 5 ชิ้น จึงมีหน้าเดียวและปุ่มถูก disable (ถูกต้องแล้ว ไม่ใช่บั๊ก) ให้เลือก <strong>Groceries</strong> ที่มี 27 ชิ้นแทน หน้า 1 ขึ้น 20 ชิ้นพร้อมแถบ <code>1 | 2 | Next</code> และคำขอ <code>GET http://localhost:3000/products/category/groceries?skip=0&amp;limit=20</code> เมื่อกดหน้า 2 จะได้คำขอ <code>GET http://localhost:3000/products/category/groceries?skip=20&amp;limit=20</code> คืนสินค้าอีก 7 ชิ้นที่ไม่ซ้ำกับหน้าแรกเลย (Protein Powder, Red Onions, Rice, Soft Drinks, Strawberry, Tissue Paper Box, Water)</li>
+        <li><strong>หน้าหมวดหมู่ <code>/categories</code></strong> — อย่าใช้ Beauty ทดสอบ pagination เพราะข้อมูล seed ของเรามีแค่ 5 ชิ้น จึงมีหน้าเดียวและปุ่มถูก disable (ถูกต้องแล้ว ไม่ใช่บั๊ก) ให้เลือก <strong>Groceries</strong> ที่มี 27 ชิ้นแทน หน้า 1 ขึ้น 20 ชิ้นพร้อมแถบ <code>1 | 2 | Next</code> และคำขอ <code>GET http://localhost:3000/products/category/groceries?skip=0&amp;limit=20</code> เมื่อกดหน้า 2 จะได้คำขอ <code>GET http://localhost:3000/products/category/groceries?skip=20&amp;limit=20</code> คืนสินค้าอีก 7 ชิ้นที่ไม่ซ้ำกับหน้าแรกเลย (Mulberry, Juniper Berry, Chinese Cabbage, White Bread, Peppers, Cabbage, Bean Shoots)</li>
         <li><strong>หน้าสินค้า <code>/products/1</code></strong> — ต้องขึ้นชื่อ <q>Essence Mascara Lash Princess</q> แบรนด์ <q>Essence</q> ราคา <code>$9.99</code> (จากราคาเต็ม <code>$11.16</code> ลด 10.48%) และรีวิวครบ 3 รายการพร้อมชื่อผู้รีวิว วันที่ และคอมเมนต์ กด <q>Add To Cart</q> แล้วต้องเด้ง modal <q>Product Added to Cart</q> พร้อมตัวเลขบนไอคอนตะกร้าขึ้นเป็น <code>1</code></li>
         <li><strong><code>/cart</code> → <code>/checkout</code> → <code>/order/success</code></strong> — ที่หน้า <code>/cart</code> ต้องเห็นสินค้าที่เพิ่งเพิ่ม 1 รายการพร้อมยอดรวม กด Checkout แล้วกรอกที่อยู่ อีเมล เบอร์โทร (ฟอร์มที่อยู่มีปุ่ม Submit ของตัวเอง ต้องกดก่อนปุ่ม <q>Place Order</q> จึงจะกดได้) เลือก delivery/payment ตามค่าเริ่มต้นได้ แล้วกด <q>Place Order</q> จะไปหน้า <code>/order/success</code> ขึ้นหัวข้อ <q>Order Placed Successfully!</q> และตัวเลขบนตะกร้าหายไป ใน Network tab ต้องเห็น <code>POST http://localhost:3000/carts/add</code> ได้ <code>201 Created</code></li>
         <li><strong>ตรวจในฐานข้อมูล</strong> — คำสั่งซื้อที่เพิ่งกดต้องมีอยู่จริงในตาราง <code>Order</code> ไม่ใช่แค่หน้าจอสวย ใช้คำสั่ง psql ด้านล่าง</li>
@@ -85,7 +85,7 @@ npm run dev</code></div>
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
         <li>ทั้งห้าจุดข้างบนผ่านครบ โดยเฉพาะ pagination หน้า 2 ของ Groceries ที่ต้องคืนสินค้าไม่ซ้ำหน้าแรก</li>
-        <li>ใน Network tab ทุกคำขอมี host เป็น <code>localhost:3000</code> — ไม่เหลือคำขอไปที่ <code>dummyjson.com</code> แม้แต่รายการเดียว (ยกเว้นไฟล์รูปที่ชี้ไป CDN ตามข้อมูล seed)</li>
+        <li>ใน Network tab ทุกคำขอมี host เป็น <code>localhost:3000</code> ทั้งหมด (ยกเว้นไฟล์รูปที่ชี้ไป CDN ตามข้อมูล seed)</li>
         <li><code>POST /carts/add</code> ได้ <code>201</code> และคำสั่ง <code>SELECT … FROM "Order" ORDER BY id DESC LIMIT 1;</code> คืนแถวที่อีเมลกับ <code>totalQuantity</code> ตรงกับที่คุณกรอกและใส่ตะกร้า</li>
         <li>ไม่มี error CORS ใน Console ของเบราว์เซอร์ — ถ้ามี ให้กลับไปดู <code>CORS_ORIGIN</code> ในบทที่ 20 ว่าตรงกับพอร์ตที่ Vite ใช้จริงหรือไม่</li>
         <li><code>npm test</code> ในโปรเจกต์ React ให้ผลบรรทัดสุดท้ายเหมือน baseline ที่รันไว้ก่อนสลับทุกตัวเลข</li>
@@ -94,7 +94,6 @@ npm run dev</code></div>
     </section>
     <h2>แหล่งอ้างอิง</h2>
     <ul class="source-list">
-      <li><a href="https://dummyjson.com/docs/products">Products API (DummyJSON Docs)</a></li>
       <li><a href="https://docs.docker.com/reference/cli/docker/compose/exec/">docker compose exec (Docker Docs)</a></li>
       <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS">Cross-Origin Resource Sharing (CORS) — MDN</a></li>
     </ul>
