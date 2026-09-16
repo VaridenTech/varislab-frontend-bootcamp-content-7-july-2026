@@ -2019,7 +2019,7 @@ Expected: modified/added files are only under `Week_10/02_nestjs_ecommerce_api_w
 
 ## Self-review notes (fixed inline before handoff)
 
-- **Spec coverage:** every numbered item in the design spec's §1–§7 maps to a task above (§1→Task 2, §2→Tasks 6/7/8/10, §3→Task 3, §4→Task 11, §5→Task 2, §6→Tasks 4/5/9/12/13/15/16/17, §7→Task 2/18). No spec requirement is without a task.
+- **Spec coverage:** every numbered item in the design spec's §1–§7 maps to a task above (§1→Task 2, §2→Tasks 6/7/8/10, §3→Task 3, §4→Tasks 11/14, §5→Task 2, §6→Tasks 4/5/9/12/13/15/16/17, §7→Task 2/18). No spec requirement is without a task.
 - **Placeholder scan:** no TBD/TODO — every task has real code, real numbers, or an explicit "run this and use the real output" instruction where output cannot be known before execution (faker output, live curl responses).
 - **Type consistency:** `ProductResponseDto`, `product.mapper.ts`, `PaginationQueryDto`, `CartResponseDto`, `cart.mapper.ts`, `orders.service.ts`, and `contract-schemas.ts` all agree on field names, optionality, and nullability across Tasks 6, 8, 10, 11 — cross-checked against each other while writing this plan.
 - **Corrected scope vs. the design spec:** lessons 05, 08, 21, 22 added (spec said unchanged); lessons 07/08 branch point corrected to tag `lesson-06` (spec suggested `lesson-08`, which already bakes the old schema/migration). Both corrections are evidenced by direct grep/git inspection recorded in the Global Constraints section, not by re-opening the approved design decisions (contract source, faker seed, zod verification, 2dp rounding, order shape are all unchanged from the spec).

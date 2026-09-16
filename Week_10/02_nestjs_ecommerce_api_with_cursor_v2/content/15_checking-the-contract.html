@@ -75,7 +75,7 @@ package.json                          (แก้ไข: script contract:check �
   7. GET /products/abc → 400, errorSchema
   8. GET /products/category/groceries?limit=20&amp;skip=0 → 200, listEnvelopeSchema, total ต้องเป็น 27
   9. GET /products/category/nope?limit=5&amp;skip=0 → 200, listEnvelopeSchema, products ว่างและ total เป็น 0
-- ห้ามเพิ่ม check ที่ 10 สำหรับ POST /carts/add เด็ดขาด แม้ endpoint นั้นจะรันได้จริงแล้วก็ตาม เพราะบทนี้ยังไม่ได้สอนเรื่อง carts และ endpoint นั้นต้องมาพร้อมบทที่ 19
+- ห้ามเพิ่ม check ที่ 10 สำหรับ POST /carts/add เด็ดขาด เพราะบทนี้ยังไม่ได้สอนเรื่อง carts และ endpoint นั้นยังไม่มีอยู่จริงจนกว่าจะถึงบทที่ 19
 - แต่ละ check เรียก schema.parse(...) ตรง ๆ ไม่ใช่ .safeParse() ปล่อยให้ ZodError โยนออกมาให้ try/catch ของ loop จับเอง แล้ว console.log(error.message) ที่มากับ ZodError (มันเป็น JSON ของรายการ issue ที่มี path ในตัวอยู่แล้ว)
 - พิมพ์บรรทัดละ check ขึ้นต้นด้วย ✅ หรือ ❌ ตามด้วยชื่อ check
 - จบด้วย process.exit(1) ถ้ามี ❌ อย่างน้อยหนึ่งรายการ ไม่งั้น exit 0
@@ -89,7 +89,7 @@ package.json                          (แก้ไข: script contract:check �
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
         <li><code>scripts/contract-schemas.ts</code> export ครบเจ็ดตัวตามชื่อที่สั่ง และ schema ที่แทน object เต็มรูป (<code>productSchema</code>, <code>categorySchema</code>, <code>listEnvelopeSchema</code>, <code>errorSchema</code>) ปิดท้ายด้วย <code>.strict()</code> ทุกตัว — <code>grep -c '.strict()' scripts/contract-schemas.ts</code> ต้องได้อย่างน้อย 4 (จริง ๆ ได้ 6 เพราะ <code>cartProductSchema</code>/<code>orderResponseSchema</code> ก็ strict ด้วย)</li>
-        <li><code>checks</code> ใน <code>contract-check.ts</code> มีเก้ารายการ เรียงตามลำดับที่สั่งไว้เป๊ะ และไม่มี check ของ <code>POST /carts/add</code> ปนมา แม้ endpoint นั้นจะรันได้จริงในเครื่องแล้วก็ตาม</li>
+        <li><code>checks</code> ใน <code>contract-check.ts</code> มีเก้ารายการ เรียงตามลำดับที่สั่งไว้เป๊ะ และไม่มี check ของ <code>POST /carts/add</code> ปนมา เพราะ endpoint นั้นยังไม่มีอยู่จริงในบทนี้</li>
         <li>ทุก check เรียก <code>schema.parse(body)</code> ไม่ใช่ <code>.safeParse()</code> — ถ้าเห็น <code>.safeParse()</code> ให้เช็คต่อว่ามันพิมพ์ <code>result.error</code> ออกมาด้วยหรือเปล่า ถ้าเช็คแค่ <code>result.success</code> แล้วพิมพ์ข้อความคงที่ ให้แก้กลับเป็น <code>.parse()</code></li>
         <li><code>import</code> ชี้ไปที่ <code>./contract-schemas.js</code> (นามสกุล <code>.js</code> แม้ไฟล์จริงคือ <code>.ts</code> — เป็นธรรมเนียม ESM+TypeScript ปกติ ไม่ใช่พิมพ์ผิด)</li>
         <li><code>BASE</code> ผูกกับ <code>process.env.LOCAL_URL ?? 'http://localhost:3000'</code> เท่านั้น ไม่มี URL ของ server ตัวที่สองหลงเหลือในไฟล์เลย</li>
@@ -331,7 +331,7 @@ process.exit(failures === 0 ? 0 : 1);</code></pre>
 ✅ GET /products/abc → 400 with message
 ✅ GET /products/category/groceries?limit=20&amp;skip=0 → total 27
 ✅ GET /products/category/nope?limit=5&amp;skip=0 → 200, empty envelope</code></pre>
-      <p>เก้าบรรทัด ไม่ใช่สิบ — <code>POST /carts/add</code> ยังไม่มี check เป็นของตัวเอง แม้ตัว endpoint จะรันได้จริงในเครื่องแล้วก็ตาม (บทที่ 16–19 จะสอนเรื่อง order และ cart) check ที่ 10 จะถูกเพิ่มเข้ามาในบทที่ 19 พอ <code>POST /carts/add</code> กลายเป็นส่วนหนึ่งของหลักสูตรจริง ๆ ถ้าไปเจอบทที่ 22 พูดถึง "สิบบรรทัด" ภายหลัง นั่นคือหลังจากบทที่ 19 เพิ่ม check นั้นเข้ามาแล้ว ไม่ใช่ความขัดแย้งกับบทนี้</p>
+      <p>เก้าบรรทัด ไม่ใช่สิบ — <code>POST /carts/add</code> ยังไม่มี check เป็นของตัวเอง เพราะ endpoint นั้นยังไม่มีอยู่จริงในบทนี้ (บทที่ 16–19 จะสอนเรื่อง order และ cart) check ที่ 10 จะถูกเพิ่มเข้ามาในบทที่ 19 พอ <code>POST /carts/add</code> กลายเป็นส่วนหนึ่งของหลักสูตรจริง ๆ ถ้าไปเจอบทที่ 22 พูดถึง "สิบบรรทัด" ภายหลัง นั่นคือหลังจากบทที่ 19 เพิ่ม check นั้นเข้ามาแล้ว ไม่ใช่ความขัดแย้งกับบทนี้</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>

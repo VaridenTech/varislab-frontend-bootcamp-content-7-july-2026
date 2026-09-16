@@ -47,7 +47,7 @@ npm run dev</code></div>
       <ol>
         <li><strong>หน้าแรก <code>/</code></strong> — ส่วน <q>DEALS OF THE DAY</q> ต้องขึ้นสินค้า 5 ชิ้น และเมนูหมวดหมู่ต้องขึ้นครบ 24 หมวด (Beauty, Fragrances, Furniture, Groceries, … , Womens Watches) ใน Network tab จะเห็นสามคำขอตอนโหลดหน้า ได้ 200 ทั้งหมด: <code>GET http://localhost:3000/products?skip=0&amp;limit=5</code>, <code>GET http://localhost:3000/products/categories</code> และ <code>GET http://localhost:3000/products/category/beauty?skip=0&amp;limit=12</code> ลองกดหมวด <q>Fragrances</q> จะมีคำขอใหม่ <code>GET http://localhost:3000/products/category/fragrances?skip=0&amp;limit=12</code> ได้ 200 และ grid เปลี่ยนตาม</li>
         <li><strong>หน้าหมวดหมู่ <code>/categories</code></strong> — อย่าใช้ Beauty ทดสอบ pagination เพราะข้อมูล seed ของเรามีแค่ 5 ชิ้น จึงมีหน้าเดียวและปุ่มถูก disable (ถูกต้องแล้ว ไม่ใช่บั๊ก) ให้เลือก <strong>Groceries</strong> ที่มี 27 ชิ้นแทน หน้า 1 ขึ้น 20 ชิ้นพร้อมแถบ <code>1 | 2 | Next</code> และคำขอ <code>GET http://localhost:3000/products/category/groceries?skip=0&amp;limit=20</code> เมื่อกดหน้า 2 จะได้คำขอ <code>GET http://localhost:3000/products/category/groceries?skip=20&amp;limit=20</code> คืนสินค้าอีก 7 ชิ้นที่ไม่ซ้ำกับหน้าแรกเลย (Mulberry, Juniper Berry, Chinese Cabbage, White Bread, Peppers, Cabbage, Bean Shoots)</li>
-        <li><strong>หน้าสินค้า <code>/products/1</code></strong> — ต้องขึ้นชื่อ <q>Essence Mascara Lash Princess</q> แบรนด์ <q>Essence</q> ราคา <code>$9.99</code> (จากราคาเต็ม <code>$11.16</code> ลด 10.48%) และรีวิวครบ 3 รายการพร้อมชื่อผู้รีวิว วันที่ และคอมเมนต์ กด <q>Add To Cart</q> แล้วต้องเด้ง modal <q>Product Added to Cart</q> พร้อมตัวเลขบนไอคอนตะกร้าขึ้นเป็น <code>1</code></li>
+        <li><strong>หน้าสินค้า <code>/products/1</code></strong> — ต้องขึ้นชื่อ <q>Velvet Matte Lipstick</q> แบรนด์ <q>Lumina</q> ราคา <code>$9.99</code> (จากราคาเต็ม <code>$11.16</code> ลด 10.48%) และรีวิวครบ 3 รายการพร้อมชื่อผู้รีวิว วันที่ และคอมเมนต์ กด <q>Add To Cart</q> แล้วต้องเด้ง modal <q>Product Added to Cart</q> พร้อมตัวเลขบนไอคอนตะกร้าขึ้นเป็น <code>1</code></li>
         <li><strong><code>/cart</code> → <code>/checkout</code> → <code>/order/success</code></strong> — ที่หน้า <code>/cart</code> ต้องเห็นสินค้าที่เพิ่งเพิ่ม 1 รายการพร้อมยอดรวม กด Checkout แล้วกรอกที่อยู่ อีเมล เบอร์โทร (ฟอร์มที่อยู่มีปุ่ม Submit ของตัวเอง ต้องกดก่อนปุ่ม <q>Place Order</q> จึงจะกดได้) เลือก delivery/payment ตามค่าเริ่มต้นได้ แล้วกด <q>Place Order</q> จะไปหน้า <code>/order/success</code> ขึ้นหัวข้อ <q>Order Placed Successfully!</q> และตัวเลขบนตะกร้าหายไป ใน Network tab ต้องเห็น <code>POST http://localhost:3000/carts/add</code> ได้ <code>201 Created</code></li>
         <li><strong>ตรวจในฐานข้อมูล</strong> — คำสั่งซื้อที่เพิ่งกดต้องมีอยู่จริงในตาราง <code>Order</code> ไม่ใช่แค่หน้าจอสวย ใช้คำสั่ง psql ด้านล่าง</li>
       </ol>
@@ -56,7 +56,7 @@ npm run dev</code></div>
       <p>ตอนตรวจของจริงได้แถวนี้ (อีเมลและจำนวนตรงกับที่กรอกและใส่ตะกร้าไว้ ส่วนเลข <code>id</code> ของคุณจะต่างออกไปตามจำนวนคำสั่งซื้อที่เคยสร้าง)</p>
       <pre><code> id |           email           | totalQuantity
 ----+---------------------------+---------------
-  2 | task11-verify@example.com |             1</code></pre>
+  2 | customer@example.com      |             1</code></pre>
     </section>
 
     <h2>ทำไม <code>npm test</code> ของ React app ไม่เปลี่ยนผล</h2>

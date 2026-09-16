@@ -137,7 +137,7 @@ export class AppModule {}</code></pre>
       <p>ถ้าอธิบายบรรทัดไหนไม่ได้ ยังไม่ผ่านบทนี้ — กลับไปอ่านส่วนแนวคิดก่อน</p>
     </section>
 
-    <section class="contract-check-extension" aria-labelledby="contract-check-heading">
+    <section class="workshop" aria-labelledby="contract-check-heading">
       <h2 id="contract-check-heading">เพิ่ม check ที่สิบด้วยมือ</h2>
       <p>บทที่ 15 ตั้งใจปล่อยให้ <code>scripts/contract-check.ts</code> มีแค่เก้า check ไว้ก่อน เพราะตอนนั้น <code>POST /carts/add</code> ยังไม่มีอยู่จริง ตอนนี้มันมีแล้ว จึงถึงเวลาต่อ check ที่สิบเข้าไป — แก้ไฟล์นี้ <strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างบน เพราะ prompt นั้นสั่งห้ามแก้ไฟล์อื่นนอกจากสามไฟล์ของ controller ไว้ชัดเจนแล้ว การเพิ่ม check นี้เป็นงานแยกที่ควรทำเอง จะได้อธิบายทุกบรรทัดได้เหมือนเดิม</p>
       <p>เปิด <code>scripts/contract-check.ts</code> แล้วเพิ่ม <code>orderResponseSchema</code> เข้า import (ตัว schema เองมีอยู่แล้วตั้งแต่บทที่ 15 ไม่ต้องเขียนใหม่)</p>
