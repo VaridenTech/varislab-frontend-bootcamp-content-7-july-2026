@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="สารบัญ Workshop ภาษาไทย สร้าง E-commerce API ด้วย NestJS + Cursor AI: 24 บทเรียน สร้าง API แทน dummyjson.com ทีละ endpoint ด้วย Cursor Agent" />
+  <meta name="description" content="สารบัญ Workshop ภาษาไทย สร้าง E-commerce API ด้วย NestJS + Cursor AI: 24 บทเรียน ออกแบบสัญญา API เองจากโค้ด client แล้วสร้างทีละ endpoint ด้วย Cursor Agent" />
   <title>สร้าง E-commerce API ด้วย NestJS + Cursor AI</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -12,7 +12,7 @@
     <p class="eyebrow">Workshop ภาษาไทย ต่อยอดจากคอร์ส <a href="../../../Week_09/01_nestjs_basic/content/index.html">NestJS Fundamentals</a></p>
     <h1>สร้าง E-commerce API ด้วย NestJS + Cursor AI</h1>
 
-    <p>เส้นทางเรียนรู้แบบต่อเนื่อง 24 บทเรียน: เราจะสร้าง <code>ecommerce-api</code> ที่ใช้แทน <a href="https://dummyjson.com/">dummyjson.com</a> ได้ทันทีโดย React e-commerce app จาก Week_05_06 ไม่ต้องแก้โค้ด นอกจากเปลี่ยนแค่ base URL (<code>VITE_API_BASE_URL</code>) ทุก endpoint ในคอร์สนี้จะถูกสร้างด้วย Cursor Agent จาก prompt ที่มีโครงสร้างชัดเจน แล้วตรวจโค้ดที่ AI สร้างทีละบรรทัดก่อนใช้งานจริง</p>
+    <p>เส้นทางเรียนรู้แบบต่อเนื่อง 24 บทเรียน: เราจะอ่านโค้ดฝั่ง client ของ React e-commerce app จาก Week_05_06 แล้วออกแบบสัญญา (contract) ของ API เอง จากนั้นสร้าง <code>ecommerce-api</code> ที่ React app สลับมาใช้แทน <a href="https://dummyjson.com/">dummyjson.com</a> ได้ทันทีโดยไม่ต้องแก้โค้ด นอกจากเปลี่ยนแค่ base URL (<code>VITE_API_BASE_URL</code>) ทุก endpoint ในคอร์สนี้จะถูกสร้างด้วย Cursor Agent จาก prompt ที่มีโครงสร้างชัดเจน แล้วตรวจโค้ดที่ AI สร้างทีละบรรทัดก่อนใช้งานจริง</p>
     <p>เนื้อหาต่อยอดจากพื้นฐาน NestJS ของคอร์ส <a href="https://learn.nestjs.com/">NestJS Fundamentals</a> และอ้างอิงเอกสารทางการของ <a href="https://docs.nestjs.com/">NestJS</a> และ <a href="https://www.prisma.io/docs">Prisma</a> เพื่อให้ผู้เรียนตรวจสอบรายละเอียดปัจจุบันได้เอง</p>
 
     <section aria-label="ผลลัพธ์การเรียนรู้">
@@ -45,7 +45,7 @@ npm run start:dev</code></pre>
         <li><a href="06_setting-up-prisma.html">ติดตั้ง Prisma และ PrismaModule</a></li>
         <li><a href="07_modeling-products-in-prisma.html">ออกแบบ Prisma Model ของสินค้า</a></li>
         <li><a href="08_running-the-first-migration.html">รัน Migration แรกและดูตารางจริง</a></li>
-        <li><a href="09_seeding-real-products.html">Seed สินค้าจริงจาก dummyjson</a></li>
+        <li><a href="09_seeding-real-products.html">เขียน Seed Generator ด้วย Faker</a></li>
       </ol>
     </section>
 
@@ -53,11 +53,11 @@ npm run start:dev</code></pre>
       <h2 id="products-heading">10–15. Products Endpoints ทีละตัว</h2>
       <ol start="10">
         <li><a href="10_get-products-categories.html">GET /products/categories</a></li>
-        <li><a href="11_mapping-rows-to-the-contract.html">แปลงแถวจากฐานข้อมูลเป็นรูปทรงของ dummyjson</a></li>
+        <li><a href="11_mapping-rows-to-the-contract.html">แปลงแถวจากฐานข้อมูลเป็นรูปทรง Product ใน api-spec.md</a></li>
         <li><a href="12_get-product-by-id.html">GET /products/:id</a></li>
         <li><a href="13_get-products-with-pagination.html">GET /products พร้อม skip และ limit</a></li>
         <li><a href="14_get-products-by-category.html">GET /products/category/:slug</a></li>
-        <li><a href="15_checking-the-contract.html">ตรวจสัญญากับ dummyjson อัตโนมัติ</a></li>
+        <li><a href="15_checking-the-contract.html">ทำสัญญาให้รันได้จริงด้วย zod</a></li>
       </ol>
     </section>
 

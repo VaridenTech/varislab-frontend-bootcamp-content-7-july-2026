@@ -27,19 +27,12 @@
 ├── docker-compose.yml                   postgres:17 (บทที่ 5)
 ├── prisma7.config.ts                    config ของ Prisma CLI (บทที่ 6)
 ├── nest-cli.json                        เปิด CLI plugin ของ swagger (บทที่ 21)
-├── docs/contract/                       สัญญาที่จับจาก dummyjson (บทที่ 3)
-│   ├── categories.json
-│   ├── products-page.json
-│   ├── products-by-category.json
-│   ├── products-by-category-unknown.json
-│   ├── product-1.json
-│   ├── product-not-found.txt
-│   └── cart-add.txt
+├── docs/api-spec.md                     สัญญาที่เราออกแบบเองจากโค้ด client (บทที่ 3)
 ├── prisma/
 │   ├── schema.prisma                    Product, Category, Review, Order, OrderItem
 │   ├── migrations/                      init + add_orders
-│   └── seed.ts                          ดึงสินค้าจริงมาลงฐานข้อมูล (บทที่ 9)
-├── scripts/contract-check.ts            เทียบ response ของเรากับ dummyjson (บทที่ 15)
+│   └── seed.ts                          สร้างสินค้า 208 ชิ้นด้วย faker (บทที่ 9)
+├── scripts/contract-check.ts            ตรวจ response ของเราเองด้วย zod (บทที่ 15)
 └── src/
     ├── main.ts                          ValidationPipe + CORS + Swagger
     ├── app.module.ts
@@ -54,8 +47,8 @@
         └── dto/add-cart.dto.ts  dto/cart-response.dto.ts</code></pre>
     <p>และของที่ใช้งานได้จริงห้าอย่างนี้</p>
     <ul>
-      <li><strong>ห้า endpoint</strong> ที่รูปทรง response ตรงกับ dummyjson: <code>GET /products/categories</code>, <code>GET /products</code>, <code>GET /products/{id}</code>, <code>GET /products/category/{slug}</code> และ <code>POST /carts/add</code></li>
-      <li><strong>สัญญาที่ตรวจอัตโนมัติ</strong> — <code>npm run contract:check</code> เทียบ key ของ response เราเทียบกับ dummyjson ทั้งแปดเคส รวมถึงเคส 404 และหมวดที่ไม่มีจริง</li>
+      <li><strong>ห้า endpoint</strong> ที่รูปทรง response ตรงกับสัญญาใน <code>docs/api-spec.md</code>: <code>GET /products/categories</code>, <code>GET /products</code>, <code>GET /products/{id}</code>, <code>GET /products/category/{slug}</code> และ <code>POST /carts/add</code></li>
+      <li><strong>สัญญาที่ตรวจอัตโนมัติ</strong> — <code>npm run contract:check</code> ตรวจ key และรูปทรงของ response ด้วย zod schema ของเราเองครบสิบเคส รวมถึงเคส 404, หมวดที่ไม่มีจริง และ <code>POST /carts/add</code></li>
       <li><strong>validation ที่กันขยะ</strong> — <code>ValidationPipe</code> แบบ global พร้อม <code>whitelist</code> และ DTO ที่ประกาศกฎไว้ครบ ทำให้ payload ผิดรูปได้ 400 พร้อมข้อความที่อ่านรู้เรื่อง</li>
       <li><strong>คำสั่งซื้อที่ atomic</strong> — <code>POST /carts/add</code> เขียน <code>Order</code> กับ <code>OrderItem</code> ในทรานแซกชันเดียว</li>
       <li><strong>เอกสารและการเชื่อมต่อ</strong> — Swagger UI ที่ <code>/api</code> พร้อม response schema ทุก endpoint, CORS ที่เปิดให้เฉพาะ origin ของ Vite และ React app ของจริงที่รันบน API นี้ได้ครบวงจรโดยแก้แค่ base URL หนึ่งบรรทัด</li>
@@ -69,8 +62,8 @@
         <li>ทำไม <code>id</code> ของ <code>Product</code> ไม่ใช่ <code>@default(autoincrement())</code> (บทที่ 7 และ 9)</li>
         <li><code>whitelist: true</code> ใน <code>ValidationPipe</code> ตัดอะไรทิ้ง และทำไมการตัดทิ้งเงียบ ๆ ปลอดภัยกว่าปล่อยผ่าน (บทที่ 13 และ 17)</li>
         <li>ทำไม <code>@Get('categories')</code> ต้องประกาศก่อน <code>@Get(':id')</code> และจะเกิดอะไรถ้าสลับกัน (บทที่ 10 และ 12)</li>
-        <li>ทำไม <code>limit=0</code> ถูกแปลเป็น <code>take: undefined</code> แทนที่จะเป็น <code>take: 0</code> (บทที่ 13)</li>
-        <li>ทำไม mapper ไม่ใส่ key <code>brand</code> เลยเมื่อค่าในฐานข้อมูลเป็น <code>null</code> (บทที่ 11)</li>
+        <li>ทำไม <code>limit</code> ที่เกิน 100 หรือต่ำกว่า 1 ต้องได้ <code>400</code> แทนที่จะถูกปัดให้อยู่ในช่วงเงียบ ๆ (บทที่ 13)</li>
+        <li>ทำไม mapper ไม่ใส่ key <code>discountPercentage</code> เลยเมื่อค่าในฐานข้อมูลเป็น <code>null</code> แต่ยังใส่ <code>brand</code> เสมอ (บทที่ 11)</li>
         <li>callback ที่ส่งให้ <code>$transaction</code> rollback อะไรเมื่อมีการ throw ข้างใน และ client ที่ควรใช้ข้างในคือตัวไหน (บทที่ 18)</li>
         <li>ทำไม endpoint ของคำสั่งซื้อชื่อ <code>/carts/add</code> ไม่ใช่ <code>/orders</code> ที่ดูถูกหลักกว่า (บทที่ 19)</li>
         <li>origin ที่ใส่ใน <code>enableCors</code> ป้องกันอะไร และ<em>ไม่</em>ป้องกันอะไร (บทที่ 20)</li>
@@ -83,8 +76,8 @@
       <li><strong>ใส่ auth ด้วย Guards</strong> — ตอนนี้ใครก็ยิง <code>POST /carts/add</code> ได้ ถ้าจะผูกคำสั่งซื้อกับผู้ใช้จริงต้องมี token และ guard มาคั่น ทบทวนได้จาก <a href="../../../Week_09/01_nestjs_basic/content/52_protect-routes-with-guards.html">Week_09 บทที่ 52 — ป้องกัน Route ด้วย Guards</a> แล้วเขียน prompt ในรูปแบบห้าส่วนเดิมให้ Cursor ทำ</li>
       <li><strong>เขียน e2e test ด้วย Vitest</strong> — <code>contract:check</code> ตรวจรูปทรง response แต่ยังไม่ใช่ test suite ที่รันใน CI ได้ ต่อยอดจาก <a href="../../../Week_09/01_nestjs_basic/content/67_diving-into-e2e-tests.html">Week_09 บทที่ 67–69</a> โดยเริ่มจากเคสที่เจ็บที่สุดก่อน: <code>limit=abc</code> ต้องได้ 400 และ <code>/products/9999</code> ต้องได้ 404</li>
       <li><strong>ขึ้น production ด้วย <code>migrate deploy</code></strong> — บนเครื่องเราใช้ <code>prisma migrate dev</code> แต่บน server ต้องใช้ <code>prisma migrate deploy</code> ซึ่งรัน migration ที่ commit ไว้เท่านั้นและไม่สร้างไฟล์ใหม่ ลองย้ายฐานข้อมูลขึ้น Postgres แบบ hosted ตาม <a href="../../../Week_08/02_API_Design_in_Nodejs_v1/content/18_hosted_postgresql_with_neon.html">Week_08 บทที่ 18 — Hosted PostgreSQL กับ Neon</a> แล้วเปลี่ยนแค่ <code>DATABASE_URL</code> กับ <code>CORS_ORIGIN</code></li>
-      <li><strong>ตัด stock ในทรานแซกชันของคำสั่งซื้อ</strong> — ตอนนี้สั่งซื้อแล้ว <code>stock</code> ไม่ลด เพราะ dummyjson ไม่ได้ทำ แต่ของจริงต้องลด และต้องลดใน <code>$transaction</code> เดียวกับที่สร้าง <code>Order</code> พร้อมปฏิเสธเมื่อของไม่พอ — เป็นแบบฝึกหัดที่ดีเรื่อง business rule กับ atomicity</li>
-      <li><strong>เลิกพึ่ง dummyjson ตอน seed</strong> — <code>prisma/seed.ts</code> ยัง fetch สดจากอินเทอร์เน็ต ซึ่งหมายถึง seed พังได้เมื่อ API ต้นทางล่มหรือเปลี่ยนข้อมูล ย้ายไปอ่านจากไฟล์ JSON ที่ commit ไว้ในโปรเจกต์ แล้ว seed จะได้ผลเหมือนกันทุกครั้งและทำงานแบบ offline ได้</li>
+      <li><strong>ตัด stock ในทรานแซกชันของคำสั่งซื้อ</strong> — ตอนนี้สั่งซื้อแล้ว <code>stock</code> ไม่ลด เพราะคอร์สนี้ยังไม่ทำในเวอร์ชันแรก แต่ของจริงต้องลด และต้องลดใน <code>$transaction</code> เดียวกับที่สร้าง <code>Order</code> พร้อมปฏิเสธเมื่อของไม่พอ — เป็นแบบฝึกหัดที่ดีเรื่อง business rule กับ atomicity</li>
+      <li><strong>เพิ่ม endpoint ค้นหาสินค้า</strong> — ตอนนี้ client กรองสินค้าได้แค่ตาม category กับ pagination ลองเพิ่ม query param อย่าง <code>q</code> สำหรับค้นหาชื่อสินค้า โดยเริ่มจากการเพิ่ม field นี้ลงใน <code>docs/api-spec.md</code> ก่อนเขียนโค้ดสักบรรทัด — ฝึก workflow contract-first แบบเดียวกับที่ใช้มาทั้งคอร์สด้วยตัวเองอีกครั้ง</li>
     </ul>
 
     <h2>ปิดท้าย</h2>
