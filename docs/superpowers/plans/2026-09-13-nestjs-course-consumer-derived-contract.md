@@ -1117,14 +1117,28 @@ git commit -m "content(week10): lesson 13 — validated 1-100 pagination, not du
 ### Task 9: Edit lesson 14 (products by category)
 
 **Files:**
+- Reference project: `src/products/products.service.ts`, `src/products/products.controller.ts`
 - Modify: `Week_10/02_nestjs_ecommerce_api_with_cursor_v2/content/14_get-products-by-category.html`
 
+**Correction (found while dispatching — verified directly: `git show lesson-13:src/products/products.service.ts` has no `findByCategory` at all):** this task's original text assumed `GET /products/category/:slug` already existed in the reference project and only needed re-verifying — it doesn't exist yet anywhere on `rework-consumer-contract`. Lesson 14 is where it's built for the first time (same as lesson 12 was for `GET /products/:id`, in Task 7). Added Step 0 below to build it, using this lesson's own already-published reference code (which itself needs two updates first — see Step 0a).
+
 **Interfaces:**
-- Consumes: `PaginationQueryDto` from Task 8 (unchanged endpoint behavior for unknown category — still 200 + empty envelope).
+- Consumes: `PaginationQueryDto` from Task 8 (unchanged endpoint behavior for unknown category — still 200 + empty envelope, but `limit` now echoes the request per Task 8, not `rows.length` — this changes the unknown-category example's `limit` value, see Step 1).
 
-- [ ] **Step 1**: This endpoint's behavior for an unknown category (200 + empty envelope) is **unchanged** — only its justification and paths change. Update the Cursor prompt's context lines from `@docs/contract/products-by-category.json @docs/contract/products-by-category-unknown.json` to `@docs/api-spec.md`. Update the intro paragraph's justification for "unknown category → 200, not 404" to cite the design spec's reasoning directly: `Category.tsx` calls `useQuery` un-guarded when the category changes, and a 404 there would trip `isError` and render the error screen instead of the empty grid the UI actually shows for an empty category.
+- [ ] **Step 0a: Update this lesson's own reference-code paste before using it** — the `products.service.ts` code block already printed later in this same lesson (under "โค้ดอ้างอิงของบทนี้") is a full copy of the service file and has gone stale relative to Tasks 7 and 8: it still shows `throw new NotFoundException(\`Product with id '${id}' not found\`)` (pre-Task-7 format) and the `paginate` method still shows `take: limit === 0 ? undefined : limit` / `limit: rows.length` (pre-Task-8 behavior). Fix both in that reference code block: the message becomes `` `Product ${id} not found` ``; `paginate` becomes `take: limit` (no ternary) returning `{ products: rows.map(toProductResponse), total, skip, limit }` (echoes the parameter, not `rows.length`). Add `findByCategory(slug: string, query: PaginationQueryDto) { return this.paginate({ category: { slug } }, query.skip, query.limit); }` to that same reference block, and add the `@Get('category/:slug')` handler to the `products.controller.ts` reference block, positioned between `findCategories` and `findAll` (matching the lesson's own stated route-ordering rule).
 
-- [ ] **Step 2**: Verify against the real running reference project (should already pass unchanged since behavior didn't change, but confirm against the new 208-product dataset and the validated-pagination DTO from Task 8):
+- [ ] **Step 0b: Build it for real in the reference project** using the corrected code from Step 0a:
+```bash
+SCRATCH=/private/tmp/claude-501/-Users-varis-Sites-varis-lab-frontend-bootcamp-content-7-july-2026/16431c67-c41f-48ab-8541-21a433bf6c5d/scratchpad/verify/ecommerce-api
+cd "$SCRATCH"
+npm run build && npm run lint
+git add -A && git commit -m "feat: GET /products/category/:slug"
+git tag -f lesson-14
+```
+
+- [ ] **Step 1**: This endpoint's behavior for an unknown category (200 + empty envelope) is **unchanged in kind**, but the `limit` value in that empty envelope is different now — it echoes the request (e.g. `?limit=5` → `limit: 5`), not `rows.length` (which would have been `0`). Update the Cursor prompt's context lines from `@docs/contract/products-by-category.json @docs/contract/products-by-category-unknown.json` to `@docs/api-spec.md`. Update the intro paragraph's justification for "unknown category → 200, not 404" to cite the design spec's reasoning directly: `Category.tsx` calls `useQuery` un-guarded when the category changes, and a 404 there would trip `isError` and render the error screen instead of the empty grid the UI actually shows for an empty category. Update the paragraph explaining the empty envelope's `limit` value (it currently says `limit: 0` "because `paginate` returns `rows.length`" — both the number and the reasoning are now wrong) to state `limit` simply echoes whatever was requested, same as every other endpoint since Task 8.
+
+- [ ] **Step 2**: Verify against the real running reference project (built fresh in Step 0b, so this is a first real run, not a re-check):
 
 ```bash
 SCRATCH=/private/tmp/claude-501/-Users-varis-Sites-varis-lab-frontend-bootcamp-content-7-july-2026/16431c67-c41f-48ab-8541-21a433bf6c5d/scratchpad/verify/ecommerce-api
