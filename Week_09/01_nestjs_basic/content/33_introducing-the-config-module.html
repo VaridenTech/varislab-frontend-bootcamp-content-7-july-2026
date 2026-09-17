@@ -3,20 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ติดตั้งและใช้งาน @nestjs/config เพื่อจัดการ environment variables ของแอป NestJS อย่างปลอดภัย แทนการ hardcode ค่าเชื่อมต่อฐานข้อมูล" />
-  <title>รู้จัก Config Module</title>
+  <meta name="description" content="ติดตั้ง ConfigModule จัดการไฟล์ .env อย่างปลอดภัย และเลือกแหล่ง environment variables ให้เหมาะกับการรัน NestJS แต่ละแบบ" />
+  <title>ตั้งค่า ConfigModule และ Environment Files</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 33/66</p>
-    <h1>รู้จัก Config Module</h1>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 33/58</p>
+    <h1>ตั้งค่า ConfigModule และ Environment Files</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
       <ul>
         <li>อธิบายได้ว่าทำไม configuration ควรอยู่ใน environment ไม่ใช่ hardcode ในโค้ด</li>
-        <li>ติดตั้ง <code>@nestjs/config</code> และสร้างไฟล์ <code>.env</code> ที่ไม่ถูก track โดย git</li>
-        <li>ให้ <code>ConfigModule</code> เป็นผู้โหลด <code>DATABASE_URL</code> จาก <code>.env</code> แทนการ <code>import 'dotenv/config'</code> เองใน <code>main.ts</code></li>
+        <li>ติดตั้ง <code>@nestjs/config</code> และดูแลไฟล์ <code>.env</code> โดยไม่ให้ credentials หลุดขึ้น git</li>
+        <li>ให้ <code>ConfigModule</code> โหลด <code>DATABASE_URL</code> แทนการ import <code>dotenv</code> เองใน <code>main.ts</code></li>
+        <li>เลือกใช้ <code>envFilePath</code> หรือ <code>ignoreEnvFile</code> ให้เหมาะกับสภาพแวดล้อมที่รันแอป</li>
       </ul>
     </section>
 
@@ -39,7 +40,7 @@ export class AppModule {}</code></pre>
     <p>ตั้งแต่บทที่ 22 <code>npx prisma init</code> สร้างไฟล์ <code>.env</code> ที่ root ของ <code>iluvcoffee</code> ไว้ให้ และเราเก็บ connection string ของ PostgreSQL ไว้ในนั้นมาตลอด</p>
     <pre><code>DATABASE_URL="postgresql://postgres:pass123@localhost:5432/postgres"</code></pre>
     <div class="warning">
-      <p>ไฟล์ <code>.env</code> มี credentials จริง ห้าม commit ขึ้น repository เด็ดขาด — <code>prisma init</code> ในบทที่ 22 เพิ่ม <code>.env</code> ลง <code>.gitignore</code> ให้แล้ว แต่บทถัดไปเราจะมีไฟล์ env หลายชื่อ จึงควรขยายเป็นแพทเทิร์น <code>*.env</code> ตั้งแต่ตอนนี้ แล้วตรวจด้วย <code>git status</code> ว่าไฟล์ไม่โผล่ในรายการ</p>
+      <p>ไฟล์ <code>.env</code> มี credentials จริง ห้าม commit ขึ้น repository เด็ดขาด — <code>prisma init</code> ในบทที่ 22 เพิ่ม <code>.env</code> ลง <code>.gitignore</code> ให้แล้ว ถ้าทีมใช้ไฟล์อย่าง <code>.env.development</code> เพิ่ม ให้ใส่แพทเทิร์น <code>*.env</code> ด้วย แล้วตรวจ <code>git status</code> ทุกครั้งว่าไฟล์เหล่านี้ไม่โผล่ในรายการ</p>
     </div>
     <pre><code># .gitignore
 # Env
@@ -68,9 +69,32 @@ super({
     <div class="note"><p><code>ConfigModule.forRoot()</code> อ่าน <code>.env</code> ตอนที่ <code>imports</code> array ถูกประเมิน ซึ่งเกิดก่อน Nest จะสร้าง provider ใด ๆ ดังนั้น constructor ของ <code>PrismaService</code> จึงเห็นค่าเสมอไม่ว่าจะวาง <code>PrismaModule</code> ไว้ก่อนหรือหลัง ส่วน <code>prisma7.config.ts</code> ยังต้องมี <code>import "dotenv/config"</code> ของตัวเองต่อไป เพราะ Prisma CLI ทำงานนอก NestJS</p></div>
     <div class="warning"><p>ข้อควรระวังของแพทเทิร์นนี้คือค่าที่ถูกอ่านจาก <code>process.env</code> <strong>ตอน import module</strong> แทนที่จะอ่านใน constructor เช่น <code>SomeModule.register({ connectionString: process.env.DATABASE_URL })</code> ที่เขียนตรง ๆ ใน <code>imports</code> array — ES module จะประเมินค่านั้นตอนโหลดไฟล์ ซึ่งเกิดก่อน <code>ConfigModule.forRoot()</code> จะได้ทำงานเสมอ ผลคือได้ <code>undefined</code> แบบงง ๆ ของเราไม่มีปัญหานี้เพราะ <code>PrismaService</code> อ่าน <code>process.env.DATABASE_URL</code> ใน <em>constructor</em> ซึ่งรันใน DI phase หลัง <code>ConfigModule</code> โหลด <code>.env</code> เรียบร้อยแล้ว</p></div>
 
+    <h2>เลือกแหล่ง environment ให้เหมาะกับตอนรันแอป</h2>
+    <p>ตอนพัฒนาในเครื่อง ค่า default ที่อ่าน <code>.env</code> มักเพียงพอ แต่บางทีมแยกไฟล์ตาม environment หรือให้ hosting platform ส่งค่าเข้า <code>process.env</code> โดยตรง เราปรับพฤติกรรมนี้ได้จาก options ของ <code>forRoot()</code></p>
+    <pre><code>// อ่านจากไฟล์ที่กำหนด โดยไฟล์ด้านหน้ามี priority สูงกว่า
+ConfigModule.forRoot({
+  envFilePath: ['.env.development.local', '.env.development'],
+});
+
+// production ที่ platform inject environment variables ให้แล้ว
+ConfigModule.forRoot({
+  ignoreEnvFile: true,
+});</code></pre>
+    <div class="comparison" role="region" aria-label="เปรียบเทียบแหล่ง environment variables" tabindex="0">
+      <table>
+        <thead><tr><th>สถานการณ์</th><th>Option ที่ใช้</th><th>ผล</th></tr></thead>
+        <tbody>
+          <tr><td>ใช้ไฟล์ <code>.env</code> ที่ root</td><td>ไม่ต้องเพิ่ม option</td><td><code>ConfigModule</code> อ่านไฟล์ให้อัตโนมัติ</td></tr>
+          <tr><td>ใช้ไฟล์ชื่ออื่นหรือมีหลายไฟล์</td><td><code>envFilePath</code></td><td>อ่าน path ตามลำดับที่กำหนด</td></tr>
+          <tr><td>Hosting platform จัดการค่าให้</td><td><code>ignoreEnvFile: true</code></td><td>ใช้ค่าจาก <code>process.env</code> โดยไม่อ่านไฟล์</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><p><code>envFilePath</code> มีผลกับแอป NestJS เท่านั้น ส่วน Prisma CLI ทำงานนอก Nest ถ้าเปลี่ยนชื่อไฟล์ <code>.env</code> ต้องตั้งค่าใน <code>prisma7.config.ts</code> ให้โหลดชื่อใหม่ด้วย</p></div>
+
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ส่งมอบหน้าที่โหลด .env ให้ ConfigModule</h2>
-      <p>ติดตั้ง <code>@nestjs/config</code>, ตรวจว่า <code>*.env</code> อยู่ใน <code>.gitignore</code>, import <code>ConfigModule.forRoot()</code> ใน <code>AppModule</code> แล้วลบ <code>import 'dotenv/config'</code> ออกจาก <code>main.ts</code></p>
+      <p>ติดตั้ง <code>@nestjs/config</code>, ตรวจว่าไฟล์ environment อยู่ใน <code>.gitignore</code>, เพิ่ม <code>ConfigModule.forRoot()</code> ใน <code>AppModule</code> แล้วลบ <code>import 'dotenv/config'</code> ออกจาก <code>main.ts</code> จากนั้นลองเปลี่ยนชื่อไฟล์ชั่วคราวเพื่อทดสอบ <code>envFilePath</code></p>
       <div class="prompt-example"><code>npm i @nestjs/config
 
 # ลบ import 'dotenv/config' ใน src/main.ts
@@ -81,15 +105,15 @@ npm run start:dev</code></div>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ควรได้ผลลัพธ์แบบนี้</h2>
-      <p>แอปยังเปิดและเชื่อมต่อ PostgreSQL ได้ตามปกติ แม้จะลบ dotenv ออกจาก <code>main.ts</code> แล้ว และ <code>git status</code> ต้องไม่แสดงไฟล์ <code>.env</code> ในรายการที่จะ commit</p>
+      <p>แอปยังเชื่อมต่อ PostgreSQL ได้หลังลบ dotenv ออกจาก <code>main.ts</code> และยังเปิดได้เมื่อเปลี่ยนชื่อไฟล์พร้อมตั้ง <code>envFilePath</code> ให้ตรงกัน ส่วน <code>git status</code> ต้องไม่แสดงไฟล์ environment ในรายการที่จะ commit</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ลองเช็กให้แน่ใจ</h2>
       <ul>
         <li><code>GET /coffees</code> ยังตอบข้อมูลจากฐานข้อมูลได้ปกติหลังถอด dotenv ออกจาก <code>main.ts</code></li>
-        <li>ลองแก้รหัสผ่านใน <code>DATABASE_URL</code> ของ <code>.env</code> ให้ผิดแล้ว restart — แอปต้องต่อฐานข้อมูลไม่ได้ ยืนยันว่าค่าถูกอ่านจากไฟล์ผ่าน <code>ConfigModule</code> จริง (แก้กลับเมื่อทดสอบเสร็จ)</li>
+        <li>อธิบายได้ว่าเมื่อไรควรใช้ค่า default, <code>envFilePath</code> และ <code>ignoreEnvFile</code></li>
         <li><code>git status</code> ไม่มี <code>.env</code> โผล่ในรายการ untracked/staged</li>
-        <li>คอมเมนต์ <code>ConfigModule.forRoot()</code> ออกชั่วคราว — แอปต้อง start ไม่ผ่านเพราะ <code>DATABASE_URL</code> เป็น <code>undefined</code> (แล้วใส่กลับ)</li>
+        <li>รู้ว่า Prisma CLI ต้องตั้งค่าการโหลด env แยกจาก NestJS</li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>
@@ -101,7 +125,7 @@ npm run start:dev</code></div>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link" href="32_control-nestjs-module-encapsulation.html" rel="prev">← บทก่อน</a>
       <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="34_custom-environment-file-paths.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="34_schema-validation.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
   <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>

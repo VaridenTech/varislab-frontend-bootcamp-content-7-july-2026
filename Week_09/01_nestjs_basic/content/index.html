@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="สารบัญ Workshop ภาษาไทย NestJS Fundamentals: 66 บทเรียน ตั้งแต่ติดตั้ง CLI สร้าง REST API ต่อฐานข้อมูล PostgreSQL/MongoDB จนถึงการทดสอบ" />
+  <meta name="description" content="สารบัญ Workshop ภาษาไทย NestJS Fundamentals: 58 บทเรียน ตั้งแต่ติดตั้ง CLI สร้าง REST API ต่อฐานข้อมูล PostgreSQL/MongoDB จนถึงการทดสอบ" />
   <title>NestJS Fundamentals: สร้าง REST API ตั้งแต่ศูนย์ถึงโปรดักชัน</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -11,7 +11,7 @@
   <main>
     <h1>NestJS Fundamentals: สร้าง REST API ตั้งแต่ศูนย์ถึงโปรดักชัน</h1>
 
-    <p>คอร์สนี้มี 66 บทและใช้โปรเจกต์เดียวต่อเนื่องตั้งแต่ต้นจนจบ เราจะสร้าง REST API สำหรับร้านกาแฟชื่อ <code>iluvcoffee</code> เริ่มจาก scaffold โปรเจกต์และทำ CRUD ก่อนต่อ PostgreSQL ด้วย Prisma จากนั้นค่อยจัดการ configuration, building blocks ของ Nest, เอกสาร Swagger และการทดสอบ ส่วนท้ายมีเส้นทางโบนัสสำหรับ MongoDB + Mongoose</p>
+    <p>คอร์สนี้มี 58 บทและใช้โปรเจกต์เดียวต่อเนื่องตั้งแต่ต้นจนจบ เราจะสร้าง REST API สำหรับร้านกาแฟชื่อ <code>iluvcoffee</code> เริ่มจาก scaffold โปรเจกต์และทำ CRUD ก่อนต่อ PostgreSQL ด้วย Prisma จากนั้นค่อยจัดการ configuration, building blocks ของ Nest, เอกสาร Swagger และการทดสอบ ส่วนท้ายมีเส้นทางโบนัสสำหรับ MongoDB + Mongoose</p>
 
     <section aria-label="ผลลัพธ์การเรียนรู้">
       <p><strong>เรียนครบแล้ว เราจะ:</strong> ออกแบบ API เป็น modules ตาม business domain, ตรวจสอบและแปลงข้อมูลขาเข้าด้วย DTO + ValidationPipe, ทำงานกับฐานข้อมูลทั้ง SQL และ NoSQL อย่างปลอดภัย (relations, transactions, indexes, migrations), แยก configuration ออกจากโค้ดด้วย ConfigModule และเขียนชุดทดสอบที่ยืนยันว่าระบบทำงานจริง</p>
@@ -76,68 +76,60 @@ npm run start:dev</code></pre>
     </section>
 
     <section class="lesson-index" aria-labelledby="config-heading">
-      <h2 id="config-heading">32–37. Module Encapsulation และ Application Configuration</h2>
+      <h2 id="config-heading">32–35. Module Encapsulation และ Application Configuration</h2>
       <ol start="32">
         <li><a href="32_control-nestjs-module-encapsulation.html">ควบคุม Module Encapsulation</a></li>
-        <li><a href="33_introducing-the-config-module.html">รู้จัก Config Module</a></li>
-        <li><a href="34_custom-environment-file-paths.html">กำหนด Path ของ Environment File เอง</a></li>
-        <li><a href="35_schema-validation.html">ตรวจ Environment Variables ด้วย Schema</a></li>
-        <li><a href="36_using-the-config-service.html">ใช้งาน ConfigService</a></li>
-        <li><a href="37_custom-configuration-files.html">สร้าง Configuration Files ของตัวเอง</a></li>
+        <li><a href="33_introducing-the-config-module.html">ตั้งค่า ConfigModule และ Environment Files</a></li>
+        <li><a href="34_schema-validation.html">ตรวจ Environment Variables ด้วย Schema</a></li>
+        <li><a href="35_using-config-service-and-custom-configuration.html">ใช้ ConfigService และจัดโครงสร้าง Configuration</a></li>
       </ol>
     </section>
 
     <section class="lesson-index" aria-labelledby="blocks-heading">
-      <h2 id="blocks-heading">38–47. Building Blocks: Filters, Guards, Interceptors, Pipes</h2>
-      <ol start="38">
-        <li><a href="38_introducing-more-building-blocks.html">รู้จัก Building Blocks เพิ่มเติม</a></li>
-        <li><a href="39_understanding-binding-techniques.html">เข้าใจเทคนิคการ Bind</a></li>
-        <li><a href="40_catch-exceptions-with-filters.html">จับ Exceptions ด้วย Filters</a></li>
-        <li><a href="41_protect-routes-with-guards.html">ป้องกัน Routes ด้วย Guards</a></li>
-        <li><a href="42_using-metadata-to-build-generic-guards-or-interceptors.html">ใช้ Metadata สร้าง Guards และ Interceptors แบบ Generic</a></li>
-        <li><a href="43_add-pointcuts-with-interceptors.html">เพิ่ม Pointcuts ด้วย Interceptors</a></li>
-        <li><a href="44_handling-timeouts-with-interceptors.html">จัดการ Timeout ด้วย Interceptors</a></li>
-        <li><a href="45_creating-custom-pipes.html">สร้าง Custom Pipes</a></li>
-        <li><a href="46_bonus-add-request-logging-with-middleware.html">โบนัส: เพิ่ม Request Logging ด้วย Middleware</a></li>
-        <li><a href="47_bonus-create-custom-param-decorators.html">โบนัส: สร้าง Custom Param Decorators</a></li>
+      <h2 id="blocks-heading">36–42. Building Blocks: Filters, Guards, Interceptors, Pipes</h2>
+      <ol start="36">
+        <li><a href="36_request-lifecycle-and-binding-building-blocks.html">Request Lifecycle และการ Bind Building Blocks</a></li>
+        <li><a href="37_catch-exceptions-with-filters.html">จับ Exceptions ด้วย Filters</a></li>
+        <li><a href="38_guards-and-public-route-metadata.html">สร้าง Guard และเปิด Public Routes ด้วย Metadata</a></li>
+        <li><a href="39_interceptors-response-and-timeouts.html">สร้าง Interceptors สำหรับ Response และ Timeout</a></li>
+        <li><a href="40_creating-custom-pipes.html">สร้าง Custom Pipes</a></li>
+        <li><a href="41_bonus-add-request-logging-with-middleware.html">โบนัส: เพิ่ม Request Logging ด้วย Middleware</a></li>
+        <li><a href="42_bonus-create-custom-param-decorators.html">โบนัส: สร้าง Custom Param Decorators</a></li>
       </ol>
     </section>
 
     <section class="lesson-index" aria-labelledby="swagger-heading">
-      <h2 id="swagger-heading">48–52. เอกสาร API ด้วย OpenAPI (Swagger)</h2>
-      <ol start="48">
-        <li><a href="48_introducing-the-swagger-module.html">รู้จัก Swagger Module</a></li>
-        <li><a href="49_enabling-cli-plugin.html">เปิดใช้ Swagger CLI Plugin</a></li>
-        <li><a href="50_decorating-model-properties.html">ตกแต่ง Model Properties ให้เอกสารครบ</a></li>
-        <li><a href="51_adding-example-responses.html">เพิ่ม Example Responses</a></li>
-        <li><a href="52_using-tags-to-group-resources.html">จัดกลุ่ม Resources ด้วย Tags</a></li>
+      <h2 id="swagger-heading">43–45. เอกสาร API ด้วย OpenAPI (Swagger)</h2>
+      <ol start="43">
+        <li><a href="43_setting-up-swagger-and-cli-plugin.html">ตั้งค่า Swagger และเปิดใช้ CLI Plugin</a></li>
+        <li><a href="44_decorating-model-properties.html">ตกแต่ง Model Properties ให้เอกสารครบ</a></li>
+        <li><a href="45_documenting-responses-and-grouping-with-tags.html">อธิบาย Responses และจัดกลุ่ม API ด้วย Tags</a></li>
       </ol>
     </section>
 
     <section class="lesson-index" aria-labelledby="testing-heading">
-      <h2 id="testing-heading">53–58. การทดสอบด้วย Vitest</h2>
-      <ol start="53">
-        <li><a href="53_introduction-to-vitest.html">รู้จัก Vitest</a></li>
-        <li><a href="54_getting-started-with-test-suites.html">เริ่มต้นกับ Test Suites</a></li>
-        <li><a href="55_adding-unit-tests.html">เขียน Unit Tests</a></li>
-        <li><a href="56_diving-into-e2e-tests.html">เจาะลึก e2e Tests</a></li>
-        <li><a href="57_creating-our-first-e2e-test.html">สร้าง e2e Test แรก</a></li>
-        <li><a href="58_implementing-e2e-test-logic.html">เขียน Logic ของ e2e Test</a></li>
+      <h2 id="testing-heading">46–50. การทดสอบด้วย Vitest</h2>
+      <ol start="46">
+        <li><a href="46_getting-started-with-vitest-and-test-suites.html">เริ่มต้น Vitest และสร้าง Test Suite</a></li>
+        <li><a href="47_adding-unit-tests.html">เขียน Unit Tests</a></li>
+        <li><a href="48_diving-into-e2e-tests.html">เจาะลึก e2e Tests</a></li>
+        <li><a href="49_creating-our-first-e2e-test.html">สร้าง e2e Test แรก</a></li>
+        <li><a href="50_implementing-e2e-test-logic.html">เขียน Logic ของ e2e Test</a></li>
       </ol>
     </section>
 
     <section class="lesson-index" aria-labelledby="mongo-heading">
-      <h2 id="mongo-heading">59–66. โบนัส: MongoDB + Mongoose</h2>
+      <h2 id="mongo-heading">51–58. โบนัส: MongoDB + Mongoose</h2>
       <p>เส้นทางนี้แยกออกมาจากโค้ดตอนจบ Chapter 2 (บทที่ 18) ถ้าทำตามมาถึงตรงนี้ ให้สลับกลับไปยัง branch ที่บันทึกไว้ในบทที่ 19 ก่อนเริ่ม</p>
-      <ol start="59">
-        <li><a href="59_before-we-get-started-mongodb.html">ก่อนเริ่มบท MongoDB: กลับไปที่จุดจบ Chapter 2</a></li>
-        <li><a href="60_running-mongodb.html">รัน MongoDB ด้วย Docker Compose</a></li>
-        <li><a href="61_introducing-the-mongoose-module.html">รู้จัก Mongoose Module</a></li>
-        <li><a href="62_creating-a-mongoose-model.html">สร้าง Mongoose Model</a></li>
-        <li><a href="63_using-a-mongoose-model-to-access-mongodb.html">ใช้ Mongoose Model เข้าถึง MongoDB</a></li>
-        <li><a href="64_adding-pagination-mongodb.html">เพิ่ม Pagination (MongoDB)</a></li>
-        <li><a href="65_use-transactions-mongodb.html">ใช้ Transactions (MongoDB)</a></li>
-        <li><a href="66_adding-indexes-to-schemas.html">เพิ่ม Indexes ให้ Schemas</a></li>
+      <ol start="51">
+        <li><a href="51_before-we-get-started-mongodb.html">ก่อนเริ่มบท MongoDB: กลับไปที่จุดจบ Chapter 2</a></li>
+        <li><a href="52_running-mongodb.html">รัน MongoDB ด้วย Docker Compose</a></li>
+        <li><a href="53_introducing-the-mongoose-module.html">รู้จัก Mongoose Module</a></li>
+        <li><a href="54_creating-a-mongoose-model.html">สร้าง Mongoose Model</a></li>
+        <li><a href="55_using-a-mongoose-model-to-access-mongodb.html">ใช้ Mongoose Model เข้าถึง MongoDB</a></li>
+        <li><a href="56_adding-pagination-mongodb.html">เพิ่ม Pagination (MongoDB)</a></li>
+        <li><a href="57_use-transactions-mongodb.html">ใช้ Transactions (MongoDB)</a></li>
+        <li><a href="58_adding-indexes-to-schemas.html">เพิ่ม Indexes ให้ Schemas</a></li>
       </ol>
     </section>
 

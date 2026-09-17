@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 65/66</p>
+    <p class="eyebrow">NestJS Fundamentals Workshop · บทที่ 57/58</p>
     <h1>ใช้ Transactions (MongoDB)</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">บทนี้เราจะทำอะไรบ้าง</h2>
@@ -61,7 +61,7 @@ export class CoffeesService {
     @InjectModel(Event.name) private readonly eventModel: Model&lt;Event&gt;,
   ) {}
 
-  // ...CRUD methods เดิมจากบทที่ 64 คงไว้ทั้งหมด...
+  // ...CRUD methods เดิมจากบทที่ 56 คงไว้ทั้งหมด...
 
   async recommendCoffee(coffee: Coffee) {
     const session = await this.connection.startSession();
@@ -86,8 +86,8 @@ export class CoffeesService {
     }
   }
 }</code></pre>
-    <div class="note"><p>โค้ดนี้อ้าง <code>coffee.recommendations</code> — อย่าลืมเพิ่ม <code>@Prop({ default: 0 }) recommendations: number;</code> เข้าไปใน <code>Coffee</code> schema ของบทที่ 62 ก่อน ไม่อย่างนั้นค่าจะเป็น <code>NaN</code></p></div>
-    <div class="warning"><p>MongoDB รองรับ multi-document transaction เฉพาะเมื่อรันเป็น replica set เท่านั้น container แบบ standalone จากบทที่ 60 <strong>ไม่</strong>โยน error ตอน <code>session.startTransaction()</code> (เมธอดนี้แค่ตั้งค่า flag ในตัว session เท่านั้น) แต่จะโยน error ตอนมีคำสั่งเขียนแรกที่แนบ <code>{ session }</code> เข้าไปจริง (ในโค้ดนี้คือ <code>recommendEvent.save({ session })</code>) — สำหรับการเรียนแนวคิดนี้ถือว่าปกติ (โค้ดจับได้ใน <code>catch</code> อยู่แล้วไม่ว่า error จะเกิดจากบรรทัดไหนใน try) แต่ถ้าอยากเห็น transaction ทำงานจริง ต้องตั้งค่า mongo ใน docker-compose ให้เป็น replica set โหนดเดียว (<code>--replSet</code>) ก่อน</p></div>
+    <div class="note"><p>โค้ดนี้อ้าง <code>coffee.recommendations</code> — อย่าลืมเพิ่ม <code>@Prop({ default: 0 }) recommendations: number;</code> เข้าไปใน <code>Coffee</code> schema ของบทที่ 54 ก่อน ไม่อย่างนั้นค่าจะเป็น <code>NaN</code></p></div>
+    <div class="warning"><p>MongoDB รองรับ multi-document transaction เฉพาะเมื่อรันเป็น replica set เท่านั้น container แบบ standalone จากบทที่ 52 <strong>ไม่</strong>โยน error ตอน <code>session.startTransaction()</code> (เมธอดนี้แค่ตั้งค่า flag ในตัว session เท่านั้น) แต่จะโยน error ตอนมีคำสั่งเขียนแรกที่แนบ <code>{ session }</code> เข้าไปจริง (ในโค้ดนี้คือ <code>recommendEvent.save({ session })</code>) — สำหรับการเรียนแนวคิดนี้ถือว่าปกติ (โค้ดจับได้ใน <code>catch</code> อยู่แล้วไม่ว่า error จะเกิดจากบรรทัดไหนใน try) แต่ถ้าอยากเห็น transaction ทำงานจริง ต้องตั้งค่า mongo ใน docker-compose ให้เป็น replica set โหนดเดียว (<code>--replSet</code>) ก่อน</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">เพิ่ม endpoint สำหรับ recommend coffee</h2>
@@ -120,9 +120,9 @@ POST http://localhost:3000/coffees/&lt;_id&gt;/recommend</code></div>
       <li><a href="https://learn.nestjs.com/">คอร์สต้นฉบับ NestJS Fundamentals</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="64_adding-pagination-mongodb.html" rel="prev">← บทก่อน</a>
+      <a class="lesson-navigation__link" href="56_adding-pagination-mongodb.html" rel="prev">← บทก่อน</a>
       <a class="lesson-navigation__link" href="index.html">ดูบทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="66_adding-indexes-to-schemas.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="58_adding-indexes-to-schemas.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
   <footer><p>NestJS Fundamentals Workshop · เนื้อหาตรวจทานล่าสุด 1 กันยายน 2026</p></footer>
