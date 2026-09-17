@@ -37,7 +37,7 @@
     <p><code>limit</code> ใน envelope สะท้อนค่าที่ request ขอมาเสมอ ตามที่ <code>docs/api-spec.md</code> ระบุไว้ตรง ๆ ("limit: echoes the request") ไม่เกี่ยวกับจำนวนแถวที่ส่งกลับจริง เขียน <code>limit: rows.length</code> คือบั๊กคลาสสิกของบทนี้ — curl หน้าแรกจะยังดูถูกต้องทุกอย่าง แล้วจะพังเฉพาะตอนที่ query วิ่งเลยขอบข้อมูลไปแล้วเท่านั้น</p>
 
     <h2>ค่าเริ่มต้นอยู่ที่ field ของ DTO ไม่ใช่ที่ <code>??</code> ใน service</h2>
-    <p>ใน Week_09 บทที่ 11 เราอ่าน query parameter แบบดิบ ๆ แล้วเติมค่าเริ่มต้นเอง บทที่ 16 และ 18 พาเราไปถึงวิธีที่สะอาดกว่า: ประกาศ DTO แล้วปล่อยให้ pipe จัดการ</p>
+    <p>ใน NestJS Fundamentals บทที่ 11 เราอ่าน query parameter แบบดิบ ๆ แล้วเติมค่าเริ่มต้นเอง บทที่ 16 และ 18 พาเราไปถึงวิธีที่สะอาดกว่า: ประกาศ DTO แล้วปล่อยให้ pipe จัดการ</p>
     <pre><code>export class PaginationQueryDto {
   @IsInt()
   @Min(0)
@@ -64,7 +64,7 @@
     </ul>
 
     <h2><code>total</code> กับหน้าข้อมูลต้องมาจาก snapshot เดียว</h2>
-    <p>response envelope ต้องมี <code>total</code> คือจำนวนสินค้าทั้งหมด ซึ่งเป็นอีก query หนึ่ง (<code>count</code>) ถ้ายิงสอง query แยกกัน มีช่องให้ข้อมูลเปลี่ยนระหว่างนั้น แล้ว client จะได้ <code>total: 208</code> พร้อมหน้าข้อมูลที่มาจากโลกที่มี 209 ชิ้น เราจึงห่อทั้งคู่ไว้ใน transaction เดียว (ทบทวน Week_09 บทที่ 29)</p>
+    <p>response envelope ต้องมี <code>total</code> คือจำนวนสินค้าทั้งหมด ซึ่งเป็นอีก query หนึ่ง (<code>count</code>) ถ้ายิงสอง query แยกกัน มีช่องให้ข้อมูลเปลี่ยนระหว่างนั้น แล้ว client จะได้ <code>total: 208</code> พร้อมหน้าข้อมูลที่มาจากโลกที่มี 209 ชิ้น เราจึงห่อทั้งคู่ไว้ใน transaction เดียว (ทบทวน NestJS Fundamentals บทที่ 29)</p>
     <pre><code>const [rows, total] = await this.prisma.$transaction([
   this.prisma.product.findMany({ /* … */ }),
   this.prisma.product.count({ where }),

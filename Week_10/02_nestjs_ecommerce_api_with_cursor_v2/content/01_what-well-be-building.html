@@ -14,14 +14,14 @@
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
       <ul>
-        <li>บอกได้ว่า React app จาก Week_05_06 เรียก dummyjson ที่ endpoint ไหน และคำว่า <em>drop-in replacement</em> หมายถึงอะไร</li>
+        <li>บอกได้ว่า React app จากคอร์ส React E-commerce เรียก dummyjson ที่ endpoint ไหน และคำว่า <em>drop-in replacement</em> หมายถึงอะไร</li>
         <li>อ่านโครงสร้างสุดท้ายของโปรเจกต์ <code>ecommerce-api</code> ได้ว่าไฟล์ไหนเกิดขึ้นในบทไหน</li>
         <li>ตรวจความพร้อมของเครื่องตัวเอง (Node, Docker, Cursor, React app) ก่อนลงมือบทที่ 2</li>
       </ul>
     </section>
 
     <h2>เราจะแทนที่ dummyjson ด้วย API ของเราเอง</h2>
-    <p>React e-commerce app ที่เราสร้างไว้ใน Week_05_06 ไม่มีฐานข้อมูลของตัวเอง มันดึงข้อมูลสินค้าทั้งหมดจาก <a href="https://dummyjson.com/">dummyjson.com</a> ผ่าน endpoint เพียง 5 เส้น เป้าหมายของคอร์สนี้คือสร้าง API ของเราเองที่ตอบ 5 เส้นนี้ได้ <strong>ด้วย path เดิมและรูปทรง JSON เดิม</strong> เพื่อให้ React app ไม่ต้องแก้โค้ดแม้แต่บรรทัดเดียว — เปลี่ยนแค่ค่า <code>VITE_API_BASE_URL</code> จาก <code>https://dummyjson.com</code> เป็น <code>http://localhost:3000</code> ก็ใช้งานได้ทันที นี่คือความหมายของคำว่า drop-in replacement</p>
+    <p>React e-commerce app ที่เราสร้างไว้ในคอร์ส React E-commerce ไม่มีฐานข้อมูลของตัวเอง มันดึงข้อมูลสินค้าทั้งหมดจาก <a href="https://dummyjson.com/">dummyjson.com</a> ผ่าน endpoint เพียง 5 เส้น เป้าหมายของคอร์สนี้คือสร้าง API ของเราเองที่ตอบ 5 เส้นนี้ได้ <strong>ด้วย path เดิมและรูปทรง JSON เดิม</strong> เพื่อให้ React app ไม่ต้องแก้โค้ดแม้แต่บรรทัดเดียว — เปลี่ยนแค่ค่า <code>VITE_API_BASE_URL</code> จาก <code>https://dummyjson.com</code> เป็น <code>http://localhost:3000</code> ก็ใช้งานได้ทันที นี่คือความหมายของคำว่า drop-in replacement</p>
     <div class="comparison" role="region" aria-label="endpoint ของ dummyjson ที่ React app เรียกใช้" tabindex="0">
       <table>
         <thead><tr><th>Method + Path</th><th>React ใช้ที่ไหน</th><th>ตอบอะไร</th></tr></thead>
@@ -37,7 +37,7 @@
     <p>ข้อผูกมัดจึงชัดเจนมาก: ทุกชื่อ field ทุก status code และทุกพฤติกรรมขอบ ๆ (เช่น หมวดที่ไม่มีจริงตอบอะไร) ต้องตรงกับสิ่งที่โค้ดฝั่ง client (type, API client, MSW fixtures) คาดหวังจริง เพราะถ้าไม่ตรง หน้าจอของ React จะพังโดยที่ API ของเราไม่ฟ้อง error อะไรเลย บทที่ 3 จะอ่านโค้ดเหล่านั้นแล้วออกแบบ <em>สัญญา</em> (contract) นี้เก็บไว้เป็นไฟล์จริงในโปรเจกต์ แล้วทุกบทหลังจากนั้นจะอ้างถึงไฟล์นั้นเสมอ</p>
 
     <h2>สถาปัตยกรรมที่จะได้ตอนจบ</h2>
-    <p>เราใช้สแตกเดียวกับ Week_09 บทที่ 19–31 คือ <strong>NestJS 12</strong> (ES module + TypeScript strict) ต่อ <strong>PostgreSQL 17</strong> ที่รันใน Docker ผ่าน <strong>Prisma 7</strong> บวกของที่ React app ต้องใช้จริงอีกสามอย่าง: validation ด้วย <code>class-validator</code>, CORS และเอกสาร Swagger ตอนจบคอร์สโปรเจกต์จะมีหน้าตาแบบนี้</p>
+    <p>เราใช้สแตกเดียวกับ NestJS Fundamentals บทที่ 19–31 คือ <strong>NestJS 12</strong> (ES module + TypeScript strict) ต่อ <strong>PostgreSQL 17</strong> ที่รันใน Docker ผ่าน <strong>Prisma 7</strong> บวกของที่ React app ต้องใช้จริงอีกสามอย่าง: validation ด้วย <code>class-validator</code>, CORS และเอกสาร Swagger ตอนจบคอร์สโปรเจกต์จะมีหน้าตาแบบนี้</p>
     <pre><code>ecommerce-api/
 ├── .cursor/rules/project.mdc        กติกาถาวรที่ Cursor ต้องทำตาม      (บทที่ 4)
 ├── docs/api-spec.md                 สัญญาที่เราออกแบบเองจากโค้ด client (บทที่ 3)
@@ -111,11 +111,11 @@
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">พร้อมเริ่มหรือยัง</h2>
       <ul>
-        <li>เรียน <a href="../../../Week_09/01_nestjs_basic/content/index.html">NestJS Fundamentals (Week_09)</a> จบแล้ว และอธิบายได้ว่า module, controller, service, DTO และ <code>PrismaService</code> แต่ละอย่างทำหน้าที่อะไร — คอร์สนี้ทบทวนให้สั้น ๆ เท่านั้น ไม่ได้สอนใหม่</li>
-        <li>ติดตั้ง Cursor แล้วและ sign in เรียบร้อย เปิดแชทโหมด Agent ได้ (ทบทวนวิธีใช้ได้จากคอร์ส Week_05_06)</li>
+        <li>เรียน <a href="../../../Week_09/01_nestjs_basic/content/index.html">NestJS Fundamentals</a> จบแล้ว และอธิบายได้ว่า module, controller, service, DTO และ <code>PrismaService</code> แต่ละอย่างทำหน้าที่อะไร — คอร์สนี้ทบทวนให้สั้น ๆ เท่านั้น ไม่ได้สอนใหม่</li>
+        <li>ติดตั้ง Cursor แล้วและ sign in เรียบร้อย เปิดแชทโหมด Agent ได้ (ทบทวนวิธีใช้ได้จากคอร์ส React E-commerce + Cursor AI)</li>
         <li><code>node --version</code> ได้เลข 24 หรือมากกว่า</li>
         <li><code>docker --version</code> ตอบเวอร์ชันได้ และ Docker Desktop กำลังรันอยู่</li>
-        <li>เปิดโปรเจกต์ React e-commerce จาก Week_05_06 แล้ว <code>npm run dev</code> ขึ้นหน้า Home ที่เห็นสินค้าจาก dummyjson จริง — นี่คือหลักฐานตั้งต้นที่เราจะเอากลับมาเทียบในบทที่ 23</li>
+        <li>เปิดโปรเจกต์ React e-commerce จากคอร์ส React E-commerce แล้ว <code>npm run dev</code> ขึ้นหน้า Home ที่เห็นสินค้าจาก dummyjson จริง — นี่คือหลักฐานตั้งต้นที่เราจะเอากลับมาเทียบในบทที่ 23</li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>

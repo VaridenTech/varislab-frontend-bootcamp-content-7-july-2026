@@ -21,7 +21,7 @@
     </section>
 
     <h2>ฐานข้อมูลอยู่ในคอนเทนเนอร์ ไม่ใช่ในเครื่องเรา</h2>
-    <p>เราใช้วิธีเดียวกับ <a href="../../../Week_09/01_nestjs_basic/content/20_running-postgresql.html">Week_09 บทที่ 20</a>: ไม่ติดตั้ง PostgreSQL ลงเครื่องโดยตรง แต่ประกาศมันเป็น service ในไฟล์ <code>docker-compose.yml</code> แล้วให้ Docker ยกขึ้นให้ ข้อดีคือทุกคนในทีมได้ PostgreSQL เวอร์ชันเดียวกันจากไฟล์เดียว และลบทิ้งทั้งชุดได้เมื่อจบคอร์ส คำสั่งที่ใช้ตลอดคอร์สมีแค่สามคำสั่งนี้</p>
+    <p>เราใช้วิธีเดียวกับ <a href="../../../Week_09/01_nestjs_basic/content/20_running-postgresql.html">NestJS Fundamentals บทที่ 20</a>: ไม่ติดตั้ง PostgreSQL ลงเครื่องโดยตรง แต่ประกาศมันเป็น service ในไฟล์ <code>docker-compose.yml</code> แล้วให้ Docker ยกขึ้นให้ ข้อดีคือทุกคนในทีมได้ PostgreSQL เวอร์ชันเดียวกันจากไฟล์เดียว และลบทิ้งทั้งชุดได้เมื่อจบคอร์ส คำสั่งที่ใช้ตลอดคอร์สมีแค่สามคำสั่งนี้</p>
     <pre><code># ยกฐานข้อมูลขึ้นแบบ background (detached)
 docker compose up -d
 
@@ -41,7 +41,7 @@ docker compose down</code></pre>
     <p>เราเลือก named volume (<code>pgdata:</code>) แทน bind mount (<code>./data:/var/lib/postgresql/data</code>) เพราะ named volume ถูกจัดการโดย Docker ไม่โผล่เป็นโฟลเดอร์ในโปรเจกต์ให้เผลอ commit ขึ้น git</p>
 
     <h2>ทำไมต้อง POSTGRES_DB=ecommerce</h2>
-    <p>ใน Week_09 เราต่อกับ database ปริยายชื่อ <code>postgres</code> ได้เพราะมีโปรเจกต์เดียว คอร์สนี้เราตั้ง <code>POSTGRES_DB=ecommerce</code> ให้คอนเทนเนอร์สร้าง database เฉพาะของโปรเจกต์ตั้งแต่ boot ครั้งแรก เหตุผลคือ <code>DATABASE_URL</code> ของ Prisma ลงท้ายด้วยชื่อ database (<code>…/ecommerce</code>) ถ้าลืม key นี้ database จะไม่มีจริง แล้วบทที่ 8 (<code>prisma migrate dev</code>) จะล้มด้วย error ว่าหา database ไม่เจอ</p>
+    <p>ในคอร์ส NestJS Fundamentals เราต่อกับ database ปริยายชื่อ <code>postgres</code> ได้เพราะมีโปรเจกต์เดียว คอร์สนี้เราตั้ง <code>POSTGRES_DB=ecommerce</code> ให้คอนเทนเนอร์สร้าง database เฉพาะของโปรเจกต์ตั้งแต่ boot ครั้งแรก เหตุผลคือ <code>DATABASE_URL</code> ของ Prisma ลงท้ายด้วยชื่อ database (<code>…/ecommerce</code>) ถ้าลืม key นี้ database จะไม่มีจริง แล้วบทที่ 8 (<code>prisma migrate dev</code>) จะล้มด้วย error ว่าหา database ไม่เจอ</p>
     <div class="note">
       <p>ตัวแปร <code>POSTGRES_PASSWORD</code> เป็น key เดียวที่ image บังคับให้ใส่ ส่วน user เราไม่ตั้งเอง จึงได้ superuser ปริยายชื่อ <code>postgres</code> — ตรงกับ <code>-U postgres</code> ในคำสั่ง <code>psql</code> และตรงกับ <code>postgres:pass123</code> ใน <code>DATABASE_URL</code> รหัสผ่านแบบนี้ใช้ได้เพราะฐานข้อมูลนี้เปิดอยู่แค่บนเครื่องเราเพื่อเรียน ไม่ใช่ของจริงบน production</p>
     </div>

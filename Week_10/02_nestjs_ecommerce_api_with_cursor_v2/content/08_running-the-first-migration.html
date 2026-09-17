@@ -25,7 +25,7 @@
     </div>
 
     <h2>migrate dev ทำสามอย่างในคำสั่งเดียว</h2>
-    <p>เราเคยเห็น migration ครั้งแรกใน <a href="../../../Week_09/01_nestjs_basic/content/31_setting-up-migrations.html">Week_09 บทที่ 31</a> แล้ว ทบทวนว่า <code>prisma migrate dev --name init</code> ทำอะไร</p>
+    <p>เราเคยเห็น migration ครั้งแรกใน <a href="../../../Week_09/01_nestjs_basic/content/31_setting-up-migrations.html">NestJS Fundamentals บทที่ 31</a> แล้ว ทบทวนว่า <code>prisma migrate dev --name init</code> ทำอะไร</p>
     <ul>
       <li><strong>เขียนไฟล์ SQL</strong> — เทียบ <code>schema.prisma</code> กับสถานะฐานข้อมูลปัจจุบัน แล้วสร้าง <code>prisma/migrations/&lt;timestamp&gt;_init/migration.sql</code> ที่เป็น SQL ธรรมดา อ่านได้ แก้ได้ และ commit ขึ้น git ได้</li>
       <li><strong>รัน SQL นั้นกับฐานข้อมูล</strong> — ตารางเกิดขึ้นจริงหลังคำสั่งนี้</li>
@@ -151,7 +151,7 @@ Foreign-key constraints:
     </ul>
     <p>ท้ายผลลัพธ์ยังมีส่วน <code>Referenced by:</code> ที่บอกว่า <code>Review</code> ชี้กลับมาที่ตารางนี้ด้วย <code>ON DELETE CASCADE</code> — ผลของ <code>onDelete: Cascade</code> ที่เราใส่ไว้ใน model <code>Review</code></p>
     <div class="note">
-      <p><code>docker compose exec db psql …</code> คือวิธีดูฐานข้อมูลแบบไม่ต้องติดตั้งอะไรเพิ่ม (เรายืม <code>psql</code> ที่อยู่ในคอนเทนเนอร์มาใช้) ถ้าถนัด GUI จะต่อ pgAdmin ตามวิธีใน <a href="../../../Week_09/01_nestjs_basic/content/21_how-to-visualize-your-postgres-database-gui.html">Week_09 บทที่ 21</a> ก็ได้ — host <code>localhost</code>, port <code>5432</code>, user <code>postgres</code>, password <code>pass123</code>, database <code>ecommerce</code> คอร์สนี้จะใช้ <code>psql</code> ตลอดเพราะคัดลอกคำสั่งไปวางได้ตรง ๆ</p>
+      <p><code>docker compose exec db psql …</code> คือวิธีดูฐานข้อมูลแบบไม่ต้องติดตั้งอะไรเพิ่ม (เรายืม <code>psql</code> ที่อยู่ในคอนเทนเนอร์มาใช้) ถ้าถนัด GUI จะต่อ pgAdmin ตามวิธีใน <a href="../../../Week_09/01_nestjs_basic/content/21_how-to-visualize-your-postgres-database-gui.html">NestJS Fundamentals บทที่ 21</a> ก็ได้ — host <code>localhost</code>, port <code>5432</code>, user <code>postgres</code>, password <code>pass123</code>, database <code>ecommerce</code> คอร์สนี้จะใช้ <code>psql</code> ตลอดเพราะคัดลอกคำสั่งไปวางได้ตรง ๆ</p>
     </div>
 
     <section class="verification" aria-labelledby="exercise-check-heading">

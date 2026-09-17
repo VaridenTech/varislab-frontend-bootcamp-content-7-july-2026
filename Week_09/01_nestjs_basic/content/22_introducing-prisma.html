@@ -22,7 +22,7 @@
 
     <h2>Prisma คือสะพานระหว่าง TypeScript กับ SQL</h2>
     <p><strong>Prisma</strong> เป็น ORM สำหรับ Node.js/TypeScript ที่ให้เรานิยามโครงสร้างตารางในไฟล์ <code>schema.prisma</code> แล้ว generate <em>Prisma Client</em> ที่รู้จักทุกตารางและทุกคอลัมน์ของเราออกมาเป็น TypeScript — query จึงมี autocomplete และถูก type check ตั้งแต่ตอนเขียน ไม่ต้องพิมพ์ SQL ดิบทุกครั้ง NestJS ไม่ได้มีแพ็กเกจ integration แยกสำหรับ Prisma เพราะไม่จำเป็น: เราแค่ห่อ <code>PrismaClient</code> ไว้ใน provider ปกติของ Nest แล้วปล่อยให้ระบบ DI ฉีดมันไปยัง service ไหนก็ได้</p>
-    <p>เริ่มจากติดตั้ง 4 แพ็กเกจ โดยล็อกเวอร์ชันแบบเจาะจงเหมือนที่ทำในคอร์ส API Design ของ Week 8 — CLI ของ Prisma ปรับพฤติกรรมระหว่างเวอร์ชันอยู่เรื่อย ๆ การล็อกเวอร์ชันทำให้ทุกคนในคลาสได้ผลลัพธ์เดียวกัน</p>
+    <p>เริ่มจากติดตั้ง 4 แพ็กเกจ โดยล็อกเวอร์ชันแบบเจาะจงเหมือนที่ทำในคอร์ส API Design in Node.js — CLI ของ Prisma ปรับพฤติกรรมระหว่างเวอร์ชันอยู่เรื่อย ๆ การล็อกเวอร์ชันทำให้ทุกคนที่เรียนคอร์สนี้ได้ผลลัพธ์เดียวกัน</p>
     <pre><code>npm install @prisma/client@7.10.0 @prisma/adapter-pg@7.10.0 dotenv
 npm install -D prisma@7.10.0</code></pre>
     <div class="comparison" role="region" aria-label="แพ็กเกจที่ติดตั้งและหน้าที่" tabindex="0">

@@ -31,8 +31,8 @@
 nest new ecommerce-api -p npm</code></pre>
     <p>flag <code>-p npm</code> บอก CLI ว่าใช้ npm เป็น package manager เลย ไม่ต้องถาม ส่วนเรื่องที่ต้องรู้คือ <code>nest new</code> <strong>รัน <code>git init</code> ให้เองแล้ว</strong> พร้อมสร้าง <code>.gitignore</code> มาให้ — เราจึงไม่ต้อง init ซ้ำ แต่ยังต้อง commit แรกด้วยมือ (CLI ไม่ commit ให้)</p>
 
-    <h2>ข้างใน scaffold มีอะไร และอะไรที่ต่างจาก Week_09</h2>
-    <p>รายละเอียดของแต่ละไฟล์ในโปรเจกต์ Nest เราดูกันไปแล้วใน <a href="../../../Week_09/01_nestjs_basic/content/02_whats-inside-a-nestjs-application.html">Week_09 บทที่ 2</a> บทนี้ขอเน้นเฉพาะสามจุดที่กำหนดวิธีเขียนโค้ดของเราไปทั้งคอร์ส</p>
+    <h2>ข้างใน scaffold มีอะไร และอะไรที่ต่างจากคอร์ส NestJS Fundamentals</h2>
+    <p>รายละเอียดของแต่ละไฟล์ในโปรเจกต์ Nest เราดูกันไปแล้วใน <a href="../../../Week_09/01_nestjs_basic/content/02_whats-inside-a-nestjs-application.html">NestJS Fundamentals บทที่ 2</a> บทนี้ขอเน้นเฉพาะสามจุดที่กำหนดวิธีเขียนโค้ดของเราไปทั้งคอร์ส</p>
     <ul>
       <li><strong><code>"type": "module"</code></strong> ใน <code>package.json</code> — โปรเจกต์นี้เป็น ES module ล้วน ผลตรง ๆ คือ <em>ทุก import ที่ชี้ไฟล์ในโปรเจกต์ต้องลงท้ายด้วย <code>.js</code></em> แม้ไฟล์จริงจะเป็น <code>.ts</code> (เห็นได้จาก <code>./app.module.js</code> ด้านล่าง) นี่เป็นข้อผิดพลาดอันดับหนึ่งที่ AI ทำในคอร์สนี้ เราจึงเขียนเป็นกฎถาวรในบทที่ 4</li>
       <li><strong>top-level <code>await</code></strong> — ไฟล์ <code>src/main.ts</code> ปิดท้ายด้วย <code>await bootstrap();</code> เฉย ๆ ไม่มี <code>.catch()</code> ห่อ เพราะ ESM ให้ใช้ <code>await</code> ที่ระดับบนสุดของไฟล์ได้</li>

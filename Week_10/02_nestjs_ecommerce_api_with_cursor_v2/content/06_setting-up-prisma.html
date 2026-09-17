@@ -21,7 +21,7 @@
     </section>
 
     <h2>Prisma 7 ไม่มี default engine ต้องบอก driver adapter ทุกครั้ง</h2>
-    <p>ใน <a href="../../../Week_09/01_nestjs_basic/content/22_introducing-prisma.html">Week_09 บทที่ 22</a> เราเห็นรูปแบบนี้มาแล้ว: Prisma 7 ไม่ต่อฐานข้อมูลด้วย engine binary ของตัวเองอีกต่อไป แต่ต่อผ่าน <strong>driver adapter</strong> ซึ่งเป็น driver ของภาษา JavaScript จริง ๆ สำหรับ PostgreSQL คือแพ็กเกจ <code>@prisma/adapter-pg</code> ที่ครอบ <code>pg</code> ไว้ ผลคือทุกครั้งที่ <code>new PrismaClient()</code> เราต้องส่ง <code>adapter</code> เข้าไปด้วย</p>
+    <p>ใน <a href="../../../Week_09/01_nestjs_basic/content/22_introducing-prisma.html">NestJS Fundamentals บทที่ 22</a> เราเห็นรูปแบบนี้มาแล้ว: Prisma 7 ไม่ต่อฐานข้อมูลด้วย engine binary ของตัวเองอีกต่อไป แต่ต่อผ่าน <strong>driver adapter</strong> ซึ่งเป็น driver ของภาษา JavaScript จริง ๆ สำหรับ PostgreSQL คือแพ็กเกจ <code>@prisma/adapter-pg</code> ที่ครอบ <code>pg</code> ไว้ ผลคือทุกครั้งที่ <code>new PrismaClient()</code> เราต้องส่ง <code>adapter</code> เข้าไปด้วย</p>
     <pre><code>// รูปแบบที่ Prisma 7 ต้องการ
 new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });</code></pre>
     <p>ถ้าเขียนแบบ Prisma 5 (<code>new PrismaClient()</code> เปล่า ๆ แล้ว import จาก <code>@prisma/client</code>) โค้ดจะ compile ผ่านแต่พังตอนรันด้วย error ว่าต้องมี adapter — เป็นจุดที่ AI พลาดบ่อยที่สุดในบทนี้ เพราะตัวอย่างบนอินเทอร์เน็ตส่วนใหญ่ยังเป็นของ Prisma 5</p>
@@ -59,12 +59,12 @@ export default defineConfig({
 
     <h2>PrismaService คือ PrismaClient ที่ผูกกับ lifecycle ของ Nest</h2>
     <p>เราไม่เรียก <code>new PrismaClient()</code> กระจายทั่วโปรเจกต์ (กติกาใน <code>.cursor/rules/project.mdc</code> ห้ามไว้) แต่ห่อไว้ใน provider เดียวที่ <code>extends PrismaClient</code> แล้วใช้ hook ของ Nest สองตัว: <code>onModuleInit</code> เรียก <code>$connect()</code> ตอนแอปเริ่ม และ <code>onModuleDestroy</code> เรียก <code>$disconnect()</code> ตอนแอปปิด เพื่อให้ connection pool ถูกคืนอย่างเรียบร้อย</p>
-    <p>จากนั้น <code>PrismaModule</code> ติด <code>@Global()</code> เพื่อให้โมดูลอื่น (products ในบทที่ 10, orders ในบทที่ 18) inject <code>PrismaService</code> ได้ทันทีโดยไม่ต้อง import <code>PrismaModule</code> ซ้ำในทุกโมดูล — เทคนิคเดียวกับ <a href="../../../Week_09/01_nestjs_basic/content/32_control-nestjs-module-encapsulation.html">Week_09 บทที่ 32</a></p>
+    <p>จากนั้น <code>PrismaModule</code> ติด <code>@Global()</code> เพื่อให้โมดูลอื่น (products ในบทที่ 10, orders ในบทที่ 18) inject <code>PrismaService</code> ได้ทันทีโดยไม่ต้อง import <code>PrismaModule</code> ซ้ำในทุกโมดูล — เทคนิคเดียวกับ <a href="../../../Week_09/01_nestjs_basic/content/32_control-nestjs-module-encapsulation.html">NestJS Fundamentals บทที่ 32</a></p>
 
     <h2>เปิด ConfigModule ตั้งแต่วันแรก</h2>
     <p>เราใส่ <code>ConfigModule.forRoot({ isGlobal: true })</code> เป็นรายการแรกของ <code>imports</code> ตั้งแต่บทนี้ แม้ยังไม่มีใครใช้ <code>ConfigService</code> เลย เหตุผลสองข้อ</p>
     <ul>
-      <li><code>ConfigModule</code> โหลด <code>.env</code> เข้า <code>process.env</code> ให้เอง เราจึงไม่ต้องเขียน <code>import 'dotenv/config'</code> ไว้หัว <code>main.ts</code> — รายละเอียดเรื่องนี้อยู่ใน <a href="../../../Week_09/01_nestjs_basic/content/42_introducing-the-config-module.html">Week_09 บทที่ 42</a></li>
+      <li><code>ConfigModule</code> โหลด <code>.env</code> เข้า <code>process.env</code> ให้เอง เราจึงไม่ต้องเขียน <code>import 'dotenv/config'</code> ไว้หัว <code>main.ts</code> — รายละเอียดเรื่องนี้อยู่ใน <a href="../../../Week_09/01_nestjs_basic/content/33_introducing-the-config-module.html">NestJS Fundamentals บทที่ 33</a></li>
       <li><code>isGlobal: true</code> ทำให้ <code>ConfigService</code> ถูก inject ได้ทุกที่ บทที่ 10 จะใช้อ่าน <code>APP_URL</code> และบทที่ 20 จะใช้อ่าน <code>PORT</code> กับ <code>CORS_ORIGIN</code></li>
     </ul>
     <p><code>ConfigModule.forRoot()</code> โหลด <code>.env</code> เข้า <code>process.env</code> ทันทีตอนที่ array <code>imports</code> ถูกประเมิน จึงมีค่าก่อนที่ provider ตัวไหนจะถูกสร้าง — การวางไว้ตัวแรกเป็นธรรมเนียมที่ช่วยตอนมี module อื่นอ่าน <code>process.env</code> ในตัวเลือกของ <code>forRoot()</code> ของมันเอง</p>

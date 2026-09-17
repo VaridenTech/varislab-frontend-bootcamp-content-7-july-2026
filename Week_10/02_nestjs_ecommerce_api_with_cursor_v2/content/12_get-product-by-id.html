@@ -22,16 +22,16 @@
 
     <h2>บทนี้คือบทที่ mapper ได้ทำงานจริง</h2>
     <p>บทที่ 11 เขียน <code>toProductResponse</code> ไว้แต่ยังไม่มีใครเรียก บทนี้เราต่อสายให้ครบ: controller รับ id → service query สินค้าพร้อม relation → ส่งแถวเข้า mapper → คืน JSON ที่ตรงกับ section Product ใน <code>docs/api-spec.md</code></p>
-    <p>รูปแบบการรับ parameter เป็นแบบเดียวกับ Week_09 บทที่ 7 (route parameters) และการโยน error เป็นแบบเดียวกับบทที่ 13 (ข้อความ error ที่อ่านรู้เรื่อง) ต่างกันที่คราวนี้ข้อความไม่ใช่เรื่องรสนิยม — มันคือส่วนหนึ่งของสัญญา</p>
+    <p>รูปแบบการรับ parameter เป็นแบบเดียวกับ NestJS Fundamentals บทที่ 7 (route parameters) และการโยน error เป็นแบบเดียวกับบทที่ 13 (ข้อความ error ที่อ่านรู้เรื่อง) ต่างกันที่คราวนี้ข้อความไม่ใช่เรื่องรสนิยม — มันคือส่วนหนึ่งของสัญญา</p>
 
     <h2>ข้อความ 404 คือสัญญา ไม่ใช่ข้อความประกอบ</h2>
     <p>เปิด <code>docs/api-spec.md</code> ดู section Errors — เราออกแบบให้ product ที่ไม่มีอยู่ตอบ status 404 พร้อม body</p>
     <pre><code>{ "message": "Product 9999 not found" }</code></pre>
-    <p>React app ที่เราจะต่อในบทที่ 23 อ่าน <code>data.message</code> มาโชว์ให้ผู้ใช้เห็นตรง ๆ ผ่าน <code>ApiError</code> ของมัน ข้อความจึงต้องตรงตามที่เราออกแบบไว้ทุกตัวอักษร ถ้าเขียนเป็น <code>Product #9999 not found</code> แบบที่เคยทำใน Week_09 หน้าเว็บก็ยังไม่พัง (เพราะ client อ่านแค่ field <code>message</code> ไม่สนใจเนื้อหา) แต่ผิดสัญญาที่เราเขียนไว้ใน <code>docs/api-spec.md</code> และ script ตรวจสัญญาในบทที่ 15 จะจับได้ทันที</p>
+    <p>React app ที่เราจะต่อในบทที่ 23 อ่าน <code>data.message</code> มาโชว์ให้ผู้ใช้เห็นตรง ๆ ผ่าน <code>ApiError</code> ของมัน ข้อความจึงต้องตรงตามที่เราออกแบบไว้ทุกตัวอักษร ถ้าเขียนเป็น <code>Product #9999 not found</code> แบบที่เคยทำในคอร์ส NestJS Fundamentals หน้าเว็บก็ยังไม่พัง (เพราะ client อ่านแค่ field <code>message</code> ไม่สนใจเนื้อหา) แต่ผิดสัญญาที่เราเขียนไว้ใน <code>docs/api-spec.md</code> และ script ตรวจสัญญาในบทที่ 15 จะจับได้ทันที</p>
     <pre><code>throw new NotFoundException(`Product ${id} not found`);</code></pre>
 
     <h2><code>include</code> และเหตุผลที่ต้องสั่ง <code>orderBy</code> ให้ reviews</h2>
-    <p>แถว <code>Product</code> เปล่า ๆ ไม่มี <code>category</code> และไม่มี <code>reviews</code> ติดมา เราจึงต้องสั่ง <code>include</code> (ทบทวน Week_09 บทที่ 26 เรื่องดึง model พร้อม relation)</p>
+    <p>แถว <code>Product</code> เปล่า ๆ ไม่มี <code>category</code> และไม่มี <code>reviews</code> ติดมา เราจึงต้องสั่ง <code>include</code> (ทบทวน NestJS Fundamentals บทที่ 26 เรื่องดึง model พร้อม relation)</p>
     <pre><code>include: { category: true, reviews: { orderBy: { id: 'asc' } } }</code></pre>
     <p>ทำไมต้องมี <code>orderBy</code> ให้ reviews ด้วย? เพราะ array ที่ลำดับไม่ตรงกันจะทำให้การตรวจสัญญาในบทถัด ๆ ไปไม่ผ่าน และ Postgres ไม่รับประกันลำดับของแถวที่คืนมาถ้าไม่มี <code>ORDER BY</code> — มันจะเรียงตามที่สะดวกที่สุดในแผนการ query นั้น ๆ ซึ่งอาจเปลี่ยนเมื่อข้อมูลโตขึ้นหรือมี index ใหม่ seed ในบทที่ 9 ใส่ review ของสินค้าแต่ละชิ้นตามลำดับที่เขียนไว้ในสคริปต์ ดังนั้น <code>id</code> น้อยไปมากคือลำดับเดียวกับที่ seed ใส่ไว้</p>
 
@@ -95,7 +95,7 @@ controller มี route GET /products/categories อยู่แล้ว route 
         <li>return type ของ service เขียนไว้ชัดเป็น <code>Promise&lt;ProductResponseDto&gt;</code></li>
         <li><code>findCategories</code> เดิมไม่ถูกแก้ และไฟล์ mapper/DTO ไม่มีการเปลี่ยนแปลง (<code>git diff --stat</code> ต้องเห็นแค่สองไฟล์)</li>
       </ul>
-      <p><strong>AI มักพลาดตรงนี้:</strong> เขียนข้อความเป็น <code>Product #9999 not found</code> ตามสไตล์ที่เคยเห็นใน Week_09 (ซึ่งเป็นข้อความที่ถูกต้องใน<em>คอร์สนั้น</em> แต่ผิดสัญญาในคอร์สนี้) อีกแบบคือใช้ <code>findFirst({ where: { id } })</code> โดยลืม <code>include</code> ทั้งก้อน — TypeScript จะฟ้องเมื่อส่งเข้า <code>toProductResponse</code> เพราะ type <code>ProductWithRelations</code> ไม่ยอม แต่บางครั้ง Cursor จะแก้ปัญหาด้วยการเติม <code>as</code> เข้าไปกลบ ให้ค้นคำว่า <code>as </code> ในไฟล์แล้วลบออก แก้ที่ <code>include</code> แทน</p>
+      <p><strong>AI มักพลาดตรงนี้:</strong> เขียนข้อความเป็น <code>Product #9999 not found</code> ตามสไตล์ที่เคยเห็นในคอร์ส NestJS Fundamentals (ซึ่งเป็นข้อความที่ถูกต้องใน<em>คอร์สนั้น</em> แต่ผิดสัญญาในคอร์สนี้) อีกแบบคือใช้ <code>findFirst({ where: { id } })</code> โดยลืม <code>include</code> ทั้งก้อน — TypeScript จะฟ้องเมื่อส่งเข้า <code>toProductResponse</code> เพราะ type <code>ProductWithRelations</code> ไม่ยอม แต่บางครั้ง Cursor จะแก้ปัญหาด้วยการเติม <code>as</code> เข้าไปกลบ ให้ค้นคำว่า <code>as </code> ในไฟล์แล้วลบออก แก้ที่ <code>include</code> แทน</p>
       <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
       <p><code>src/products/products.service.ts</code></p>
       <pre><code>import { Injectable, NotFoundException } from '@nestjs/common';

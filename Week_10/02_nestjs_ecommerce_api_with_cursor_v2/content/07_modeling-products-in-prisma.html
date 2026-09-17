@@ -56,9 +56,9 @@
     <ul>
       <li><strong>ค้นและ index ลำบาก</strong> — <code>GET /products/category/:slug</code> ในบทที่ 14 ต้องกรองตามหมวดหมู่ ถ้าหมวดหมู่ฝังอยู่ใน JSON เราจะ index ตรง ๆ แบบ <code>@@index([categoryId])</code> ไม่ได้</li>
       <li><strong>ฐานข้อมูลไม่ช่วยตรวจ</strong> — คอลัมน์ <code>Json</code> รับอะไรเข้าไปก็ได้ พิมพ์ <code>widht</code> ผิดก็ยังบันทึกผ่าน แต่คอลัมน์ <code>width Float</code> จะปฏิเสธทันที</li>
-      <li><strong>เราอยากได้ relation จริง</strong> — <code>Review</code> เป็นตารางลูกทำให้ฝึกสิ่งที่เรียนมาใน <a href="../../../Week_09/01_nestjs_basic/content/25_create-a-relation-between-two-models.html">Week_09 บทที่ 25</a> ต่อได้ และ <code>onDelete: Cascade</code> ทำให้ลบสินค้าแล้วรีวิวหายตามเองโดยไม่ต้องเขียนโค้ดลบ</li>
+      <li><strong>เราอยากได้ relation จริง</strong> — <code>Review</code> เป็นตารางลูกทำให้ฝึกสิ่งที่เรียนมาใน <a href="../../../Week_09/01_nestjs_basic/content/25_create-a-relation-between-two-models.html">NestJS Fundamentals บทที่ 25</a> ต่อได้ และ <code>onDelete: Cascade</code> ทำให้ลบสินค้าแล้วรีวิวหายตามเองโดยไม่ต้องเขียนโค้ดลบ</li>
     </ul>
-    <p>ส่วน <code>@@index([categoryId])</code> และ <code>@@index([productId])</code> ที่เราใส่ไว้คือเหตุผลเดียวกับ <a href="../../../Week_09/01_nestjs_basic/content/30_adding-indexes-to-models.html">Week_09 บทที่ 30</a>: คอลัมน์ที่ถูกใช้เป็นเงื่อนไข <code>where</code> บ่อย ๆ ควรมี index — ที่นี่คือทุกครั้งที่ดึงสินค้าตามหมวด หรือดึงรีวิวของสินค้าหนึ่งชิ้น</p>
+    <p>ส่วน <code>@@index([categoryId])</code> และ <code>@@index([productId])</code> ที่เราใส่ไว้คือเหตุผลเดียวกับ <a href="../../../Week_09/01_nestjs_basic/content/30_adding-indexes-to-models.html">NestJS Fundamentals บทที่ 30</a>: คอลัมน์ที่ถูกใช้เป็นเงื่อนไข <code>where</code> บ่อย ๆ ควรมี index — ที่นี่คือทุกครั้งที่ดึงสินค้าตามหมวด หรือดึงรีวิวของสินค้าหนึ่งชิ้น</p>
 
     <h2>เป้าหมายของบทนี้</h2>
     <pre><code>ecommerce-api/

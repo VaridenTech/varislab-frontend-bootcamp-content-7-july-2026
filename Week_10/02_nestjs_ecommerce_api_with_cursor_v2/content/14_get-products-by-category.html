@@ -28,7 +28,7 @@
     <p>เท่านี้ก็ได้ pagination, <code>total</code> ที่นับเฉพาะหมวดนั้น, <code>orderBy</code>, <code>include</code> และการ map เป็น contract มาครบ โดยไม่ต้อง copy อะไรเลย ถ้าตอนนั้นเราปล่อยให้ <code>findAll</code> เขียน <code>$transaction</code> ไว้ในตัวเอง บทนี้จะกลายเป็นการ copy สามสิบบรรทัดมาแก้คำเดียว — ซึ่งคือจุดเริ่มของความไม่ตรงกันในอนาคต</p>
 
     <h2>กรองผ่าน relation ไม่ใช่ผ่าน <code>categoryId</code></h2>
-    <p>ในฐานข้อมูล สินค้าอ้างหมวดหมู่ด้วยคอลัมน์ <code>categoryId</code> ที่เป็นตัวเลข แต่ client ส่ง <code>slug</code> มาให้ ทางที่คิดขึ้นมาก่อนคือสองขั้น: หา category จาก slug ก่อน ได้ <code>id</code> แล้วค่อยกรองสินค้า — แต่ Prisma ให้เราเขียนเงื่อนไขข้าม relation ได้ในครั้งเดียว (ทบทวน Week_09 บทที่ 26)</p>
+    <p>ในฐานข้อมูล สินค้าอ้างหมวดหมู่ด้วยคอลัมน์ <code>categoryId</code> ที่เป็นตัวเลข แต่ client ส่ง <code>slug</code> มาให้ ทางที่คิดขึ้นมาก่อนคือสองขั้น: หา category จาก slug ก่อน ได้ <code>id</code> แล้วค่อยกรองสินค้า — แต่ Prisma ให้เราเขียนเงื่อนไขข้าม relation ได้ในครั้งเดียว (ทบทวน NestJS Fundamentals บทที่ 26)</p>
     <pre><code>where: { category: { slug } }</code></pre>
     <p>Prisma แปลงก้อนนี้เป็น SQL ที่ join ไปที่ตาราง <code>Category</code> แล้วกรองด้วย <code>slug</code> ในคำสั่งเดียว ผลคือไป-กลับฐานข้อมูลครั้งเดียวแทนสองครั้ง และไม่มีช่องให้ข้อมูลเปลี่ยนระหว่างสอง query</p>
 

@@ -22,7 +22,7 @@
 
     <h2>plugin รู้ <em>รูปร่าง</em> แต่ไม่รู้ว่า handler คืนอะไร</h2>
     <p>บทที่แล้ว CLI plugin อ่านไฟล์ <code>.dto.ts</code> แล้วใส่ metadata ของ field ให้ครบ แต่เปิด <code>/api</code> ดูจะพบว่า endpoint ทุกตัวยังไม่มี response schema — เพราะไม่มีใครบอก Swagger ว่า <code>findOne()</code> คืน <code>ProductResponseDto</code> TypeScript รู้ (จาก return type ของ service) แต่ข้อมูลนั้นหายไปตอน compile ส่วน OpenAPI document สร้างตอน runtime จึงต้องมี decorator ที่ถือ <em>ตัว class จริง</em> มาบอก: <code>@ApiOkResponse({ type: ProductResponseDto })</code></p>
-    <p>นี่คือเหตุผลย้อนหลังที่ตอนบทที่ 11 เราประกาศ response DTO เป็น <code>class</code> ไม่ใช่ <code>interface</code> — <code>interface</code> หายไปหมดตอน compile จึงเขียน <code>type: ProductResponseDto</code> ไม่ได้เลย ขณะที่ <code>class</code> ยังเหลือเป็นค่าจริงให้ส่งเข้า decorator ได้ และเพราะ class ถูก <em>อ้างถึง</em> จาก handler มันจึงถูกดึงเข้า <code>components.schemas</code> ให้เอกสารอ้างถึงด้วย <code>$ref</code> ได้ (Week_09 บทที่ 61–63 เล่าเรื่องเดียวกันในมุมของ <code>@ApiProperty</code>)</p>
+    <p>นี่คือเหตุผลย้อนหลังที่ตอนบทที่ 11 เราประกาศ response DTO เป็น <code>class</code> ไม่ใช่ <code>interface</code> — <code>interface</code> หายไปหมดตอน compile จึงเขียน <code>type: ProductResponseDto</code> ไม่ได้เลย ขณะที่ <code>class</code> ยังเหลือเป็นค่าจริงให้ส่งเข้า decorator ได้ และเพราะ class ถูก <em>อ้างถึง</em> จาก handler มันจึงถูกดึงเข้า <code>components.schemas</code> ให้เอกสารอ้างถึงด้วย <code>$ref</code> ได้ (NestJS Fundamentals บทที่ 44–45 เล่าเรื่องเดียวกันในมุมของ <code>@ApiProperty</code>)</p>
 
     <h2>สามรูปแบบที่ใช้ในบทนี้</h2>
     <div class="comparison" role="region" aria-label="เปรียบเทียบ decorator ที่ใช้ในบทนี้" tabindex="0">
