@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="สร้าง ProductsModule แล้วทำ endpoint แรกของคอร์ส GET /products/categories ให้ตอบเหมือน dummyjson ทุกไบต์ โดยให้ host ของ field url มาจาก APP_URL ผ่าน ConfigService" />
+  <meta name="description" content="สร้าง ProductsModule แล้วทำ endpoint แรกของคอร์ส GET /products/categories ให้ตรงกับ section Category ใน docs/api-spec.md โดยให้ host ของ field url มาจาก APP_URL ผ่าน ConfigService" />
   <title>GET /products/categories</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -16,12 +16,12 @@
       <ul>
         <li>ประกอบ module + controller + service ของ resource <code>products</code> ขึ้นมาใหม่ทั้งชุด แล้วลงทะเบียนเข้า <code>AppModule</code></li>
         <li>อธิบายได้ว่าทำไม field <code>url</code> ของ category ต้องอ่าน host จาก <code>APP_URL</code> ไม่ใช่ hard-code</li>
-        <li>ยืนยันด้วย <code>diff</code> ว่า response ของเราตรงกับ <code>docs/contract/categories.json</code> แบบไบต์ต่อไบต์</li>
+        <li>ยืนยันด้วย node script ว่า response ของเราตรงกับ section <code>Category</code> ใน <code>docs/api-spec.md</code> — 24 รายการ แต่ละรายการมีเพียงสามคีย์ <code>slug</code>/<code>name</code>/<code>url</code></li>
       </ul>
     </section>
 
     <h2>เลือก endpoint ที่ง่ายที่สุดขึ้นมาทำก่อน</h2>
-    <p>ใน contract ที่วางไว้ในโปรเจกต์ตั้งแต่บทที่ 3 มี endpoint เดียวที่ไม่มี query parameter ไม่มี route parameter และมีรูปทรง response แบนราบสามคีย์ — นั่นคือ <code>GET /products/categories</code> เราจึงเริ่มจากตัวนี้ เพราะมันพิสูจน์ว่าเส้นทางทั้งเส้น (request → controller → service → Prisma → Postgres → response) เชื่อมกันได้จริง โดยยังไม่ต้องยุ่งกับ mapper หรือ pagination ที่จะมาในบทถัด ๆ ไป</p>
+    <p>ใน <code>docs/api-spec.md</code> ที่เขียนไว้ตั้งแต่บทที่ 3 section <strong>Category</strong> คือ endpoint เดียวที่ไม่มี query parameter ไม่มี route parameter และมีรูปทรง response แบนราบสามคีย์ — นั่นคือ <code>GET /products/categories</code> เราจึงเริ่มจากตัวนี้ เพราะมันพิสูจน์ว่าเส้นทางทั้งเส้น (request → controller → service → Prisma → Postgres → response) เชื่อมกันได้จริง โดยยังไม่ต้องยุ่งกับ mapper หรือ pagination ที่จะมาในบทถัด ๆ ไป</p>
     <p>โครงสร้างสามไฟล์เป็นแบบเดียวกับที่คุณเคยทำใน Week_09 บทที่ 6 (controller), บทที่ 12 (service) และบทที่ 14 (module) ต่างกันแค่คราวนี้เราไม่พิมพ์เอง — เราสั่ง Cursor พิมพ์ แล้วเราอ่านทุกบรรทัด</p>
     <ul>
       <li><strong>controller</strong> รู้แค่เรื่อง HTTP: path, method, parameter — แล้วส่งต่อให้ service ทันที</li>
@@ -30,16 +30,16 @@
     </ul>
 
     <h2>field <code>url</code> คือจุดที่ต้องคิด ไม่ใช่จุดที่ต้อง copy</h2>
-    <p>เปิด <code>docs/contract/categories.json</code> ดูสักแถว dummyjson ตอบมาแบบนี้</p>
-    <pre><code>{ "slug": "beauty", "name": "Beauty", "url": "https://dummyjson.com/products/category/beauty" }</code></pre>
-    <p>ถ้าเรา copy ค่า <code>url</code> มาตรง ๆ React app จะยิงกลับไปที่ dummyjson แทนที่จะยิงมาที่ API ของเรา — API ของเราต้องตอบ <code>http://localhost:3000/products/category/beauty</code> คือ host ของ<em>ตัวเอง</em> ต่อท้ายด้วย path เดียวกัน</p>
+    <p>เปิด <code>docs/api-spec.md</code> ดู section <strong>Category</strong> — response หน้าตาแบบนี้</p>
+    <pre><code>{ "slug": "beauty", "name": "Beauty", "url": "http://localhost:3000/products/category/beauty" }</code></pre>
+    <p><code>url</code> ต้องเป็น host ของ<em>ตัวเอง</em> ต่อท้ายด้วย path เดียวกัน ไม่ใช่ path เปล่า ๆ — เพราะ type <code>Category</code> ฝั่ง client (<code>src/features/products/types.ts</code>) กำหนดให้ <code>url</code> เป็น URL เต็มเสมอ</p>
     <p>host ของตัวเองเปลี่ยนไปตามที่รัน (เครื่องคุณ, staging, production) จึงต้องมาจาก environment variable ไม่ใช่จากโค้ด เรามี <code>APP_URL</code> อยู่ใน <code>.env</code> ตั้งแต่บทที่ 5 แล้ว และ <code>ConfigModule</code> ถูกตั้งเป็น global ในบทที่ 6 แล้ว จึงฉีด <code>ConfigService</code> เข้า service ได้เลย</p>
     <pre><code>const appUrl = this.config.getOrThrow&lt;string&gt;('APP_URL');</code></pre>
     <p>สังเกตว่าเราใช้ <code>getOrThrow</code> ไม่ใช่ <code>get</code> — <code>get</code> คืน <code>undefined</code> เงียบ ๆ เมื่อไม่มีคีย์นั้น ผลคือ url จะกลายเป็น <code>undefined/products/category/beauty</code> แล้วหลุดขึ้น production ไปเงียบ ๆ ส่วน <code>getOrThrow</code> ทำให้แอปพังทันทีที่ request แรก ซึ่งเป็นสิ่งที่เราต้องการ (ทบทวน Week_09 บทที่ 45 เรื่อง <code>ConfigService</code>)</p>
 
-    <h2>ทำไมแค่ <code>orderBy: { id: 'asc' }</code> ก็ตรงกับ dummyjson</h2>
-    <p>ลำดับของ array มีผลต่อ <code>diff</code> — ถ้าเรียงไม่ตรง ถึงข้อมูลจะครบก็ถือว่าไม่ผ่าน seed ในบทที่ 9 ส่ง category เข้า <code>createMany</code> เป็น array ตามลำดับที่ <code>GET /products/categories</code> คืนมา ดังนั้น <code>id</code> ที่ sequence แจกให้ (auto-increment) จึงเรียงตรงกับลำดับของ dummyjson อยู่แล้ว การสั่ง <code>orderBy: { id: 'asc' }</code> คือการ<em>เขียนเจตนานั้นออกมา</em> ไม่ใช่การหวังว่า Postgres จะคืนแถวตามลำดับที่ insert — Postgres ไม่รับประกันลำดับให้เลยถ้าไม่สั่ง <code>ORDER BY</code></p>
-    <div class="note"><p>ค่า <code>id</code> ที่แท้จริงจะขยับขึ้นทุกครั้งที่ re-seed (ตามที่เจอในบทที่ 9) แต่ไม่มีผลกับบทนี้ เพราะ <code>id</code> ไม่ถูกส่งออกไปใน response — dummyjson ส่งแค่สามคีย์ <code>slug</code>, <code>name</code>, <code>url</code> เท่านั้น</p></div>
+    <h2>ทำไมต้องสั่ง <code>orderBy: { id: 'asc' }</code> ทั้งที่ไม่มีใครขอ</h2>
+    <p>ลำดับของ array ที่ตอบกลับมามีผลต่อ node script ที่ตรวจสัญญาในบทถัด ๆ ไป (นับจำนวน, ตรวจ key) — seed ในบทที่ 9 ส่ง category เข้า <code>createMany</code> เป็น array ตามลำดับที่เขียนไว้ใน <code>CATEGORIES</code> ดังนั้น <code>id</code> ที่ sequence แจกให้ (auto-increment) จึงเรียงตามลำดับนั้นอยู่แล้ว แต่การสั่ง <code>orderBy: { id: 'asc' }</code> คือการ<em>เขียนเจตนานั้นออกมา</em> ไม่ใช่การหวังว่า Postgres จะคืนแถวตามลำดับที่ insert — Postgres ไม่รับประกันลำดับให้เลยถ้าไม่สั่ง <code>ORDER BY</code></p>
+    <div class="note"><p>ค่า <code>id</code> ที่แท้จริงจะขยับขึ้นทุกครั้งที่ re-seed (ตามที่เจอในบทที่ 9) แต่ไม่มีผลกับบทนี้ เพราะ <code>id</code> ไม่ถูกส่งออกไปใน response — <code>docs/api-spec.md</code> กำหนดให้ Category มีแค่สามคีย์ <code>slug</code>, <code>name</code>, <code>url</code> เท่านั้น</p></div>
 
     <h2>เป้าหมายของบทนี้</h2>
     <pre><code>src/
@@ -58,11 +58,11 @@
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">สั่ง Cursor สร้าง ProductsModule แล้วอ่านทุกบรรทัด</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before products module"</code>) จากนั้นส่ง prompt นี้ทั้งก้อน — กติกาของคอร์สยังเหมือนเดิม: <strong>AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้</strong></p>
-      <div class="cursor-prompt"><code>สร้าง ProductsModule พร้อม endpoint GET /products/categories ที่ตอบเหมือน dummyjson
+      <div class="cursor-prompt"><code>สร้าง ProductsModule พร้อม endpoint GET /products/categories ตาม section Category ใน docs/api-spec.md
 
-บริบท: @src/app.module.ts @src/prisma/prisma.service.ts @prisma/schema.prisma @docs/contract/categories.json @.env @.cursor/rules/project.mdc
-ฐานข้อมูลถูก seed แล้ว ตาราง Category มี 24 แถว (id เรียงตามลำดับเดียวกับ dummyjson)
-docs/contract/categories.json คือ response จริง: array ของ { slug, name, url } โดย url คือ https://dummyjson.com/products/category/&lt;slug&gt;
+บริบท: @src/app.module.ts @src/prisma/prisma.service.ts @prisma/schema.prisma @docs/api-spec.md @.env @.cursor/rules/project.mdc
+ฐานข้อมูลถูก seed แล้ว ตาราง Category มี 24 แถว (id เรียงตามลำดับที่ seed ในบทที่ 9 insert ไว้)
+docs/api-spec.md มี section Category: response คือ array ของ { slug, name, url } โดย url เป็น URL เต็ม (ไม่ใช่แค่ path)
 ของเรา url ต้องเป็น &lt;APP_URL&gt;/products/category/&lt;slug&gt; โดย APP_URL อ่านจาก .env ผ่าน ConfigService (ConfigModule เป็น global แล้ว)
 PrismaModule เป็น global แล้ว ฉีด PrismaService ผ่าน constructor ได้เลย
 
@@ -173,10 +173,17 @@ export class AppModule {}</code></pre>
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
         <li>log ตอน start มีทั้ง <code>ProductsModule dependencies initialized</code> และ <code>Mapped {/products/categories, GET} route</code></li>
-        <li>เทียบกับ contract โดยแทน host ของเรากลับเป็นของ dummyjson ก่อน แล้ว <code>diff</code> — ต้องได้คำว่า <code>IDENTICAL</code>
-          <pre><code>curl -s http://localhost:3000/products/categories \
-  | sed 's#http://localhost:3000#https://dummyjson.com#g' &gt; /tmp/actual.json
-diff /tmp/actual.json docs/contract/categories.json &amp;&amp; echo IDENTICAL</code></pre>
+        <li>ยืนยันด้วย node script ว่า response ตรงกับ section <code>Category</code> ใน <code>docs/api-spec.md</code> — ต้องได้ 24 รายการ แต่ละรายการมีเพียงสามคีย์
+          <pre><code>curl -s http://localhost:3000/products/categories -o /tmp/actual.json
+node -e "
+const categories = require('/tmp/actual.json');
+if (categories.length !== 24) throw new Error('expected 24, got ' + categories.length);
+for (const c of categories) {
+  const keys = Object.keys(c).sort().join(',');
+  if (keys !== 'name,slug,url') throw new Error('unexpected keys: ' + keys);
+}
+console.log('OK: 24 categories, each {slug,name,url}');
+"</code></pre>
         </li>
         <li>พิสูจน์ว่า host มาจาก config จริง: แก้ <code>APP_URL</code> ใน <code>.env</code> เป็น <code>http://127.0.0.1:3000</code> restart แล้วยิงซ้ำ — ทุก <code>url</code> ต้องเปลี่ยนตาม (จากนั้นแก้กลับเป็น <code>http://localhost:3000</code> แล้ว restart)</li>
         <li>ลบบรรทัด <code>APP_URL</code> ออกจาก <code>.env</code> ชั่วคราว restart แล้วยิงซ้ำ — ต้องได้ error 500 จาก <code>getOrThrow</code> ไม่ใช่ url ที่มีคำว่า <code>undefined</code> (แล้วใส่กลับ)</li>
@@ -188,7 +195,6 @@ diff /tmp/actual.json docs/contract/categories.json &amp;&amp; echo IDENTICAL</c
       <li><a href="https://docs.nestjs.com/modules">Modules (NestJS Docs)</a></li>
       <li><a href="https://docs.nestjs.com/techniques/configuration">Configuration: ConfigService (NestJS Docs)</a></li>
       <li><a href="https://www.prisma.io/docs/orm/prisma-client/queries/crud">CRUD: findMany (Prisma Docs)</a></li>
-      <li><a href="https://dummyjson.com/docs/products">Products endpoints (DummyJSON Docs)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link" href="09_seeding-real-products.html" rel="prev">← บทก่อนหน้า</a>

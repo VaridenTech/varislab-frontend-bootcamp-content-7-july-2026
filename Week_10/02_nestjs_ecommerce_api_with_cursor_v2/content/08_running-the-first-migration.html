@@ -103,11 +103,11 @@ CREATE TABLE "Product" (
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
-    "discountPercentage" DOUBLE PRECISION NOT NULL,
+    "discountPercentage" DOUBLE PRECISION,
     "rating" DOUBLE PRECISION NOT NULL,
     "stock" INTEGER NOT NULL,
     "tags" TEXT[],
-    "brand" TEXT,
+    "brand" TEXT NOT NULL,
     "sku" TEXT NOT NULL,
     "weight" DOUBLE PRECISION NOT NULL,
     "width" DOUBLE PRECISION NOT NULL,
@@ -135,8 +135,9 @@ CREATE TABLE "Product" (
     <pre><code>        Column        |              Type              | Collation | Nullable | Default
 ----------------------+--------------------------------+-----------+----------+---------
  id                   | integer                        |           | not null |
+ discountPercentage   | double precision               |           |          |
  tags                 | text[]                         |           |          |
- brand                | text                           |           |          |
+ brand                | text                           |           | not null |
  categoryId           | integer                        |           | not null |
 Indexes:
     "Product_pkey" PRIMARY KEY, btree (id)
@@ -144,7 +145,7 @@ Indexes:
 Foreign-key constraints:
     "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"(id) ON UPDATE CASCADE ON DELETE RESTRICT</code></pre>
     <ul>
-      <li><code>brand | text | |</code> — ช่อง Nullable <strong>ว่าง</strong> แปลว่าคอลัมน์นี้ยอมให้เป็น NULL ได้ ตรงกับ <code>brand String?</code> และรองรับสินค้า 92 ชิ้นที่ไม่มียี่ห้อ เทียบกับ <code>sku</code> ที่เขียน <code>not null</code> ไว้ชัดเจน</li>
+      <li><code>discountPercentage | double precision | |</code> — ช่อง Nullable <strong>ว่าง</strong> แปลว่าคอลัมน์นี้ยอมให้เป็น NULL ได้ ตรงกับ <code>discountPercentage Float?</code> เพราะสินค้าบางชิ้นของเราไม่มีส่วนลด เทียบกับ <code>brand</code> ที่เขียน <code>not null</code> ไว้ชัดเจน เพราะเราออกแบบให้สินค้าทุกชิ้นต้องมียี่ห้อ</li>
       <li><code>tags | text[]</code> — PostgreSQL เก็บ array ของ text ในคอลัมน์เดียวได้จริง ไม่ต้องมีตาราง <code>ProductTag</code> แยก (คอลัมน์ <code>images</code> ก็เป็น <code>text[]</code> เหมือนกัน)</li>
       <li><code>"categoryId" integer not null</code> คู่กับบรรทัด <code>"Product_categoryId_idx" btree ("categoryId")</code> ในส่วน Indexes — นี่คือ <code>@@index([categoryId])</code> ที่กลายเป็น index จริง และเป็นเหตุผลว่าทำไม <code>GET /products/category/:slug</code> ในบทที่ 14 จะเร็วแม้สินค้าเยอะ</li>
     </ul>

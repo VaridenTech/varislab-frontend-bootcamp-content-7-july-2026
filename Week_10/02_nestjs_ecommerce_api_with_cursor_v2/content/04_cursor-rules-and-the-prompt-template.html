@@ -37,7 +37,7 @@ alwaysApply: true
 - src/&lt;domain&gt;/ หนึ่งโฟลเดอร์ต่อหนึ่ง business domain (products, orders) มี *.module.ts, *.controller.ts, *.service.ts และ dto/
 - src/prisma/ มี PrismaModule (global) และ PrismaService
 - src/generated/prisma/ คือโค้ดที่ Prisma generate ห้ามแก้ด้วยมือ
-- docs/contract/ คือ payload จริงของ dummyjson (README.md คือสรุปสัญญาทั้งหมด) — response ของทุก endpoint ต้องมีรูปทรงตรงกับไฟล์เหล่านี้
+- docs/api-spec.md คือสัญญาของ API ที่เราออกแบบเองจากโค้ดฝั่ง client — response ของทุก endpoint ต้องมีรูปทรงตรงกับไฟล์นี้
 
 # กติกาการเขียนโค้ด
 - import ไฟล์ในโปรเจกต์ต้องลงท้ายด้วย .js เสมอ (เช่น './products.service.js') แม้ไฟล์จริงจะเป็น .ts
@@ -56,7 +56,7 @@ alwaysApply: true
     <p>แต่ละกลุ่มมีเหตุผลเฉพาะของโปรเจกต์นี้ ไม่ได้ลอกมาจากเทมเพลตทั่วไป</p>
     <ul>
       <li><strong>Stack</strong> — บอกความจริงที่เราเห็นด้วยตาในบทที่ 2 ว่าโปรเจกต์เป็น ESM และ strict โมเดลภาษาโดยธรรมชาติจะเขียนโค้ด Nest แบบ CommonJS (ซึ่งเป็นตัวอย่างส่วนใหญ่บนอินเทอร์เน็ต) ประโยคนี้จึงกันปัญหาไว้ตั้งแต่ต้น ส่วนข้อ <em>ห้าม <code>new PrismaClient</code> ในไฟล์อื่น</em> มีไว้เพราะการเปิด connection pool ซ้อนกันหลายชุดคือ bug ที่ไม่แสดงอาการตอน dev แต่ล้มตอนรันจริง</li>
-      <li><strong>โครงสร้างไฟล์</strong> — หนึ่งโฟลเดอร์ต่อหนึ่ง domain ทำให้ diff ของแต่ละบทอยู่ในโฟลเดอร์เดียวและอ่านจบได้ ส่วนบรรทัด <code>docs/contract/</code> เป็นหัวใจ: มันบอก Cursor ว่า <em>แหล่งความจริงเรื่องรูปทรง response ไม่ใช่ความรู้ของมัน แต่เป็นไฟล์ในโปรเจกต์</em> และบรรทัด <code>src/generated/prisma/</code> กัน AI ไม่ให้ "แก้ type error" ด้วยการไปแก้โค้ดที่ generate มา</li>
+      <li><strong>โครงสร้างไฟล์</strong> — หนึ่งโฟลเดอร์ต่อหนึ่ง domain ทำให้ diff ของแต่ละบทอยู่ในโฟลเดอร์เดียวและอ่านจบได้ ส่วนบรรทัด <code>docs/api-spec.md</code> เป็นหัวใจ: มันบอก Cursor ว่า <em>แหล่งความจริงเรื่องรูปทรง response ไม่ใช่ความรู้ของมัน แต่เป็นไฟล์ในโปรเจกต์</em> และบรรทัด <code>src/generated/prisma/</code> กัน AI ไม่ให้ "แก้ type error" ด้วยการไปแก้โค้ดที่ generate มา</li>
       <li><strong>กติกาการเขียนโค้ด</strong> — สามข้อแรกคือรอยแผลจาก Nest 12 + TS 6 โดยตรง: import ไม่ลงท้าย <code>.js</code> จะพังตอนรัน (ไม่ใช่ตอน compile), <code>import type</code> จำเป็นเพราะ <code>isolatedModules</code> ทำงานร่วมกับ decorator ที่ต้องมี metadata ของ type จริงตอน runtime และการห้าม <code>any</code> / <code>as</code> / <code>!</code> ปิดทางออกที่ AI ชอบใช้ที่สุดเมื่อมัน compile ไม่ผ่าน — เราต้องการโค้ดที่ถูก ไม่ใช่โค้ดที่เงียบ ส่วนข้อสุดท้ายเรื่อง Date/Decimal มาจากสัญญาในบทที่ 3 ที่ระบุว่าวันเวลาเป็น string และตัวเลขเป็น number</li>
       <li><strong>ขอบเขต</strong> — สามข้อแรกคุมขนาดของ diff ข้อ barrel file กัน <code>index.ts</code> ที่ทำให้ import สับสนใน ESM และข้อสุดท้ายสำคัญที่สุดในคอร์สนี้: <em>ห้ามรัน migrate, db push, generate หรือ docker เอง</em> เพราะคำสั่งเหล่านั้นแตะฐานข้อมูลจริง และ <code>prisma migrate reset</code> ที่หลุดมาหนึ่งครั้งคือข้อมูล seed ทั้งหมดหายไป เราจะรันคำสั่งพวกนี้ด้วยมือในบทที่ 8 เสมอ</li>
     </ul>
@@ -66,7 +66,7 @@ alwaysApply: true
     <div class="cursor-prompt"><code>&lt;เป้าหมายหนึ่งบรรทัด เขียนเป็นประโยคคำสั่ง&gt;
 
 บริบท: @&lt;ไฟล์&gt; @&lt;โฟลเดอร์&gt; …
-&lt;ข้อเท็จจริงที่ Cursor รู้เองไม่ได้: มีอะไรอยู่ในโปรเจกต์แล้ว, payload ของ dummyjson ที่จับมา,
+&lt;ข้อเท็จจริงที่ Cursor รู้เองไม่ได้: มีอะไรอยู่ในโปรเจกต์แล้ว, สัญญาใน docs/api-spec.md,
  เวอร์ชันของแพ็กเกจ, กติกาใน .cursor/rules ที่เกี่ยวกับบทนี้&gt;
 
 โครงสร้าง: สร้าง/แก้ไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
@@ -83,8 +83,8 @@ alwaysApply: true
     <p><strong>เป้าหมาย (บรรทัดแรก)</strong> — หนึ่งประโยค เป็นคำสั่ง เช่น "สร้าง endpoint <code>GET /products/categories</code>" ถ้าเขียนได้ไม่จบในหนึ่งประโยค แปลว่าบทนี้ใหญ่เกินไปและควรแยกเป็นสอง prompt ประโยคนี้ยังเป็นเกณฑ์ตัดสินตอนรีวิวด้วย: อะไรที่ AI ทำเกินจากประโยคนี้คือของที่ต้องเอาออก</p>
     <p><strong>บริบท</strong> — ส่วนที่ยาวที่สุดและเป็นตัวตัดสินคุณภาพของผลลัพธ์ มีสองอย่างในนี้: (1) <code>@</code>-mention ไฟล์หรือโฟลเดอร์ที่ Cursor ต้องอ่านก่อนลงมือ และ (2) ข้อเท็จจริงที่มันรู้เองไม่ได้ เช่น "<code>PrismaService</code> ถูก export จาก <code>PrismaModule</code> ที่เป็น global แล้ว" หรือข้อความ error ที่ต้องตรงตัวอักษร ทุกครั้งที่ผลลัพธ์ออกมาผิด ให้ถามตัวเองก่อนว่า <em>ข้อเท็จจริงที่หายไปคืออะไร</em> แล้วเติมลงส่วนนี้ — ไม่ใช่ไปดุ AI ให้ทำใหม่</p>
     <p><strong>โครงสร้าง</strong> — ระบุ path ทุกไฟล์พร้อมวงเล็บว่า <em>สร้างใหม่</em> หรือ <em>แก้ไข</em> และปิดท้ายด้วย "ไม่มากไม่น้อยกว่านี้" ประโยคสั้น ๆ นี้กันพฤติกรรมที่เจอบ่อยที่สุดของ Agent คือสร้างไฟล์แถมมาให้ (interface ซ้ำ, service ที่ยังไม่ต้องใช้, เทสต์ที่คอร์สนี้ไม่ได้ขอ) และมันทำให้ <code>git status</code> หลังรันเป็น checklist ได้ทันที: มีไฟล์เกินจากลิสต์ = ผิด</p>
-    <p><strong>ข้อกำหนดทางเทคนิค</strong> — ชื่อ class ชื่อ method signature decorator รูปทรง response และพฤติกรรมเมื่อเกิด error เขียนแบบชี้ชัด เช่น "<code>findOne(id: number)</code> โยน <code>NotFoundException</code> ด้วยข้อความ <code>Product with id '9999' not found</code>" ยิ่งข้อนี้ละเอียด ผลลัพธ์ยิ่งเดาได้ และเวลารีวิวก็ยิ่งสั้น เพราะคุณเทียบข้อต่อข้อได้เลย</p>
-    <p><strong>ขอบเขต</strong> — บอกสิ่งที่ <em>ห้าม</em> ทำ สามบรรทัดแรกจะซ้ำ ๆ กันแทบทุกบทจนกลายเป็นพิมพ์นิสัย และข้อห้ามที่เขียนไว้ใน <code>.cursor/rules</code> แล้ว (เช่น "ห้ามสร้าง index.ts / barrel") ไม่ต้องเขียนซ้ำในทุก prompt ก็ได้ บรรทัดที่สำคัญที่สุดคือ "ยังไม่ต้อง…" ซึ่งกันงานของบทถัดไปไม่ให้ถูกทำล่วงหน้า เช่นในบทที่ 10 เราเขียน "ยังไม่ต้องแปลงแถวเป็นรูปทรงของ dummyjson" เพราะนั่นคืองานของบทที่ 11 ถ้าไม่เขียน AI จะทำทั้งสองบทรวดเดียว แล้วคุณจะเสียโอกาสตรวจแต่ละส่วนแยกกัน</p>
+    <p><strong>ข้อกำหนดทางเทคนิค</strong> — ชื่อ class ชื่อ method signature decorator รูปทรง response และพฤติกรรมเมื่อเกิด error เขียนแบบชี้ชัด เช่น "<code>findOne(id: number)</code> โยน <code>NotFoundException</code> ด้วยข้อความ <code>Product 9999 not found</code>" ยิ่งข้อนี้ละเอียด ผลลัพธ์ยิ่งเดาได้ และเวลารีวิวก็ยิ่งสั้น เพราะคุณเทียบข้อต่อข้อได้เลย</p>
+    <p><strong>ขอบเขต</strong> — บอกสิ่งที่ <em>ห้าม</em> ทำ สามบรรทัดแรกจะซ้ำ ๆ กันแทบทุกบทจนกลายเป็นพิมพ์นิสัย และข้อห้ามที่เขียนไว้ใน <code>.cursor/rules</code> แล้ว (เช่น "ห้ามสร้าง index.ts / barrel") ไม่ต้องเขียนซ้ำในทุก prompt ก็ได้ บรรทัดที่สำคัญที่สุดคือ "ยังไม่ต้อง…" ซึ่งกันงานของบทถัดไปไม่ให้ถูกทำล่วงหน้า เช่นในบทที่ 10 เราเขียน "ยังไม่ต้องแปลงแถวเป็นรูปทรงของ Product ใน docs/api-spec.md" เพราะนั่นคืองานของบทที่ 11 ถ้าไม่เขียน AI จะทำทั้งสองบทรวดเดียว แล้วคุณจะเสียโอกาสตรวจแต่ละส่วนแยกกัน</p>
 
     <h2>วงจรตรวจงาน</h2>
     <p>หลังกด send แล้ว Cursor แก้ไฟล์เสร็จ อย่ารีบ commit ให้เดินเจ็ดขั้นนี้ทุกครั้ง จนจำได้เอง</p>
@@ -94,11 +94,11 @@ alwaysApply: true
       <li><code>npm run lint</code> — oxlint จับของที่ compile ผ่านแต่ไม่ควรอยู่ เช่นตัวแปรที่ไม่ได้ใช้</li>
       <li><strong>ดู log ของ dev server</strong> ว่ามีบรรทัด <code>Mapped {…} route</code> ของ endpoint ที่เพิ่งสร้างขึ้นมาจริง — ถ้าไม่มี แปลว่า controller ยังไม่ถูกลงทะเบียนใน module (เป็นความผิดที่ build ไม่ฟ้อง)</li>
       <li><code>curl</code> ยิง endpoint นั้นด้วยข้อมูลจริง ทั้งกรณีปกติและกรณีพัง (id ที่ไม่มี, หมวดที่ไม่มี)</li>
-      <li><strong>เทียบ response กับไฟล์ใน <code>docs/contract/</code></strong> — ชื่อ field ครบไหม, ตัวเลขเป็น number ไม่ใช่ string ไหม, status code ตรงไหม</li>
+      <li><strong>เทียบ response กับสัญญาใน <code>docs/api-spec.md</code></strong> — ชื่อ field ครบไหม, ตัวเลขเป็น number ไม่ใช่ string ไหม, status code ตรงไหม</li>
       <li><strong>ถามตัวเองว่า "อธิบายได้ไหม"</strong> ทุกบรรทัดที่เพิ่มเข้ามา ถ้ามีบรรทัดที่ตอบไม่ได้ ให้ถาม Cursor ว่าบรรทัดนั้นทำอะไรและทำไมต้องมี แล้วอ่านคำตอบเทียบกับเอกสารจริง เสร็จแล้วจึง <code>git add -A &amp;&amp; git commit</code> หรือถ้าไม่ผ่าน ให้ <code>git checkout -- .</code> แล้วส่ง prompt ใหม่ที่เติมข้อเท็จจริงที่ขาดไปลงในส่วนบริบท</li>
     </ol>
     <div class="note">
-      <p>เส้นแบ่งระหว่าง <strong>refine</strong> กับ <strong>revert</strong>: ถ้าโครงสร้างถูกแล้วแต่ขาดข้อกำหนดไปข้อเดียว (ลืมโยน <code>NotFoundException</code>, ลืมตัด <code>brand</code> ที่เป็น null) ให้ส่ง prompt ต่อท้ายสั้น ๆ ในแชทเดิม แต่ถ้าไฟล์ผิดที่ ผิดชื่อ หรือมีของแถมมาเยอะ ให้ <code>git checkout -- .</code> (และ <code>git clean -fd</code> ถ้ามีไฟล์ใหม่) แล้วเริ่มแชทใหม่ — การแก้โครงสร้างที่ผิดด้วยการต่อ prompt มักได้โค้ดที่ทั้งผิดและซ้อนกันหลายชั้น</p>
+      <p>เส้นแบ่งระหว่าง <strong>refine</strong> กับ <strong>revert</strong>: ถ้าโครงสร้างถูกแล้วแต่ขาดข้อกำหนดไปข้อเดียว (ลืมโยน <code>NotFoundException</code>, ลืมตัด <code>discountPercentage</code> ที่เป็น null) ให้ส่ง prompt ต่อท้ายสั้น ๆ ในแชทเดิม แต่ถ้าไฟล์ผิดที่ ผิดชื่อ หรือมีของแถมมาเยอะ ให้ <code>git checkout -- .</code> (และ <code>git clean -fd</code> ถ้ามีไฟล์ใหม่) แล้วเริ่มแชทใหม่ — การแก้โครงสร้างที่ผิดด้วยการต่อ prompt มักได้โค้ดที่ทั้งผิดและซ้อนกันหลายชั้น</p>
     </div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
@@ -114,7 +114,7 @@ git commit -m "chore: add cursor rules"</code></div>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
       <p>Cursor Settings → Rules แสดงไฟล์ <code>project.mdc</code> พร้อมป้าย <strong>Always</strong> (มาจาก <code>alwaysApply: true</code> ใน frontmatter) และคำตอบของแชท Ask ต้องบอกว่า import ไฟล์ในโปรเจกต์ต้องลงท้ายด้วย <code>.js</code> แม้ไฟล์จริงเป็น <code>.ts</code> — ถ้ามันตอบแบบทั่ว ๆ ไปโดยไม่พูดถึง <code>.js</code> แปลว่าไฟล์ยังไม่ถูกอ่าน (มักเป็นเพราะวางไฟล์ผิดที่ หรือเปิด Cursor ที่โฟลเดอร์แม่ ไม่ใช่ที่ <code>ecommerce-api</code>)</p>
-      <p>ตอนนี้ <code>git log --oneline</code> มีสาม commit: scaffold, contract และ rules — โปรเจกต์พร้อมสำหรับ prompt แรกจริงในบทที่ 5</p>
+      <p>ตอนนี้ <code>git log --oneline</code> มีสาม commit: scaffold, api-spec.md และ rules — โปรเจกต์พร้อมสำหรับ prompt แรกจริงในบทที่ 5</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
