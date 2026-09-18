@@ -170,6 +170,97 @@ Root-caused as a **base-state gap that predates this task**, not a bad merge: `g
 
 Evidence: `/private/tmp/nestjs-companion-sync-20260917/repo` (branches `lesson-52`..`lesson-58`, `rebuild/mongodb`); live verification via a locally-run `mongo:8.0.4` container (`mongo-verify-task7`, removed) and `node dist/main.js` (`npm run build` output) against `curl`/`mongosh`.
 
+## Pre-publication verification
+
+Independent final local verification gate (Task 8), run against the isolated companion clone at `/private/tmp/nestjs-companion-sync-20260917/repo` (Node `v26.7.0`, npm `11.19.0`). Confirms the local ref set produced by Tasks 1–7 is ready to publish; does not push or delete any remote ref, and does not modify any lesson branch, `main`, or `end-of-chapter-2`.
+
+**Step 1 — target ref inventory:**
+
+```bash
+cd /private/tmp/nestjs-companion-sync-20260917/repo
+for n in $(seq -w 1 58); do git show-ref --verify --quiet "refs/heads/lesson-$n" || git show-ref --verify --quiet "refs/remotes/origin/lesson-$n" || exit 1; done
+test "$(git rev-parse main^{tree})" = "$(git rev-parse lesson-50^{tree})"
+test "$(git rev-parse origin/lesson-18^{tree})" = "$(git rev-parse origin/end-of-chapter-2^{tree})"
+```
+
+All 58 `lesson-NN` local heads exist (no fallback to `origin/*` needed). `main^{tree}` == `lesson-50^{tree}` == `c03958bdfaa46ba54d5e4daf32393af213ca2d16` — **PASS**. `origin/lesson-18^{tree}` == `origin/end-of-chapter-2^{tree}` == `df96d051fccf9af14e9dffb0e25c08ad35ca82c1` (informational check on the old frozen origin refs) — **PASS**. Additional explicit local checkpoint check (the ref Task 9 actually publishes): `test "$(git rev-parse end-of-chapter-2)" = "$(git rev-parse lesson-18)"` — **PASS**, both `8dd9cc1de97f80da852068630becec80e1d5e700`.
+
+**Step 2 — structural course checks**, run in the course repository:
+
+```bash
+git diff --check
+```
+
+Exit 0 — **PASS**. No prior audit script/methodology for the sequential-filename/index/navigation/id/tag checks was found in this repo's history (checked `git log --oneline -- Week_09/01_nestjs_basic/content` and the "renumber to 67 lessons" commit `fd23950`), so the following independent checks were run directly against `Week_09/01_nestjs_basic/content/`:
+
+- `ls | grep -E '^[0-9]{2}_.*\.html$' | wc -l` → **58**; filenames are sequentially numbered `01`–`58` with no gaps or duplicates (verified by listing).
+- Index membership: every one of the 58 content filenames appears as an `href` inside `index.html` — **PASS**, 0 missing. Explicit count: `grep -oE 'href="[0-9]{2}_[^"]+\.html"' index.html | sort -u | wc -l` → **58**, exactly matching the content directory.
+- Previous/next navigation: a Python check parsed each file's `rel="prev"`/`rel="next"` anchors and confirmed lesson 01 has no `prev`, lesson 58 has no `next`, and every other file's `prev`/`next` hrefs exactly match its immediate neighbors in the 01–58 sequence — **0 errors** across all 58 files.
+- Unique HTML IDs: no file has a duplicate `id="..."` attribute within itself — **0 files with duplicates**.
+- Local link resolution: every non-`http(s)`/`#`/`mailto:` `href` across all 58 lesson files plus `index.html` resolves to an existing file on disk — **0 broken links**.
+- Balanced major tags: `tidy -q -e` run against all 58 files, filtered for `unclosed|not closed|mismatched|missing.*</` — **0 files with tag issues**.
+
+**Step 3 — branch-to-content review** (local `lesson-$n` used uniformly for all 58 lessons, per the correction to the brief):
+
+- Corrected row-count command: `grep -c '^| lesson-[0-9][0-9] ' docs/superpowers/reports/2026-09-17-nestjs-companion-repo-sync.md` → **58** — matches expected.
+- Gap/duplicate check: extracted all `lesson-NN` row numbers, sorted, and diffed against `seq -w 1 58` → **exact match, no gaps or duplicates**.
+- Every one of the 58 rows has a title, a source-state commit SHA, a `PASS` content result, and a build/test result column present (visually confirmed by re-reading the full Branch audit table, rows for lesson-01 through lesson-58).
+- Independent spot-checks (claims not previously verified in this task, chosen across both the SQL and MongoDB ranges), each confirmed against the LOCAL branch tree via `git show lesson-NN:path` and cross-checked against the current HTML:
+  - **lesson-29** (SQL, transactions): `git show lesson-29:src/coffees/coffees.service.ts` contains `this.prisma.$transaction(async (tx) => {` — confirms the row's "transaction callback" claim.
+  - **lesson-44** (SQL, Swagger model decorating): `git show lesson-44:src/coffees/dto/create-coffee.dto.ts` has `@ApiProperty({ description: 'The name of a coffee.' })`/`@ApiProperty({ description: 'The brand of a coffee.' })`/`@ApiProperty({ example: ['chocolate', 'vanilla'] })`; `update-coffee.dto.ts` imports `PartialType` from `@nestjs/swagger` (not `@nestjs/mapped-types`) — confirms both halves of the row's claim. Cross-checked against `44_decorating-model-properties.html`, which shows the identical `@ApiProperty` code block.
+  - **lesson-53** (MongoDB, Mongoose module): `git show lesson-53:package.json` has `"@nestjs/mongoose": "^12.0.0"` and `"mongoose": "^9.10.0"`; `git show lesson-53:src/app.module.ts` has `MongooseModule.forRoot('mongodb://localhost:27017/nest-course')` alongside `CoffeesModule` — confirms the row's claim.
+  - **lesson-57** (MongoDB, transactions): `git show lesson-57:src/events/entities/event.entity.ts` has `@Prop({ type: mongoose.SchemaTypes.Mixed })` (braced form) on `payload`; `git show lesson-57:src/coffees/coffees.service.ts` has `import type { Connection, Model } from 'mongoose'`, `@InjectConnection() private readonly connection: Connection`, and `startSession()`/`startTransaction()`/`commitTransaction()`/`abortTransaction()` calls — confirms the row's claim. Cross-checked against `57_use-transactions-mongodb.html`, which documents the same `Mixed` requirement.
+
+No discrepancies found in any spot-check.
+
+**Step 4 — final companion repository checks:**
+
+`lesson-50` (full SQL path, commit `a154103709aa1b1323c3d3197865c231c20b47da`):
+
+All exit codes below were re-measured with the command's own exit status captured directly into a variable immediately after the command (`cmd > log 2>&1; echo $?`), not through a piped `tail` (an initial pass mistakenly captured `tail`'s exit status instead of the command's; every command was re-run to get the real code, and every result was unchanged — see raw logs under this session's scratchpad `task8-logs/`).
+
+- `npm ci` — exit 0 (511 packages).
+- `npm run build` — initially failed with TS2339/TS2307 errors (missing generated Prisma client, since `npm ci`'s postinstall scripts are not run under this environment's `allowScripts` policy); ran `npx prisma generate --config prisma7.config.ts` (exit 0, generated to `./src/generated/prisma`), then `npm run build` — exit 0, clean.
+- `npm run lint` — exit 0; 1 pre-existing warning (`parse-int.pipe.ts` unused `metadata` param), matching the row-58/lesson-40 documented warning.
+- `npm test` — exit 0; 4 test files, 6 tests passed, matching the report's row 68.
+- e2e lifecycle, three runs against the port-5433 `test-db` (only the pre-existing unrelated containers `ecommerce-api-db-1`, `iluvcofee-db-1`, `mongo-rs`, `mongo-standalone` were ever running alongside it; the task's own `repo-test-db-1` was created/removed three times, cleanly each time):
+  1. `npm run pretest:e2e` — exit 0 (container created, 3 migrations applied). `npm run test:e2e` — exit **1**: `test/app.e2e-spec.ts` failed (`Config validation error: DATABASE_URL: "DATABASE_URL" is required`) because the clone has no `.env` and the full `AppModule` requires `DATABASE_URL`/`API_KEY` at boot (the same harness/environment gap Task 5 documented and worked around, see line 141 above — not a content defect); `test/coffees/coffees.e2e-spec.ts` (which sets `process.env.DATABASE_URL` itself) passed all 5 of its own tests, including creating coffee id `1` and then deleting it. Since the main script failed, npm's `posttest:e2e` did not auto-fire and the container was left running with its id sequence already advanced past `1`.
+  2. Created a temporary, untracked `.env` (`DATABASE_URL` pointing at the same `test-db`, an `API_KEY` value, `PORT=3000`). Re-ran `npm run test:e2e` against the **same still-running container** from run 1 — exit **1** again, but for a different reason: `app.e2e-spec.ts` now passed (DATABASE_URL/API_KEY present), but 3 of `coffees.e2e-spec.ts`'s 5 tests failed (`Get one [GET /:id]` → 404 "Coffee #1 not found", `Update one` → `undefined` name, `Delete one` → 404) because the new `POST /coffees` in this run received id `2` (the container's sequence had already advanced in run 1), while the spec hardcodes `/coffees/1`. This is a **test/environment non-idempotency**, not a rebuild defect: `test/coffees/coffees.e2e-spec.ts`'s five cases assume a fresh, empty `test-db` and are not safe to re-run against a container that already has data — worth flagging for Task 10, which must always run a fresh `pretest:e2e` immediately before `test:e2e`, never reuse a container across runs.
+  3. Ran `npm run posttest:e2e` explicitly — exit 0, removed the stale container. Ran `npm run pretest:e2e` — exit 0 (fresh container, 3 migrations applied). Ran `npm run test:e2e` (which itself auto-chains `pretest:e2e`/`posttest:e2e` via npm's `pre`/`post` script convention since the main script this time succeeded) — exit **0**, **2 test files, 6 tests passed**; `posttest:e2e` auto-fired and removed the container. Deleted the temporary `.env` afterward.
+- `git status --short --ignored` after all lesson-50 checks: only ignored `dist/`, `node_modules/`, `src/generated/`, `tsconfig.build.tsbuildinfo` — no tracked changes.
+
+`lesson-58` (MongoDB path, build+lint only, commit `92346819b77cc64d27f220cc3776f93af46d37f3` = `rebuild/mongodb`):
+
+- Before starting: found an untracked `src/generated/` directory left over from switching from `lesson-50` (this lineage's `.gitignore` does not list `src/generated`, unlike the SQL lineage; it is not part of this branch's tree — `git ls-files | grep -c '^src/generated'` = 0). Removed it (`rm -rf src/generated`) before proceeding, since it is not part of the MongoDB lineage. (This carryover reproduced identically on a second branch switch during exit-code re-verification, confirming it is deterministic branch-switch behavior in a shared working tree, not a one-off.)
+- `npm ci` — exit 0 (no Prisma involved on this lineage).
+- `npm run build` — exit 0, clean.
+- `npm run lint` — exit 0; 1 pre-existing warning (`coffees.service.ts:72` unused `err` catch parameter), matching the row-76/lesson-58 documented warning.
+- No live MongoDB test/e2e run performed, per the brief and this task's instructions (already verified live in Task 7).
+- `git restore tsconfig.build.tsbuildinfo` — restored the one tracked file the build touched (this lineage tracks it, unlike the SQL lineage from lesson-32 onward).
+- `git clean -fdX` — removed ignored `dist/` and `node_modules/`.
+- Final `git status --short` — **empty, 0 lines**. Working tree fully clean.
+
+**Step 5 — ref graph review:**
+
+```bash
+git log --graph --decorate --oneline --all --simplify-by-decoration
+git for-each-ref --sort=refname --format='%(refname:short) %(objectname) %(tree)' refs/heads/lesson-* refs/heads/main
+```
+
+Graph confirms: `lesson-01`..`lesson-50`/`main`/`rebuild/sql` form one continuous line from the shared `iluvcoffee` scaffold; `lesson-51`..`lesson-58`/`rebuild/mongodb` branch off the shared `lesson-18`/`end-of-chapter-2` checkpoint (`8dd9cc1`) as a separate line, never touching the SQL lesson-19–50 line; the old `origin/lesson-*` refs (including `84aca79`, the old configuration-namespace commit) sit on an entirely disconnected historical graph with no edges into any local `lesson-NN` ref. `git for-each-ref` printed commit+tree OIDs for all 58 local `lesson-*` refs plus `main`, matching the SHAs recorded in each Branch audit row above (spot-checked: `lesson-50`/`main` both `a154103...`/tree `c03958b...`; `lesson-58` `9234681...`/tree `79e934d...`).
+
+Ancestor check:
+
+```bash
+for n in $(seq -w 36 50); do git merge-base --is-ancestor 84aca79 "lesson-$n" && exit 1 || true; done
+```
+
+Loop completed without hitting `exit 1` for any of `lesson-36`–`lesson-50` — **PASS**, none of the rebuilt SQL refs descend from the old namespace commit.
+
+**Concerns:** none rising to a real content or build defect. Three harmless environmental/informational notes, all resolved within this task: (1) the isolated clone has no `.env`, so a temporary untracked one was needed to run `lesson-50`'s full e2e suite (same gap Task 5 already documented); (2) a stray untracked `src/generated/` directory carried over when switching from `lesson-50` to `lesson-58` in the same working tree, removed before building since it is not part of the MongoDB lineage's tracked or ignored content; (3) informational, for Task 10: `test/coffees/coffees.e2e-spec.ts` hardcodes id `1` and is only valid against a genuinely fresh `test-db` container — re-running `test:e2e` against a container that already has data from a prior run fails on 404s unrelated to any code defect, so any future verification must always pair a fresh `pretest:e2e` immediately before `test:e2e`.
+
+**Result: all 58 lesson refs, `main`, and `end-of-chapter-2` are verified consistent, buildable, and ready for Task 9 to publish.**
+
 ## Published remote state
 
 Not published. All remediation commits and corrected companion branches remain local. The remote and all frozen origin refs remain unchanged.
