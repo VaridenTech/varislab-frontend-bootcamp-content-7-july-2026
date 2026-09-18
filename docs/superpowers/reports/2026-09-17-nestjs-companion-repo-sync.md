@@ -48,6 +48,9 @@ Rows identify the corrected **local** target branches in the isolated clone, not
 | lesson-30 | เพิ่ม Indexes ให้ Models | `23b371b0128cf74394e3565d6c28c0710735c0c9` | PASS — Event name and name/type indexes match. | `build=0; lint=0`; `generate=0` |
 | lesson-31 | ตั้งค่า Migrations ด้วย Prisma Migrate | `e10df075d8bfb89d1f35b4de7d30d803e08523a4` | PASS — Initial schema plus forward/reverse column-renaming migrations match. | `build=0; lint=0`; `generate=0` |
 | lesson-32 | ควบคุม Module Encapsulation | `130aeeb54b3fa2cb951be299fb9ddaec35be2772` | PASS — Module encapsulation matches; verified local base for Task 3. | `build=0; lint=0`; `generate=0` |
+| lesson-33 | ตั้งค่า ConfigModule และ Environment Files | `98231e925b901433e64e3ae90d808a6fa21941b4` | PASS — Plain `ConfigModule.forRoot()`, `dotenv/config` import removed from main.ts, `.gitignore` excludes `.env`; no namespace/`coffees.config.ts`. | `build=0; lint=0`; `generate=0`; `npm ci=0` |
+| lesson-34 | ตรวจ Environment Variables ด้วย Schema | `65bfff13c30265a46d95186e23155bd563219999` | PASS — `ConfigModule.forRoot({ validationSchema: Joi.object({...}) })` matches; `joi` dependency present; no namespace/`coffees.config.ts`. | `build=0; lint=0`; `generate=0`; `npm ci=0` |
+| lesson-35 | ใช้ ConfigService และจัดโครงสร้าง Configuration | `744248d31dec30fed225efe051f9b54749479862` | PASS — `app.config.ts` loaded via `load: [appConfig]`; `ConfigService` injected and reads typed `database.url`/`port` with `console.log` removed, an intentional deviation from old `origin/lesson-37` per ruling; no namespace/`coffees.config.ts`. | `build=0; lint=0`; `generate=0`; `npm ci=0`; lint warnings only (unused `databaseUrl`/`port`, matches HTML) |
 
 ## Repository-wide checks
 
