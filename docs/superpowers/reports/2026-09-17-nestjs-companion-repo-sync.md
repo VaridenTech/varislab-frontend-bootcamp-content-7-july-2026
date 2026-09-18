@@ -1,86 +1,97 @@
 # NestJS Companion Repository Sync Report
 
-**Date:** 2026-09-17
+**Date:** 2026-09-17; prefix remediation verified 2026-09-18.
 **Remote:** `git@github-variden:VaridenTech/varislab-intro-to-nestjs-v1.git`
 **Source of truth:** `Week_09/01_nestjs_basic/content`
 
 ## Pre-sync snapshot
 
-- Remote branch count: 69
-- Snapshot file: `/private/tmp/nestjs-companion-sync-20260917/pre-sync-refs.txt`
+- Remote branch count: 69.
+- Frozen snapshot: `/private/tmp/nestjs-companion-sync-20260917/pre-sync-refs.txt`.
+- All 69 `origin/*` source refs remain identical to this snapshot. No remote mutation has occurred.
 
 ## Branch audit
 
-| Branch | Lesson title | Source state | Content check | Build/test |
+Rows identify the corrected **local** target branches in the isolated clone, not the old remote-tracking refs. All 32 source lessons were audited; all 26 distinct corrected target trees were built and linted.
+
+| Branch | Lesson title | Verified local target commit | Content check | Build/test |
 | --- | --- | --- | --- | --- |
-| lesson-01 | ติดตั้ง NestJS CLI | `462faa07a834cfd9b8f7e215f3fd685343e84272` | BLOCKED (C3); Nest 12 ESM scaffold present; see N1. | `build=0; lint=0`; `npm ci=0` |
-| lesson-02 | มีอะไรอยู่ในแอป NestJS | `462faa07a834cfd9b8f7e215f3fd685343e84272` | BLOCKED (C3); Scaffold files, AppModule, ESM imports and Vitest match. | `build=0; lint=0` reused from 01 |
-| lesson-03 | สิ่งที่เราจะสร้างกันในคอร์สนี้ | `462faa07a834cfd9b8f7e215f3fd685343e84272` | BLOCKED (C3); Planning only; no application delta. | `build=0; lint=0` reused from 01 |
-| lesson-04 | เตรียมเครื่องมือ: ติดตั้ง Insomnia | `462faa07a834cfd9b8f7e215f3fd685343e84272` | BLOCKED (C3); Insomnia setup; no source delta. | `build=0; lint=0` reused from 01 |
-| lesson-05 | รัน NestJS ในโหมด Development | `462faa07a834cfd9b8f7e215f3fd685343e84272` | BLOCKED (C3); Development scripts match; greeting edit is an unspecified experiment. | `build=0; lint=0` reused from 01 |
-| lesson-06 | สร้าง Controller พื้นฐาน | `27636aedf981d56210310fcda10751fa8fe3d994` | BLOCKED (C3); Controller, GET /coffees and module registration match. | `build=0; lint=0` |
-| lesson-07 | ใช้ Route Parameters | `30aee86380ffea9f831fc76860af9baa7ce9d328` | BLOCKED (C3); GET /coffees/:id and string parameter match. | `build=0; lint=0` |
-| lesson-08 | จัดการ Request Body (Payload) | `87cf3753cfc24db475ba7796f16714b03f6a42e2` | BLOCKED (C3); POST /coffees echoes JSON body as instructed. | `build=0; lint=0` |
-| lesson-09 | กำหนด Response Status Codes | `87cf3753cfc24db475ba7796f16714b03f6a42e2` | BLOCKED (C3); No delta matches removal of temporary 410 decorator. | `build=0; lint=0` reused from 08 |
-| lesson-10 | จัดการคำขอ Update และ Delete | `6b9a7a45dcf703e39388fb50627d217489c7911f` | BLOCKED (C3); PATCH/DELETE handlers and responses match. | `build=0; lint=0`; warnings |
-| lesson-11 | ทำ Pagination ด้วย Query Parameters | `3de95e51f7a991ea69c58e4d82b6b66474b1ebac` | BLOCKED (C3); Query limit/offset handling matches. | `build=0; lint=0`; warnings |
-| lesson-12 | สร้าง Service พื้นฐาน | `5d7fcf054635520e859964860032074c4344e141` | BLOCKED (C3); In-memory entity/service, delegation and DI match. | `build=0; lint=0`; warnings |
-| lesson-13 | ส่ง Error Message ที่เป็นมิตรกับผู้ใช้ | `8ac26d62385cd59903c6428eeec317fa845090d1` | BLOCKED (C3); NotFoundException and response message match. | `build=0; lint=0`; warnings |
-| lesson-14 | ห่อ Business Domain ไว้ใน Modules | `7ec5dca12f09086bfc207a91ded9011570935c96` | BLOCKED (C3); CoffeesModule extraction and root import match. | `build=0; lint=0`; warnings |
-| lesson-15 | รู้จัก Data Transfer Objects (DTO) | `301a58195eed8c30763e8ababcbb0bd77f67a094` | BLOCKED (C3); DTOs, readonly/optional rules and service-created id match. | `build=0; lint=0`; warnings |
-| lesson-16 | Validate ข้อมูลขาเข้าด้วย DTO | `670cd3487f8307469f49e951ad14463d57d2acce` | BLOCKED (C3); ValidationPipe, IsString, PartialType and dependencies match. | `build=0; lint=0`; `npm ci=0`; warnings |
-| lesson-17 | ป้องกันข้อมูลคำขอที่ไม่พึงประสงค์ | `103cda13a87a685682b70f305137c56b6444a16e` | BLOCKED (C3); Whitelist and forbidNonWhitelisted match. | `build=0; lint=0`; warnings |
-| lesson-18 | แปลง Payload เป็น DTO Instance อัตโนมัติ | `c92dfb93e7f46e3b0b5c148b7a4c7015695b2556` | BLOCKED (C3); Global transform matches; primitive demonstration caveat N2. | `build=0; lint=0`; warnings |
-| lesson-19 | ก่อนเริ่มบทฐานข้อมูล: เก็บความคืบหน้าไว้ใน Branch | `279ff3afb519bad64688496b8de9dcc5a32c0caf` | BLOCKED (C1, C3); Application unchanged; saved fork exact; README map differs. | `build=0; lint=0`; warnings |
-| lesson-20 | รัน PostgreSQL ด้วย Docker Compose | `71287829e7c9d4da63f6c73612ce224955dd4fe9` | BLOCKED (C1, C3); Compose service, image, port and password match. | `build=0; lint=0`; warnings |
-| lesson-21 | ดูฐานข้อมูล Postgres ด้วย GUI | `71287829e7c9d4da63f6c73612ce224955dd4fe9` | BLOCKED (C1, C3); GUI only; unchanged application/Compose tree. | `build=0; lint=0` reused from 20; warnings |
-| lesson-22 | รู้จัก Prisma และ PrismaService | `76651560515926852d6853d3e4069eeb6624c320` | BLOCKED (C1, C2, C3); Prisma config, generated output path, DI lifecycle and dotenv import match; dependency placement differs. | Before generate: `build=1; lint=0`; after `generate=0`: `build=0; lint=0`; `npm ci=0`; warnings |
-| lesson-23 | สร้าง Prisma Model | `c657b3abc3ee64934e1957fa8a127cf50b464fa6` | BLOCKED (C1, C2, C3); Coffee schema, scalar flavors and retained entity match. | Before generate: `build=1; lint=0`; after `generate=0`: `build=0; lint=0`; warnings |
-| lesson-24 | ใช้ Prisma Client เข้าถึงฐานข้อมูล | `4832280139643500e6934126d66ddbe0d54fd0e6` | BLOCKED (C1, C2, C3); Prisma CRUD, 404 handling and entity removal match. | Before generate: `build=1; lint=0`; after `generate=0`: `build=0; lint=0`; warnings |
-| lesson-25 | สร้าง Relation ระหว่างสอง Models | `312f2c14d57a29095dd3d7b967d618aec0c79150` | BLOCKED (C1, C2, C3); Flavor relation, unique name and temporarily commented writes match. | Before generate: `build=1; lint=0`; after `generate=0`: `build=0; lint=0`; warnings |
-| lesson-26 | ดึง Models พร้อม Relations | `8a8834a51be1caf0c94f077b8231d4b8abbdbef8` | BLOCKED (C1, C2, C3); Read includes and initial connectOrCreate writes match. | Before generate: `build=1; lint=0`; after `generate=0`: `build=0; lint=0`; warnings |
-| lesson-27 | ใช้ Nested Writes สร้างและอัปเดตพร้อม Relation | `5586f23be068ecb87b756aa66e9c718405b93450` | BLOCKED (C1, C2, C3); PATCH relation replacement and write-response includes match. | Before generate: `build=1; lint=0`; after `generate=0`: `build=0; lint=0`; warnings |
-| lesson-28 | เพิ่ม Pagination ที่ชั้นฐานข้อมูล | `28b8e81e14b17f03582ce1278fe01a5cb4438617` | BLOCKED (C1, C2, C3); DTO validation, transformation and ordered skip/take match. | Before generate: `build=1; lint=0`; after `generate=0`: `build=0; lint=0` |
-| lesson-29 | ใช้ Transactions | `a98b00d64551d31e01fa1199bf6979c13e3b65ed` | BLOCKED (C1, C2, C3); Event, recommendations, transaction callback and route match. | Before generate: `build=1; lint=0`; after `generate=0`: `build=0; lint=0` |
-| lesson-30 | เพิ่ม Indexes ให้ Models | `9c6beaa964e5d41598a228f651b6b0aa6e7d1f51` | BLOCKED (C1, C2, C3); Event name and name/type indexes match. | Before generate: `build=1; lint=0`; after `generate=0`: `build=0; lint=0` |
-| lesson-31 | ตั้งค่า Migrations ด้วย Prisma Migrate | `d3805975e92858e24209c6c2c47fff44bc2715b8` | BLOCKED (C1, C2, C3); Initial schema plus forward/reverse column-renaming migrations match. | Before generate: `build=1; lint=0`; after `generate=0`: `build=0; lint=0` |
-| lesson-32 | ควบคุม Module Encapsulation | `f25e667f95f1ea933039a595c7bab9ff7d2e7a97` | BLOCKED (C1, C2, C3); CoffeeRating DI, owner export and consumer module import match. | Before generate: `build=1; lint=0`; after `generate=0`: `build=0; lint=0` |
+| lesson-01 | ติดตั้ง NestJS CLI | `c61e5f46b2ea88f6c86a47665b7a1968d0b28897` | PASS — Nest 12 ESM scaffold; project name corrected to iluvcoffee. | `build=0; lint=0`; `npm ci=0` |
+| lesson-02 | มีอะไรอยู่ในแอป NestJS | `c61e5f46b2ea88f6c86a47665b7a1968d0b28897` | PASS — Scaffold files, AppModule, ESM imports and Vitest match. | `build=0; lint=0` reused from 01 (identical tree) |
+| lesson-03 | สิ่งที่เราจะสร้างกันในคอร์สนี้ | `c61e5f46b2ea88f6c86a47665b7a1968d0b28897` | PASS — Planning only; no application delta. | `build=0; lint=0` reused from 01 (identical tree) |
+| lesson-04 | เตรียมเครื่องมือ: ติดตั้ง Insomnia | `c61e5f46b2ea88f6c86a47665b7a1968d0b28897` | PASS — Insomnia setup; no source delta. | `build=0; lint=0` reused from 01 (identical tree) |
+| lesson-05 | รัน NestJS ในโหมด Development | `c61e5f46b2ea88f6c86a47665b7a1968d0b28897` | PASS — Development scripts match; greeting edit is an unspecified experiment. | `build=0; lint=0` reused from 01 (identical tree) |
+| lesson-06 | สร้าง Controller พื้นฐาน | `968d0da9fee0212b26709e5030d30b19f018915b` | PASS — Controller, GET /coffees and module registration match. | `build=0; lint=0` |
+| lesson-07 | ใช้ Route Parameters | `bb31c0f82d53ec602f88e659b72d2b4dd8e0eb7f` | PASS — GET /coffees/:id and string parameter match. | `build=0; lint=0` |
+| lesson-08 | จัดการ Request Body (Payload) | `d01b10ef7e5d86f368b6cc93383bd721f36828e7` | PASS — POST /coffees echoes JSON body as instructed. | `build=0; lint=0` |
+| lesson-09 | กำหนด Response Status Codes | `d01b10ef7e5d86f368b6cc93383bd721f36828e7` | PASS — No delta matches removal of temporary 410 decorator. | `build=0; lint=0` reused from 08 (identical tree) |
+| lesson-10 | จัดการคำขอ Update และ Delete | `6fb310de02b4caa3bcf6175687ce87ebf587cbae` | PASS — PATCH/DELETE handlers and responses match. | `build=0; lint=0`; lint warnings only |
+| lesson-11 | ทำ Pagination ด้วย Query Parameters | `8fe9c58c4e103e9d5cfda903fe91eca2e2b568a7` | PASS — Query limit/offset handling matches. | `build=0; lint=0`; lint warnings only |
+| lesson-12 | สร้าง Service พื้นฐาน | `0a4a0a4d4c05eef60f1abc8fbdf84dabc11099c6` | PASS — In-memory entity/service, delegation and DI match. | `build=0; lint=0`; lint warnings only |
+| lesson-13 | ส่ง Error Message ที่เป็นมิตรกับผู้ใช้ | `4628658db060bb6176bc5fc5896387555811d774` | PASS — NotFoundException and response message match. | `build=0; lint=0`; lint warnings only |
+| lesson-14 | ห่อ Business Domain ไว้ใน Modules | `ae09cc8ff3138010176847219eeec9e321d4a760` | PASS — CoffeesModule extraction and root import match. | `build=0; lint=0`; lint warnings only |
+| lesson-15 | รู้จัก Data Transfer Objects (DTO) | `121ddd0eaca79ac9697d699c4a1879be388120cc` | PASS — DTOs, readonly/optional rules and service-created id match. | `build=0; lint=0`; lint warnings only |
+| lesson-16 | Validate ข้อมูลขาเข้าด้วย DTO | `4bb164329cc066e85ef5337793448207914553a8` | PASS — ValidationPipe, IsString, PartialType and dependencies match. | `build=0; lint=0`; `npm ci=0`; lint warnings only |
+| lesson-17 | ป้องกันข้อมูลคำขอที่ไม่พึงประสงค์ | `219ad66e1ae5e73e0e87dbefbd7c83e43c7bcbb9` | PASS — Whitelist and forbidNonWhitelisted match. | `build=0; lint=0`; lint warnings only |
+| lesson-18 | แปลง Payload เป็น DTO Instance อัตโนมัติ | `8dd9cc1de97f80da852068630becec80e1d5e700` | PASS — Global transform plus numeric findOne parameter and string service-id conversion; no diagnostic logging. | `build=0; lint=0`; numeric-route runtime check=0; lint warnings only |
+| lesson-19 | ก่อนเริ่มบทฐานข้อมูล: เก็บความคืบหน้าไว้ใน Branch | `1c7ccd80bf274e1eeaa4529f7195790b71be362f` | PASS — Application checkpoint retained; exact 58-lesson README introduction/map and original Nest tail. | `build=0; lint=0`; numeric-route runtime check=0; lint warnings only |
+| lesson-20 | รัน PostgreSQL ด้วย Docker Compose | `569960f9c3190fb29f9074fb9efdb2faf26c1e3e` | PASS — Compose service, image, port and password match. | `build=0; lint=0`; numeric-route runtime check=0; lint warnings only |
+| lesson-21 | ดูฐานข้อมูล Postgres ด้วย GUI | `569960f9c3190fb29f9074fb9efdb2faf26c1e3e` | PASS — GUI only; unchanged application/Compose tree. | `build=0; lint=0` reused from 20 (identical tree); numeric-route runtime check=0; lint warnings only |
+| lesson-22 | รู้จัก Prisma และ PrismaService | `68635ab083310f80acb0943ff50cefaf95c841ab` | PASS — Prisma setup matches; CLI moved to devDependencies with regenerated lock classifications. | `build=0; lint=0`; `npm ci=0`; `generate=0`; numeric-route runtime check=0; lint warnings only |
+| lesson-23 | สร้าง Prisma Model | `fbdf6a2a697b5ce70a091c91426fc8f0a64434b7` | PASS — Coffee schema, scalar flavors and retained entity match. | `build=0; lint=0`; `generate=0`; numeric-route runtime check=0; lint warnings only |
+| lesson-24 | ใช้ Prisma Client เข้าถึงฐานข้อมูล | `6a24d5634febfaf7c654526eb3851819c00dbfec` | PASS — Prisma CRUD and 404 checks; string route id restored as explicitly described in HTML. | `build=0; lint=0`; `generate=0`; lint warnings only |
+| lesson-25 | สร้าง Relation ระหว่างสอง Models | `3d10f7e7a31d78275f04959b6e4f685577dc3d32` | PASS — Flavor relation, unique name and temporarily commented writes match. | `build=0; lint=0`; `generate=0`; lint warnings only |
+| lesson-26 | ดึง Models พร้อม Relations | `b01716ac507b462e058f12c456fa3ac47f1515ad` | PASS — Read includes and initial connectOrCreate writes match. | `build=0; lint=0`; `generate=0`; lint warnings only |
+| lesson-27 | ใช้ Nested Writes สร้างและอัปเดตพร้อม Relation | `7ebf9da84dbcd9da3a065543db86b16ff2da944f` | PASS — PATCH relation replacement and write-response includes match. | `build=0; lint=0`; `generate=0`; lint warnings only |
+| lesson-28 | เพิ่ม Pagination ที่ชั้นฐานข้อมูล | `72b577efa4ad707d01c6621ef01bd37453a3225c` | PASS — DTO validation, transformation and ordered skip/take match. | `build=0; lint=0`; `generate=0` |
+| lesson-29 | ใช้ Transactions | `0cfb7d0817a8c8eeb58cbb91e6079abfd65c378a` | PASS — Event, recommendations, transaction callback and route match. | `build=0; lint=0`; `generate=0` |
+| lesson-30 | เพิ่ม Indexes ให้ Models | `23b371b0128cf74394e3565d6c28c0710735c0c9` | PASS — Event name and name/type indexes match. | `build=0; lint=0`; `generate=0` |
+| lesson-31 | ตั้งค่า Migrations ด้วย Prisma Migrate | `e10df075d8bfb89d1f35b4de7d30d803e08523a4` | PASS — Initial schema plus forward/reverse column-renaming migrations match. | `build=0; lint=0`; `generate=0` |
+| lesson-32 | ควบคุม Module Encapsulation | `130aeeb54b3fa2cb951be299fb9ddaec35be2772` | PASS — Module encapsulation matches; verified local base for Task 3. | `build=0; lint=0`; `generate=0` |
 
 ## Repository-wide checks
 
-### Lessons 01–32 audit outcome
+### Corrected lessons 01–32: PASS
 
-**BLOCKED for unchanged reuse.** All 32 HTML lessons and all 32 frozen trees were inspected, including cumulative source deltas. All 26 distinct snapshots build and lint with exit 0 after the documented Prisma-generation prerequisite. Content differences still require a ruling before Task 3; no companion source, refs or remote state were changed.
+The initial audit found stale README numbering, project-name metadata, Prisma dependency classification, and the missing lesson-18 primitive-conversion state. The recorded ruling authorized rebuilding the prefix locally. All four findings are resolved; Task 3 and Task 6 must consume the corrected local refs below.
 
-#### Content discrepancies requiring a ruling
+- `lesson-32`: **130aeeb54b3fa2cb951be299fb9ddaec35be2772**; tree **19d4ea46e4d008fca327de4d74a68bb86bd1a7ab**.
+- `end-of-chapter-2` and `lesson-18`: both **8dd9cc1de97f80da852068630becec80e1d5e700**; both trees **97cd998ab4bf2a02f17630e8690507ed52abf02c**.
+- `rebuild/prefix` points to local `lesson-32`. Each numbered local ref is an ancestor of the next. Identical checkpoints share commits: **01–05**, **08–09**, **20–21**.
+- The original `origin/lesson-32` and `origin/end-of-chapter-2` are frozen historical sources, not downstream target bases.
 
-- **C1 — README numbering, lessons 19–32:** `origin/lesson-19:README.md:3` says **67 lessons**. Lines 13–15 reference lesson 19/60, SQL through 59, and MongoDB 60–67. The same README is inherited through lesson 32. Current lesson 19 HTML line 24 places MongoDB at **51–58**, within a 58-lesson course. README is also the only changed file at lesson 19; its HTML workshop only creates the Git checkpoint. Affected: `README.md` on every branch **19–32**.
-- **C2 — Prisma dependency classification, lessons 22–32:** lesson 22 HTML lines 27 and 146 run `npm install -D prisma@7.10.0`; line 162 expects `prisma` in `devDependencies`. Instead, `origin/lesson-22:package.json:34` places `"prisma": "^7.10.0"` in `dependencies`, mirrored in the lockfile root. This persists through 32. Affected: `package.json` and `package-lock.json` on every branch **22–32**. The installed/locked version is 7.10.0; placement is the mismatch.
-- **C3 — Scaffold name, lessons 01–32:** lesson 02 HTML lines 24 and 73 specify `nest new iluvcoffee`, but `package.json:2` and package-lock project metadata name `iluvcoffee-new` on all 32 branches. This is a metadata mismatch with no observed build impact. Affected: `package.json` and `package-lock.json` on every branch **01–32**. Retaining this as a deliberate companion-repository exception requires a ruling.
+### Corrections and source fidelity
 
-#### Interpretation notes
+1. **Lesson 01 / carried through 32:** package.json and both package-lock project-name fields now say `iluvcoffee`, matching `nest new iluvcoffee`. Initial scaffold timing remains the established 01–05 baseline.
+2. **Lesson 18 / carried through 23:** `findOne(@Param('id') id: number)` calls `this.coffeesService.findOne('' + id)`; global `transform: true` remains enabled. No temporary logging remains. Lesson 24 explicitly describes string route ids, so its controller returns to `id: string` with direct service delegation.
+3. **Lesson 19 / carried through 32:** README introduction and branch map exactly match the plan's 58-lesson text. The original Nest-generated content below the horizontal rule is preserved byte-for-byte.
+4. **Lesson 22 / carried through 32:** `prisma: "^7.10.0"` is in devDependencies, absent from dependencies, and the lockfile root agrees. `npm install --package-lock-only --ignore-scripts --save-dev prisma@7.10.0` exited 0 and updated 131 package classification flags. The locked package set, versions, integrity values and all other package-entry data are unchanged.
+5. Old lesson deltas were replayed sequentially with `git diff --binary origin/lesson-PP origin/lesson-NN | git apply --index --3way`. All other tracked content equals the previously audited original tree for its lesson. Full comparisons permit only the specific name, README, dependency-classification and 18–23 controller corrections above.
 
-- **N1 — Scaffold timing:** 01–05 share the exact same commit/tree. The companion already includes the scaffold at 01, while the `nest new` workshop appears in 02. This is recorded as the initial repository baseline.
-- **N2 — Lesson 18 demonstration:** HTML lines 43–45 demonstrate `findOne(@Param('id') id: number)`, converting the id back to string for the service. The branch retains `id: string` and only changes the global pipe. The workshop describes its logging as temporary; lesson 24 explicitly uses string route parameters again. The global-transform requirement matches, but the number-parameter demonstration is not retained. This ambiguity is disclosed rather than claimed as an exact code-block match.
-- Temporary experiments were compared at their final state: removing lesson 09's 410 decorator, restoring lesson 26's include, removing lesson 29's rollback sabotage, and restoring lesson 31's column name. Lesson 25's commented create/update bodies are explicitly instructed and compile.
-- Scope: static content, build and lint. No database, HTTP, unit or e2e tests were run in Task 2.
+### Fresh verification of corrected local refs
 
-#### Verification commands and results
+Environment: Node `v26.7.0`, npm `11.19.0`; all commands ran in `/private/tmp/nestjs-companion-sync-20260917/repo`. Table shorthand: `build` = `npm run build`; `lint` = `npm run lint`; `generate` = `npx --no-install prisma generate`. Numbers are exit codes.
 
-Working directory: `/private/tmp/nestjs-companion-sync-20260917/repo`. Node `v26.7.0`; npm `11.19.0`. Table shorthand: `build` = `npm run build`; `lint` = `npm run lint`; `generate` = `npx --no-install prisma generate`. Numbers are actual process exit codes.
+- `node /private/tmp/nestjs-companion-sync-20260917/verify-rebuilt-prefix.mjs`: **exit 0**. Checked all 32 corrected trees, full allowed-change scope, package/lock agreement, exact README, sequential ancestry, lesson-18/checkpoint commit and tree equality, all 69 frozen origin refs, and clean status.
+- `node /private/tmp/nestjs-companion-sync-20260917/verify-prefix-builds.mjs`: **exit 0**. Built/linted all **26 distinct local trees**, verified emitted `dist/main.js` for each, and recorded every command/status. Only identical trees were skipped.
+- `npm ci`: **exit 0** at local **01, 16, 22**, whenever the lockfile changed. Dependencies were retained between switches.
+- `npm run build` and `npm run lint`: **exit 0** on every distinct local snapshot. For every local lesson **22–32**, `npx --no-install prisma generate` ran first and exited **0**.
+- Runtime primitive-conversion checks: **exit 0** for each distinct state in **18–23** (21 reuses 20). Compiled decorator metadata is Number; ValidationPipe transforms URL `'42'` into numeric `42`; the controller delegates string `'42'` to the service.
+- `git status --short` was recorded after every distinct build/lint. Lesson 01 generated only untracked tsbuildinfo, preserved outside the clone as `audit/rebuilt-lesson-01.generated.tsbuildinfo`. Lessons 18–20 changed only tracked tsbuildinfo; `git restore tsconfig.build.tsbuildinfo` restored it. Other tracked snapshots 06–21 were clean and their tracked tsbuildinfo was also restored. From 22 the file is ignored/untracked. No other tracked file changed.
+- After all final checks, `git clean -ndX` listed only dist/, node_modules/, src/generated/ and tsconfig.build.tsbuildinfo. Authorized `git clean -fdX`: **exit 0**, removing those reproducible outputs only in the isolated clone. Final `git status --short` and `git clean -ndX` were empty. Content/ref verification was rerun successfully after cleanup.
 
-1. Verified exactly one HTML for each number 01–32. `git rev-parse origin/lesson-NN` and `git ls-tree -r --name-only origin/lesson-NN` succeeded for all 32; all commits match the frozen snapshot.
-2. Inspected every complete tree and previous-lesson delta: `git diff --stat origin/lesson-PP origin/lesson-NN`, plus complete diffs for package.json, package-lock.json, src, test, prisma and docker-compose.yml. Lockfiles change at 16 and 22; their dependency roots agree with package.json, including C2.
-3. `git rev-parse origin/lesson-18^{tree} origin/end-of-chapter-2^{tree}`: exit 0; both output **df96d051fccf9af14e9dffb0e25c08ad35ca82c1**. Fork point **PASS**.
-4. Selected each distinct tree with `git switch --detach origin/lesson-NN`. `npm ci` ran at **01, 16, 22**, each exit 0. Ignored dependencies remained between snapshots. Exact-tree skips: **02–05 → 01**, **09 → 08**, **21 → 20**.
-5. Initial build: exit 0 for 01–21 (15 distinct trees), exit 1 for 22–32. Initial lint: exit 0 for all 26 distinct trees. Failed builds report **TS2307** at `src/prisma/prisma.service.ts:3`: `Cannot find module '../generated/prisma/client.js'`, followed by missing inherited Prisma members. Lesson 22 explicitly requires generating this ignored client before starting/building.
-6. First `npx --no-install prisma generate` at 22 failed with sandbox **EPERM**, attempting `utime` on `/Users/varis/.cache/prisma/master/0edf323efd1d98336f3f0a68684b56f689b900d3/darwin-arm64/schema-engine`. Retried with approved access: exit 0. For **each lesson 22–32**, generation, build and lint then all exited **0**. These initial build failures are reconciled by the documented prerequisite, without source edits.
-7. Lint exit 0 includes existing **eslint(no-unused-vars)** warnings in 10–27 for instructional parameters: body, paginationQuery, updateCoffeeDto and (25) createCoffeeDto. No lint errors. Warnings were preserved.
-8. Captured `git status --short` after every distinct build/lint. At 01 it showed only `?? tsconfig.build.tsbuildinfo`; that generated file is not tracked until 06. The first switch to 06 refused to overwrite it (exit 1). Preserved it outside the clone as `audit/lesson-01.generated.tsbuildinfo`, then retried successfully. For each distinct tree 06–21, status was empty and `git restore tsconfig.build.tsbuildinfo` exited 0. At 22–32 the file is ignored/untracked, so no restore was attempted; all statuses were empty. **No other tracked file changed.**
-9. After final lesson-32 verification, `git clean -ndX` listed only dist/, node_modules/, src/generated/ and tsconfig.build.tsbuildinfo. `git clean -fdX` removed these reproducible outputs in this isolated clone only, exit 0. Final `git status --short` was empty.
-10. Compared all **69** origin remote-tracking refs (excluding symbolic HEAD) with the frozen snapshot: exact match. No companion commits, fetch, pushes or branch rewrites occurred.
+### Remaining concerns and verification limits
 
-Raw HTML extraction, full trees, source diffs and command outputs remain under `/private/tmp/nestjs-companion-sync-20260917/audit/`: `lesson-NN.txt`, `lesson-NN.full.diff`, `meta.json`, `build-results.json`, and `generated-build-results.json`. The durable rows above record every source commit and command result.
+- Existing unused-parameter lint warnings remain in lessons 10–27, with exit 0; these match the instructional intermediate code.
+- npm's install audit reported **7 vulnerabilities (2 low, 1 moderate, 4 high)** at 01/16 and **11 (2 low, 1 moderate, 8 high)** at 22. Dependency versions were preserved to match the course; no audit-fix upgrade was applied. npm also reported deprecated tsconfck and install scripts awaiting approval; documented client generation and every build still succeeded.
+- No database/container mutations, HTTP smoke tests, full unit suites or e2e suites were run for this prefix task. Verification covers the requested static content/build/lint checks plus the specific corrected parameter-conversion behavior.
 
+### Evidence
+
+The initial audit and its pre/post-generation results remain in the task-2 handoff and Git history. Initial original-tree builds 22–32 failed on missing generated Prisma Client, then passed after the documented generation step; corrected local builds ran generation before building and all passed on their first verification pass.
+
+Raw evidence: `/private/tmp/nestjs-companion-sync-20260917/audit/`. Key files: `rebuilt-mapping.json` (full old-to-local mapping and trees), `rebuilt-build-results.json` (all corrected commands, outputs and exit statuses), `replay-commands.json`, `meta.json`, `lesson-NN.txt`, `lesson-NN.full.diff`, `build-results.json`, and `generated-build-results.json`.
 
 ## Published remote state
+
+Not published. All remediation commits and corrected companion branches remain local. The remote and all frozen origin refs remain unchanged.
