@@ -329,41 +329,38 @@ try {
     <pre><code>ecommerce-api/
 ├── package.json        (แก้ไข: เพิ่ม devDependency faker และ script db:seed)
 └── prisma/seed.ts      (สร้างใหม่)</code></pre>
+    <p>ตำแหน่งและชื่อไฟล์ข้างบนมาจากโค้ดอ้างอิง prompt ไม่ได้สั่งว่าต้องวางไฟล์ที่ไหน Cursor อาจเลือกต่างออกไปได้ สิ่งที่ต้องตรงคือข้อในส่วน "ผลลัพธ์ที่ต้องได้" ของ prompt</p>
     <ul>
       <li><strong><code>package.json</code></strong> — สัญญา: <code>devDependencies</code> ต้องมี <code>@faker-js/faker</code> ที่ resolve เป็น <code>10.6.0</code> เป๊ะ (ดูใน <code>package-lock.json</code>) และ <code>scripts</code> ต้องมี <code>"db:seed": "tsx prisma/seed.ts"</code></li>
-      <li><strong><code>prisma/seed.ts</code></strong> — สัญญา: <code>faker.seed(20260913)</code> ต้องถูกเรียกครั้งเดียวก่อนวนสร้างสินค้า, <code>CATEGORIES</code>/<code>COUNT_OVERRIDES</code>/<code>DEFAULT_COUNT</code> ต้องตรงกับที่บทนี้กำหนด, product id 1 ต้องเป็นค่าคงที่จาก <code>handAuthoredProductOne</code> ไม่ใช่ค่าที่สุ่ม, ลบ–เติมใหม่ต้องอยู่ใน <code>$transaction</code> เดียว / ต้องไม่ใช้ <code>upsert</code> ไม่วน <code>create</code> ทีละชิ้น ไม่ใช้ <code>any</code> และไม่ใช้ <code>!</code></li>
+      <li><strong><code>prisma/seed.ts</code></strong> — สัญญา: รันสองรอบได้ข้อมูลเหมือนกันทุกแถว, หมวดหมู่และจำนวนสินค้าต่อหมวดต้องตรงกับที่บทนี้กำหนด, product id 1 ต้องเป็นค่าคงที่ไม่ใช่ค่าที่สุ่ม, ลบ–เติมใหม่ต้องสำเร็จทั้งชุดหรือไม่เปลี่ยนเลย / ต้องไม่ใช้ <code>any</code>, <code>as</code> และ <code>!</code></li>
     </ul>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">pin faker แล้วให้ Cursor เขียน seed script</h2>
       <p>ติดตั้ง dependency ก่อนเปิดแชท เพราะ prompt ข้างล่างจะอ้างว่าติดตั้งไว้แล้ว</p>
       <div class="prompt-example"><code>npm i -D @faker-js/faker@10.6.0</code></div>
-      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent prompt นี้ยาวและเจาะจงตัวเลขทุกจุด เพราะความ deterministic ของทั้งบทขึ้นอยู่กับว่าทุกค่าคงที่และทุกลำดับการเรียก faker ตรงกับที่ระบุเป๊ะ ๆ</p>
+      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent prompt นี้ยาวเพราะต้องให้<em>ข้อมูล</em>ครบทุกค่า (หมวดหมู่ จำนวน สินค้า id 1) แต่ไม่ได้สั่งว่าโค้ดต้องเขียนอย่างไร — สิ่งที่ตรวจคือผลลัพธ์ที่ต้องได้ โดยเฉพาะการรันสองรอบแล้วได้ข้อมูลเหมือนเดิม</p>
+      <div class="note">
+        <p>ถ้า Cursor เรียก faker ในลำดับต่างจากโค้ดอ้างอิง ค่าที่<strong>สุ่ม</strong>ได้ของสินค้าชิ้นอื่น ๆ จะไม่ตรงกับตัวอย่างที่พิมพ์ไว้ในบทหลัง ๆ — เป็นเรื่องปกติ ให้เทียบกับข้อมูลในฐานข้อมูลของคุณเอง ค่าที่ต้องตรงเป๊ะมีแค่จำนวนแถวและสินค้า id 1</p>
+      </div>
       <div class="cursor-prompt"><code>เขียน seed script ที่สร้างแคตตาล็อกสินค้าด้วย faker แบบ deterministic ไม่ดึงจากที่ไหนอีกแล้ว
+@package.json
 
-บริบท: @prisma/schema.prisma @src/prisma/prisma.service.ts @package.json @docs/api-spec.md @.cursor/rules/project.mdc
-schema มี model Category, Product, Review แล้ว migrate และ generate แล้ว Prisma Client อยู่ที่ src/generated/prisma/client.ts
-@faker-js/faker เวอร์ชัน 10.6.0 ติดตั้งไว้แล้วเป็น devDependency (pin เป๊ะ ห้ามใช้เวอร์ชันอื่น)
-script นี้รันนอก NestJS ด้วย tsx จึงต้องสร้าง PrismaClient เองพร้อม adapter แบบเดียวกับ prisma.service.ts และต้อง import 'dotenv/config' บรรทัดแรก
-
-โครงสร้าง: สร้าง/แก้ไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
-- prisma/seed.ts (สร้างใหม่)
-- package.json (แก้ไข: เพิ่ม script "db:seed": "tsx prisma/seed.ts")
-
-ข้อกำหนดทางเทคนิค — ต้องตรงเป๊ะเพราะผลลัพธ์ต้อง deterministic:
-- ค่าคงที่ CATEGORIES เป็น array ของ [slug, name] 24 คู่เรียงลำดับตายตัว (beauty, fragrances, furniture, groceries, home-decoration, kitchen-accessories, laptops, mens-shirts, mens-shoes, mens-watches, mobile-accessories, motorcycle, skin-care, smartphones, sports-accessories, sunglasses, tablets, tops, vehicle, womens-bags, womens-dresses, womens-jewellery, womens-shoes, womens-watches)
-- COUNT_OVERRIDES = { beauty: 5, groceries: 27 } ส่วนหมวดอื่นใช้ DEFAULT_COUNT = 8 ชิ้น (รวม 208 ชิ้น)
-- ฟังก์ชัน buildProducts เรียก faker.seed(20260913) ครั้งเดียวก่อนวน loop ผ่าน CATEGORIES ตามลำดับ array แจก id ต่อเนื่องเริ่มจาก 1
-- สินค้า id 1 (ชิ้นแรกของหมวด beauty) ต้องเป็นค่าคงที่ที่เขียนด้วยมือ ไม่ใช่ค่าที่สุ่ม: title "Velvet Matte Lipstick", price 9.99, discountPercentage 10.48, rating 4.6, stock 42, brand "Lumina", sku "BEA-LUM-001", tags ["beauty","lipstick"], barcode "8901234567891", ขนาด width 3.2 height 9.5 depth 3.2 weight 2, warrantyInformation "No warranty", shippingInformation "Ships in 1-2 business days", availabilityStatus "In Stock", returnPolicy "30 days return policy", minimumOrderQuantity 1, พร้อมรีวิว 3 รายการที่เขียนด้วยมือเช่นกัน
-- สินค้าที่เหลือทุกชิ้นสุ่มด้วย faker: ชื่อไม่ซ้ำกันภายในหมวดเดียวกัน (หมวด groceries สุ่มจากคำศัพท์อาหาร ingredient/fruit/vegetable ส่วนหมวดอื่นสุ่มชื่อสินค้าทั่วไป), ส่วนลด 2 ใน 3 ของสินค้ามีค่า 1-25 อีก 1 ใน 3 เป็น null, ราคา 4-1999, rating 2.5-5, สต็อก 0-100, แบรนด์สุ่มจากชื่อบริษัท, sku 8 ตัวอักษรพิมพ์ใหญ่, ขนาด/น้ำหนักสุ่มในช่วงสมเหตุสมผล, warranty/shipping/availability/returnPolicy สุ่มจาก array ตัวเลือกที่กำหนดไว้ (ห้ามสุ่มข้อความอิสระ), รีวิว 3 รายการต่อชิ้นสุ่ม rating 1-5 และประโยคคอมเมนต์สั้น ๆ
-- ลบข้อมูลเดิมตามลำดับ review, product, category แล้วเติมใหม่ตามลำดับ category (createMany จาก CATEGORIES), product (createMany พร้อม resolve categoryId จาก slug ผ่าน Map ที่อ่าน Category กลับมาหลัง createMany), review (createMany จาก flatMap) ทั้งหมดอยู่ใน prisma.$transaction เดียว
-- ฟังก์ชันหา categoryId จาก slug ต้อง throw Error บอกชื่อ slug ถ้าไม่พบ ห้ามใช้ non-null assertion
-- จบด้วย console.log บอกจำนวน categories, products, reviews ที่ seed แล้วเรียกด้วย top-level await ใน try/finally ที่ finally เรียก prisma.$disconnect()
-- ห้ามใช้ upsert ห้ามวน loop สร้างทีละชิ้น ห้ามใช้ any และห้าม non-null assertion (!)
+ผลลัพธ์ที่ต้องได้:
+- package.json มี script db:seed ที่รัน seed script ด้วย tsx ได้เองโดยไม่ต้อง start แอป NestJS และพิมพ์บรรทัดสุดท้าย Seeded 24 categories, 208 products, 624 reviews
+- รัน npm run db:seed สองรอบติดกัน ได้บรรทัดสรุปเดียวกันและข้อมูลสินค้าเหมือนกันทุกแถว (ข้อมูลเก่าถูกแทนที่ ไม่ซ้อนเพิ่ม) — ค่าสุ่มทั้งหมดมาจาก faker 10.6.0 ที่ seed ด้วย 20260913
+- ถ้าการ seed ล้มกลางทาง ฐานข้อมูลต้องไม่เหลือข้อมูลครึ่ง ๆ กลาง ๆ (สำเร็จทั้งชุดหรือไม่เปลี่ยนเลย)
+- หมวดหมู่ 24 หมวด (slug → name) เรียงตามลำดับนี้: beauty, fragrances, furniture, groceries, home-decoration, kitchen-accessories, laptops, mens-shirts, mens-shoes, mens-watches, mobile-accessories, motorcycle, skin-care, smartphones, sports-accessories, sunglasses, tablets, tops, vehicle, womens-bags, womens-dresses, womens-jewellery, womens-shoes, womens-watches (name เป็น Title Case ของ slug เช่น "Home Decoration", "Men's Shirts", "Women's Jewellery")
+- SELECT count(*) FROM "Product" ได้ 208 และนับตามหมวดได้ groceries 27, beauty 5, หมวดอื่นหมวดละ 8
+- สินค้า id 1 (ชิ้นแรกของ beauty) เป็นค่าคงที่ ไม่สุ่ม: title "Velvet Matte Lipstick", price 9.99, discountPercentage 10.48, rating 4.6, stock 42, brand "Lumina", sku "BEA-LUM-001", tags ["beauty","lipstick"], barcode "8901234567891", width 3.2 height 9.5 depth 3.2 weight 2, warrantyInformation "No warranty", shippingInformation "Ships in 1-2 business days", availabilityStatus "In Stock", returnPolicy "30 days return policy", minimumOrderQuantity 1, และรีวิว 3 รายการที่เขียนด้วยมือเช่นกัน
+- SELECT id, title, price, "discountPercentage", brand FROM "Product" WHERE id = 1 ได้ 1 | Velvet Matte Lipstick | 9.99 | 10.48 | Lumina
+- สินค้าที่เหลือสุ่มด้วย faker: ชื่อไม่ซ้ำในหมวดเดียวกัน (groceries ใช้คำศัพท์อาหาร), ประมาณ 1 ใน 3 ไม่มีส่วนลด ที่เหลือส่วนลด 1-25, ราคา 4-1999, rating 2.5-5, สต็อก 0-100, แบรนด์จากชื่อบริษัท, sku 8 ตัวอักษรพิมพ์ใหญ่, รีวิวชิ้นละ 3 รายการ
+- warrantyInformation, shippingInformation, availabilityStatus, returnPolicy มาจากชุดตัวเลือกคงที่ (เช่น "No warranty", "1 year warranty" / "Ships overnight" / "In Stock", "Low Stock", "Out of Stock" / "30 days return policy") ไม่ใช่ข้อความอิสระ
+- ถ้าเจอ slug ที่ไม่มีในตาราง Category ต้อง throw error ที่บอกชื่อ slug
+- npx oxlint บนไฟล์ seed script ไม่มี output และไม่มี any / as / !
 
 ขอบเขต:
-- ห้ามติดตั้ง dependency ใหม่ (faker ติดตั้งไว้แล้ว)
-- ห้ามแก้ schema.prisma, prisma7.config.ts หรือไฟล์ใน src/
+- ห้ามติดตั้ง dependency ใหม่ (faker 10.6.0 ติดตั้งไว้แล้ว)
 - ห้ามรัน script ให้ผมรันเอง
 - ยังไม่ต้องสร้าง controller หรือ endpoint ของสินค้า</code></div>
       <p>ตรวจโค้ดตามหัวข้อถัดไปให้จบก่อน แล้วรันเอง <strong>สองครั้ง</strong> เพื่อพิสูจน์ว่าไม่ใช่แค่รันซ้ำได้ไม่พัง แต่ deterministic จริง — ได้บรรทัดสรุปและแถวในตารางเหมือนกันเป๊ะทั้งสองครั้ง</p>
@@ -373,17 +370,17 @@ npm run db:seed</code></div>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li><code>CATEGORIES</code> มี 24 คู่ เรียงลำดับตรงกับที่ระบุในบทนี้เป๊ะ (สลับลำดับแม้สองหมวดก็ทำให้ค่าที่สุ่มได้เปลี่ยนไปทั้งหมดตามหลังจุดนั้น)</li>
-        <li><code>faker.seed(20260913)</code> ถูกเรียกครั้งเดียวใน <code>buildProducts</code> ก่อนวน loop — ไม่มีการเรียก <code>faker.seed()</code> ซ้ำที่อื่น</li>
-        <li>product id 1 เป็นค่าคงที่ ไม่มี <code>faker.</code> ปนอยู่ในฟังก์ชันที่สร้างมันเลยสักบรรทัด</li>
-        <li>มี <code>createMany</code> สามครั้งพอดี (<code>category</code>, <code>product</code>, <code>review</code>) ไม่มี <code>upsert</code> และไม่มี <code>for</code>/<code>map</code> ที่เรียก <code>create</code> ทีละชิ้น</li>
-        <li>ลำดับ <code>deleteMany</code> คือ <code>review</code> → <code>product</code> → <code>category</code> และทุกคำสั่งข้างในเรียกผ่าน <code>tx</code> ไม่ใช่ <code>prisma</code></li>
-        <li>warranty/shipping/availability/returnPolicy สุ่มจาก <code>faker.helpers.arrayElement</code> บน array ตัวเลือกคงที่ ไม่ใช่ข้อความอิสระจาก faker</li>
-        <li>ไม่มี <code>any</code> และไม่มี non-null assertion (<code>!</code>) — หา <code>categoryId</code> จาก slug ด้วยฟังก์ชันที่ <code>throw Error</code> เมื่อไม่พบ</li>
-        <li><code>package.json</code> มี <code>@faker-js/faker</code> ใน <code>devDependencies</code> และ <code>"db:seed": "tsx prisma/seed.ts"</code> ใน <code>scripts</code></li>
+        <li>หมวดหมู่ 24 หมวดเรียงตามลำดับที่ระบุ และจำนวนสินค้าต่อหมวดตรงตาม prompt</li>
+        <li>faker ถูก seed ด้วยค่าคงที่ก่อนสุ่มทุกค่า — รัน seed สองรอบแล้วข้อมูลสินค้าเหมือนกันทุกแถว</li>
+        <li>product id 1 เป็นค่าคงที่ ไม่มีค่าไหนของมันมาจาก faker</li>
+        <li>ลบและเติมข้อมูลใหม่อยู่ใน transaction เดียว — ล้มกลางทางแล้วฐานข้อมูลไม่เหลือข้อมูลครึ่ง ๆ กลาง ๆ</li>
+        <li>warranty/shipping/availability/returnPolicy มาจากชุดตัวเลือกคงที่ ไม่ใช่ข้อความอิสระจาก faker</li>
+        <li>ไม่มี <code>any</code>, <code>as</code> และ non-null assertion (<code>!</code>) — slug ที่หาไม่เจอต้อง throw error ที่บอกชื่อ slug</li>
+        <li><code>package.json</code> มี <code>@faker-js/faker</code> ใน <code>devDependencies</code> และ script <code>db:seed</code> ที่รัน seed script ด้วย <code>tsx</code></li>
+        <li><code>git status</code> ไม่มีไฟล์ที่ไม่เกี่ยวกับ seed ถูกแก้ (เช่น <code>schema.prisma</code> หรือไฟล์ใน <code>src/</code>)</li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> ปล่อยให้สินค้า id 1 สุ่มไปด้วยแทนที่จะเขียนด้วยมือ (ได้ผลรันแต่ค่าจะไม่ตรงกับที่บทถัดไปพิมพ์ไว้เลย) หรือสุ่มข้อความอิสระให้ <code>warrantyInformation</code>/<code>returnPolicy</code> แทนการสุ่มจาก array ตัวเลือกที่กำหนด (ทำให้ค่าไม่อยู่ในเซตที่คาดไว้)</p>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด — ต่อจากส่วนที่แสดงไว้ในหัวข้อด้านบนแล้ว):</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้ (ต่อจากส่วนที่แสดงไว้ในหัวข้อด้านบนแล้ว):</p>
       <pre><code>// prisma/seed.ts (ต่อจาก CATEGORIES, COUNT_OVERRIDES ด้านบน)
 import 'dotenv/config';
 import { faker } from '@faker-js/faker';
@@ -442,7 +439,7 @@ Seeded 24 categories, 208 products, 624 reviews</code></pre>
   1 | Velvet Matte Lipstick |  9.99 |              10.48 | Lumina
 (1 row)</code></pre>
       <ul>
-        <li><code>npm run lint</code> ผ่าน แต่ต้องรัน <code>npx oxlint prisma/seed.ts</code> เพิ่มด้วย เพราะ script <code>lint</code> ของ scaffold ครอบแค่ <code>src/</code> กับ <code>test/</code> (ไม่มี output = ไม่มีปัญหา)</li>
+        <li><code>npm run lint</code> ผ่าน แต่ต้องรัน <code>npx oxlint</code> บนไฟล์ seed ของคุณเพิ่มด้วย (โค้ดอ้างอิงคือ <code>npx oxlint prisma/seed.ts</code>) เพราะ script <code>lint</code> ของ scaffold ครอบแค่ <code>src/</code> กับ <code>test/</code> (ไม่มี output = ไม่มีปัญหา)</li>
         <li>commit ด้วย <code>git add -A &amp;&amp; git commit -m "feat: faker seed generator (208 products, 24 categories)"</code></li>
       </ul>
       <div class="note">

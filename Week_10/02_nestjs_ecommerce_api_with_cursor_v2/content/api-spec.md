@@ -1,7 +1,7 @@
 # API Spec — derived from the React storefront's own contract
 
 This project has no reference API to copy. The React e-commerce app
-(`workshop/temp/react-ecommerce-app`) was prototyped against a public mock
+(`react-ecommerce-app`) was prototyped against a public mock
 API we don't control and won't ship with. This document is what we get by
 reading the app's own source code: its TypeScript types, its API client,
 its mock fixtures. Every clause below cites the client file that requires it.

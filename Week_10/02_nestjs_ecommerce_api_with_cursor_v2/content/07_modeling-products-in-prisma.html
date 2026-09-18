@@ -69,37 +69,23 @@
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ให้ Cursor เขียน schema จาก docs/api-spec.md</h2>
-      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent สังเกตว่า prompt นี้แนบ <code>@docs/api-spec.md</code> ไปด้วย — นั่นคือหัวใจ: เราไม่ได้ให้ AI เดารูปทรงของสินค้า แต่ให้มันอ่าน interface <code>Product</code> และ <code>Category</code> ที่เราออกแบบเองจากโค้ดฝั่ง client</p>
+      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent สังเกตว่า prompt นี้แนบแค่ <code>@prisma/schema.prisma</code> ซึ่งเป็นไฟล์เดิมที่ต้องถูกแก้ แต่ไม่ต้องแนบ <code>@docs/api-spec.md</code> — บรรทัดเป้าหมายชี้ไปที่ไฟล์นั้นตรง ๆ และ <code>.cursor/rules</code> บอก Cursor ไว้แล้วว่ามันคือสัญญา นั่นคือหัวใจ: เราไม่ได้ให้ AI เดารูปทรงของสินค้า แต่ให้มันอ่าน interface <code>Product</code> และ <code>Category</code> ที่เราออกแบบเองจากโค้ดฝั่ง client</p>
       <div class="cursor-prompt"><code>เพิ่ม Prisma model ของ Category, Product และ Review ให้ตรงกับ interface ใน docs/api-spec.md
+@prisma/schema.prisma
 
-บริบท: @prisma/schema.prisma @docs/api-spec.md @.cursor/rules/project.mdc
-schema.prisma ตอนนี้มีแค่ generator กับ datasource ห้ามแก้สองบล็อกนั้น
-docs/api-spec.md มี interface Product 22 field ทุก field ของ Product ต้องตรงกับ interface นี้ (discountPercentage เป็น optional ตามที่ client ประกาศไว้ ส่วน brand ต้องมีเสมอ)
-docs/api-spec.md มี interface Category { slug, name, url } — url ไม่ต้องเก็บเพราะคำนวณจาก slug ได้
-สินค้าทุกชิ้นของเรามี field brand เสมอ แต่บางชิ้นไม่มี discountPercentage
-ฐานข้อมูลคือ PostgreSQL 17
-
-โครงสร้าง: แก้ไฟล์เดียว
-- prisma/schema.prisma (แก้ไข: เพิ่มสาม model ต่อท้าย)
-
-ข้อกำหนดทางเทคนิค:
-- model Category: id Int @id @default(autoincrement()), slug String @unique, name String, products Product[]
-- model Product: id Int @id (ไม่ใส่ autoincrement เพราะเราจะกำหนด id เองตอน seed ในบทที่ 9 เพื่อให้ตัวอย่างที่อ้าง id คงที่ทุกครั้งที่ reseed)
-  field ตามลำดับนี้: title String, description String, price Float, discountPercentage Float?, rating Float, stock Int,
-  tags String[], brand String, sku String, weight Float, width Float, height Float, depth Float,
-  warrantyInformation String, shippingInformation String, availabilityStatus String, returnPolicy String,
-  minimumOrderQuantity Int, barcode String, qrCode String, images String[], thumbnail String,
-  createdAt DateTime, updatedAt DateTime (ไม่ใส่ @default หรือ @updatedAt เพราะ seed script กำหนดค่าเหล่านี้เองเช่นเดียวกับ id)
-  categoryId Int, category Category @relation(fields: [categoryId], references: [id]), reviews Review[]
-  และ @@index([categoryId])
-- model Review: id Int @id @default(autoincrement()), rating Int, comment String, date DateTime, reviewerName String, reviewerEmail String,
-  productId Int, product Product @relation(fields: [productId], references: [id], onDelete: Cascade) และ @@index([productId])
-- ใช้ Float สำหรับทุกค่าที่เป็นทศนิยม ห้ามใช้ Decimal (Prisma serialize Decimal เป็น string ซึ่งผิด contract)
-- dimensions และ meta ใน docs/api-spec.md เป็น object ซ้อน ให้แบนเป็นคอลัมน์ตามที่ระบุด้านบน ห้ามใช้ Json
-- ห้ามสร้าง model อื่น ห้ามใส่ @@map หรือ @map
+ผลลัพธ์ที่ต้องได้:
+- npx prisma validate ได้ The schema at prisma/schema.prisma is valid 🚀 และ npx prisma format ไม่เปลี่ยนอะไรเพิ่ม
+- มีสาม model: Category, Product, Review — ไม่มี model อื่น
+- ทุก field ของ interface Product (ยกเว้น object ซ้อน) มีคอลัมน์ชื่อเดียวกัน dimensions และ meta แบนเป็นคอลัมน์ width, height, depth, barcode, qrCode, createdAt, updatedAt (ชื่อตาม key ใน interface เพราะบทที่ 11 จะประกอบกลับ) ไม่ใช้ Json
+- ค่าทศนิยมทุกตัวออกมาเป็น number ใน JSON (ห้าม Decimal เพราะ Prisma serialize เป็น string)
+- discountPercentage เป็นคอลัมน์เดียวที่ nullable ส่วน brand บังคับมีค่า
+- id ของ Product ไม่ถูกฐานข้อมูลแจกให้เอง และ createdAt/updatedAt ไม่มีค่า default หรืออัปเดตเอง (seed script ในบทที่ 9 กำหนดค่าเหล่านี้เอง)
+- Category.slug ไม่ซ้ำกัน และไม่เก็บ url (url คำนวณจาก slug)
+- ลบสินค้าแล้วรีวิวของมันหายตาม แต่ลบหมวดหมู่ที่ยังมีสินค้าไม่ได้
+- คอลัมน์ที่ใช้ดึงสินค้าตามหมวดและดึงรีวิวตามสินค้ามี index
+- บล็อก generator และ datasource ไม่เปลี่ยนเลย
 
 ขอบเขต:
-- ห้ามแก้ไฟล์อื่น
 - ห้ามรัน prisma migrate, db push หรือ generate ให้ผมรันเอง
 - ยังไม่ต้องเขียน seed หรือ service</code></div>
       <p>เมื่อ Agent แก้ไฟล์เสร็จ ตรวจตามหัวข้อถัดไป แล้วรันสองคำสั่งนี้เอง (ยังไม่ migrate — บทที่ 8 ค่อยทำ)</p>
@@ -109,17 +95,17 @@ npx prisma format</code></div>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li><code>Product.id</code> เป็น <code>Int @id</code> เฉย ๆ — <strong>ไม่มี</strong> <code>@default(autoincrement())</code></li>
-        <li><code>discountPercentage Float?</code> เป็น field เดียวในทั้งสาม model ที่มีเครื่องหมาย <code>?</code> (ค้นหา <code>?</code> ในไฟล์แล้วต้องเจอที่เดียว) ส่วน <code>brand</code> ต้อง<strong>ไม่มี</strong> <code>?</code></li>
-        <li><code>updatedAt DateTime</code> ไม่มี <code>@updatedAt</code> และ <code>createdAt</code> ไม่มี <code>@default(now())</code> — ค่าทั้งคู่ต้องถูกกำหนดโดย seed script เอง ไม่ใช่ Prisma</li>
-        <li><code>Review.product</code> มี <code>onDelete: Cascade</code> ส่วน <code>Product.category</code> ไม่มี (ปล่อยเป็น restrict ตามค่าปริยาย — ห้ามลบหมวดหมู่ที่ยังมีสินค้าอยู่)</li>
-        <li>มี <code>@@index([categoryId])</code> ใน <code>Product</code> และ <code>@@index([productId])</code> ใน <code>Review</code> ครบทั้งสองตัว</li>
-        <li>ไม่มีคำว่า <code>Decimal</code>, <code>Json</code>, <code>@map</code> หรือ <code>@@map</code> ในไฟล์เลย</li>
-        <li>บล็อก <code>generator client</code> และ <code>datasource db</code> ยังเหมือนเดิมทุกตัวอักษร และไม่มี model ที่เราไม่ได้สั่ง (เช่น <code>User</code>, <code>Order</code>) แถมมา</li>
+        <li>id ของ <code>Product</code> ไม่ถูกฐานข้อมูลแจกเอง — seed script ในบทที่ 9 ต้องกำหนดได้</li>
+        <li><code>discountPercentage</code> เป็น field เดียวในทั้งสาม model ที่ nullable ส่วน <code>brand</code> บังคับมีค่า</li>
+        <li><code>createdAt</code>/<code>updatedAt</code> ไม่มีค่า default และไม่อัปเดตตัวเอง — ค่าทั้งคู่ต้องมาจาก seed script</li>
+        <li>ลบสินค้าแล้วรีวิวหายตาม แต่ลบหมวดหมู่ที่ยังมีสินค้าอยู่ไม่ได้</li>
+        <li>คอลัมน์ที่ใช้ดึงสินค้าตามหมวดและดึงรีวิวตามสินค้ามี index</li>
+        <li>ไม่มีชนิด <code>Decimal</code> หรือ <code>Json</code> ในไฟล์เลย</li>
+        <li>บล็อก <code>generator client</code> และ <code>datasource db</code> ยังเหมือนเดิม ไม่มี model แถมมา (เช่น <code>User</code>, <code>Order</code>) และ <code>git status</code> เห็นแค่ <code>prisma/schema.prisma</code></li>
         <li>ทุก field ของ <code>Product</code> มีอยู่จริงใน interface <code>Product</code> ของ <code>docs/api-spec.md</code> — ไล่เทียบทีละบรรทัด ไม่ใช่ไล่ด้วยความรู้สึก</li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> ใส่ <code>@updatedAt</code> ให้ <code>updatedAt</code> เพราะเป็นแบบแผนที่พบเจอทั่วไป (ผลคือค่าที่ seed script กำหนดไว้จะถูกเขียนทับด้วยเวลาปัจจุบันทุกครั้งที่แถวถูก update) หรือเลือก <code>Decimal</code> ให้ <code>price</code> ตามตำราบัญชี ซึ่งทำให้ราคาถูกส่งออกไปเป็น string และผิด contract ทันที</p>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้:</p>
       <pre><code>// prisma/schema.prisma
 generator client {
   provider = "prisma-client"

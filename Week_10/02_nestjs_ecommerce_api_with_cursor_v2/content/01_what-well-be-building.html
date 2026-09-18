@@ -48,7 +48,7 @@
 │   ├── schema.prisma                Category, Product, Review, Order, OrderItem
 │   ├── migrations/                  &lt;timestamp&gt;_init, &lt;timestamp&gt;_add_orders
 │   └── seed.ts                      สร้างสินค้า 208 ชิ้นด้วย faker     (บทที่ 9)
-├── scripts/contract-check.ts        ตรวจ response ของเราเองด้วย zod    (บทที่ 15)
+├── scripts/contract-check.ts        ตรวจ response ของเราเองด้วย zod    (บทที่ 12, ด้วย zod ในบทที่ 15)
 ├── nest-cli.json                    เปิด Swagger CLI plugin            (บทที่ 21)
 └── src/
     ├── main.ts                      ValidationPipe, CORS, Swagger
@@ -78,7 +78,7 @@
     <div class="warning">
       <p><strong>AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้ — ถ้าอธิบายไม่ได้ แปลว่ายังไม่ผ่านบทนี้</strong></p>
     </div>
-    <p>ทุกบทที่ใช้ Cursor เดินตามลำดับเดียวกันห้าขั้น: <strong>แนวคิด</strong> (ทำความเข้าใจว่า endpoint นี้ต้องทำอะไร และข้อเท็จจริงจาก <code>docs/api-spec.md</code> ข้อไหนบังคับมันอยู่) → <strong>เป้าหมายของบทนี้</strong> (ไฟล์ที่จะเกิดขึ้นและสัญญาของแต่ละไฟล์) → <strong>🤖 prompt</strong> (คำสั่งห้าส่วนที่ส่งให้ Cursor Agent) → <strong>✅ review</strong> (ตรวจโค้ดที่ AI สร้างทีละข้อ เทียบกับโค้ดอ้างอิงของบทนั้น) → <strong>ตรวจว่าใช้งานได้จริง</strong> (ยิง curl แล้วเทียบกับสัญญาใน <code>docs/api-spec.md</code>) ลำดับนี้ไม่สลับ เพราะ prompt ที่ดีเขียนได้เฉพาะเมื่อคุณรู้คำตอบคร่าว ๆ อยู่ก่อนแล้ว</p>
+    <p>ทุกบทที่ใช้ Cursor เดินตามลำดับเดียวกันห้าขั้น: <strong>แนวคิด</strong> (ทำความเข้าใจว่า endpoint นี้ต้องทำอะไร และข้อเท็จจริงจาก <code>docs/api-spec.md</code> ข้อไหนบังคับมันอยู่) → <strong>เป้าหมายของบทนี้</strong> (ไฟล์ที่จะเกิดขึ้นและสัญญาของแต่ละไฟล์) → <strong>🤖 prompt</strong> (คำสั่งสามส่วนที่ส่งให้ Cursor Agent) → <strong>✅ review</strong> (ตรวจโค้ดที่ AI สร้างทีละข้อ เทียบกับโค้ดอ้างอิงของบทนั้น) → <strong>ตรวจว่าใช้งานได้จริง</strong> (ยิง curl แล้วเทียบกับสัญญาใน <code>docs/api-spec.md</code>) ลำดับนี้ไม่สลับ เพราะ prompt ที่ดีเขียนได้เฉพาะเมื่อคุณรู้คำตอบคร่าว ๆ อยู่ก่อนแล้ว</p>
     <p>มีห้าบทที่เรา <strong>ไม่</strong> ใช้ Cursor แต่พิมพ์ด้วยมือ (บทที่ 2, 3, 4, 8 และ 23) ด้วยเหตุผลสามข้อ</p>
     <ul>
       <li>บทที่ 3 คือ <strong>การออกแบบที่ AI ทำแทนไม่ได้</strong> — สัญญาต้องมาจากการอ่านโค้ดฝั่ง client ของคุณเองแล้วตัดสินใจเอง ถ้าให้ AI ออกแบบสัญญาให้ มันจะเดารูปทรงที่ดูสมเหตุสมผลแต่ไม่ตรงกับที่ client ต้องการจริง</li>

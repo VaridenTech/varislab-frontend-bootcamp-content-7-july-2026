@@ -42,46 +42,40 @@ npm ls @nestjs/swagger</code></pre>
 ├── nest-cli.json      (แก้ไข)
 └── src/
     └── main.ts        (แก้ไข)</code></pre>
+    <p>ไฟล์ด้านล่างมาจากโค้ดอ้างอิงของคอร์ส — Cursor อาจแก้ไฟล์ต่างออกไปได้ ขอแค่ไม่แตะไฟล์ที่ไม่เกี่ยวกับเป้าหมายและผ่านผลลัพธ์ที่ต้องได้ใน prompt</p>
     <ul>
-      <li><strong><code>src/main.ts</code></strong> — สัญญา: ต้องสร้าง config ด้วย <code>DocumentBuilder</code> แล้วเรียก <code>SwaggerModule.setup('api', ...)</code> หลัง <code>enableCors</code> และก่อน <code>app.listen</code> / ต้องไม่ย้ายหรือแก้ <code>ValidationPipe</code> และ <code>enableCors</code> ที่มีอยู่</li>
-      <li><strong><code>nest-cli.json</code></strong> — สัญญา: ต้องเพิ่ม <code>"plugins": ["@nestjs/swagger/plugin"]</code> ไว้<strong>ใน</strong> <code>compilerOptions</code> / ต้องไม่ลบ <code>deleteOutDir</code>, <code>sourceRoot</code>, <code>collection</code> หรือ <code>$schema</code> ที่มีอยู่</li>
+      <li><strong><code>src/main.ts</code></strong> — สัญญา: ต้องเสิร์ฟ Swagger UI ที่ <code>/api</code> และ JSON ที่ <code>/api-json</code> / validation และ CORS ที่มีอยู่ต้องทำงานเหมือนเดิม</li>
+      <li><strong><code>nest-cli.json</code></strong> — สัญญา: CLI plugin ของ <code>@nestjs/swagger</code> ต้องทำงานจริง (DTO ขึ้นใน <code>components.schemas</code>) / ค่าเดิมในไฟล์ต้องไม่หาย</li>
     </ul>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">สั่ง Cursor ตั้งค่า Swagger และเปิด plugin</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: install swagger"</code>) จากนั้นส่ง prompt นี้ — <a href="01_what-well-be-building.html">กติกาเดิม</a>: AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้</p>
       <div class="cursor-prompt"><code>ตั้งค่า Swagger UI ที่ /api และเปิดใช้ CLI plugin ของ @nestjs/swagger
+@src/main.ts @nest-cli.json
 
-บริบท: @src/main.ts @nest-cli.json @package.json @.cursor/rules/project.mdc
-ติดตั้ง @nestjs/swagger แล้ว
-main.ts มี ValidationPipe, enableCors และ app.listen อยู่แล้ว
-DTO ทุกไฟล์ในโปรเจกต์ลงท้าย .dto.ts ซึ่งตรงกับค่าเริ่มต้นของ plugin
-
-โครงสร้าง: แก้ไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
-- src/main.ts (แก้ไข)
-- nest-cli.json (แก้ไข)
-
-ข้อกำหนดทางเทคนิค:
-- main.ts: import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-  หลัง enableCors และก่อน app.listen สร้าง config ด้วย new DocumentBuilder().setTitle('E-commerce API').setDescription("E-commerce API designed from the React storefront's own contract (see docs/api-spec.md)").setVersion('1.0').build()
-  แล้ว SwaggerModule.setup('api', app, SwaggerModule.createDocument(app, config))
-- nest-cli.json: ใน compilerOptions เพิ่ม "plugins": ["@nestjs/swagger/plugin"] คงค่าอื่นไว้ทั้งหมด
+ผลลัพธ์ที่ต้องได้:
+- หลัง restart npm run start:dev เปิด http://localhost:3000/api ได้หน้า Swagger UI status 200
+- http://localhost:3000/api-json คืน OpenAPI document ที่ info.title เป็น E-commerce API, info.version เป็น 1.0 และ description อ้างถึง docs/api-spec.md
+- paths มีครบ /products/categories, /products/category/{slug}, /products, /products/{id}, /carts/add
+- components.schemas มี AddCartDto, CartProductDto และ AddressDto ทั้งที่ยังไม่มี decorator ของ swagger ใน DTO (แปลว่า CLI plugin ของ @nestjs/swagger ทำงานจริง)
+- CORS และ validation เดิมยังทำงานเหมือนเดิม
 
 ขอบเขต:
-- ห้ามติดตั้ง dependency ใหม่
-- ห้ามแก้ไฟล์อื่น ห้ามใส่ decorator ของ swagger ใน controller หรือ DTO ในรอบนี้</code></div>
+- ห้ามติดตั้ง dependency ใหม่ (@nestjs/swagger ติดตั้งแล้ว)
+- ห้ามใส่ decorator ของ swagger ใน controller หรือ DTO ในรอบนี้</code></div>
     </section>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li><code>SwaggerModule.setup('api', app, ...)</code> อยู่หลัง <code>app.enableCors(...)</code> และก่อน <code>await app.listen(...)</code></li>
-        <li>chain ของ <code>DocumentBuilder</code> ครบสี่ขั้น: <code>setTitle</code>, <code>setDescription</code>, <code>setVersion</code>, <code>build</code> — ถ้าลืม <code>.build()</code> จะได้ builder แทน config</li>
-        <li>ใน <code>nest-cli.json</code> คีย์ <code>plugins</code> อยู่<strong>ใน</strong> <code>compilerOptions</code> คู่กับ <code>deleteOutDir</code> ไม่ได้อยู่ระดับบนสุดของไฟล์</li>
+        <li>หลัง restart <code>/api</code> ตอบ <code>200</code> และ <code>/api-json</code> มี title, version และ description ตามที่ prompt ระบุ</li>
+        <li><code>paths</code> ใน <code>/api-json</code> มีครบทุก endpoint และ <code>components.schemas</code> มี <code>AddCartDto</code>, <code>CartProductDto</code>, <code>AddressDto</code> — ถ้า schema ว่าง แปลว่า plugin ไม่ทำงาน</li>
+        <li>ยิง curl ด้วย <code>Origin: http://localhost:5173</code> ยังได้ header CORS และ <code>GET /products?limit=0</code> ยังได้ <code>400</code></li>
         <li>ยังไม่มี decorator ของ <code>@nestjs/swagger</code> ในไฟล์ controller หรือ DTO เลย (บทหน้าเป็นรอบของมัน)</li>
-        <li><code>git status</code> แสดงเฉพาะ <code>src/main.ts</code>, <code>nest-cli.json</code> และ <code>package.json</code> / <code>package-lock.json</code> ที่เปลี่ยนจากขั้นติดตั้ง</li>
+        <li><code>git status</code> ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ (นอกจาก <code>package.json</code> / <code>package-lock.json</code> ที่เปลี่ยนจากขั้นติดตั้ง) และไม่มี decorator ของ swagger ใน controller หรือ DTO</li>
       </ul>
-      <p><strong>AI มักพลาดตรงนี้:</strong> ใส่ <code>"plugins"</code> ไว้ระดับบนสุดของ <code>nest-cli.json</code> (ข้าง ๆ <code>sourceRoot</code>) แทนที่จะอยู่ใน <code>compilerOptions</code> ซึ่ง Nest CLI จะไม่ร้อง error อะไรเลย — plugin แค่ไม่ทำงานเงียบ ๆ แล้วคุณจะไปเจอผลตอนอ่าน <code>/api-json</code> ว่า schema ของ DTO ว่างเปล่า อีกจุดคือ AI ชอบเพิ่ม <code>.addTag()</code> หรือ <code>.addBearerAuth()</code> ที่เราไม่ได้สั่ง ให้ลบออกให้เหลือเท่าที่ prompt ระบุ</p>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
+      <p><strong>AI มักพลาดตรงนี้:</strong> ใส่ <code>"plugins"</code> ไว้ระดับบนสุดของ <code>nest-cli.json</code> (ข้าง ๆ <code>sourceRoot</code>) แทนที่จะอยู่ใน <code>compilerOptions</code> ซึ่ง Nest CLI จะไม่ร้อง error อะไรเลย — plugin แค่ไม่ทำงานเงียบ ๆ แล้วคุณจะไปเจอผลตอนอ่าน <code>/api-json</code> ว่า schema ของ DTO ว่างเปล่า อีกจุดคือ AI ชอบเพิ่ม <code>.addTag()</code> หรือ <code>.addBearerAuth()</code> ที่เราไม่ได้ขอ ไม่ผิดผลลัพธ์ แต่เป็นของแถมที่ควรถามตัวเองว่าต้องการจริงไหม</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้:</p>
       <pre><code>/* src/main.ts */
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';

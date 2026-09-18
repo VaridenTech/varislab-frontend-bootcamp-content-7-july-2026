@@ -65,68 +65,44 @@
 ├── dto/
 │   └── product-response.dto.ts       (สร้างใหม่)
 └── product.mapper.ts                 (สร้างใหม่)</code></pre>
+    <p>โครงไฟล์ด้านบนคือของโค้ดอ้างอิง — Cursor อาจแบ่งหรือตั้งชื่อต่างไปได้ ขอแค่ได้ผลลัพธ์นี้</p>
     <ul>
-      <li><strong><code>src/products/dto/product-response.dto.ts</code></strong> — สัญญา: ต้องมีหกคลาสตามลำดับ (<code>ProductDimensionsDto</code>, <code>ProductReviewDto</code>, <code>ProductMetaDto</code>, <code>ProductResponseDto</code>, <code>CategoryResponseDto</code>, <code>ProductListResponseDto</code>) และ <code>ProductResponseDto</code> ต้องมี 22 field เรียงตาม docs/api-spec.md / ต้องไม่มี decorator ไม่มี method และมี <code>?</code> ได้ที่ <code>discountPercentage</code> ที่เดียว</li>
-      <li><strong><code>src/products/product.mapper.ts</code></strong> — สัญญา: ต้อง export <code>ProductWithRelations</code> และ <code>toProductResponse</code> ที่คืน <code>ProductResponseDto</code> โดยเรียงคีย์ตาม contract / ต้องไม่ใช้ <code>any</code> ไม่ใช้ <code>as</code> และต้องไม่ส่ง <code>id</code>/<code>productId</code> ของ review ออกไป</li>
+      <li><strong>response DTO</strong> — class ของ Product ที่มี 22 field เรียงตาม docs/api-spec.md, มี <code>?</code> ได้ที่ <code>discountPercentage</code> ที่เดียว พร้อม class ของ Category และซองรายการ <code>{ products, total, skip, limit }</code></li>
+      <li><strong>mapper</strong> — ฟังก์ชันบริสุทธิ์ที่รับแถวสินค้าพร้อม <code>category</code> และ <code>reviews</code> แล้วคืนรูปทรง Product ตามสัญญา / ไม่มี <code>any</code> ไม่มี <code>as</code> และไม่ส่ง <code>id</code>/<code>productId</code> ของ review ออกไป</li>
     </ul>
-    <p>บทนี้ไม่แตะ <code>products.service.ts</code> เลย — ยังไม่มี endpoint ไหนเรียก mapper จนถึงบทถัดไป</p>
+    <p>บทนี้ยังไม่แตะ service เลย — ยังไม่มี endpoint ไหนเรียก mapper จนถึงบทถัดไป</p>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">สั่ง Cursor สร้าง DTO และ mapper แล้วตรวจคีย์ให้ครบ 22 ตัว</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before product mapper"</code>) เปิด <code>docs/api-spec.md</code> ไว้ข้าง ๆ ด้วย เพราะรอบนี้เราจะนับคีย์เทียบกันจริง ๆ</p>
       <div class="cursor-prompt"><code>สร้าง response DTO และ mapper ที่แปลงแถวสินค้าจาก Prisma เป็นรูปทรง Product ตาม docs/api-spec.md
 
-บริบท: @prisma/schema.prisma @src/products/products.service.ts @docs/api-spec.md @.cursor/rules/project.mdc
-docs/api-spec.md section Product คือรูปทรงเป้าหมาย: 22 key เรียงตามนี้
-  id, title, description, category, price, discountPercentage, rating, stock, tags, brand, sku, weight,
-  dimensions { width, height, depth }, warrantyInformation, shippingInformation, availabilityStatus,
-  reviews [{ rating, comment, date, reviewerName, reviewerEmail }], returnPolicy, minimumOrderQuantity,
-  meta { createdAt, updatedAt, barcode, qrCode }, images, thumbnail
-ในฐานข้อมูล category เป็น relation (ต้องตอบเป็น slug string) ส่วน dimensions และ meta ถูกแบนเป็นคอลัมน์ width/height/depth และ barcode/qrCode/createdAt/updatedAt
-date ทุกตัวใน docs/api-spec.md เป็น ISO string เช่น "2025-04-30T09:41:02.053Z"
-สินค้าที่ discountPercentage เป็น null ใน DB ต้องไม่มี key discountPercentage ใน response (docs/api-spec.md กำหนด discountPercentage?: number ไม่ใช่ number | null)
-Prisma Client อยู่ที่ src/generated/prisma/client.ts และ export type ของ model ชื่อ Product, Category, Review
-
-โครงสร้าง: สร้างไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
-- src/products/dto/product-response.dto.ts (สร้างใหม่)
-- src/products/product.mapper.ts (สร้างใหม่)
-
-ข้อกำหนดทางเทคนิค:
-- product-response.dto.ts: export class หกตัวตามลำดับ ไม่มี decorator ไม่มี method มีแต่ field ที่ระบุ type
-  ProductDimensionsDto { width: number; height: number; depth: number }
-  ProductReviewDto { rating: number; comment: string; date: string; reviewerName: string; reviewerEmail: string }
-  ProductMetaDto { createdAt: string; updatedAt: string; barcode: string; qrCode: string }
-  ProductResponseDto ที่มี field ครบ 22 ตัวตามลำดับด้านบน โดย category: string, brand: string (required เสมอ), discountPercentage?: number (optional ตัวเดียว), dimensions: ProductDimensionsDto, reviews: ProductReviewDto[], meta: ProductMetaDto, tags และ images เป็น string[]
-  CategoryResponseDto { slug: string; name: string; url: string }
-  ProductListResponseDto { products: ProductResponseDto[]; total: number; skip: number; limit: number }
-- product.mapper.ts: import type { Category, Product, Review } from '../generated/prisma/client.js'
-  export type ProductWithRelations = Product &amp; { category: Category; reviews: Review[] }
-  export function toProductResponse(product: ProductWithRelations): ProductResponseDto
-  สร้าง object literal เรียง key ตามลำดับ contract, category เป็น product.category.slug,
-  discountPercentage ใส่เฉพาะเมื่อไม่เป็น null ด้วย spread แบบมีเงื่อนไข ...(product.discountPercentage !== null ? { discountPercentage: product.discountPercentage } : {})
-  date, createdAt, updatedAt แปลงด้วย .toISOString()
-  reviews map ทีละตัวเลือกเฉพาะห้า field ของ contract (ห้ามส่ง id หรือ productId ออกไป)
-- ห้ามใช้ any ห้ามใช้ as
+ผลลัพธ์ที่ต้องได้:
+- npm run build ได้ exit 0 และ npm run lint ไม่พิมพ์อะไรออกมา
+- มี response DTO เป็น class (ไม่ใช่ interface — บทที่ 21 Swagger plugin อ่าน field ของ class) ของ Product ที่มี field ครบ 22 ตัวเรียงตาม section Product ใน docs/api-spec.md โดย discountPercentage เป็น field optional ตัวเดียว และไม่มี type null ในไฟล์ DTO
+- มี DTO class ของ Category { slug, name, url } และของซองรายการ { products, total, skip, limit } ด้วย
+- มีฟังก์ชันแปลงแถวเป็นรูปทรง Product ที่ใช้ซ้ำได้ใน endpoint ถัดไป เป็นฟังก์ชันบริสุทธิ์ (ไม่แตะฐานข้อมูล ไม่แตะ config) รับแถวสินค้าที่มี category และ reviews ติดมา แล้วคืนรูปทรง Product ตาม docs/api-spec.md:
+  category เป็น slug string, dimensions { width, height, depth } และ meta { createdAt, updatedAt, barcode, qrCode } เป็น object ซ้อน, date/createdAt/updatedAt เป็น ISO string เช่น "2025-04-30T09:41:02.053Z"
+  review แต่ละตัวมีห้าคีย์ { rating, comment, date, reviewerName, reviewerEmail } เท่านั้น (ไม่มี id หรือ productId)
+  สินค้าที่ discountPercentage เป็น null ใน DB ต้องไม่มีคีย์ discountPercentage เลย ไม่ใช่มีคีย์เป็น null หรือ undefined
+- ถ้าลองส่ง category ทั้ง object แทน slug ต้อง build ไม่ผ่าน (type ของ DTO เป็นยามจริง)
 
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
-- ห้ามแก้ไฟล์อื่นนอกจากที่ระบุ (products.service.ts ยังไม่ต้องแก้)
-- ห้ามสร้าง index.ts / barrel
-- ยังไม่ต้องสร้าง endpoint ที่ใช้ mapper</code></div>
+- ยังไม่ต้องสร้าง endpoint ที่ใช้ mapper และยังไม่ต้องแก้ service</code></div>
     </section>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li>ใน DTO มีหกคลาสครบ และมีเครื่องหมาย <code>?</code> เพียงจุดเดียวคือ <code>discountPercentage?: number</code> — ค้นหาคำว่า <code>null</code> ในไฟล์นี้ ต้องไม่เจอเลย</li>
-        <li><code>ProductResponseDto</code> มี 22 field เรียงตามลำดับของ docs/api-spec.md (นับเทียบกับ product id 1 จริงในฐานข้อมูล — SELECT * FROM "Product" WHERE id = 1 — ทีละบรรทัด)</li>
-        <li>type ของ model นำเข้าด้วย <code>import type</code> ไม่ใช่ <code>import</code> ธรรมดา และ path ลงท้าย <code>.js</code></li>
-        <li>discountPercentage ใช้ conditional spread ไม่ใช่ <code>?? undefined</code></li>
-        <li>เรียก <code>.toISOString()</code> ครบสามจุด: <code>review.date</code>, <code>product.createdAt</code>, <code>product.updatedAt</code> — และไม่มี <code>Date</code> object ไหนหลุดออกไปเป็น field</li>
-        <li>object ของ review ที่ map ออกมามีห้าคีย์เท่านั้น ไม่มี <code>id</code> ไม่มี <code>productId</code></li>
-        <li><code>npm run build</code> ผ่าน และในไฟล์ทั้งสองไม่มีคำว่า <code>any</code> หรือ <code>as</code></li>
+        <li>DTO เป็น class (ไม่ใช่ interface) และ response DTO ของ Product มีเครื่องหมาย <code>?</code> เพียงจุดเดียวที่ <code>discountPercentage</code> — ค้นคำว่า <code>null</code> ในไฟล์ DTO ต้องไม่เจอเลย</li>
+        <li>response DTO ของ Product มี 22 field เรียงตามลำดับของ docs/api-spec.md (นับเทียบกับ product id 1 จริงในฐานข้อมูล — SELECT * FROM "Product" WHERE id = 1 — ทีละบรรทัด)</li>
+        <li>ไม่มี <code>Date</code> object หลุดออกไปเป็น field — วันที่ทั้งสามจุด (<code>date</code> ของ review, <code>createdAt</code>, <code>updatedAt</code>) กลายเป็น ISO string</li>
+        <li>สินค้าที่ไม่มีส่วนลดไม่มีคีย์ <code>discountPercentage</code> เลย และ type ใน DTO ไม่ได้ประกาศว่าเป็น <code>null</code> ได้</li>
+        <li>review ที่ map ออกมามีห้าคีย์เท่านั้น ไม่มี <code>id</code> ไม่มี <code>productId</code></li>
+        <li>mapper ไม่ inject อะไร ไม่แตะฐานข้อมูลหรือ config, ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ (service เดิมยังไม่ถูกแตะ), <code>npm run build</code> ผ่าน และไม่มี <code>any</code> / <code>as</code> / <code>!</code></li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> เขียน <code>discountPercentage: product.discountPercentage ?? undefined</code> — runtime ยังถูก (JSON ตัด <code>undefined</code> ทิ้ง) แต่เมื่อเขียนแบบนี้ Cursor มักไปประกาศใน DTO เป็น <code>discountPercentage: number | null</code> หรือ <code>discountPercentage: number | undefined</code> ตามด้วย ให้เปิด DTO เช็กเสมอ อีกข้อที่พลาดบ่อยคือ <code>category: product.category</code> (ยัด object ทั้งก้อนเข้าไป) แทนที่จะเป็น <code>product.category.slug</code> — TypeScript จะฟ้องให้ ถ้า DTO ประกาศ <code>category: string</code> ไว้ถูก ซึ่งเป็นอีกเหตุผลที่เราเขียน DTO ก่อน mapper</p>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้ (ชื่อไฟล์หรือชื่อฟังก์ชันของคุณต่างจากนี้ได้ — Cursor จะค้นเจอเองในบทถัด ๆ ไป):</p>
       <p><code>src/products/dto/product-response.dto.ts</code></p>
       <pre><code>export class ProductDimensionsDto {
   width: number;

@@ -73,7 +73,7 @@
 
     <h2>ก้าวต่อไป</h2>
     <ul>
-      <li><strong>ใส่ auth ด้วย Guards</strong> — ตอนนี้ใครก็ยิง <code>POST /carts/add</code> ได้ ถ้าจะผูกคำสั่งซื้อกับผู้ใช้จริงต้องมี token และ guard มาคั่น ทบทวนได้จาก <a href="../../../Week_09/01_nestjs_basic/content/38_guards-and-public-route-metadata.html">NestJS Fundamentals บทที่ 38 — สร้าง Guard และเปิด Public Routes</a> แล้วเขียน prompt ในรูปแบบห้าส่วนเดิมให้ Cursor ทำ</li>
+      <li><strong>ใส่ auth ด้วย Guards</strong> — ตอนนี้ใครก็ยิง <code>POST /carts/add</code> ได้ ถ้าจะผูกคำสั่งซื้อกับผู้ใช้จริงต้องมี token และ guard มาคั่น ทบทวนได้จาก <a href="../../../Week_09/01_nestjs_basic/content/38_guards-and-public-route-metadata.html">NestJS Fundamentals บทที่ 38 — สร้าง Guard และเปิด Public Routes</a> แล้วเขียน prompt ในรูปแบบสามส่วนเดิมให้ Cursor ทำ</li>
       <li><strong>เขียน e2e test ด้วย Vitest</strong> — <code>contract:check</code> ตรวจรูปทรง response แต่ยังไม่ใช่ test suite ที่รันใน CI ได้ ต่อยอดจาก <a href="../../../Week_09/01_nestjs_basic/content/48_diving-into-e2e-tests.html">NestJS Fundamentals บทที่ 48–50</a> โดยเริ่มจากเคสที่เจ็บที่สุดก่อน: <code>limit=abc</code> ต้องได้ 400 และ <code>/products/9999</code> ต้องได้ 404</li>
       <li><strong>ขึ้น production ด้วย <code>migrate deploy</code></strong> — บนเครื่องเราใช้ <code>prisma migrate dev</code> แต่บน server ต้องใช้ <code>prisma migrate deploy</code> ซึ่งรัน migration ที่ commit ไว้เท่านั้นและไม่สร้างไฟล์ใหม่ ลองย้ายฐานข้อมูลขึ้น Postgres แบบ hosted ตาม <a href="../../../Week_08/02_API_Design_in_Nodejs_v1/content/18_hosted_postgresql_with_neon.html">API Design in Node.js บทที่ 18 — Hosted PostgreSQL กับ Neon</a> แล้วเปลี่ยนแค่ <code>DATABASE_URL</code> กับ <code>CORS_ORIGIN</code></li>
       <li><strong>ตัด stock ในทรานแซกชันของคำสั่งซื้อ</strong> — ตอนนี้สั่งซื้อแล้ว <code>stock</code> ไม่ลด เพราะคอร์สนี้ยังไม่ทำในเวอร์ชันแรก แต่ของจริงต้องลด และต้องลดใน <code>$transaction</code> เดียวกับที่สร้าง <code>Order</code> พร้อมปฏิเสธเมื่อของไม่พอ — เป็นแบบฝึกหัดที่ดีเรื่อง business rule กับ atomicity</li>
@@ -81,7 +81,7 @@
     </ul>
 
     <h2>ปิดท้าย</h2>
-    <p>สิ่งที่คอร์สนี้ฝึกจริง ๆ ไม่ใช่การพิมพ์โค้ด NestJS ให้เร็วขึ้น แต่เป็นการ<strong>สั่งงานให้แคบพอจะตรวจได้</strong>: จับสัญญาก่อนเขียนโค้ด แปลงสัญญาเป็น prompt ห้าส่วนที่ระบุไฟล์และข้อห้ามชัดเจน แล้วอ่านผลลัพธ์ทีละบรรทัดเทียบกับสัญญานั้น ยิ่ง AI พิมพ์ได้เร็วเท่าไร ความสามารถในการตรวจของคุณยิ่งเป็นตัวตัดสินคุณภาพงานมากขึ้นเท่านั้น เก็บกติกาข้อเดียวนี้ไปใช้กับทุกโปรเจกต์ต่อจากนี้</p>
+    <p>สิ่งที่คอร์สนี้ฝึกจริง ๆ ไม่ใช่การพิมพ์โค้ด NestJS ให้เร็วขึ้น แต่เป็นการ<strong>สั่งงานให้แคบพอจะตรวจได้</strong>: จับสัญญาก่อนเขียนโค้ด แปลงสัญญาเป็น prompt สามส่วนที่ระบุผลลัพธ์และข้อห้ามชัดเจน แล้วอ่านผลลัพธ์ทีละบรรทัดเทียบกับสัญญานั้น ยิ่ง AI พิมพ์ได้เร็วเท่าไร ความสามารถในการตรวจของคุณยิ่งเป็นตัวตัดสินคุณภาพงานมากขึ้นเท่านั้น เก็บกติกาข้อเดียวนี้ไปใช้กับทุกโปรเจกต์ต่อจากนี้</p>
     <blockquote><p>AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้ — ถ้าอธิบายไม่ได้ แปลว่ายังไม่ผ่านบทนี้</p></blockquote>
 
     <h2>แหล่งอ้างอิง</h2>

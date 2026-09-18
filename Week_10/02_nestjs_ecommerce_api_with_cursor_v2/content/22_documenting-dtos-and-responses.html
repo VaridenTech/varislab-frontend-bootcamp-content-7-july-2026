@@ -49,6 +49,7 @@
     └── products/
         ├── products.controller.ts         (แก้ไข)
         └── dto/product-response.dto.ts    (แก้ไข)</code></pre>
+    <p>รายการด้านล่างคือไฟล์และ decorator ที่โค้ดอ้างอิงของคอร์สใช้ — Cursor อาจเลือก decorator หรือแก้ไฟล์ต่างออกไปได้ ขอแค่ไม่แตะไฟล์ที่ไม่เกี่ยวกับเป้าหมายและผ่านผลลัพธ์ที่ต้องได้ใน prompt</p>
     <ul>
       <li><strong><code>src/products/products.controller.ts</code></strong> — สัญญา: ต้องมี <code>@ApiTags('products')</code> บน class และ response decorator บนทั้งสี่ handler / ต้องไม่แก้ logic และต้องไม่สลับลำดับ handler</li>
       <li><strong><code>src/orders/carts.controller.ts</code></strong> — สัญญา: ต้องมี <code>@ApiTags('carts')</code> และ <code>@ApiCreatedResponse</code> + <code>@ApiBadRequestResponse</code> บน <code>create</code> / ต้องไม่แตะ <code>OrdersService</code></li>
@@ -60,45 +61,33 @@
       <h2 id="exercise-heading">สั่ง Cursor ตกแต่งเอกสารให้ครบทุก endpoint</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: checkpoint before swagger decorations"</code>) จากนั้นส่ง prompt นี้ — <a href="01_what-well-be-building.html">กติกาเดิม</a>: AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้</p>
       <div class="cursor-prompt"><code>ตกแต่ง controller และ DTO ด้วย decorator ของ @nestjs/swagger ให้เอกสารที่ /api บอก response ของทุก endpoint
+@&lt;controller และ DTO ที่ต้องติด decorator — โค้ดอ้างอิงคือ src/products/products.controller.ts, src/orders/carts.controller.ts, src/products/dto/product-response.dto.ts, src/orders/dto/add-cart.dto.ts&gt;
 
-บริบท: @src/products/products.controller.ts @src/orders/carts.controller.ts @src/products/dto/product-response.dto.ts @src/orders/dto/cart-response.dto.ts @src/orders/dto/add-cart.dto.ts @src/products/dto/pagination-query.dto.ts @.cursor/rules/project.mdc
-Swagger ตั้งค่าที่ /api แล้ว และ CLI plugin เปิดอยู่ (plugin อ่าน type ของ field ใน class ที่ลงท้าย .dto.ts ให้เอง จึงไม่ต้องใส่ @ApiProperty ทุกบรรทัด)
-ตอนนี้ /api แสดง endpoint ครบแต่ไม่มี response schema และไม่มี tag
-
-โครงสร้าง: แก้ไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
-- src/products/products.controller.ts (แก้ไข)
-- src/orders/carts.controller.ts (แก้ไข)
-- src/products/dto/product-response.dto.ts (แก้ไข)
-- src/orders/dto/add-cart.dto.ts (แก้ไข)
-
-ข้อกำหนดทางเทคนิค:
-- products.controller.ts: @ApiTags('products') บน class
-  findCategories: @ApiOkResponse({ type: [CategoryResponseDto] })
-  findByCategory และ findAll: @ApiOkResponse({ type: ProductListResponseDto })
-  findOne: @ApiOkResponse({ type: ProductResponseDto }) และ @ApiNotFoundResponse({ description: "Product 9999 not found" })
-- carts.controller.ts: @ApiTags('carts') บน class, create: @ApiCreatedResponse({ type: CartResponseDto }) และ @ApiBadRequestResponse({ description: 'Validation failed' })
-- product-response.dto.ts: ใส่ @ApiPropertyOptional() ให้ discountPercentage ตัวเดียว (plugin จัดการ field อื่นให้)
-- add-cart.dto.ts: ใส่ @ApiProperty({ example: 1 }) ให้ userId, @ApiProperty({ type: [CartProductDto] }) ให้ products และ @ApiProperty({ type: AddressDto }) ให้ address
-- ห้ามแก้ logic ใด ๆ ใน controller ห้ามเปลี่ยนลำดับ handler
+ผลลัพธ์ที่ต้องได้:
+- /api แบ่ง endpoint เป็นสองกลุ่ม: products และ carts
+- ใน /api-json ทุก endpoint มี response schema: GET /products/categories → array ของ category, GET /products และ GET /products/category/{slug} → list envelope, GET /products/{id} → product (200) และ 404 ที่ description เป็น Product 9999 not found, POST /carts/add → receipt (201) และ 400
+- components.schemas.ProductResponseDto.required ไม่มี discountPercentage (ตรงกับ docs/api-spec.md ที่ key นี้ optional) ส่วน field อื่นยังเป็น required ตามเดิม
+- schema ของ AddCartDto แสดง products เป็น array ของ object และ address เป็น object ซ้อน ไม่ใช่ type ว่าง และปุ่ม Try it out ของ POST /carts/add มี userId ตัวอย่างเป็น 1
+- พฤติกรรม API ไม่เปลี่ยน: npm run contract:check ได้ ✅ ครบสิบบรรทัด และ GET /products/categories ยังตอบ 200 (ไม่โดน route :id)
+- npm run build และ npm run lint ผ่าน
 
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
-- ห้ามแก้ไฟล์อื่น ห้ามแตะ service, mapper หรือ main.ts</code></div>
+- ห้ามแก้ logic หรือ validation เดิม — งานนี้เพิ่มแค่เอกสาร</code></div>
     </section>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li><code>@ApiTags('products')</code> และ <code>@ApiTags('carts')</code> อยู่บน class คู่กับ <code>@Controller(...)</code></li>
-        <li><code>findCategories</code> ได้ <code>@ApiOkResponse({ type: [CategoryResponseDto] })</code> พร้อมวงเล็บเหลี่ยม — ไม่ใช่ <code>CategoryResponseDto</code> เดี่ยว</li>
-        <li><code>findByCategory</code> และ <code>findAll</code> ได้ <code>ProductListResponseDto</code> ส่วน <code>findOne</code> ได้ <code>ProductResponseDto</code> บวก <code>@ApiNotFoundResponse</code> ที่ข้อความตรงตัวทุกตัวอักษร</li>
-        <li>ลำดับ handler ยังเป็น <code>categories</code> → <code>category/:slug</code> → <code>@Get()</code> → <code>:id</code> เหมือนเดิม (ถ้าสลับ <code>/products/categories</code> จะไปโดน <code>:id</code> แล้วพัง)</li>
-        <li>ใน <code>product-response.dto.ts</code> มี <code>@ApiPropertyOptional()</code> แค่ที่ <code>discountPercentage</code> — field อื่นสะอาดเหมือนเดิม</li>
-        <li>ใน <code>add-cart.dto.ts</code> decorator ของ class-validator (<code>@IsInt</code>, <code>@ValidateNested</code>, <code>@Type</code>) ยังอยู่ครบ ไม่ถูกแทนที่</li>
-        <li>import path ทุกเส้นยังลงท้าย <code>.js</code> ตามกติกา ESM ของ Nest 12 เช่น <code>./dto/product-response.dto.js</code></li>
-        <li><code>npm run build</code> และ <code>npm run lint</code> ผ่านทั้งคู่</li>
+        <li><code>/api</code> แบ่ง endpoint เป็นกลุ่ม <strong>products</strong> และ <strong>carts</strong></li>
+        <li><code>GET /products/categories</code> มี response schema เป็น <em>array</em> ของ category — ไม่ใช่ category ตัวเดียว</li>
+        <li>list endpoint ชี้ไป list envelope, <code>GET /products/{id}</code> ชี้ไป product พร้อม 404 ที่ข้อความตรงตัวทุกตัวอักษร และ <code>POST /carts/add</code> ประกาศ 201 ไม่ใช่ 200</li>
+        <li><code>GET /products/categories</code> ยังตอบ <code>200</code> — ถ้าได้ <code>400</code> แปลว่า handler ถูกจัดลำดับใหม่จน route <code>:id</code> มาก่อน</li>
+        <li><code>discountPercentage</code> ไม่อยู่ใน <code>required</code> ของ <code>ProductResponseDto</code> แต่ field อื่นยังอยู่</li>
+        <li>validation ของ <code>POST /carts/add</code> ยังทำงาน — ยิง body ที่ไม่มี <code>userId</code> ยังได้ <code>400</code> (decorator ของ class-validator ไม่ถูกแทนที่)</li>
+        <li><code>git status</code> ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ (service, mapper และ <code>main.ts</code> ไม่ถูกแตะ), import ทุกเส้นลงท้าย <code>.js</code> และ <code>npm run build</code> / <code>npm run lint</code> ผ่าน</li>
       </ul>
-      <p><strong>AI มักพลาดตรงนี้:</strong> ใส่ decorator เพลินจนใส่ <code>@ApiProperty()</code> ให้ทุก field ของทุก DTO — ซึ่งเป็นสิ่งที่ CLI plugin มีไว้เพื่อไม่ให้เราต้องทำ ผลคือไฟล์ยาวขึ้นเท่าตัวโดยเอกสารไม่ได้ดีขึ้นเลย ถ้าเจอให้ลบออกให้เหลือเท่าที่ prompt ระบุ อีกอันตรายที่แนบเนียนกว่าคือมันจัดเรียง handler ใหม่ตาม <q>ความสวยงาม</q> (เช่นย้าย <code>@Get(':id')</code> ขึ้นไปไว้ต้น class) ซึ่งทำให้ <code>GET /products/categories</code> กลายเป็นการหา product id ชื่อ <code>categories</code> แล้วได้ 400 จาก <code>ParseIntPipe</code> — ตรวจลำดับด้วยตาทุกครั้ง</p>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
+      <p><strong>AI มักพลาดตรงนี้:</strong> ใส่ decorator เพลินจนใส่ <code>@ApiProperty()</code> ให้ทุก field ของทุก DTO — ซึ่งเป็นสิ่งที่ CLI plugin มีไว้เพื่อไม่ให้เราต้องทำ ผลคือไฟล์ยาวขึ้นเท่าตัวโดยเอกสารไม่ได้ดีขึ้นเลย ถ้าเจอให้ถามตัวเองว่ามันเพิ่มอะไรให้เอกสารจริงไหม อีกอันตรายที่แนบเนียนกว่าคือมันจัดเรียง handler ใหม่ตาม <q>ความสวยงาม</q> (เช่นย้าย <code>@Get(':id')</code> ขึ้นไปไว้ต้น class) ซึ่งทำให้ <code>GET /products/categories</code> กลายเป็นการหา product id ชื่อ <code>categories</code> แล้วได้ 400 จาก <code>ParseIntPipe</code> — ยิง <code>GET /products/categories</code> ตรวจทุกครั้ง</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้:</p>
       <pre><code>/* src/products/products.controller.ts */
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApiNotFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -240,7 +229,7 @@ false</code></pre>
 ✅ GET /products?limit=0 → 400 (out of range)
 ✅ GET /products?limit=101 → 400 (out of range)
 ✅ GET /products/1 → validated product
-✅ GET /products/999999 → 404 with message
+✅ GET /products/9999 → 404 with message
 ✅ GET /products/abc → 400 with message
 ✅ GET /products/category/groceries?limit=20&amp;skip=0 → total 27
 ✅ GET /products/category/nope?limit=5&amp;skip=0 → 200, empty envelope

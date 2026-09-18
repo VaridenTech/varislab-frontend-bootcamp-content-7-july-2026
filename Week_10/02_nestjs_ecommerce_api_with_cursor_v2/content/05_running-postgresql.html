@@ -78,34 +78,23 @@ docker compose down</code></pre>
       <h2 id="exercise-heading">ให้ Cursor สร้าง compose file และ .env</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: add cursor rules"</code> ถ้ายังไม่ได้ commit ของบทที่ 4) แชทใหม่หมายถึงบริบทสะอาด ไม่มีคำสั่งเก่าค้างมากวน แล้วส่ง prompt นี้ทั้งก้อน</p>
       <div class="cursor-prompt"><code>สร้าง Docker Compose สำหรับ PostgreSQL และไฟล์ .env ของโปรเจกต์
+@.gitignore
 
-บริบท: @package.json @.gitignore @.cursor/rules/project.mdc
-โปรเจกต์นี้เป็น NestJS 12 ที่เพิ่ง scaffold ยังไม่มีฐานข้อมูล ยังไม่ได้ติดตั้ง Prisma
-เครื่องมี Docker Desktop รันอยู่แล้ว
-บทเรียนถัดไปจะติดตั้ง Prisma ซึ่งต้องการตัวแปร DATABASE_URL
-
-โครงสร้าง: สร้าง/แก้ไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
-- docker-compose.yml (สร้างใหม่)
-- .env (สร้างใหม่)
-- .env.example (สร้างใหม่)
-- .gitignore (แก้ไข: เพิ่ม .env ต่อท้าย)
-
-ข้อกำหนดทางเทคนิค:
-- docker-compose.yml ไม่มี key version (Compose รุ่นใหม่ไม่ใช้แล้ว) มี service เดียวชื่อ db
-  image: postgres:17, restart: always, ports: "5432:5432"
-  environment: POSTGRES_PASSWORD=pass123 และ POSTGRES_DB=ecommerce
-  volumes: named volume ชื่อ pgdata เมานต์ที่ /var/lib/postgresql/data และประกาศ volumes: pgdata: ไว้ท้ายไฟล์
-- .env มีสี่บรรทัดตามลำดับนี้ ไม่มีเครื่องหมายคำพูดครอบค่า
+ผลลัพธ์ที่ต้องได้:
+- docker compose up -d แล้ว docker compose ps เห็น service เดียวชื่อ db จาก image postgres:17 สถานะ Up และ port 5432 ของเครื่อง map เข้าคอนเทนเนอร์
+- docker compose exec db psql -U postgres -d ecommerce -c '\l' เห็น database ชื่อ ecommerce (รหัสผ่าน superuser คือ pass123)
+- docker compose down แล้ว up -d ใหม่ database ecommerce ยังอยู่ (ข้อมูลเก็บใน named volume ไม่ใช่ bind mount)
+- docker compose up ไม่ขึ้น warning เรื่อง key ที่เลิกใช้แล้ว
+- .env มีสี่บรรทัดตามลำดับนี้ ค่าไม่ครอบด้วยเครื่องหมายคำพูด
   DATABASE_URL=postgresql://postgres:pass123@localhost:5432/ecommerce
   PORT=3000
   APP_URL=http://localhost:3000
   CORS_ORIGIN=http://localhost:5173
-- .env.example มี key และค่าเดียวกันทั้งสี่บรรทัด (โปรเจกต์นี้ไม่มี secret จริง)
-- .gitignore เพิ่มบรรทัด .env ต่อท้ายไฟล์ ห้ามลบบรรทัดเดิม
+- diff .env .env.example ไม่มีผลต่าง (โปรเจกต์นี้ไม่มี secret จริง)
+- git status ไม่เห็น .env และบรรทัดเดิมของ .gitignore ยังอยู่ครบ
 
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
-- ห้ามแก้ไฟล์อื่นนอกจากที่ระบุ
 - ห้ามรัน docker compose up ให้ผมรันเอง
 - ยังไม่ต้องติดตั้งหรือตั้งค่า Prisma</code></div>
       <p>เมื่อ Cursor สร้างไฟล์ครบแล้ว ยกฐานข้อมูลขึ้นเอง (prompt สั่งห้าม Agent รัน docker ให้)</p>
@@ -115,19 +104,19 @@ docker compose ps</code></div>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li>บรรทัดแรกของ <code>docker-compose.yml</code> คือ <code>services:</code> — ไม่มี key <code>version:</code> (Compose รุ่นใหม่เลิกใช้แล้ว ถ้ามีจะขึ้น warning)</li>
-        <li>image เป็น <code>postgres:17</code> ไม่ใช่ <code>postgres:latest</code> หรือ <code>postgres:16-alpine</code></li>
-        <li>มี <code>POSTGRES_DB: ecommerce</code> จริง — ขาด key นี้แล้ว <code>DATABASE_URL</code> จะชี้ไป database ที่ไม่มีอยู่</li>
-        <li><code>volumes</code> ของ service เป็น <code>pgdata:/var/lib/postgresql/data</code> และมีบล็อก <code>volumes:</code> ประกาศ <code>pgdata:</code> ท้ายไฟล์ (ไม่ใช่ bind mount แบบ <code>./data:…</code>)</li>
+        <li><code>docker compose up -d</code> ไม่ขึ้น warning ว่ามี key ที่เลิกใช้ (เช่น <code>version</code>)</li>
+        <li>image เป็น <code>postgres:17</code> ที่ปักเวอร์ชันไว้ ไม่ใช่ <code>postgres:latest</code></li>
+        <li>database <code>ecommerce</code> เกิดขึ้นจริงตอน boot — ถ้าไม่มี <code>DATABASE_URL</code> จะชี้ไป database ที่ไม่มีอยู่</li>
+        <li>ข้อมูลอยู่รอดหลัง <code>docker compose down</code> / <code>up -d</code> และไม่มีโฟลเดอร์ข้อมูลโผล่ในโปรเจกต์ (ใช้ named volume ไม่ใช่ bind mount)</li>
         <li><code>.env</code> มีสี่บรรทัดพอดี เรียงตามที่สั่ง และไม่มีเครื่องหมายคำพูดครอบค่า (<code>PORT=3000</code> ไม่ใช่ <code>PORT="3000"</code>)</li>
-        <li><code>.env.example</code> มี key และค่าเหมือน <code>.env</code> ทุกบรรทัด — <code>diff .env .env.example</code> ต้องไม่มีผลต่าง</li>
-        <li><code>git status</code> เห็นแค่ <code>docker-compose.yml</code> และ <code>.env.example</code> เป็นไฟล์ใหม่ — <strong>ไม่เห็น</strong> <code>.env</code></li>
+        <li><code>diff .env .env.example</code> ต้องไม่มีผลต่าง</li>
+        <li><code>git status</code> <strong>ไม่เห็น</strong> <code>.env</code> และไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ (เช่นไฟล์ใน <code>src/</code>)</li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> เติม <code>version: "3"</code> ไว้บนสุด (เป็นรูปแบบเก่าที่ยังเจอในบทความทั่วเน็ต), เพิ่มบรรทัด <code>POSTGRES_USER: …</code> ที่เราไม่ได้สั่ง (ทำให้ user ไม่ตรงกับ <code>postgres</code> ใน <code>DATABASE_URL</code>), หรือครอบค่าใน <code>.env</code> ด้วยเครื่องหมายคำพูด (บาง loader จะอ่านเครื่องหมายคำพูดติดไปเป็นส่วนของค่า)</p>
       <div class="note">
         <p>scaffold ของ Nest ใส่ <code>.env</code> ไว้ใน <code>.gitignore</code> ให้แล้วใต้หัวข้อ <code># dotenv environment variable files</code> ดังนั้นถ้า Agent บอกว่า <q>ไม่ต้องแก้ <code>.gitignore</code> เพราะมีอยู่แล้ว</q> ก็ถูกต้อง สิ่งที่เราตรวจคือผลลัพธ์ (<code>git status</code> ไม่โชว์ <code>.env</code>) ไม่ใช่จำนวนบรรทัดที่ถูกเพิ่ม</p>
       </div>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้:</p>
       <pre><code># docker-compose.yml
 services:
   db:

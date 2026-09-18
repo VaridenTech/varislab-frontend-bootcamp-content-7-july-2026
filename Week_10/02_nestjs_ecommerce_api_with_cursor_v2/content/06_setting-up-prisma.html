@@ -81,6 +81,7 @@ export default defineConfig({
     │   ├── prisma.service.ts       (สร้างใหม่)
     │   └── prisma.module.ts        (สร้างใหม่)
     └── app.module.ts               (แก้ไข)</code></pre>
+    <p>ตำแหน่งและชื่อไฟล์ข้างบนมาจากโค้ดอ้างอิง prompt ไม่ได้สั่งว่าต้องวางไฟล์ที่ไหน Cursor อาจเลือกต่างออกไปได้ สิ่งที่ต้องตรงคือข้อในส่วน "ผลลัพธ์ที่ต้องได้" ของ prompt (ยกเว้นชื่อ class <code>PrismaService</code> ที่บทหลังใช้ inject)</p>
     <ul>
       <li><strong><code>src/prisma/prisma.service.ts</code></strong> — สัญญา: ต้อง <code>extends PrismaClient</code> ที่ import จาก <code>'../generated/prisma/client.js'</code> และส่ง <code>adapter</code> เข้า <code>super()</code> / ต้องไม่ import <code>dotenv</code> และต้องไม่ import จาก <code>@prisma/client</code></li>
       <li><strong><code>src/prisma/prisma.module.ts</code></strong> — สัญญา: ต้องเป็น <code>@Global()</code> และ <code>exports: [PrismaService]</code> / ต้องไม่มี <code>controllers</code></li>
@@ -108,37 +109,20 @@ warn You already have a .gitignore file. Don't forget to add .env in it to not c
       </div>
       <p>เมื่อไฟล์จาก <code>prisma init</code> อยู่ครบแล้ว ส่ง prompt นี้ทั้งก้อน</p>
       <div class="cursor-prompt"><code>สร้าง PrismaModule กับ PrismaService แบบ global และเปิดใช้ ConfigModule ใน AppModule
+@src/app.module.ts
 
-บริบท: @src/app.module.ts @src/main.ts @prisma/schema.prisma @prisma7.config.ts @.env @.cursor/rules/project.mdc
-ติดตั้งแล้ว: @prisma/client@7.10.0, @prisma/adapter-pg@7.10.0, dotenv, @nestjs/config และ prisma@7.10.0 (devDependency)
-npx prisma init สร้าง prisma/schema.prisma (generator prisma-client, output ../src/generated/prisma) และ prisma7.config.ts ไว้แล้ว
-schema ยังไม่มี model ใด ๆ และยังไม่ได้ generate — ห้ามเพิ่ม model ในรอบนี้
-Prisma 7 ต้องสร้าง PrismaClient พร้อม driver adapter เสมอ: new PrismaClient({ adapter: new PrismaPg({ connectionString }) })
-Prisma Client ที่ generate จะอยู่ที่ src/generated/prisma/client.ts จึง import จาก '../generated/prisma/client.js'
-โปรเจกต์เป็น ES module ทุก import ไฟล์ในโปรเจกต์ต้องลงท้าย .js
-
-โครงสร้าง: สร้าง/แก้ไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
-- src/prisma/prisma.service.ts (สร้างใหม่)
-- src/prisma/prisma.module.ts (สร้างใหม่)
-- src/app.module.ts (แก้ไข)
-
-ข้อกำหนดทางเทคนิค:
-- prisma.service.ts: import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common'
-  import { PrismaPg } from '@prisma/adapter-pg' และ import { PrismaClient } from '../generated/prisma/client.js'
-  @Injectable() export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy
-  constructor เรียก super({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) })
-  onModuleInit เรียก await this.$connect() และ onModuleDestroy เรียก await this.$disconnect()
-  ห้าม import dotenv ในไฟล์นี้
-- prisma.module.ts: @Global() @Module({ providers: [PrismaService], exports: [PrismaService] }) export class PrismaModule
-- app.module.ts: เพิ่ม ConfigModule.forRoot({ isGlobal: true }) เป็นรายการแรกของ imports ตามด้วย PrismaModule
-  คง AppController และ AppService ไว้ตามเดิม
+ผลลัพธ์ที่ต้องได้:
+- หลังผมรัน npx prisma generate แล้ว npm run build และ npm run lint ผ่านโดยไม่มี error
+- npm run start:dev boot ผ่าน log มีบรรทัด PrismaModule dependencies initialized และ ConfigModule dependencies initialized
+- มี class ชื่อ PrismaService (บทถัดไปจะ inject ด้วยชื่อนี้) ที่ inject ได้จากโมดูลไหนก็ได้โดยไม่ต้อง import PrismaModule ซ้ำ
+- แอปเชื่อมต่อฐานข้อมูลตอนเริ่มและปิดการเชื่อมต่อตอนแอปปิด
+- ค่าใน .env อ่านได้ผ่าน ConfigService ทุกโมดูล และ grep -r dotenv src/ ไม่มีผลลัพธ์
+- curl -s http://localhost:3000 ยังได้ Hello World! เหมือนเดิม
 
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
-- ห้ามแก้ main.ts, schema.prisma, prisma7.config.ts หรือ .env
-- ห้ามสร้าง index.ts / barrel
 - ห้ามรัน prisma generate หรือ migrate ให้ผมรันเอง
-- ยังไม่ต้องสร้าง model, service หรือ controller ของสินค้า</code></div>
+- ยังไม่ต้องเพิ่ม model ใน schema.prisma และยังไม่ต้องสร้าง service หรือ controller ของสินค้า</code></div>
       <p>รีวิวโค้ดตามหัวข้อถัดไปให้จบก่อน แล้วจึงรันสองคำสั่งนี้เอง (prompt สั่งห้าม Agent รันให้)</p>
       <div class="prompt-example"><code>npx prisma generate
 npm run start:dev</code></div>
@@ -146,16 +130,16 @@ npm run start:dev</code></div>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li><code>prisma.module.ts</code> มี <code>@Global()</code> อยู่เหนือ <code>@Module()</code> — ขาดไปแล้วบทที่ 10 จะ inject <code>PrismaService</code> ไม่ได้</li>
-        <li><code>prisma.service.ts</code> import <code>PrismaClient</code> จาก <code>'../generated/prisma/client.js'</code> — ต้องมี <code>.js</code> ต่อท้าย และต้องมาจาก <code>src/generated</code> ไม่ใช่ <code>@prisma/client</code></li>
-        <li><code>super()</code> ได้รับ <code>{ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) }</code> จริง ไม่ใช่ <code>super()</code> เปล่า</li>
-        <li><code>app.module.ts</code> มี <code>ConfigModule.forRoot({ isGlobal: true })</code> เป็นรายการ<strong>แรก</strong> ตามด้วย <code>PrismaModule</code> และ <code>AppController</code>/<code>AppService</code> ยังอยู่</li>
-        <li>ไม่มี <code>import 'dotenv/config'</code> หรือ <code>import dotenv</code> ที่ไหนเลยใน <code>src/</code> — ตรวจได้ด้วย <code>grep -r dotenv src/</code> ต้องไม่มีผลลัพธ์</li>
-        <li>import ไฟล์ในโปรเจกต์ทุกบรรทัดลงท้าย <code>.js</code> (<code>'./prisma.service.js'</code>, <code>'./prisma/prisma.module.js'</code>)</li>
-        <li>ไม่มีไฟล์เกินมา เช่น <code>src/prisma/index.ts</code> หรือการแก้ <code>main.ts</code>, <code>schema.prisma</code>, <code>.env</code></li>
+        <li><code>PrismaService</code> inject ได้จากทุกโมดูลโดยไม่ต้อง import <code>PrismaModule</code> ซ้ำ — ถ้าไม่ global บทที่ 10 จะ inject ไม่ได้</li>
+        <li><code>PrismaClient</code> มาจาก client ที่ generate ใน <code>src/generated/prisma</code> ไม่ใช่ <code>@prisma/client</code></li>
+        <li>client ถูกสร้างพร้อม driver adapter จริง — ไม่ใช่ <code>PrismaClient</code> เปล่า ๆ ที่ compile ผ่านแต่พังตอนรัน</li>
+        <li><code>ConfigModule</code> เปิดแบบ global และ <code>AppController</code>/<code>AppService</code> ยังอยู่ (<code>curl</code> ยังได้ <code>Hello World!</code>)</li>
+        <li><code>grep -r dotenv src/</code> ต้องไม่มีผลลัพธ์</li>
+        <li>import ไฟล์ในโปรเจกต์ทุกบรรทัดลงท้าย <code>.js</code> และไม่มี <code>any</code> / <code>as</code> / <code>!</code></li>
+        <li><code>git status</code> ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ — ไม่มี <code>index.ts</code> และไม่มีการแก้ <code>main.ts</code>, <code>schema.prisma</code>, <code>.env</code></li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> import <code>PrismaClient</code> จาก <code>'@prisma/client'</code> (ถูกต้องสำหรับ Prisma 5 แต่ที่นี่จะพังตอนรันด้วย error ว่าต้องมี adapter) หรือลืม <code>.js</code> ท้าย path ทำให้โปรเจกต์ ES module หาไฟล์ไม่เจอตอนรัน อีกท่าที่เจอคือแอบเติม <code>import 'dotenv/config'</code> ใน <code>main.ts</code> ซึ่งซ้ำซ้อนกับ <code>ConfigModule</code></p>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้:</p>
       <pre><code>// src/prisma/prisma.service.ts
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';

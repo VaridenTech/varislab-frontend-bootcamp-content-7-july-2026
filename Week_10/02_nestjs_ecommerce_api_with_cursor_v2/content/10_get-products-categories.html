@@ -42,66 +42,42 @@
     <div class="note"><p>ค่า <code>id</code> ที่แท้จริงจะขยับขึ้นทุกครั้งที่ re-seed (ตามที่เจอในบทที่ 9) แต่ไม่มีผลกับบทนี้ เพราะ <code>id</code> ไม่ถูกส่งออกไปใน response — <code>docs/api-spec.md</code> กำหนดให้ Category มีแค่สามคีย์ <code>slug</code>, <code>name</code>, <code>url</code> เท่านั้น</p></div>
 
     <h2>เป้าหมายของบทนี้</h2>
-    <pre><code>src/
-├── app.module.ts                     (แก้ไข)
-└── products/
-    ├── products.module.ts            (สร้างใหม่)
-    ├── products.controller.ts        (สร้างใหม่)
-    └── products.service.ts           (สร้างใหม่)</code></pre>
+    <p>module, controller และ service ของสินค้าที่ถูกลงทะเบียนเข้าแอปแล้ว (ในโค้ดอ้างอิงคือโฟลเดอร์ <code>src/products/</code> และ <code>ProductsModule</code> ใน <code>src/app.module.ts</code> — Cursor เลือกที่วางและชื่อไฟล์เองได้ตามกติกาใน <code>.cursor/rules</code>) โดยต้องได้ผลลัพธ์นี้</p>
     <ul>
-      <li><strong><code>src/products/products.service.ts</code></strong> — สัญญา: ต้องดึง category ทุกแถวด้วย <code>findMany({ orderBy: { id: 'asc' } })</code> แล้ว map เป็น <code>{ slug, name, url }</code> โดย host มาจาก <code>this.config.getOrThrow&lt;string&gt;('APP_URL')</code> / ต้องไม่ส่ง <code>id</code> ออกไป และต้องไม่ hard-code host</li>
-      <li><strong><code>src/products/products.controller.ts</code></strong> — สัญญา: ต้องมี prefix <code>@Controller('products')</code> และ handler <code>@Get('categories')</code> ที่ <code>return</code> ผลจาก service ตรง ๆ / ต้องไม่มี logic ฐานข้อมูลอยู่ในนี้</li>
-      <li><strong><code>src/products/products.module.ts</code></strong> — สัญญา: ต้องประกาศ <code>controllers</code> และ <code>providers</code> ของ products / ต้องไม่ import <code>ConfigModule</code> หรือ <code>PrismaModule</code> ซ้ำ เพราะทั้งสองเป็น global แล้ว</li>
-      <li><strong><code>src/app.module.ts</code></strong> — สัญญา: ต้องเพิ่ม <code>ProductsModule</code> ต่อจาก <code>PrismaModule</code> ใน <code>imports</code> / ต้องไม่ลบ <code>AppController</code> หรือ <code>AppService</code></li>
+      <li><code>GET /products/categories</code> ตอบ 24 รายการตามลำดับที่ seed ไว้ แต่ละรายการมีแค่ <code>{ slug, name, url }</code> ไม่มี <code>id</code></li>
+      <li>host ใน <code>url</code> มาจาก <code>APP_URL</code> — เปลี่ยนค่าแล้ว url เปลี่ยนตาม และถ้าไม่มีค่าต้องพังทันที ไม่ใช่เงียบ</li>
+      <li>controller รู้แค่เรื่อง HTTP ส่วนงานฐานข้อมูลอยู่ใน service และ <code>AppController</code>/<code>AppService</code> เดิมยังอยู่ครบ</li>
     </ul>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">สั่ง Cursor สร้าง ProductsModule แล้วอ่านทุกบรรทัด</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before products module"</code>) จากนั้นส่ง prompt นี้ทั้งก้อน — กติกาของคอร์สยังเหมือนเดิม: <strong>AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้</strong></p>
       <div class="cursor-prompt"><code>สร้าง ProductsModule พร้อม endpoint GET /products/categories ตาม section Category ใน docs/api-spec.md
+@src/app.module.ts
 
-บริบท: @src/app.module.ts @src/prisma/prisma.service.ts @prisma/schema.prisma @docs/api-spec.md @.env @.cursor/rules/project.mdc
-ฐานข้อมูลถูก seed แล้ว ตาราง Category มี 24 แถว (id เรียงตามลำดับที่ seed ในบทที่ 9 insert ไว้)
-docs/api-spec.md มี section Category: response คือ array ของ { slug, name, url } โดย url เป็น URL เต็ม (ไม่ใช่แค่ path)
-ของเรา url ต้องเป็น &lt;APP_URL&gt;/products/category/&lt;slug&gt; โดย APP_URL อ่านจาก .env ผ่าน ConfigService (ConfigModule เป็น global แล้ว)
-PrismaModule เป็น global แล้ว ฉีด PrismaService ผ่าน constructor ได้เลย
-
-โครงสร้าง: สร้าง/แก้ไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
-- src/products/products.module.ts (สร้างใหม่)
-- src/products/products.controller.ts (สร้างใหม่)
-- src/products/products.service.ts (สร้างใหม่)
-- src/app.module.ts (แก้ไข: เพิ่ม ProductsModule ใน imports ต่อจาก PrismaModule)
-
-ข้อกำหนดทางเทคนิค:
-- products.service.ts: @Injectable() export class ProductsService
-  constructor(private readonly prisma: PrismaService, private readonly config: ConfigService)
-  method async findCategories() ดึง category ทั้งหมดด้วย findMany({ orderBy: { id: 'asc' } })
-  แล้ว map เป็น { slug, name, url } โดย url = `${appUrl}/products/category/${slug}` และ appUrl มาจาก this.config.getOrThrow&lt;string&gt;('APP_URL')
-  ห้ามคืน id ของ category ออกไป
-- products.controller.ts: @Controller('products') export class ProductsController
-  constructor(private readonly productsService: ProductsService)
-  handler @Get('categories') findCategories() return this.productsService.findCategories()
-- products.module.ts: @Module({ controllers: [ProductsController], providers: [ProductsService] })
-- import ไฟล์ในโปรเจกต์ทุกตัวลงท้าย .js
-- ห้ามสร้าง DTO หรือ interface ในรอบนี้
+ผลลัพธ์ที่ต้องได้:
+- log ตอน start มีบรรทัด Mapped {/products/categories, GET} route
+- GET /products/categories ตอบ 200 เป็น array 24 รายการ เรียงตาม id ของหมวด (ลำดับที่ seed ไว้ เริ่มด้วย beauty, fragrances, furniture)
+- แต่ละรายการมีเพียงสามคีย์ { slug, name, url } ไม่มี id หลุดออกไป
+- url เป็น URL เต็ม = &lt;APP_URL&gt;/products/category/&lt;slug&gt; โดย APP_URL อ่านจาก .env — เปลี่ยน APP_URL แล้ว restart ทุก url ต้องเปลี่ยนตาม (ห้าม hard-code host)
+- ถ้าไม่มี APP_URL ใน .env ต้องตอบ error 500 ไม่ใช่ url ที่มีคำว่า undefined
+- AppController/AppService เดิมยังอยู่ครบ
 
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
-- ห้ามแก้ไฟล์อื่นนอกจากที่ระบุ ห้ามลบ AppController/AppService
-- ห้ามสร้าง index.ts / barrel
 - ยังไม่ต้องสร้าง endpoint อื่นของสินค้า</code></div>
     </section>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li>service เรียก <code>this.config.getOrThrow&lt;string&gt;('APP_URL')</code> — ถ้าเห็น <code>this.config.get(...)</code> ให้แก้เป็น <code>getOrThrow</code></li>
-        <li><code>findMany({ orderBy: { id: 'asc' } })</code> มีจริง ไม่ใช่ <code>findMany()</code> เปล่า</li>
-        <li>object ที่ map ออกมามีเพียงสามคีย์ — ไม่มี <code>id</code> หลุดออกไป</li>
-        <li>import ที่ชี้ไปไฟล์ในโปรเจกต์ลงท้าย <code>.js</code> ครบทั้งสี่จุด (<code>prisma.service.js</code>, <code>products.service.js</code>, <code>products.controller.js</code>, <code>products.module.js</code>)</li>
-        <li><code>ProductsModule</code> ถูกเพิ่มใน <code>imports</code> ของ <code>AppModule</code> ต่อจาก <code>PrismaModule</code> จริง</li>
+        <li>ลบ <code>APP_URL</code> ออกจาก <code>.env</code> ชั่วคราวแล้วยิงซ้ำ ต้องได้ 500 — ถ้าได้ url ที่มีคำว่า <code>undefined</code> แปลว่าโค้ดอ่าน config แบบเงียบ (<code>get</code>) ไม่ใช่แบบพังทันที</li>
+        <li>ลำดับของ array เป็นลำดับที่ seed ไว้ และคงที่ทุกครั้งที่ยิง — โค้ดต้องสั่งเรียงเอง ไม่ใช่หวังพึ่งลำดับที่ Postgres คืนมา</li>
+        <li>แต่ละรายการมีเพียงสามคีย์ — ไม่มี <code>id</code> หลุดออกไป</li>
+        <li>host ไม่ได้ hard-code: ค้น <code>localhost</code> ในไฟล์ที่ Cursor สร้างหรือแก้ต้องไม่เจอ</li>
+        <li>ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ (<code>git status</code>), <code>npm run build</code> ผ่าน (import ลงท้าย <code>.js</code> ครบ) และไม่มี <code>any</code> / <code>as</code> / <code>!</code></li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> hard-code <code>http://localhost:3000</code> ลงไปใน template string ตรง ๆ (อ่านผ่านตาแล้วดูเหมือนใช้ได้ เพราะ run บนเครื่องแล้วผลตรงกัน แต่สัญญาที่ตั้งไว้คือ host ต้องมาจาก <code>APP_URL</code>) อีกแบบคือ import <code>ConfigModule</code> เข้ามาใน <code>ProductsModule</code> ด้วย — ไม่เสียหายอะไร แต่ไม่จำเป็นเพราะ <code>ConfigModule.forRoot({ isGlobal: true })</code> ทำให้ <code>ConfigService</code> ใช้ได้ทั่วแอปแล้ว ลบออกให้เหลือเท่าที่จำเป็น</p>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้:</p>
       <p><code>src/products/products.service.ts</code></p>
       <pre><code>import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';

@@ -40,56 +40,47 @@
     └── orders/
         ├── carts.controller.ts     (สร้างใหม่)
         └── orders.module.ts        (สร้างใหม่)</code></pre>
+    <p>ชื่อไฟล์และหน้าที่ด้านล่างมาจากโค้ดอ้างอิงของคอร์ส — Cursor อาจตั้งชื่อหรือแบ่งไฟล์ต่างออกไปได้ ขอแค่ไม่แตะไฟล์ที่ไม่เกี่ยวกับเป้าหมายและผ่านผลลัพธ์ที่ต้องได้ใน prompt</p>
     <ul>
       <li><strong><code>src/orders/carts.controller.ts</code></strong> — สัญญา: ต้องเป็น <code>@Controller('carts')</code> กับ <code>@Post('add')</code> และรับ body ด้วย <code>@Body() dto: AddCartDto</code> · ต้องไม่ใส่ <code>@HttpCode()</code>, ไม่คิดเลขหรือแตะ Prisma ใน controller</li>
       <li><strong><code>src/orders/orders.module.ts</code></strong> — สัญญา: ต้องประกาศ <code>controllers: [CartsController]</code> และ <code>providers: [OrdersService]</code> · ต้องไม่ import <code>PrismaModule</code> ซ้ำ (บทที่ 6 ทำให้มันเป็น global module แล้ว)</li>
       <li><strong><code>src/app.module.ts</code></strong> — สัญญา: ต้องเพิ่ม <code>OrdersModule</code> ต่อจาก <code>ProductsModule</code> ใน <code>imports</code> · ต้องไม่แตะ <code>ConfigModule</code>, <code>controllers</code> หรือ <code>providers</code> เดิม</li>
-      <li><strong><code>scripts/contract-check.ts</code></strong> — สัญญา: import <code>orderResponseSchema</code> เพิ่มจาก <code>./contract-schemas.js</code> (ตัว schema มีอยู่แล้วตั้งแต่บทที่ 15) แล้วต่อ check ที่สิบท้าย array เดิม · แก้ไฟล์นี้<strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างล่าง เพราะ prompt นั้นถูกจำกัดขอบเขตไว้แค่สามไฟล์ของ controller</li>
+      <li><strong><code>scripts/contract-check.ts</code></strong> — สัญญา: import <code>orderResponseSchema</code> เพิ่มจาก <code>./contract-schemas.js</code> (ตัว schema มีอยู่แล้วตั้งแต่บทที่ 15) แล้วต่อ check ที่สิบท้าย array เดิม · แก้ไฟล์นี้<strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างล่าง เพราะการเขียน check ด้วยตัวเองคือการยืนยันว่าคุณอ่านสัญญาออกเอง ไม่ใช่ให้ AI ตรวจงานตัวเอง</li>
     </ul>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">สั่ง Cursor เปิด route แล้วยิงทดสอบสี่กรณี</h2>
-      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before carts controller"</code>) — prompt ยก <code>@src/products/products.controller.ts</code> และ <code>@src/products/products.module.ts</code> ให้เป็นแบบอย่าง และย้ำเรื่องชื่อไฟล์กับ path ไว้ชัด ๆ เพราะนี่คือจุดที่ AI ชอบ "แก้ให้ดีขึ้น" โดยไม่ได้ขอ</p>
+      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before carts controller"</code>) — prompt ยก <code>@src/products/products.controller.ts</code> และ <code>@src/products/products.module.ts</code> ให้เป็นแบบอย่าง และย้ำเรื่อง path กับ status ไว้ในผลลัพธ์ที่ต้องได้ชัด ๆ เพราะนี่คือจุดที่ AI ชอบ "แก้ให้ดีขึ้น" โดยไม่ได้ขอ</p>
       <p>ก่อนส่ง อ่าน<a href="01_what-well-be-building.html">กติกาของคอร์ส</a>อีกครั้ง: AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้ — ถ้าอธิบายไม่ได้ แปลว่ายังไม่ผ่านบทนี้</p>
       <div class="cursor-prompt"><code>สร้าง CartsController ที่เปิด POST /carts/add และลงทะเบียน OrdersModule
+@src/app.module.ts @&lt;ไฟล์ service ของ orders ที่คุณสร้างไว้ในบทที่ 18 — โค้ดอ้างอิงคือ src/orders/orders.service.ts&gt;
 
-บริบท: @src/orders/orders.service.ts @src/orders/dto/add-cart.dto.ts @src/products/products.controller.ts @src/products/products.module.ts @src/app.module.ts @.cursor/rules/project.mdc
-React app เรียก POST /carts/add (path นี้ต้องตรงตัว เพราะ src/features/checkout/api.ts เรียก path นี้ตรง ๆ โดยไม่แก้ฝั่ง frontend) และคาดหวัง status 201
-OrdersService.create(dto: AddCartDto) คืน Promise&lt;CartResponseDto&gt; แล้ว
-products.controller.ts และ products.module.ts คือรูปแบบมาตรฐานของ controller และ module ในโปรเจกต์นี้
-
-โครงสร้าง: สร้าง/แก้ไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
-- src/orders/carts.controller.ts (สร้างใหม่)
-- src/orders/orders.module.ts (สร้างใหม่)
-- src/app.module.ts (แก้ไข: เพิ่ม OrdersModule ต่อจาก ProductsModule)
-
-ข้อกำหนดทางเทคนิค:
-- carts.controller.ts: @Controller('carts') export class CartsController constructor(private readonly ordersService: OrdersService)
-  handler @Post('add') create(@Body() dto: AddCartDto) return this.ordersService.create(dto)
-  ไม่ต้องใส่ @HttpCode เพราะ POST ของ Nest ตอบ 201 อยู่แล้ว
-- orders.module.ts: @Module({ controllers: [CartsController], providers: [OrdersService] })
-- ชื่อไฟล์ controller คือ carts.controller.ts (ตาม path) แต่ module และ service ใช้คำว่า orders (ตาม domain)
+ผลลัพธ์ที่ต้องได้:
+- log ตอน npm run start:dev มีบรรทัด Mapped {/carts/add, POST} route (path ต้องเป็น /carts/add ตรงตัว เพราะ React app เรียก path นี้โดยไม่แก้ฝั่ง frontend — ไม่ใช่ /orders)
+- POST /carts/add body {"userId":1,"products":[{"id":1,"quantity":2}],"address":{"address":"1 Sukhumvit Rd","email":"a@b.com","phone":"0812345678"}} → 201 พร้อม receipt ตาม docs/api-spec.md (total 19.98, discountedPrice 17.89, discountedTotal 17.89, totalProducts 1, totalQuantity 2)
+- ไม่มี userId → 400 และ message เป็น array ["userId must not be less than 1","userId must be an integer number"] (validation ของ AddCartDto ต้องทำงานจริง)
+- สินค้า id 99999 → 404 {"message":"Product 99999 not found","error":"Not Found","statusCode":404} และจำนวนแถวใน Order ไม่เพิ่ม
+- email ผิดรูป → 400 message ["address.email must be an email"]
+- npm run build และ npm run lint ผ่าน
 
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
-- ห้ามแก้ไฟล์อื่นนอกจากที่ระบุ
+- ห้ามแก้ service หรือการคำนวณที่ทำไว้ในบทที่ 18
 - ยังไม่ต้องเปิด CORS</code></div>
     </section>
 
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li>ชื่อไฟล์คือ <code>carts.controller.ts</code> และ class คือ <code>CartsController</code> ไม่ใช่ <code>OrdersController</code></li>
-        <li><code>@Controller('carts')</code> คู่กับ <code>@Post('add')</code> — รวมกันได้ <code>POST /carts/add</code> ไม่มี <code>/orders</code> โผล่ที่ไหน</li>
-        <li>parameter เป็น <code>@Body() dto: AddCartDto</code> มีชนิดกำกับครบ ไม่ใช่ <code>any</code> และไม่มี <code>@Body('products')</code> แยกส่วน</li>
-        <li>ไม่มี <code>@HttpCode()</code> ใน controller เลย</li>
-        <li>handler บรรทัดเดียว <code>return this.ordersService.create(dto)</code> — ไม่มี try/catch, ไม่มีการคิดเลข, ไม่มีการเรียก Prisma ตรง</li>
-        <li><code>orders.module.ts</code> มี <code>controllers: [CartsController]</code> และ <code>providers: [OrdersService]</code> ไม่มี <code>imports</code> เกินมา</li>
-        <li><code>app.module.ts</code> เพิ่ม <code>OrdersModule</code> ต่อจาก <code>ProductsModule</code> และ <code>git diff src/app.module.ts</code> เห็นแค่บรรทัด import กับบรรทัดใน array</li>
-        <li>import ทุกตัวลงท้ายด้วย <code>.js</code> ตามกติกา ESM ของโปรเจกต์</li>
+        <li>log ตอน start มี <code>Mapped {/carts/add, POST} route</code> — path รวมกันได้ <code>POST /carts/add</code> ไม่มี <code>/orders</code> โผล่ที่ไหน</li>
+        <li>ยิงทั้งสี่กรณีในส่วน "ผลลัพธ์ที่ต้องได้" แล้วได้ <code>201</code>, <code>400</code>, <code>404</code>, <code>400</code> พร้อม body ตรงตัวอักษร — ถ้ากรณี 400 ได้ 201 แทน แปลว่า body ไม่ได้ถูกประกาศชนิดเป็น DTO class ทำให้ validation ไม่ทำงาน</li>
+        <li>POST ตอบ <code>201</code> ไม่ใช่ <code>200</code></li>
+        <li>controller ไม่คิดเลข ไม่เรียก Prisma ตรง และไม่กลืน error ด้วย try/catch — ส่งงานต่อให้ service ที่ทำไว้ในบทที่ 18</li>
+        <li><code>git status</code> ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ — ฝั่ง root module มีแค่การลงทะเบียน module ใหม่ และ service/การคำนวณจากบทที่ 18 ไม่ถูกแตะ</li>
+        <li>ไม่มี <code>any</code>, <code>as</code>, <code>!</code> และ import ทุกตัวลงท้ายด้วย <code>.js</code> ตามกติกา ESM ของโปรเจกต์</li>
       </ul>
-      <p><strong>AI มักพลาดตรงนี้:</strong> ตั้งชื่อเป็น <code>OrdersController</code> พร้อม <code>@Controller('orders')</code> เพราะมันดูสอดคล้องกับชื่อ service และ module มากกว่า ผลคือโค้ดดูสวยแต่ React app ได้ 404 ทุกครั้งที่กดสั่งซื้อ อีกกรณีคือแถม <code>@HttpCode(201)</code> (ไม่ผิดผลลัพธ์ แต่เกินความจำเป็นและ prompt สั่งห้าม) หรือเผลอ import <code>PrismaModule</code> เข้า <code>OrdersModule</code> ซ้ำ ทั้งที่มันเป็น global module อยู่แล้ว</p>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
+      <p><strong>AI มักพลาดตรงนี้:</strong> ตั้ง route เป็น <code>/orders</code> เพราะมันดูสอดคล้องกับชื่อ service และ module มากกว่า ผลคือโค้ดดูสวยแต่ React app ได้ 404 ทุกครั้งที่กดสั่งซื้อ อีกกรณีคือแถม <code>@HttpCode(200)</code> (ทำสัญญา 201 พัง) หรือเผลอ import <code>PrismaModule</code> ซ้ำ ทั้งที่มันเป็น global module อยู่แล้ว</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้:</p>
       <pre><code>// src/orders/carts.controller.ts
 import { Body, Controller, Post } from '@nestjs/common';
 import { AddCartDto } from './dto/add-cart.dto.js';
@@ -139,7 +130,7 @@ export class AppModule {}</code></pre>
 
     <section class="workshop" aria-labelledby="contract-check-heading">
       <h2 id="contract-check-heading">เพิ่ม check ที่สิบด้วยมือ</h2>
-      <p>บทที่ 15 ตั้งใจปล่อยให้ <code>scripts/contract-check.ts</code> มีแค่เก้า check ไว้ก่อน เพราะตอนนั้น <code>POST /carts/add</code> ยังไม่มีอยู่จริง ตอนนี้มันมีแล้ว จึงถึงเวลาต่อ check ที่สิบเข้าไป — แก้ไฟล์นี้ <strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างบน เพราะ prompt นั้นสั่งห้ามแก้ไฟล์อื่นนอกจากสามไฟล์ของ controller ไว้ชัดเจนแล้ว การเพิ่ม check นี้เป็นงานแยกที่ควรทำเอง จะได้อธิบายทุกบรรทัดได้เหมือนเดิม</p>
+      <p>บทที่ 15 ตั้งใจปล่อยให้ <code>scripts/contract-check.ts</code> มีแค่เก้า check ไว้ก่อน เพราะตอนนั้น <code>POST /carts/add</code> ยังไม่มีอยู่จริง ตอนนี้มันมีแล้ว จึงถึงเวลาต่อ check ที่สิบเข้าไป — แก้ไฟล์นี้ <strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างบน เพราะเป้าหมายของ prompt นั้นคือเปิด endpoint เท่านั้น และกติกาใน rules ห้ามแตะไฟล์ที่ไม่เกี่ยวกับเป้าหมาย การเพิ่ม check นี้เป็นงานแยกที่ควรทำเอง จะได้อธิบายทุกบรรทัดได้เหมือนเดิม</p>
       <p>เปิด <code>scripts/contract-check.ts</code> แล้วเพิ่ม <code>orderResponseSchema</code> เข้า import (ตัว schema เองมีอยู่แล้วตั้งแต่บทที่ 15 ไม่ต้องเขียนใหม่)</p>
       <pre><code>import {
   categorySchema,
@@ -228,7 +219,7 @@ LOG [RouterExplorer] Mapped {/carts/add, POST} route +0ms</code></pre>
 ✅ GET /products?limit=0 → 400 (out of range)
 ✅ GET /products?limit=101 → 400 (out of range)
 ✅ GET /products/1 → validated product
-✅ GET /products/999999 → 404 with message
+✅ GET /products/9999 → 404 with message
 ✅ GET /products/abc → 400 with message
 ✅ GET /products/category/groceries?limit=20&amp;skip=0 → total 27
 ✅ GET /products/category/nope?limit=5&amp;skip=0 → 200, empty envelope

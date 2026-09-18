@@ -81,17 +81,12 @@
     <p><code>satisfies</code> สำคัญกว่าที่เห็น: ถ้าเขียน <code>const productInclude: Prisma.ProductInclude = {...}</code> TypeScript จะกว้างเกินไป และถ้าไม่ใส่อะไรเลย <code>'asc'</code> จะถูกอนุมานเป็น <code>string</code> ซึ่ง Prisma ไม่รับ <code>satisfies</code> ตรวจว่าก้อนนี้เข้ากับ <code>Prisma.ProductInclude</code> จริง <em>โดยยังคง literal type</em> <code>'asc'</code> ไว้ให้</p>
 
     <h2>เป้าหมายของบทนี้</h2>
-    <pre><code>src/
-├── main.ts                           (แก้ไข: เพิ่ม global ValidationPipe)
-└── products/
-    ├── dto/pagination-query.dto.ts   (สร้างใหม่)
-    ├── products.controller.ts        (แก้ไข: เพิ่ม handler)
-    └── products.service.ts           (แก้ไข: productInclude + paginate + findAll)</code></pre>
+    <p>ในโค้ดอ้างอิงคือ query DTO ใหม่ + list endpoint ใน <code>src/products/</code> และการเปิด validation แบบ global ใน <code>src/main.ts</code> — Cursor เลือกที่วางเองได้ โดยต้องได้ผลลัพธ์นี้</p>
     <ul>
-      <li><strong><code>src/products/dto/pagination-query.dto.ts</code></strong> — สัญญา: <code>skip</code> ค่าเริ่มต้น <code>0</code> พร้อม <code>@IsInt()</code> <code>@Min(0)</code>, <code>limit</code> ค่าเริ่มต้น <code>20</code> พร้อม <code>@IsInt()</code> <code>@Min(1)</code> <code>@Max(100)</code> / ต้องไม่ใส่ <code>@IsOptional()</code> และไม่ใส่ <code>?</code></li>
-      <li><strong><code>src/main.ts</code></strong> — สัญญา: ต้องเพิ่ม <code>useGlobalPipes</code> ก่อน <code>app.listen</code> ด้วย option สามข้อตามที่ระบุ / ต้องไม่เปลี่ยนวิธีอ่าน port</li>
-      <li><strong><code>src/products/products.service.ts</code></strong> — สัญญา: ต้องมี <code>productInclude</code> ระดับไฟล์ที่ <code>findOne</code> หันมาใช้ด้วย, <code>private async paginate(where, skip, limit)</code> ที่ envelope คืนค่า <code>limit</code> ตามที่ request ส่งเข้ามาตรง ๆ (ไม่ใช่ <code>rows.length</code>), และ <code>findAll(query)</code> ที่เรียก <code>paginate({}, …)</code> / ต้องไม่เขียน logic pagination ซ้ำใน <code>findAll</code></li>
-      <li><strong><code>src/products/products.controller.ts</code></strong> — สัญญา: ต้องเพิ่ม <code>@Get()</code> ไว้<em>ระหว่าง</em> <code>findCategories</code> กับ <code>findOne</code> / ต้องไม่ย้าย <code>@Get(':id')</code> ขึ้นไปข้างบน</li>
+      <li><code>GET /products</code> ตอบ envelope <code>{ products, total, skip, limit }</code> ตามกติกาในตารางข้างบนทุกแถว รวมถึง <code>limit</code> ที่ echo ค่าที่ขอมาเสมอ</li>
+      <li>query ผิดช่วงหรือผิดรูปได้ 400 ก่อนถึงฐานข้อมูล ส่วน query ที่ไม่รู้จักถูกตัดทิ้ง</li>
+      <li><code>total</code> กับหน้าข้อมูลมาจาก snapshot เดียว และ logic pagination พร้อมให้บทที่ 14 ใช้ซ้ำ</li>
+      <li><code>GET /products/categories</code> และ <code>GET /products/:id</code> ยังทำงานเหมือนเดิม</li>
     </ul>
 
     <h2>ติดตั้ง validator ก่อน (ทำด้วยมือ)</h2>
@@ -102,54 +97,36 @@
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">สั่ง Cursor ทำ list endpoint พร้อม pagination</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: install validators"</code>) จากนั้นส่ง prompt นี้</p>
-      <div class="cursor-prompt"><code>เพิ่ม endpoint GET /products พร้อม skip/limit ที่ validate ตาม docs/api-spec.md และเปิด ValidationPipe แบบ global
+      <div class="cursor-prompt"><code>เพิ่ม endpoint GET /products พร้อม skip/limit ที่ validate ตาม docs/api-spec.md และเปิด validation ของ query แบบ global
+@&lt;controller และ service ของ products จากบทที่ 10&gt; @src/main.ts — โค้ดอ้างอิงของ products คือ src/products/products.controller.ts กับ src/products/products.service.ts
 
-บริบท: @src/main.ts @src/products/products.controller.ts @src/products/products.service.ts @src/products/product.mapper.ts @src/products/dto/product-response.dto.ts @docs/api-spec.md @.cursor/rules/project.mdc
-ติดตั้ง class-validator และ class-transformer แล้ว
-docs/api-spec.md ระบุ envelope { products: Product[], total, skip, limit } โดย skip และ limit ต้อง echo ค่าที่ request ขอมาเสมอ ไม่ใช่จำนวนแถวที่ส่งกลับจริง
-กติกาของเรา: ถ้าไม่ส่ง limit ใช้ 20, ถ้าไม่ส่ง skip ใช้ 0, limit ต้องเป็น integer อยู่ในช่วง 1–100 ไม่งั้นตอบ 400, สินค้าเรียงตาม id น้อยไปมาก
-field limit ใน response ต้อง echo ค่าที่ request ขอมาเสมอ แม้ query จะเลยขอบข้อมูลแล้วได้สินค้าน้อยกว่าที่ขอ เช่น ?limit=10&amp;skip=200 (เหลือของแค่ 8 ชิ้นจาก total 208) ต้องตอบ limit: 10 พร้อม products แค่ 8 ชิ้น ไม่ใช่ limit: 8
-มี ProductListResponseDto { products, total, skip, limit } และ toProductResponse อยู่แล้ว
-findOne ใช้ include: { category: true, reviews: { orderBy: { id: 'asc' } } } — list ต้องใช้ include เดียวกัน
-
-โครงสร้าง: สร้าง/แก้ไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
-- src/products/dto/pagination-query.dto.ts (สร้างใหม่)
-- src/products/products.service.ts (แก้ไข)
-- src/products/products.controller.ts (แก้ไข)
-- src/main.ts (แก้ไข)
-
-ข้อกำหนดทางเทคนิค:
-- pagination-query.dto.ts: export class PaginationQueryDto มีสอง field พร้อมค่าเริ่มต้น
-  @IsInt() @Min(0) skip: number = 0
-  @IsInt() @Min(1) @Max(100) limit: number = 20
-  ไม่ต้องใส่ @Type และไม่ต้องใส่ @IsOptional เพราะจะเปิด enableImplicitConversion ที่ pipe และมีค่าเริ่มต้นแล้ว
-- main.ts: ก่อน app.listen เพิ่ม app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true, transformOptions: { enableImplicitConversion: true } }))
-- service: ประกาศค่าคงที่ระดับไฟล์ const productInclude = { category: true, reviews: { orderBy: { id: 'asc' } } } satisfies Prisma.ProductInclude
-  (import type { Prisma } from '../generated/prisma/client.js') แล้วให้ findOne ใช้ include: productInclude แทนของเดิม
-  เพิ่ม private async paginate(where: Prisma.ProductWhereInput, skip: number, limit: number): Promise&lt;ProductListResponseDto&gt;
-  ใช้ this.prisma.$transaction([ findMany, count ]) โดย findMany มี where, skip, take: limit, orderBy: { id: 'asc' }, include: productInclude ส่วน count มี where เดียวกัน
-  คืน { products: rows.map(toProductResponse), total, skip, limit } (limit คือค่าที่รับเข้ามาตรง ๆ ไม่ใช่ rows.length)
-  เพิ่ม findAll(query: PaginationQueryDto) ที่คืน this.paginate({}, query.skip, query.limit)
-- controller: เพิ่ม handler @Get() findAll(@Query() query: PaginationQueryDto) วางไว้ระหว่าง findCategories กับ findOne (ต้องอยู่ก่อน @Get(':id'))
+ผลลัพธ์ที่ต้องได้:
+- GET /products?limit=2&amp;skip=0 ตอบ 200 envelope ที่มีคีย์ products, total, skip, limit เท่านั้น: total 208, skip 0, limit 2, products คือ id 1 และ 2 (เรียงตาม id น้อยไปมาก)
+- สินค้าในรายการมีรูปทรงเดียวกับ GET /products/:id ทุกคีย์
+- GET /products (ไม่ส่ง query) ได้ skip 0, limit 20 และ products 20 ชิ้น
+- GET /products?limit=10&amp;skip=200 ได้ total 208, limit 10 (echo ค่าที่ขอมา ไม่ใช่จำนวนแถวที่ได้จริง) และ products แค่ 8 ชิ้น
+- limit=0, limit=101, limit=-1, limit=abc และ skip=-1 ตอบ 400 ก่อนถึง query ฐานข้อมูล (limit ต้องเป็น integer 1–100, skip ต้องเป็น integer ≥ 0)
+- query ที่ไม่รู้จัก เช่น ?limit=2&amp;sort=price ถูกตัดทิ้งเงียบ ๆ ได้ 200 ปกติ
+- total กับหน้าข้อมูลมาจาก snapshot เดียวกัน (ไม่ใช่สอง query ที่ข้อมูลเปลี่ยนระหว่างกันได้)
+- กติกา pagination ชุดนี้ใช้ซ้ำได้ เพราะบทที่ 14 จะเพิ่ม GET /products/category/:slug ที่ใช้กติกาเดียวกันทุกข้อ
+- GET /products/categories และ GET /products/:id ยังทำงานเหมือนเดิม
 
 ขอบเขต:
-- ห้ามติดตั้ง dependency ใหม่
-- ห้ามแก้ไฟล์อื่นนอกจากที่ระบุ
+- ห้ามติดตั้ง dependency ใหม่ (class-validator และ class-transformer ติดตั้งไว้แล้ว)
 - ยังไม่ต้องทำ GET /products/category/:slug</code></div>
     </section>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li>DTO มีค่าเริ่มต้น <code>skip: number = 0</code> พร้อม <code>@IsInt()</code> <code>@Min(0)</code> และ <code>limit: number = 20</code> พร้อม <code>@IsInt()</code> <code>@Min(1)</code> <code>@Max(100)</code> — ไม่มี <code>?</code> ไม่มี <code>@IsOptional()</code></li>
-        <li>option ของ pipe มีครบสามข้อและไม่มีข้ออื่นแถมมา: <code>whitelist</code>, <code>transform</code>, <code>transformOptions: { enableImplicitConversion: true }</code></li>
-        <li><code>$transaction</code> ใช้รูปแบบ array <code>[findMany, count]</code> ไม่ใช่ callback</li>
-        <li><code>take: limit</code> ตรง ๆ ไม่มี ternary พิเศษ</li>
-        <li>envelope คืน <code>limit</code> ตามค่าที่รับเข้ามาตรง ๆ — ไม่ใช่ <code>rows.length</code></li>
-        <li><code>findOne</code> เปลี่ยนมาใช้ <code>include: productInclude</code> แล้ว ไม่มี <code>include</code> แบบเขียนสดค้างอยู่</li>
-        <li>ใน controller ลำดับ handler เป็น <code>findCategories</code> → <code>findAll</code> → <code>findOne</code></li>
+        <li>ค่าเริ่มต้นทำงานโดยไม่ส่ง query: <code>limit</code> 20 และ <code>skip</code> 0 — และค่าเริ่มต้นประกาศไว้ที่เดียว ไม่ได้โปรย <code>?? 20</code> ไว้หลายจุด</li>
+        <li><code>?limit=10&amp;skip=200</code> ได้ <code>limit: 10</code> ไม่ใช่ <code>8</code> — ต้องทดสอบ query ที่เลยขอบข้อมูลจริง ไม่ใช่แค่หน้าแรก</li>
+        <li><code>limit</code> นอกช่วง 1–100, ไม่ใช่ integer หรือ <code>skip</code> ติดลบ ได้ 400 ทุกกรณี และ query ที่ไม่รู้จักถูกตัดทิ้งได้ 200</li>
+        <li><code>total</code> กับรายการสินค้าดึงมาใน transaction เดียวกัน ไม่ใช่สอง query แยกอิสระ</li>
+        <li>สินค้าในรายการมีรูปทรงเดียวกับ <code>GET /products/:id</code> ทุกคีย์ และการดึง relation ไม่ได้ถูก copy ไว้สองที่จนวันหนึ่ง list กับ detail ตอบไม่เหมือนกัน</li>
+        <li><code>GET /products/categories</code> และ <code>GET /products/1</code> ยังตอบเหมือนเดิม, ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ และไม่มี <code>any</code> / <code>as</code> / <code>!</code></li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> ประกาศ <code>skip?: number</code> คู่กับ <code>@IsOptional()</code> แล้วไปโปรย <code>query.skip ?? 0</code> ตามจุดต่าง ๆ ใน service — ใช้งานได้ แต่ย้ายกฎเรื่องค่าเริ่มต้นออกจาก DTO ไปกระจายในโค้ด ซึ่งบทที่ 21 (Swagger) จะอ่านค่าเริ่มต้นไม่เจอ อีกข้อที่พลาดบ่อยกว่าคือเขียน <code>limit: rows.length</code> ตรงบรรทัด return — ดูถูกต้องทุกอย่างในหน้าแรก เพราะ <code>rows.length</code> เท่ากับ <code>limit</code> ที่ขอมาพอดีตราบใดที่ยังมีข้อมูลเหลือพอ แล้วจะพังเงียบ ๆ เฉพาะตอนที่ query วิ่งเลยขอบข้อมูลไปแล้วเท่านั้น การทดสอบจึงต้องมี query ที่วิ่งเลยขอบข้อมูลจริง ๆ ด้วย ไม่ใช่เช็คแค่หน้าแรก</p>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้:</p>
       <p><code>src/products/dto/pagination-query.dto.ts</code></p>
       <pre><code>import { IsInt, Max, Min } from 'class-validator';
 
@@ -300,6 +277,7 @@ export class ProductsController {
         </li>
         <li>ขอเลยขอบข้อมูล — <code>curl -s "http://localhost:3000/products?limit=10&amp;skip=200"</code> ต้องได้ <code>limit: 10</code> (ค่าที่ขอมา ไม่ใช่ <code>8</code>) พร้อม <code>products.length: 8</code> และ <code>total: 208</code> (208 - 200 = 8 ซึ่งน้อยกว่า 10 ที่ขอ)</li>
         <li><code>whitelist</code> ทำงาน — <code>curl -s "http://localhost:3000/products?limit=2&amp;sort=price"</code> ต้องได้ 200 ปกติ ไม่ใช่ 400</li>
+        <li>ขยาย <code>scripts/contract-check.ts</code> จากบทที่ 12 ให้ครอบ endpoint ใหม่ด้วยมือ (ไม่ต้องสั่ง Cursor) แล้ว <code>npm run contract:check</code> ต้องได้ <code>✅</code> ครบ<strong>เจ็ด</strong>บรรทัด — สาม check ที่เพิ่มคือ <code>GET /products?limit=5&amp;skip=0</code> (200, envelope มีสี่คีย์ <code>products</code>/<code>total</code>/<code>skip</code>/<code>limit</code> พอดี และทั้ง <code>limit</code> และจำนวน <code>products</code> เป็น 5), <code>GET /products?limit=0</code> (400) และ <code>GET /products?limit=101</code> (400)</li>
         <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: GET /products with pagination"</code></li>
       </ul>
     </section>

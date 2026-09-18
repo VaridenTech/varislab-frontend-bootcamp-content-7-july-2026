@@ -62,63 +62,53 @@
     <p>รูปแบบ error ที่ตอบออกไปเป็นมาตรฐานของ Nest: <code>message</code> เป็น array ของทุกข้อที่ผิดพร้อมกัน ไม่ใช่ string เดี่ยว — <code>ApiError</code> ของ React app อ่านค่าจาก <code>data.message</code> ได้อยู่แล้วไม่ว่าจะเป็น string หรือ array และการบอกครบทุกข้อในรอบเดียวมีประโยชน์กับคนใช้ API มากกว่าการต้องยิงซ้ำทีละข้อ</p>
 
     <h2>เป้าหมายของบทนี้</h2>
+    <p>รายการด้านล่างคือไฟล์ที่เปลี่ยนใน<strong>โค้ดอ้างอิงของคอร์ส</strong> — ใช้เป็นแผนที่ตอนเทียบงาน ไม่ใช่ข้อบังคับ Cursor ของคุณอาจวางไฟล์หรือตั้งชื่อต่างไปได้ ขอแค่ผ่านผลลัพธ์ที่ต้องได้ใน prompt</p>
     <pre><code>ecommerce-api/
 └── src/
     └── orders/
         └── dto/
             └── add-cart.dto.ts   (สร้างใหม่)</code></pre>
     <ul>
-      <li><strong><code>src/orders/dto/add-cart.dto.ts</code></strong> — สัญญา: ต้อง <code>export</code> class สามตัวในไฟล์เดียว เรียง <code>CartProductDto</code> → <code>AddressDto</code> → <code>AddCartDto</code>, ทุก field มี decorator, <code>products</code> มีทั้ง <code>@IsArray()</code>, <code>@ArrayMinSize(1)</code>, <code>@ValidateNested({ each: true })</code> และ <code>@Type()</code> · ต้องไม่มี field ที่เป็น optional, ไม่มีค่า default, ไม่ติดตั้ง package ใหม่ (class-validator และ class-transformer ติดตั้งไว้แล้วตั้งแต่บทที่ 13)</li>
+      <li><strong><code>src/orders/dto/add-cart.dto.ts</code></strong> — ในโค้ดอ้างอิง: <code>export</code> class สามตัวในไฟล์เดียว เรียง <code>CartProductDto</code> → <code>AddressDto</code> → <code>AddCartDto</code>, ทุก field มี decorator, <code>products</code> มีทั้ง <code>@IsArray()</code>, <code>@ArrayMinSize(1)</code>, <code>@ValidateNested({ each: true })</code> และ <code>@Type()</code> · ไม่มี field ที่เป็น optional, ไม่มีค่า default, ไม่ติดตั้ง package ใหม่ (class-validator และ class-transformer ติดตั้งไว้แล้วตั้งแต่บทที่ 13)</li>
       <li>ยังไม่มี controller ในบทนี้ — DTO ตัวนี้จะถูกใช้ครั้งแรกในบทที่ 18 (service) และผูกเข้า route ในบทที่ 19</li>
     </ul>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">สั่ง Cursor เขียน DTO ของ POST /carts/add</h2>
-      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before add-cart dto"</code>) — prompt ให้ <code>@src/products/dto/pagination-query.dto.ts</code> เป็นตัวอย่างสไตล์ DTO ของโปรเจกต์ และให้ <code>@src/main.ts</code> เพื่อให้ AI เห็นว่า <code>ValidationPipe</code> ตั้งค่าไว้แบบไหนแล้ว</p>
+      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before add-cart dto"</code>) — ไม่ต้อง <code>@</code>-mention ไฟล์ตัวอย่าง Cursor Agent อ่านสไตล์ DTO ที่มีอยู่แล้วในโปรเจกต์และการตั้งค่า <code>ValidationPipe</code> ใน <code>main.ts</code> ได้เอง</p>
       <p>ก่อนส่ง อ่าน<a href="01_what-well-be-building.html">กติกาของคอร์ส</a>อีกครั้ง: AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้ — ถ้าอธิบายไม่ได้ แปลว่ายังไม่ผ่านบทนี้</p>
       <div class="cursor-prompt"><code>สร้าง DTO สำหรับ validate body ของ POST /carts/add ตามที่ React app ส่งมา
 
-บริบท: @src/products/dto/pagination-query.dto.ts @src/main.ts @docs/api-spec.md @.cursor/rules/project.mdc
-ValidationPipe แบบ global เปิด whitelist และ transform อยู่แล้ว (ดูใน main.ts)
-React app ส่ง body รูปนี้เสมอ:
-  { "userId": 1, "products": [{ "id": 1, "quantity": 2 }], "address": { "address": "...", "email": "...", "phone": "..." } }
-address ฝั่ง React ถูก validate ด้วย zod: address ต้องไม่ว่าง, email ต้องเป็นอีเมล, phone ต้องไม่ว่าง — ฝั่ง API ต้องตรวจซ้ำ
-เมื่อไม่มี userId ของเราให้ ValidationPipe ตอบ 400 ตามรูปแบบมาตรฐานของ Nest ได้เลย (message เป็น array ของทุกข้อที่ผิด)
-
-โครงสร้าง: สร้างไฟล์เดียว
-- src/orders/dto/add-cart.dto.ts (สร้างใหม่)
-
-ข้อกำหนดทางเทคนิค:
-- export class สามตัวในไฟล์เดียว เรียงตามลำดับนี้
-  CartProductDto: @IsInt() @Min(1) id: number และ @IsInt() @Min(1) quantity: number
-  AddressDto: @IsString() @IsNotEmpty() address: string, @IsEmail() email: string, @IsString() @IsNotEmpty() phone: string
-  AddCartDto: @IsInt() @Min(1) userId: number,
-    @IsArray() @ArrayMinSize(1) @ValidateNested({ each: true }) @Type(() =&gt; CartProductDto) products: CartProductDto[],
-    @ValidateNested() @Type(() =&gt; AddressDto) address: AddressDto
-- @Type มาจาก class-transformer ที่เหลือมาจาก class-validator
-- ไม่มี field ใดเป็น optional ไม่มี default
-- ห้ามใช้ interface สำหรับ body เพราะ ValidationPipe ต้องการ class
+ผลลัพธ์ที่ต้องได้ (ทดสอบด้วย curl ได้จริงเมื่อผูก route ในบทที่ 19 — บทนี้ตรวจด้วย build และอ่านโค้ด):
+- body รูปนี้ผ่าน validation ครบทุกชั้น: { "userId": 1, "products": [{ "id": 1, "quantity": 2 }], "address": { "address": "...", "email": "...", "phone": "..." } }
+- ทุก field required: ขาด userId, products หรือ address ตัวใดตัวหนึ่ง → 400
+- userId, products[].id, products[].quantity ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป — 0, ติดลบ หรือทศนิยม → 400
+- products: [] (ตะกร้าว่าง) → 400
+- ทุกสมาชิกใน products ถูกตรวจ: { "products": [{ "id": 1 }] } ที่ขาด quantity → 400
+- address ถูกตรวจข้างในตามกฎเดียวกับฟอร์มฝั่ง React (address ไม่ว่าง, email เป็นอีเมล, phone ไม่ว่าง): "address": {} → 400 และ email ผิดรูป → 400 ด้วย message ที่มีคำนำหน้า address. เช่น "address.email must be an email"
+- error 400 ใช้รูปแบบมาตรฐานของ ValidationPipe ใน Nest (message เป็น array ของทุกข้อที่ผิด) ไม่ต้องเขียนรูปแบบเอง
+- field ที่ไม่ได้ประกาศ (เช่น isAdmin) ถูกตัดทิ้ง ไม่ไหลเข้า service
+- DTO ของ body ถูก export ไว้ให้ service (บทที่ 18) และ route POST /carts/add (บทที่ 19) import ไปใช้
+- npm run build และ npm run lint ผ่าน
 
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
-- ห้ามแก้ไฟล์อื่น
 - ยังไม่ต้องสร้าง service, controller หรือ module ของ orders</code></div>
     </section>
 
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li>ลำดับ class ในไฟล์คือ <code>CartProductDto</code>, <code>AddressDto</code> แล้วค่อย <code>AddCartDto</code> — เป็นเรื่องความอ่านง่าย ไม่ใช่ข้อบังคับทางเทคนิค (thunk ใน <code>@Type()</code> ทำให้ลำดับไม่สำคัญ) แต่ให้จัดให้ตรงกันเพื่อเทียบกับโค้ดอ้างอิงทีละบรรทัดได้</li>
-        <li><code>@Type()</code> ปรากฏ <strong>สองครั้ง</strong> คือที่ <code>products</code> และที่ <code>address</code> (ค้นด้วย <code>grep -c "@Type" src/orders/dto/add-cart.dto.ts</code> ต้องได้ 2)</li>
-        <li><code>Type</code> import มาจาก <code>class-transformer</code> ส่วน decorator ที่เหลือมาจาก <code>class-validator</code> — สอง package ไม่ปนกัน</li>
-        <li><code>products</code> มี <code>@ArrayMinSize(1)</code> และ <code>@ValidateNested({ each: true })</code> ครบ</li>
-        <li><code>email</code> ใช้ <code>@IsEmail()</code> ไม่ใช่ <code>@IsString()</code> เปล่า ๆ และไม่มี regex เขียนเองมาแทน</li>
-        <li>ไม่มี <code>@IsOptional()</code>, ไม่มีค่า default, ไม่มี <code>?</code> หลังชื่อ field ตัวใดเลย</li>
-        <li><code>id</code>, <code>quantity</code>, <code>userId</code> ใช้ <code>@IsInt()</code> คู่กับ <code>@Min(1)</code> — id 0 หรือจำนวน 0 ชิ้นไม่ใช่ค่าที่ถูกต้อง</li>
-        <li>ไม่มีไฟล์อื่นถูกแก้ (<code>git status</code> เห็นไฟล์ใหม่ไฟล์เดียว) และ <code>package.json</code> ไม่เปลี่ยน</li>
+        <li>body ของ request เป็น <strong>class</strong> ไม่ใช่ <code>interface</code> — ไม่งั้น <code>ValidationPipe</code> ไม่มี rule ให้ตรวจเลย</li>
+        <li><code>address</code> และสมาชิกทุกตัวของ <code>products</code> ถูกแปลงเป็น instance และถูกไล่ตรวจข้างในจริง — อ่านโค้ดแล้วชี้ได้ว่าบรรทัดไหนทำให้ <code>"address": {}</code> ได้ 400 (ถ้าชี้ไม่ได้ มักแปลว่าขาดตัวแปลงชนิดของ nested object)</li>
+        <li>ตะกร้าว่าง (<code>products: []</code>) ไม่ผ่าน</li>
+        <li><code>email</code> ถูกตรวจว่าเป็นอีเมลจริง ไม่ใช่แค่เป็น string และไม่มี regex เขียนเองมาแทนตัวตรวจของ library</li>
+        <li>ไม่มี field ไหนเป็น optional หรือมีค่า default</li>
+        <li><code>userId</code>, <code>id</code>, <code>quantity</code> ปฏิเสธ 0, ค่าติดลบ และทศนิยม</li>
+        <li><code>git status</code> ไม่มีไฟล์ที่ไม่เกี่ยวกับ DTO ตัวนี้ถูกแก้, <code>package.json</code> ไม่เปลี่ยน และไม่มี <code>any</code>, <code>as</code> หรือ <code>!</code></li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> ลืม <code>@Type(() =&gt; AddressDto)</code> ที่ field <code>address</code> เพราะมันดู "ไม่ใช่ array" จึงรู้สึกว่าไม่ต้องมี ผลคือ <code>address</code> กลายเป็น plain object ที่ validation ผ่านทุกค่า รวมถึง object ว่าง ตรวจง่าย ๆ ด้วยการนับจำนวน <code>@Type</code> ในไฟล์ว่าได้ 2 จริง อีกกรณีคือใส่ <code>@IsObject()</code> แทน <code>@ValidateNested()</code> ซึ่งตรวจแค่ว่า "เป็น object" แล้วจบ</p>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้ (บทที่ 18–19 อ้างชื่อ <code>AddCartDto</code> และ path <code>src/orders/dto/add-cart.dto.ts</code> ถ้าของคุณต่างไปก็ไม่เป็นไร Cursor ในบทนั้นจะอ่านจากโค้ดของคุณเอง):</p>
       <pre><code>// src/orders/dto/add-cart.dto.ts
 import { Type } from 'class-transformer';
 import {
@@ -184,9 +174,9 @@ export class AddCartDto {
       <ul>
         <li><code>npm run build</code> ผ่าน ไม่มี error</li>
         <li><code>npm run lint</code> ผ่าน (oxlint ดู <code>src/</code> จึงครอบไฟล์นี้แล้ว)</li>
-        <li><code>grep -c "@Type" src/orders/dto/add-cart.dto.ts</code> ได้ <code>2</code></li>
-        <li><code>grep -n "IsOptional\|?:" src/orders/dto/add-cart.dto.ts</code> ไม่เจออะไรเลย — ยืนยันว่าไม่มี field optional หลุดมา</li>
-        <li><code>git diff --stat HEAD</code> เห็นไฟล์เดียว และ <code>package.json</code> กับ <code>package-lock.json</code> ไม่อยู่ในรายการ</li>
+        <li>ถ้าใช้ class-transformer เหมือนโค้ดอ้างอิง <code>grep -rc "@Type" src/orders/dto/</code> รวมกันต้องได้ <code>2</code> (หนึ่งที่ <code>products</code> หนึ่งที่ <code>address</code>)</li>
+        <li><code>grep -rn "IsOptional\|?:" src/orders/dto/</code> ไม่เจออะไรเลย — ยืนยันว่าไม่มี field optional หลุดมา</li>
+        <li><code>git diff --stat HEAD</code> เห็นแค่ไฟล์ DTO ที่สร้างใหม่ (ในโค้ดอ้างอิงคือ <code>src/orders/dto/</code>) และ <code>package.json</code> กับ <code>package-lock.json</code> ไม่อยู่ในรายการ</li>
         <li>commit ผลงานของบทนี้: <code>git add -A &amp;&amp; git commit -m "feat: add-cart dto"</code></li>
       </ul>
     </section>

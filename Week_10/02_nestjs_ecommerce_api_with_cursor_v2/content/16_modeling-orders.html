@@ -60,13 +60,14 @@
     <div class="note"><p>ลำดับต้องเป็น <code>orderItem</code> ก่อน <code>order</code> เสมอ ไม่ใช่เพราะ Cascade ใช้ไม่ได้ (ใช้ได้) แต่เพราะการเขียนลำดับลูกก่อนแม่ให้ชัดเจนทำให้อ่าน seed แล้วเห็น dependency graph ทันที และไม่ต้องพึ่งพฤติกรรมของ FK</p></div>
 
     <h2>เป้าหมายของบทนี้</h2>
+    <p>รายการด้านล่างคือไฟล์ที่เปลี่ยนใน<strong>โค้ดอ้างอิงของคอร์ส</strong> — ใช้เป็นแผนที่ตอนเทียบงาน ไม่ใช่ข้อบังคับ Cursor ของคุณอาจวางไฟล์หรือตั้งชื่อต่างไปได้ ขอแค่ผ่านผลลัพธ์ที่ต้องได้ใน prompt</p>
     <pre><code>ecommerce-api/
 └── prisma/
     ├── schema.prisma   (แก้ไข: เพิ่ม model Order, OrderItem และ relation ฝั่ง Product)
     └── seed.ts         (แก้ไข: ลบ orderItem และ order ก่อนลบ review)</code></pre>
     <ul>
-      <li><strong><code>prisma/schema.prisma</code></strong> — สัญญา: ต้องมี <code>model Order</code> และ <code>model OrderItem</code> ครบ field ตาม order receipt ใน <code>docs/api-spec.md</code> บวกที่อยู่จัดส่ง, ต้องมี <code>orderItems OrderItem[]</code> ฝั่ง <code>Product</code>, ต้องมี <code>@@index([orderId])</code> และ <code>@@index([productId])</code> · ต้องไม่แตะ model <code>Category</code>, <code>Review</code> หรือ field เดิมของ <code>Product</code></li>
-      <li><strong><code>prisma/seed.ts</code></strong> — สัญญา: ต้องเพิ่ม <code>tx.orderItem.deleteMany()</code> แล้ว <code>tx.order.deleteMany()</code> ก่อน <code>tx.review.deleteMany()</code> · ต้องไม่แก้ส่วน fetch, ส่วน createMany หรือข้อความ log</li>
+      <li><strong><code>prisma/schema.prisma</code></strong> — ในโค้ดอ้างอิง: มี <code>model Order</code> และ <code>model OrderItem</code> ครบ field ตาม order receipt ใน <code>docs/api-spec.md</code> บวกที่อยู่จัดส่ง, มี <code>orderItems OrderItem[]</code> ฝั่ง <code>Product</code>, มี <code>@@index([orderId])</code> และ <code>@@index([productId])</code> · ไม่แตะ model <code>Category</code>, <code>Review</code> หรือ field เดิมของ <code>Product</code></li>
+      <li><strong><code>prisma/seed.ts</code></strong> — ในโค้ดอ้างอิง: เพิ่ม <code>tx.orderItem.deleteMany()</code> แล้ว <code>tx.order.deleteMany()</code> ก่อน <code>tx.review.deleteMany()</code> · ไม่แก้ส่วน fetch, ส่วน createMany หรือข้อความ log</li>
       <li>ไม่มีไฟล์ใน <code>src/</code> เปลี่ยนในบทนี้ — DTO, service และ controller ของคำสั่งซื้ออยู่ในบทที่ 17–19</li>
     </ul>
 
@@ -74,32 +75,20 @@
       <h2 id="exercise-heading">สั่ง Cursor เพิ่มสอง model แล้วรัน migration ด้วยมือ</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent — commit ไว้เพื่อให้เทียบ diff ของ AI ได้ทีละบรรทัด และแชทใหม่ทำให้ context ไม่ปนกับบทก่อน (<code>git add -A &amp;&amp; git commit -m "chore: before order schema"</code>) จากนั้นส่ง prompt นี้ทั้งก้อน</p>
       <p>ก่อนส่ง อ่าน<a href="01_what-well-be-building.html">กติกาของคอร์ส</a>อีกครั้ง: AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้ — ถ้าอธิบายไม่ได้ แปลว่ายังไม่ผ่านบทนี้</p>
-      <div class="cursor-prompt"><code>เพิ่ม Prisma model ของ Order และ OrderItem และอัปเดต seed ให้ล้างคำสั่งซื้อก่อนล้างสินค้า
+      <div class="cursor-prompt"><code>เพิ่ม Prisma model ชื่อ Order และ OrderItem และอัปเดต seed ให้ล้างคำสั่งซื้อก่อนล้างสินค้า
+@prisma/schema.prisma @prisma/seed.ts (ชื่อไฟล์ตามโค้ดอ้างอิง ถ้า seed ของคุณอยู่คนละที่ ให้ @ ไฟล์ seed ที่คุณมีจริง)
 
-บริบท: @prisma/schema.prisma @prisma/seed.ts @docs/api-spec.md @.cursor/rules/project.mdc
-docs/api-spec.md ส่วน order receipt คือ response ที่เราออกแบบเองให้ POST /carts/add (status 201):
-  { id, userId, products: [{ id, title, price, quantity, total, discountPercentage, discountedPrice, thumbnail }], total, discountedTotal, totalProducts, totalQuantity }
-React app ส่ง body { userId, products: [{ id, quantity }], address: { address, email, phone } } — เราจะเก็บ address ไว้ที่ Order ด้วย
-schema มี Category, Product, Review แล้ว seed.ts ลบข้อมูลตามลำดับ review, product, category ใน transaction
-เมื่อมี OrderItem อ้างถึง Product แล้ว seed จะลบ product ไม่ได้ถ้ายังมีคำสั่งซื้อค้างอยู่
-
-โครงสร้าง: แก้ไฟล์ตามนี้ ไม่มากไม่น้อยกว่านี้
-- prisma/schema.prisma (แก้ไข: เพิ่มสอง model ต่อท้าย และเพิ่ม relation ฝั่ง Product)
-- prisma/seed.ts (แก้ไข: เพิ่มการลบ orderItem และ order)
-
-ข้อกำหนดทางเทคนิค:
-- model Order: id Int @id @default(autoincrement()), userId Int, address String, email String, phone String,
-  total Float, discountedTotal Float, totalProducts Int, totalQuantity Int, createdAt DateTime @default(now()), items OrderItem[]
-- model OrderItem: id Int @id @default(autoincrement()), orderId Int, order Order @relation(fields: [orderId], references: [id], onDelete: Cascade),
-  productId Int, product Product @relation(fields: [productId], references: [id]), title String, thumbnail String,
-  price Float, discountPercentage Float?, quantity Int, total Float, discountedPrice Float และ @@index([orderId]) @@index([productId])
-- discountPercentage เป็น optional (Float?) ตาม Product.discountPercentage — บาง order snapshot สินค้าที่ตอนนั้นไม่มีส่วนลดเลย
-- Product เพิ่ม field orderItems OrderItem[] ต่อท้าย
-- ราคาและชื่อสินค้าถูกคัดลอกลง OrderItem ตอนสั่งซื้อ (snapshot) เพราะสินค้าอาจเปลี่ยนราคาภายหลัง ห้ามตัด field เหล่านี้ออก
-- seed.ts: ใน transaction ก่อน tx.review.deleteMany() เพิ่ม await tx.orderItem.deleteMany() แล้ว await tx.order.deleteMany() ตามลำดับ ห้ามแก้ส่วนอื่น
+ผลลัพธ์ที่ต้องได้:
+- หลังผมรัน npx prisma migrate dev --name add-orders ฐานข้อมูลมีตารางใหม่ Order และ OrderItem (\dt ได้ 6 แถว) โดย migration ไม่ถามยืนยันและไม่ทำข้อมูลเดิมหาย
+- Order เก็บของทั้งใบตาม order receipt ใน docs/api-spec.md: userId, total, discountedTotal, totalProducts, totalQuantity, เวลาที่สั่ง และที่อยู่จัดส่งที่ React app ส่งมา (address, email, phone) — ใบเสร็จแก้ไม่ได้ จึงไม่มีเวลาแก้ไข
+- OrderItem เก็บของแต่ละบรรทัด: สินค้าตัวไหน, quantity, total, discountedPrice และ snapshot ของ title, thumbnail, price, discountPercentage ณ ตอนสั่ง เพราะสินค้าอาจเปลี่ยนราคาภายหลัง (discountPercentage ว่างได้ ฟิลด์อื่นห้ามว่าง)
+- ลบ Order → OrderItem ของใบนั้นหายตามไปด้วย แต่ลบ Product ที่ยังมี OrderItem อ้างถึง → ฐานข้อมูลปฏิเสธ (ใน migration.sql: orderId เป็น ON DELETE CASCADE ส่วน productId เป็น ON DELETE RESTRICT)
+- ค้นรายการตาม order และตามสินค้าได้เร็ว (มี index ของทั้งสองคอลัมน์)
+- npm run db:seed ยังได้ Seeded 24 categories, 208 products, 624 reviews เท่าเดิม และรันซ้ำได้แม้มีคำสั่งซื้อค้างอยู่ในฐานข้อมูล
+- model Category, Review และ field เดิมของ Product ไม่เปลี่ยน, ไม่มีไฟล์ใน src/ ถูกแก้ และ npm run build ผ่าน
 
 ขอบเขต:
-- ห้ามแก้ไฟล์ใน src/
+- ห้ามติดตั้ง dependency ใหม่
 - ห้ามรัน migrate หรือ generate ให้ผมรันเอง
 - ยังไม่ต้องสร้าง DTO, service หรือ controller ของคำสั่งซื้อ</code></div>
       <p>prompt สั่งห้าม AI รัน migrate หรือ generate เอง เพราะสองคำสั่งนี้แก้ฐานข้อมูลจริงและสร้างไฟล์ migration ที่ commit ลง repo — เราต้องอ่าน schema ที่ AI เขียนให้จบก่อน แล้วจึงรันสามคำสั่งนี้ด้วยมือตามลำดับ</p>
@@ -112,16 +101,15 @@ npm run db:seed</code></div>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li><code>model Order</code> มี 10 field: <code>id</code>, <code>userId</code>, <code>address</code>, <code>email</code>, <code>phone</code>, <code>total</code>, <code>discountedTotal</code>, <code>totalProducts</code>, <code>totalQuantity</code>, <code>createdAt</code> บวก relation <code>items OrderItem[]</code></li>
-        <li><code>createdAt</code> เป็น <code>DateTime @default(now())</code> และ<strong>ไม่มี</strong> <code>updatedAt</code> — ใบเสร็จไม่ถูกแก้</li>
-        <li><code>model OrderItem</code> เก็บ snapshot ครบสี่ตัว (<code>title</code>, <code>thumbnail</code>, <code>price</code>, <code>discountPercentage</code>) บวก <code>quantity</code>, <code>total</code>, <code>discountedPrice</code></li>
-        <li>relation ฝั่ง <code>order</code> มี <code>onDelete: Cascade</code> ส่วนฝั่ง <code>product</code> <strong>ไม่มี</strong> <code>onDelete</code></li>
-        <li>มี <code>@@index([orderId])</code> และ <code>@@index([productId])</code> ทั้งสองบรรทัด</li>
-        <li><code>Product</code> ได้ field <code>orderItems OrderItem[]</code> ต่อท้าย และ field เดิมไม่ถูกแตะ (<code>git diff prisma/schema.prisma</code> ต้องเห็นแค่บรรทัดที่เพิ่ม)</li>
-        <li><code>seed.ts</code> เพิ่มแค่สองบรรทัด และอยู่<strong>ข้างใน</strong> <code>prisma.$transaction</code> ก่อน <code>tx.review.deleteMany()</code></li>
+        <li><code>Order</code> เก็บครบทุกค่าของทั้งใบ (userId, ที่อยู่จัดส่งสามค่า, ยอดรวมสี่ค่า, เวลาที่สั่ง) และ<strong>ไม่มี</strong>เวลาแก้ไข — ใบเสร็จไม่ถูกแก้</li>
+        <li><code>OrderItem</code> เก็บ snapshot ครบสี่ค่า (title, thumbnail, price, discountPercentage) บวก quantity, total, discountedPrice — ไม่ได้อ่านราคาย้อนกลับจาก <code>Product</code></li>
+        <li><code>migration.sql</code> ที่สร้างขึ้น: FK ฝั่ง order เป็น <code>ON DELETE CASCADE</code> ส่วนฝั่ง product เป็น <code>ON DELETE RESTRICT</code> และมี index ของทั้งสองคอลัมน์</li>
+        <li>field เดิมของ <code>Product</code>, <code>Category</code>, <code>Review</code> ไม่เปลี่ยน (<code>git diff prisma/schema.prisma</code> เห็นแค่บรรทัดที่เพิ่ม)</li>
+        <li>seed ล้างคำสั่งซื้อ<strong>ก่อน</strong>ล้างสินค้า และอยู่ใน transaction เดียวกับการลบเดิม — ตัวเลข seed เท่าเดิม และส่วน fetch/createMany/log ไม่ถูกแก้</li>
+        <li><code>git status</code> ไม่มีไฟล์ใน <code>src/</code> และไม่มีไฟล์ที่ไม่เกี่ยวกับ schema หรือ seed ถูกแก้</li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> ใส่ <code>onDelete: Cascade</code> ให้ relation ฝั่ง <code>product</code> ด้วย (ลบสินค้าตัวเดียวแล้วใบเสร็จเก่าหายไปเงียบ ๆ) หรือแถม <code>@updatedAt</code> ให้ <code>Order</code> ทั้งที่ไม่มีใน requirement และผิดความหมายของใบเสร็จ อีกกรณีที่เจอบ่อยคือเอาบรรทัด <code>deleteMany</code> ไปวางไว้นอก transaction หรือวางไว้หลัง <code>tx.product.deleteMany()</code> ซึ่งพังตอนรัน</p>
-      <p>โค้ดอ้างอิงของบทนี้ (เทียบกับของคุณทีละบรรทัด):</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้ (บทที่ 17–19 อ้างชื่อ field เหล่านี้ ถ้าของคุณตั้งชื่อต่างไปก็ไม่เป็นไร Cursor ในบทนั้นจะอ่านจาก schema ของคุณเอง):</p>
       <pre><code>// prisma/schema.prisma — ท้าย model Product (field อื่นทั้งหมดไม่เปลี่ยน)
   categoryId           Int
   category             Category @relation(fields: [categoryId], references: [id])
