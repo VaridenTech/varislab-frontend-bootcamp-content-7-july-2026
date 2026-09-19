@@ -39,10 +39,11 @@ export class ApiKeyGuard implements CanActivate {
   ): boolean | Promise&lt;boolean&gt; | Observable&lt;boolean&gt; {
     const request = context.switchToHttp().getRequest&lt;Request&gt;();
     const authHeader = request.header('Authorization');
-    return authHeader === process.env.API_KEY;
+    const token = authHeader && authHeader.split(' ')[1];
+    return token === process.env.API_KEY;
   }
 }</code></pre>
-    <p><code>context.switchToHttp().getRequest()</code> คือ pattern เดียวกับที่เห็นใน exception filter: แปลง context กลางของ NestJS ให้เป็น HTTP request ของ Express เพื่ออ่าน header จากนั้นตั้งค่า <code>API_KEY</code> ในไฟล์ <code>.env</code> ให้เรียบร้อยก่อนทดสอบ</p>
+    <p><code>context.switchToHttp().getRequest()</code> คือ pattern เดียวกับที่เห็นใน exception filter: แปลง context กลางของ NestJS ให้เป็น HTTP request ของ Express เพื่ออ่าน header จากนั้นตั้งค่า <code>API_KEY</code> ในไฟล์ <code>.env</code> ให้เรียบร้อยก่อนทดสอบ เราอ่าน header ในรูปแบบ <code>Authorization: Bearer &lt;key&gt;</code> — <code>split(' ')[1]</code> ตัดเอาส่วนหลัง scheme <code>Bearer</code> ออกมา ซึ่งเป็นรูปแบบเดียวกับที่ Postman ใส่ให้อัตโนมัติเมื่อเลือก auth type เป็น Bearer Token จึงทดสอบผ่าน Postman ได้ตรงไปตรงมา</p>
 
     <h2>ผูกแบบ global ใน main.ts</h2>
     <pre><code>app.useGlobalGuards(new ApiKeyGuard());</code></pre>
@@ -86,11 +87,27 @@ export class ApiKeyGuard implements CanActivate {
     }
     const request = context.switchToHttp().getRequest&lt;Request&gt;();
     const authHeader = request.header('Authorization');
-    return authHeader === this.configService.get('API_KEY');
+    const token = authHeader && authHeader.split(' ')[1];
+    return token === this.configService.get('API_KEY');
   }
 }</code></pre>
     <p>หัวใจคือ <code>context.getHandler()</code> — guard รู้ว่า method ไหนกำลังจะถูกเรียก จึงส่งให้ <code>reflector.get()</code> ดึง metadata ของ method นั้นออกมาได้ ถ้าเจอ <code>isPublic</code> ก็ปล่อยผ่านทันที ไม่เจอจึงค่อยตรวจ key ตามปกติ pattern เดียวกันนี้ใช้สร้าง interceptor ที่อ่าน metadata ได้เช่นกัน เช่น decorator กำหนด cache key หรือ role ที่ต้องมี</p>
-    <div class="note"><p>เพราะตอนนี้ guard ต้อง inject dependency ได้ การ <code>new ApiKeyGuard()</code> ใน <code>main.ts</code> จึงใช้ไม่ได้แล้ว — ให้ลงทะเบียนผ่าน DI ด้วย <code>APP_GUARD</code> token ใน module (เช่น <code>CommonModule</code>) แทน: <code>{ provide: APP_GUARD, useClass: ApiKeyGuard }</code> แล้วอย่าลืม import <code>ConfigModule</code> ใน module นั้นด้วย</p></div>
+    <div class="note"><p>เพราะตอนนี้ guard ต้อง inject dependency ได้ การ <code>new ApiKeyGuard()</code> ใน <code>main.ts</code> จึงใช้ไม่ได้แล้ว — ให้ลงทะเบียนผ่าน DI ด้วย <code>APP_GUARD</code> token ใน module (เช่น <code>CommonModule</code>) แทน: <code>{ provide: APP_GUARD, useClass: ApiKeyGuard }</code> ส่วน <code>ConfigModule</code> ไม่ต้อง import ซ้ำเพราะประกาศเป็น <code>isGlobal: true</code> ไว้ตั้งแต่บทที่ 34 แล้ว</p></div>
+    <pre><code>// common.module.ts
+import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ApiKeyGuard } from './guards/api-key.guard.js';
+
+@Module({
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ApiKeyGuard,
+    },
+  ],
+})
+export class CommonModule {}</code></pre>
+    <div class="warning"><p>อย่าสับสนกับ <code>app.useGlobalPipes(new ValidationPipe())</code> ที่เคยเขียนใน <code>main.ts</code> ตั้งแต่บทที่ 16 — นั่นคือการลงทะเบียนแบบ imperative นอก DI container ส่วน <code>APP_GUARD</code> เป็น <em>DI token</em> พิเศษที่ NestJS จองไว้ให้ ต้องประกาศใน <code>providers</code> array ของ module (ไม่ใช่ <code>imports</code>) จึงจะถูกสร้างผ่าน DI และ inject <code>Reflector</code>/<code>ConfigService</code> เข้าไปได้ตามปกติ — ถ้าลองเขียน <code>app.useGlobalGuards(new ApiKeyGuard())</code> ต่อจาก <code>main.ts</code> แบบเดิม จะพังทันทีเพราะ guard สร้างนอก DI container จึง inject อะไรไม่ได้เลย เหมือนที่ note ด้านบนบอกไว้</p></div>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">ล็อก routes ด้วย API key แล้วเปิดเฉพาะ public endpoints</h2>
@@ -108,7 +125,7 @@ app.useGlobalGuards(new ApiKeyGuard());
 curl -i http://localhost:3000/coffees
 
 # มี key — ควรผ่าน
-curl -i -H "Authorization: iluvcoffeeSecretKey" http://localhost:3000/coffees</code></div>
+curl -i -H "Authorization: Bearer iluvcoffeeSecretKey" http://localhost:3000/coffees</code></div>
       <h3>ขั้นที่ 2: เปิด GET /coffees ให้สาธารณะ แต่ล็อก route อื่นไว้</h3>
       <p>สร้าง <code>public.decorator.ts</code> ใน <code>common/decorators</code> อัปเกรด <code>ApiKeyGuard</code> ตามโค้ดด้านบน ย้ายการลงทะเบียนจาก <code>main.ts</code> ไปเป็น <code>APP_GUARD</code> แล้วติด <code>@Public()</code> ที่ <code>findAll()</code></p>
       <div class="prompt-example"><code># coffees.controller.ts
