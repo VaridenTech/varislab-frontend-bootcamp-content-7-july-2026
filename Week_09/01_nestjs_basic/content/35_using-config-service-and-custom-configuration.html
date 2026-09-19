@@ -31,7 +31,7 @@ export class CoffeesService {
   ) {}
 }</code></pre>
     <div class="note">
-      <p>ถ้า inject แล้ว Nest ฟ้องว่า resolve <code>ConfigService</code> ไม่ได้ ให้ตรวจว่า module ที่ใช้งาน import <code>ConfigModule</code> แล้ว หรือประกาศ <code>ConfigModule.forRoot({ isGlobal: true })</code> ที่ <code>AppModule</code> เพื่อให้ทุก module มองเห็นโดยไม่ต้อง import ซ้ำ</p>
+      <p>เนื่องจากบทที่แล้วเราประกาศ <code>ConfigModule.forRoot({ isGlobal: true })</code> ไว้ที่ <code>AppModule</code> แล้ว <code>ConfigService</code> จึง inject ได้ทุก module โดยไม่ต้อง import <code>ConfigModule</code> ซ้ำ</p>
     </div>
 
     <h2>อ่านค่าด้วย get() แบบระบุ type และ default</h2>
@@ -69,11 +69,12 @@ import appConfig from './config/app.config.js';
 import Joi from 'joi';
 
 ConfigModule.forRoot({
-  // เก็บ validation จากบทก่อนเอาไว้
+  // เก็บ validation และ isGlobal จากบทก่อนเอาไว้
   validationSchema: Joi.object({
     DATABASE_URL: Joi.string().required(),
     PORT: Joi.number().default(3000),
   }),
+  isGlobal: true,
   load: [appConfig],
 });
 
@@ -87,8 +88,7 @@ const port = this.configService.get&lt;number&gt;('port', 3000);</code></pre>
       <p>สร้าง <code>src/config/app.config.ts</code>, ลงทะเบียนผ่าน <code>load</code> แล้ว inject <code>ConfigService</code> ใน <code>CoffeesService</code> เพื่อลองอ่าน <code>database.url</code> และ <code>port</code> จาก object ใหม่</p>
       <div class="prompt-example"><code>mkdir -p src/config
 # สร้าง src/config/app.config.ts ตามตัวอย่างด้านบน
-
-// coffees.module.ts → imports: [ConfigModule]
+# ไม่ต้องแก้ coffees.module.ts เพราะ ConfigModule เป็น global แล้วตั้งแต่บทก่อน
 
 // coffees.service.ts
 import { ConfigService } from '@nestjs/config';

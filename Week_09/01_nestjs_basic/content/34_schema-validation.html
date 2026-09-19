@@ -37,6 +37,7 @@ import Joi from 'joi';
         DATABASE_URL: Joi.string().required(),
         PORT: Joi.number().default(3000),
       }),
+      isGlobal: true,
     }),
     // ...
   ],
