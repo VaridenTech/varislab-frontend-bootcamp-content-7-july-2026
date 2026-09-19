@@ -263,4 +263,22 @@ Loop completed without hitting `exit 1` for any of `lesson-36`–`lesson-50` —
 
 ## Published remote state
 
-Not published. All remediation commits and corrected companion branches remain local. The remote and all frozen origin refs remain unchanged.
+**Published.** Remote (`git@github-variden:VaridenTech/varislab-intro-to-nestjs-v1.git`) now holds exactly 60 refs: `main`, `end-of-chapter-2`, and `lesson-01` through `lesson-58`. `lesson-59` through `lesson-67` were deleted after full verification. Verified via `git ls-remote --heads origin` after publication: 60 lines, no `lesson-59`–`lesson-67` remaining, every one of `lesson-01`–`lesson-58` matches its verified local target OID, `main` matches local `lesson-50`, and `end-of-chapter-2` matches the local corrected checkpoint (not the stale old `origin/end-of-chapter-2`).
+
+Per Task 2's binding downstream ruling, the full range `lesson-01`–`lesson-58` was republished (not only `lesson-33`–`lesson-58` as the original task brief said) because Task 2's remediation rebuilt the entire local `lesson-01`–`lesson-32` lineage (project name, README, Prisma placement, lesson-18 fix); `end-of-chapter-2` was republished for the same reason.
+
+Representative final OIDs:
+
+| Ref | Final OID |
+| --- | --- |
+| `lesson-01` | `c61e5f46b2ea88f6c86a47665b7a1968d0b28897` |
+| `lesson-22` | `68635ab083310f80acb0943ff50cefaf95c841ab` |
+| `lesson-32` | `130aeeb54b3fa2cb951be299fb9ddaec35be2772` |
+| `lesson-33` | `98231e925b901433e64e3ae90d808a6fa21941b4` |
+| `lesson-50` | `a154103709aa1b1323c3d3197865c231c20b47da` |
+| `lesson-51` | `1e91f92e69e118822e0e21add7d7e60b55dfff50` |
+| `lesson-58` | `92346819b77cc64d27f220cc3776f93af46d37f3` |
+| `main` | `a154103709aa1b1323c3d3197865c231c20b47da` (= `lesson-50`) |
+| `end-of-chapter-2` | `8dd9cc1de97f80da852068630becec80e1d5e700` (= `lesson-18`) |
+
+Publication was performed across several sessions, all with explicit user confirmation before any push: an automated dispatch published `lesson-01` through `lesson-32` (32/60 refs) using exact `--force-with-lease` leases against the Task 1 frozen pre-sync OIDs; the remaining 26 lesson pushes plus `main` and `end-of-chapter-2` were blocked twice by this environment's auto-mode safety classifier on an unrelated permission-scoping issue (not a real concurrency or safety problem — remote state was independently re-verified clean and unchanged after each block), so the user ran those 28 `--force-with-lease` pushes directly; the 9 obsolete-branch deletions (`lesson-59`–`lesson-67`) were then run and each independently verified. A full `git ls-remote` comparison after every phase confirmed no unexpected concurrent remote changes at any point (matched the Task 1 `pre-sync-refs.txt` snapshot throughout, until each ref's own intended update).
