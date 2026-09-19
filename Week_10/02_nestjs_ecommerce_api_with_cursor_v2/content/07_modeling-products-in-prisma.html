@@ -76,10 +76,10 @@
 ผลลัพธ์ที่ต้องได้:
 - npx prisma validate ได้ The schema at prisma/schema.prisma is valid 🚀 และ npx prisma format ไม่เปลี่ยนอะไรเพิ่ม
 - มีสาม model: Category, Product, Review — ไม่มี model อื่น
-- ทุก field ของ interface Product (ยกเว้น object ซ้อน) มีคอลัมน์ชื่อเดียวกัน dimensions และ meta แบนเป็นคอลัมน์ width, height, depth, barcode, qrCode, createdAt, updatedAt (ชื่อตาม key ใน interface เพราะบทที่ 11 จะประกอบกลับ) ไม่ใช้ Json
+- ทุก field ของ interface Product (ยกเว้น object ซ้อน) มีคอลัมน์ชื่อเดียวกัน dimensions และ meta แบนเป็นคอลัมน์ width, height, depth, barcode, qrCode, createdAt, updatedAt (ชื่อตาม key ใน interface เพราะขั้นต่อไปจะประกอบกลับเป็น object ซ้อนตามสัญญา) ไม่ใช้ Json
 - ค่าทศนิยมทุกตัวออกมาเป็น number ใน JSON (ห้าม Decimal เพราะ Prisma serialize เป็น string)
 - discountPercentage เป็นคอลัมน์เดียวที่ nullable ส่วน brand บังคับมีค่า
-- id ของ Product ไม่ถูกฐานข้อมูลแจกให้เอง และ createdAt/updatedAt ไม่มีค่า default หรืออัปเดตเอง (seed script ในบทที่ 9 กำหนดค่าเหล่านี้เอง)
+- id ของ Product ไม่ถูกฐานข้อมูลแจกให้เอง และ createdAt/updatedAt ไม่มีค่า default หรืออัปเดตเอง (seed script กำหนดค่าเหล่านี้เอง)
 - Category.slug ไม่ซ้ำกัน และไม่เก็บ url (url คำนวณจาก slug)
 - ลบสินค้าแล้วรีวิวของมันหายตาม แต่ลบหมวดหมู่ที่ยังมีสินค้าไม่ได้
 - คอลัมน์ที่ใช้ดึงสินค้าตามหมวดและดึงรีวิวตามสินค้ามี index

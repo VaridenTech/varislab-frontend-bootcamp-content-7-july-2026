@@ -79,7 +79,7 @@
       <p>ก่อนส่ง อ่าน<a href="01_what-well-be-building.html">กติกาของคอร์ส</a>อีกครั้ง: AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้ — ถ้าอธิบายไม่ได้ แปลว่ายังไม่ผ่านบทนี้</p>
       <div class="cursor-prompt"><code>สร้าง DTO สำหรับ validate body ของ POST /carts/add ตามที่ React app ส่งมา
 
-ผลลัพธ์ที่ต้องได้ (ทดสอบด้วย curl ได้จริงเมื่อผูก route ในบทที่ 19 — บทนี้ตรวจด้วย build และอ่านโค้ด):
+ผลลัพธ์ที่ต้องได้ (ยังยิง curl ไม่ได้จนกว่าจะผูก route ในขั้นถัดไป — ตอนนี้ตรวจด้วย build และอ่านโค้ด):
 - body รูปนี้ผ่าน validation ครบทุกชั้น: { "userId": 1, "products": [{ "id": 1, "quantity": 2 }], "address": { "address": "...", "email": "...", "phone": "..." } }
 - ทุก field required: ขาด userId, products หรือ address ตัวใดตัวหนึ่ง → 400
 - userId, products[].id, products[].quantity ต้องเป็นจำนวนเต็มตั้งแต่ 1 ขึ้นไป — 0, ติดลบ หรือทศนิยม → 400
@@ -88,7 +88,7 @@
 - address ถูกตรวจข้างในตามกฎเดียวกับฟอร์มฝั่ง React (address ไม่ว่าง, email เป็นอีเมล, phone ไม่ว่าง): "address": {} → 400 และ email ผิดรูป → 400 ด้วย message ที่มีคำนำหน้า address. เช่น "address.email must be an email"
 - error 400 ใช้รูปแบบมาตรฐานของ ValidationPipe ใน Nest (message เป็น array ของทุกข้อที่ผิด) ไม่ต้องเขียนรูปแบบเอง
 - field ที่ไม่ได้ประกาศ (เช่น isAdmin) ถูกตัดทิ้ง ไม่ไหลเข้า service
-- DTO ของ body ถูก export ไว้ให้ service (บทที่ 18) และ route POST /carts/add (บทที่ 19) import ไปใช้
+- DTO ของ body ถูก export ไว้ให้ service ที่คิดเงินและ route POST /carts/add import ไปใช้ในขั้นถัดไป
 - npm run build และ npm run lint ผ่าน
 
 ขอบเขต:

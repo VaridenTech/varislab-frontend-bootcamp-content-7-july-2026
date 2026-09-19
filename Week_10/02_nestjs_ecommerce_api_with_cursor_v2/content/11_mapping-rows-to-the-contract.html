@@ -79,7 +79,7 @@
 
 ผลลัพธ์ที่ต้องได้:
 - npm run build ได้ exit 0 และ npm run lint ไม่พิมพ์อะไรออกมา
-- มี response DTO เป็น class (ไม่ใช่ interface — บทที่ 21 Swagger plugin อ่าน field ของ class) ของ Product ที่มี field ครบ 22 ตัวเรียงตาม section Product ใน docs/api-spec.md โดย discountPercentage เป็น field optional ตัวเดียว และไม่มี type null ในไฟล์ DTO
+- มี response DTO เป็น class (ไม่ใช่ interface เพราะตัวสร้างเอกสาร Swagger อ่าน field จาก class เท่านั้น) ของ Product ที่มี field ครบ 22 ตัวเรียงตาม section Product ใน docs/api-spec.md โดย discountPercentage เป็น field optional ตัวเดียว และไม่มี type null ในไฟล์ DTO
 - มี DTO class ของ Category { slug, name, url } และของซองรายการ { products, total, skip, limit } ด้วย
 - มีฟังก์ชันแปลงแถวเป็นรูปทรง Product ที่ใช้ซ้ำได้ใน endpoint ถัดไป เป็นฟังก์ชันบริสุทธิ์ (ไม่แตะฐานข้อมูล ไม่แตะ config) รับแถวสินค้าที่มี category และ reviews ติดมา แล้วคืนรูปทรง Product ตาม docs/api-spec.md:
   category เป็น slug string, dimensions { width, height, depth } และ meta { createdAt, updatedAt, barcode, qrCode } เป็น object ซ้อน, date/createdAt/updatedAt เป็น ISO string เช่น "2025-04-30T09:41:02.053Z"

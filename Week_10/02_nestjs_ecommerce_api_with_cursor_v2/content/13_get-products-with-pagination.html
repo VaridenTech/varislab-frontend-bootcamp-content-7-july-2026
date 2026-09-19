@@ -98,7 +98,7 @@
       <h2 id="exercise-heading">สั่ง Cursor ทำ list endpoint พร้อม pagination</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: install validators"</code>) จากนั้นส่ง prompt นี้</p>
       <div class="cursor-prompt"><code>เพิ่ม endpoint GET /products พร้อม skip/limit ที่ validate ตาม docs/api-spec.md และเปิด validation ของ query แบบ global
-@&lt;controller และ service ของ products จากบทที่ 10&gt; @src/main.ts — โค้ดอ้างอิงของ products คือ src/products/products.controller.ts กับ src/products/products.service.ts
+@&lt;controller และ service ของ products ที่คุณมีอยู่แล้ว&gt; @src/main.ts — โค้ดอ้างอิงของ products คือ src/products/products.controller.ts กับ src/products/products.service.ts
 
 ผลลัพธ์ที่ต้องได้:
 - GET /products?limit=2&amp;skip=0 ตอบ 200 envelope ที่มีคีย์ products, total, skip, limit เท่านั้น: total 208, skip 0, limit 2, products คือ id 1 และ 2 (เรียงตาม id น้อยไปมาก)
@@ -108,7 +108,7 @@
 - limit=0, limit=101, limit=-1, limit=abc และ skip=-1 ตอบ 400 ก่อนถึง query ฐานข้อมูล (limit ต้องเป็น integer 1–100, skip ต้องเป็น integer ≥ 0)
 - query ที่ไม่รู้จัก เช่น ?limit=2&amp;sort=price ถูกตัดทิ้งเงียบ ๆ ได้ 200 ปกติ
 - total กับหน้าข้อมูลมาจาก snapshot เดียวกัน (ไม่ใช่สอง query ที่ข้อมูลเปลี่ยนระหว่างกันได้)
-- กติกา pagination ชุดนี้ใช้ซ้ำได้ เพราะบทที่ 14 จะเพิ่ม GET /products/category/:slug ที่ใช้กติกาเดียวกันทุกข้อ
+- กติกา pagination ชุดนี้ใช้ซ้ำได้ เพราะ endpoint ที่กรองตามหมวด (GET /products/category/:slug) จะใช้กติกาเดียวกันทุกข้อ
 - GET /products/categories และ GET /products/:id ยังทำงานเหมือนเดิม
 
 ขอบเขต:

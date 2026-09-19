@@ -61,10 +61,10 @@
       <h2 id="exercise-heading">สั่ง Cursor ต่อ endpoint สินค้าหนึ่งชิ้น</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before product by id"</code>) จากนั้นส่ง prompt นี้</p>
       <div class="cursor-prompt"><code>เพิ่ม endpoint GET /products/:id ที่ตอบสินค้าหนึ่งชิ้นตามรูปทรงใน docs/api-spec.md และ 404 ด้วยข้อความที่เราออกแบบไว้
-@&lt;controller และ service ของ products ที่คุณสร้างไว้ในบทที่ 10&gt; — โค้ดอ้างอิงคือ src/products/products.controller.ts กับ src/products/products.service.ts
+@&lt;controller และ service ของ products ที่คุณมีอยู่แล้ว&gt; — โค้ดอ้างอิงคือ src/products/products.controller.ts กับ src/products/products.service.ts
 
 ผลลัพธ์ที่ต้องได้:
-- GET /products/1 ตอบ 200 เป็นสินค้าครบ 22 คีย์ตาม section Product ใน docs/api-spec.md ผ่าน mapper เดิมจากบทที่ 11 (title "Velvet Matte Lipstick", price 9.99, discountPercentage 10.48, brand "Lumina")
+- GET /products/1 ตอบ 200 เป็นสินค้าครบ 22 คีย์ตาม section Product ใน docs/api-spec.md ผ่าน mapper ที่มีอยู่แล้ว (title "Velvet Matte Lipstick", price 9.99, discountPercentage 10.48, brand "Lumina")
 - reviews ของสินค้าเรียงตาม id ของ review (ลำดับที่ seed ใส่ไว้) และคงที่ทุกครั้งที่ยิง
 - GET /products/3 (ไม่มีส่วนลด) ไม่มีคีย์ discountPercentage เลย
 - GET /products/9999 ตอบ 404 และ message เป็น "Product 9999 not found" ตรงตัวอักษรต่ออักษร

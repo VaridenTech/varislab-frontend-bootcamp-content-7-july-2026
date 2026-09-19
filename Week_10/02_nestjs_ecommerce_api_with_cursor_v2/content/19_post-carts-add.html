@@ -53,7 +53,7 @@
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before carts controller"</code>) — prompt ยก <code>@src/products/products.controller.ts</code> และ <code>@src/products/products.module.ts</code> ให้เป็นแบบอย่าง และย้ำเรื่อง path กับ status ไว้ในผลลัพธ์ที่ต้องได้ชัด ๆ เพราะนี่คือจุดที่ AI ชอบ "แก้ให้ดีขึ้น" โดยไม่ได้ขอ</p>
       <p>ก่อนส่ง อ่าน<a href="01_what-well-be-building.html">กติกาของคอร์ส</a>อีกครั้ง: AI พิมพ์แทนคุณได้ แต่คุณต้องอธิบายทุกบรรทัดได้ — ถ้าอธิบายไม่ได้ แปลว่ายังไม่ผ่านบทนี้</p>
       <div class="cursor-prompt"><code>สร้าง CartsController ที่เปิด POST /carts/add และลงทะเบียน OrdersModule
-@src/app.module.ts @&lt;ไฟล์ service ของ orders ที่คุณสร้างไว้ในบทที่ 18 — โค้ดอ้างอิงคือ src/orders/orders.service.ts&gt;
+@src/app.module.ts @&lt;ไฟล์ service ของ orders ที่คุณสร้างไว้ก่อนหน้านี้ — โค้ดอ้างอิงคือ src/orders/orders.service.ts&gt;
 
 ผลลัพธ์ที่ต้องได้:
 - log ตอน npm run start:dev มีบรรทัด Mapped {/carts/add, POST} route (path ต้องเป็น /carts/add ตรงตัว เพราะ React app เรียก path นี้โดยไม่แก้ฝั่ง frontend — ไม่ใช่ /orders)
@@ -65,7 +65,7 @@
 
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
-- ห้ามแก้ service หรือการคำนวณที่ทำไว้ในบทที่ 18
+- ห้ามแก้ service หรือการคำนวณที่ทำไว้ก่อนหน้านี้
 - ยังไม่ต้องเปิด CORS</code></div>
     </section>
 

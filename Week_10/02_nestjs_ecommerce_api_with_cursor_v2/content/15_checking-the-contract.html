@@ -48,7 +48,7 @@ package.json                          (แก้ไข: script contract:check �
       <h2 id="exercise-heading">สั่ง Cursor เขียน schema และ script ตรวจสัญญา</h2>
       <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before contract check"</code>) ปล่อยให้ API รันอยู่ที่ <code>http://localhost:3000</code> ไว้ เพราะเราจะรันตรวจทันทีหลังได้โค้ด</p>
       <div class="cursor-prompt"><code>เขียน zod schema แล้วเขียน script ตรวจสัญญาที่มีอยู่ใหม่ทั้งไฟล์ ให้ตรวจ body ทั้งก้อนตาม docs/api-spec.md
-@package.json @&lt;ไฟล์ contract-check ที่คุณเขียนไว้ในบทที่ 12&gt; — โค้ดอ้างอิงคือ scripts/contract-check.ts
+@package.json @&lt;ไฟล์ contract-check ที่คุณเขียนไว้ก่อนหน้านี้&gt; — โค้ดอ้างอิงคือ scripts/contract-check.ts
 
 ผลลัพธ์ที่ต้องได้:
 - npm run contract:check ตอน API รันอยู่และตรงสัญญา พิมพ์เก้าบรรทัดขึ้นต้นด้วย ✅ ตามลำดับนี้ แล้ว exit 0
@@ -66,13 +66,13 @@ package.json                          (แก้ไข: script contract:check �
 - มี ❌ อย่างน้อยหนึ่งบรรทัด → exit ไม่ใช่ 0
 - ยิงที่ http://localhost:3000 โดยค่าเริ่มต้น และเปลี่ยนได้ด้วย env LOCAL_URL — ปิด API แล้วรัน → ❌ ทั้งเก้าบรรทัดและ exit ไม่ใช่ 0 (ไม่มี remote server อื่นหลงอยู่)
 - เก้า check เดิมยังอยู่ครบ ไม่หายไปข้อไหน และ script ยังรันด้วย npm run contract:check ชื่อเดิม
-- schema อยู่คนละไฟล์กับตัวรันและ export ออกมาให้ import ซ้ำได้ รวมถึง cartProductSchema และ orderResponseSchema (รูปทรง body และ receipt ของ POST /carts/add ตาม docs/api-spec.md) ที่บทที่ 19 จะใช้ต่อ แม้บทนี้ยังไม่ได้ใช้
+- schema อยู่คนละไฟล์กับตัวรันและ export ออกมาให้ import ซ้ำได้ รวมถึง cartProductSchema และ orderResponseSchema (รูปทรง body และ receipt ของ POST /carts/add ตาม docs/api-spec.md) ที่ endpoint สั่งซื้อจะใช้ต่อ แม้ตอนนี้ยังไม่ได้ใช้
 - script เป็นเครื่องมือตรวจจากภายนอก: ไม่มีไฟล์ใน src/ ถูกแก้ และ oxlint บนไฟล์ script ที่สร้างไม่พิมพ์อะไรออกมา
 
 ขอบเขต:
 - ติดตั้ง dependency ได้แค่ zod@4.6.2
 - ห้ามรัน script ให้ผมรันเอง
-- ยังไม่ต้องเพิ่ม check ของ POST /carts/add หรือ orders (endpoint นั้นยังไม่มีจนถึงบทที่ 19)</code></div>
+- ยังไม่ต้องเพิ่ม check ของ POST /carts/add หรือ orders (endpoint นั้นยังไม่มีในตอนนี้)</code></div>
     </section>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
