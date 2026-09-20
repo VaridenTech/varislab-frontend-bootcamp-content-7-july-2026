@@ -3,46 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="เขียน zod schema จาก docs/api-spec.md แล้วเขียน contract:check ที่สะสมมาตั้งแต่บทที่ 12 ใหม่ทั้งไฟล์ ให้ตรวจโครงสร้างของ response จริงทั้งเก้ารายการ ใช้ .strict() จับ field ที่เกินมาหรือถูกเปลี่ยนชื่อ" />
+  <meta name="description" content="เขียน zod schema จาก docs/api-spec.md แล้วเขียน contract:check ที่สะสมมาตั้งแต่ตอนเขียนด้วยมือใหม่ทั้งไฟล์ ให้ตรวจโครงสร้างของ response จริงทั้งเก้ารายการ ใช้ .strict() จับ field ที่เกินมาหรือถูกเปลี่ยนชื่อ" />
   <title>ทำสัญญาให้รันได้จริงด้วย zod</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS E-commerce API Workshop · บทที่ 15 จาก 24</p>
+    <p class="eyebrow">NestJS E-commerce API Workshop</p>
     <h1>ทำสัญญาให้รันได้จริงด้วย zod</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
       <ul>
-        <li>ยกระดับ <code>contract:check</code> ที่เขียนเองไว้ตั้งแต่บทที่ 12 ให้ตรวจ <em>โครงสร้างทั้งก้อน</em> ของ response ด้วย zod ไม่ใช่แค่ field ที่เราอุตส่าห์นึกออกและเขียนเช็คไว้เอง</li>
+        <li>ยกระดับ <code>contract:check</code> ที่เขียนเองไว้ด้วยมือก่อนหน้านี้ ให้ตรวจ <em>โครงสร้างทั้งก้อน</em> ของ response ด้วย zod ไม่ใช่แค่ field ที่เราอุตส่าห์นึกออกและเขียนเช็คไว้เอง</li>
         <li>อธิบายว่า <code>.strict()</code> ให้อะไรเพิ่มจาก <code>z.object({...})</code> เฉย ๆ — มันปฏิเสธ field ที่เกินมาหรือถูกเปลี่ยนชื่อ ไม่ใช่แค่ field ที่หายไป</li>
         <li>อ่าน error ที่ zod โยนออกมาตอน <code>.parse()</code> ล้มเหลว (<code>ZodError</code>) เพื่อหาว่า field ไหนพังและพังเพราะอะไร โดยไม่ต้องเขียนตัวหา diff เอง</li>
       </ul>
     </section>
 
     <h2>check ที่เขียนเอง จับได้แค่สิ่งที่เรานึกถึง</h2>
-    <p><code>npm run contract:check</code> มีอยู่แล้วตั้งแต่บทที่ 12 และโตมาเป็นเก้า check ในบทที่ 13–14 — มันแก้ปัญหา "ไล่ยิง curl ใหม่ทุกครั้ง" ไปแล้วเรียบร้อย แต่มันมีช่องโหว่ที่ใหญ่กว่าเดิมซ่อนอยู่: <strong>มันตรวจเฉพาะสิ่งที่เราเขียนสั่งให้มันตรวจ</strong> ตอนนี้มันดู status, จำนวน category, จำนวนคีย์ของสินค้าชิ้นที่ 1, และข้อความ 404 — เท่านั้น</p>
+    <p><code>npm run contract:check</code> มีอยู่แล้วตั้งแต่ตอนที่คุณเขียนมันด้วยมือ และโตมาเป็นเก้า check ตอนเพิ่ม pagination กับ endpoint ตามหมวด — มันแก้ปัญหา "ไล่ยิง curl ใหม่ทุกครั้ง" ไปแล้วเรียบร้อย แต่มันมีช่องโหว่ที่ใหญ่กว่าเดิมซ่อนอยู่: <strong>มันตรวจเฉพาะสิ่งที่เราเขียนสั่งให้มันตรวจ</strong> ตอนนี้มันดู status, จำนวน category, จำนวนคีย์ของสินค้าชิ้นที่ 1, และข้อความ 404 — เท่านั้น</p>
     <p>แปลว่าถ้า mapper เปลี่ยน <code>thumbnail</code> เป็น <code>thumbnailUrl</code> เงียบ ๆ จำนวนคีย์ยังเป็น 22 เท่าเดิม ทุกบรรทัดยังขึ้น <code>✅</code> และสัญญาพังไปแล้วโดยไม่มีใครรู้ การไล่เขียน <code>assert</code> ให้ครบทั้ง 22 คีย์ของทุก endpoint ด้วยมือเป็นงานที่ไม่มีใครเขียนจบและไม่มีใครอยากดูแล</p>
     <p>สิ่งที่เราต้องการคือ <em>regression test ของสัญญา</em> ที่ตรวจ body ทั้งก้อน: คำสั่งเดิมที่ยิง request ชุดเดิมไปที่ API ของเรา แต่คราวนี้เทียบ response ทั้งอันกับ schema ที่เขียนจาก <code>docs/api-spec.md</code> ไม่ใช่เทียบทีละ field ที่เรานึกออก — และยังคืน exit code ที่ไม่ใช่ศูนย์เมื่อพังเหมือนเดิม เพื่อให้เอาไปแขวนใน CI ได้ในอนาคต</p>
     <p>จุดที่ทำให้ script นี้ต่างจาก unit test ทั่วไปคือมันยิง<strong>API ของเราเองที่กำลังรันอยู่จริง</strong> ไม่ได้ mock อะไรเลย มันจึงตรวจสิ่งที่ TypeScript ตรวจให้ไม่ได้: TypeScript เช็คว่า <code>ProductResponseDto</code> ที่คุณ <em>ประกาศไว้</em> ถูกต้องตอน compile แต่ไม่รู้ว่า JSON ที่ออกไปจริงทาง HTTP ตรงกับที่ประกาศไว้หรือเปล่า ถ้า mapper คืนค่าผิดชนิด หรือมีใคร (หรือ AI) เปลี่ยนชื่อ field ไปเงียบ ๆ แต่ยังพอ compile ผ่านได้ด้วยเหตุผลบางอย่าง TypeScript จะไม่รู้เรื่องเลยจนกว่าจะมีคนอ่าน response จริง — นี่คือช่องว่างที่ zod ปิดให้ที่ขอบเขต JSON</p>
 
     <h2>ทำไม <code>npm run contract:check</code> ต้องใช้ <code>tsx</code> ไม่ใช่ <code>node</code> ตรง ๆ</h2>
-    <p>schema ทั้งหมดแยกไว้ในไฟล์ <code>scripts/contract-schemas.ts</code> ต่างหาก ไม่ได้เขียนปนอยู่ใน <code>contract-check.ts</code> เพราะบทที่ 19 จะ import schema ชุดเดียวกันนี้ไปใช้ซ้ำ (สำหรับ check ที่ 10 ของ <code>POST /carts/add</code>) และเพราะไฟล์ schema ล้วน ๆ อ่านและรีวิวแยกจากตัว script ที่รันจริงได้ง่ายกว่า</p>
-    <p><code>scripts/contract-check.ts</code> จึงมีบรรทัด <code>import { ... } from './contract-schemas.js'</code> อยู่บนสุด — ต่างจากฉบับที่คุณเขียนเองในบทที่ 12 ที่ไม่มี import เลยสักบรรทัด จึงสั่ง <code>node</code> ตรง ๆ ได้ การลบ type ออกอย่างเดียว (type stripping) ที่ Node ทำได้เองตอนรันไฟล์ <code>.ts</code> เดี่ยว ๆ ไม่พอสำหรับกรณีนี้ เพราะตอนนี้มีการ import ข้ามไฟล์ <code>.ts</code> สองไฟล์ ซึ่งต้องมีตัว resolve module ที่รู้จักรูปแบบของ TypeScript จริง ๆ (แม้ path ที่ import จะเขียนด้วยนามสกุล <code>.js</code> ตามธรรมเนียม ESM+TypeScript แต่ไฟล์จริงบนดิสก์คือ <code>.ts</code>) เราจึงใช้ <code>tsx</code> ตัวเดียวกับที่ <code>db:seed</code> ใช้อยู่แล้วมารันแทน <code>node</code> ตรง ๆ</p>
+    <p>schema ทั้งหมดแยกไว้ในไฟล์ <code>scripts/contract-schemas.ts</code> ต่างหาก ไม่ได้เขียนปนอยู่ใน <code>contract-check.ts</code> เพราะ check ของ <code>POST /carts/add</code> ที่จะเพิ่มภายหลังจะ import schema ชุดเดียวกันนี้ไปใช้ซ้ำ และเพราะไฟล์ schema ล้วน ๆ อ่านและรีวิวแยกจากตัว script ที่รันจริงได้ง่ายกว่า</p>
+    <p><code>scripts/contract-check.ts</code> จึงมีบรรทัด <code>import { ... } from './contract-schemas.js'</code> อยู่บนสุด — ต่างจากฉบับแรกที่คุณเขียนเองด้วยมือ ที่ไม่มี import เลยสักบรรทัด จึงสั่ง <code>node</code> ตรง ๆ ได้ การลบ type ออกอย่างเดียว (type stripping) ที่ Node ทำได้เองตอนรันไฟล์ <code>.ts</code> เดี่ยว ๆ ไม่พอสำหรับกรณีนี้ เพราะตอนนี้มีการ import ข้ามไฟล์ <code>.ts</code> สองไฟล์ ซึ่งต้องมีตัว resolve module ที่รู้จักรูปแบบของ TypeScript จริง ๆ (แม้ path ที่ import จะเขียนด้วยนามสกุล <code>.js</code> ตามธรรมเนียม ESM+TypeScript แต่ไฟล์จริงบนดิสก์คือ <code>.ts</code>) เราจึงใช้ <code>tsx</code> ตัวเดียวกับที่ <code>db:seed</code> ใช้อยู่แล้วมารันแทน <code>node</code> ตรง ๆ</p>
     <div class="note"><p><code>fetch</code> และ top-level <code>await</code> ในลูปของ script นี้เป็นของที่มีใน Node อยู่แล้ว ไม่ต้องติดตั้ง <code>node-fetch</code> หรืออะไรเพิ่ม</p></div>
 
     <h2>เป้าหมายของบทนี้</h2>
     <p>รายการด้านล่างคือไฟล์ที่เปลี่ยนใน<strong>โค้ดอ้างอิงของคอร์ส</strong> — ใช้เป็นแผนที่ตอนเทียบงาน ไม่ใช่ข้อบังคับ Cursor ของคุณอาจวางไฟล์หรือตั้งชื่อต่างไปได้ ขอแค่ผ่านผลลัพธ์ที่ต้องได้ใน prompt</p>
     <pre><code>scripts/
 ├── contract-schemas.ts               (สร้างใหม่)
-└── contract-check.ts                 (แก้ไข: เขียนใหม่ทั้งไฟล์ด้วย zod จากฉบับบทที่ 12)
+└── contract-check.ts                 (แก้ไข: เขียนใหม่ทั้งไฟล์ด้วย zod จากฉบับที่เขียนเองด้วยมือ)
 package.json                          (แก้ไข: script contract:check เปลี่ยนจาก node เป็น tsx)</code></pre>
     <ul>
-      <li><strong><code>scripts/contract-schemas.ts</code></strong> — ในโค้ดอ้างอิง: export เจ็ดตัวตาม <code>docs/api-spec.md</code> คือ <code>dimensionsSchema</code>, <code>reviewSchema</code>, <code>metaSchema</code>, <code>productSchema</code>, <code>categorySchema</code>, <code>listEnvelopeSchema</code>, <code>errorSchema</code> / schema ที่แทน object เต็มรูปทั้งหมด (<code>productSchema</code>, <code>categorySchema</code>, <code>listEnvelopeSchema</code>, <code>errorSchema</code>) ต้องปิดท้ายด้วย <code>.strict()</code> / ไฟล์นี้นิยาม <code>cartProductSchema</code> กับ <code>orderResponseSchema</code> ไว้ด้วยสำหรับบทที่ 19 แต่ยังไม่มีที่ไหน import สองตัวนี้ไปใช้ในบทนี้</li>
-      <li><strong><code>scripts/contract-check.ts</code></strong> — ในโค้ดอ้างอิง: import schema จาก <code>./contract-schemas.js</code>, มี <strong>เก้า</strong> check เรียงตามลำดับ (ชุดเดียวกับที่คุณสะสมไว้ตั้งแต่บทที่ 12–14 แต่เรียงใหม่และตรวจ body ทั้งก้อน ดูรายชื่อในส่วนผลลัพธ์ที่คาดหวังด้านล่าง) แต่ละ check เรียก <code>schema.parse(body)</code> ตรง ๆ (ไม่ใช่ <code>.safeParse()</code>) เพื่อให้ error ที่ zod โยนออกมามีรายละเอียดครบ, จับด้วย <code>try/catch</code> ที่ loop ระดับนอก แล้วพิมพ์ <code>✅</code>/<code>❌</code> ต่อบรรทัด, ปิดท้ายด้วย <code>process.exit(1)</code> เมื่อมี <code>❌</code> อย่างน้อยหนึ่งรายการ / <strong>ต้องไม่มี check ของ <code>POST /carts/add</code></strong> เพราะ endpoint นั้นยังไม่มีอยู่ในหลักสูตร ณ จุดนี้ (มาถึงบทที่ 19)</li>
+      <li><strong><code>scripts/contract-schemas.ts</code></strong> — ในโค้ดอ้างอิง: export เจ็ดตัวตาม <code>docs/api-spec.md</code> คือ <code>dimensionsSchema</code>, <code>reviewSchema</code>, <code>metaSchema</code>, <code>productSchema</code>, <code>categorySchema</code>, <code>listEnvelopeSchema</code>, <code>errorSchema</code> / schema ที่แทน object เต็มรูปทั้งหมด (<code>productSchema</code>, <code>categorySchema</code>, <code>listEnvelopeSchema</code>, <code>errorSchema</code>) ต้องปิดท้ายด้วย <code>.strict()</code> / ไฟล์นี้นิยาม <code>cartProductSchema</code> กับ <code>orderResponseSchema</code> ไว้ด้วยสำหรับ endpoint สั่งซื้อที่จะมาภายหลัง แต่ยังไม่มีที่ไหน import สองตัวนี้ไปใช้ในบทนี้</li>
+      <li><strong><code>scripts/contract-check.ts</code></strong> — ในโค้ดอ้างอิง: import schema จาก <code>./contract-schemas.js</code>, มี <strong>เก้า</strong> check เรียงตามลำดับ (ชุดเดียวกับที่คุณสะสมไว้ตั้งแต่ฉบับเขียนมือ แต่เรียงใหม่และตรวจ body ทั้งก้อน ดูรายชื่อในส่วนผลลัพธ์ที่คาดหวังด้านล่าง) แต่ละ check เรียก <code>schema.parse(body)</code> ตรง ๆ (ไม่ใช่ <code>.safeParse()</code>) เพื่อให้ error ที่ zod โยนออกมามีรายละเอียดครบ, จับด้วย <code>try/catch</code> ที่ loop ระดับนอก แล้วพิมพ์ <code>✅</code>/<code>❌</code> ต่อบรรทัด, ปิดท้ายด้วย <code>process.exit(1)</code> เมื่อมี <code>❌</code> อย่างน้อยหนึ่งรายการ / <strong>ต้องไม่มี check ของ <code>POST /carts/add</code></strong> เพราะ endpoint นั้นยังไม่มีอยู่จริง ณ จุดนี้ (จะมาถึงภายหลัง)</li>
       <li><strong><code>package.json</code></strong> — ในโค้ดอ้างอิง: <code>"contract:check": "tsx scripts/contract-check.ts"</code> / ไม่แก้ script อื่นและไม่เพิ่ม dependency นอกจาก <code>zod</code></li>
     </ul>
-    <p>ไม่มีไฟล์ใน <code>src/</code> ถูกแตะในบทนี้เลย — สิ่งที่เราสร้างคือเครื่องมือตรวจ ไม่ใช่ฟีเจอร์ และ schema พวกนี้ไม่ได้มาแทนที่ <code>ProductResponseDto</code> ที่มีอยู่แล้ว: <code>ProductResponseDto</code> ยังเป็น type ตอน compile ที่ Swagger CLI plugin อ่านในบทที่ 21–22 อยู่เหมือนเดิม ส่วน zod schema ในบทนี้เป็นการตรวจแยกอีกชั้นหนึ่งตอน<strong>runtime</strong> ว่า response จริงที่ออกไปทาง HTTP ยังตรงกับสัญญาอยู่หรือเปล่า — ไม่ใช่รูปทรงที่สามอันดับที่มาแข่งกัน แต่เป็นเครื่องมือคนละงาน: DTO บอก compiler, zod บอกตอนรันจริง</p>
+    <p>ไม่มีไฟล์ใน <code>src/</code> ถูกแตะในบทนี้เลย — สิ่งที่เราสร้างคือเครื่องมือตรวจ ไม่ใช่ฟีเจอร์ และ schema พวกนี้ไม่ได้มาแทนที่ <code>ProductResponseDto</code> ที่มีอยู่แล้ว: <code>ProductResponseDto</code> ยังเป็น type ตอน compile ที่ Swagger CLI plugin จะอ่านตอนทำเอกสาร API อยู่เหมือนเดิม ส่วน zod schema ในบทนี้เป็นการตรวจแยกอีกชั้นหนึ่งตอน<strong>runtime</strong> ว่า response จริงที่ออกไปทาง HTTP ยังตรงกับสัญญาอยู่หรือเปล่า — ไม่ใช่รูปทรงที่สามอันดับที่มาแข่งกัน แต่เป็นเครื่องมือคนละงาน: DTO บอก compiler, zod บอกตอนรันจริง</p>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">สั่ง Cursor เขียน schema และ script ตรวจสัญญา</h2>
@@ -86,7 +86,7 @@ package.json                          (แก้ไข: script contract:check �
         <li><code>git status</code> ไม่มีไฟล์ใน <code>src/</code> และไม่มีไฟล์ที่ไม่เกี่ยวกับ script ตรวจสัญญาถูกแก้, dependency ที่เพิ่มมีแค่ <code>zod</code> และไม่มี <code>any</code>, <code>as</code> หรือ <code>!</code></li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> เขียน schema เป็น <code>z.object({...})</code> เฉย ๆ โดยไม่ปิดท้ายด้วย <code>.strict()</code> — โค้ดยัง compile ผ่านและดูทำงานถูกในตอนแรก แต่ zod โหมดปกติ (ที่เรียกว่า "strip") จะเงียบ ๆ ตัดทุก field ที่ไม่รู้จักทิ้งไปโดยไม่ error เลย ถ้าวันหนึ่งมีใคร (หรือ AI ตัวอื่น) เปลี่ยนชื่อ field ใน mapper หรือเผลอเพิ่ม field แปลกปลอมเข้ามา check จะยังขึ้น <code>✅</code> เหมือนไม่มีอะไรเกิดขึ้น ทั้งที่ response จริงเปลี่ยนไปแล้ว อีกจุดที่พลาดได้คือใช้ <code>.safeParse()</code> แล้วเช็คแค่ <code>result.success</code> โดยไม่พิมพ์ <code>result.error.issues</code> ออกมา — script ยังรายงาน <code>❌</code> ถูกต้องอยู่ แต่บรรทัด error จะไม่บอกว่า field ไหนพังเพราะอะไร ทำให้ debug ช้าลงกลับไปเหมือนสมัยที่ยังไม่มี schema เลย</p>
-      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้ (แต่บทที่ 19 จะอ้างชื่อ <code>cartProductSchema</code>/<code>orderResponseSchema</code> และ array <code>checks</code> ถ้าของคุณตั้งชื่อต่างไปก็ไม่เป็นไร Cursor ในบทนั้นจะอ่านจากโค้ดของคุณเอง):</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้ (ขั้นเปิด route <code>POST /carts/add</code> จะอ้างชื่อ <code>cartProductSchema</code>/<code>orderResponseSchema</code> และ array <code>checks</code> ถ้าของคุณตั้งชื่อต่างไปก็ไม่เป็นไร Cursor ในขั้นนั้นจะอ่านจากโค้ดของคุณเอง):</p>
       <p><code>scripts/contract-schemas.ts</code></p>
       <pre><code>import { z } from 'zod';
 
@@ -320,7 +320,7 @@ process.exit(failures === 0 ? 0 : 1);</code></pre>
 ✅ GET /products/abc → 400 with message
 ✅ GET /products/category/groceries?limit=20&amp;skip=0 → total 27
 ✅ GET /products/category/nope?limit=5&amp;skip=0 → 200, empty envelope</code></pre>
-      <p>เก้าบรรทัด ไม่ใช่สิบ — <code>POST /carts/add</code> ยังไม่มี check เป็นของตัวเอง เพราะ endpoint นั้นยังไม่มีอยู่จริงในบทนี้ (บทที่ 16–19 จะสอนเรื่อง order และ cart) check ที่ 10 จะถูกเพิ่มเข้ามาในบทที่ 19 พอ <code>POST /carts/add</code> กลายเป็นส่วนหนึ่งของหลักสูตรจริง ๆ ถ้าไปเจอบทที่ 22 พูดถึง "สิบบรรทัด" ภายหลัง นั่นคือหลังจากบทที่ 19 เพิ่ม check นั้นเข้ามาแล้ว ไม่ใช่ความขัดแย้งกับบทนี้</p>
+      <p>เก้าบรรทัด ไม่ใช่สิบ — <code>POST /carts/add</code> ยังไม่มี check เป็นของตัวเอง เพราะ endpoint นั้นยังไม่มีอยู่จริงในตอนนี้ (เรื่อง order และ cart รออยู่ในขั้นถัดไป) check ที่ 10 จะถูกเพิ่มเข้ามาตอนเปิด route <code>POST /carts/add</code> ถ้าเจอที่อื่นพูดถึง "สิบบรรทัด" ภายหลัง นั่นคือหลังจากขั้นนั้นเพิ่ม check เข้ามาแล้ว ไม่ใช่ความขัดแย้งกับตอนนี้</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>

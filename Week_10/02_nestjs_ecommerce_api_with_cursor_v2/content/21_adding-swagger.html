@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS E-commerce API Workshop · บทที่ 21 จาก 24</p>
+    <p class="eyebrow">NestJS E-commerce API Workshop</p>
     <h1>เพิ่มเอกสาร API ด้วย Swagger</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
@@ -21,7 +21,7 @@
     </section>
 
     <h2>Swagger ประกอบจากสามชิ้น</h2>
-    <p>เราเคยทำเรื่องนี้มาแล้วใน NestJS Fundamentals บทที่ 43 บทนี้จึงเป็นการเอาของเดิมมาวางในโปรเจกต์ใหม่ ไม่ใช่ของใหม่ทั้งหมด ชิ้นแรกคือ <strong><code>DocumentBuilder</code></strong> — ตัวสร้าง metadata ของเอกสาร (ชื่อ, คำอธิบาย, เวอร์ชัน) ด้วย chain ที่ปิดท้ายด้วย <code>.build()</code> ชิ้นที่สองคือ <strong><code>SwaggerModule.createDocument(app, config)</code></strong> ซึ่งเดินดู controller ทุกตัวใน app ที่ประกอบเสร็จแล้ว อ่าน decorator ที่เจอ แล้วประกอบเป็น OpenAPI document ขึ้นมาในหน่วยความจำ ชิ้นที่สามคือ <strong><code>SwaggerModule.setup('api', app, document)</code></strong> ซึ่งเสิร์ฟเอกสารนั้นออกมาสองหน้า: UI แบบกดเล่นได้ที่ <code>/api</code> และ JSON ดิบที่ <code>/api-json</code></p>
+    <p>เราเคยทำเรื่องนี้มาแล้วในคอร์ส NestJS Fundamentals บทนี้จึงเป็นการเอาของเดิมมาวางในโปรเจกต์ใหม่ ไม่ใช่ของใหม่ทั้งหมด ชิ้นแรกคือ <strong><code>DocumentBuilder</code></strong> — ตัวสร้าง metadata ของเอกสาร (ชื่อ, คำอธิบาย, เวอร์ชัน) ด้วย chain ที่ปิดท้ายด้วย <code>.build()</code> ชิ้นที่สองคือ <strong><code>SwaggerModule.createDocument(app, config)</code></strong> ซึ่งเดินดู controller ทุกตัวใน app ที่ประกอบเสร็จแล้ว อ่าน decorator ที่เจอ แล้วประกอบเป็น OpenAPI document ขึ้นมาในหน่วยความจำ ชิ้นที่สามคือ <strong><code>SwaggerModule.setup('api', app, document)</code></strong> ซึ่งเสิร์ฟเอกสารนั้นออกมาสองหน้า: UI แบบกดเล่นได้ที่ <code>/api</code> และ JSON ดิบที่ <code>/api-json</code></p>
     <p>ลำดับสำคัญ: <code>createDocument</code> ต้องถูกเรียกหลัง app ประกอบ module เสร็จ และ <code>setup</code> ต้องถูกเรียก<strong>ก่อน</strong> <code>await app.listen(...)</code> เพราะ <code>listen</code> คือจุดที่เปิดรับ request — route ของ Swagger ต้องถูกลงทะเบียนไว้ก่อนหน้านั้น</p>
 
     <h2>CLI plugin อ่าน <code>.dto.ts</code> ให้เราเอง</h2>
@@ -34,7 +34,7 @@
 npm ls @nestjs/swagger</code></pre>
     <p>ตอนตรวจของจริงได้ <code>@nestjs/swagger@12.0.1</code> คู่กับ <code>@nestjs/common@12.0.1</code> ที่ใช้อยู่</p>
     <div class="note">
-      <p>npm 11.19 ที่มาพร้อม Node 26 กั้น install script ไว้เหมือนตอนบทที่ 6 รอบนี้จะเจอข้อความ <code>npm warn install-scripts 1 package has install scripts not yet covered by allowScripts: @scarf/scarf@1.4.0 (postinstall: node ./report.js)</code> ให้อนุมัติแล้ว rebuild ตามนี้ <code>npm install-scripts approve @scarf/scarf@1.4.0</code> แล้วต่อด้วย <code>npm rebuild</code> — <code>package.json</code> จะมีรายการเพิ่มในบล็อก <code>allowScripts</code> ซึ่งเป็นเรื่องปกติ อย่าลบออก ถ้า npm ของคุณไม่มีการกั้นนี้ ก็จะไม่เห็นข้อความดังกล่าวและข้ามขั้นนี้ไปได้เลย</p>
+      <p>npm 11.19 ที่มาพร้อม Node 26 กั้น install script ไว้เหมือนตอนติดตั้ง Prisma รอบนี้จะเจอข้อความ <code>npm warn install-scripts 1 package has install scripts not yet covered by allowScripts: @scarf/scarf@1.4.0 (postinstall: node ./report.js)</code> ให้อนุมัติแล้ว rebuild ตามนี้ <code>npm install-scripts approve @scarf/scarf@1.4.0</code> แล้วต่อด้วย <code>npm rebuild</code> — <code>package.json</code> จะมีรายการเพิ่มในบล็อก <code>allowScripts</code> ซึ่งเป็นเรื่องปกติ อย่าลบออก ถ้า npm ของคุณไม่มีการกั้นนี้ ก็จะไม่เห็นข้อความดังกล่าวและข้ามขั้นนี้ไปได้เลย</p>
     </div>
 
     <h2>เป้าหมายของบทนี้</h2>

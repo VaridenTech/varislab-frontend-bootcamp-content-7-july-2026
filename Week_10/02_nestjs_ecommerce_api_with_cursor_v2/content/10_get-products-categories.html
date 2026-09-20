@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS E-commerce API Workshop · บทที่ 10 จาก 24</p>
+    <p class="eyebrow">NestJS E-commerce API Workshop</p>
     <h1>GET /products/categories</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
@@ -21,8 +21,8 @@
     </section>
 
     <h2>เลือก endpoint ที่ง่ายที่สุดขึ้นมาทำก่อน</h2>
-    <p>ใน <code>docs/api-spec.md</code> ที่เขียนไว้ตั้งแต่บทที่ 3 section <strong>Category</strong> คือ endpoint เดียวที่ไม่มี query parameter ไม่มี route parameter และมีรูปทรง response แบนราบสามคีย์ — นั่นคือ <code>GET /products/categories</code> เราจึงเริ่มจากตัวนี้ เพราะมันพิสูจน์ว่าเส้นทางทั้งเส้น (request → controller → service → Prisma → Postgres → response) เชื่อมกันได้จริง โดยยังไม่ต้องยุ่งกับ mapper หรือ pagination ที่จะมาในบทถัด ๆ ไป</p>
-    <p>โครงสร้างสามไฟล์เป็นแบบเดียวกับที่คุณเคยทำใน NestJS Fundamentals บทที่ 6 (controller), บทที่ 12 (service) และบทที่ 14 (module) ต่างกันแค่คราวนี้เราไม่พิมพ์เอง — เราสั่ง Cursor พิมพ์ แล้วเราอ่านทุกบรรทัด</p>
+    <p>ใน <code>docs/api-spec.md</code> ที่เขียนไว้ตั้งแต่ตอนออกแบบสัญญา section <strong>Category</strong> คือ endpoint เดียวที่ไม่มี query parameter ไม่มี route parameter และมีรูปทรง response แบนราบสามคีย์ — นั่นคือ <code>GET /products/categories</code> เราจึงเริ่มจากตัวนี้ เพราะมันพิสูจน์ว่าเส้นทางทั้งเส้น (request → controller → service → Prisma → Postgres → response) เชื่อมกันได้จริง โดยยังไม่ต้องยุ่งกับ mapper หรือ pagination ที่จะมาในบทถัด ๆ ไป</p>
+    <p>โครงสร้างสามไฟล์เป็นแบบเดียวกับที่คุณเคยทำใน NestJS Fundamentals ตอน controller, service และ module ต่างกันแค่คราวนี้เราไม่พิมพ์เอง — เราสั่ง Cursor พิมพ์ แล้วเราอ่านทุกบรรทัด</p>
     <ul>
       <li><strong>controller</strong> รู้แค่เรื่อง HTTP: path, method, parameter — แล้วส่งต่อให้ service ทันที</li>
       <li><strong>service</strong> เป็นที่เดียวที่รู้จักฐานข้อมูลและรู้จักรูปทรงของ response</li>
@@ -33,13 +33,13 @@
     <p>เปิด <code>docs/api-spec.md</code> ดู section <strong>Category</strong> — response หน้าตาแบบนี้</p>
     <pre><code>{ "slug": "beauty", "name": "Beauty", "url": "http://localhost:3000/products/category/beauty" }</code></pre>
     <p><code>url</code> ต้องเป็น host ของ<em>ตัวเอง</em> ต่อท้ายด้วย path เดียวกัน ไม่ใช่ path เปล่า ๆ — เพราะ type <code>Category</code> ฝั่ง client (<code>src/features/products/types.ts</code>) กำหนดให้ <code>url</code> เป็น URL เต็มเสมอ</p>
-    <p>host ของตัวเองเปลี่ยนไปตามที่รัน (เครื่องคุณ, staging, production) จึงต้องมาจาก environment variable ไม่ใช่จากโค้ด เรามี <code>APP_URL</code> อยู่ใน <code>.env</code> ตั้งแต่บทที่ 5 แล้ว และ <code>ConfigModule</code> ถูกตั้งเป็น global ในบทที่ 6 แล้ว จึงฉีด <code>ConfigService</code> เข้า service ได้เลย</p>
+    <p>host ของตัวเองเปลี่ยนไปตามที่รัน (เครื่องคุณ, staging, production) จึงต้องมาจาก environment variable ไม่ใช่จากโค้ด เรามี <code>APP_URL</code> อยู่ใน <code>.env</code> ตั้งแต่ตอนตั้งค่า Postgres แล้ว และ <code>ConfigModule</code> ถูกตั้งเป็น global ตั้งแต่ตอนต่อ Prisma แล้ว จึงฉีด <code>ConfigService</code> เข้า service ได้เลย</p>
     <pre><code>const appUrl = this.config.getOrThrow&lt;string&gt;('APP_URL');</code></pre>
-    <p>สังเกตว่าเราใช้ <code>getOrThrow</code> ไม่ใช่ <code>get</code> — <code>get</code> คืน <code>undefined</code> เงียบ ๆ เมื่อไม่มีคีย์นั้น ผลคือ url จะกลายเป็น <code>undefined/products/category/beauty</code> แล้วหลุดขึ้น production ไปเงียบ ๆ ส่วน <code>getOrThrow</code> ทำให้แอปพังทันทีที่ request แรก ซึ่งเป็นสิ่งที่เราต้องการ (ทบทวน NestJS Fundamentals บทที่ 35 เรื่อง <code>ConfigService</code>)</p>
+    <p>สังเกตว่าเราใช้ <code>getOrThrow</code> ไม่ใช่ <code>get</code> — <code>get</code> คืน <code>undefined</code> เงียบ ๆ เมื่อไม่มีคีย์นั้น ผลคือ url จะกลายเป็น <code>undefined/products/category/beauty</code> แล้วหลุดขึ้น production ไปเงียบ ๆ ส่วน <code>getOrThrow</code> ทำให้แอปพังทันทีที่ request แรก ซึ่งเป็นสิ่งที่เราต้องการ (ทบทวน NestJS Fundamentals ตอนที่ว่าด้วย <code>ConfigService</code>)</p>
 
     <h2>ทำไมต้องสั่ง <code>orderBy: { id: 'asc' }</code> ทั้งที่ไม่มีใครขอ</h2>
-    <p>ลำดับของ array ที่ตอบกลับมามีผลต่อ node script ที่ตรวจสัญญาในบทถัด ๆ ไป (นับจำนวน, ตรวจ key) — seed ในบทที่ 9 ส่ง category เข้า <code>createMany</code> เป็น array ตามลำดับที่เขียนไว้ใน <code>CATEGORIES</code> ดังนั้น <code>id</code> ที่ sequence แจกให้ (auto-increment) จึงเรียงตามลำดับนั้นอยู่แล้ว แต่การสั่ง <code>orderBy: { id: 'asc' }</code> คือการ<em>เขียนเจตนานั้นออกมา</em> ไม่ใช่การหวังว่า Postgres จะคืนแถวตามลำดับที่ insert — Postgres ไม่รับประกันลำดับให้เลยถ้าไม่สั่ง <code>ORDER BY</code></p>
-    <div class="note"><p>ค่า <code>id</code> ที่แท้จริงจะขยับขึ้นทุกครั้งที่ re-seed (ตามที่เจอในบทที่ 9) แต่ไม่มีผลกับบทนี้ เพราะ <code>id</code> ไม่ถูกส่งออกไปใน response — <code>docs/api-spec.md</code> กำหนดให้ Category มีแค่สามคีย์ <code>slug</code>, <code>name</code>, <code>url</code> เท่านั้น</p></div>
+    <p>ลำดับของ array ที่ตอบกลับมามีผลต่อ node script ที่ตรวจสัญญาในบทถัด ๆ ไป (นับจำนวน, ตรวจ key) — seed script ส่ง category เข้า <code>createMany</code> เป็น array ตามลำดับที่เขียนไว้ใน <code>CATEGORIES</code> ดังนั้น <code>id</code> ที่ sequence แจกให้ (auto-increment) จึงเรียงตามลำดับนั้นอยู่แล้ว แต่การสั่ง <code>orderBy: { id: 'asc' }</code> คือการ<em>เขียนเจตนานั้นออกมา</em> ไม่ใช่การหวังว่า Postgres จะคืนแถวตามลำดับที่ insert — Postgres ไม่รับประกันลำดับให้เลยถ้าไม่สั่ง <code>ORDER BY</code></p>
+    <div class="note"><p>ค่า <code>id</code> ที่แท้จริงจะขยับขึ้นทุกครั้งที่ re-seed (ตามที่เจอตอน seed ข้อมูล) แต่ไม่มีผลกับบทนี้ เพราะ <code>id</code> ไม่ถูกส่งออกไปใน response — <code>docs/api-spec.md</code> กำหนดให้ Category มีแค่สามคีย์ <code>slug</code>, <code>name</code>, <code>url</code> เท่านั้น</p></div>
 
     <h2>เป้าหมายของบทนี้</h2>
     <p>module, controller และ service ของสินค้าที่ถูกลงทะเบียนเข้าแอปแล้ว (ในโค้ดอ้างอิงคือโฟลเดอร์ <code>src/products/</code> และ <code>ProductsModule</code> ใน <code>src/app.module.ts</code> — Cursor เลือกที่วางและชื่อไฟล์เองได้ตามกติกาใน <code>.cursor/rules</code>) โดยต้องได้ผลลัพธ์นี้</p>

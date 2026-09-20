@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS E-commerce API Workshop · บทที่ 12 จาก 24</p>
+    <p class="eyebrow">NestJS E-commerce API Workshop</p>
     <h1>GET /products/:id</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
@@ -22,19 +22,19 @@
     </section>
 
     <h2>บทนี้คือบทที่ mapper ได้ทำงานจริง</h2>
-    <p>บทที่ 11 เขียน <code>toProductResponse</code> ไว้แต่ยังไม่มีใครเรียก บทนี้เราต่อสายให้ครบ: controller รับ id → service query สินค้าพร้อม relation → ส่งแถวเข้า mapper → คืน JSON ที่ตรงกับ section Product ใน <code>docs/api-spec.md</code></p>
-    <p>รูปแบบการรับ parameter เป็นแบบเดียวกับ NestJS Fundamentals บทที่ 7 (route parameters) และการโยน error เป็นแบบเดียวกับบทที่ 13 (ข้อความ error ที่อ่านรู้เรื่อง) ต่างกันที่คราวนี้ข้อความไม่ใช่เรื่องรสนิยม — มันคือส่วนหนึ่งของสัญญา</p>
+    <p>ขั้นก่อนหน้าเขียน <code>toProductResponse</code> ไว้แต่ยังไม่มีใครเรียก บทนี้เราต่อสายให้ครบ: controller รับ id → service query สินค้าพร้อม relation → ส่งแถวเข้า mapper → คืน JSON ที่ตรงกับ section Product ใน <code>docs/api-spec.md</code></p>
+    <p>รูปแบบการรับ parameter เป็นแบบเดียวกับ NestJS Fundamentals ตอน route parameters และการโยน error เป็นแบบเดียวกับตอนที่ว่าด้วยข้อความ error ที่อ่านรู้เรื่อง ต่างกันที่คราวนี้ข้อความไม่ใช่เรื่องรสนิยม — มันคือส่วนหนึ่งของสัญญา</p>
 
     <h2>ข้อความ 404 คือสัญญา ไม่ใช่ข้อความประกอบ</h2>
     <p>เปิด <code>docs/api-spec.md</code> ดู section Errors — เราออกแบบให้ product ที่ไม่มีอยู่ตอบ status 404 พร้อม body</p>
     <pre><code>{ "message": "Product 9999 not found" }</code></pre>
-    <p>React app ที่เราจะต่อในบทที่ 23 อ่าน <code>data.message</code> มาโชว์ให้ผู้ใช้เห็นตรง ๆ ผ่าน <code>ApiError</code> ของมัน ข้อความจึงต้องตรงตามที่เราออกแบบไว้ทุกตัวอักษร ถ้าเขียนเป็น <code>Product #9999 not found</code> แบบที่เคยทำในคอร์ส NestJS Fundamentals หน้าเว็บก็ยังไม่พัง (เพราะ client อ่านแค่ field <code>message</code> ไม่สนใจเนื้อหา) แต่ผิดสัญญาที่เราเขียนไว้ใน <code>docs/api-spec.md</code> และ script ตรวจสัญญาที่เราจะเขียนท้ายบทนี้จะจับได้ทันที</p>
+    <p>React app ที่เราจะต่อในตอนท้ายของ workshop อ่าน <code>data.message</code> มาโชว์ให้ผู้ใช้เห็นตรง ๆ ผ่าน <code>ApiError</code> ของมัน ข้อความจึงต้องตรงตามที่เราออกแบบไว้ทุกตัวอักษร ถ้าเขียนเป็น <code>Product #9999 not found</code> แบบที่เคยทำในคอร์ส NestJS Fundamentals หน้าเว็บก็ยังไม่พัง (เพราะ client อ่านแค่ field <code>message</code> ไม่สนใจเนื้อหา) แต่ผิดสัญญาที่เราเขียนไว้ใน <code>docs/api-spec.md</code> และ script ตรวจสัญญาที่เราจะเขียนท้ายบทนี้จะจับได้ทันที</p>
     <pre><code>throw new NotFoundException(`Product ${id} not found`);</code></pre>
 
     <h2><code>include</code> และเหตุผลที่ต้องสั่ง <code>orderBy</code> ให้ reviews</h2>
-    <p>แถว <code>Product</code> เปล่า ๆ ไม่มี <code>category</code> และไม่มี <code>reviews</code> ติดมา เราจึงต้องสั่ง <code>include</code> (ทบทวน NestJS Fundamentals บทที่ 26 เรื่องดึง model พร้อม relation)</p>
+    <p>แถว <code>Product</code> เปล่า ๆ ไม่มี <code>category</code> และไม่มี <code>reviews</code> ติดมา เราจึงต้องสั่ง <code>include</code> (ทบทวน NestJS Fundamentals ตอนดึง model พร้อม relation)</p>
     <pre><code>include: { category: true, reviews: { orderBy: { id: 'asc' } } }</code></pre>
-    <p>ทำไมต้องมี <code>orderBy</code> ให้ reviews ด้วย? เพราะ array ที่ลำดับไม่ตรงกันจะทำให้การตรวจสัญญาในบทถัด ๆ ไปไม่ผ่าน และ Postgres ไม่รับประกันลำดับของแถวที่คืนมาถ้าไม่มี <code>ORDER BY</code> — มันจะเรียงตามที่สะดวกที่สุดในแผนการ query นั้น ๆ ซึ่งอาจเปลี่ยนเมื่อข้อมูลโตขึ้นหรือมี index ใหม่ seed ในบทที่ 9 ใส่ review ของสินค้าแต่ละชิ้นตามลำดับที่เขียนไว้ในสคริปต์ ดังนั้น <code>id</code> น้อยไปมากคือลำดับเดียวกับที่ seed ใส่ไว้</p>
+    <p>ทำไมต้องมี <code>orderBy</code> ให้ reviews ด้วย? เพราะ array ที่ลำดับไม่ตรงกันจะทำให้การตรวจสัญญาในบทถัด ๆ ไปไม่ผ่าน และ Postgres ไม่รับประกันลำดับของแถวที่คืนมาถ้าไม่มี <code>ORDER BY</code> — มันจะเรียงตามที่สะดวกที่สุดในแผนการ query นั้น ๆ ซึ่งอาจเปลี่ยนเมื่อข้อมูลโตขึ้นหรือมี index ใหม่ seed script ใส่ review ของสินค้าแต่ละชิ้นตามลำดับที่เขียนไว้ในสคริปต์ ดังนั้น <code>id</code> น้อยไปมากคือลำดับเดียวกับที่ seed ใส่ไว้</p>
 
     <h2>ลำดับการประกาศ route คือลำดับที่ Nest ลองจับ</h2>
     <p>Nest ลงทะเบียน handler ตามลำดับที่ประกาศไว้ใน class และ router จะจับ pattern แรกที่ตรง ถ้าเราเผลอวาง <code>@Get(':id')</code> ไว้ก่อน</p>
@@ -42,7 +42,7 @@
   → ตรงกับ pattern /products/:id  (id = "categories")
   → ParseIntPipe แปลง "categories" ไม่ได้
   → 400 Bad Request</code></pre>
-    <p>endpoint ที่เคยทำงานในบทที่ 10 จะตายเงียบ ๆ ทั้งที่เราไม่ได้แตะโค้ดของมันเลย กฎง่าย ๆ คือ <strong>route ที่เป็นคำตายตัวต้องมาก่อน route ที่มี parameter เสมอ</strong> ดังนั้นใน <code>ProductsController</code> เราวาง <code>findOne</code> เป็น handler สุดท้ายของ class ตั้งแต่วันนี้ แล้วบทที่ 13 และ 14 จะแทรก handler ใหม่ไว้<em>ก่อน</em>มันทุกครั้ง</p>
+    <p>endpoint หมวดสินค้าที่เคยทำงานอยู่จะตายเงียบ ๆ ทั้งที่เราไม่ได้แตะโค้ดของมันเลย กฎง่าย ๆ คือ <strong>route ที่เป็นคำตายตัวต้องมาก่อน route ที่มี parameter เสมอ</strong> ดังนั้นใน <code>ProductsController</code> เราวาง <code>findOne</code> เป็น handler สุดท้ายของ class ตั้งแต่วันนี้ แล้ว endpoint ที่เพิ่มทีหลังจะแทรก handler ใหม่ไว้<em>ก่อน</em>มันทุกครั้ง</p>
 
     <h2>ทำไม id ที่ไม่ใช่ตัวเลขได้ 400 ไม่ใช่ 404</h2>
     <p>ถ้ายิง <code>GET /products/abc</code> เราตอบ 400 พร้อมข้อความ <code>Validation failed (numeric string is expected)</code> เพราะ <code>ParseIntPipe</code> ดักไว้ก่อนที่ handler จะทำงาน — เป็นพฤติกรรมมาตรฐานของ Nest ไม่ต้องเขียนโค้ดเพิ่ม</p>
@@ -51,11 +51,11 @@
     <h2>เป้าหมายของบทนี้</h2>
     <p>ในโค้ดอ้างอิงคือการเพิ่ม handler ใน controller กับ method ใน service เดิมของ <code>src/products/</code> — Cursor เลือกวิธีเองได้ โดยต้องได้ผลลัพธ์นี้</p>
     <ul>
-      <li><code>GET /products/:id</code> ตอบสินค้าหนึ่งชิ้นครบ 22 คีย์ผ่าน mapper จากบทที่ 11</li>
+      <li><code>GET /products/:id</code> ตอบสินค้าหนึ่งชิ้นครบ 22 คีย์ผ่าน mapper ที่มีอยู่แล้ว</li>
       <li>id ที่ไม่มีอยู่ → 404 <code>Product 9999 not found</code> ตรงตัวอักษร / id ที่ไม่ใช่ตัวเลข → 400</li>
-      <li><code>GET /products/categories</code> ยังทำงานเหมือนบทที่ 10</li>
+      <li><code>GET /products/categories</code> ยังทำงานเหมือนเดิม</li>
     </ul>
-    <p>บทนี้ไม่แตะ mapper และ DTO จากบทที่ 11 เลย</p>
+    <p>บทนี้ไม่แตะ mapper และ DTO ที่มีอยู่แล้วเลย</p>
 
     <section class="workshop" aria-labelledby="exercise-heading">
       <h2 id="exercise-heading">สั่ง Cursor ต่อ endpoint สินค้าหนึ่งชิ้น</h2>
@@ -83,7 +83,7 @@
         <li><code>GET /products/9999</code> ได้ 404 และข้อความตรงตัวอักษรต่ออักษร: <code>Product 9999 not found</code></li>
         <li><code>GET /products/categories</code> ยังตอบรายการหมวด ไม่ถูกจับเป็น id (log ตอน start ต้องเห็น route <code>categories</code> ก่อน <code>:id</code>)</li>
         <li>สินค้ามี <code>category</code> เป็น slug และมี <code>reviews</code> ครบ — ถ้าได้ <code>category</code> เป็น <code>undefined</code> หรือ reviews ว่าง แปลว่า query ไม่ได้ดึง relation มาด้วย</li>
-        <li>response ผ่าน mapper ตัวเดิมจากบทที่ 11 ไม่ได้ประกอบรูปทรงใหม่ขึ้นมาเองใน service</li>
+        <li>response ผ่าน mapper ตัวเดิมที่มีอยู่แล้ว ไม่ได้ประกอบรูปทรงใหม่ขึ้นมาเองใน service</li>
         <li>ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้, mapper/DTO ไม่ถูกแก้, และไม่มี <code>any</code> / <code>as</code> / <code>!</code></li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> เขียนข้อความเป็น <code>Product #9999 not found</code> ตามสไตล์ที่เคยเห็นในคอร์ส NestJS Fundamentals (ซึ่งเป็นข้อความที่ถูกต้องใน<em>คอร์สนั้น</em> แต่ผิดสัญญาในคอร์สนี้) อีกแบบคือใช้ <code>findFirst({ where: { id } })</code> โดยลืม <code>include</code> ทั้งก้อน — TypeScript จะฟ้องเมื่อส่งเข้า <code>toProductResponse</code> เพราะ type <code>ProductWithRelations</code> ไม่ยอม แต่บางครั้ง Cursor จะแก้ปัญหาด้วยการเติม <code>as</code> เข้าไปกลบ ให้ค้นคำว่า <code>as </code> ในไฟล์แล้วลบออก แก้ที่ <code>include</code> แทน</p>
@@ -166,7 +166,7 @@ console.log(p.title, p.price, p.discountPercentage, p.brand);
           <p>ผลลัพธ์จริง: <code>keys: 22</code> แล้วบรรทัดถัดมา <code>Velvet Matte Lipstick 9.99 10.48 Lumina</code></p>
         </li>
         <li><code>curl -i http://localhost:3000/products/9999</code> ได้ 404 พร้อม <code>"message":"Product 9999 not found"</code> ตรงตัวอักษร</li>
-        <li><code>curl -s http://localhost:3000/products/categories</code> ยังตอบ array 24 ก้อนเหมือนบทที่ 10 — พิสูจน์ว่าลำดับ route ถูก (ถ้าได้ 400 แปลว่า <code>@Get(':id')</code> ไปอยู่ข้างบน)</li>
+        <li><code>curl -s http://localhost:3000/products/categories</code> ยังตอบ array 24 ก้อนเหมือนเดิม — พิสูจน์ว่าลำดับ route ถูก (ถ้าได้ 400 แปลว่า <code>@Get(':id')</code> ไปอยู่ข้างบน)</li>
         <li>หาสินค้าที่ไม่มีส่วนลดแล้วยืนยันว่าคีย์ <code>discountPercentage</code> หายไปทั้งคีย์ — สินค้า id <code>3</code> คือตัวหนึ่งที่ <code>discountPercentage</code> เป็น <code>null</code>
           <pre><code>curl -s http://localhost:3000/products/3 \
   | node -e "let d='';process.stdin.on('data',c=&gt;d+=c).on('end',()=&gt;console.log('discountPercentage' in JSON.parse(d)))"
@@ -178,14 +178,14 @@ console.log(p.title, p.price, p.discountPercentage, p.brand);
     </section>
     <section class="workshop" aria-labelledby="contract-check-heading">
       <h2 id="contract-check-heading">เปลี่ยน checklist ให้เป็นคำสั่งเดียวที่รันได้</h2>
-      <p>ทุกข้อในส่วน "ตรวจว่าใช้งานได้จริง" ด้านบนคือสัญญาที่ต้องเป็นจริง<em>ตลอดไป</em> ไม่ใช่แค่วันนี้ — บทที่ 13 และ 14 จะกลับมาแก้ controller ตัวเดิมนี้อีก และจะไม่มีใครไล่ยิง curl ห้าคำสั่งแล้วอ่านผลด้วยตาทุกครั้งที่ AI แก้โค้ดให้ วิธีที่ใช้ได้จริงคือย้าย checklist ทั้งอันลงไปอยู่ในไฟล์ที่รันได้ แล้วตัดสินด้วยคำสั่งเดียวว่า <code>npm run contract:check</code> ผ่านหรือไม่ผ่าน</p>
+      <p>ทุกข้อในส่วน "ตรวจว่าใช้งานได้จริง" ด้านบนคือสัญญาที่ต้องเป็นจริง<em>ตลอดไป</em> ไม่ใช่แค่วันนี้ — ขั้นถัด ๆ ไปจะกลับมาแก้ controller ตัวเดิมนี้อีก และจะไม่มีใครไล่ยิง curl ห้าคำสั่งแล้วอ่านผลด้วยตาทุกครั้งที่ AI แก้โค้ดให้ วิธีที่ใช้ได้จริงคือย้าย checklist ทั้งอันลงไปอยู่ในไฟล์ที่รันได้ แล้วตัดสินด้วยคำสั่งเดียวว่า <code>npm run contract:check</code> ผ่านหรือไม่ผ่าน</p>
       <p>เหตุผลที่ลึกกว่านั้นคือ <strong>check ที่รันได้คือสิ่งที่ AI เอาไปใช้เองได้</strong> คู่มือของเครื่องมือ agent ทุกตัวพูดตรงกันข้อหนึ่ง: ให้คำสั่งที่ตัดสินถูก/ผิดได้เองกับมัน แล้วมันจะรัน อ่านผล และแก้ซ้ำจนผ่านได้โดยไม่ต้องรอคุณอ่าน output ให้ทีละบรรทัด ส่วน checklist ที่เป็นข้อความเฉย ๆ มีแต่คุณเท่านั้นที่ตรวจได้ และเป็นงานที่คนเลิกทำเป็นคนแรกเมื่อรีบ</p>
-      <p><strong>เขียนไฟล์นี้ด้วยมือ ไม่ต้องสั่ง Cursor</strong> ด้วยเหตุผลเดียวกับ <code>docs/api-spec.md</code> ในบทที่ 3: เครื่องมือที่ใช้ตรวจงานของ AI ไม่ควรถูกเขียนโดย AI ตัวที่มันตรวจ และการพิมพ์เองคือการพิสูจน์ว่าคุณอ่านสัญญาออกจริง</p>
+      <p><strong>เขียนไฟล์นี้ด้วยมือ ไม่ต้องสั่ง Cursor</strong> ด้วยเหตุผลเดียวกับตอนเขียน <code>docs/api-spec.md</code> เอง: เครื่องมือที่ใช้ตรวจงานของ AI ไม่ควรถูกเขียนโดย AI ตัวที่มันตรวจ และการพิมพ์เองคือการพิสูจน์ว่าคุณอ่านสัญญาออกจริง</p>
       <div class="prompt-example"><code>mkdir -p scripts
 # เขียนไฟล์ scripts/contract-check.ts ด้วยมือตามด้านล่าง
 # แล้วเพิ่มบรรทัดนี้ในส่วน "scripts" ของ package.json ต่อจาก db:seed
 #   "contract:check": "node scripts/contract-check.ts",</code></div>
-      <p>ไฟล์นี้ยังไม่ต้องติดตั้งอะไรเพิ่มเลย — <code>fetch</code> และ top-level <code>await</code> มีอยู่ใน Node อยู่แล้ว ส่วนไฟล์ <code>.ts</code> ที่<em>ไม่มี import ข้ามไฟล์</em> แบบนี้ Node 24 รันได้เองด้วยการลบ type ทิ้ง (type stripping) จึงสั่ง <code>node</code> ตรง ๆ ได้ ไม่ต้องมี build step (ข้อจำกัดข้อนี้จะกลับมาสำคัญในบทที่ 15 ตอนที่ไฟล์เริ่ม import ข้ามไฟล์)</p>
+      <p>ไฟล์นี้ยังไม่ต้องติดตั้งอะไรเพิ่มเลย — <code>fetch</code> และ top-level <code>await</code> มีอยู่ใน Node อยู่แล้ว ส่วนไฟล์ <code>.ts</code> ที่<em>ไม่มี import ข้ามไฟล์</em> แบบนี้ Node 24 รันได้เองด้วยการลบ type ทิ้ง (type stripping) จึงสั่ง <code>node</code> ตรง ๆ ได้ ไม่ต้องมี build step (ข้อจำกัดข้อนี้จะกลับมาสำคัญภายหลัง ตอนที่ไฟล์เริ่ม import ข้ามไฟล์)</p>
       <pre><code>const BASE = process.env.LOCAL_URL ?? 'http://localhost:3000';
 
 interface Check {
@@ -269,7 +269,7 @@ process.exit(failures === 0 ? 0 : 1);</code></pre>
         <li>ปิด API (Ctrl+C ที่ terminal ของ <code>npm run start:dev</code>) แล้วรันซ้ำ — ต้องได้ <code>❌</code> ทั้งสี่บรรทัดพร้อมข้อความ <code>fetch failed</code> ไม่ใช่ผ่านเงียบ ๆ</li>
         <li>commit ด้วย <code>git add -A &amp;&amp; git commit -m "test: contract check for the products endpoints"</code></li>
       </ul>
-      <div class="note"><p>สี่ check นี้จะโตขึ้นทีละบท: บทที่ 13 เพิ่มสามข้อของ <code>GET /products</code> บทที่ 14 เพิ่มอีกสองข้อของหมวดสินค้า รวมเป็นเก้าข้อ แล้วบทที่ 15 จะเขียนทั้งไฟล์ใหม่ด้วย zod ให้ตรวจ <em>ทุก field</em> ใน response แทนที่จะตรวจเฉพาะข้อที่เราอุตส่าห์นึกออกและเขียนถึงเอง</p></div>
+      <div class="note"><p>สี่ check นี้จะโตขึ้นทีละขั้น: ขั้น pagination เพิ่มสามข้อของ <code>GET /products</code> ขั้นกรองตามหมวดเพิ่มอีกสองข้อ รวมเป็นเก้าข้อ แล้วภายหลังจะเขียนทั้งไฟล์ใหม่ด้วย zod ให้ตรวจ <em>ทุก field</em> ใน response แทนที่จะตรวจเฉพาะข้อที่เราอุตส่าห์นึกออกและเขียนถึงเอง</p></div>
     </section>
     <h2>แหล่งอ้างอิง</h2>
     <ul class="source-list">

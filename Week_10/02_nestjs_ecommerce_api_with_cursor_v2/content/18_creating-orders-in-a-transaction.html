@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS E-commerce API Workshop · บทที่ 18 จาก 24</p>
+    <p class="eyebrow">NestJS E-commerce API Workshop</p>
     <h1>สร้างคำสั่งซื้อใน Transaction</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
@@ -40,15 +40,15 @@
 
     <h2>อ่านและเขียนในก้อนเดียวด้วย interactive transaction</h2>
     <p>การสร้างคำสั่งซื้อต้องทำสองอย่าง: อ่านราคาสินค้าจากตาราง <code>Product</code> แล้วเขียน <code>Order</code> พร้อมรายการลงไป ถ้าปล่อยสองอย่างนี้อยู่นอก transaction จะเกิดปัญหาสองแบบ — ราคาถูกแก้ระหว่างที่เราอ่านเสร็จแต่ยังไม่เขียน (ใบเสร็จได้ราคาผีที่ไม่มีอยู่จริงในช่วงเวลาใดเลย) และถ้าการเขียนพังกลางทางก็จะเหลือข้อมูลค้างครึ่ง ๆ</p>
-    <p>คำตอบคือ <strong>interactive transaction</strong> แบบเดียวกับบทที่ 29 ของคอร์ส NestJS Fundamentals: <code>this.prisma.$transaction(async (tx) =&gt; { … })</code> ทุก query ข้างในต้องเรียกผ่าน <code>tx</code> ไม่ใช่ <code>this.prisma</code> ไม่งั้น query นั้นจะหลุดออกไปอยู่นอก transaction เงียบ ๆ</p>
+    <p>คำตอบคือ <strong>interactive transaction</strong> แบบเดียวกับบทเรื่องทรานแซกชันของคอร์ส NestJS Fundamentals: <code>this.prisma.$transaction(async (tx) =&gt; { … })</code> ทุก query ข้างในต้องเรียกผ่าน <code>tx</code> ไม่ใช่ <code>this.prisma</code> ไม่งั้น query นั้นจะหลุดออกไปอยู่นอก transaction เงียบ ๆ</p>
     <p>สิ่งที่ทำให้ pattern นี้สวยคือการจัดการ error: ถ้ามี id สินค้าที่ไม่มีจริง เรา <code>throw new NotFoundException(...)</code> ข้างใน callback ได้เลย Prisma จะ rollback ทุกอย่างให้อัตโนมัติเพราะ callback reject และ Nest จะแปลง exception ตัวนั้นเป็น response <code>404</code> ให้เอง เราจึงไม่ต้องเขียนโค้ดลบข้อมูลที่เพิ่งสร้างเลยแม้แต่บรรทัดเดียว</p>
-    <p>การเขียน <code>Order</code> กับ <code>OrderItem</code> ใช้ nested write (บทที่ 27 ของคอร์ส NestJS Fundamentals) คือ <code>items: { create: items }</code> ข้างใน <code>tx.order.create()</code> — Prisma ออก INSERT ให้ทั้งใบและทุกบรรทัดในคำสั่งเดียว โดยเติม <code>orderId</code> ให้เองหลังได้ id ของ <code>Order</code> ส่วน <code>include: { items: { orderBy: { id: 'asc' } } }</code> ทำให้ได้รายการกลับมาพร้อมกันในลำดับที่เขียนลงไป — ไม่ต้อง query ซ้ำ และ <code>products[]</code> ใน response เรียงตรงกับที่ client ส่งมา</p>
+    <p>การเขียน <code>Order</code> กับ <code>OrderItem</code> ใช้ nested write (บทเรื่องความสัมพันธ์ของคอร์ส NestJS Fundamentals) คือ <code>items: { create: items }</code> ข้างใน <code>tx.order.create()</code> — Prisma ออก INSERT ให้ทั้งใบและทุกบรรทัดในคำสั่งเดียว โดยเติม <code>orderId</code> ให้เองหลังได้ id ของ <code>Order</code> ส่วน <code>include: { items: { orderBy: { id: 'asc' } } }</code> ทำให้ได้รายการกลับมาพร้อมกันในลำดับที่เขียนลงไป — ไม่ต้อง query ซ้ำ และ <code>products[]</code> ใน response เรียงตรงกับที่ client ส่งมา</p>
     <div class="note"><p>เราอ่านสินค้าทั้งหมดด้วย <code>findMany({ where: { id: { in: ids } } })</code> ครั้งเดียวแล้วทำ <code>Map</code> จาก id ไปหา product ไม่ใช่ loop <code>findUnique</code> ทีละตัว — ตะกร้า 10 รายการจึงเป็น 1 query ไม่ใช่ 10 query ส่วนการวน <code>dto.products.map(...)</code> ต่อจากนั้นทำให้ลำดับของ response ตรงกับลำดับที่ client ส่งมาเสมอ ไม่ใช่ลำดับที่ฐานข้อมูลคืนแถวมา</p></div>
     <p>อีกเรื่องที่ตั้งใจ<strong>ไม่</strong>ทำ: เราไม่ลด <code>stock</code> ของสินค้า เพราะ React app อ่าน stock จาก <code>GET /products/:id</code> ใหม่ทุกครั้งที่เปิดหน้าสินค้า ถ้าเราลด stock ขึ้นมาเอง พฤติกรรมของแอปจะเปลี่ยนไปจากเดิมทันทีทั้งที่เราไม่ได้แก้ frontend — ขัดกับเป้าหมายของคอร์สนี้</p>
 
     <h2>mapper กันข้อมูลส่วนตัวหลุด</h2>
     <p>แถวที่ Prisma คืนมามีมากกว่าที่สัญญาอนุญาตให้ส่งออก: <code>Order</code> มี <code>address</code>, <code>email</code>, <code>phone</code>, <code>createdAt</code> ที่สัญญาของเรา (<code>docs/api-spec.md</code>) ไม่ได้กำหนดให้ส่งออกไป และ <code>OrderItem</code> มี <code>id</code> ของตัวเองซึ่ง<strong>ไม่ใช่</strong> <code>products[].id</code> ที่ client ต้องการ — client ต้องการ <code>productId</code> เพราะมันใช้ค่านั้นลิงก์ไปหน้าสินค้า</p>
-    <p>เราจึงใช้ mapper แบบเดียวกับบทที่ 11 คือฟังก์ชันบริสุทธิ์ที่แปลงแถวเป็น response DTO ทีละ field อย่างชัดเจน ข้อดีคือ field ที่เพิ่มใน schema วันหลังจะไม่รั่วออก API เอง เพราะถ้าไม่เขียนไว้ใน mapper มันก็ไม่ถูกส่ง</p>
+    <p>เราจึงใช้ mapper แบบเดียวกับตอนแปลงแถวสินค้าเป็นรูปทรงตามสัญญา คือฟังก์ชันบริสุทธิ์ที่แปลงแถวเป็น response DTO ทีละ field อย่างชัดเจน ข้อดีคือ field ที่เพิ่มใน schema วันหลังจะไม่รั่วออก API เอง เพราะถ้าไม่เขียนไว้ใน mapper มันก็ไม่ถูกส่ง</p>
 
     <h2>เป้าหมายของบทนี้</h2>
     <pre><code>ecommerce-api/
@@ -63,7 +63,7 @@
       <li><strong><code>src/orders/dto/cart-response.dto.ts</code></strong> — สัญญา: ต้องมีแค่ชนิดข้อมูลของ response ตามสัญญา (<code>CartProductResponseDto</code>, <code>CartResponseDto</code>) · ต้องไม่มี decorator และไม่มี method</li>
       <li><strong><code>src/orders/cart.mapper.ts</code></strong> — สัญญา: ต้อง export <code>toCartResponse()</code> ที่ map <code>products[].id</code> จาก <code>item.productId</code> · ต้องไม่ส่ง <code>address</code>, <code>email</code>, <code>phone</code>, <code>createdAt</code> ออกไป และไม่แตะฐานข้อมูล</li>
       <li><strong><code>src/orders/orders.service.ts</code></strong> — สัญญา: ต้องทำทั้งการอ่านสินค้าและการเขียนคำสั่งซื้อใน <code>$transaction</code> เดียว, ต้อง throw <code>NotFoundException</code> ด้วยข้อความเดียวกับ <code>ProductsService</code> · ต้องไม่แก้ <code>stock</code>, ไม่ใช้ <code>any</code>, ไม่ใช้ <code>as</code></li>
-      <li>ยังไม่มี controller และ module ในบทนี้ — service ตัวนี้จึงยังไม่ถูกเรียกจากที่ไหน จนถึงบทที่ 19</li>
+      <li>ยังไม่มี controller และ module ในบทนี้ — service ตัวนี้จึงยังไม่ถูกเรียกจากที่ไหน จนกว่าจะเปิด route <code>POST /carts/add</code> ในขั้นถัดไป</li>
     </ul>
 
     <section class="workshop" aria-labelledby="exercise-heading">
@@ -224,7 +224,7 @@ export class OrdersService {
         <li><code>npm run build &amp;&amp; npm run lint</code> ผ่านทั้งสองคำสั่ง</li>
         <li><code>grep -rn "this.prisma" src/orders/</code> — ทุกบรรทัดที่เจอต้องเป็นการเปิด transaction เท่านั้น ไม่มี query ใดเรียก <code>this.prisma</code> ตรง ๆ — ยืนยันว่าไม่มี query หลุดออกนอก transaction</li>
         <li><code>grep -rn "stock\|: any\| as " src/orders/</code> ไม่เจออะไรเลย</li>
-        <li>คิดเลขตามด้วยมือใน <code>node -e "console.log(Math.round(19.98 * (1 - 10.48 / 100) * 100) / 100)"</code> ได้ <code>17.89</code> — เลขนี้คือ <code>discountedPrice</code> ที่ service ของคุณต้องคืน (จะยิงยืนยันจริงด้วย curl ในบทที่ 19)</li>
+        <li>คิดเลขตามด้วยมือใน <code>node -e "console.log(Math.round(19.98 * (1 - 10.48 / 100) * 100) / 100)"</code> ได้ <code>17.89</code> — เลขนี้คือ <code>discountedPrice</code> ที่ service ของคุณต้องคืน (จะยิงยืนยันจริงด้วย curl ตอนเปิด route <code>POST /carts/add</code>)</li>
         <li><code>git status</code> ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ — ยังไม่มีการลงทะเบียน module ใน <code>app.module.ts</code> และโค้ดฝั่ง products ไม่ถูกแตะ</li>
         <li>commit ผลงานของบทนี้: <code>git add -A &amp;&amp; git commit -m "feat: orders service"</code></li>
       </ul>

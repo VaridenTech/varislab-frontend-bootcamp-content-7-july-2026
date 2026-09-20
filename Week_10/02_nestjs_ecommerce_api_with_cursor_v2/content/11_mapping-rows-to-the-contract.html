@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS E-commerce API Workshop · บทที่ 11 จาก 24</p>
+    <p class="eyebrow">NestJS E-commerce API Workshop</p>
     <h1>แปลงแถวจากฐานข้อมูลเป็นรูปทรงของ Product ใน docs/api-spec.md</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
@@ -41,12 +41,12 @@
     <p><code>toProductResponse(product)</code> รับค่าเข้า คืนค่าออก ไม่แตะฐานข้อมูล ไม่แตะ config ไม่มี state — เรียก <code>export function</code> ธรรมดาก็พอ ไม่ต้อง <code>@Injectable()</code> ผลที่ได้คือ</p>
     <ul>
       <li>เทสได้โดยไม่ต้องยก Nest ขึ้นมาเลย: ประกอบ object เข้าไปตรง ๆ แล้วเทียบผลลัพธ์ ไม่ต้องมี <code>Test.createTestingModule</code> ไม่ต้องมีฐานข้อมูล</li>
-      <li>ทุก endpoint ที่คืนสินค้า (บทที่ 12, 13, 14) เรียกฟังก์ชันเดียวกัน จึงตอบรูปทรงเดียวกันแน่นอน</li>
+      <li>ทุก endpoint ที่คืนสินค้า (สินค้าชิ้นเดียว, รายการสินค้า, สินค้าตามหมวด) เรียกฟังก์ชันเดียวกัน จึงตอบรูปทรงเดียวกันแน่นอน</li>
       <li>เวลา contract เปลี่ยน มีที่เดียวที่ต้องแก้</li>
     </ul>
 
     <h2>ทำไมใช้ <code>class</code> ไม่ใช่ <code>interface</code> สำหรับ response DTO</h2>
-    <p><code>interface</code> หายไปตอน compile จึงไม่เหลือข้อมูลอะไรให้ tool อ่านตอน runtime ในบทที่ 21 เราจะเปิด Swagger CLI plugin ซึ่งอ่าน field ของ <strong>class</strong> เพื่อสร้าง schema ของเอกสาร API ให้อัตโนมัติ ถ้าเราประกาศเป็น interface ไว้ตอนนี้ ก็ต้องมาเขียนใหม่ทั้งหมดในบทนั้น</p>
+    <p><code>interface</code> หายไปตอน compile จึงไม่เหลือข้อมูลอะไรให้ tool อ่านตอน runtime ภายหลังเราจะเปิด Swagger CLI plugin ซึ่งอ่าน field ของ <strong>class</strong> เพื่อสร้าง schema ของเอกสาร API ให้อัตโนมัติ ถ้าเราประกาศเป็น interface ไว้ตอนนี้ ก็ต้องมาเขียนใหม่ทั้งหมดตอนนั้น</p>
     <p>ข้อกังวลปกติของการใช้ class คือ TypeScript จะบ่นว่า field ไม่ถูก assign ใน constructor (<code>strictPropertyInitialization</code>) แต่ <code>tsconfig.json</code> ของ scaffold Nest 12 ตั้ง <code>"strictPropertyInitialization": false</code> ไว้ให้แล้ว ดังนั้นการประกาศเปล่า ๆ แบบ <code>title: string;</code> จึง compile ผ่าน โดยที่ <code>"strict": true</code> ยังเปิดอยู่ตามปกติ</p>
 
     <h2>คีย์ที่ต้องหายไปทั้งคีย์: conditional spread</h2>

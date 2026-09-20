@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS E-commerce API Workshop · บทที่ 3 จาก 24</p>
+    <p class="eyebrow">NestJS E-commerce API Workshop</p>
     <h1>อ่านโค้ดฝั่ง client แล้วออกแบบสัญญาเป็นของตัวเอง</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
@@ -122,7 +122,7 @@ apiClient.interceptors.response.use(
       ),
     ),
 )</code></pre>
-    <p>บรรทัดที่สำคัญที่สุดคือ <code>error.response?.data?.message</code> — interceptor ตัวนี้ทำงานกับ error response <em>ทุกเส้น</em> และมันอ่านค่าจาก key <code>message</code> เท่านั้น ถ้า backend ของเราตอบ error กลับมาโดยไม่มี key นี้ (เช่นตอบ <code>{"error": "not found"}</code>) ผู้ใช้จะเห็นข้อความทั่วไป <q>Something went wrong</q> แทนข้อความจริง — ดังนั้นไม่ว่า error จะมาจากที่ไหนใน API ของเรา <strong>body ต้องมี field <code>message</code> เสมอ</strong> นี่คือข้อบังคับเดียวที่ไฟล์นี้ตั้งไว้ แต่มีผลกับทุก error handler ที่เราจะเขียนตั้งแต่บทที่ 12 เป็นต้นไป</p>
+    <p>บรรทัดที่สำคัญที่สุดคือ <code>error.response?.data?.message</code> — interceptor ตัวนี้ทำงานกับ error response <em>ทุกเส้น</em> และมันอ่านค่าจาก key <code>message</code> เท่านั้น ถ้า backend ของเราตอบ error กลับมาโดยไม่มี key นี้ (เช่นตอบ <code>{"error": "not found"}</code>) ผู้ใช้จะเห็นข้อความทั่วไป <q>Something went wrong</q> แทนข้อความจริง — ดังนั้นไม่ว่า error จะมาจากที่ไหนใน API ของเรา <strong>body ต้องมี field <code>message</code> เสมอ</strong> นี่คือข้อบังคับเดียวที่ไฟล์นี้ตั้งไว้ แต่มีผลกับทุก error handler ที่เราจะเขียนตั้งแต่ endpoint แรกที่ต้องตอบ error เป็นต้นไป</p>
 
     <h2>ไฟล์ที่ 5: src/features/checkout/{api.ts, schema.ts} — body และ response ของ checkout</h2>
     <pre><code>// src/features/checkout/api.ts
@@ -155,7 +155,7 @@ export const checkoutAddressSchema = z.object({
     <p>สองไฟล์นี้บอกรูปทรง body ของ <code>POST /carts/add</code> ครบ: <code>userId</code>, <code>products</code> (array ของ <code>{id, quantity}</code>) และ <code>address</code> ที่เป็น object ซ้อนสามฟิลด์ตาม <code>checkoutAddressSchema</code> — <code>address</code>, <code>email</code>, <code>phone</code> ทั้งสามฟิลด์ required ทั้งหมด (validate ด้วย zod ก่อนส่งออกจากฟอร์ม) ส่วน <code>PlaceOrderResponse</code> น่าสนใจตรงที่ client <strong>ไม่สนใจอะไรเลยนอกจาก <code>id</code></strong> — แต่นั่นไม่ได้แปลว่า response ของเราควรมีแค่ <code>id</code> เพราะ endpoint ที่คืนแค่ id เดียวไม่เหลือทางให้ client (หรือทีม support) ตรวจสอบย้อนหลังได้เลยว่าคำสั่งซื้อนั้นมีอะไรบ้าง เราจะออกแบบ receipt เต็มรูปแบบ แล้วให้ client เลือกอ่านแค่ field ที่มันต้องการเอง</p>
 
     <h2>เขียน docs/api-spec.md ด้วยมือ</h2>
-    <p>เปิดไฟล์ใหม่ในโปรเจกต์ <code>ecommerce-api</code> แล้ว<strong>พิมพ์เอง</strong> ไม่ต้องสั่ง Cursor เขียนให้ (เหตุผลเดียวกับบทที่ 4 เรื่อง <code>.cursor/rules</code>: นี่คือความจริงที่คุณต้องอ่านจากโค้ด ไม่ใช่สิ่งที่โมเดลภาษาเดาแทนได้) ให้ครอบคลุมหกหัวข้อตามไฟล์ที่อ่านมาข้างบน</p>
+    <p>เปิดไฟล์ใหม่ในโปรเจกต์ <code>ecommerce-api</code> แล้ว<strong>พิมพ์เอง</strong> ไม่ต้องสั่ง Cursor เขียนให้ (เหตุผลเดียวกับไฟล์ <code>.cursor/rules</code> ที่เราจะเขียนเองในขั้นถัดไป: นี่คือความจริงที่คุณต้องอ่านจากโค้ด ไม่ใช่สิ่งที่โมเดลภาษาเดาแทนได้) ให้ครอบคลุมหกหัวข้อตามไฟล์ที่อ่านมาข้างบน</p>
     <ul>
       <li><strong>Endpoints</strong> — ห้าเส้นจากไฟล์ที่ 2 และไฟล์ที่ 5 พร้อม query/body ของแต่ละเส้น</li>
       <li><strong>Product</strong> — interface เต็มจากไฟล์ที่ 1 พร้อมวงเล็บอธิบายว่าทำไม <code>discountPercentage</code> เป็น optional แต่ <code>brand</code> ไม่ใช่</li>

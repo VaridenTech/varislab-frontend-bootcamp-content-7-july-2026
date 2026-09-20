@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS E-commerce API Workshop · บทที่ 20 จาก 24</p>
+    <p class="eyebrow">NestJS E-commerce API Workshop</p>
     <h1>เปิด CORS และตั้งค่า PORT</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
@@ -32,7 +32,7 @@
       <li><code>*</code> ใช้ร่วมกับ cookie ไม่ได้ตามสเปก — ถ้าวันหน้าเพิ่ม auth ด้วย cookie ก็ต้องกลับมาแก้อยู่ดี ตั้ง origin ให้ตรงตัวไว้ตั้งแต่ต้นจึงประหยัดกว่า</li>
       <li>เราเก็บค่าไว้ใน <code>.env</code> (<code>CORS_ORIGIN=http://localhost:5173</code>) เพื่อให้ตอน deploy เปลี่ยนเป็นโดเมนจริงได้โดยไม่แตะโค้ด — รูปแบบเดียวกับ <code>PORT</code></li>
     </ul>
-    <p>ส่วน <code>PORT</code> นั้น scaffold ทำไว้ให้แล้วตั้งแต่บทที่ 2: บรรทัดสุดท้ายของ <code>main.ts</code> คือ <code>await app.listen(process.env.PORT ?? 3000)</code> และ <code>ConfigModule.forRoot({ isGlobal: true })</code> ที่เราใส่ใน <code>AppModule</code> ตอนบทที่ 6 เป็นตัวโหลด <code>.env</code> เข้า <code>process.env</code> ให้ตอน module ถูก import — บทนี้จึงไม่ต้องแก้อะไรเรื่องพอร์ต แค่รู้ว่ามันมาจากไหน</p>
+    <p>ส่วน <code>PORT</code> นั้น scaffold ทำไว้ให้แล้วตั้งแต่ตอน <code>nest new</code>: บรรทัดสุดท้ายของ <code>main.ts</code> คือ <code>await app.listen(process.env.PORT ?? 3000)</code> และ <code>ConfigModule.forRoot({ isGlobal: true })</code> ที่เราใส่ใน <code>AppModule</code> ตอนติดตั้ง Prisma เป็นตัวโหลด <code>.env</code> เข้า <code>process.env</code> ให้ตอน module ถูก import — บทนี้จึงไม่ต้องแก้อะไรเรื่องพอร์ต แค่รู้ว่ามันมาจากไหน</p>
 
     <h2>เป้าหมายของบทนี้</h2>
     <pre><code>ecommerce-api/

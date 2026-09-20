@@ -9,35 +9,35 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS E-commerce API Workshop · บทที่ 14 จาก 24</p>
+    <p class="eyebrow">NestJS E-commerce API Workshop</p>
     <h1>GET /products/category/:slug</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
       <ul>
         <li>กรองสินค้าด้วยเงื่อนไขที่อยู่บน relation (<code>{ category: { slug } }</code>) โดยไม่ต้อง query ตาราง category แยก</li>
         <li>อธิบายว่าทำไม slug ที่ไม่มีอยู่จริงต้องได้ 200 พร้อม list ว่าง ไม่ใช่ 404</li>
-        <li>เห็นผลตอบแทนของการแยก <code>paginate</code> ออกมาในบทที่ 13: endpoint ใหม่ใช้โค้ดสองบรรทัด</li>
+        <li>เห็นผลตอบแทนของการแยก <code>paginate</code> ออกมาก่อนหน้านี้: endpoint ใหม่ใช้โค้ดสองบรรทัด</li>
       </ul>
     </section>
 
     <h2>บทนี้สั้นมาก และนั่นคือประเด็น</h2>
-    <p>บทที่ 13 เราไม่ได้เขียนแค่ <code>findAll</code> — เราเขียน <code>paginate(where, skip, limit)</code> ที่รับ <em>เงื่อนไขอะไรก็ได้</em> เข้ามา แล้วให้ <code>findAll</code> ส่ง <code>{}</code> (ไม่กรองอะไร) เข้าไป บทนี้จึงเหลืองานแค่หาว่า "เงื่อนไขของหมวดหมู่" เขียนอย่างไร</p>
+    <p>ก่อนหน้านี้เราไม่ได้เขียนแค่ <code>findAll</code> — เราเขียน <code>paginate(where, skip, limit)</code> ที่รับ <em>เงื่อนไขอะไรก็ได้</em> เข้ามา แล้วให้ <code>findAll</code> ส่ง <code>{}</code> (ไม่กรองอะไร) เข้าไป บทนี้จึงเหลืองานแค่หาว่า "เงื่อนไขของหมวดหมู่" เขียนอย่างไร</p>
     <pre><code>findByCategory(slug: string, query: PaginationQueryDto) {
   return this.paginate({ category: { slug } }, query.skip, query.limit);
 }</code></pre>
     <p>เท่านี้ก็ได้ pagination, <code>total</code> ที่นับเฉพาะหมวดนั้น, <code>orderBy</code>, <code>include</code> และการ map เป็น contract มาครบ โดยไม่ต้อง copy อะไรเลย ถ้าตอนนั้นเราปล่อยให้ <code>findAll</code> เขียน <code>$transaction</code> ไว้ในตัวเอง บทนี้จะกลายเป็นการ copy สามสิบบรรทัดมาแก้คำเดียว — ซึ่งคือจุดเริ่มของความไม่ตรงกันในอนาคต</p>
 
     <h2>กรองผ่าน relation ไม่ใช่ผ่าน <code>categoryId</code></h2>
-    <p>ในฐานข้อมูล สินค้าอ้างหมวดหมู่ด้วยคอลัมน์ <code>categoryId</code> ที่เป็นตัวเลข แต่ client ส่ง <code>slug</code> มาให้ ทางที่คิดขึ้นมาก่อนคือสองขั้น: หา category จาก slug ก่อน ได้ <code>id</code> แล้วค่อยกรองสินค้า — แต่ Prisma ให้เราเขียนเงื่อนไขข้าม relation ได้ในครั้งเดียว (ทบทวน NestJS Fundamentals บทที่ 26)</p>
+    <p>ในฐานข้อมูล สินค้าอ้างหมวดหมู่ด้วยคอลัมน์ <code>categoryId</code> ที่เป็นตัวเลข แต่ client ส่ง <code>slug</code> มาให้ ทางที่คิดขึ้นมาก่อนคือสองขั้น: หา category จาก slug ก่อน ได้ <code>id</code> แล้วค่อยกรองสินค้า — แต่ Prisma ให้เราเขียนเงื่อนไขข้าม relation ได้ในครั้งเดียว (ทบทวน NestJS Fundamentals ตอน relation queries)</p>
     <pre><code>where: { category: { slug } }</code></pre>
     <p>Prisma แปลงก้อนนี้เป็น SQL ที่ join ไปที่ตาราง <code>Category</code> แล้วกรองด้วย <code>slug</code> ในคำสั่งเดียว ผลคือไป-กลับฐานข้อมูลครั้งเดียวแทนสองครั้ง และไม่มีช่องให้ข้อมูลเปลี่ยนระหว่างสอง query</p>
 
     <h2>slug ที่ไม่มีอยู่: 200 ไม่ใช่ 404</h2>
     <p>นี่คือจุดที่ความรู้สึกเรื่อง REST จะขัดกับสัญญา เปิด <code>docs/api-spec.md</code> ดู section List envelope + pagination — เราออกแบบให้ slug ที่ไม่มีอยู่ตอบ status 200 พร้อม (ตัวอย่างนี้ยิง <code>?limit=2&amp;skip=0</code>)</p>
     <pre><code>{"products":[],"total":0,"skip":0,"limit":2}</code></pre>
-    <p>เหตุผลที่มันสมเหตุสมผล: endpoint นี้ตอบ <em>ผลการค้นหา</em> ไม่ใช่ <em>ตัว resource</em> การค้นหาที่ไม่พบอะไรคือการค้นหาที่สำเร็จแต่ได้ศูนย์รายการ ต่างจาก <code>GET /products/9999</code> ในบทที่ 12 ที่ขอ resource ชิ้นหนึ่งซึ่งไม่มีอยู่ — อันนั้น 404 ถูกต้อง</p>
+    <p>เหตุผลที่มันสมเหตุสมผล: endpoint นี้ตอบ <em>ผลการค้นหา</em> ไม่ใช่ <em>ตัว resource</em> การค้นหาที่ไม่พบอะไรคือการค้นหาที่สำเร็จแต่ได้ศูนย์รายการ ต่างจาก <code>GET /products/9999</code> ที่ขอ resource ชิ้นหนึ่งซึ่งไม่มีอยู่ — อันนั้น 404 ถูกต้อง</p>
     <p>และเหตุผลที่สำคัญกว่า: <code>Category.tsx</code> ยิง <code>useQuery</code> ทันทีที่หมวดหมู่เปลี่ยน โดยไม่มีการ์ดพิเศษสำหรับ "หมวดที่ว่างเปล่า" เลย — component เช็คแค่ <code>isError</code> กับ <code>isLoading</code> ถ้า endpoint ตอบ 404 ตอนหมวดนั้นไม่มีสินค้า <code>isError</code> จะเป็น <code>true</code> ทันที แล้วหน้า Category เด้งไปโชว์ <code>&lt;ErrorMessage /&gt;</code> เต็มหน้า แทนที่จะโชว์ตะแกรงสินค้าที่ว่างเปล่าตามที่ควรเป็น</p>
-    <p>สังเกต <code>limit</code> ด้วย — ตามกติกาที่เราคุยไว้ในบทที่ 13 คือ <code>limit</code> ต้อง echo ค่าที่ client ขอมาเสมอ แม้หมวดนั้นจะไม่มีสินค้าเลย เช่นยิง <code>?limit=5</code> กับหมวดที่ว่างเปล่าก็ต้องได้ <code>limit: 5</code> (ไม่ใช่ 0) เพราะ <code>paginate</code> ของเราคืน <code>limit</code> ตามที่รับเข้ามาตรง ๆ อยู่แล้ว (ไม่ใช่ <code>rows.length</code>) ข้อนี้จึงถูกต้องโดยอัตโนมัติ ไม่ต้องเขียนกรณีพิเศษ</p>
+    <p>สังเกต <code>limit</code> ด้วย — ตามกติกา pagination ที่ตกลงไว้ก่อนหน้านี้ คือ <code>limit</code> ต้อง echo ค่าที่ client ขอมาเสมอ แม้หมวดนั้นจะไม่มีสินค้าเลย เช่นยิง <code>?limit=5</code> กับหมวดที่ว่างเปล่าก็ต้องได้ <code>limit: 5</code> (ไม่ใช่ 0) เพราะ <code>paginate</code> ของเราคืน <code>limit</code> ตามที่รับเข้ามาตรง ๆ อยู่แล้ว (ไม่ใช่ <code>rows.length</code>) ข้อนี้จึงถูกต้องโดยอัตโนมัติ ไม่ต้องเขียนกรณีพิเศษ</p>
     <div class="note"><p>ผลลัพธ์ที่ต้องได้ในรอบนี้จึงเขียนไว้ชัดว่า slug ที่ไม่มีอยู่ต้องได้ <strong>200 ห้ามตอบ 404</strong> — เป็นการปิดทางที่ AI (และคนส่วนใหญ่) จะเลือกโดยสัญชาตญาณ</p></div>
 
     <h2>ลำดับ route: ปลอดภัยอยู่แล้ว แต่ยังต้องวางให้ถูก</h2>
@@ -217,7 +217,7 @@ export class ProductsController {
         </li>
         <li>สาม endpoint เดิมยังทำงาน: <code>/products/categories</code> ได้ 24 ก้อน, <code>/products?limit=2</code> ได้ <code>total: 208</code>, <code>/products/1</code> ได้สินค้าชิ้นแรก</li>
         <li><code>git diff --stat</code> ไม่มีไฟล์ที่ไม่เกี่ยวกับ endpoint นี้ (ในโค้ดอ้างอิงคือแค่ไฟล์ใน <code>src/products/</code>)</li>
-        <li>ขยาย <code>scripts/contract-check.ts</code> อีกสองข้อด้วยมือ แล้ว <code>npm run contract:check</code> ต้องได้ <code>✅</code> ครบ<strong>เก้า</strong>บรรทัด — <code>GET /products/category/groceries?limit=20&amp;skip=0</code> (200 และ <code>total</code> เป็น 27) กับ <code>GET /products/category/nope?limit=5&amp;skip=0</code> (200 และ envelope ว่างที่ <code>total</code> เป็น 0 ไม่ใช่ 404) เก้าข้อนี้คือชุดเดียวกับที่บทที่ 15 จะเขียนใหม่ทั้งไฟล์ด้วย zod</li>
+        <li>ขยาย <code>scripts/contract-check.ts</code> อีกสองข้อด้วยมือ แล้ว <code>npm run contract:check</code> ต้องได้ <code>✅</code> ครบ<strong>เก้า</strong>บรรทัด — <code>GET /products/category/groceries?limit=20&amp;skip=0</code> (200 และ <code>total</code> เป็น 27) กับ <code>GET /products/category/nope?limit=5&amp;skip=0</code> (200 และ envelope ว่างที่ <code>total</code> เป็น 0 ไม่ใช่ 404) เก้าข้อนี้คือชุดเดียวกับที่ขั้นถัดไปจะเขียนใหม่ทั้งไฟล์ด้วย zod</li>
         <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: GET /products/category/:slug"</code></li>
       </ul>
     </section>

@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS E-commerce API Workshop · บทที่ 19 จาก 24</p>
+    <p class="eyebrow">NestJS E-commerce API Workshop</p>
     <h1>POST /carts/add</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
@@ -24,10 +24,10 @@
     <h2>path มาจาก client ไม่ใช่จากเรา</h2>
     <p>ถ้าออกแบบ API ใหม่ตั้งแต่ต้น การสั่งซื้อควรเป็น <code>POST /orders</code> แต่คอร์สนี้มีข้อจำกัดที่ชัดเจน: React app เรียก <code>POST /carts/add</code> และเราสัญญาว่าจะไม่แก้โค้ด frontend นอกจาก base URL ดังนั้น path ต้องเป็น <code>/carts/add</code> เป๊ะ ๆ — พลาดตัวเดียวก็ได้ 404 ทุกครั้งที่กดสั่งซื้อ</p>
     <p>ทางออกคือแยกสองเรื่องนี้ออกจากกัน: <strong>path เป็นเรื่องของสัญญากับ client</strong> จึงตั้งชื่อไฟล์ controller ตาม path (<code>carts.controller.ts</code> + <code>@Controller('carts')</code>) ส่วน <strong>module และ service เป็นเรื่องของ domain</strong> คือการสั่งซื้อ จึงใช้คำว่า <code>orders</code> (<code>orders.module.ts</code>, <code>orders.service.ts</code>) โครงสร้างนี้บอกคนอ่านโค้ดคนต่อไปได้ทันทีว่า "ชื่อ carts มาจากข้อจำกัดภายนอก ไม่ใช่จากวิธีที่เราคิดเรื่องธุรกิจ"</p>
-    <div class="note"><p>ทั้งสองไฟล์อยู่ในโฟลเดอร์ <code>src/orders/</code> เดียวกัน ตามหลักการรวม domain ไว้ใน module เดียวจากบทที่ 14 ของคอร์ส NestJS Fundamentals — คนหาโค้ดเรื่องคำสั่งซื้อจะเจอทุกอย่างในที่เดียว แม้ route จะชื่อ <code>/carts</code></p></div>
+    <div class="note"><p>ทั้งสองไฟล์อยู่ในโฟลเดอร์ <code>src/orders/</code> เดียวกัน ตามหลักการรวม domain ไว้ใน module เดียวจากคอร์ส NestJS Fundamentals — คนหาโค้ดเรื่องคำสั่งซื้อจะเจอทุกอย่างในที่เดียว แม้ route จะชื่อ <code>/carts</code></p></div>
 
     <h2>ทวนของเดิม: @Body และ status 201</h2>
-    <p>บทที่ 8 และ 9 ของคอร์ส NestJS Fundamentals วางพื้นไว้แล้วสองข้อที่ใช้ตรง ๆ ในบทนี้ ข้อแรก <code>@Body() dto: AddCartDto</code> — การ<em>ประกาศชนิด</em>ของ parameter ให้เป็น class ของ DTO คือสิ่งที่ทำให้ <code>ValidationPipe</code> รู้ว่าต้องเอา rule ชุดไหนมาตรวจ ถ้าเขียนเป็น <code>@Body() dto: any</code> หรือลืมใส่ชนิด DTO ทั้งชุดของบทที่ 17 จะไม่ทำงานเลยแม้แต่ข้อเดียว และไม่มี error ใด ๆ เตือน</p>
+    <p>คอร์ส NestJS Fundamentals วางพื้นไว้แล้วสองข้อที่ใช้ตรง ๆ ในบทนี้ ข้อแรก <code>@Body() dto: AddCartDto</code> — การ<em>ประกาศชนิด</em>ของ parameter ให้เป็น class ของ DTO คือสิ่งที่ทำให้ <code>ValidationPipe</code> รู้ว่าต้องเอา rule ชุดไหนมาตรวจ ถ้าเขียนเป็น <code>@Body() dto: any</code> หรือลืมใส่ชนิด DTO ทั้งชุดที่เขียน validation ไว้จะไม่ทำงานเลยแม้แต่ข้อเดียว และไม่มี error ใด ๆ เตือน</p>
     <p>ข้อสอง handler ที่เป็น <code>@Post()</code> ของ Nest ตอบ <code>201 Created</code> เป็นค่าเริ่มต้นอยู่แล้ว ตรงกับสัญญาที่เราออกแบบไว้ใน <code>docs/api-spec.md</code> พอดี จึง<strong>ไม่ต้อง</strong>ใส่ <code>@HttpCode()</code> — ใส่ <code>@HttpCode(200)</code> ไปจะกลายเป็นการทำสัญญาเสียเอง</p>
     <p>สุดท้าย <code>OrdersModule</code> ต้องถูก import เข้า <code>AppModule</code> ไม่ทำขั้นนี้ Nest จะไม่รู้จัก controller ตัวใหม่ และจะไม่มีบรรทัด <code>Mapped {/carts/add, POST}</code> ใน log ตอน start — ซึ่งเป็นวิธีตรวจที่เร็วที่สุดว่าลืมหรือไม่ลืม</p>
 
@@ -43,9 +43,9 @@
     <p>ชื่อไฟล์และหน้าที่ด้านล่างมาจากโค้ดอ้างอิงของคอร์ส — Cursor อาจตั้งชื่อหรือแบ่งไฟล์ต่างออกไปได้ ขอแค่ไม่แตะไฟล์ที่ไม่เกี่ยวกับเป้าหมายและผ่านผลลัพธ์ที่ต้องได้ใน prompt</p>
     <ul>
       <li><strong><code>src/orders/carts.controller.ts</code></strong> — สัญญา: ต้องเป็น <code>@Controller('carts')</code> กับ <code>@Post('add')</code> และรับ body ด้วย <code>@Body() dto: AddCartDto</code> · ต้องไม่ใส่ <code>@HttpCode()</code>, ไม่คิดเลขหรือแตะ Prisma ใน controller</li>
-      <li><strong><code>src/orders/orders.module.ts</code></strong> — สัญญา: ต้องประกาศ <code>controllers: [CartsController]</code> และ <code>providers: [OrdersService]</code> · ต้องไม่ import <code>PrismaModule</code> ซ้ำ (บทที่ 6 ทำให้มันเป็น global module แล้ว)</li>
+      <li><strong><code>src/orders/orders.module.ts</code></strong> — สัญญา: ต้องประกาศ <code>controllers: [CartsController]</code> และ <code>providers: [OrdersService]</code> · ต้องไม่ import <code>PrismaModule</code> ซ้ำ (ตอนตั้งค่า Prisma ทำให้มันเป็น global module แล้ว)</li>
       <li><strong><code>src/app.module.ts</code></strong> — สัญญา: ต้องเพิ่ม <code>OrdersModule</code> ต่อจาก <code>ProductsModule</code> ใน <code>imports</code> · ต้องไม่แตะ <code>ConfigModule</code>, <code>controllers</code> หรือ <code>providers</code> เดิม</li>
-      <li><strong><code>scripts/contract-check.ts</code></strong> — สัญญา: import <code>orderResponseSchema</code> เพิ่มจาก <code>./contract-schemas.js</code> (ตัว schema มีอยู่แล้วตั้งแต่บทที่ 15) แล้วต่อ check ที่สิบท้าย array เดิม · แก้ไฟล์นี้<strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างล่าง เพราะการเขียน check ด้วยตัวเองคือการยืนยันว่าคุณอ่านสัญญาออกเอง ไม่ใช่ให้ AI ตรวจงานตัวเอง</li>
+      <li><strong><code>scripts/contract-check.ts</code></strong> — สัญญา: import <code>orderResponseSchema</code> เพิ่มจาก <code>./contract-schemas.js</code> (ตัว schema มีอยู่แล้วตั้งแต่ตอนเขียน schema ด้วย zod) แล้วต่อ check ที่สิบท้าย array เดิม · แก้ไฟล์นี้<strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างล่าง เพราะการเขียน check ด้วยตัวเองคือการยืนยันว่าคุณอ่านสัญญาออกเอง ไม่ใช่ให้ AI ตรวจงานตัวเอง</li>
     </ul>
 
     <section class="workshop" aria-labelledby="exercise-heading">
@@ -75,8 +75,8 @@
         <li>log ตอน start มี <code>Mapped {/carts/add, POST} route</code> — path รวมกันได้ <code>POST /carts/add</code> ไม่มี <code>/orders</code> โผล่ที่ไหน</li>
         <li>ยิงทั้งสี่กรณีในส่วน "ผลลัพธ์ที่ต้องได้" แล้วได้ <code>201</code>, <code>400</code>, <code>404</code>, <code>400</code> พร้อม body ตรงตัวอักษร — ถ้ากรณี 400 ได้ 201 แทน แปลว่า body ไม่ได้ถูกประกาศชนิดเป็น DTO class ทำให้ validation ไม่ทำงาน</li>
         <li>POST ตอบ <code>201</code> ไม่ใช่ <code>200</code></li>
-        <li>controller ไม่คิดเลข ไม่เรียก Prisma ตรง และไม่กลืน error ด้วย try/catch — ส่งงานต่อให้ service ที่ทำไว้ในบทที่ 18</li>
-        <li><code>git status</code> ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ — ฝั่ง root module มีแค่การลงทะเบียน module ใหม่ และ service/การคำนวณจากบทที่ 18 ไม่ถูกแตะ</li>
+        <li>controller ไม่คิดเลข ไม่เรียก Prisma ตรง และไม่กลืน error ด้วย try/catch — ส่งงานต่อให้ service ที่ทำไว้ในขั้นคิดเงิน</li>
+        <li><code>git status</code> ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ — ฝั่ง root module มีแค่การลงทะเบียน module ใหม่ และ service/การคำนวณที่ทำไว้ก่อนหน้านี้ไม่ถูกแตะ</li>
         <li>ไม่มี <code>any</code>, <code>as</code>, <code>!</code> และ import ทุกตัวลงท้ายด้วย <code>.js</code> ตามกติกา ESM ของโปรเจกต์</li>
       </ul>
       <p><strong>AI มักพลาดตรงนี้:</strong> ตั้ง route เป็น <code>/orders</code> เพราะมันดูสอดคล้องกับชื่อ service และ module มากกว่า ผลคือโค้ดดูสวยแต่ React app ได้ 404 ทุกครั้งที่กดสั่งซื้อ อีกกรณีคือแถม <code>@HttpCode(200)</code> (ทำสัญญา 201 พัง) หรือเผลอ import <code>PrismaModule</code> ซ้ำ ทั้งที่มันเป็น global module อยู่แล้ว</p>
@@ -130,8 +130,8 @@ export class AppModule {}</code></pre>
 
     <section class="workshop" aria-labelledby="contract-check-heading">
       <h2 id="contract-check-heading">เพิ่ม check ที่สิบด้วยมือ</h2>
-      <p>บทที่ 15 ตั้งใจปล่อยให้ <code>scripts/contract-check.ts</code> มีแค่เก้า check ไว้ก่อน เพราะตอนนั้น <code>POST /carts/add</code> ยังไม่มีอยู่จริง ตอนนี้มันมีแล้ว จึงถึงเวลาต่อ check ที่สิบเข้าไป — แก้ไฟล์นี้ <strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างบน เพราะเป้าหมายของ prompt นั้นคือเปิด endpoint เท่านั้น และกติกาใน rules ห้ามแตะไฟล์ที่ไม่เกี่ยวกับเป้าหมาย การเพิ่ม check นี้เป็นงานแยกที่ควรทำเอง จะได้อธิบายทุกบรรทัดได้เหมือนเดิม</p>
-      <p>เปิด <code>scripts/contract-check.ts</code> แล้วเพิ่ม <code>orderResponseSchema</code> เข้า import (ตัว schema เองมีอยู่แล้วตั้งแต่บทที่ 15 ไม่ต้องเขียนใหม่)</p>
+      <p>ตอนเขียน schema ด้วย zod เราตั้งใจปล่อยให้ <code>scripts/contract-check.ts</code> มีแค่เก้า check ไว้ก่อน เพราะตอนนั้น <code>POST /carts/add</code> ยังไม่มีอยู่จริง ตอนนี้มันมีแล้ว จึงถึงเวลาต่อ check ที่สิบเข้าไป — แก้ไฟล์นี้ <strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างบน เพราะเป้าหมายของ prompt นั้นคือเปิด endpoint เท่านั้น และกติกาใน rules ห้ามแตะไฟล์ที่ไม่เกี่ยวกับเป้าหมาย การเพิ่ม check นี้เป็นงานแยกที่ควรทำเอง จะได้อธิบายทุกบรรทัดได้เหมือนเดิม</p>
+      <p>เปิด <code>scripts/contract-check.ts</code> แล้วเพิ่ม <code>orderResponseSchema</code> เข้า import (ตัว schema เองมีอยู่แล้วตั้งแต่ตอนเขียนด้วย zod ไม่ต้องเขียนใหม่)</p>
       <pre><code>import {
   categorySchema,
   errorSchema,
@@ -180,13 +180,13 @@ LOG [RouterExplorer] Mapped {/carts/add, POST} route +0ms</code></pre>
       <pre><code>HTTP/1.1 400 Bad Request
 
 {"message":["userId must not be less than 1","userId must be an integer number"],"error":"Bad Request","statusCode":400}</code></pre>
-      <p>สินค้า id ที่ไม่มีจริง → <code>404</code> จาก <code>NotFoundException</code> ที่ throw อยู่ข้างใน transaction ข้อความตรงกับที่ <code>GET /products/:id</code> ตอบในบทที่ 12</p>
+      <p>สินค้า id ที่ไม่มีจริง → <code>404</code> จาก <code>NotFoundException</code> ที่ throw อยู่ข้างใน transaction ข้อความตรงกับที่ <code>GET /products/:id</code> ตอบไว้ก่อนหน้านี้</p>
       <pre><code>curl -s -i -X POST http://localhost:3000/carts/add -H 'Content-Type: application/json' \
   -d '{"userId":1,"products":[{"id":99999,"quantity":1}],"address":{"address":"x","email":"a@b.com","phone":"1"}}'</code></pre>
       <pre><code>HTTP/1.1 404 Not Found
 
 {"message":"Product 99999 not found","error":"Not Found","statusCode":404}</code></pre>
-      <p>email ผิดรูป → <code>400</code> โดยชื่อ field ใน message มีคำนำหน้า <code>address.</code> ซึ่งเป็นหลักฐานว่า <code>@ValidateNested()</code> ของบทที่ 17 ไล่ตรวจเข้าไปข้างใน object จริง</p>
+      <p>email ผิดรูป → <code>400</code> โดยชื่อ field ใน message มีคำนำหน้า <code>address.</code> ซึ่งเป็นหลักฐานว่า <code>@ValidateNested()</code> ใน DTO ไล่ตรวจเข้าไปข้างใน object จริง</p>
       <pre><code>curl -s -i -X POST http://localhost:3000/carts/add -H 'Content-Type: application/json' \
   -d '{"userId":1,"products":[{"id":1,"quantity":1}],"address":{"address":"x","email":"not-an-email","phone":"1"}}'</code></pre>
       <pre><code>HTTP/1.1 400 Bad Request

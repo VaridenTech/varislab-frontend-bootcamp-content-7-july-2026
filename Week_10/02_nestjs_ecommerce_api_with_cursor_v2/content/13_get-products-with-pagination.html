@@ -9,14 +9,14 @@
 </head>
 <body>
   <main>
-    <p class="eyebrow">NestJS E-commerce API Workshop · บทที่ 13 จาก 24</p>
+    <p class="eyebrow">NestJS E-commerce API Workshop</p>
     <h1>GET /products พร้อม skip และ limit</h1>
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
       <ul>
         <li>รับ query parameter ด้วย DTO ที่มีค่าเริ่มต้นในตัว แล้วเปิด <code>ValidationPipe</code> แบบ global</li>
         <li>อธิบายได้ว่าทำไม <code>limit</code> ใน response ต้อง echo ค่าที่ client ขอมาเสมอ แม้ query จะเลยขอบข้อมูลแล้วได้สินค้าน้อยกว่าที่ขอ</li>
-        <li>ดึงหน้าข้อมูลกับ <code>total</code> จาก snapshot เดียวด้วย <code>$transaction</code> ใน method กลางชื่อ <code>paginate</code> ที่บทที่ 14 จะเพิ่ม endpoint ใหม่ได้ด้วยโค้ดสองบรรทัด</li>
+        <li>ดึงหน้าข้อมูลกับ <code>total</code> จาก snapshot เดียวด้วย <code>$transaction</code> ใน method กลางชื่อ <code>paginate</code> ที่ทำให้ endpoint กรองตามหมวดในขั้นถัดไปเพิ่มได้ด้วยโค้ดสองบรรทัด</li>
       </ul>
     </section>
 
@@ -37,7 +37,7 @@
     <p><code>limit</code> ใน envelope สะท้อนค่าที่ request ขอมาเสมอ ตามที่ <code>docs/api-spec.md</code> ระบุไว้ตรง ๆ ("limit: echoes the request") ไม่เกี่ยวกับจำนวนแถวที่ส่งกลับจริง เขียน <code>limit: rows.length</code> คือบั๊กคลาสสิกของบทนี้ — curl หน้าแรกจะยังดูถูกต้องทุกอย่าง แล้วจะพังเฉพาะตอนที่ query วิ่งเลยขอบข้อมูลไปแล้วเท่านั้น</p>
 
     <h2>ค่าเริ่มต้นอยู่ที่ field ของ DTO ไม่ใช่ที่ <code>??</code> ใน service</h2>
-    <p>ใน NestJS Fundamentals บทที่ 11 เราอ่าน query parameter แบบดิบ ๆ แล้วเติมค่าเริ่มต้นเอง บทที่ 16 และ 18 พาเราไปถึงวิธีที่สะอาดกว่า: ประกาศ DTO แล้วปล่อยให้ pipe จัดการ</p>
+    <p>ใน NestJS Fundamentals ตอนแรก ๆ เราอ่าน query parameter แบบดิบ ๆ แล้วเติมค่าเริ่มต้นเอง ตอนที่ว่าด้วย DTO และ pipe พาเราไปถึงวิธีที่สะอาดกว่า: ประกาศ DTO แล้วปล่อยให้ pipe จัดการ</p>
     <pre><code>export class PaginationQueryDto {
   @IsInt()
   @Min(0)
@@ -64,7 +64,7 @@
     </ul>
 
     <h2><code>total</code> กับหน้าข้อมูลต้องมาจาก snapshot เดียว</h2>
-    <p>response envelope ต้องมี <code>total</code> คือจำนวนสินค้าทั้งหมด ซึ่งเป็นอีก query หนึ่ง (<code>count</code>) ถ้ายิงสอง query แยกกัน มีช่องให้ข้อมูลเปลี่ยนระหว่างนั้น แล้ว client จะได้ <code>total: 208</code> พร้อมหน้าข้อมูลที่มาจากโลกที่มี 209 ชิ้น เราจึงห่อทั้งคู่ไว้ใน transaction เดียว (ทบทวน NestJS Fundamentals บทที่ 29)</p>
+    <p>response envelope ต้องมี <code>total</code> คือจำนวนสินค้าทั้งหมด ซึ่งเป็นอีก query หนึ่ง (<code>count</code>) ถ้ายิงสอง query แยกกัน มีช่องให้ข้อมูลเปลี่ยนระหว่างนั้น แล้ว client จะได้ <code>total: 208</code> พร้อมหน้าข้อมูลที่มาจากโลกที่มี 209 ชิ้น เราจึงห่อทั้งคู่ไว้ใน transaction เดียว (ทบทวน NestJS Fundamentals ตอน transaction)</p>
     <pre><code>const [rows, total] = await this.prisma.$transaction([
   this.prisma.product.findMany({ /* … */ }),
   this.prisma.product.count({ where }),
@@ -85,7 +85,7 @@
     <ul>
       <li><code>GET /products</code> ตอบ envelope <code>{ products, total, skip, limit }</code> ตามกติกาในตารางข้างบนทุกแถว รวมถึง <code>limit</code> ที่ echo ค่าที่ขอมาเสมอ</li>
       <li>query ผิดช่วงหรือผิดรูปได้ 400 ก่อนถึงฐานข้อมูล ส่วน query ที่ไม่รู้จักถูกตัดทิ้ง</li>
-      <li><code>total</code> กับหน้าข้อมูลมาจาก snapshot เดียว และ logic pagination พร้อมให้บทที่ 14 ใช้ซ้ำ</li>
+      <li><code>total</code> กับหน้าข้อมูลมาจาก snapshot เดียว และ logic pagination พร้อมให้ endpoint ถัดไปใช้ซ้ำ</li>
       <li><code>GET /products/categories</code> และ <code>GET /products/:id</code> ยังทำงานเหมือนเดิม</li>
     </ul>
 
@@ -125,7 +125,7 @@
         <li>สินค้าในรายการมีรูปทรงเดียวกับ <code>GET /products/:id</code> ทุกคีย์ และการดึง relation ไม่ได้ถูก copy ไว้สองที่จนวันหนึ่ง list กับ detail ตอบไม่เหมือนกัน</li>
         <li><code>GET /products/categories</code> และ <code>GET /products/1</code> ยังตอบเหมือนเดิม, ไม่มีไฟล์ที่ไม่เกี่ยวกับเป้าหมายถูกแก้ และไม่มี <code>any</code> / <code>as</code> / <code>!</code></li>
       </ul>
-      <p><strong>AI มักพลาดตรงนี้:</strong> ประกาศ <code>skip?: number</code> คู่กับ <code>@IsOptional()</code> แล้วไปโปรย <code>query.skip ?? 0</code> ตามจุดต่าง ๆ ใน service — ใช้งานได้ แต่ย้ายกฎเรื่องค่าเริ่มต้นออกจาก DTO ไปกระจายในโค้ด ซึ่งบทที่ 21 (Swagger) จะอ่านค่าเริ่มต้นไม่เจอ อีกข้อที่พลาดบ่อยกว่าคือเขียน <code>limit: rows.length</code> ตรงบรรทัด return — ดูถูกต้องทุกอย่างในหน้าแรก เพราะ <code>rows.length</code> เท่ากับ <code>limit</code> ที่ขอมาพอดีตราบใดที่ยังมีข้อมูลเหลือพอ แล้วจะพังเงียบ ๆ เฉพาะตอนที่ query วิ่งเลยขอบข้อมูลไปแล้วเท่านั้น การทดสอบจึงต้องมี query ที่วิ่งเลยขอบข้อมูลจริง ๆ ด้วย ไม่ใช่เช็คแค่หน้าแรก</p>
+      <p><strong>AI มักพลาดตรงนี้:</strong> ประกาศ <code>skip?: number</code> คู่กับ <code>@IsOptional()</code> แล้วไปโปรย <code>query.skip ?? 0</code> ตามจุดต่าง ๆ ใน service — ใช้งานได้ แต่ย้ายกฎเรื่องค่าเริ่มต้นออกจาก DTO ไปกระจายในโค้ด ซึ่งตอนทำเอกสาร Swagger จะอ่านค่าเริ่มต้นไม่เจอ อีกข้อที่พลาดบ่อยกว่าคือเขียน <code>limit: rows.length</code> ตรงบรรทัด return — ดูถูกต้องทุกอย่างในหน้าแรก เพราะ <code>rows.length</code> เท่ากับ <code>limit</code> ที่ขอมาพอดีตราบใดที่ยังมีข้อมูลเหลือพอ แล้วจะพังเงียบ ๆ เฉพาะตอนที่ query วิ่งเลยขอบข้อมูลไปแล้วเท่านั้น การทดสอบจึงต้องมี query ที่วิ่งเลยขอบข้อมูลจริง ๆ ด้วย ไม่ใช่เช็คแค่หน้าแรก</p>
       <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้:</p>
       <p><code>src/products/dto/pagination-query.dto.ts</code></p>
       <pre><code>import { IsInt, Max, Min } from 'class-validator';
@@ -277,7 +277,7 @@ export class ProductsController {
         </li>
         <li>ขอเลยขอบข้อมูล — <code>curl -s "http://localhost:3000/products?limit=10&amp;skip=200"</code> ต้องได้ <code>limit: 10</code> (ค่าที่ขอมา ไม่ใช่ <code>8</code>) พร้อม <code>products.length: 8</code> และ <code>total: 208</code> (208 - 200 = 8 ซึ่งน้อยกว่า 10 ที่ขอ)</li>
         <li><code>whitelist</code> ทำงาน — <code>curl -s "http://localhost:3000/products?limit=2&amp;sort=price"</code> ต้องได้ 200 ปกติ ไม่ใช่ 400</li>
-        <li>ขยาย <code>scripts/contract-check.ts</code> จากบทที่ 12 ให้ครอบ endpoint ใหม่ด้วยมือ (ไม่ต้องสั่ง Cursor) แล้ว <code>npm run contract:check</code> ต้องได้ <code>✅</code> ครบ<strong>เจ็ด</strong>บรรทัด — สาม check ที่เพิ่มคือ <code>GET /products?limit=5&amp;skip=0</code> (200, envelope มีสี่คีย์ <code>products</code>/<code>total</code>/<code>skip</code>/<code>limit</code> พอดี และทั้ง <code>limit</code> และจำนวน <code>products</code> เป็น 5), <code>GET /products?limit=0</code> (400) และ <code>GET /products?limit=101</code> (400)</li>
+        <li>ขยาย <code>scripts/contract-check.ts</code> ที่เขียนไว้ก่อนหน้านี้ ให้ครอบ endpoint ใหม่ด้วยมือ (ไม่ต้องสั่ง Cursor) แล้ว <code>npm run contract:check</code> ต้องได้ <code>✅</code> ครบ<strong>เจ็ด</strong>บรรทัด — สาม check ที่เพิ่มคือ <code>GET /products?limit=5&amp;skip=0</code> (200, envelope มีสี่คีย์ <code>products</code>/<code>total</code>/<code>skip</code>/<code>limit</code> พอดี และทั้ง <code>limit</code> และจำนวน <code>products</code> เป็น 5), <code>GET /products?limit=0</code> (400) และ <code>GET /products?limit=101</code> (400)</li>
         <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: GET /products with pagination"</code></li>
       </ul>
     </section>
