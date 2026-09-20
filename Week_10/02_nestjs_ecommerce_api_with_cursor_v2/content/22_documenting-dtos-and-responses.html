@@ -68,7 +68,7 @@
 - ใน /api-json ทุก endpoint มี response schema: GET /products/categories → array ของ category, GET /products และ GET /products/category/{slug} → list envelope, GET /products/{id} → product (200) และ 404 ที่ description เป็น Product 9999 not found, POST /carts/add → receipt (201) และ 400
 - components.schemas.ProductResponseDto.required ไม่มี discountPercentage (ตรงกับ docs/api-spec.md ที่ key นี้ optional) ส่วน field อื่นยังเป็น required ตามเดิม
 - schema ของ AddCartDto แสดง products เป็น array ของ object และ address เป็น object ซ้อน ไม่ใช่ type ว่าง และปุ่ม Try it out ของ POST /carts/add มี userId ตัวอย่างเป็น 1
-- พฤติกรรม API ไม่เปลี่ยน: npm run contract:check ได้ ✅ ครบสิบบรรทัด และ GET /products/categories ยังตอบ 200 (ไม่โดน route :id)
+- พฤติกรรม API ไม่เปลี่ยน: npm run test:e2e ผ่านครบทั้งสิบ test ของสัญญา และ GET /products/categories ยังตอบ 200 (ไม่โดน route :id)
 - npm run build และ npm run lint ผ่าน
 
 ขอบเขต:
@@ -222,18 +222,14 @@ false</code></pre>
         <li>บรรทัดแรกมี <code>$ref</code> ชี้ไป <code>ProductResponseDto</code> และมี <code>404</code> พร้อมข้อความที่เราสั่งไว้</li>
         <li>ลิสต์ schema มี <code>CategoryResponseDto</code> เพิ่มเข้ามาจากบทที่แล้ว — เพราะตอนนี้มี handler อ้างถึงมันแล้ว</li>
         <li>บรรทัดสุดท้ายเป็น <code>false</code> คือ <code>discountPercentage</code> ไม่อยู่ใน <code>required</code> ตามที่ <code>@ApiPropertyOptional()</code> สั่ง</li>
-        <li>สัญญากับ docs/api-spec.md ยังไม่เพี้ยน: <code>npm run contract:check</code> ต้องได้ ✅ ครบทั้งสิบบรรทัด</li>
+        <li>สัญญากับ docs/api-spec.md ยังไม่เพี้ยน: <code>npm run test:e2e</code> ต้องผ่านครบทั้งสิบ test ของสัญญา — เก้าข้อในไฟล์ของ products และอีกหนึ่งข้อของ <code>POST /carts/add</code> ในไฟล์ของ orders</li>
       </ul>
-      <pre><code>✅ GET /products/categories → 200, 24 categories
-✅ GET /products?limit=5&amp;skip=0 → limit and skip echo the request
-✅ GET /products?limit=0 → 400 (out of range)
-✅ GET /products?limit=101 → 400 (out of range)
-✅ GET /products/1 → validated product
-✅ GET /products/9999 → 404 with message
-✅ GET /products/abc → 400 with message
-✅ GET /products/category/groceries?limit=20&amp;skip=0 → total 27
-✅ GET /products/category/nope?limit=5&amp;skip=0 → 200, empty envelope
-✅ POST /carts/add → 201, discountedPrice rounds to 2dp</code></pre>
+      <pre><code> ✓ test/app.e2e-spec.ts (1 test)
+ ✓ test/products.e2e-spec.ts (9 tests)
+ ✓ test/orders.e2e-spec.ts (1 test)
+
+ Test Files  3 passed (3)
+      Tests  11 passed (11)</code></pre>
       <ul>
         <li>commit งานนี้ด้วย <code>git add -A &amp;&amp; git commit -m "feat: swagger decorations"</code></li>
       </ul>

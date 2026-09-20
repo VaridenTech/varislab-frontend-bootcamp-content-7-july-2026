@@ -32,7 +32,10 @@
 │   ├── schema.prisma                    Product, Category, Review, Order, OrderItem
 │   ├── migrations/                      init + add_orders
 │   └── seed.ts                          สร้างสินค้า 208 ชิ้นด้วย faker (ตอน seed ข้อมูล)
-├── scripts/contract-check.ts            ตรวจ response ของเราเองด้วย zod (ตอนทำ contract check)
+├── test/
+│   ├── contract-schemas.ts              สัญญาในรูป zod schema (ตอนทำ contract check)
+│   ├── products.e2e-spec.ts             e2e test ของ endpoint สินค้า
+│   └── orders.e2e-spec.ts               e2e test ของ POST /carts/add
 └── src/
     ├── main.ts                          ValidationPipe + CORS + Swagger
     ├── app.module.ts
@@ -48,7 +51,7 @@
     <p>และของที่ใช้งานได้จริงห้าอย่างนี้</p>
     <ul>
       <li><strong>ห้า endpoint</strong> ที่รูปทรง response ตรงกับสัญญาใน <code>docs/api-spec.md</code>: <code>GET /products/categories</code>, <code>GET /products</code>, <code>GET /products/{id}</code>, <code>GET /products/category/{slug}</code> และ <code>POST /carts/add</code></li>
-      <li><strong>สัญญาที่ตรวจอัตโนมัติ</strong> — <code>npm run contract:check</code> ตรวจ key และรูปทรงของ response ด้วย zod schema ของเราเองครบสิบเคส รวมถึงเคส 404, หมวดที่ไม่มีจริง และ <code>POST /carts/add</code></li>
+      <li><strong>สัญญาที่ตรวจอัตโนมัติ</strong> — <code>npm run test:e2e</code> boot แอปจริงขึ้นมาแล้วตรวจ key และรูปทรงของ response ด้วย zod schema ของเราเองครบสิบเคส รวมถึงเคส 404, หมวดที่ไม่มีจริง และ <code>POST /carts/add</code></li>
       <li><strong>validation ที่กันขยะ</strong> — <code>ValidationPipe</code> แบบ global พร้อม <code>whitelist</code> และ DTO ที่ประกาศกฎไว้ครบ ทำให้ payload ผิดรูปได้ 400 พร้อมข้อความที่อ่านรู้เรื่อง</li>
       <li><strong>คำสั่งซื้อที่ atomic</strong> — <code>POST /carts/add</code> เขียน <code>Order</code> กับ <code>OrderItem</code> ในทรานแซกชันเดียว</li>
       <li><strong>เอกสารและการเชื่อมต่อ</strong> — Swagger UI ที่ <code>/api</code> พร้อม response schema ทุก endpoint, CORS ที่เปิดให้เฉพาะ origin ของ Vite และ React app ของจริงที่รันบน API นี้ได้ครบวงจรโดยแก้แค่ base URL หนึ่งบรรทัด</li>
@@ -74,7 +77,7 @@
     <h2>ก้าวต่อไป</h2>
     <ul>
       <li><strong>ใส่ auth ด้วย Guards</strong> — ตอนนี้ใครก็ยิง <code>POST /carts/add</code> ได้ ถ้าจะผูกคำสั่งซื้อกับผู้ใช้จริงต้องมี token และ guard มาคั่น ทบทวนได้จาก <a href="../../../Week_09/01_nestjs_basic/content/38_guards-and-public-route-metadata.html">NestJS Fundamentals — สร้าง Guard และเปิด Public Routes</a> แล้วเขียน prompt ในรูปแบบสามส่วนเดิมให้ Cursor ทำ</li>
-      <li><strong>เขียน e2e test ด้วย Vitest</strong> — <code>contract:check</code> ตรวจรูปทรง response แต่ยังไม่ใช่ test suite ที่รันใน CI ได้ ต่อยอดจาก <a href="../../../Week_09/01_nestjs_basic/content/48_diving-into-e2e-tests.html">NestJS Fundamentals — บทว่าด้วย e2e test</a> โดยเริ่มจากเคสที่เจ็บที่สุดก่อน: <code>limit=abc</code> ต้องได้ 400 และ <code>/products/9999</code> ต้องได้ 404</li>
+      <li><strong>พา test suite ขึ้น CI</strong> — <code>npm run test:e2e</code> ที่เรามีตอนนี้ยิงใส่ฐานข้อมูล<em>ตัวเดียวกับที่ใช้พัฒนา</em> ซึ่งสะดวกตอนทำ workshop แต่ใช้บน CI ไม่ได้: test จะเห็นข้อมูลที่ใครก็ไม่รู้ทิ้งค้างไว้ และเคสสั่งซื้อก็เขียนแถวจริงเพิ่มทุกครั้งที่รัน ทางออกคือฐานข้อมูลแยกที่ยกขึ้นก่อนรันแล้วทิ้งทีหลัง ตาม <a href="../../../Week_09/01_nestjs_basic/content/49_creating-our-first-e2e-test.html">NestJS Fundamentals — สร้าง e2e Test แรก</a> ที่ผูก <code>pretest:e2e</code> กับ <code>posttest:e2e</code> ไว้กับ service <code>test-db</code> ใน Docker</li>
       <li><strong>ขึ้น production ด้วย <code>migrate deploy</code></strong> — บนเครื่องเราใช้ <code>prisma migrate dev</code> แต่บน server ต้องใช้ <code>prisma migrate deploy</code> ซึ่งรัน migration ที่ commit ไว้เท่านั้นและไม่สร้างไฟล์ใหม่ ลองย้ายฐานข้อมูลขึ้น Postgres แบบ hosted ตาม <a href="../../../Week_08/02_API_Design_in_Nodejs_v1/content/18_hosted_postgresql_with_neon.html">API Design in Node.js — Hosted PostgreSQL กับ Neon</a> แล้วเปลี่ยนแค่ <code>DATABASE_URL</code> กับ <code>CORS_ORIGIN</code></li>
       <li><strong>ตัด stock ในทรานแซกชันของคำสั่งซื้อ</strong> — ตอนนี้สั่งซื้อแล้ว <code>stock</code> ไม่ลด เพราะคอร์สนี้ยังไม่ทำในเวอร์ชันแรก แต่ของจริงต้องลด และต้องลดใน <code>$transaction</code> เดียวกับที่สร้าง <code>Order</code> พร้อมปฏิเสธเมื่อของไม่พอ — เป็นแบบฝึกหัดที่ดีเรื่อง business rule กับ atomicity</li>
       <li><strong>เพิ่ม endpoint ค้นหาสินค้า</strong> — ตอนนี้ client กรองสินค้าได้แค่ตาม category กับ pagination ลองเพิ่ม query param อย่าง <code>q</code> สำหรับค้นหาชื่อสินค้า โดยเริ่มจากการเพิ่ม field นี้ลงใน <code>docs/api-spec.md</code> ก่อนเขียนโค้ดสักบรรทัด — ฝึก workflow contract-first แบบเดียวกับที่ใช้มาทั้งคอร์สด้วยตัวเองอีกครั้ง</li>

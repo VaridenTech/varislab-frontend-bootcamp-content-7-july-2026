@@ -277,8 +277,74 @@ export class ProductsController {
         </li>
         <li>ขอเลยขอบข้อมูล — <code>curl -s "http://localhost:3000/products?limit=10&amp;skip=200"</code> ต้องได้ <code>limit: 10</code> (ค่าที่ขอมา ไม่ใช่ <code>8</code>) พร้อม <code>products.length: 8</code> และ <code>total: 208</code> (208 - 200 = 8 ซึ่งน้อยกว่า 10 ที่ขอ)</li>
         <li><code>whitelist</code> ทำงาน — <code>curl -s "http://localhost:3000/products?limit=2&amp;sort=price"</code> ต้องได้ 200 ปกติ ไม่ใช่ 400</li>
-        <li>ขยาย <code>scripts/contract-check.ts</code> ที่เขียนไว้ก่อนหน้านี้ ให้ครอบ endpoint ใหม่ด้วยมือ (ไม่ต้องสั่ง Cursor) แล้ว <code>npm run contract:check</code> ต้องได้ <code>✅</code> ครบ<strong>เจ็ด</strong>บรรทัด — สาม check ที่เพิ่มคือ <code>GET /products?limit=5&amp;skip=0</code> (200, envelope มีสี่คีย์ <code>products</code>/<code>total</code>/<code>skip</code>/<code>limit</code> พอดี และทั้ง <code>limit</code> และจำนวน <code>products</code> เป็น 5), <code>GET /products?limit=0</code> (400) และ <code>GET /products?limit=101</code> (400)</li>
         <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: GET /products with pagination"</code></li>
+      </ul>
+    </section>
+    <section class="workshop" aria-labelledby="contract-test-heading">
+      <h2 id="contract-test-heading">เพิ่มสาม test ของ pagination ลงในไฟล์เดิม</h2>
+      <p>ไฟล์ <code>test/products.e2e-spec.ts</code> ที่คุณเขียนด้วยมือไว้ตอนต่อ <code>GET /products/:id</code> ตอนนี้มีสี่ test แล้ว ขั้นนี้เพิ่มอีกสามข้อของ endpoint ใหม่ลงไปในไฟล์เดิม รวมเป็น<strong>เจ็ด</strong> — <strong>เขียนเองเหมือนเดิม ไม่ต้องสั่ง Cursor</strong> ด้วยเหตุผลเดิม: เครื่องมือที่ใช้ตรวจงานของ AI ไม่ควรถูกเขียนโดย AI ตัวที่มันตรวจ</p>
+      <p>แต่ก่อนจะเพิ่ม test ต้องแก้ <code>beforeAll</code> ก่อน ไม่อย่างนั้นสอง test ใหม่ของ <code>limit=0</code> และ <code>limit=101</code> จะได้ status ที่ไม่ใช่ <code>400</code> แล้วคุณจะนั่งหาสาเหตุอยู่นานว่าทำไม <code>curl</code> ได้ 400 แต่ test ไม่ได้ ทั้งที่ยิง URL เดียวกัน</p>
+      <p>เหตุผลคือ <code>createNestApplication()</code> สร้างแอปขึ้นจาก <code>AppModule</code> เท่านั้น <strong>มันไม่ได้รัน <code>src/main.ts</code> ให้</strong> ทุกอย่างที่คุณเพิ่งตั้งค่าไว้ใน <code>bootstrap()</code> — รวมถึง <code>app.useGlobalPipes(...)</code> ที่เป็นหัวใจของบทนี้ — จึงไม่ติดมาเอง ต้องเขียนซ้ำใน <code>beforeAll</code> ให้ตรงกับ <code>main.ts</code> ทุกตัวเลือก</p>
+      <pre><code>import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from './../src/app.module.js';
+
+describe('Products contract (e2e)', () =&gt; {
+  let app: INestApplication;
+
+  beforeAll(async () =&gt; {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
+      }),
+    );
+    await app.init();
+  });</code></pre>
+      <div class="note"><p>นี่คือสิ่งที่เราได้กลับมาจากการที่ test boot แอปเอง: pipe, guard และ filter ที่แอปใช้จริงต้องถูกประกาศออกมาให้เห็นครบในไฟล์ test ถ้าเราไปยิง server ที่เปิดค้างไว้แทน ของพวกนี้จะติดมาเองโดยที่เราไม่เคยต้องรู้ว่ามีอะไรบ้าง และวันที่ <code>main.ts</code> เปลี่ยน test ก็จะไม่บอกอะไรเราเลย</p></div>
+      <p>แล้วค่อยเพิ่มสาม <code>it()</code> นี้ต่อท้ายข้อที่มีอยู่</p>
+      <pre><code>  it('GET /products?limit=5&amp;skip=0 → limit and skip echo the request', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products?limit=5&amp;skip=0')
+      .expect(200);
+
+    expect(Object.keys(response.body).sort()).toEqual(['limit', 'products', 'skip', 'total']);
+    expect(response.body.limit).toBe(5);
+    expect(response.body.skip).toBe(0);
+    expect(response.body.products).toHaveLength(5);
+  });
+
+  it('GET /products?limit=0 → 400 (out of range)', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products?limit=0')
+      .expect(400);
+
+    expect(response.body.message).toBeDefined();
+  });
+
+  it('GET /products?limit=101 → 400 (out of range)', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products?limit=101')
+      .expect(400);
+
+    expect(response.body.message).toBeDefined();
+  });</code></pre>
+      <p>ตรวจว่าฐานข้อมูลรันอยู่ แล้วรัน <code>npm run test:e2e</code> อีกครั้ง — ไฟล์ของสัญญาต้องขึ้นเป็นเจ็ด test</p>
+      <pre><code> ✓ test/app.e2e-spec.ts (1 test)
+ ✓ test/products.e2e-spec.ts (7 tests)
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)</code></pre>
+      <ul>
+        <li>พิสูจน์ว่าบรรทัด <code>useGlobalPipes</code> มีผลจริง: ลบมันออกจาก <code>beforeAll</code> ชั่วคราวแล้วรัน <code>npm run test:e2e -- products</code> — สอง test ของ <code>limit=0</code> และ <code>limit=101</code> ต้องล้มทั้งคู่เพราะ status ที่ได้ไม่ใช่ 400 อีกต่อไป (ไม่มี pipe ตัวไหนตรวจ query เลย — ค่าที่ไหลเข้าไปจะเป็น string ดิบ ไม่ใช่ number ที่ผ่านการตรวจช่วงแล้ว) ใส่กลับคืนแล้วต้องเขียวครบเจ็ด</li>
+        <li>commit ด้วย <code>git add -A &amp;&amp; git commit -m "test: contract e2e for pagination"</code></li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>

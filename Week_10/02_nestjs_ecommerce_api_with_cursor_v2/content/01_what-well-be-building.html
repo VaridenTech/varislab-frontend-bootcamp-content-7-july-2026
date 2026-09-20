@@ -48,7 +48,10 @@
 │   ├── schema.prisma                Category, Product, Review, Order, OrderItem
 │   ├── migrations/                  &lt;timestamp&gt;_init, &lt;timestamp&gt;_add_orders
 │   └── seed.ts                      สร้างสินค้า 208 ชิ้นด้วย faker
-├── scripts/contract-check.ts        ตรวจ response ของเราเองเทียบกับสัญญา
+├── test/
+│   ├── contract-schemas.ts          สัญญาในรูป zod schema
+│   ├── products.e2e-spec.ts         e2e test ของ endpoint สินค้า
+│   └── orders.e2e-spec.ts           e2e test ของ POST /carts/add
 ├── nest-cli.json                    เปิด Swagger CLI plugin
 └── src/
     ├── main.ts                      ValidationPipe, CORS, Swagger

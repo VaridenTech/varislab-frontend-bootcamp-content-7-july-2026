@@ -217,7 +217,14 @@ export class ProductsController {
         </li>
         <li>สาม endpoint เดิมยังทำงาน: <code>/products/categories</code> ได้ 24 ก้อน, <code>/products?limit=2</code> ได้ <code>total: 208</code>, <code>/products/1</code> ได้สินค้าชิ้นแรก</li>
         <li><code>git diff --stat</code> ไม่มีไฟล์ที่ไม่เกี่ยวกับ endpoint นี้ (ในโค้ดอ้างอิงคือแค่ไฟล์ใน <code>src/products/</code>)</li>
-        <li>ขยาย <code>scripts/contract-check.ts</code> อีกสองข้อด้วยมือ แล้ว <code>npm run contract:check</code> ต้องได้ <code>✅</code> ครบ<strong>เก้า</strong>บรรทัด — <code>GET /products/category/groceries?limit=20&amp;skip=0</code> (200 และ <code>total</code> เป็น 27) กับ <code>GET /products/category/nope?limit=5&amp;skip=0</code> (200 และ envelope ว่างที่ <code>total</code> เป็น 0 ไม่ใช่ 404) เก้าข้อนี้คือชุดเดียวกับที่ขั้นถัดไปจะเขียนใหม่ทั้งไฟล์ด้วย zod</li>
+        <li>ขยาย <code>test/products.e2e-spec.ts</code> อีกสองข้อด้วยมือ (ไม่ต้องสั่ง Cursor) แล้ว <code>npm run test:e2e</code> ต้องผ่านครบ<strong>เก้า</strong> test — สองข้อที่เพิ่มคือ <code>GET /products/category/groceries → total 27</code> (ยิง <code>/products/category/groceries?limit=20&amp;skip=0</code> ได้ 200 และ <code>total</code> เป็น 27) กับ <code>GET /products/category/nope → 200, empty envelope</code> (ยิง <code>/products/category/nope?limit=5&amp;skip=0</code> ได้ 200 และ envelope ว่างที่ <code>total</code> เป็น 0 ไม่ใช่ 404) เก้าข้อนี้คือชุดเดียวกับที่ขั้นถัดไปจะเขียนใหม่ทั้งไฟล์ด้วย zod
+          <pre><code> ✓ test/app.e2e-spec.ts (1 test)
+ ✓ test/products.e2e-spec.ts (9 tests)
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)</code></pre>
+          reporter ปริยายของ Vitest ยุบไฟล์ที่ผ่านให้เหลือบรรทัดเดียว ถ้าอยากเห็นชื่อ test ทีละข้อให้เติม <code>--reporter=verbose</code> ต่อท้าย (<code>npm run test:e2e -- --reporter=verbose</code>) และอย่าลืมว่า test ชุดนี้ boot แอปของตัวเอง ฐานข้อมูลจึงต้องรันอยู่ แต่ไม่ต้องเปิด <code>npm run start:dev</code> ค้างไว้ก็ได้ — ต่างจาก <code>curl</code> ทุกข้อด้านบนที่ต้องมี dev server จริง
+        </li>
         <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: GET /products/category/:slug"</code></li>
       </ul>
     </section>

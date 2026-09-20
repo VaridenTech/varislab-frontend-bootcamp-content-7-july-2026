@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="เขียน zod schema จาก docs/api-spec.md แล้วเขียน contract:check ที่สะสมมาตั้งแต่ตอนเขียนด้วยมือใหม่ทั้งไฟล์ ให้ตรวจโครงสร้างของ response จริงทั้งเก้ารายการ ใช้ .strict() จับ field ที่เกินมาหรือถูกเปลี่ยนชื่อ" />
+  <meta name="description" content="เขียน zod schema จาก docs/api-spec.md แล้วเขียน e2e test ของสัญญาที่สะสมมาตั้งแต่ตอนเขียนด้วยมือใหม่ทั้งไฟล์ ให้ตรวจโครงสร้างของ response จริงทั้งเก้ารายการ ใช้ .strict() จับ field ที่เกินมาหรือถูกเปลี่ยนชื่อ" />
   <title>ทำสัญญาให้รันได้จริงด้วย zod</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -14,44 +14,44 @@
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
       <ul>
-        <li>ยกระดับ <code>contract:check</code> ที่เขียนเองไว้ด้วยมือก่อนหน้านี้ ให้ตรวจ <em>โครงสร้างทั้งก้อน</em> ของ response ด้วย zod ไม่ใช่แค่ field ที่เราอุตส่าห์นึกออกและเขียนเช็คไว้เอง</li>
+        <li>ยกระดับ e2e test ของสัญญาที่เขียนเองไว้ด้วยมือก่อนหน้านี้ ให้ตรวจ <em>โครงสร้างทั้งก้อน</em> ของ response ด้วย zod ไม่ใช่แค่ field ที่เราอุตส่าห์นึกออกและเขียนเช็คไว้เอง</li>
         <li>อธิบายว่า <code>.strict()</code> ให้อะไรเพิ่มจาก <code>z.object({...})</code> เฉย ๆ — มันปฏิเสธ field ที่เกินมาหรือถูกเปลี่ยนชื่อ ไม่ใช่แค่ field ที่หายไป</li>
         <li>อ่าน error ที่ zod โยนออกมาตอน <code>.parse()</code> ล้มเหลว (<code>ZodError</code>) เพื่อหาว่า field ไหนพังและพังเพราะอะไร โดยไม่ต้องเขียนตัวหา diff เอง</li>
       </ul>
     </section>
 
-    <h2>check ที่เขียนเอง จับได้แค่สิ่งที่เรานึกถึง</h2>
-    <p><code>npm run contract:check</code> มีอยู่แล้วตั้งแต่ตอนที่คุณเขียนมันด้วยมือ และโตมาเป็นเก้า check ตอนเพิ่ม pagination กับ endpoint ตามหมวด — มันแก้ปัญหา "ไล่ยิง curl ใหม่ทุกครั้ง" ไปแล้วเรียบร้อย แต่มันมีช่องโหว่ที่ใหญ่กว่าเดิมซ่อนอยู่: <strong>มันตรวจเฉพาะสิ่งที่เราเขียนสั่งให้มันตรวจ</strong> ตอนนี้มันดู status, จำนวน category, จำนวนคีย์ของสินค้าชิ้นที่ 1, และข้อความ 404 — เท่านั้น</p>
-    <p>แปลว่าถ้า mapper เปลี่ยน <code>thumbnail</code> เป็น <code>thumbnailUrl</code> เงียบ ๆ จำนวนคีย์ยังเป็น 22 เท่าเดิม ทุกบรรทัดยังขึ้น <code>✅</code> และสัญญาพังไปแล้วโดยไม่มีใครรู้ การไล่เขียน <code>assert</code> ให้ครบทั้ง 22 คีย์ของทุก endpoint ด้วยมือเป็นงานที่ไม่มีใครเขียนจบและไม่มีใครอยากดูแล</p>
-    <p>สิ่งที่เราต้องการคือ <em>regression test ของสัญญา</em> ที่ตรวจ body ทั้งก้อน: คำสั่งเดิมที่ยิง request ชุดเดิมไปที่ API ของเรา แต่คราวนี้เทียบ response ทั้งอันกับ schema ที่เขียนจาก <code>docs/api-spec.md</code> ไม่ใช่เทียบทีละ field ที่เรานึกออก — และยังคืน exit code ที่ไม่ใช่ศูนย์เมื่อพังเหมือนเดิม เพื่อให้เอาไปแขวนใน CI ได้ในอนาคต</p>
-    <p>จุดที่ทำให้ script นี้ต่างจาก unit test ทั่วไปคือมันยิง<strong>API ของเราเองที่กำลังรันอยู่จริง</strong> ไม่ได้ mock อะไรเลย มันจึงตรวจสิ่งที่ TypeScript ตรวจให้ไม่ได้: TypeScript เช็คว่า <code>ProductResponseDto</code> ที่คุณ <em>ประกาศไว้</em> ถูกต้องตอน compile แต่ไม่รู้ว่า JSON ที่ออกไปจริงทาง HTTP ตรงกับที่ประกาศไว้หรือเปล่า ถ้า mapper คืนค่าผิดชนิด หรือมีใคร (หรือ AI) เปลี่ยนชื่อ field ไปเงียบ ๆ แต่ยังพอ compile ผ่านได้ด้วยเหตุผลบางอย่าง TypeScript จะไม่รู้เรื่องเลยจนกว่าจะมีคนอ่าน response จริง — นี่คือช่องว่างที่ zod ปิดให้ที่ขอบเขต JSON</p>
+    <h2>test ที่เขียนเอง จับได้แค่สิ่งที่เรานึกถึง</h2>
+    <p><code>npm run test:e2e</code> มีอยู่แล้วตั้งแต่ตอนที่คุณเขียน <code>test/products.e2e-spec.ts</code> ด้วยมือ และโตมาเป็นเก้า test ตอนเพิ่ม pagination กับ endpoint ตามหมวด — มันแก้ปัญหา "ไล่ยิง curl ใหม่ทุกครั้ง" ไปแล้วเรียบร้อย แต่มันมีช่องโหว่ที่ใหญ่กว่าเดิมซ่อนอยู่: <strong>มันตรวจเฉพาะสิ่งที่เราเขียนสั่งให้มันตรวจ</strong> ตอนนี้มันดู status, จำนวน category, จำนวนคีย์ของสินค้าชิ้นที่ 1, และข้อความ 404 — เท่านั้น</p>
+    <p>แปลว่าถ้า mapper เปลี่ยน <code>thumbnail</code> เป็น <code>thumbnailUrl</code> เงียบ ๆ จำนวนคีย์ยังเป็น 22 เท่าเดิม ทุก test ยังเขียว และสัญญาพังไปแล้วโดยไม่มีใครรู้ การไล่เขียน <code>expect</code> ให้ครบทั้ง 22 คีย์ของทุก endpoint ด้วยมือเป็นงานที่ไม่มีใครเขียนจบและไม่มีใครอยากดูแล</p>
+    <p>สิ่งที่เราต้องการคือ <em>regression test ของสัญญา</em> ที่ตรวจ body ทั้งก้อน: test ชุดเดิมที่ยิง request ชุดเดิมไปที่ API ของเรา แต่คราวนี้เทียบ response ทั้งอันกับ schema ที่เขียนจาก <code>docs/api-spec.md</code> ไม่ใช่เทียบทีละ field ที่เรานึกออก — และยังคืน exit code ที่ไม่ใช่ศูนย์เมื่อพังเหมือนเดิม เพื่อให้เอาไปแขวนใน CI ได้ในอนาคต</p>
+    <p>จุดที่ทำให้ e2e test ต่างจาก unit test คือมันยิง<strong>แอปจริงทั้งใบที่ต่อฐานข้อมูลจริง</strong> ไม่ได้ mock อะไรเลย มันจึงตรวจสิ่งที่ TypeScript ตรวจให้ไม่ได้: TypeScript เช็คว่า <code>ProductResponseDto</code> ที่คุณ <em>ประกาศไว้</em> ถูกต้องตอน compile แต่ไม่รู้ว่า JSON ที่ออกไปจริงทาง HTTP ตรงกับที่ประกาศไว้หรือเปล่า ถ้า mapper คืนค่าผิดชนิด หรือมีใคร (หรือ AI) เปลี่ยนชื่อ field ไปเงียบ ๆ แต่ยังพอ compile ผ่านได้ด้วยเหตุผลบางอย่าง TypeScript จะไม่รู้เรื่องเลยจนกว่าจะมีคนอ่าน response จริง — นี่คือช่องว่างที่ zod ปิดให้ที่ขอบเขต JSON</p>
 
-    <h2>ทำไม <code>npm run contract:check</code> ต้องใช้ <code>tsx</code> ไม่ใช่ <code>node</code> ตรง ๆ</h2>
-    <p>schema ทั้งหมดแยกไว้ในไฟล์ <code>scripts/contract-schemas.ts</code> ต่างหาก ไม่ได้เขียนปนอยู่ใน <code>contract-check.ts</code> เพราะ check ของ <code>POST /carts/add</code> ที่จะเพิ่มภายหลังจะ import schema ชุดเดียวกันนี้ไปใช้ซ้ำ และเพราะไฟล์ schema ล้วน ๆ อ่านและรีวิวแยกจากตัว script ที่รันจริงได้ง่ายกว่า</p>
-    <p><code>scripts/contract-check.ts</code> จึงมีบรรทัด <code>import { ... } from './contract-schemas.js'</code> อยู่บนสุด — ต่างจากฉบับแรกที่คุณเขียนเองด้วยมือ ที่ไม่มี import เลยสักบรรทัด จึงสั่ง <code>node</code> ตรง ๆ ได้ การลบ type ออกอย่างเดียว (type stripping) ที่ Node ทำได้เองตอนรันไฟล์ <code>.ts</code> เดี่ยว ๆ ไม่พอสำหรับกรณีนี้ เพราะตอนนี้มีการ import ข้ามไฟล์ <code>.ts</code> สองไฟล์ ซึ่งต้องมีตัว resolve module ที่รู้จักรูปแบบของ TypeScript จริง ๆ (แม้ path ที่ import จะเขียนด้วยนามสกุล <code>.js</code> ตามธรรมเนียม ESM+TypeScript แต่ไฟล์จริงบนดิสก์คือ <code>.ts</code>) เราจึงใช้ <code>tsx</code> ตัวเดียวกับที่ <code>db:seed</code> ใช้อยู่แล้วมารันแทน <code>node</code> ตรง ๆ</p>
-    <div class="note"><p><code>fetch</code> และ top-level <code>await</code> ในลูปของ script นี้เป็นของที่มีใน Node อยู่แล้ว ไม่ต้องติดตั้ง <code>node-fetch</code> หรืออะไรเพิ่ม</p></div>
+    <h2>ทำไม schema ต้องอยู่คนละไฟล์กับ test</h2>
+    <p>schema ทั้งหมดแยกไว้ในไฟล์ <code>test/contract-schemas.ts</code> ต่างหาก ไม่ได้เขียนปนอยู่ใน <code>products.e2e-spec.ts</code> ด้วยเหตุผลสองข้อ ข้อแรก test ของ <code>POST /carts/add</code> ที่จะมาภายหลังอยู่คนละไฟล์กัน (<code>orders.e2e-spec.ts</code>) แต่ต้อง import schema ชุดเดียวกันนี้ไปใช้ซ้ำ — สัญญาต้องมีฉบับเดียว ไม่ใช่สำเนาที่ค่อย ๆ เพี้ยนจากกัน ข้อสอง ไฟล์ schema ล้วน ๆ อ่านและรีวิวแยกจาก test ที่รันจริงได้ง่ายกว่า: มันคือ <code>docs/api-spec.md</code> ที่เขียนใหม่ในรูปแบบที่เครื่องอ่านออก</p>
+    <p>ไฟล์ <code>.ts</code> ที่ import ข้ามกันแบบนี้ไม่ต้องตั้งค่าอะไรเพิ่มเลย เพราะ Vitest compile TypeScript ให้อยู่แล้ว — ขอแค่เขียน path ลงท้าย <code>.js</code> ตามธรรมเนียม ESM+TypeScript ที่ใช้ทั่วโปรเจกต์นี้ (ไฟล์จริงบนดิสก์คือ <code>.ts</code> ไม่ใช่พิมพ์ผิด)</p>
+    <div class="note"><p>ไฟล์ทั้งสองอยู่ใน <code>test/</code> จึงถูก <code>npm run lint</code> ครอบให้อยู่แล้ว (<code>oxlint src/ test/</code>) และถูก <code>vitest.config.e2e.ts</code> มองเห็น ซึ่ง <code>include</code> ไว้เฉพาะ <code>**/*.e2e-spec.ts</code> — ไฟล์ schema จึงไม่ถูกนับเป็น test suite เปล่า ๆ เพราะชื่อไม่ได้ลงท้ายแบบนั้น</p></div>
 
     <h2>เป้าหมายของบทนี้</h2>
     <p>รายการด้านล่างคือไฟล์ที่เปลี่ยนใน<strong>โค้ดอ้างอิงของคอร์ส</strong> — ใช้เป็นแผนที่ตอนเทียบงาน ไม่ใช่ข้อบังคับ Cursor ของคุณอาจวางไฟล์หรือตั้งชื่อต่างไปได้ ขอแค่ผ่านผลลัพธ์ที่ต้องได้ใน prompt</p>
-    <pre><code>scripts/
+    <pre><code>test/
 ├── contract-schemas.ts               (สร้างใหม่)
-└── contract-check.ts                 (แก้ไข: เขียนใหม่ทั้งไฟล์ด้วย zod จากฉบับที่เขียนเองด้วยมือ)
-package.json                          (แก้ไข: script contract:check เปลี่ยนจาก node เป็น tsx)</code></pre>
+└── products.e2e-spec.ts              (แก้ไข: เขียนใหม่ทั้งไฟล์ด้วย zod จากฉบับที่เขียนเองด้วยมือ)
+package.json                          (แก้ไข: เพิ่ม zod เป็น dependency — script ไม่ต้องแก้)</code></pre>
     <ul>
-      <li><strong><code>scripts/contract-schemas.ts</code></strong> — ในโค้ดอ้างอิง: export เจ็ดตัวตาม <code>docs/api-spec.md</code> คือ <code>dimensionsSchema</code>, <code>reviewSchema</code>, <code>metaSchema</code>, <code>productSchema</code>, <code>categorySchema</code>, <code>listEnvelopeSchema</code>, <code>errorSchema</code> / schema ที่แทน object เต็มรูปทั้งหมด (<code>productSchema</code>, <code>categorySchema</code>, <code>listEnvelopeSchema</code>, <code>errorSchema</code>) ต้องปิดท้ายด้วย <code>.strict()</code> / ไฟล์นี้นิยาม <code>cartProductSchema</code> กับ <code>orderResponseSchema</code> ไว้ด้วยสำหรับ endpoint สั่งซื้อที่จะมาภายหลัง แต่ยังไม่มีที่ไหน import สองตัวนี้ไปใช้ในบทนี้</li>
-      <li><strong><code>scripts/contract-check.ts</code></strong> — ในโค้ดอ้างอิง: import schema จาก <code>./contract-schemas.js</code>, มี <strong>เก้า</strong> check เรียงตามลำดับ (ชุดเดียวกับที่คุณสะสมไว้ตั้งแต่ฉบับเขียนมือ แต่เรียงใหม่และตรวจ body ทั้งก้อน ดูรายชื่อในส่วนผลลัพธ์ที่คาดหวังด้านล่าง) แต่ละ check เรียก <code>schema.parse(body)</code> ตรง ๆ (ไม่ใช่ <code>.safeParse()</code>) เพื่อให้ error ที่ zod โยนออกมามีรายละเอียดครบ, จับด้วย <code>try/catch</code> ที่ loop ระดับนอก แล้วพิมพ์ <code>✅</code>/<code>❌</code> ต่อบรรทัด, ปิดท้ายด้วย <code>process.exit(1)</code> เมื่อมี <code>❌</code> อย่างน้อยหนึ่งรายการ / <strong>ต้องไม่มี check ของ <code>POST /carts/add</code></strong> เพราะ endpoint นั้นยังไม่มีอยู่จริง ณ จุดนี้ (จะมาถึงภายหลัง)</li>
-      <li><strong><code>package.json</code></strong> — ในโค้ดอ้างอิง: <code>"contract:check": "tsx scripts/contract-check.ts"</code> / ไม่แก้ script อื่นและไม่เพิ่ม dependency นอกจาก <code>zod</code></li>
+      <li><strong><code>test/contract-schemas.ts</code></strong> — ในโค้ดอ้างอิง: export เจ็ดตัวตาม <code>docs/api-spec.md</code> คือ <code>dimensionsSchema</code>, <code>reviewSchema</code>, <code>metaSchema</code>, <code>productSchema</code>, <code>categorySchema</code>, <code>listEnvelopeSchema</code>, <code>errorSchema</code> / schema ที่แทน object เต็มรูปทั้งหมด (<code>productSchema</code>, <code>categorySchema</code>, <code>listEnvelopeSchema</code>, <code>errorSchema</code>) ต้องปิดท้ายด้วย <code>.strict()</code> / ไฟล์นี้นิยาม <code>cartProductSchema</code> กับ <code>orderResponseSchema</code> ไว้ด้วยสำหรับ endpoint สั่งซื้อที่จะมาภายหลัง แต่ยังไม่มีที่ไหน import สองตัวนี้ไปใช้ในบทนี้</li>
+      <li><strong><code>test/products.e2e-spec.ts</code></strong> — ในโค้ดอ้างอิง: import schema จาก <code>./contract-schemas.js</code>, มี <strong>เก้า</strong> <code>it()</code> เรียงตามลำดับ (ชุดเดียวกับที่คุณสะสมไว้ตั้งแต่ฉบับเขียนมือ แต่เรียงใหม่และตรวจ body ทั้งก้อน ดูรายชื่อในส่วนผลลัพธ์ที่คาดหวังด้านล่าง) แต่ละ test เรียก <code>schema.parse(response.body)</code> ตรง ๆ (ไม่ใช่ <code>.safeParse()</code>) เพื่อให้ <code>ZodError</code> ที่โยนออกมาทำให้ test ล้มพร้อมรายละเอียดครบ ไม่ต้องเขียน <code>if</code> เช็ค <code>success</code> เอง / โครง <code>beforeAll</code>/<code>afterAll</code> ที่ boot แอปยังเป็นตัวเดิม / <strong>ต้องไม่มี test ของ <code>POST /carts/add</code></strong> เพราะ endpoint นั้นยังไม่มีอยู่จริง ณ จุดนี้ (จะมาถึงภายหลัง)</li>
+      <li><strong><code>package.json</code></strong> — ในโค้ดอ้างอิง: มี <code>zod</code> เพิ่มเข้ามาตัวเดียว / ไม่แก้ script ใด ๆ เพราะ <code>test:e2e</code> ที่ scaffold ให้มาครอบไฟล์ <code>*.e2e-spec.ts</code> ทุกไฟล์อยู่แล้ว</li>
     </ul>
-    <p>ไม่มีไฟล์ใน <code>src/</code> ถูกแตะในบทนี้เลย — สิ่งที่เราสร้างคือเครื่องมือตรวจ ไม่ใช่ฟีเจอร์ และ schema พวกนี้ไม่ได้มาแทนที่ <code>ProductResponseDto</code> ที่มีอยู่แล้ว: <code>ProductResponseDto</code> ยังเป็น type ตอน compile ที่ Swagger CLI plugin จะอ่านตอนทำเอกสาร API อยู่เหมือนเดิม ส่วน zod schema ในบทนี้เป็นการตรวจแยกอีกชั้นหนึ่งตอน<strong>runtime</strong> ว่า response จริงที่ออกไปทาง HTTP ยังตรงกับสัญญาอยู่หรือเปล่า — ไม่ใช่รูปทรงที่สามอันดับที่มาแข่งกัน แต่เป็นเครื่องมือคนละงาน: DTO บอก compiler, zod บอกตอนรันจริง</p>
+    <p>ไม่มีไฟล์ใน <code>src/</code> ถูกแตะในบทนี้เลย — สิ่งที่เราเขียนคือ test ไม่ใช่ฟีเจอร์ และ schema พวกนี้ไม่ได้มาแทนที่ <code>ProductResponseDto</code> ที่มีอยู่แล้ว: <code>ProductResponseDto</code> ยังเป็น type ตอน compile ที่ Swagger CLI plugin จะอ่านตอนทำเอกสาร API อยู่เหมือนเดิม ส่วน zod schema ในบทนี้เป็นการตรวจแยกอีกชั้นหนึ่งตอน<strong>runtime</strong> ว่า response จริงที่ออกไปทาง HTTP ยังตรงกับสัญญาอยู่หรือเปล่า — ไม่ใช่รูปทรงที่สามอันดับที่มาแข่งกัน แต่เป็นเครื่องมือคนละงาน: DTO บอก compiler, zod บอกตอนรันจริง</p>
 
     <section class="workshop" aria-labelledby="exercise-heading">
-      <h2 id="exercise-heading">สั่ง Cursor เขียน schema และ script ตรวจสัญญา</h2>
-      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before contract check"</code>) ปล่อยให้ API รันอยู่ที่ <code>http://localhost:3000</code> ไว้ เพราะเราจะรันตรวจทันทีหลังได้โค้ด</p>
-      <div class="cursor-prompt"><code>เขียน zod schema แล้วเขียน script ตรวจสัญญาที่มีอยู่ใหม่ทั้งไฟล์ ให้ตรวจ body ทั้งก้อนตาม docs/api-spec.md
-@package.json @&lt;ไฟล์ contract-check ที่คุณเขียนไว้ก่อนหน้านี้&gt; — โค้ดอ้างอิงคือ scripts/contract-check.ts
+      <h2 id="exercise-heading">สั่ง Cursor เขียน schema และ test ตรวจสัญญา</h2>
+      <p>commit งานก่อน แล้วเปิดแชทใหม่ใน Cursor โหมด Agent (<code>git add -A &amp;&amp; git commit -m "chore: before contract check"</code>) ตรวจว่าฐานข้อมูลรันอยู่ เพราะเราจะรัน test ทันทีหลังได้โค้ด</p>
+      <div class="cursor-prompt"><code>เขียน zod schema แล้วเขียน e2e test ของสัญญาที่มีอยู่ใหม่ทั้งไฟล์ ให้ตรวจ body ทั้งก้อนตาม docs/api-spec.md
+@package.json @&lt;ไฟล์ e2e test ของ products ที่คุณเขียนไว้ก่อนหน้านี้&gt; — โค้ดอ้างอิงคือ test/products.e2e-spec.ts
 
 ผลลัพธ์ที่ต้องได้:
-- npm run contract:check ตอน API รันอยู่และตรงสัญญา พิมพ์เก้าบรรทัดขึ้นต้นด้วย ✅ ตามลำดับนี้ แล้ว exit 0
+- npm run test:e2e ตอนฐานข้อมูลรันอยู่และ API ตรงสัญญา ผ่านครบเก้า test ตามลำดับนี้ แล้ว exit 0
   1. GET /products/categories → 200 ได้ category 24 รายการ
   2. GET /products?limit=5&amp;skip=0 → 200 envelope ที่ limit และจำนวน products เป็น 5
   3. GET /products?limit=0 → 400 error body ตาม docs/api-spec.md
@@ -61,33 +61,33 @@ package.json                          (แก้ไข: script contract:check �
   7. GET /products/abc → 400 error body
   8. GET /products/category/groceries?limit=20&amp;skip=0 → 200 envelope ที่ total เป็น 27
   9. GET /products/category/nope?limit=5&amp;skip=0 → 200 envelope ว่าง total เป็น 0
-- ทุก check ตรวจรูปทรงเต็มของ body ไม่ใช่แค่ status: discountPercentage ไม่มีได้ ส่วน field อื่นของ product ต้องมีครบ และ message ใน error body เป็น string หรือ array ของ string ก็ได้
-- ถ้าเปลี่ยนชื่อ field ใน response (เช่น thumbnail → thumbnailUrl) check ที่มีสินค้าต้องเป็น ❌ และบรรทัด error บอกทั้ง field ที่หายไปและ field ที่เกินมา พร้อม path — field แปลกปลอมต้องทำให้ตรวจไม่ผ่าน ไม่ใช่ถูกตัดทิ้งเงียบ ๆ
-- มี ❌ อย่างน้อยหนึ่งบรรทัด → exit ไม่ใช่ 0
-- ยิงที่ http://localhost:3000 โดยค่าเริ่มต้น และเปลี่ยนได้ด้วย env LOCAL_URL — ปิด API แล้วรัน → ❌ ทั้งเก้าบรรทัดและ exit ไม่ใช่ 0 (ไม่มี remote server อื่นหลงอยู่)
-- เก้า check เดิมยังอยู่ครบ ไม่หายไปข้อไหน และ script ยังรันด้วย npm run contract:check ชื่อเดิม
-- schema อยู่คนละไฟล์กับตัวรันและ export ออกมาให้ import ซ้ำได้ รวมถึง cartProductSchema และ orderResponseSchema (รูปทรง body และ receipt ของ POST /carts/add ตาม docs/api-spec.md) ที่ endpoint สั่งซื้อจะใช้ต่อ แม้ตอนนี้ยังไม่ได้ใช้
-- script เป็นเครื่องมือตรวจจากภายนอก: ไม่มีไฟล์ใน src/ ถูกแก้ และ oxlint บนไฟล์ script ที่สร้างไม่พิมพ์อะไรออกมา
+- ทุก test ตรวจรูปทรงเต็มของ body ไม่ใช่แค่ status: discountPercentage ไม่มีได้ ส่วน field อื่นของ product ต้องมีครบ และ message ใน error body เป็น string หรือ array ของ string ก็ได้
+- ถ้าเปลี่ยนชื่อ field ใน response (เช่น thumbnail → thumbnailUrl) test ที่มีสินค้าต้องล้ม และรายงานบอกทั้ง field ที่หายไปและ field ที่เกินมา พร้อม path — field แปลกปลอมต้องทำให้ตรวจไม่ผ่าน ไม่ใช่ถูกตัดทิ้งเงียบ ๆ
+- มี test ล้มอย่างน้อยหนึ่งข้อ → exit ไม่ใช่ 0
+- test boot แอปเองด้วย Test.createTestingModule + supertest เหมือนไฟล์เดิม ไม่ยิงไปที่ URL ภายนอกและไม่ต้องให้ใครเปิด dev server ค้างไว้
+- เก้า test เดิมยังอยู่ครบ ไม่หายไปข้อไหน และยังรันด้วย npm run test:e2e ชื่อเดิม
+- schema อยู่คนละไฟล์กับ test และ export ออกมาให้ import ซ้ำได้ รวมถึง cartProductSchema และ orderResponseSchema (รูปทรง body และ receipt ของ POST /carts/add ตาม docs/api-spec.md) ที่ endpoint สั่งซื้อจะใช้ต่อ แม้ตอนนี้ยังไม่ได้ใช้
+- test เป็นเครื่องมือตรวจจากภายนอก: ไม่มีไฟล์ใน src/ ถูกแก้ และ npm run lint ไม่พิมพ์อะไรออกมา
 
 ขอบเขต:
 - ติดตั้ง dependency ได้แค่ zod@4.6.2
-- ห้ามรัน script ให้ผมรันเอง
+- ห้ามรัน test ให้ผมรันเอง
 - ยังไม่ต้องเพิ่ม check ของ POST /carts/add หรือ orders (endpoint นั้นยังไม่มีในตอนนี้)</code></div>
     </section>
     <section class="review" aria-labelledby="review-heading">
       <h2 id="review-heading">ตรวจโค้ดที่ AI สร้าง</h2>
       <ul>
-        <li>ทุก object schema เต็มรูป (product, category, envelope, error) <em>ปฏิเสธ</em> field ที่ไม่รู้จัก — ทดสอบได้จริงด้วยการเปลี่ยนชื่อ field ในส่วนตรวจว่าใช้งานได้จริงด้านล่าง ถ้าตรวจแล้วยังขึ้น <code>✅</code> แปลว่า schema ปล่อยผ่านเงียบ ๆ</li>
-        <li>รัน <code>npm run contract:check</code> ได้เก้าบรรทัดตามลำดับในผลลัพธ์ที่ต้องได้ และไม่มี check ของ <code>POST /carts/add</code> ปนมา เพราะ endpoint นั้นยังไม่มีอยู่จริงในบทนี้</li>
-        <li>บรรทัด <code>❌</code> บอกได้ว่า field ไหนพังและพังเพราะอะไร (มี path) — ไม่ใช่ข้อความคงที่อย่าง "invalid response"</li>
+        <li>ทุก object schema เต็มรูป (product, category, envelope, error) <em>ปฏิเสธ</em> field ที่ไม่รู้จัก — ทดสอบได้จริงด้วยการเปลี่ยนชื่อ field ในส่วนตรวจว่าใช้งานได้จริงด้านล่าง ถ้าตรวจแล้ว test ยังเขียว แปลว่า schema ปล่อยผ่านเงียบ ๆ</li>
+        <li>รัน <code>npm run test:e2e</code> ได้เก้า test ตามลำดับในผลลัพธ์ที่ต้องได้ และไม่มี test ของ <code>POST /carts/add</code> ปนมา เพราะ endpoint นั้นยังไม่มีอยู่จริงในบทนี้</li>
+        <li>รายงานของ test ที่ล้มบอกได้ว่า field ไหนพังและพังเพราะอะไร (มี path) — ไม่ใช่ข้อความคงที่อย่าง "invalid response"</li>
         <li>import ข้ามไฟล์ในโปรเจกต์ลงท้าย <code>.js</code> ตามกติกาใน <code>.cursor/rules</code> (แม้ไฟล์จริงคือ <code>.ts</code> — ไม่ใช่พิมพ์ผิด)</li>
-        <li>URL ที่ยิงมีแค่ API ของเราเอง (เปลี่ยนได้ด้วย <code>LOCAL_URL</code>) ไม่มี URL ของ server ตัวที่สองหลงเหลือในไฟล์</li>
-        <li>มี <code>❌</code> แล้ว <code>echo $?</code> ไม่ใช่ 0</li>
-        <li><code>git status</code> ไม่มีไฟล์ใน <code>src/</code> และไม่มีไฟล์ที่ไม่เกี่ยวกับ script ตรวจสัญญาถูกแก้, dependency ที่เพิ่มมีแค่ <code>zod</code> และไม่มี <code>any</code>, <code>as</code> หรือ <code>!</code></li>
+        <li>ไม่มี URL ของ server ตัวไหนฮาร์ดโค้ดอยู่ในไฟล์ test เลย — ทุก request ยิงผ่าน <code>request(app.getHttpServer())</code> เข้าแอปที่ suite boot เอง</li>
+        <li>มี test ล้มแล้ว <code>echo $?</code> ไม่ใช่ 0</li>
+        <li><code>git status</code> ไม่มีไฟล์ใน <code>src/</code> และไม่มีไฟล์ที่ไม่เกี่ยวกับ test ตรวจสัญญาถูกแก้, dependency ที่เพิ่มมีแค่ <code>zod</code> และไม่มี <code>any</code>, <code>as</code> หรือ <code>!</code></li>
       </ul>
-      <p><strong>AI มักพลาดตรงนี้:</strong> เขียน schema เป็น <code>z.object({...})</code> เฉย ๆ โดยไม่ปิดท้ายด้วย <code>.strict()</code> — โค้ดยัง compile ผ่านและดูทำงานถูกในตอนแรก แต่ zod โหมดปกติ (ที่เรียกว่า "strip") จะเงียบ ๆ ตัดทุก field ที่ไม่รู้จักทิ้งไปโดยไม่ error เลย ถ้าวันหนึ่งมีใคร (หรือ AI ตัวอื่น) เปลี่ยนชื่อ field ใน mapper หรือเผลอเพิ่ม field แปลกปลอมเข้ามา check จะยังขึ้น <code>✅</code> เหมือนไม่มีอะไรเกิดขึ้น ทั้งที่ response จริงเปลี่ยนไปแล้ว อีกจุดที่พลาดได้คือใช้ <code>.safeParse()</code> แล้วเช็คแค่ <code>result.success</code> โดยไม่พิมพ์ <code>result.error.issues</code> ออกมา — script ยังรายงาน <code>❌</code> ถูกต้องอยู่ แต่บรรทัด error จะไม่บอกว่า field ไหนพังเพราะอะไร ทำให้ debug ช้าลงกลับไปเหมือนสมัยที่ยังไม่มี schema เลย</p>
-      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้ (ขั้นเปิด route <code>POST /carts/add</code> จะอ้างชื่อ <code>cartProductSchema</code>/<code>orderResponseSchema</code> และ array <code>checks</code> ถ้าของคุณตั้งชื่อต่างไปก็ไม่เป็นไร Cursor ในขั้นนั้นจะอ่านจากโค้ดของคุณเอง):</p>
-      <p><code>scripts/contract-schemas.ts</code></p>
+      <p><strong>AI มักพลาดตรงนี้:</strong> เขียน schema เป็น <code>z.object({...})</code> เฉย ๆ โดยไม่ปิดท้ายด้วย <code>.strict()</code> — โค้ดยัง compile ผ่านและดูทำงานถูกในตอนแรก แต่ zod โหมดปกติ (ที่เรียกว่า "strip") จะเงียบ ๆ ตัดทุก field ที่ไม่รู้จักทิ้งไปโดยไม่ error เลย ถ้าวันหนึ่งมีใคร (หรือ AI ตัวอื่น) เปลี่ยนชื่อ field ใน mapper หรือเผลอเพิ่ม field แปลกปลอมเข้ามา test จะยังเขียวเหมือนไม่มีอะไรเกิดขึ้น ทั้งที่ response จริงเปลี่ยนไปแล้ว อีกจุดที่พลาดได้คือใช้ <code>.safeParse()</code> แล้ว <code>expect(result.success).toBe(true)</code> เฉย ๆ — test ยังล้มถูกต้องอยู่ แต่รายงานจะบอกได้แค่ <code>expected false to be true</code> ไม่บอกว่า field ไหนพังเพราะอะไร ทำให้ debug ช้าลงกลับไปเหมือนสมัยที่ยังไม่มี schema เลย ส่วน <code>.parse()</code> ที่โยน <code>ZodError</code> ออกมาจะพา issues ทั้งชุดขึ้นไปอยู่ในรายงานของ Vitest ให้เอง</p>
+      <p>โค้ดอ้างอิงของบทนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้ (ขั้นเปิด route <code>POST /carts/add</code> จะอ้างชื่อ <code>cartProductSchema</code>/<code>orderResponseSchema</code> ถ้าของคุณตั้งชื่อต่างไปก็ไม่เป็นไร Cursor ในขั้นนั้นจะอ่านจากโค้ดของคุณเอง):</p>
+      <p><code>test/contract-schemas.ts</code></p>
       <pre><code>import { z } from 'zod';
 
 export const dimensionsSchema = z.object({
@@ -183,154 +183,153 @@ export const orderResponseSchema = z
     totalQuantity: z.number().int(),
   })
   .strict();</code></pre>
-      <p><code>scripts/contract-check.ts</code></p>
-      <pre><code>import {
+      <p><code>test/products.e2e-spec.ts</code></p>
+      <pre><code>import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from './../src/app.module.js';
+import {
   categorySchema,
   errorSchema,
   listEnvelopeSchema,
   productSchema,
 } from './contract-schemas.js';
 
-const BASE = process.env.LOCAL_URL ?? 'http://localhost:3000';
+describe('Products contract (e2e)', () =&gt; {
+  let app: INestApplication;
 
-interface Check {
-  name: string;
-  run: () =&gt; Promise&lt;void&gt;;
-}
+  beforeAll(async () =&gt; {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-async function getJson(path: string, init?: RequestInit) {
-  const response = await fetch(`${BASE}${path}`, init);
-  const body = await response.json();
-  return { status: response.status, body };
-}
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
+      }),
+    );
+    await app.init();
+  });
 
-const checks: Check[] = [
-  {
-    name: 'GET /products/categories → 200, 24 categories',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products/categories');
-      if (status !== 200) throw new Error(`status ${status}`);
-      const categories = categorySchema.array().parse(body);
-      if (categories.length !== 24) throw new Error(`expected 24 categories, got ${categories.length}`);
-    },
-  },
-  {
-    name: 'GET /products?limit=5&amp;skip=0 → limit and skip echo the request',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products?limit=5&amp;skip=0');
-      if (status !== 200) throw new Error(`status ${status}`);
-      const envelope = listEnvelopeSchema.parse(body);
-      if (envelope.limit !== 5 || envelope.products.length !== 5) {
-        throw new Error('limit did not echo the request');
-      }
-    },
-  },
-  {
-    name: 'GET /products?limit=0 → 400 (out of range)',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products?limit=0');
-      if (status !== 400) throw new Error(`expected 400, got ${status}`);
-      errorSchema.parse(body);
-    },
-  },
-  {
-    name: 'GET /products?limit=101 → 400 (out of range)',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products?limit=101');
-      if (status !== 400) throw new Error(`expected 400, got ${status}`);
-      errorSchema.parse(body);
-    },
-  },
-  {
-    name: 'GET /products/1 → validated product',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products/1');
-      if (status !== 200) throw new Error(`status ${status}`);
-      productSchema.parse(body);
-    },
-  },
-  {
-    name: 'GET /products/9999 → 404 with message',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products/9999');
-      if (status !== 404) throw new Error(`expected 404, got ${status}`);
-      errorSchema.parse(body);
-    },
-  },
-  {
-    name: 'GET /products/abc → 400 with message',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products/abc');
-      if (status !== 400) throw new Error(`expected 400, got ${status}`);
-      errorSchema.parse(body);
-    },
-  },
-  {
-    name: 'GET /products/category/groceries?limit=20&amp;skip=0 → total 27',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products/category/groceries?limit=20&amp;skip=0');
-      if (status !== 200) throw new Error(`status ${status}`);
-      const envelope = listEnvelopeSchema.parse(body);
-      if (envelope.total !== 27) throw new Error(`expected total 27, got ${envelope.total}`);
-    },
-  },
-  {
-    name: 'GET /products/category/nope?limit=5&amp;skip=0 → 200, empty envelope',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products/category/nope?limit=5&amp;skip=0');
-      if (status !== 200) throw new Error(`status ${status}`);
-      const envelope = listEnvelopeSchema.parse(body);
-      if (envelope.products.length !== 0 || envelope.total !== 0) {
-        throw new Error('unknown category should be empty, not an error');
-      }
-    },
-  },
-];
-// Task 14 (lesson 19) appends a tenth check here — POST /carts/add → 201 —
-// once that endpoint exists. Do not add it in this task: a student running
-// this script at lesson 15 doesn't have /carts/add yet (it arrives at
-// lesson 19), and a check that can never pass at the point it's introduced
-// is worse than not having it yet.
+  afterAll(async () =&gt; {
+    await app.close();
+  });
 
-let failures = 0;
-for (const check of checks) {
-  try {
-    await check.run();
-    console.log(`✅ ${check.name}`);
-  } catch (error) {
-    failures += 1;
-    console.log(`❌ ${check.name}`);
-    console.log(`   ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-process.exit(failures === 0 ? 0 : 1);</code></pre>
-      <p>บรรทัดที่ <code>package.json</code> ได้เปลี่ยนคือบรรทัดเดียว วางไว้ต่อจาก <code>db:seed</code></p>
-      <pre><code>"contract:check": "tsx scripts/contract-check.ts",</code></pre>
+  it('GET /products/categories → 200, 24 categories', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products/categories')
+      .expect(200);
+
+    const categories = categorySchema.array().parse(response.body);
+    expect(categories).toHaveLength(24);
+  });
+
+  it('GET /products?limit=5&amp;skip=0 → limit and skip echo the request', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products?limit=5&amp;skip=0')
+      .expect(200);
+
+    const envelope = listEnvelopeSchema.parse(response.body);
+    expect(envelope.limit).toBe(5);
+    expect(envelope.products).toHaveLength(5);
+  });
+
+  it('GET /products?limit=0 → 400 (out of range)', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products?limit=0')
+      .expect(400);
+
+    errorSchema.parse(response.body);
+  });
+
+  it('GET /products?limit=101 → 400 (out of range)', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products?limit=101')
+      .expect(400);
+
+    errorSchema.parse(response.body);
+  });
+
+  it('GET /products/1 → validated product', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products/1')
+      .expect(200);
+
+    productSchema.parse(response.body);
+  });
+
+  it('GET /products/9999 → 404 with message', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products/9999')
+      .expect(404);
+
+    errorSchema.parse(response.body);
+  });
+
+  it('GET /products/abc → 400 with message', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products/abc')
+      .expect(400);
+
+    errorSchema.parse(response.body);
+  });
+
+  it('GET /products/category/groceries → total 27', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products/category/groceries?limit=20&amp;skip=0')
+      .expect(200);
+
+    const envelope = listEnvelopeSchema.parse(response.body);
+    expect(envelope.total).toBe(27);
+  });
+
+  it('GET /products/category/nope → 200, empty envelope', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products/category/nope?limit=5&amp;skip=0')
+      .expect(200);
+
+    const envelope = listEnvelopeSchema.parse(response.body);
+    expect(envelope.products).toHaveLength(0);
+    expect(envelope.total).toBe(0);
+  });
+});
+// test ของ POST /carts/add จะอยู่ในไฟล์ของตัวเอง (test/orders.e2e-spec.ts)
+// ตอนที่ endpoint นั้นเกิดขึ้นจริง — ยังไม่ต้องเพิ่มที่นี่ในบทนี้</code></pre>
+      <p><code>app.useGlobalPipes(...)</code> ใน <code>beforeAll</code> คือบรรทัดเดิมที่คุณใส่ไว้ตั้งแต่ขั้น pagination ทบทวนเหตุผลอีกครั้ง: <code>createNestApplication()</code> สร้างแอปจาก <code>AppModule</code> เท่านั้น มันไม่ได้รัน <code>src/main.ts</code> ให้ ดังนั้นอะไรที่ตั้งค่าไว้ใน <code>bootstrap()</code> จะ<strong>ไม่ติดมาเอง</strong> ถ้าบรรทัดนี้หายไป สอง test ของ <code>limit=0</code> และ <code>limit=101</code> จะได้ status ที่ไม่ใช่ 400 เพราะไม่มี pipe ตัวไหนตรวจ query เลย ค่าใน <code>ValidationPipe</code> ตรงนี้จึงต้องตรงกับใน <code>main.ts</code> ทุกตัว</p>
+      <p><code>package.json</code> ไม่ต้องแก้เลยในบทนี้ — <code>test:e2e</code> ที่ scaffold ให้มาเก็บไฟล์ <code>*.e2e-spec.ts</code> ทุกไฟล์อยู่แล้ว สิ่งเดียวที่เปลี่ยนคือมี <code>zod</code> เพิ่มเข้ามาในรายการ dependency</p>
       <p>ถ้าอธิบายบรรทัดไหนไม่ได้ ยังไม่ผ่านบทนี้ — กลับไปอ่านส่วนแนวคิดก่อน</p>
     </section>
     <section class="expected-result" aria-labelledby="exercise-result-heading">
       <h2 id="exercise-result-heading">ผลลัพธ์ที่คาดหวัง</h2>
-      <p>เปิด API ไว้ที่ <code>http://localhost:3000</code> (ด้วย <code>npm run start:dev</code>) แล้วรัน <code>npm run contract:check</code> ในอีก terminal จะได้<strong>เก้า</strong>บรรทัดและ exit code 0</p>
-      <pre><code>✅ GET /products/categories → 200, 24 categories
-✅ GET /products?limit=5&amp;skip=0 → limit and skip echo the request
-✅ GET /products?limit=0 → 400 (out of range)
-✅ GET /products?limit=101 → 400 (out of range)
-✅ GET /products/1 → validated product
-✅ GET /products/9999 → 404 with message
-✅ GET /products/abc → 400 with message
-✅ GET /products/category/groceries?limit=20&amp;skip=0 → total 27
-✅ GET /products/category/nope?limit=5&amp;skip=0 → 200, empty envelope</code></pre>
-      <p>เก้าบรรทัด ไม่ใช่สิบ — <code>POST /carts/add</code> ยังไม่มี check เป็นของตัวเอง เพราะ endpoint นั้นยังไม่มีอยู่จริงในตอนนี้ (เรื่อง order และ cart รออยู่ในขั้นถัดไป) check ที่ 10 จะถูกเพิ่มเข้ามาตอนเปิด route <code>POST /carts/add</code> ถ้าเจอที่อื่นพูดถึง "สิบบรรทัด" ภายหลัง นั่นคือหลังจากขั้นนั้นเพิ่ม check เข้ามาแล้ว ไม่ใช่ความขัดแย้งกับตอนนี้</p>
+      <p>ตรวจว่าฐานข้อมูลรันอยู่ แล้วรัน <code>npm run test:e2e</code> — ไฟล์ของสัญญาต้องผ่าน<strong>เก้า</strong> test และ exit code เป็น 0</p>
+      <pre><code> ✓ test/app.e2e-spec.ts (1 test)
+ ✓ test/products.e2e-spec.ts (9 tests)
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)</code></pre>
+      <p>reporter ปริยายของ Vitest ยุบไฟล์ที่ผ่านทั้งหมดให้เหลือบรรทัดเดียว ถ้าอยากเห็นชื่อ test ทีละข้อให้เติม <code>--reporter=verbose</code> ต่อท้าย (<code>npm run test:e2e -- --reporter=verbose</code>) จะได้เก้าชื่อนี้ตามลำดับ</p>
+      <pre><code>GET /products/categories → 200, 24 categories
+GET /products?limit=5&amp;skip=0 → limit and skip echo the request
+GET /products?limit=0 → 400 (out of range)
+GET /products?limit=101 → 400 (out of range)
+GET /products/1 → validated product
+GET /products/9999 → 404 with message
+GET /products/abc → 400 with message
+GET /products/category/groceries → total 27
+GET /products/category/nope → 200, empty envelope</code></pre>
+      <p>เก้า test ไม่ใช่สิบ — <code>POST /carts/add</code> ยังไม่มี test เป็นของตัวเอง เพราะ endpoint นั้นยังไม่มีอยู่จริงในตอนนี้ (เรื่อง order และ cart รออยู่ในขั้นถัดไป) test ที่ 10 จะมาพร้อมไฟล์ <code>test/orders.e2e-spec.ts</code> ตอนเปิด route <code>POST /carts/add</code> ถ้าเจอที่อื่นพูดถึง "สิบ test" ภายหลัง นั่นคือหลังจากขั้นนั้นเพิ่มเข้ามาแล้ว ไม่ใช่ความขัดแย้งกับตอนนี้</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
       <ul>
-        <li><code>npm run contract:check</code> ได้ <code>✅</code> เก้าบรรทัดและ <code>echo $?</code> ได้ <code>0</code></li>
-        <li>lint ไฟล์เหล่านี้ด้วยมือ เพราะ <code>npm run lint</code> ครอบแค่ <code>src/</code> และ <code>test/</code> — <code>npx oxlint scripts/contract-schemas.ts scripts/contract-check.ts</code> (เปลี่ยน path ให้ตรงกับไฟล์ของคุณ) ต้องไม่พิมพ์อะไรออกมา</li>
-        <li>ทำให้พังเพื่อดูว่า <code>.strict()</code> จับได้จริง: เปลี่ยนชื่อ field เดียวกัน<em>สองที่พร้อมกัน</em> เพื่อให้ยัง compile ผ่าน — ใน <code>src/products/product.mapper.ts</code> แก้บรรทัดสุดท้ายของ object ที่ return จาก <code>thumbnail: product.thumbnail,</code> เป็น <code>thumbnailUrl: product.thumbnail,</code> และใน <code>src/products/dto/product-response.dto.ts</code> แก้ <code>thumbnail: string;</code> เป็น <code>thumbnailUrl: string;</code> ใน <code>ProductResponseDto</code> (ถ้าแก้แค่ mapper อย่างเดียว TypeScript จะฟ้อง <code>TS2561</code> ทันที และ <code>nest start --watch</code> จะไม่ restart ให้ ทำให้ endpoint ยังตอบ <code>thumbnail</code> เดิมอยู่ และแบบฝึกหัดนี้จะไม่ได้ทดสอบอะไรเลย — แก้ทั้งสองไฟล์คือสิ่งที่ต้องทำ) รอ watch mode compile ผ่านแบบไม่มี error แล้วรันตรวจซ้ำ — สามบรรทัดที่ response มีสินค้าติดมาด้วยจะกลายเป็น <code>❌</code> โดย <code>.strict()</code> จับได้สองอย่างพร้อมกันในการพังครั้งเดียว: field ที่หายไป (<code>thumbnail</code>) กับ field แปลกปลอมที่โผล่มา (<code>thumbnailUrl</code>)
-          <pre><code>✅ GET /products/categories → 200, 24 categories
-❌ GET /products?limit=5&amp;skip=0 → limit and skip echo the request
-   [
+        <li><code>npm run test:e2e</code> ผ่านเก้า test ของสัญญาและ <code>echo $?</code> ได้ <code>0</code></li>
+        <li><code>npm run lint</code> ไม่พิมพ์อะไรออกมา — ไฟล์ทั้งสองอยู่ใน <code>test/</code> จึงถูก <code>oxlint src/ test/</code> ครอบอยู่แล้ว ไม่ต้อง lint ทีละไฟล์เองเหมือนไฟล์ seed</li>
+        <li>ทำให้พังเพื่อดูว่า <code>.strict()</code> จับได้จริง: เปลี่ยนชื่อ field เดียวกัน<em>สองที่พร้อมกัน</em> เพื่อให้ยัง compile ผ่าน — ใน <code>src/products/product.mapper.ts</code> แก้บรรทัดสุดท้ายของ object ที่ return จาก <code>thumbnail: product.thumbnail,</code> เป็น <code>thumbnailUrl: product.thumbnail,</code> และใน <code>src/products/dto/product-response.dto.ts</code> แก้ <code>thumbnail: string;</code> เป็น <code>thumbnailUrl: string;</code> ใน <code>ProductResponseDto</code> (แก้สองที่เพื่อให้ <code>npm run build</code> ยังผ่าน ไม่ติด <code>TS2561</code> — แต่ถึงแก้แค่ mapper ไฟล์เดียว test ก็ยังจับได้อยู่ดี เพราะ Vitest <strong>ไม่ได้ type-check ให้</strong> มันลบ type ทิ้งแล้วรันเลย นี่คือตัวอย่างตรง ๆ ของสิ่งที่ย่อหน้าข้างบนพูดไว้: TypeScript กับ zod ตรวจคนละเวลาและคนละเรื่อง) แล้วรัน <code>npm run test:e2e</code> ซ้ำ — สาม test ที่ response มีสินค้าติดมาด้วยจะล้ม โดย <code>.strict()</code> จับได้สองอย่างพร้อมกันในการพังครั้งเดียว: field ที่หายไป (<code>thumbnail</code>) กับ field แปลกปลอมที่โผล่มา (<code>thumbnailUrl</code>) รายงานของ Vitest จะพา <code>ZodError</code> ของแต่ละ test ขึ้นมาแสดงพร้อม issues ชุดนี้
+          <pre><code>× GET /products?limit=5&amp;skip=0 → limit and skip echo the request
+  → ZodError: [
   {
     "expected": "string",
     "code": "invalid_type",
@@ -345,10 +344,9 @@ process.exit(failures === 0 ? 0 : 1);</code></pre>
   },
   ... (คู่เดียวกันซ้ำอีกสี่รอบ หนึ่งรอบต่อสินค้าหนึ่งชิ้นใน products array — limit=5 ขอมา 5 ชิ้น ก็ได้ 5 คู่)
 ]
-✅ GET /products?limit=0 → 400 (out of range)
-✅ GET /products?limit=101 → 400 (out of range)
-❌ GET /products/1 → validated product
-   [
+
+× GET /products/1 → validated product
+  → ZodError: [
   {
     "expected": "string",
     "code": "invalid_type",
@@ -362,16 +360,17 @@ process.exit(failures === 0 ? 0 : 1);</code></pre>
     "message": "Unrecognized key: \"thumbnailUrl\""
   }
 ]
-✅ GET /products/9999 → 404 with message
-✅ GET /products/abc → 400 with message
-❌ GET /products/category/groceries?limit=20&amp;skip=0 → total 27
-   [ ... คู่ invalid_type + unrecognized_keys ซ้ำ 20 รอบ หนึ่งรอบต่อสินค้าหนึ่งชิ้น เพราะ query ขอ limit=20 ]
-✅ GET /products/category/nope?limit=5&amp;skip=0 → 200, empty envelope</code></pre>
-          บล็อกด้านบนคือ output จริงจากการรันบทนี้ (ตัด array ที่ยาว 20 รายการของ <code>groceries</code> และย่อรายการที่ 2–5 ของ <code>limit=5</code> ลง เพื่อไม่ให้หน้านี้ยาวเกินไป — รูปแบบ error ในแต่ละคู่เหมือนกันทุกตัวคือ <code>invalid_type</code> ที่ <code>thumbnail</code> หาย บวก <code>unrecognized_keys</code> ที่ <code>thumbnailUrl</code> เกินมา) หกบรรทัดที่ยังขึ้น <code>✅</code> อธิบายได้ทุกบรรทัด: <code>/products/categories</code> ไม่มี field <code>thumbnail</code> ใน response เลย ส่วนสอง 400 กับ 404 กับ <code>/products/category/nope</code> ไม่มี product object ปนมาใน body (400/404 คือ <code>errorSchema</code> อย่างเดียว ส่วน <code>nope</code> คืน <code>products: []</code>) <code>exit code</code> รอบนี้เป็น <code>1</code>
+
+× GET /products/category/groceries → total 27
+  → ZodError: [ ... คู่ invalid_type + unrecognized_keys ซ้ำ 20 รอบ หนึ่งรอบต่อสินค้าหนึ่งชิ้น เพราะ query ขอ limit=20 ]
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  3 failed | 7 passed (10)</code></pre>
+          issues ใน <code>ZodError</code> ด้านบนคือของจริงจากการรันเคสนี้ (ตัด array ที่ยาว 20 รายการของ <code>groceries</code> และย่อรายการที่ 2–5 ของ <code>limit=5</code> ลง เพื่อไม่ให้หน้านี้ยาวเกินไป — รูปแบบ error ในแต่ละคู่เหมือนกันทุกตัวคือ <code>invalid_type</code> ที่ <code>thumbnail</code> หาย บวก <code>unrecognized_keys</code> ที่ <code>thumbnailUrl</code> เกินมา) หก test ที่ยังเขียวอธิบายได้ทุกข้อ: <code>/products/categories</code> ไม่มี field <code>thumbnail</code> ใน response เลย ส่วนสอง 400 กับ 404 กับ <code>/products/category/nope</code> ไม่มี product object ปนมาใน body (400/404 คือ <code>errorSchema</code> อย่างเดียว ส่วน <code>nope</code> คืน <code>products: []</code>) <code>exit code</code> รอบนี้เป็น <code>1</code>
         </li>
-        <li>ย้อนกลับด้วย <code>git checkout -- src/products/product.mapper.ts src/products/dto/product-response.dto.ts</code> รอ compile แล้วรันตรวจอีกครั้ง — ต้องกลับมา <code>✅</code> เก้าบรรทัดและ exit 0 ก่อนจะ commit</li>
-        <li>ปิด server ที่ terminal ของ <code>npm run start:dev</code> (Ctrl+C) แล้วรัน <code>npm run contract:check</code> ดู — ต้องได้ <code>❌</code> ทั้งเก้าบรรทัด ข้อความ error ทุกบรรทัดเป็น <code>fetch failed</code> (connection refused ใต้ฝากระโปรง) และ exit code เป็น <code>1</code> เพราะ script คุยกับ API ของเราเท่านั้น ไม่มี remote server ให้ fallback แล้ว การรัน script นี้จึงต้องมี server รันอยู่จริงเสมอ</li>
-        <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: zod contract check against our own API"</code></li>
+        <li>ย้อนกลับด้วย <code>git checkout -- src/products/product.mapper.ts src/products/dto/product-response.dto.ts</code> แล้วรันอีกครั้ง — ต้องกลับมาเขียวครบเก้า test และ exit 0 ก่อนจะ commit</li>
+        <li>ลองลบ <code>.strict()</code> ออกจาก <code>productSchema</code> ชั่วคราวแล้วทำให้พังซ้ำแบบเดิม — คราวนี้จะเหลือแต่ <code>invalid_type</code> ของ <code>thumbnail</code> ที่หายไป ส่วน <code>thumbnailUrl</code> ที่เกินมาจะเงียบสนิท นี่คือสิ่งที่ <code>.strict()</code> ซื้อให้เรา ใส่กลับคืนก่อน commit</li>
+        <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "test: zod contract e2e against our own API"</code></li>
       </ul>
     </section>
     <h2>แหล่งอ้างอิง</h2>
@@ -379,6 +378,7 @@ process.exit(failures === 0 ? 0 : 1);</code></pre>
       <li><a href="https://docs.nestjs.com/exception-filters">Exception filters: standard error body (NestJS Docs)</a></li>
       <li><a href="https://docs.nestjs.com/techniques/validation">Validation: error response shape (NestJS Docs)</a></li>
       <li><a href="https://zod.dev/api">Defining schemas, .strict() and error issues (Zod Docs)</a></li>
+      <li><a href="https://docs.nestjs.com/fundamentals/testing#end-to-end-testing">Testing: end-to-end tests (NestJS Docs)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link" href="14_get-products-by-category.html" rel="prev">← บทก่อนหน้า</a>

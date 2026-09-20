@@ -17,7 +17,7 @@
         <li>รับ route parameter ด้วย <code>@Param('id', ParseIntPipe)</code> แล้วส่งต่อเป็น <code>number</code> ให้ service</li>
         <li>อธิบายว่าทำไม <code>@Get('categories')</code> ต้องประกาศไว้ก่อน <code>@Get(':id')</code> เสมอ</li>
         <li>พิสูจน์ว่า response ของสินค้าชิ้นที่ 1 ตรงกับ docs/api-spec.md ทุกคีย์ และข้อความใน <code>NotFoundException</code> ตรงตัวอักษรต่ออักษรกับที่เราออกแบบไว้</li>
-        <li>ย้าย checklist ของบทนี้ลงไปอยู่ใน <code>npm run contract:check</code> — คำสั่งเดียวที่ตัดสินถูก/ผิดได้เองและคืน exit code ให้ทั้งคุณและ AI ใช้ตรวจซ้ำได้</li>
+        <li>ย้าย checklist ของบทนี้ลงไปอยู่ใน e2e test ที่รันด้วย <code>npm run test:e2e</code> — คำสั่งเดียวที่ตัดสินถูก/ผิดได้เองและคืน exit code ให้ทั้งคุณและ AI ใช้ตรวจซ้ำได้</li>
       </ul>
     </section>
 
@@ -28,7 +28,7 @@
     <h2>ข้อความ 404 คือสัญญา ไม่ใช่ข้อความประกอบ</h2>
     <p>เปิด <code>docs/api-spec.md</code> ดู section Errors — เราออกแบบให้ product ที่ไม่มีอยู่ตอบ status 404 พร้อม body</p>
     <pre><code>{ "message": "Product 9999 not found" }</code></pre>
-    <p>React app ที่เราจะต่อในตอนท้ายของ workshop อ่าน <code>data.message</code> มาโชว์ให้ผู้ใช้เห็นตรง ๆ ผ่าน <code>ApiError</code> ของมัน ข้อความจึงต้องตรงตามที่เราออกแบบไว้ทุกตัวอักษร ถ้าเขียนเป็น <code>Product #9999 not found</code> แบบที่เคยทำในคอร์ส NestJS Fundamentals หน้าเว็บก็ยังไม่พัง (เพราะ client อ่านแค่ field <code>message</code> ไม่สนใจเนื้อหา) แต่ผิดสัญญาที่เราเขียนไว้ใน <code>docs/api-spec.md</code> และ script ตรวจสัญญาที่เราจะเขียนท้ายบทนี้จะจับได้ทันที</p>
+    <p>React app ที่เราจะต่อในตอนท้ายของ workshop อ่าน <code>data.message</code> มาโชว์ให้ผู้ใช้เห็นตรง ๆ ผ่าน <code>ApiError</code> ของมัน ข้อความจึงต้องตรงตามที่เราออกแบบไว้ทุกตัวอักษร ถ้าเขียนเป็น <code>Product #9999 not found</code> แบบที่เคยทำในคอร์ส NestJS Fundamentals หน้าเว็บก็ยังไม่พัง (เพราะ client อ่านแค่ field <code>message</code> ไม่สนใจเนื้อหา) แต่ผิดสัญญาที่เราเขียนไว้ใน <code>docs/api-spec.md</code> และ test ตรวจสัญญาที่เราจะเขียนท้ายบทนี้จะจับได้ทันที</p>
     <pre><code>throw new NotFoundException(`Product ${id} not found`);</code></pre>
 
     <h2><code>include</code> และเหตุผลที่ต้องสั่ง <code>orderBy</code> ให้ reviews</h2>
@@ -46,7 +46,7 @@
 
     <h2>ทำไม id ที่ไม่ใช่ตัวเลขได้ 400 ไม่ใช่ 404</h2>
     <p>ถ้ายิง <code>GET /products/abc</code> เราตอบ 400 พร้อมข้อความ <code>Validation failed (numeric string is expected)</code> เพราะ <code>ParseIntPipe</code> ดักไว้ก่อนที่ handler จะทำงาน — เป็นพฤติกรรมมาตรฐานของ Nest ไม่ต้องเขียนโค้ดเพิ่ม</p>
-    <p>เรา<em>เลือก</em>ที่จะปล่อยให้เป็น 400 เพราะ React app ไม่เคยยิง id ที่ไม่ใช่ตัวเลข (มันได้ id มาจาก list ที่ API ตอบไป) และ 400 เป็นคำตอบที่ตรงความจริงกว่า: request นั้นผิดรูป ไม่ใช่ resource ไม่มีอยู่ พฤติกรรมนี้จะถูกตรวจซ้ำทุกครั้งด้วย <code>contract:check</code> ที่เราเขียนท้ายบทนี้</p>
+    <p>เรา<em>เลือก</em>ที่จะปล่อยให้เป็น 400 เพราะ React app ไม่เคยยิง id ที่ไม่ใช่ตัวเลข (มันได้ id มาจาก list ที่ API ตอบไป) และ 400 เป็นคำตอบที่ตรงความจริงกว่า: request นั้นผิดรูป ไม่ใช่ resource ไม่มีอยู่ พฤติกรรมนี้จะถูกตรวจซ้ำทุกครั้งด้วย e2e test ที่เราเขียนท้ายบทนี้</p>
 
     <h2>เป้าหมายของบทนี้</h2>
     <p>ในโค้ดอ้างอิงคือการเพิ่ม handler ใน controller กับ method ใน service เดิมของ <code>src/products/</code> — Cursor เลือกวิธีเองได้ โดยต้องได้ผลลัพธ์นี้</p>
@@ -176,100 +176,87 @@ console.log(p.title, p.price, p.discountPercentage, p.brand);
         <li>commit ผลงานด้วย <code>git add -A &amp;&amp; git commit -m "feat: GET /products/:id"</code></li>
       </ul>
     </section>
-    <section class="workshop" aria-labelledby="contract-check-heading">
-      <h2 id="contract-check-heading">เปลี่ยน checklist ให้เป็นคำสั่งเดียวที่รันได้</h2>
-      <p>ทุกข้อในส่วน "ตรวจว่าใช้งานได้จริง" ด้านบนคือสัญญาที่ต้องเป็นจริง<em>ตลอดไป</em> ไม่ใช่แค่วันนี้ — ขั้นถัด ๆ ไปจะกลับมาแก้ controller ตัวเดิมนี้อีก และจะไม่มีใครไล่ยิง curl ห้าคำสั่งแล้วอ่านผลด้วยตาทุกครั้งที่ AI แก้โค้ดให้ วิธีที่ใช้ได้จริงคือย้าย checklist ทั้งอันลงไปอยู่ในไฟล์ที่รันได้ แล้วตัดสินด้วยคำสั่งเดียวว่า <code>npm run contract:check</code> ผ่านหรือไม่ผ่าน</p>
+    <section class="workshop" aria-labelledby="contract-test-heading">
+      <h2 id="contract-test-heading">เปลี่ยน checklist ให้เป็น test ที่รันได้</h2>
+      <p>ทุกข้อในส่วน "ตรวจว่าใช้งานได้จริง" ด้านบนคือสัญญาที่ต้องเป็นจริง<em>ตลอดไป</em> ไม่ใช่แค่วันนี้ — ขั้นถัด ๆ ไปจะกลับมาแก้ controller ตัวเดิมนี้อีก และจะไม่มีใครไล่ยิง curl ห้าคำสั่งแล้วอ่านผลด้วยตาทุกครั้งที่ AI แก้โค้ดให้ วิธีที่ใช้ได้จริงคือย้าย checklist ทั้งอันลงไปอยู่ในไฟล์ที่รันได้ แล้วตัดสินด้วยคำสั่งเดียวว่า <code>npm run test:e2e</code> ผ่านหรือไม่ผ่าน</p>
       <p>เหตุผลที่ลึกกว่านั้นคือ <strong>check ที่รันได้คือสิ่งที่ AI เอาไปใช้เองได้</strong> คู่มือของเครื่องมือ agent ทุกตัวพูดตรงกันข้อหนึ่ง: ให้คำสั่งที่ตัดสินถูก/ผิดได้เองกับมัน แล้วมันจะรัน อ่านผล และแก้ซ้ำจนผ่านได้โดยไม่ต้องรอคุณอ่าน output ให้ทีละบรรทัด ส่วน checklist ที่เป็นข้อความเฉย ๆ มีแต่คุณเท่านั้นที่ตรวจได้ และเป็นงานที่คนเลิกทำเป็นคนแรกเมื่อรีบ</p>
+      <p>เครื่องมือสำหรับงานนี้<strong>มีอยู่ในโปรเจกต์แล้วตั้งแต่วันแรก</strong> ไม่ต้องประดิษฐ์เอง: <code>nest new</code> แถม Vitest, <code>supertest</code>, ไฟล์ตัวอย่าง <code>test/app.e2e-spec.ts</code>, ไฟล์ตั้งค่า <code>vitest.config.e2e.ts</code> (จับเฉพาะไฟล์ <code>*.e2e-spec.ts</code>) และ script <code>test:e2e</code> มาให้ครบตั้งแต่ตอน scaffold และคุณเขียน e2e test แบบนี้มาแล้วใน <a href="../../../Week_09/01_nestjs_basic/content/48_diving-into-e2e-tests.html">NestJS Fundamentals บทรู้จัก e2e Test</a> — <code>Test.createTestingModule</code> boot <code>AppModule</code> ทั้งใบ แล้ว <code>supertest</code> ยิง HTTP เข้าไปที่แอปนั้นตรง ๆ บทนี้แค่เอาสิ่งที่คุณมีอยู่แล้วมาใช้กับสัญญาของเรา</p>
+      <div class="note"><p>e2e test <strong>boot แอปของตัวเอง</strong>ขึ้นมาในโปรเซสเดียวกับ Vitest ไม่ได้ยิงไปที่ <code>npm run start:dev</code> ที่คุณเปิดค้างไว้ และไม่ต้องจอง port จริง จะเปิด dev server ค้างไว้หรือไม่ก็ได้ ผลเท่ากัน — แต่ <strong>ฐานข้อมูลต้องรันอยู่</strong> เพราะแอปที่ boot ขึ้นมาสร้าง <code>PrismaService</code> ตัวจริงและ query ข้อมูลที่ seed ไว้จริง ๆ</p></div>
       <p><strong>เขียนไฟล์นี้ด้วยมือ ไม่ต้องสั่ง Cursor</strong> ด้วยเหตุผลเดียวกับตอนเขียน <code>docs/api-spec.md</code> เอง: เครื่องมือที่ใช้ตรวจงานของ AI ไม่ควรถูกเขียนโดย AI ตัวที่มันตรวจ และการพิมพ์เองคือการพิสูจน์ว่าคุณอ่านสัญญาออกจริง</p>
-      <div class="prompt-example"><code>mkdir -p scripts
-# เขียนไฟล์ scripts/contract-check.ts ด้วยมือตามด้านล่าง
-# แล้วเพิ่มบรรทัดนี้ในส่วน "scripts" ของ package.json ต่อจาก db:seed
-#   "contract:check": "node scripts/contract-check.ts",</code></div>
-      <p>ไฟล์นี้ยังไม่ต้องติดตั้งอะไรเพิ่มเลย — <code>fetch</code> และ top-level <code>await</code> มีอยู่ใน Node อยู่แล้ว ส่วนไฟล์ <code>.ts</code> ที่<em>ไม่มี import ข้ามไฟล์</em> แบบนี้ Node 24 รันได้เองด้วยการลบ type ทิ้ง (type stripping) จึงสั่ง <code>node</code> ตรง ๆ ได้ ไม่ต้องมี build step (ข้อจำกัดข้อนี้จะกลับมาสำคัญภายหลัง ตอนที่ไฟล์เริ่ม import ข้ามไฟล์)</p>
-      <pre><code>const BASE = process.env.LOCAL_URL ?? 'http://localhost:3000';
+      <div class="prompt-example"><code># เขียนไฟล์ test/products.e2e-spec.ts ด้วยมือตามด้านล่าง
+# ไม่ต้องแก้ package.json และไม่ต้องติดตั้งอะไรเพิ่ม — script test:e2e มีอยู่แล้ว</code></div>
+      <pre><code>import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from './../src/app.module.js';
 
-interface Check {
-  name: string;
-  run: () =&gt; Promise&lt;void&gt;;
-}
+describe('Products contract (e2e)', () =&gt; {
+  let app: INestApplication;
 
-async function getJson(path: string) {
-  const response = await fetch(`${BASE}${path}`);
-  const body = await response.json();
-  return { status: response.status, body };
-}
+  beforeAll(async () =&gt; {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-function assert(ok: boolean, message: string) {
-  if (!ok) throw new Error(message);
-}
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
 
-const checks: Check[] = [
-  {
-    name: 'GET /products/categories → 200, 24 categories',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products/categories');
-      assert(status === 200, `expected 200, got ${status}`);
-      assert(body.length === 24, `expected 24 categories, got ${body.length}`);
-      const keys = Object.keys(body[0]).sort().join(',');
-      assert(keys === 'name,slug,url', `expected name,slug,url — got ${keys}`);
-    },
-  },
-  {
-    name: 'GET /products/1 → 200, product with 22 keys',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products/1');
-      assert(status === 200, `expected 200, got ${status}`);
-      const count = Object.keys(body).length;
-      assert(count === 22, `expected 22 keys, got ${count}`);
-      assert(body.title === 'Velvet Matte Lipstick', `unexpected title: ${body.title}`);
-      assert(typeof body.category === 'string', 'category must be a slug string');
-      assert(Array.isArray(body.reviews), 'reviews must be an array');
-    },
-  },
-  {
-    name: 'GET /products/9999 → 404 with the exact message',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products/9999');
-      assert(status === 404, `expected 404, got ${status}`);
-      assert(
-        body.message === 'Product 9999 not found',
-        `wrong message: ${JSON.stringify(body.message)}`,
-      );
-    },
-  },
-  {
-    name: 'GET /products/abc → 400 with message',
-    run: async () =&gt; {
-      const { status, body } = await getJson('/products/abc');
-      assert(status === 400, `expected 400, got ${status}`);
-      assert(body.message !== undefined, 'error body must carry a message');
-    },
-  },
-];
+  afterAll(async () =&gt; {
+    await app.close();
+  });
 
-let failures = 0;
-for (const check of checks) {
-  try {
-    await check.run();
-    console.log(`✅ ${check.name}`);
-  } catch (error) {
-    failures += 1;
-    console.log(`❌ ${check.name}`);
-    console.log(`   ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-process.exit(failures === 0 ? 0 : 1);</code></pre>
-      <p>เปิด API ค้างไว้ที่พอร์ต 3000 แล้วรัน <code>npm run contract:check</code> ในอีก terminal ต้องได้สี่บรรทัดนี้</p>
-      <pre><code>✅ GET /products/categories → 200, 24 categories
-✅ GET /products/1 → 200, product with 22 keys
-✅ GET /products/9999 → 404 with the exact message
-✅ GET /products/abc → 400 with message</code></pre>
+  it('GET /products/categories → 200, 24 categories', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products/categories')
+      .expect(200);
+
+    expect(response.body).toHaveLength(24);
+    expect(Object.keys(response.body[0]).sort()).toEqual(['name', 'slug', 'url']);
+  });
+
+  it('GET /products/1 → 200, product with 22 keys', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products/1')
+      .expect(200);
+
+    expect(Object.keys(response.body)).toHaveLength(22);
+    expect(response.body.title).toBe('Velvet Matte Lipstick');
+    expect(typeof response.body.category).toBe('string');
+    expect(Array.isArray(response.body.reviews)).toBe(true);
+  });
+
+  it('GET /products/9999 → 404 with the exact message', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products/9999')
+      .expect(404);
+
+    expect(response.body.message).toBe('Product 9999 not found');
+  });
+
+  it('GET /products/abc → 400 with message', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .get('/products/abc')
+      .expect(400);
+
+    expect(response.body.message).toBeDefined();
+  });
+});</code></pre>
+      <p>สังเกตสองอย่างในไฟล์นี้ อย่างแรก <code>import</code> ลงท้ายด้วย <code>.js</code> ทั้งที่ไฟล์จริงเป็น <code>.ts</code> — ธรรมเนียมเดิมของ ESM+TypeScript ที่ใช้ทั่วโปรเจกต์นี้ อย่างที่สอง <code>.expect(404)</code> ของ supertest ตรวจ status ให้ในบรรทัดเดียว ถ้า status ไม่ตรง test จะล้มตรงนั้นทันทีโดยไม่ต้องเขียน <code>if</code> เอง ส่วน <code>expect(...)</code> ที่เหลือคือของ Vitest ซึ่งพิมพ์ค่าที่ได้จริงเทียบกับค่าที่คาดไว้ให้เองเมื่อไม่ตรง</p>
+      <p>เปิดฐานข้อมูลไว้แล้วรัน <code>npm run test:e2e</code> จะเห็นรายงานของ Vitest — ไฟล์ที่ผ่านขึ้นต้นด้วย <code>✓</code> และปิดท้ายด้วยสรุปจำนวน (ตัวเลขเวลาเป็นของเครื่องคุณเอง ไม่ต้องตรงกับที่นี่)</p>
+      <pre><code> ✓ test/app.e2e-spec.ts (1 test)
+ ✓ test/products.e2e-spec.ts (4 tests)
+
+ Test Files  2 passed (2)
+      Tests  5 passed (5)</code></pre>
+      <p><code>test/app.e2e-spec.ts</code> คือไฟล์ตัวอย่างที่ scaffold ให้มา (ยิง <code>GET /</code> แล้วคาดว่าได้ <code>Hello World!</code>) ปล่อยไว้ได้ ไม่ต้องลบ — มันเป็นสัญญาณว่าแอป boot ขึ้นจริง</p>
       <ul>
-        <li>ลองทำให้พังก่อนจะเชื่อมัน: แก้ข้อความใน <code>NotFoundException</code> เป็น <code>Product #9999 not found</code> ชั่วคราว รอ watch mode compile แล้วรันซ้ำ — บรรทัดที่สามต้องเป็น <code>❌</code> พร้อมพิมพ์ข้อความที่ได้จริงออกมา และ <code>echo $?</code> ต้องไม่ใช่ <code>0</code> จากนั้นย้อนกลับด้วย <code>git checkout -- .</code></li>
-        <li>ปิด API (Ctrl+C ที่ terminal ของ <code>npm run start:dev</code>) แล้วรันซ้ำ — ต้องได้ <code>❌</code> ทั้งสี่บรรทัดพร้อมข้อความ <code>fetch failed</code> ไม่ใช่ผ่านเงียบ ๆ</li>
-        <li>commit ด้วย <code>git add -A &amp;&amp; git commit -m "test: contract check for the products endpoints"</code></li>
+        <li>ลองทำให้พังก่อนจะเชื่อมัน: แก้ข้อความใน <code>NotFoundException</code> เป็น <code>Product #9999 not found</code> ชั่วคราว แล้วรัน <code>npm run test:e2e</code> ซ้ำ — test ที่สามต้องล้มพร้อมบรรทัดเทียบค่าที่ได้จริงกับค่าที่คาดไว้ และ <code>echo $?</code> ต้องไม่ใช่ <code>0</code> จากนั้นย้อนกลับด้วย <code>git checkout -- .</code> (ไม่ต้องรอ watch mode เพราะ test ไม่ได้ยิงไปที่ dev server — มัน compile และ boot แอปจากซอร์สปัจจุบันเองทุกครั้งที่รัน)</li>
+        <li>พิสูจน์ว่ามันไม่ได้แอบพึ่ง dev server: ปิด <code>npm run start:dev</code> (Ctrl+C) แล้วรัน <code>npm run test:e2e</code> อีกครั้ง — ต้องผ่านเขียวครบเหมือนเดิม ถ้าพังแปลว่าคุณยิงผิดที่</li>
+        <li>รันเฉพาะไฟล์เดียวได้ด้วย <code>npm run test:e2e -- products</code> เมื่อไม่อยากรอไฟล์อื่น</li>
+        <li>commit ด้วย <code>git add -A &amp;&amp; git commit -m "test: contract e2e for the products endpoints"</code></li>
       </ul>
-      <div class="note"><p>สี่ check นี้จะโตขึ้นทีละขั้น: ขั้น pagination เพิ่มสามข้อของ <code>GET /products</code> ขั้นกรองตามหมวดเพิ่มอีกสองข้อ รวมเป็นเก้าข้อ แล้วภายหลังจะเขียนทั้งไฟล์ใหม่ด้วย zod ให้ตรวจ <em>ทุก field</em> ใน response แทนที่จะตรวจเฉพาะข้อที่เราอุตส่าห์นึกออกและเขียนถึงเอง</p></div>
+      <div class="note"><p>สี่ test นี้จะโตขึ้นทีละขั้น: ขั้น pagination เพิ่มสามข้อของ <code>GET /products</code> ขั้นกรองตามหมวดเพิ่มอีกสองข้อ รวมเป็นเก้าข้อ แล้วภายหลังจะเขียนทั้งไฟล์ใหม่ด้วย zod ให้ตรวจ <em>ทุก field</em> ใน response แทนที่จะตรวจเฉพาะข้อที่เราอุตส่าห์นึกออกและเขียนถึงเอง</p></div>
     </section>
     <h2>แหล่งอ้างอิง</h2>
     <ul class="source-list">
@@ -277,7 +264,7 @@ process.exit(failures === 0 ? 0 : 1);</code></pre>
       <li><a href="https://docs.nestjs.com/pipes">Pipes: ParseIntPipe (NestJS Docs)</a></li>
       <li><a href="https://docs.nestjs.com/exception-filters">Exception filters: NotFoundException (NestJS Docs)</a></li>
       <li><a href="https://www.prisma.io/docs/orm/prisma-client/queries/relation-queries">Relation queries: include (Prisma Docs)</a></li>
-      <li><a href="https://nodejs.org/api/typescript.html">Running TypeScript natively: type stripping (Node.js Docs)</a></li>
+      <li><a href="https://docs.nestjs.com/fundamentals/testing#end-to-end-testing">Testing: end-to-end tests (NestJS Docs)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link" href="11_mapping-rows-to-the-contract.html" rel="prev">← บทก่อนหน้า</a>

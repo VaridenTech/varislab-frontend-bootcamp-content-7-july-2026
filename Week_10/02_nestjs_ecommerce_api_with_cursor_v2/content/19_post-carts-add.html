@@ -17,7 +17,7 @@
         <li>เปิด route <code>POST /carts/add</code> ให้ตรงกับ path ที่ React app เรียกโดยไม่แก้ฝั่ง frontend</li>
         <li>อธิบายได้ว่าทำไมไฟล์ controller ชื่อ <code>carts</code> แต่ module และ service ใช้คำว่า <code>orders</code></li>
         <li>พิสูจน์ทั้งสี่พฤติกรรมด้วย curl: 201, 400 ขาด <code>userId</code>, 404 สินค้าไม่มีจริงพร้อม rollback, 400 email ผิดรูป</li>
-        <li>เพิ่ม check ที่สิบใน <code>scripts/contract-check.ts</code> ด้วยมือ ให้ <code>npm run contract:check</code> ครอบคลุม <code>POST /carts/add</code> ด้วย</li>
+        <li>เขียน <code>test/orders.e2e-spec.ts</code> ด้วยมือ ให้ <code>npm run test:e2e</code> ครอบคลุม <code>POST /carts/add</code> ด้วย</li>
       </ul>
     </section>
 
@@ -33,19 +33,19 @@
 
     <h2>เป้าหมายของบทนี้</h2>
     <pre><code>ecommerce-api/
-├── scripts/
-│   └── contract-check.ts           (แก้ไข ด้วยมือ: เพิ่ม check ที่สิบ)
-└── src/
-    ├── app.module.ts               (แก้ไข: เพิ่ม OrdersModule ต่อจาก ProductsModule)
-    └── orders/
-        ├── carts.controller.ts     (สร้างใหม่)
-        └── orders.module.ts        (สร้างใหม่)</code></pre>
+├── src/
+│   ├── app.module.ts               (แก้ไข: เพิ่ม OrdersModule ต่อจาก ProductsModule)
+│   └── orders/
+│       ├── carts.controller.ts     (สร้างใหม่)
+│       └── orders.module.ts        (สร้างใหม่)
+└── test/
+    └── orders.e2e-spec.ts          (สร้างใหม่ ด้วยมือ)</code></pre>
     <p>ชื่อไฟล์และหน้าที่ด้านล่างมาจากโค้ดอ้างอิงของคอร์ส — Cursor อาจตั้งชื่อหรือแบ่งไฟล์ต่างออกไปได้ ขอแค่ไม่แตะไฟล์ที่ไม่เกี่ยวกับเป้าหมายและผ่านผลลัพธ์ที่ต้องได้ใน prompt</p>
     <ul>
       <li><strong><code>src/orders/carts.controller.ts</code></strong> — สัญญา: ต้องเป็น <code>@Controller('carts')</code> กับ <code>@Post('add')</code> และรับ body ด้วย <code>@Body() dto: AddCartDto</code> · ต้องไม่ใส่ <code>@HttpCode()</code>, ไม่คิดเลขหรือแตะ Prisma ใน controller</li>
       <li><strong><code>src/orders/orders.module.ts</code></strong> — สัญญา: ต้องประกาศ <code>controllers: [CartsController]</code> และ <code>providers: [OrdersService]</code> · ต้องไม่ import <code>PrismaModule</code> ซ้ำ (ตอนตั้งค่า Prisma ทำให้มันเป็น global module แล้ว)</li>
       <li><strong><code>src/app.module.ts</code></strong> — สัญญา: ต้องเพิ่ม <code>OrdersModule</code> ต่อจาก <code>ProductsModule</code> ใน <code>imports</code> · ต้องไม่แตะ <code>ConfigModule</code>, <code>controllers</code> หรือ <code>providers</code> เดิม</li>
-      <li><strong><code>scripts/contract-check.ts</code></strong> — สัญญา: import <code>orderResponseSchema</code> เพิ่มจาก <code>./contract-schemas.js</code> (ตัว schema มีอยู่แล้วตั้งแต่ตอนเขียน schema ด้วย zod) แล้วต่อ check ที่สิบท้าย array เดิม · แก้ไฟล์นี้<strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างล่าง เพราะการเขียน check ด้วยตัวเองคือการยืนยันว่าคุณอ่านสัญญาออกเอง ไม่ใช่ให้ AI ตรวจงานตัวเอง</li>
+      <li><strong><code>test/orders.e2e-spec.ts</code></strong> — สัญญา: ไฟล์<strong>ใหม่</strong>ที่ import <code>orderResponseSchema</code> จาก <code>./contract-schemas.js</code> (ตัว schema มีอยู่แล้วตั้งแต่ตอนเขียน schema ด้วย zod) แล้วมี <code>it()</code> เดียวสำหรับ <code>POST /carts/add</code> · <code>test/products.e2e-spec.ts</code> ไม่ถูกแตะเลย · เขียนไฟล์นี้<strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างล่าง เพราะการเขียน test ด้วยตัวเองคือการยืนยันว่าคุณอ่านสัญญาออกเอง ไม่ใช่ให้ AI ตรวจงานตัวเอง</li>
     </ul>
 
     <section class="workshop" aria-labelledby="exercise-heading">
@@ -66,6 +66,7 @@
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
 - ห้ามแก้ service หรือการคำนวณที่ทำไว้ก่อนหน้านี้
+- ห้ามแตะไฟล์ใน test/ — e2e test ของสัญญาผมเขียนเอง
 - ยังไม่ต้องเปิด CORS</code></div>
     </section>
 
@@ -128,38 +129,57 @@ export class AppModule {}</code></pre>
       <p>ถ้าอธิบายบรรทัดไหนไม่ได้ ยังไม่ผ่านบทนี้ — กลับไปอ่านส่วนแนวคิดก่อน</p>
     </section>
 
-    <section class="workshop" aria-labelledby="contract-check-heading">
-      <h2 id="contract-check-heading">เพิ่ม check ที่สิบด้วยมือ</h2>
-      <p>ตอนเขียน schema ด้วย zod เราตั้งใจปล่อยให้ <code>scripts/contract-check.ts</code> มีแค่เก้า check ไว้ก่อน เพราะตอนนั้น <code>POST /carts/add</code> ยังไม่มีอยู่จริง ตอนนี้มันมีแล้ว จึงถึงเวลาต่อ check ที่สิบเข้าไป — แก้ไฟล์นี้ <strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างบน เพราะเป้าหมายของ prompt นั้นคือเปิด endpoint เท่านั้น และกติกาใน rules ห้ามแตะไฟล์ที่ไม่เกี่ยวกับเป้าหมาย การเพิ่ม check นี้เป็นงานแยกที่ควรทำเอง จะได้อธิบายทุกบรรทัดได้เหมือนเดิม</p>
-      <p>เปิด <code>scripts/contract-check.ts</code> แล้วเพิ่ม <code>orderResponseSchema</code> เข้า import (ตัว schema เองมีอยู่แล้วตั้งแต่ตอนเขียนด้วย zod ไม่ต้องเขียนใหม่)</p>
-      <pre><code>import {
-  categorySchema,
-  errorSchema,
-  listEnvelopeSchema,
-  orderResponseSchema,
-  productSchema,
-} from './contract-schemas.js';</code></pre>
-      <p>แล้วต่อ check object นี้ท้าย array <code>checks</code> (หลัง check ของ <code>nope</code>)</p>
-      <pre><code>  {
-    name: 'POST /carts/add → 201, discountedPrice rounds to 2dp',
-    run: async () => {
-      const { status, body } = await getJson('/carts/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: 1,
-          products: [{ id: 1, quantity: 2 }],
-          address: { address: '1 Sukhumvit Rd', email: 'a@b.com', phone: '0812345678' },
-        }),
-      });
-      if (status !== 201) throw new Error(`expected 201, got ${status}`);
-      const receipt = orderResponseSchema.parse(body);
-      if (receipt.products[0].discountedPrice !== 17.89) {
-        throw new Error(`expected discountedPrice 17.89, got ${receipt.products[0].discountedPrice}`);
-      }
-    },
-  },</code></pre>
-      <p>check นี้ยิง <code>POST /carts/add</code> จริง แปลว่ารันหนึ่งครั้งเท่ากับสร้างคำสั่งซื้อเพิ่มอีกหนึ่งใบในฐานข้อมูล — ถ้ารัน <code>npm run contract:check</code> หลังจากยิง curl ทั้งสี่กรณีไปแล้ว แล้วย้อนไปนับแถวใน <code>Order</code> อีกครั้ง จำนวนจะเพิ่มจาก <code>1</code> เป็น <code>2</code> นั่นไม่ใช่ transaction รั่ว แต่เป็นเพราะ check นี้เองที่สั่งซื้อเพิ่ม</p>
+    <section class="workshop" aria-labelledby="contract-test-heading">
+      <h2 id="contract-test-heading">เขียน e2e test ของคำสั่งซื้อด้วยมือ</h2>
+      <p>ตอนเขียน schema ด้วย zod เราตั้งใจปล่อยให้สัญญามีแค่เก้า test ของ products ไว้ก่อน เพราะตอนนั้น <code>POST /carts/add</code> ยังไม่มีอยู่จริง ตอนนี้มันมีแล้ว จึงถึงเวลาเขียน test ที่สิบ — เขียน <strong>ด้วยมือ</strong> ไม่ใช่ผ่าน Cursor prompt ข้างบน เพราะเป้าหมายของ prompt นั้นคือเปิด endpoint เท่านั้น และกติกาใน rules ห้ามแตะไฟล์ที่ไม่เกี่ยวกับเป้าหมาย การเขียน test นี้เป็นงานแยกที่ควรทำเอง จะได้อธิบายทุกบรรทัดได้เหมือนเดิม</p>
+      <p>test ที่สิบไปอยู่ใน<strong>ไฟล์ใหม่</strong> <code>test/orders.e2e-spec.ts</code> ไม่ได้ต่อท้าย <code>test/products.e2e-spec.ts</code> ที่มีอยู่ — ธรรมเนียมของ Nest คือแบ่ง e2e spec ตาม resource ไฟล์ของ products จึงไม่ถูกแตะเลยในบทนี้ และนี่คือจังหวะที่การแยก schema ไว้คนละไฟล์ตั้งแต่ตอนเขียน zod ได้ผลจริง: spec สองไฟล์ import สัญญาชุดเดียวกันจาก <code>./contract-schemas.js</code> ไม่มีสำเนาที่ค่อย ๆ เพี้ยนจากกัน</p>
+      <pre><code>import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from './../src/app.module.js';
+import { orderResponseSchema } from './contract-schemas.js';
+
+describe('Orders contract (e2e)', () =&gt; {
+  let app: INestApplication;
+
+  beforeAll(async () =&gt; {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
+      }),
+    );
+    await app.init();
+  });
+
+  afterAll(async () =&gt; {
+    await app.close();
+  });
+
+  it('POST /carts/add → 201, discountedPrice rounds to 2dp', async () =&gt; {
+    const response = await request(app.getHttpServer())
+      .post('/carts/add')
+      .send({
+        userId: 1,
+        products: [{ id: 1, quantity: 2 }],
+        address: { address: '1 Sukhumvit Rd', email: 'a@b.com', phone: '0812345678' },
+      })
+      .expect(201);
+
+    const receipt = orderResponseSchema.parse(response.body);
+    expect(receipt.products[0].discountedPrice).toBe(17.89);
+  });
+});</code></pre>
+      <p>บรรทัด <code>app.useGlobalPipes(...)</code> ต้องอยู่ที่นี่ด้วยเหตุผลเดียวกับใน spec ของ products: <code>createNestApplication()</code> สร้างแอปจาก <code>AppModule</code> เท่านั้น ไม่ได้รัน <code>src/main.ts</code> ให้ ค่าทั้งสามจึงต้องตรงกับใน <code>main.ts</code> ทุกตัว — ไม่อย่างนั้น spec นี้จะทดสอบแอปคนละตัวกับที่ผู้ใช้จริงเจอ และวันที่มีคนเพิ่ม test ของเคส 400 เข้ามา มันจะผ่านทั้งที่ไม่ควรผ่าน เพราะไม่มี pipe ตัวไหนตรวจ body เลย</p>
+      <p>ส่วน <code>.send({...})</code> ของ supertest แปลง object เป็น JSON แล้วใส่ header <code>Content-Type: application/json</code> ให้เอง จึงไม่ต้องเขียน <code>JSON.stringify</code> หรือ header เองเหมือนตอนยิงด้วย curl</p>
+      <div class="note"><p>test นี้ยิง <code>POST /carts/add</code> จริง แปลว่ารันหนึ่งครั้งเท่ากับสร้างคำสั่งซื้อเพิ่มอีกหนึ่งใบในฐานข้อมูล — ถ้ารัน <code>npm run test:e2e</code> หลังจากยิง curl ทั้งสี่กรณีไปแล้ว แล้วย้อนไปนับแถวใน <code>Order</code> อีกครั้ง จำนวนจะเพิ่มจาก <code>1</code> เป็น <code>2</code> นั่นไม่ใช่ transaction รั่ว แต่เป็นเพราะ test นี้เองที่สั่งซื้อเพิ่ม และเพราะรันซ้ำได้เรื่อย ๆ แบบนี้ test จึงตรวจ<em>รูปทรง</em>ของ receipt กับตัวเลขที่คำนวณได้ ไม่ตรวจ <code>id</code> ของคำสั่งซื้อ ซึ่งเปลี่ยนทุกรอบ</p></div>
+      <p>รันเฉพาะไฟล์นี้ได้ด้วย <code>npm run test:e2e -- orders</code> เมื่อไม่อยากรอ spec ของ products ทั้งเก้าข้อ</p>
     </section>
 
     <section class="expected-result" aria-labelledby="exercise-result-heading">
@@ -213,17 +233,24 @@ LOG [RouterExplorer] Mapped {/carts/add, POST} route +0ms</code></pre>
      1
 (1 row)</code></pre></li>
         <li><code>docker compose exec db psql -U postgres -d ecommerce -c 'SELECT "orderId", "productId", title, price, quantity, total, "discountedPrice" FROM "OrderItem";'</code> เห็นบรรทัดเดียวที่เก็บ snapshot ชื่อและราคาสินค้าไว้ครบ ไม่ใช่แค่ <code>productId</code></li>
-        <li>หลังต่อ check ที่สิบตามหัวข้อ "เพิ่ม check ที่สิบด้วยมือ" ด้านบน รัน <code>npm run contract:check</code> ต้องได้สิบบรรทัดนี้ (สังเกตว่า <code>Order</code> จะกลายเป็น <code>2</code> ใบหลังรันรอบนี้ เพราะ check ที่สิบสั่งซื้อจริง)
-          <pre><code>✅ GET /products/categories → 200, 24 categories
-✅ GET /products?limit=5&amp;skip=0 → limit and skip echo the request
-✅ GET /products?limit=0 → 400 (out of range)
-✅ GET /products?limit=101 → 400 (out of range)
-✅ GET /products/1 → validated product
-✅ GET /products/9999 → 404 with message
-✅ GET /products/abc → 400 with message
-✅ GET /products/category/groceries?limit=20&amp;skip=0 → total 27
-✅ GET /products/category/nope?limit=5&amp;skip=0 → 200, empty envelope
-✅ POST /carts/add → 201, discountedPrice rounds to 2dp</code></pre></li>
+        <li>หลังเขียน <code>test/orders.e2e-spec.ts</code> ตามหัวข้อ "เขียน e2e test ของคำสั่งซื้อด้วยมือ" ด้านบน รัน <code>npm run test:e2e</code> ต้องผ่านครบทุกไฟล์ (สังเกตว่า <code>Order</code> จะกลายเป็น <code>2</code> ใบหลังรันรอบนี้ เพราะ test ของคำสั่งซื้อสั่งซื้อจริง)
+          <pre><code> ✓ test/app.e2e-spec.ts (1 test)
+ ✓ test/orders.e2e-spec.ts (1 test)
+ ✓ test/products.e2e-spec.ts (9 tests)
+
+ Test Files  3 passed (3)
+      Tests  11 passed (11)</code></pre>
+          <p>สิบในนั้นคือสัญญาของเรา — เก้าข้อของ products บวกหนึ่งข้อของคำสั่งซื้อ ที่เหลืออีกหนึ่งคือไฟล์ตัวอย่างที่ scaffold ให้มา เติม <code>--reporter=verbose</code> เพื่อดูชื่อทีละข้อ (<code>npm run test:e2e -- --reporter=verbose</code>) จะได้สิบชื่อนี้</p>
+          <pre><code>GET /products/categories → 200, 24 categories
+GET /products?limit=5&amp;skip=0 → limit and skip echo the request
+GET /products?limit=0 → 400 (out of range)
+GET /products?limit=101 → 400 (out of range)
+GET /products/1 → validated product
+GET /products/9999 → 404 with message
+GET /products/abc → 400 with message
+GET /products/category/groceries → total 27
+GET /products/category/nope → 200, empty envelope
+POST /carts/add → 201, discountedPrice rounds to 2dp</code></pre></li>
         <li><code>npm run build &amp;&amp; npm run lint</code> ผ่านทั้งคู่</li>
         <li>commit ผลงานของบทนี้: <code>git add -A &amp;&amp; git commit -m "feat: POST /carts/add"</code></li>
       </ul>
