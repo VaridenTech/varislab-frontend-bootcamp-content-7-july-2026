@@ -74,6 +74,7 @@
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่
 - ห้ามแก้ mapper/DTO
+- ห้ามเขียน test — e2e test เป็น prompt แยกในแชทถัดไป
 - ยังไม่ต้องทำ GET /products (list) หรือ pagination</code></div>
     </section>
     <section class="review" aria-labelledby="review-heading">
@@ -182,9 +183,32 @@ console.log(p.title, p.price, p.discountPercentage, p.brand);
       <p>เหตุผลที่ลึกกว่านั้นคือ <strong>check ที่รันได้คือสิ่งที่ AI เอาไปใช้เองได้</strong> คู่มือของเครื่องมือ agent ทุกตัวพูดตรงกันข้อหนึ่ง: ให้คำสั่งที่ตัดสินถูก/ผิดได้เองกับมัน แล้วมันจะรัน อ่านผล และแก้ซ้ำจนผ่านได้โดยไม่ต้องรอคุณอ่าน output ให้ทีละบรรทัด ส่วน checklist ที่เป็นข้อความเฉย ๆ มีแต่คุณเท่านั้นที่ตรวจได้ และเป็นงานที่คนเลิกทำเป็นคนแรกเมื่อรีบ</p>
       <p>เครื่องมือสำหรับงานนี้<strong>มีอยู่ในโปรเจกต์แล้วตั้งแต่วันแรก</strong> ไม่ต้องประดิษฐ์เอง: <code>nest new</code> แถม Vitest, <code>supertest</code>, ไฟล์ตัวอย่าง <code>test/app.e2e-spec.ts</code>, ไฟล์ตั้งค่า <code>vitest.config.e2e.ts</code> (จับเฉพาะไฟล์ <code>*.e2e-spec.ts</code>) และ script <code>test:e2e</code> มาให้ครบตั้งแต่ตอน scaffold และคุณเขียน e2e test แบบนี้มาแล้วใน <a href="../../../Week_09/01_nestjs_basic/content/48_diving-into-e2e-tests.html">NestJS Fundamentals บทรู้จัก e2e Test</a> — <code>Test.createTestingModule</code> boot <code>AppModule</code> ทั้งใบ แล้ว <code>supertest</code> ยิง HTTP เข้าไปที่แอปนั้นตรง ๆ บทนี้แค่เอาสิ่งที่คุณมีอยู่แล้วมาใช้กับสัญญาของเรา</p>
       <div class="note"><p>e2e test <strong>boot แอปของตัวเอง</strong>ขึ้นมาในโปรเซสเดียวกับ Vitest ไม่ได้ยิงไปที่ <code>npm run start:dev</code> ที่คุณเปิดค้างไว้ และไม่ต้องจอง port จริง จะเปิด dev server ค้างไว้หรือไม่ก็ได้ ผลเท่ากัน — แต่ <strong>ฐานข้อมูลต้องรันอยู่</strong> เพราะแอปที่ boot ขึ้นมาสร้าง <code>PrismaService</code> ตัวจริงและ query ข้อมูลที่ seed ไว้จริง ๆ</p></div>
-      <p><strong>เขียนไฟล์นี้ด้วยมือ ไม่ต้องสั่ง Cursor</strong> ด้วยเหตุผลเดียวกับตอนเขียน <code>docs/api-spec.md</code> เอง: เครื่องมือที่ใช้ตรวจงานของ AI ไม่ควรถูกเขียนโดย AI ตัวที่มันตรวจ และการพิมพ์เองคือการพิสูจน์ว่าคุณอ่านสัญญาออกจริง</p>
-      <div class="prompt-example"><code># เขียนไฟล์ test/products.e2e-spec.ts ด้วยมือตามด้านล่าง
-# ไม่ต้องแก้ package.json และไม่ต้องติดตั้งอะไรเพิ่ม — script test:e2e มีอยู่แล้ว</code></div>
+      <p><strong>แล้วให้ AI เขียน test ที่เอาไว้ตรวจงานของ AI เองได้จริงหรือ?</strong> ได้ — แต่ต้องรักษา<strong>ความเป็นอิสระ</strong>ของ test ไว้ ไม่ใช่ความเป็นเจ้าของบรรทัดโค้ด สิ่งที่ทำให้ test เชื่อถือได้ไม่ใช่ว่าใครพิมพ์มัน แต่เป็นสามข้อนี้ต่างหาก และทั้งสามข้ออยู่ในมือคุณทั้งหมด</p>
+      <ul>
+        <li><strong>แชทใหม่</strong> — สั่งเขียน test ในแชทที่<em>ไม่เห็น</em>บทสนทนาที่เพิ่งเขียน endpoint ไป ถ้าใช้แชทเดิม มันจะเขียน test ที่ตรงกับโค้ดที่มันเพิ่งเขียน ไม่ใช่ตรงกับสัญญา — รวมถึงบั๊กที่มันเพิ่งใส่ไว้ด้วย</li>
+        <li><strong>ผลลัพธ์ที่ต้องได้มาจาก <code>docs/api-spec.md</code></strong> — บรรทัดพวกนั้น<em>คุณ</em> เป็นคนตัดสินใจ ไม่ใช่ AI มันแค่แปลสิ่งที่คุณตัดสินใจไว้แล้วให้เป็นโค้ด เหมือนที่มันแปล endpoint ให้เมื่อกี้</li>
+        <li><strong>ห้ามมันแก้ <code>src/</code></strong> — ข้อนี้สำคัญที่สุด ถ้า agent แก้โค้ดได้ด้วยและเขียน test ได้ด้วยในคำสั่งเดียว มันจะทำให้ test ผ่านด้วยการแก้ฝั่งที่ง่ายกว่าเสมอ ซึ่งมักเป็นฝั่ง test</li>
+      </ul>
+      <p>และข้อพิสูจน์สุดท้ายที่ไม่มีใครทำแทนคุณได้คือ <strong>ทำให้มันพังให้เห็นกับตา</strong> — test ที่คุณไม่เคยเห็นมันขึ้นสีแดงเลย ยังไม่นับว่าเป็น test เพราะคุณยังไม่รู้ว่ามันตรวจอะไรอยู่จริง ๆ หรือเปล่า แบบฝึกหัดท้ายหัวข้อนี้บังคับข้อนั้นไว้แล้ว</p>
+      <p>commit งานก่อน แล้ว<strong>เปิดแชทใหม่</strong>ใน Cursor โหมด Agent แล้วส่ง prompt นี้</p>
+      <div class="cursor-prompt"><code>เขียน e2e test ของ endpoint สินค้าให้ตรงกับสัญญาใน docs/api-spec.md
+@docs/api-spec.md
+
+ผลลัพธ์ที่ต้องได้:
+- ไฟล์ test/products.e2e-spec.ts ที่ npm run test:e2e เก็บไปรันด้วย (ไม่ต้องแก้ package.json — script นี้มีอยู่แล้ว)
+- boot แอปจริงด้วย Test.createTestingModule({ imports: [AppModule] }) แล้วยิงผ่าน supertest ที่ app.getHttpServer() — ไม่ mock อะไรเลย ไม่ยิงไป URL หรือ port ภายนอก และปิดแอปด้วย app.close() ใน afterAll
+- สี่ test ตามนี้
+  1. GET /products/categories → 200 และได้ category 24 รายการ แต่ละก้อนมีคีย์ name, slug, url
+  2. GET /products/1 → 200 และสินค้ามี 22 คีย์ ชื่อ "Velvet Matte Lipstick" category เป็น string และ reviews เป็น array
+  3. GET /products/9999 → 404 และ message เป็น "Product 9999 not found" ตรงตัวอักษร
+  4. GET /products/abc → 400 และ body มี message
+- import ในไฟล์ test ลงท้ายด้วย .js ตามกติกา ESM ของโปรเจกต์
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่ — Vitest กับ supertest มากับ scaffold แล้ว
+- ห้ามแก้ไฟล์ใน src/ เด็ดขาด ถ้า test ไม่ผ่านให้บอกผมว่าไม่ผ่านข้อไหน ห้ามแก้โค้ดให้ test ผ่านเอง
+- ห้ามรัน test ให้ ผมจะรันเอง</code></div>
+      <p>โค้ดอ้างอิงของหัวข้อนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้ข้างบน</p>
       <pre><code>import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -250,13 +274,18 @@ describe('Products contract (e2e)', () =&gt; {
  Test Files  2 passed (2)
       Tests  5 passed (5)</code></pre>
       <p><code>test/app.e2e-spec.ts</code> คือไฟล์ตัวอย่างที่ scaffold ให้มา (ยิง <code>GET /</code> แล้วคาดว่าได้ <code>Hello World!</code>) ปล่อยไว้ได้ ไม่ต้องลบ — มันเป็นสัญญาณว่าแอป boot ขึ้นจริง</p>
+      <p><strong>ตรวจ test ที่ AI เขียนก่อนจะเชื่อมัน</strong> — test ที่อ่านแล้วดูดีแต่ไม่ได้ตรวจอะไรเลยคือสิ่งที่อันตรายที่สุดในไฟล์นี้ เพราะมันขึ้นเขียวตลอดไป</p>
       <ul>
+        <li><code>git status</code> ต้องเห็นไฟล์ใหม่แค่ <code>test/products.e2e-spec.ts</code> ไฟล์เดียว — <strong>ไม่มีไฟล์ใน <code>src/</code> ถูกแก้</strong> ถ้ามี แปลว่า agent ไปแก้โค้ดให้เข้ากับ test ของมันเอง ให้ย้อนกลับแล้วสั่งใหม่</li>
+        <li>ทุก test ยิงผ่าน <code>request(app.getHttpServer())</code> — ไม่มี <code>http://localhost:3000</code> หรือเลข port โผล่ในไฟล์ และไม่มีการ mock <code>PrismaService</code> ทิ้ง (ถ้า mock แปลว่ามันกลายเป็น unit test ที่ไม่ได้แตะฐานข้อมูลจริง)</li>
+        <li>ข้อความ 404 ถูกเทียบแบบ <em>ตรงตัวอักษร</em> ด้วย <code>toBe('Product 9999 not found')</code> ไม่ใช่แค่ <code>toContain('not found')</code> หรือเช็คว่า <code>message</code> มีค่าอยู่เฉย ๆ</li>
+        <li>มี <code>afterAll</code> ที่เรียก <code>app.close()</code> — ถ้าลืม Vitest จะค้างไม่ยอมจบเพราะ connection ยังเปิดอยู่</li>
         <li>ลองทำให้พังก่อนจะเชื่อมัน: แก้ข้อความใน <code>NotFoundException</code> เป็น <code>Product #9999 not found</code> ชั่วคราว แล้วรัน <code>npm run test:e2e</code> ซ้ำ — test ที่สามต้องล้มพร้อมบรรทัดเทียบค่าที่ได้จริงกับค่าที่คาดไว้ และ <code>echo $?</code> ต้องไม่ใช่ <code>0</code> จากนั้นย้อนกลับด้วย <code>git checkout -- .</code> (ไม่ต้องรอ watch mode เพราะ test ไม่ได้ยิงไปที่ dev server — มัน compile และ boot แอปจากซอร์สปัจจุบันเองทุกครั้งที่รัน)</li>
         <li>พิสูจน์ว่ามันไม่ได้แอบพึ่ง dev server: ปิด <code>npm run start:dev</code> (Ctrl+C) แล้วรัน <code>npm run test:e2e</code> อีกครั้ง — ต้องผ่านเขียวครบเหมือนเดิม ถ้าพังแปลว่าคุณยิงผิดที่</li>
         <li>รันเฉพาะไฟล์เดียวได้ด้วย <code>npm run test:e2e -- products</code> เมื่อไม่อยากรอไฟล์อื่น</li>
         <li>commit ด้วย <code>git add -A &amp;&amp; git commit -m "test: contract e2e for the products endpoints"</code></li>
       </ul>
-      <div class="note"><p>สี่ test นี้จะโตขึ้นทีละขั้น: ขั้น pagination เพิ่มสามข้อของ <code>GET /products</code> ขั้นกรองตามหมวดเพิ่มอีกสองข้อ รวมเป็นเก้าข้อ แล้วภายหลังจะเขียนทั้งไฟล์ใหม่ด้วย zod ให้ตรวจ <em>ทุก field</em> ใน response แทนที่จะตรวจเฉพาะข้อที่เราอุตส่าห์นึกออกและเขียนถึงเอง</p></div>
+      <div class="note"><p>สี่ test นี้จะโตขึ้นทีละขั้น: ขั้น pagination เพิ่มสามข้อของ <code>GET /products</code> ขั้นกรองตามหมวดเพิ่มอีกสองข้อ รวมเป็นเก้าข้อ แล้วภายหลังจะเขียนทั้งไฟล์ใหม่ด้วย zod ให้ตรวจ <em>ทุก field</em> ใน response แทนที่จะตรวจเฉพาะ field ที่เราอุตส่าห์นึกออกแล้วสั่งไว้ใน prompt</p></div>
     </section>
     <h2>แหล่งอ้างอิง</h2>
     <ul class="source-list">

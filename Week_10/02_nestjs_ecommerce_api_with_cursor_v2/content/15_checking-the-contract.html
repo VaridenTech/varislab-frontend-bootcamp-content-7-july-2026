@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="เขียน zod schema จาก docs/api-spec.md แล้วเขียน e2e test ของสัญญาที่สะสมมาตั้งแต่ตอนเขียนด้วยมือใหม่ทั้งไฟล์ ให้ตรวจโครงสร้างของ response จริงทั้งเก้ารายการ ใช้ .strict() จับ field ที่เกินมาหรือถูกเปลี่ยนชื่อ" />
+  <meta name="description" content="เขียน zod schema จาก docs/api-spec.md แล้วเขียน e2e test ของสัญญาที่สะสมมาใหม่ทั้งไฟล์ ให้ตรวจโครงสร้างของ response จริงทั้งเก้ารายการ ใช้ .strict() จับ field ที่เกินมาหรือถูกเปลี่ยนชื่อ" />
   <title>ทำสัญญาให้รันได้จริงด้วย zod</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -14,15 +14,15 @@
     <section class="learning-objectives" aria-labelledby="objectives-heading">
       <h2 id="objectives-heading">เมื่อจบบทนี้ คุณจะสามารถ</h2>
       <ul>
-        <li>ยกระดับ e2e test ของสัญญาที่เขียนเองไว้ด้วยมือก่อนหน้านี้ ให้ตรวจ <em>โครงสร้างทั้งก้อน</em> ของ response ด้วย zod ไม่ใช่แค่ field ที่เราอุตส่าห์นึกออกและเขียนเช็คไว้เอง</li>
+        <li>ยกระดับ e2e test ของสัญญาที่สะสมไว้ก่อนหน้านี้ ให้ตรวจ <em>โครงสร้างทั้งก้อน</em> ของ response ด้วย zod ไม่ใช่แค่ field ที่เราอุตส่าห์นึกออกแล้วสั่งไว้ใน prompt</li>
         <li>อธิบายว่า <code>.strict()</code> ให้อะไรเพิ่มจาก <code>z.object({...})</code> เฉย ๆ — มันปฏิเสธ field ที่เกินมาหรือถูกเปลี่ยนชื่อ ไม่ใช่แค่ field ที่หายไป</li>
         <li>อ่าน error ที่ zod โยนออกมาตอน <code>.parse()</code> ล้มเหลว (<code>ZodError</code>) เพื่อหาว่า field ไหนพังและพังเพราะอะไร โดยไม่ต้องเขียนตัวหา diff เอง</li>
       </ul>
     </section>
 
-    <h2>test ที่เขียนเอง จับได้แค่สิ่งที่เรานึกถึง</h2>
-    <p><code>npm run test:e2e</code> มีอยู่แล้วตั้งแต่ตอนที่คุณเขียน <code>test/products.e2e-spec.ts</code> ด้วยมือ และโตมาเป็นเก้า test ตอนเพิ่ม pagination กับ endpoint ตามหมวด — มันแก้ปัญหา "ไล่ยิง curl ใหม่ทุกครั้ง" ไปแล้วเรียบร้อย แต่มันมีช่องโหว่ที่ใหญ่กว่าเดิมซ่อนอยู่: <strong>มันตรวจเฉพาะสิ่งที่เราเขียนสั่งให้มันตรวจ</strong> ตอนนี้มันดู status, จำนวน category, จำนวนคีย์ของสินค้าชิ้นที่ 1, และข้อความ 404 — เท่านั้น</p>
-    <p>แปลว่าถ้า mapper เปลี่ยน <code>thumbnail</code> เป็น <code>thumbnailUrl</code> เงียบ ๆ จำนวนคีย์ยังเป็น 22 เท่าเดิม ทุก test ยังเขียว และสัญญาพังไปแล้วโดยไม่มีใครรู้ การไล่เขียน <code>expect</code> ให้ครบทั้ง 22 คีย์ของทุก endpoint ด้วยมือเป็นงานที่ไม่มีใครเขียนจบและไม่มีใครอยากดูแล</p>
+    <h2>test จับได้แค่สิ่งที่ prompt สั่งให้จับ</h2>
+    <p><code>npm run test:e2e</code> มีอยู่แล้วตั้งแต่ขั้นต่อ <code>GET /products/:id</code> และโตมาเป็นเก้า test ตอนเพิ่ม pagination กับ endpoint ตามหมวด — มันแก้ปัญหา "ไล่ยิง curl ใหม่ทุกครั้ง" ไปแล้วเรียบร้อย แต่มันมีช่องโหว่ที่ใหญ่กว่าเดิมซ่อนอยู่ และช่องโหว่นี้<em>ไม่ได้</em>เกิดจากการที่ AI เป็นคนเขียน test ให้ — ต่อให้พิมพ์เองทุกตัวอักษรก็เจอเหมือนกัน: <strong>test ตรวจเฉพาะสิ่งที่เราระบุไว้ใน <code>ผลลัพธ์ที่ต้องได้</code></strong> ย้อนกลับไปดู prompt สามอันที่ผ่านมา เราสั่งให้ตรวจ status, จำนวน category, จำนวนคีย์ของสินค้าชิ้นที่ 1 และข้อความ 404 — เท่านั้น</p>
+    <p>แปลว่าถ้า mapper เปลี่ยน <code>thumbnail</code> เป็น <code>thumbnailUrl</code> เงียบ ๆ จำนวนคีย์ยังเป็น 22 เท่าเดิม ทุก test ยังเขียว และสัญญาพังไปแล้วโดยไม่มีใครรู้ ทางแก้แบบตรงไปตรงมาคือเขียน <code>ผลลัพธ์ที่ต้องได้</code> ให้ไล่ครบทั้ง 22 คีย์ของทุก endpoint ซึ่งเป็น prompt ที่ยาวกว่าไฟล์ test เสียอีก ไม่มีใครเขียนจบและไม่มีใครอยากดูแลมันต่อ — สัญญาฉบับเดียวที่ทั้งเราและเครื่องอ่านได้อยู่แล้วคือ <code>docs/api-spec.md</code> เราจึงควรแปลมันเป็น schema ทีเดียว แล้วให้ทุก test เทียบกับ schema นั้น แทนที่จะไล่บอกทีละ field ในทุก prompt</p>
     <p>สิ่งที่เราต้องการคือ <em>regression test ของสัญญา</em> ที่ตรวจ body ทั้งก้อน: test ชุดเดิมที่ยิง request ชุดเดิมไปที่ API ของเรา แต่คราวนี้เทียบ response ทั้งอันกับ schema ที่เขียนจาก <code>docs/api-spec.md</code> ไม่ใช่เทียบทีละ field ที่เรานึกออก — และยังคืน exit code ที่ไม่ใช่ศูนย์เมื่อพังเหมือนเดิม เพื่อให้เอาไปแขวนใน CI ได้ในอนาคต</p>
     <p>จุดที่ทำให้ e2e test ต่างจาก unit test คือมันยิง<strong>แอปจริงทั้งใบที่ต่อฐานข้อมูลจริง</strong> ไม่ได้ mock อะไรเลย มันจึงตรวจสิ่งที่ TypeScript ตรวจให้ไม่ได้: TypeScript เช็คว่า <code>ProductResponseDto</code> ที่คุณ <em>ประกาศไว้</em> ถูกต้องตอน compile แต่ไม่รู้ว่า JSON ที่ออกไปจริงทาง HTTP ตรงกับที่ประกาศไว้หรือเปล่า ถ้า mapper คืนค่าผิดชนิด หรือมีใคร (หรือ AI) เปลี่ยนชื่อ field ไปเงียบ ๆ แต่ยังพอ compile ผ่านได้ด้วยเหตุผลบางอย่าง TypeScript จะไม่รู้เรื่องเลยจนกว่าจะมีคนอ่าน response จริง — นี่คือช่องว่างที่ zod ปิดให้ที่ขอบเขต JSON</p>
 
@@ -35,11 +35,11 @@
     <p>รายการด้านล่างคือไฟล์ที่เปลี่ยนใน<strong>โค้ดอ้างอิงของคอร์ส</strong> — ใช้เป็นแผนที่ตอนเทียบงาน ไม่ใช่ข้อบังคับ Cursor ของคุณอาจวางไฟล์หรือตั้งชื่อต่างไปได้ ขอแค่ผ่านผลลัพธ์ที่ต้องได้ใน prompt</p>
     <pre><code>test/
 ├── contract-schemas.ts               (สร้างใหม่)
-└── products.e2e-spec.ts              (แก้ไข: เขียนใหม่ทั้งไฟล์ด้วย zod จากฉบับที่เขียนเองด้วยมือ)
+└── products.e2e-spec.ts              (แก้ไข: เขียนใหม่ทั้งไฟล์ด้วย zod จากฉบับเดิม)
 package.json                          (แก้ไข: เพิ่ม zod เป็น dependency — script ไม่ต้องแก้)</code></pre>
     <ul>
       <li><strong><code>test/contract-schemas.ts</code></strong> — ในโค้ดอ้างอิง: export เจ็ดตัวตาม <code>docs/api-spec.md</code> คือ <code>dimensionsSchema</code>, <code>reviewSchema</code>, <code>metaSchema</code>, <code>productSchema</code>, <code>categorySchema</code>, <code>listEnvelopeSchema</code>, <code>errorSchema</code> / schema ที่แทน object เต็มรูปทั้งหมด (<code>productSchema</code>, <code>categorySchema</code>, <code>listEnvelopeSchema</code>, <code>errorSchema</code>) ต้องปิดท้ายด้วย <code>.strict()</code> / ไฟล์นี้นิยาม <code>cartProductSchema</code> กับ <code>orderResponseSchema</code> ไว้ด้วยสำหรับ endpoint สั่งซื้อที่จะมาภายหลัง แต่ยังไม่มีที่ไหน import สองตัวนี้ไปใช้ในบทนี้</li>
-      <li><strong><code>test/products.e2e-spec.ts</code></strong> — ในโค้ดอ้างอิง: import schema จาก <code>./contract-schemas.js</code>, มี <strong>เก้า</strong> <code>it()</code> เรียงตามลำดับ (ชุดเดียวกับที่คุณสะสมไว้ตั้งแต่ฉบับเขียนมือ แต่เรียงใหม่และตรวจ body ทั้งก้อน ดูรายชื่อในส่วนผลลัพธ์ที่คาดหวังด้านล่าง) แต่ละ test เรียก <code>schema.parse(response.body)</code> ตรง ๆ (ไม่ใช่ <code>.safeParse()</code>) เพื่อให้ <code>ZodError</code> ที่โยนออกมาทำให้ test ล้มพร้อมรายละเอียดครบ ไม่ต้องเขียน <code>if</code> เช็ค <code>success</code> เอง / โครง <code>beforeAll</code>/<code>afterAll</code> ที่ boot แอปยังเป็นตัวเดิม / <strong>ต้องไม่มี test ของ <code>POST /carts/add</code></strong> เพราะ endpoint นั้นยังไม่มีอยู่จริง ณ จุดนี้ (จะมาถึงภายหลัง)</li>
+      <li><strong><code>test/products.e2e-spec.ts</code></strong> — ในโค้ดอ้างอิง: import schema จาก <code>./contract-schemas.js</code>, มี <strong>เก้า</strong> <code>it()</code> เรียงตามลำดับ (ชุดเดียวกับที่สะสมไว้ตั้งแต่สามขั้นก่อนหน้า แต่เรียงใหม่และตรวจ body ทั้งก้อน ดูรายชื่อในส่วนผลลัพธ์ที่คาดหวังด้านล่าง) แต่ละ test เรียก <code>schema.parse(response.body)</code> ตรง ๆ (ไม่ใช่ <code>.safeParse()</code>) เพื่อให้ <code>ZodError</code> ที่โยนออกมาทำให้ test ล้มพร้อมรายละเอียดครบ ไม่ต้องเขียน <code>if</code> เช็ค <code>success</code> เอง / โครง <code>beforeAll</code>/<code>afterAll</code> ที่ boot แอปยังเป็นตัวเดิม / <strong>ต้องไม่มี test ของ <code>POST /carts/add</code></strong> เพราะ endpoint นั้นยังไม่มีอยู่จริง ณ จุดนี้ (จะมาถึงภายหลัง)</li>
       <li><strong><code>package.json</code></strong> — ในโค้ดอ้างอิง: มี <code>zod</code> เพิ่มเข้ามาตัวเดียว / ไม่แก้ script ใด ๆ เพราะ <code>test:e2e</code> ที่ scaffold ให้มาครอบไฟล์ <code>*.e2e-spec.ts</code> ทุกไฟล์อยู่แล้ว</li>
     </ul>
     <p>ไม่มีไฟล์ใน <code>src/</code> ถูกแตะในบทนี้เลย — สิ่งที่เราเขียนคือ test ไม่ใช่ฟีเจอร์ และ schema พวกนี้ไม่ได้มาแทนที่ <code>ProductResponseDto</code> ที่มีอยู่แล้ว: <code>ProductResponseDto</code> ยังเป็น type ตอน compile ที่ Swagger CLI plugin จะอ่านตอนทำเอกสาร API อยู่เหมือนเดิม ส่วน zod schema ในบทนี้เป็นการตรวจแยกอีกชั้นหนึ่งตอน<strong>runtime</strong> ว่า response จริงที่ออกไปทาง HTTP ยังตรงกับสัญญาอยู่หรือเปล่า — ไม่ใช่รูปทรงที่สามอันดับที่มาแข่งกัน แต่เป็นเครื่องมือคนละงาน: DTO บอก compiler, zod บอกตอนรันจริง</p>
@@ -71,6 +71,7 @@ package.json                          (แก้ไข: เพิ่ม zod เ�
 
 ขอบเขต:
 - ติดตั้ง dependency ได้แค่ zod@4.6.2
+- ห้ามแก้ไฟล์ใน src/ เด็ดขาด ถ้า test ไม่ผ่านให้บอกผมว่าไม่ผ่านข้อไหน ห้ามแก้โค้ดให้ test ผ่านเอง
 - ห้ามรัน test ให้ผมรันเอง
 - ยังไม่ต้องเพิ่ม check ของ POST /carts/add หรือ orders (endpoint นั้นยังไม่มีในตอนนี้)</code></div>
     </section>

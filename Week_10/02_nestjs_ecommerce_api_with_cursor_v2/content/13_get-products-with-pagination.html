@@ -113,6 +113,7 @@
 
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่ (class-validator และ class-transformer ติดตั้งไว้แล้ว)
+- ห้ามแตะไฟล์ใน test/ — e2e test เป็น prompt แยกในแชทถัดไป
 - ยังไม่ต้องทำ GET /products/category/:slug</code></div>
     </section>
     <section class="review" aria-labelledby="review-heading">
@@ -281,10 +282,28 @@ export class ProductsController {
       </ul>
     </section>
     <section class="workshop" aria-labelledby="contract-test-heading">
-      <h2 id="contract-test-heading">เพิ่มสาม test ของ pagination ลงในไฟล์เดิม</h2>
-      <p>ไฟล์ <code>test/products.e2e-spec.ts</code> ที่คุณเขียนด้วยมือไว้ตอนต่อ <code>GET /products/:id</code> ตอนนี้มีสี่ test แล้ว ขั้นนี้เพิ่มอีกสามข้อของ endpoint ใหม่ลงไปในไฟล์เดิม รวมเป็น<strong>เจ็ด</strong> — <strong>เขียนเองเหมือนเดิม ไม่ต้องสั่ง Cursor</strong> ด้วยเหตุผลเดิม: เครื่องมือที่ใช้ตรวจงานของ AI ไม่ควรถูกเขียนโดย AI ตัวที่มันตรวจ</p>
-      <p>แต่ก่อนจะเพิ่ม test ต้องแก้ <code>beforeAll</code> ก่อน ไม่อย่างนั้นสอง test ใหม่ของ <code>limit=0</code> และ <code>limit=101</code> จะได้ status ที่ไม่ใช่ <code>400</code> แล้วคุณจะนั่งหาสาเหตุอยู่นานว่าทำไม <code>curl</code> ได้ 400 แต่ test ไม่ได้ ทั้งที่ยิง URL เดียวกัน</p>
-      <p>เหตุผลคือ <code>createNestApplication()</code> สร้างแอปขึ้นจาก <code>AppModule</code> เท่านั้น <strong>มันไม่ได้รัน <code>src/main.ts</code> ให้</strong> ทุกอย่างที่คุณเพิ่งตั้งค่าไว้ใน <code>bootstrap()</code> — รวมถึง <code>app.useGlobalPipes(...)</code> ที่เป็นหัวใจของบทนี้ — จึงไม่ติดมาเอง ต้องเขียนซ้ำใน <code>beforeAll</code> ให้ตรงกับ <code>main.ts</code> ทุกตัวเลือก</p>
+      <h2 id="contract-test-heading">สั่ง Cursor เพิ่มสาม test ของ pagination ลงในไฟล์เดิม</h2>
+      <p>ไฟล์ <code>test/products.e2e-spec.ts</code> ที่ได้มาตอนต่อ <code>GET /products/:id</code> ตอนนี้มีสี่ test แล้ว ขั้นนี้เพิ่มอีกสามข้อของ endpoint ใหม่ลงไปในไฟล์เดิม รวมเป็น<strong>เจ็ด</strong> — สั่งใน<strong>แชทใหม่</strong>อีกครั้ง ด้วยเหตุผลเดียวกับตอนเขียน test ชุดแรก</p>
+      <p>รอบนี้มีกับดักหนึ่งข้อที่ต้องเขียนลงไปใน prompt ตรง ๆ แล้วตามไปตรวจในส่วน review: test ใหม่สองข้อของ <code>limit=0</code> และ <code>limit=101</code> จะผ่านก็ต่อเมื่อ <code>beforeAll</code> ตั้ง <code>ValidationPipe</code> ไว้ด้วย ถ้า agent ลืมข้อนี้ สอง test นั้นจะได้ status ที่ไม่ใช่ <code>400</code> แล้วคุณจะนั่งหาสาเหตุอยู่นานว่าทำไม <code>curl</code> ได้ 400 แต่ test ไม่ได้ ทั้งที่ยิง URL เดียวกัน</p>
+      <p>เหตุผลคือ <code>createNestApplication()</code> สร้างแอปขึ้นจาก <code>AppModule</code> เท่านั้น <strong>มันไม่ได้รัน <code>src/main.ts</code> ให้</strong> ทุกอย่างที่คุณเพิ่งตั้งค่าไว้ใน <code>bootstrap()</code> — รวมถึง <code>app.useGlobalPipes(...)</code> ที่เป็นหัวใจของบทนี้ — จึงไม่ติดมาเอง ต้องมีคนเขียนซ้ำใน <code>beforeAll</code> ให้ตรงกับ <code>main.ts</code> ทุกตัวเลือก</p>
+      <div class="note"><p>นี่คือสิ่งที่เราได้กลับมาจากการที่ test boot แอปเอง: pipe, guard และ filter ที่แอปใช้จริงต้องถูกประกาศออกมาให้เห็นครบในไฟล์ test ถ้าเราไปยิง server ที่เปิดค้างไว้แทน ของพวกนี้จะติดมาเองโดยที่เราไม่เคยต้องรู้ว่ามีอะไรบ้าง และวันที่ <code>main.ts</code> เปลี่ยน test ก็จะไม่บอกอะไรเราเลย</p></div>
+      <p>commit งานก่อน แล้ว<strong>เปิดแชทใหม่</strong>ใน Cursor โหมด Agent แล้วส่ง prompt นี้</p>
+      <div class="cursor-prompt"><code>เพิ่ม test ของ GET /products แบบแบ่งหน้า ลงใน e2e test ของสัญญาที่มีอยู่แล้ว
+@docs/api-spec.md @test/products.e2e-spec.ts
+
+ผลลัพธ์ที่ต้องได้:
+- เพิ่มสาม test ต่อท้าย describe เดิมใน test/products.e2e-spec.ts โดยสี่ test เดิมยังอยู่ครบและไม่ถูกแก้ข้อความหรือเงื่อนไข
+  1. GET /products?limit=5&amp;skip=0 → 200 และ envelope มีสี่คีย์พอดีคือ products, total, skip, limit โดย limit เป็น 5 skip เป็น 0 และ products มี 5 ชิ้น
+  2. GET /products?limit=0 → 400 และ body มี message
+  3. GET /products?limit=101 → 400 และ body มี message
+- สอง test ของ limit=0 และ limit=101 ต้องได้ 400 จริง ซึ่งแปลว่า beforeAll ต้องตั้ง ValidationPipe ด้วยตัวเลือกชุดเดียวกับใน src/main.ts (whitelist, transform, enableImplicitConversion) เพราะ createNestApplication() ไม่ได้รัน main.ts ให้
+- import ในไฟล์ test ลงท้ายด้วย .js ตามกติกา ESM ของโปรเจกต์
+
+ขอบเขต:
+- ห้ามติดตั้ง dependency ใหม่ — Vitest กับ supertest มากับ scaffold แล้ว
+- ห้ามแก้ไฟล์ใน src/ เด็ดขาด ถ้า test ไม่ผ่านให้บอกผมว่าไม่ผ่านข้อไหน ห้ามแก้โค้ดให้ test ผ่านเอง
+- ห้ามรัน test ให้ ผมจะรันเอง</code></div>
+      <p>โค้ดอ้างอิงของหัวข้อนี้ — เป็นหนึ่งในวิธีที่ถูก ของคุณไม่จำเป็นต้องเหมือนทุกบรรทัด ขอแค่ผ่านผลลัพธ์ที่ต้องได้ข้างบน เริ่มที่ <code>beforeAll</code> ที่ต้องมี <code>ValidationPipe</code> เพิ่มเข้ามา</p>
       <pre><code>import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
@@ -308,8 +327,7 @@ describe('Products contract (e2e)', () =&gt; {
     );
     await app.init();
   });</code></pre>
-      <div class="note"><p>นี่คือสิ่งที่เราได้กลับมาจากการที่ test boot แอปเอง: pipe, guard และ filter ที่แอปใช้จริงต้องถูกประกาศออกมาให้เห็นครบในไฟล์ test ถ้าเราไปยิง server ที่เปิดค้างไว้แทน ของพวกนี้จะติดมาเองโดยที่เราไม่เคยต้องรู้ว่ามีอะไรบ้าง และวันที่ <code>main.ts</code> เปลี่ยน test ก็จะไม่บอกอะไรเราเลย</p></div>
-      <p>แล้วค่อยเพิ่มสาม <code>it()</code> นี้ต่อท้ายข้อที่มีอยู่</p>
+      <p>แล้วสาม <code>it()</code> ที่ต่อท้ายข้อที่มีอยู่เดิม</p>
       <pre><code>  it('GET /products?limit=5&amp;skip=0 → limit and skip echo the request', async () =&gt; {
     const response = await request(app.getHttpServer())
       .get('/products?limit=5&amp;skip=0')
@@ -342,7 +360,12 @@ describe('Products contract (e2e)', () =&gt; {
 
  Test Files  2 passed (2)
       Tests  8 passed (8)</code></pre>
+      <p><strong>ตรวจ test ที่ AI เขียนก่อนจะเชื่อมัน</strong> — รอบนี้มีสองอย่างที่ต้องดูเป็นพิเศษ: กับดัก <code>ValidationPipe</code> ที่เราเตือนไว้ตั้งแต่ต้นหัวข้อ กับการที่ agent อาจ "จัดระเบียบ" ไฟล์เดิมทิ้งไปด้วย</p>
       <ul>
+        <li><code>git status</code> ต้องเห็นไฟล์ที่ถูกแก้แค่ <code>test/products.e2e-spec.ts</code> ไฟล์เดียว — <strong>ไม่มีไฟล์ใน <code>src/</code> ถูกแก้</strong> ถ้ามี แปลว่า agent ไปแก้โค้ดให้เข้ากับ test ของมันเอง ให้ย้อนกลับแล้วสั่งใหม่</li>
+        <li><code>git diff test/products.e2e-spec.ts</code> ต้องเห็นแค่ <strong>ส่วนที่เพิ่ม</strong> — สี่ <code>it()</code> เดิมยังอยู่ครบและข้อความในนั้นไม่ถูกแก้ ถ้า diff แสดงว่าไฟล์ถูกเขียนใหม่ทั้งไฟล์ ให้ไล่อ่านว่ามีเงื่อนไขไหนหายไปบ้าง</li>
+        <li><code>beforeAll</code> มี <code>app.useGlobalPipes(...)</code> พร้อมตัวเลือกครบสามข้อตรงกับ <code>src/main.ts</code> — <strong>นี่คือกับดักคลาสสิกของ e2e test ใน Nest</strong> ถ้า agent ลืมข้อนี้ สอง test ของ <code>limit=0</code> และ <code>limit=101</code> จะไม่ผ่าน และคุณจะจับได้ตั้งแต่รันครั้งแรก</li>
+        <li>สาม <code>it()</code> ใหม่ยิงผ่าน <code>request(app.getHttpServer())</code> เหมือนเดิม — ไม่มี <code>http://localhost:3000</code> หรือเลข port โผล่ในไฟล์ และไม่มีการ mock <code>PrismaService</code> ทิ้ง</li>
         <li>พิสูจน์ว่าบรรทัด <code>useGlobalPipes</code> มีผลจริง: ลบมันออกจาก <code>beforeAll</code> ชั่วคราวแล้วรัน <code>npm run test:e2e -- products</code> — สอง test ของ <code>limit=0</code> และ <code>limit=101</code> ต้องล้มทั้งคู่เพราะ status ที่ได้ไม่ใช่ 400 อีกต่อไป (ไม่มี pipe ตัวไหนตรวจ query เลย — ค่าที่ไหลเข้าไปจะเป็น string ดิบ ไม่ใช่ number ที่ผ่านการตรวจช่วงแล้ว) ใส่กลับคืนแล้วต้องเขียวครบเจ็ด</li>
         <li>commit ด้วย <code>git add -A &amp;&amp; git commit -m "test: contract e2e for pagination"</code></li>
       </ul>
