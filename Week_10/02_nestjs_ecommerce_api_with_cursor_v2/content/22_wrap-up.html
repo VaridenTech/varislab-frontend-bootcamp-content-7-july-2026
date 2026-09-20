@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="สรุปสิ่งที่สร้างได้ในคอร์สนี้ ตรวจว่าคุณอธิบายทุกการตัดสินใจได้จริง แล้วดูเส้นทางต่อยอดหลังจบ 23 บท" />
+  <meta name="description" content="สรุปสิ่งที่สร้างได้ในคอร์สนี้ ตรวจว่าคุณอธิบายทุกการตัดสินใจได้จริง แล้วดูเส้นทางต่อยอดหลังจบ 22 บท" />
   <title>สรุปและก้าวต่อไป</title>
   <link rel="stylesheet" href="lesson.css" />
 </head>
@@ -33,8 +33,7 @@
 │   ├── migrations/                      init + add_orders
 │   └── seed.ts                          สร้างสินค้า 208 ชิ้นด้วย faker (ตอน seed ข้อมูล)
 ├── test/
-│   ├── contract-schemas.ts              สัญญาในรูป zod schema (ตอนทำ contract check)
-│   ├── products.e2e-spec.ts             e2e test ของ endpoint สินค้า
+│   ├── products.e2e-spec.ts             e2e test ของ endpoint สินค้า (ตอนสร้าง endpoint ทีละตัว)
 │   └── orders.e2e-spec.ts               e2e test ของ POST /carts/add
 └── src/
     ├── main.ts                          ValidationPipe + CORS + Swagger
@@ -51,7 +50,7 @@
     <p>และของที่ใช้งานได้จริงห้าอย่างนี้</p>
     <ul>
       <li><strong>ห้า endpoint</strong> ที่รูปทรง response ตรงกับสัญญาใน <code>docs/api-spec.md</code>: <code>GET /products/categories</code>, <code>GET /products</code>, <code>GET /products/{id}</code>, <code>GET /products/category/{slug}</code> และ <code>POST /carts/add</code></li>
-      <li><strong>สัญญาที่ตรวจอัตโนมัติ</strong> — <code>npm run test:e2e</code> boot แอปจริงขึ้นมาแล้วตรวจ key และรูปทรงของ response ด้วย zod schema ของเราเองครบสิบเคส รวมถึงเคส 404, หมวดที่ไม่มีจริง และ <code>POST /carts/add</code></li>
+      <li><strong>สัญญาที่ตรวจอัตโนมัติ</strong> — <code>npm run test:e2e</code> boot แอปจริงขึ้นมาแล้วตรวจ status และรูปทรงของ response ครบสิบเคส รวมถึงเคส 404, หมวดที่ไม่มีจริง และ <code>POST /carts/add</code></li>
       <li><strong>validation ที่กันขยะ</strong> — <code>ValidationPipe</code> แบบ global พร้อม <code>whitelist</code> และ DTO ที่ประกาศกฎไว้ครบ ทำให้ payload ผิดรูปได้ 400 พร้อมข้อความที่อ่านรู้เรื่อง</li>
       <li><strong>คำสั่งซื้อที่ atomic</strong> — <code>POST /carts/add</code> เขียน <code>Order</code> กับ <code>OrderItem</code> ในทรานแซกชันเดียว</li>
       <li><strong>เอกสารและการเชื่อมต่อ</strong> — Swagger UI ที่ <code>/api</code> พร้อม response schema ทุก endpoint, CORS ที่เปิดให้เฉพาะ origin ของ Vite และ React app ของจริงที่รันบน API นี้ได้ครบวงจรโดยแก้แค่ base URL หนึ่งบรรทัด</li>
@@ -95,7 +94,7 @@
       <li><a href="https://docs.cursor.com/context/rules">Rules (Cursor Docs)</a></li>
     </ul>
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="22_switching-the-react-app.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="21_switching-the-react-app.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
     </nav>
   </main>

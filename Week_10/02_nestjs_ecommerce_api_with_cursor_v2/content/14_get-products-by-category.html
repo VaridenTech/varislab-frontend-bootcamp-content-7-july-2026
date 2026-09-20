@@ -196,7 +196,7 @@ export class ProductsController {
 [RouterExplorer] Mapped {/products/:id, GET} route</code></pre>
       <p><code>GET /products/category/beauty?limit=2&amp;skip=1</code> ตอบ <code>total: 5</code> (หมวด beauty มีสินค้า 5 ชิ้น) <code>skip: 1</code> <code>limit: 2</code> และสินค้า id 2 กับ 3 ส่วน slug ที่ไม่มีอยู่จริงตอบ 200 พร้อมไบต์เท่านี้พอดี (ตัวอย่างนี้ยิง <code>?limit=2&amp;skip=0</code>)</p>
       <pre><code>{"products":[],"total":0,"skip":0,"limit":2}</code></pre>
-      <p>ตอนนี้ endpoint ฝั่งอ่านของสินค้าครบทั้งสี่ตัวแล้ว — ขั้นถัดไปเราจะเลิกยิง curl ทีละคำสั่ง แล้วเขียน test ชุดนี้ใหม่ทั้งไฟล์ด้วย zod ให้ตรวจ response ทั้งก้อนทีเดียว</p>
+      <p>ตอนนี้ endpoint ฝั่งอ่านของสินค้าครบทั้งสี่ตัวแล้ว และ e2e test เก้าข้อที่สะสมมาสามขั้นก็คุ้มครองมันครบทุกตัว — ต่อจากนี้เราจะไปฝั่งเขียนข้อมูล คือรับคำสั่งซื้อจาก React app</p>
     </section>
     <section class="verification" aria-labelledby="exercise-check-heading">
       <h2 id="exercise-check-heading">ตรวจว่าใช้งานได้จริง</h2>
@@ -250,7 +250,7 @@ export class ProductsController {
  Test Files  2 passed (2)
       Tests  10 passed (10)</code></pre>
       <p>reporter ปริยายของ Vitest ยุบไฟล์ที่ผ่านให้เหลือบรรทัดเดียว ถ้าอยากเห็นชื่อ test ทีละข้อให้เติม <code>--reporter=verbose</code> ต่อท้าย (<code>npm run test:e2e -- --reporter=verbose</code>) และอย่าลืมว่า test ชุดนี้ boot แอปของตัวเอง ฐานข้อมูลจึงต้องรันอยู่ แต่ไม่ต้องเปิด <code>npm run start:dev</code> ค้างไว้ก็ได้ — ต่างจาก <code>curl</code> ทุกข้อด้านบนที่ต้องมี dev server จริง</p>
-      <p>เก้าข้อนี้คือชุดเดียวกับที่ขั้นถัดไปจะเขียนใหม่ทั้งไฟล์ด้วย zod จากนั้น commit ด้วย <code>git add -A &amp;&amp; git commit -m "test: contract e2e for the category endpoint"</code></p>
+      <p>เก้าข้อนี้จะอยู่กับเราไปจนจบคอร์ส — ทุกบทหลังจากนี้ต้องรันผ่านครบเหมือนเดิม ถ้าบทไหนทำให้ข้อใดข้อหนึ่งล้ม แปลว่าเราเพิ่งทำสัญญาที่ให้ React app ไว้พัง จากนั้น commit ด้วย <code>git add -A &amp;&amp; git commit -m "test: contract e2e for the category endpoint"</code></p>
     </section>
     <h2>แหล่งอ้างอิง</h2>
     <ul class="source-list">
@@ -261,7 +261,7 @@ export class ProductsController {
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
       <a class="lesson-navigation__link" href="13_get-products-with-pagination.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="15_checking-the-contract.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="15_modeling-orders.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
   <footer><p>NestJS E-commerce API Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 12 กันยายน 2026</p></footer>

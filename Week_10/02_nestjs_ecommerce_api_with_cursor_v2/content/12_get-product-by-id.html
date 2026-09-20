@@ -285,7 +285,7 @@ describe('Products contract (e2e)', () =&gt; {
         <li>รันเฉพาะไฟล์เดียวได้ด้วย <code>npm run test:e2e -- products</code> เมื่อไม่อยากรอไฟล์อื่น</li>
         <li>commit ด้วย <code>git add -A &amp;&amp; git commit -m "test: contract e2e for the products endpoints"</code></li>
       </ul>
-      <div class="note"><p>สี่ test นี้จะโตขึ้นทีละขั้น: ขั้น pagination เพิ่มสามข้อของ <code>GET /products</code> ขั้นกรองตามหมวดเพิ่มอีกสองข้อ รวมเป็นเก้าข้อ แล้วภายหลังจะเขียนทั้งไฟล์ใหม่ด้วย zod ให้ตรวจ <em>ทุก field</em> ใน response แทนที่จะตรวจเฉพาะ field ที่เราอุตส่าห์นึกออกแล้วสั่งไว้ใน prompt</p></div>
+      <div class="note"><p>สี่ test นี้จะโตขึ้นทีละขั้น: ขั้น pagination เพิ่มสามข้อของ <code>GET /products</code> ขั้นกรองตามหมวดเพิ่มอีกสองข้อ รวมเป็นเก้าข้อที่คุ้มครอง endpoint ฝั่งอ่านทั้งหมด แล้วข้อที่สิบจะมาพร้อม <code>POST /carts/add</code> ในไฟล์ spec ของตัวเอง — ทุกครั้งที่เพิ่ม endpoint ใหม่ ให้เพิ่ม test ของมันด้วย prompt แยกเสมอ</p></div>
     </section>
     <h2>แหล่งอ้างอิง</h2>
     <ul class="source-list">

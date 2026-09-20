@@ -85,7 +85,7 @@
       <li><strong><code>src/orders/carts.controller.ts</code></strong> — สัญญา: ต้องเป็น <code>@Controller('carts')</code> กับ <code>@Post('add')</code> และรับ body ด้วย <code>@Body() dto: AddCartDto</code> · ต้องไม่ใส่ <code>@HttpCode()</code>, ไม่คิดเลขหรือแตะ Prisma ใน controller</li>
       <li><strong><code>src/orders/orders.module.ts</code></strong> — สัญญา: ต้องประกาศ <code>controllers: [CartsController]</code> และ <code>providers: [OrdersService]</code> · ต้องไม่ import <code>PrismaModule</code> ซ้ำ (ตอนตั้งค่า Prisma ทำให้มันเป็น global module แล้ว)</li>
       <li><strong><code>src/app.module.ts</code></strong> — สัญญา: ต้องเพิ่ม <code>OrdersModule</code> ต่อจาก <code>ProductsModule</code> ใน <code>imports</code> · ต้องไม่แตะ <code>ConfigModule</code>, <code>controllers</code> หรือ <code>providers</code> เดิม</li>
-      <li><strong><code>test/orders.e2e-spec.ts</code></strong> — สัญญา: ไฟล์<strong>ใหม่</strong>ที่ import <code>orderResponseSchema</code> จาก <code>./contract-schemas.js</code> (ตัว schema มีอยู่แล้วตั้งแต่ตอนเขียน schema ด้วย zod) แล้วมี <code>it()</code> เดียวสำหรับ <code>POST /carts/add</code> · <code>test/products.e2e-spec.ts</code> ไม่ถูกแตะเลย · ไฟล์นี้มาจาก prompt แยกในแชทที่สาม ไม่ใช่สองแชทแรก เพราะ agent ที่เขียน endpoint ไม่ควรเป็นตัวเดียวกับที่เขียน test ซึ่งใช้ตัดสินว่า endpoint นั้นถูกหรือผิด</li>
+      <li><strong><code>test/orders.e2e-spec.ts</code></strong> — สัญญา: ไฟล์<strong>ใหม่</strong>ที่มี <code>it()</code> เดียวสำหรับ <code>POST /carts/add</code> และเทียบ receipt ทั้งก้อนด้วย <code>toEqual</code> · <code>test/products.e2e-spec.ts</code> ไม่ถูกแตะเลย · ไฟล์นี้มาจาก prompt แยกในแชทที่สาม ไม่ใช่สองแชทแรก เพราะ agent ที่เขียน endpoint ไม่ควรเป็นตัวเดียวกับที่เขียน test ซึ่งใช้ตัดสินว่า endpoint นั้นถูกหรือผิด</li>
     </ul>
 
 <section class="workshop" aria-labelledby="service-heading">
@@ -355,31 +355,32 @@ LOG [RouterExplorer] Mapped {/carts/add, POST} route +0ms</code></pre>
 
     <section class="workshop" aria-labelledby="contract-test-heading">
       <h2 id="contract-test-heading">สั่ง Cursor เขียน e2e test ของคำสั่งซื้อ</h2>
-      <p>ตอนเขียน schema ด้วย zod เราตั้งใจปล่อยให้สัญญามีแค่เก้า test ของ products ไว้ก่อน เพราะตอนนั้น <code>POST /carts/add</code> ยังไม่มีอยู่จริง ตอนนี้มันมีแล้ว จึงถึงเวลาของ test ที่สิบ — และมันต้องมาจาก <strong>prompt แยกในแชทใหม่</strong> ไม่ใช่ prompt ที่เพิ่งเปิด route ไปข้างบน ด้วยเหตุผลเดียวกับตอนต่อ <code>GET /products/:id</code>: แชทที่เพิ่งเขียน endpoint เสร็จจะเขียน test ที่ตรงกับ<em>โค้ดที่มันเพิ่งเขียน</em> ไม่ใช่ตรงกับสัญญา — บั๊กที่มันเพิ่งใส่ไว้ก็จะกลายเป็น "พฤติกรรมที่ถูกต้อง" ไปด้วย</p>
-      <p>test ที่สิบไปอยู่ใน<strong>ไฟล์ใหม่</strong> <code>test/orders.e2e-spec.ts</code> ไม่ได้ต่อท้าย <code>test/products.e2e-spec.ts</code> ที่มีอยู่ — ธรรมเนียมของ Nest คือแบ่ง e2e spec ตาม resource ไฟล์ของ products จึงไม่ถูกแตะเลยในบทนี้ และนี่คือจังหวะที่การแยก schema ไว้คนละไฟล์ตั้งแต่ตอนเขียน zod ได้ผลจริง: spec สองไฟล์ import สัญญาชุดเดียวกันจาก <code>./contract-schemas.js</code> ไม่มีสำเนาที่ค่อย ๆ เพี้ยนจากกัน</p>
+      <p>e2e test ที่สะสมมาสามขั้นหยุดอยู่ที่เก้าข้อของ products เพราะตอนนั้น <code>POST /carts/add</code> ยังไม่มีอยู่จริง ตอนนี้มันมีแล้ว จึงถึงเวลาของ test ที่สิบ — และมันต้องมาจาก <strong>prompt แยกในแชทใหม่</strong> ไม่ใช่ prompt ที่เพิ่งเปิด route ไปข้างบน ด้วยเหตุผลเดียวกับตอนต่อ <code>GET /products/:id</code>: แชทที่เพิ่งเขียน endpoint เสร็จจะเขียน test ที่ตรงกับ<em>โค้ดที่มันเพิ่งเขียน</em> ไม่ใช่ตรงกับสัญญา — บั๊กที่มันเพิ่งใส่ไว้ก็จะกลายเป็น "พฤติกรรมที่ถูกต้อง" ไปด้วย</p>
+      <p>test ที่สิบไปอยู่ใน<strong>ไฟล์ใหม่</strong> <code>test/orders.e2e-spec.ts</code> ไม่ได้ต่อท้าย <code>test/products.e2e-spec.ts</code> ที่มีอยู่ — ธรรมเนียมของ Nest คือแบ่ง e2e spec ตาม resource ไฟล์ของ products จึงไม่ถูกแตะเลยในบทนี้ และเพราะ <code>test:e2e</code> เก็บไฟล์ <code>*.e2e-spec.ts</code> ทุกไฟล์อยู่แล้ว การเพิ่ม spec ใหม่จึงไม่ต้องแก้ <code>package.json</code> เลย</p>
       <p>commit งานก่อน แล้ว<strong>เปิดแชทใหม่</strong>ใน Cursor โหมด Agent แล้วส่ง prompt นี้</p>
       <div class="cursor-prompt"><code>เขียน e2e test ของ POST /carts/add ให้ตรงกับสัญญาใน docs/api-spec.md
-@docs/api-spec.md @&lt;ไฟล์ zod schema ที่คุณเขียนไว้ก่อนหน้านี้ — โค้ดอ้างอิงคือ test/contract-schemas.ts&gt;
+@docs/api-spec.md
 
 ผลลัพธ์ที่ต้องได้:
 - ไฟล์ใหม่ test/orders.e2e-spec.ts ที่ npm run test:e2e เก็บไปรันด้วย (ไม่ต้องแก้ package.json — script นี้มีอยู่แล้ว)
 - boot แอปจริงด้วย Test.createTestingModule({ imports: [AppModule] }) แล้วยิงผ่าน supertest ที่ app.getHttpServer() — ไม่ mock อะไรเลย ไม่ยิงไป URL หรือ port ภายนอก และปิดแอปด้วย app.close() ใน afterAll
 - beforeAll ตั้ง ValidationPipe แบบ global ให้ตรงกับ src/main.ts ทุกตัวเลือก (whitelist, transform, transformOptions.enableImplicitConversion) เพราะ createNestApplication() ไม่ได้รัน main.ts ให้
-- หนึ่ง test: POST /carts/add ด้วย body {"userId":1,"products":[{"id":1,"quantity":2}],"address":{"address":"1 Sukhumvit Rd","email":"a@b.com","phone":"0812345678"}} → 201 แล้วตรวจ body ทั้งก้อนด้วย orderResponseSchema ที่ import มาจาก ./contract-schemas.js และ discountedPrice ของสินค้าชิ้นแรกเป็น 17.89
-- ห้ามนิยาม schema ขึ้นใหม่ในไฟล์ test — ต้อง import ตัวที่มีอยู่แล้วมาใช้
-- ห้ามตรวจ id ของคำสั่งซื้อ เพราะ test นี้สร้างคำสั่งซื้อจริงทุกครั้งที่รัน เลขจึงเปลี่ยนทุกรอบ
+- หนึ่ง test: POST /carts/add ด้วย body {"userId":1,"products":[{"id":1,"quantity":2}],"address":{"address":"1 Sukhumvit Rd","email":"a@b.com","phone":"0812345678"}} → 201
+- เทียบ body ทั้งก้อนด้วย expect(response.body).toEqual({...}) กับ receipt ที่คิดเลขเองจาก docs/api-spec.md: userId 1, totalProducts 1, totalQuantity 2, total 19.98, discountedTotal 17.89 และ products ชิ้นเดียวที่ id 1 title "Velvet Matte Lipstick" price 9.99 quantity 2 total 19.98 discountPercentage 10.48 discountedPrice 17.89
+- ต้องเป็น toEqual กับ body ทั้งก้อน ไม่ใช่ toMatchObject และไม่ใช่ไล่ expect ทีละ field — field ที่เกินมาหรือถูกเปลี่ยนชื่อต้องทำให้ test ล้ม ไม่ใช่ผ่านไปเงียบ ๆ
+- id ของคำสั่งซื้อใช้ expect.any(Number) เพราะ test นี้สร้างคำสั่งซื้อจริงทุกครั้งที่รัน เลขจึงเปลี่ยนทุกรอบ ส่วน thumbnail ใช้ expect.any(String)
 - import ในไฟล์ test ลงท้ายด้วย .js ตามกติกา ESM ของโปรเจกต์
 
 ขอบเขต:
 - ห้ามติดตั้ง dependency ใหม่ — Vitest กับ supertest มากับ scaffold แล้ว
 - ห้ามแก้ไฟล์ใน src/ เด็ดขาด ถ้า test ไม่ผ่านให้บอกผมว่าไม่ผ่านข้อไหน ห้ามแก้โค้ดให้ test ผ่านเอง
-- ห้ามแตะ test/products.e2e-spec.ts และ test/contract-schemas.ts
+- ห้ามแตะ test/products.e2e-spec.ts
 - ห้ามรัน test ให้ ผมจะรันเอง</code></div>
-      <p><strong>ตรวจ test ที่ AI เขียนก่อนจะเชื่อมัน</strong> — ข้อที่สองด้านล่างคือข้อที่พลาดง่ายที่สุดในบทนี้ และเป็นข้อที่ทำให้สัญญาแตกเป็นสองฉบับโดยไม่มีใครรู้</p>
+      <p><strong>ตรวจ test ที่ AI เขียนก่อนจะเชื่อมัน</strong> — ข้อที่สองด้านล่างคือข้อที่พลาดง่ายที่สุดในบทนี้ และเป็นข้อที่ทำให้ test เขียวทั้งที่สัญญาพังไปแล้ว</p>
       <ul>
         <li><code>git status</code> ต้องเห็นไฟล์ใหม่แค่ <code>test/orders.e2e-spec.ts</code> ไฟล์เดียว — <strong>ไม่มีไฟล์ใน <code>src/</code> ถูกแก้</strong> ถ้ามี แปลว่า agent ไปแก้โค้ดให้เข้ากับ test ของมันเอง ให้ย้อนกลับแล้วสั่งใหม่</li>
-        <li><code>orderResponseSchema</code> ถูก <strong>import</strong> มาจาก <code>./contract-schemas.js</code> ไม่ใช่ถูกนิยามใหม่ด้วย <code>z.object({...})</code> ในไฟล์ test — ถ้า agent เขียน schema ขึ้นเองที่นี่ สัญญาจะมีสองฉบับทันที แล้ววันที่แก้ฉบับหนึ่ง อีกฉบับจะเงียบ ๆ ปล่อยผ่านต่อไปเหมือนไม่มีอะไรเกิดขึ้น</li>
-        <li><code>test/products.e2e-spec.ts</code> และ <code>test/contract-schemas.ts</code> ไม่ถูกแก้แม้แต่บรรทัดเดียว</li>
+        <li>receipt ถูกเทียบด้วย <code>toEqual</code> กับ object ทั้งก้อน — ไม่ใช่ <code>toMatchObject</code> และไม่ใช่ <code>expect(body.total).toBe(19.98)</code> ไล่ทีละบรรทัด สองแบบหลังมองไม่เห็น field ที่เกินมาหรือถูกเปลี่ยนชื่อ: ถ้าวันหนึ่ง mapper เปลี่ยน <code>thumbnail</code> เป็น <code>thumbnailUrl</code> test จะยังเขียวทั้งที่ React app พังไปแล้ว ส่วน <code>toEqual</code> จะล้มพร้อมบอกทั้ง field ที่หายไปและ field ที่เกินมา</li>
+        <li><code>test/products.e2e-spec.ts</code> ไม่ถูกแก้แม้แต่บรรทัดเดียว</li>
         <li>ทุก request ยิงผ่าน <code>request(app.getHttpServer())</code> — ไม่มี <code>http://localhost:3000</code> หรือเลข port โผล่ในไฟล์ และไม่มีการ mock <code>PrismaService</code> ทิ้ง</li>
         <li><code>beforeAll</code> มี <code>app.useGlobalPipes(...)</code> ที่ค่าตรงกับ <code>src/main.ts</code> ทั้งสามตัว และ <code>afterAll</code> เรียก <code>app.close()</code></li>
       </ul>
@@ -388,7 +389,6 @@ LOG [RouterExplorer] Mapped {/carts/add, POST} route +0ms</code></pre>
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from './../src/app.module.js';
-import { orderResponseSchema } from './contract-schemas.js';
 
 describe('Orders contract (e2e)', () =&gt; {
   let app: INestApplication;
@@ -423,13 +423,31 @@ describe('Orders contract (e2e)', () =&gt; {
       })
       .expect(201);
 
-    const receipt = orderResponseSchema.parse(response.body);
-    expect(receipt.products[0].discountedPrice).toBe(17.89);
+    expect(response.body).toEqual({
+      id: expect.any(Number),
+      userId: 1,
+      products: [
+        {
+          id: 1,
+          title: 'Velvet Matte Lipstick',
+          price: 9.99,
+          quantity: 2,
+          total: 19.98,
+          discountPercentage: 10.48,
+          discountedPrice: 17.89,
+          thumbnail: expect.any(String),
+        },
+      ],
+      total: 19.98,
+      discountedTotal: 17.89,
+      totalProducts: 1,
+      totalQuantity: 2,
+    });
   });
 });</code></pre>
       <p>บรรทัด <code>app.useGlobalPipes(...)</code> ต้องอยู่ที่นี่ด้วยเหตุผลเดียวกับใน spec ของ products: <code>createNestApplication()</code> สร้างแอปจาก <code>AppModule</code> เท่านั้น ไม่ได้รัน <code>src/main.ts</code> ให้ ค่าทั้งสามจึงต้องตรงกับใน <code>main.ts</code> ทุกตัว — ไม่อย่างนั้น spec นี้จะทดสอบแอปคนละตัวกับที่ผู้ใช้จริงเจอ และวันที่มีคนเพิ่ม test ของเคส 400 เข้ามา มันจะผ่านทั้งที่ไม่ควรผ่าน เพราะไม่มี pipe ตัวไหนตรวจ body เลย</p>
       <p>ส่วน <code>.send({...})</code> ของ supertest แปลง object เป็น JSON แล้วใส่ header <code>Content-Type: application/json</code> ให้เอง จึงไม่ต้องเขียน <code>JSON.stringify</code> หรือ header เองเหมือนตอนยิงด้วย curl</p>
-      <div class="note"><p>test นี้ยิง <code>POST /carts/add</code> จริง แปลว่ารันหนึ่งครั้งเท่ากับสร้างคำสั่งซื้อเพิ่มอีกหนึ่งใบในฐานข้อมูล — ถ้ารัน <code>npm run test:e2e</code> หลังจากยิง curl ทั้งสี่กรณีไปแล้ว แล้วย้อนไปนับแถวใน <code>Order</code> อีกครั้ง จำนวนจะเพิ่มจาก <code>1</code> เป็น <code>2</code> นั่นไม่ใช่ transaction รั่ว แต่เป็นเพราะ test นี้เองที่สั่งซื้อเพิ่ม และเพราะรันซ้ำได้เรื่อย ๆ แบบนี้ test จึงตรวจ<em>รูปทรง</em>ของ receipt กับตัวเลขที่คำนวณได้ ไม่ตรวจ <code>id</code> ของคำสั่งซื้อ ซึ่งเปลี่ยนทุกรอบ</p></div>
+      <div class="note"><p>test นี้ยิง <code>POST /carts/add</code> จริง แปลว่ารันหนึ่งครั้งเท่ากับสร้างคำสั่งซื้อเพิ่มอีกหนึ่งใบในฐานข้อมูล — ถ้ารัน <code>npm run test:e2e</code> หลังจากยิง curl ทั้งสี่กรณีไปแล้ว แล้วย้อนไปนับแถวใน <code>Order</code> อีกครั้ง จำนวนจะเพิ่มจาก <code>1</code> เป็น <code>2</code> นั่นไม่ใช่ transaction รั่ว แต่เป็นเพราะ test นี้เองที่สั่งซื้อเพิ่ม และเพราะรันซ้ำได้เรื่อย ๆ แบบนี้ <code>id</code> ของคำสั่งซื้อจึงต้องปล่อยเป็น <code>expect.any(Number)</code> คู่กับ <code>thumbnail</code> ที่เป็น <code>expect.any(String)</code> เพราะ URL ของรูปมาจาก seed ส่วนตัวเลขที่เหลือคิดจากสัญญาได้หมดจึงถูกตรึงไว้ทุกตัว — <code>toEqual</code> ยังจับ field ที่เกินมาหรือถูกเปลี่ยนชื่อได้เหมือนเดิม เพราะสอง <code>expect.any(...)</code> นี้ผ่อนแค่<em>ค่า</em> ไม่ได้ผ่อนว่า key ไหนมีได้บ้าง</p></div>
       <p>รันเฉพาะไฟล์นี้ได้ด้วย <code>npm run test:e2e -- orders</code> เมื่อไม่อยากรอ spec ของ products ทั้งเก้าข้อ</p>
     </section>
 
@@ -490,9 +508,9 @@ POST /carts/add → 201, discountedPrice rounds to 2dp</code></pre></li>
     </ul>
 
     <nav class="lesson-navigation" aria-label="การนำทางบทเรียน">
-      <a class="lesson-navigation__link" href="17_validating-the-cart-payload.html" rel="prev">← บทก่อนหน้า</a>
+      <a class="lesson-navigation__link" href="16_validating-the-cart-payload.html" rel="prev">← บทก่อนหน้า</a>
       <a class="lesson-navigation__link" href="index.html">บทเรียนทั้งหมด</a>
-      <a class="lesson-navigation__link" href="19_enabling-cors-and-port-config.html" rel="next">บทถัดไป →</a>
+      <a class="lesson-navigation__link" href="18_enabling-cors-and-port-config.html" rel="next">บทถัดไป →</a>
     </nav>
   </main>
   <footer><p>NestJS E-commerce API Workshop ภาษาไทย · ตรวจทานแหล่งอ้างอิงเมื่อ 12 กันยายน 2026</p></footer>
