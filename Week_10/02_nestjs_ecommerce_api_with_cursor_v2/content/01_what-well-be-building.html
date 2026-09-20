@@ -41,16 +41,18 @@
     <pre><code>ecommerce-api/
 ├── .cursor/rules/project.mdc        กติกาถาวรที่ Cursor ต้องทำตาม
 ├── docs/api-spec.md                 สัญญาที่เราออกแบบเองจากโค้ด client
+├── docs/auth-spec.md                สัญญาของ auth ที่เราออกแบบเอง (โบนัส)
 ├── docker-compose.yml               service postgres:17
-├── .env / .env.example              DATABASE_URL, PORT, APP_URL, CORS_ORIGIN
+├── .env / .env.example              DATABASE_URL, PORT, APP_URL, CORS_ORIGIN + JWT_* (โบนัส)
 ├── prisma7.config.ts                ไฟล์ config ของ Prisma CLI
 ├── prisma/
-│   ├── schema.prisma                Category, Product, Review, Order, OrderItem
-│   ├── migrations/                  &lt;timestamp&gt;_init, &lt;timestamp&gt;_add_orders
+│   ├── schema.prisma                Category, Product, Review, Order, OrderItem, User (โบนัส)
+│   ├── migrations/                  _init, _add_orders + _add_users, _add_refresh_token (โบนัส)
 │   └── seed.ts                      สร้างสินค้า 208 ชิ้นด้วย faker
 ├── test/
 │   ├── products.e2e-spec.ts         e2e test ของ endpoint สินค้า
-│   └── orders.e2e-spec.ts           e2e test ของ POST /carts/add
+│   ├── orders.e2e-spec.ts           e2e test ของ POST /carts/add
+│   └── auth.e2e-spec.ts             e2e test ของสัญญา auth (โบนัส)
 ├── nest-cli.json                    เปิด Swagger CLI plugin
 └── src/
     ├── main.ts                      ValidationPipe, CORS, Swagger
@@ -66,14 +68,23 @@
     │   └── dto/
     │       ├── pagination-query.dto.ts
     │       └── product-response.dto.ts
-    └── orders/
-        ├── orders.module.ts
-        ├── carts.controller.ts
-        ├── orders.service.ts
-        ├── cart.mapper.ts
-        └── dto/
-            ├── add-cart.dto.ts
-            └── cart-response.dto.ts</code></pre>
+    ├── orders/
+    │   ├── orders.module.ts
+    │   ├── carts.controller.ts
+    │   ├── orders.controller.ts      GET /orders/me (โบนัส)
+    │   ├── admin-orders.controller.ts  GET /admin/orders (โบนัส)
+    │   ├── orders.service.ts
+    │   ├── cart.mapper.ts
+    │   └── dto/
+    │       ├── add-cart.dto.ts
+    │       └── cart-response.dto.ts
+    └── auth/                         ทั้งโฟลเดอร์เป็นของโบนัส
+        ├── auth.module.ts  auth.controller.ts  auth.service.ts
+        ├── password.service.ts  user.mapper.ts
+        ├── jwt-auth.guard.ts  roles.guard.ts
+        ├── public.decorator.ts  roles.decorator.ts  current-user.decorator.ts
+        ├── jwt-payload.interface.ts
+        └── dto/                      signup, login, refresh, user-response</code></pre>
     <p>สังเกตว่าไฟล์ที่เราเขียนเองมีไม่ถึงสามสิบไฟล์ และแต่ละขั้นเพิ่มหรือแก้เพียงไม่กี่ไฟล์ — นั่นตั้งใจไว้ตั้งแต่ต้น เพราะการตรวจงานที่ AI เขียนจะทำได้จริงก็ต่อเมื่อ diff ของแต่ละรอบสั้นพอที่คุณจะอ่านจบ</p>
 
     <h2>กติกาของคอร์ส: เข้าใจก่อน แล้วค่อยสั่ง</h2>
@@ -105,6 +116,8 @@
           <tr><td><code>@nestjs/config</code></td><td>12.0.0</td><td>อ่านค่าจาก <code>.env</code></td></tr>
           <tr><td><code>class-validator</code> / <code>class-transformer</code></td><td>0.15.1 / 0.5.1</td><td>validation ของ DTO</td></tr>
           <tr><td><code>@nestjs/swagger</code></td><td>12.0.1</td><td>เอกสาร API</td></tr>
+          <tr><td><code>@nestjs/jwt</code></td><td>12.0.2</td><td>ออกและตรวจ JWT (โบนัส)</td></tr>
+          <tr><td><code>bcrypt</code> / <code>@types/bcrypt</code></td><td>6.0.0 / 6.0.0</td><td>hash รหัสผ่าน — native module (โบนัส)</td></tr>
           <tr><td><code>tsx</code></td><td>4.23.13</td><td>devDependency ใช้รัน <code>prisma/seed.ts</code></td></tr>
         </tbody>
       </table>
